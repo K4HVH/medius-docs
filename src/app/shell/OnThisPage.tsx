@@ -1,4 +1,5 @@
 import { createEffect, createSignal, For, on, onCleanup, onMount, Show } from 'solid-js';
+import { prefersReducedMotion } from './motion';
 
 interface Item {
   id: string;
@@ -43,6 +44,16 @@ export function OnThisPage(props: { pathname: string }) {
     spy();
   };
 
+  // The router would jump; the rail glides, and records the hash without a history entry.
+  const glide = (e: MouseEvent, id: string) => {
+    if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    const el = document.getElementById(id);
+    if (!el) return;
+    e.preventDefault();
+    el.scrollIntoView({ behavior: prefersReducedMotion() ? 'auto' : 'smooth', block: 'start' });
+    history.replaceState(history.state, '', `#${id}`);
+  };
+
   createEffect(on(() => props.pathname, () => requestAnimationFrame(() => requestAnimationFrame(scan))));
   onMount(() => window.addEventListener('scroll', spy, { passive: true }));
   onCleanup(() => window.removeEventListener('scroll', spy));
@@ -55,7 +66,7 @@ export function OnThisPage(props: { pathname: string }) {
           <span class="ind" ref={mark} aria-hidden="true" />
           <For each={items()}>
             {(it) => (
-              <a href={`#${it.id}`} classList={{ act: active() === it.id }}>
+              <a href={`#${it.id}`} classList={{ act: active() === it.id }} on:click={(e) => glide(e, it.id)}>
                 {it.title}
               </a>
             )}

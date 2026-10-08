@@ -1,5 +1,5 @@
-import { describe, it, expect, afterEach } from 'vitest';
-import { render, cleanup } from '@solidjs/testing-library';
+import { describe, it, expect, afterEach, vi } from 'vitest';
+import { render, cleanup, fireEvent } from '@solidjs/testing-library';
 import { MemoryRouter, Route, createMemoryHistory } from '@solidjs/router';
 import type { JSX } from 'solid-js';
 import { PageHeader } from '../../src/app/shell/PageHeader';
@@ -86,6 +86,26 @@ describe('OnThisPage', () => {
     ]);
     expect(links[0].classList.contains('act')).toBe(true);
     expect(r.container.querySelector('#payload h2')!.classList.contains('act')).toBe(true);
+  });
+
+  it('glides to a section from the rail and puts its hash in the address', async () => {
+    const r = mount('/native/commands/inject', () => (
+      <>
+        <main class="docs-page">
+          <DocSection id="payload" title="Payload">x</DocSection>
+          <DocSection id="classes" title="Classes">y</DocSection>
+        </main>
+        <OnThisPage pathname="/native/commands/inject" />
+      </>
+    ));
+    await frames();
+    const target = r.container.querySelector<HTMLElement>('#classes')!;
+    const glide = vi.fn();
+    target.scrollIntoView = glide;
+    const click = fireEvent.click([...r.container.querySelectorAll('.toc a')][1]);
+    expect(click).toBe(false);
+    expect(glide).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' });
+    expect(window.location.hash).toBe('#classes');
   });
 });
 

@@ -24,6 +24,7 @@ export function DocsSidebar(props: {
   disabled?: boolean;
   onSearch: () => void;
   onNavigate?: () => void;
+  title?: string;
   boxes?: JSX.Element;
 }) {
   const route = createMemo(() => routeFor(props.pathname));
@@ -95,7 +96,7 @@ export function DocsSidebar(props: {
       >
         <span>
           {barLabel()}
-          <b>{route()?.nav ?? ''}</b>
+          <b>{props.title ?? route()?.nav ?? ''}</b>
         </span>
         <span>{open() ? 'Close' : 'Pages'}</span>
       </button>
@@ -118,11 +119,16 @@ export function DocsSidebar(props: {
           <span>Search</span>
           <kbd>Ctrl K</kbd>
         </button>
-        <Show when={section() === 'dashboard' && props.boxes}>
-          <div class="group">
-            <p class="label">Boxes</p>
-            {props.boxes}
-          </div>
+        <Show when={section() === 'dashboard'}>
+          {(() => {
+            const list = props.boxes;
+            return list ? (
+              <div class="group">
+                <p class="label">Boxes</p>
+                {list}
+              </div>
+            ) : null;
+          })()}
         </Show>
         <For each={groups()}>
           {(g) => (
