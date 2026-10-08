@@ -117,7 +117,7 @@ async function main(): Promise<void> {
     // Served for unknown URLs with status 404. Taken before Home's: sirv keeps the size index.html had
     // at startup, so a page loaded after Home rewrites it arrives cut short.
     await page.goto(`http://localhost:${PORT}/__not_found__`, { waitUntil: 'load', timeout: 30000 });
-    await page.waitForSelector(`${CONTENT} #not-found`, { timeout: 20000 });
+    await page.waitForSelector(`${CONTENT} .page-header h1`, { timeout: 20000 });
     await page.evaluate(
       () => new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r()))),
     );
