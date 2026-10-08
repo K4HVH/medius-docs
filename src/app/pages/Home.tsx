@@ -3,7 +3,6 @@ import { A } from '@solidjs/router';
 import { GridBackground } from '../../components/surfaces/GridBackground';
 import { Card, CardHeader } from '../../components/surfaces/Card';
 import { SiteFooter } from '../shell/SiteFooter';
-import '../../styles/docs.css';
 
 const Home: Component = () => {
   return (

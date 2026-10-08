@@ -26,17 +26,19 @@ const Usage: Component = () => {
           <A href="/native/commands/requests#caps"><code>CAPS</code></A> <code>n_buttons</code>.
           An id past that count is a no-op, so read <code>n_buttons</code> first.
         </p>
-        <table class="api-params">
-          <thead><tr><th>Button</th><th><code>id</code></th></tr></thead>
-          <tbody>
-            <tr><td>Left</td><td><code>0</code></td></tr>
-            <tr><td>Right</td><td><code>1</code></td></tr>
-            <tr><td>Middle</td><td><code>2</code></td></tr>
-            <tr><td>Side1 (first thumb)</td><td><code>3</code></td></tr>
-            <tr><td>Side2 (second thumb)</td><td><code>4</code></td></tr>
-            <tr><td>further declared buttons</td><td><code>5 .. n_buttons - 1</code></td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Button</th><th><code>id</code></th></tr></thead>
+            <tbody>
+              <tr><td>Left</td><td><code>0</code></td></tr>
+              <tr><td>Right</td><td><code>1</code></td></tr>
+              <tr><td>Middle</td><td><code>2</code></td></tr>
+              <tr><td>Side1 (first thumb)</td><td><code>3</code></td></tr>
+              <tr><td>Side2 (second thumb)</td><td><code>4</code></td></tr>
+              <tr><td>further declared buttons</td><td><code>5 .. n_buttons - 1</code></td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           The Rust library names the five as{' '}
           <A href="/library/types/structs#button"><code>Button</code></A> constants
@@ -52,28 +54,32 @@ const Usage: Component = () => {
           (page 0x07). <code>0xE0</code>-<code>0xE7</code> are modifiers and fold into the
           modifier byte; any other usage fills a keycode slot. Common ones:
         </p>
-        <table class="api-params">
-          <thead><tr><th>Key</th><th>Usage</th></tr></thead>
-          <tbody>
-            <tr><td><code>A</code> .. <code>Z</code></td><td><code>0x04</code> .. <code>0x1D</code></td></tr>
-            <tr><td><code>1</code> .. <code>9</code></td><td><code>0x1E</code> .. <code>0x26</code></td></tr>
-            <tr><td><code>0</code></td><td><code>0x27</code></td></tr>
-            <tr><td>Enter / Escape / Backspace / Tab</td><td><code>0x28</code> / <code>0x29</code> / <code>0x2A</code> / <code>0x2B</code></td></tr>
-            <tr><td>Space</td><td><code>0x2C</code></td></tr>
-            <tr><td>Caps Lock</td><td><code>0x39</code></td></tr>
-            <tr><td><code>F1</code> .. <code>F12</code></td><td><code>0x3A</code> .. <code>0x45</code></td></tr>
-            <tr><td>Insert / Home / Page Up</td><td><code>0x49</code> / <code>0x4A</code> / <code>0x4B</code></td></tr>
-            <tr><td>Delete / End / Page Down</td><td><code>0x4C</code> / <code>0x4D</code> / <code>0x4E</code></td></tr>
-            <tr><td>Right / Left / Down / Up</td><td><code>0x4F</code> / <code>0x50</code> / <code>0x51</code> / <code>0x52</code></td></tr>
-          </tbody>
-        </table>
-        <table class="api-params">
-          <thead><tr><th>Modifier</th><th>Usage</th></tr></thead>
-          <tbody>
-            <tr><td>Left Ctrl / Shift / Alt / GUI</td><td><code>0xE0</code> / <code>0xE1</code> / <code>0xE2</code> / <code>0xE3</code></td></tr>
-            <tr><td>Right Ctrl / Shift / Alt / GUI</td><td><code>0xE4</code> / <code>0xE5</code> / <code>0xE6</code> / <code>0xE7</code></td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Key</th><th>Usage</th></tr></thead>
+            <tbody>
+              <tr><td><code>A</code> .. <code>Z</code></td><td><code>0x04</code> .. <code>0x1D</code></td></tr>
+              <tr><td><code>1</code> .. <code>9</code></td><td><code>0x1E</code> .. <code>0x26</code></td></tr>
+              <tr><td><code>0</code></td><td><code>0x27</code></td></tr>
+              <tr><td>Enter / Escape / Backspace / Tab</td><td><code>0x28</code> / <code>0x29</code> / <code>0x2A</code> / <code>0x2B</code></td></tr>
+              <tr><td>Space</td><td><code>0x2C</code></td></tr>
+              <tr><td>Caps Lock</td><td><code>0x39</code></td></tr>
+              <tr><td><code>F1</code> .. <code>F12</code></td><td><code>0x3A</code> .. <code>0x45</code></td></tr>
+              <tr><td>Insert / Home / Page Up</td><td><code>0x49</code> / <code>0x4A</code> / <code>0x4B</code></td></tr>
+              <tr><td>Delete / End / Page Down</td><td><code>0x4C</code> / <code>0x4D</code> / <code>0x4E</code></td></tr>
+              <tr><td>Right / Left / Down / Up</td><td><code>0x4F</code> / <code>0x50</code> / <code>0x51</code> / <code>0x52</code></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Modifier</th><th>Usage</th></tr></thead>
+            <tbody>
+              <tr><td>Left Ctrl / Shift / Alt / GUI</td><td><code>0xE0</code> / <code>0xE1</code> / <code>0xE2</code> / <code>0xE3</code></td></tr>
+              <tr><td>Right Ctrl / Shift / Alt / GUI</td><td><code>0xE4</code> / <code>0xE5</code> / <code>0xE6</code> / <code>0xE7</code></td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           The Rust library exposes these as named{' '}
           <A href="/library/types/structs#key"><code>Key</code></A> constants
@@ -89,20 +95,22 @@ const Usage: Component = () => {
           <A href="/native/commands/requests#caps"><code>CAPS</code></A> <code>CONSUMER</code>{' '}
           flag). Common transport controls:
         </p>
-        <table class="api-params">
-          <thead><tr><th>Media key</th><th>Usage</th></tr></thead>
-          <tbody>
-            <tr><td>Play / Pause toggle</td><td><code>0x00CD</code></td></tr>
-            <tr><td>Play</td><td><code>0x00B0</code></td></tr>
-            <tr><td>Pause</td><td><code>0x00B1</code></td></tr>
-            <tr><td>Stop</td><td><code>0x00B7</code></td></tr>
-            <tr><td>Next track</td><td><code>0x00B5</code></td></tr>
-            <tr><td>Previous track</td><td><code>0x00B6</code></td></tr>
-            <tr><td>Mute</td><td><code>0x00E2</code></td></tr>
-            <tr><td>Volume up</td><td><code>0x00E9</code></td></tr>
-            <tr><td>Volume down</td><td><code>0x00EA</code></td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Media key</th><th>Usage</th></tr></thead>
+            <tbody>
+              <tr><td>Play / Pause toggle</td><td><code>0x00CD</code></td></tr>
+              <tr><td>Play</td><td><code>0x00B0</code></td></tr>
+              <tr><td>Pause</td><td><code>0x00B1</code></td></tr>
+              <tr><td>Stop</td><td><code>0x00B7</code></td></tr>
+              <tr><td>Next track</td><td><code>0x00B5</code></td></tr>
+              <tr><td>Previous track</td><td><code>0x00B6</code></td></tr>
+              <tr><td>Mute</td><td><code>0x00E2</code></td></tr>
+              <tr><td>Volume up</td><td><code>0x00E9</code></td></tr>
+              <tr><td>Volume down</td><td><code>0x00EA</code></td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           The Rust library exposes these as named{' '}
           <A href="/library/types/structs#media-key"><code>MediaKey</code></A> constants

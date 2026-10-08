@@ -24,18 +24,20 @@ const Update: Component = () => {
         </p>
         <div class="api-response-label">SLOTS</div>
         <p>Both chips carry two app slots and boot whichever the bootloader selects.</p>
-        <table class="api-params">
-          <thead>
-            <tr><th>Partition</th><th>Offset</th><th>Size</th><th>Holds</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><code>nvs</code></td><td><code>0x9000</code></td><td><code>0x6000</code></td><td>Box name, options, and learned baselines.</td></tr>
-            <tr><td><code>phy_init</code></td><td><code>0xF000</code></td><td><code>0x1000</code></td><td>PHY calibration.</td></tr>
-            <tr><td><code>ota_0</code></td><td><code>0x10000</code></td><td><code>0xF0000</code></td><td>One app slot.</td></tr>
-            <tr><td><code>ota_1</code></td><td><code>0x100000</code></td><td><code>0xF0000</code></td><td>The other app slot.</td></tr>
-            <tr><td><code>otadata</code></td><td><code>0x1F0000</code></td><td><code>0x2000</code></td><td>Which slot boots, and its state.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Partition</th><th>Offset</th><th>Size</th><th>Holds</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>nvs</code></td><td><code>0x9000</code></td><td><code>0x6000</code></td><td>Box name, options, and learned baselines.</td></tr>
+              <tr><td><code>phy_init</code></td><td><code>0xF000</code></td><td><code>0x1000</code></td><td>PHY calibration.</td></tr>
+              <tr><td><code>ota_0</code></td><td><code>0x10000</code></td><td><code>0xF0000</code></td><td>One app slot.</td></tr>
+              <tr><td><code>ota_1</code></td><td><code>0x100000</code></td><td><code>0xF0000</code></td><td>The other app slot.</td></tr>
+              <tr><td><code>otadata</code></td><td><code>0x1F0000</code></td><td><code>0x2000</code></td><td>Which slot boots, and its state.</td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           <code>otadata</code> sits above the slots so <code>nvs</code> keeps its offset, and the box
           name, options and learned baselines survive the one flash that installs this layout. A box
@@ -53,16 +55,18 @@ const Update: Component = () => {
         <pre class="api-signature">UPDATE  0x17  ·  payload 2..508 bytes</pre>
         <p><span class="api-badge api-badge--responded">Reply</span></p>
         <div class="api-response-label">PAYLOAD</div>
-        <table class="byte-table">
-          <thead>
-            <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>0</td><td><code>op</code></td><td><code>u8</code></td><td>0=BEGIN 1=DATA 2=END 3=ABORT 4=ACTIVATE</td></tr>
-            <tr><td>1</td><td><code>target</code></td><td><code>u8</code></td><td>0=device chip, 1=host chip; ignored by <code>ACTIVATE</code></td></tr>
-            <tr><td>2..</td><td><code>body</code></td><td><code>varies</code></td><td>per op, below</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="byte-table">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>0</td><td><code>op</code></td><td><code>u8</code></td><td>0=BEGIN 1=DATA 2=END 3=ABORT 4=ACTIVATE</td></tr>
+              <tr><td>1</td><td><code>target</code></td><td><code>u8</code></td><td>0=device chip, 1=host chip; ignored by <code>ACTIVATE</code></td></tr>
+              <tr><td>2..</td><td><code>body</code></td><td><code>varies</code></td><td>per op, below</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">ORDER</div>
         <pre class="diagram">{`  BEGIN --> DATA --> DATA --> ... --> END --> (staged, inert)
     |                                          |
@@ -80,15 +84,17 @@ const Update: Component = () => {
       <DocSection id="begin" title="BEGIN" caption="Erase the spare slot and open a session">
         <pre class="api-signature">UPDATE  op 0  ·  [target u8][size u32][sha256 u8[32]]</pre>
         <div class="api-response-label">PAYLOAD</div>
-        <table class="byte-table">
-          <thead>
-            <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>2</td><td><code>size</code></td><td><code>u32</code></td><td>total image bytes, little-endian; over <code>983040</code> is refused with <code>TOOBIG</code></td></tr>
-            <tr><td>6</td><td><code>sha256</code></td><td><code>u8[32]</code></td><td>digest of the whole image, checked at <code>END</code></td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="byte-table">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>2</td><td><code>size</code></td><td><code>u32</code></td><td>total image bytes, little-endian; over <code>983040</code> is refused with <code>TOOBIG</code></td></tr>
+              <tr><td>6</td><td><code>sha256</code></td><td><code>u8[32]</code></td><td>digest of the whole image, checked at <code>END</code></td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">EFFECT</div>
         <p>
           Puts the whole box in update mode: injection and{' '}
@@ -124,15 +130,17 @@ const Update: Component = () => {
       <DocSection id="data" title="DATA" caption="One chunk, in order">
         <pre class="api-signature">UPDATE  op 1  ·  [target u8][seq u16][bytes 1..504]</pre>
         <div class="api-response-label">PAYLOAD</div>
-        <table class="byte-table">
-          <thead>
-            <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>2</td><td><code>seq</code></td><td><code>u16</code></td><td>chunk index, little-endian; the byte offset is <code>seq * 504</code></td></tr>
-            <tr><td>4..</td><td><code>bytes</code></td><td><code>u8[]</code></td><td>1 to 504 image bytes</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="byte-table">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>2</td><td><code>seq</code></td><td><code>u16</code></td><td>chunk index, little-endian; the byte offset is <code>seq * 504</code></td></tr>
+              <tr><td>4..</td><td><code>bytes</code></td><td><code>u8[]</code></td><td>1 to 504 image bytes</td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           504 is what the <A href="/native/frame">frame</A> has left: 512 less the op, the target and
           a two-byte index, rounded down to a multiple of four so every flash write is aligned.
@@ -153,17 +161,19 @@ const Update: Component = () => {
   box                       |-- write, ACK next --|                     |-- ACK next --|
                             ^
                             cache is off here; nothing may be in flight`}</pre>
-        <table class="api-params">
-          <thead>
-            <tr><th>Quantity</th><th>Value</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>Flash page write</td><td>0.3 to 0.7 ms, both cores stalled.</td></tr>
-            <tr><td>UART0 RX FIFO</td><td>128 bytes, 213 µs at 6 Mbaud.</td></tr>
-            <tr><td>Credit window</td><td>16 chunks to the device chip (8064 bytes), 6 to the host chip.</td></tr>
-            <tr><td>Inter-chip link ring</td><td>8192 bytes; caps the relayed window.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Quantity</th><th>Value</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Flash page write</td><td>0.3 to 0.7 ms, both cores stalled.</td></tr>
+              <tr><td>UART0 RX FIFO</td><td>128 bytes, 213 µs at 6 Mbaud.</td></tr>
+              <tr><td>Credit window</td><td>16 chunks to the device chip (8064 bytes), 6 to the host chip.</td></tr>
+              <tr><td>Inter-chip link ring</td><td>8192 bytes; caps the relayed window.</td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           A sender ignoring its credit overruns the smaller hop, and the lost chunk leaves the
           window one short: nothing acknowledges it, and the session dies on
@@ -340,17 +350,19 @@ const Update: Component = () => {
         <pre class="api-signature">UPDATE_RESP  0x18  ·  payload 7 bytes</pre>
         <p><span class="api-badge api-badge--responded">Reply</span></p>
         <div class="api-response-label">PAYLOAD</div>
-        <table class="byte-table">
-          <thead>
-            <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>0</td><td><code>op</code></td><td><code>u8</code></td><td>echoes the op</td></tr>
-            <tr><td>1</td><td><code>target</code></td><td><code>u8</code></td><td>echoes the target; always <code>0</code> for <code>ACTIVATE</code></td></tr>
-            <tr><td>2</td><td><code>status</code></td><td><code>u8</code></td><td>below</td></tr>
-            <tr><td>3</td><td><code>arg</code></td><td><code>u32</code></td><td>per status, little-endian</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="byte-table">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>0</td><td><code>op</code></td><td><code>u8</code></td><td>echoes the op</td></tr>
+              <tr><td>1</td><td><code>target</code></td><td><code>u8</code></td><td>echoes the target; always <code>0</code> for <code>ACTIVATE</code></td></tr>
+              <tr><td>2</td><td><code>status</code></td><td><code>u8</code></td><td>below</td></tr>
+              <tr><td>3</td><td><code>arg</code></td><td><code>u32</code></td><td>per status, little-endian</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="callout callout--info">
           <p>
             <code>SEQ</code> echoes the command frame, except for <code>DATA</code>{' '}
@@ -416,15 +428,17 @@ const Update: Component = () => {
         <pre class="diagram">{`  boot new slot --> pending-verify --> chip confirms itself --> valid
                           |
                           +-- panics, or never confirms --> bootloader picks the old slot`}</pre>
-        <table class="api-params">
-          <thead>
-            <tr><th>Chip</th><th>Confirmed by</th><th>Grace</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>Device</td><td>Ten seconds of a running main loop.</td><td>30 s</td></tr>
-            <tr><td>Host</td><td>A completed clock exchange over the link, only.</td><td>40 s</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Chip</th><th>Confirmed by</th><th>Grace</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Device</td><td>Ten seconds of a running main loop.</td><td>30 s</td></tr>
+              <tr><td>Host</td><td>A completed clock exchange over the link, only.</td><td>40 s</td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           The host chip's image arrives over the link, its only way back, so one that runs but can't
           talk must revert on its own.
@@ -446,18 +460,20 @@ const Update: Component = () => {
           A client that can update one box can update every later one. From protocol 5 (v3.2.0) on, no
           protocol changes these:
         </p>
-        <table class="api-params">
-          <thead>
-            <tr><th>Part</th><th>Where</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>Frame: SOF, header, CRC, the 512-byte payload limit</td><td><A href="/native/frame#layout">Frame layout</A></td></tr>
-            <tr><td>Control rate: 6 Mbaud, and 4 Mbaud on firmware before v3.4.0</td><td><A href="/native/transport#serial">Serial link</A></td></tr>
-            <tr><td><code>QUERY(VERSION)</code>, its reply's first ten data bytes (<code>proto_ver</code>, version, MAC) and the name after them, and the hello</td><td><A href="/native/commands/requests#version">VERSION</A>, <A href="/native/connection#hello">Ready hello</A></td></tr>
-            <tr><td><code>QUERY(FIRMWARE)</code> and the 17 bytes of its reply; anything new follows them</td><td><A href="/native/commands/requests#firmware">FIRMWARE</A></td></tr>
-            <tr><td><code>UPDATE</code> and <code>UPDATE_RESP</code>: ops, targets, bodies, the 504-byte chunk, the credit and how it is read, every status and its <code>arg</code>, update mode, staging and <code>ACTIVATE</code></td><td>This page</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Part</th><th>Where</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Frame: SOF, header, CRC, the 512-byte payload limit</td><td><A href="/native/frame#layout">Frame layout</A></td></tr>
+              <tr><td>Control rate: 6 Mbaud, and 4 Mbaud on firmware before v3.4.0</td><td><A href="/native/transport#serial">Serial link</A></td></tr>
+              <tr><td><code>QUERY(VERSION)</code>, its reply's first ten data bytes (<code>proto_ver</code>, version, MAC) and the name after them, and the hello</td><td><A href="/native/commands/requests#version">VERSION</A>, <A href="/native/connection#hello">Ready hello</A></td></tr>
+              <tr><td><code>QUERY(FIRMWARE)</code> and the 17 bytes of its reply; anything new follows them</td><td><A href="/native/commands/requests#firmware">FIRMWARE</A></td></tr>
+              <tr><td><code>UPDATE</code> and <code>UPDATE_RESP</code>: ops, targets, bodies, the 504-byte chunk, the credit and how it is read, every status and its <code>arg</code>, update mode, staging and <code>ACTIVATE</code></td><td>This page</td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           A status may be added; read one you don't know as a refusal. The dashboard connects to any
           box on protocol 5 or later, and can update but not control a box on another protocol.

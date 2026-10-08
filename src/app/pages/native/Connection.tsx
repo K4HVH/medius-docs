@@ -35,16 +35,18 @@ const Connection: Component = () => {
             Check that reply's <code>proto_ver</code> is <code>9</code>.
           </li>
         </ol>
-        <table class="api-params">
-          <thead>
-            <tr><th>Reply</th><th>Meaning</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><code>proto_ver == 9</code></td><td>Speaks the protocol these pages describe.</td></tr>
-            <tr><td><code>proto_ver != 9</code></td><td>Speaks a protocol these pages don't cover; commands may behave otherwise.</td></tr>
-            <tr><td>No reply</td><td>Not a Medius box, or wrong port or baud.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Reply</th><th>Meaning</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>proto_ver == 9</code></td><td>Speaks the protocol these pages describe.</td></tr>
+              <tr><td><code>proto_ver != 9</code></td><td>Speaks a protocol these pages don't cover; commands may behave otherwise.</td></tr>
+              <tr><td>No reply</td><td>Not a Medius box, or wrong port or baud.</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="callout callout--warning">
           <p>
             The check is mandatory. Firmware 3.1.x and earlier report <code>4</code>, where{' '}
@@ -61,20 +63,22 @@ const Connection: Component = () => {
         <p>
           Full detail on <A href="/native/commands/requests#version">Requests</A>.
         </p>
-        <table class="byte-table">
-          <thead>
-            <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>selector, echoed; <code>0x00</code> = <code>VERSION</code></td></tr>
-            <tr><td>1</td><td><code>proto_ver</code></td><td><code>u8</code></td><td>protocol version, expected <code>9</code></td></tr>
-            <tr><td>2</td><td><code>fw_major</code></td><td><code>u8</code></td><td>firmware major</td></tr>
-            <tr><td>3</td><td><code>fw_minor</code></td><td><code>u8</code></td><td>firmware minor</td></tr>
-            <tr><td>4</td><td><code>fw_patch</code></td><td><code>u8</code></td><td>firmware patch</td></tr>
-            <tr><td>5</td><td><code>mac</code></td><td><code>u8[6]</code></td><td>box MAC, a stable per-box id</td></tr>
-            <tr><td>11..</td><td><code>name</code></td><td><code>ascii</code></td><td>human-readable box name (may be empty), delimited by the frame <code>LEN</code></td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="byte-table">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>selector, echoed; <code>0x00</code> = <code>VERSION</code></td></tr>
+              <tr><td>1</td><td><code>proto_ver</code></td><td><code>u8</code></td><td>protocol version, expected <code>9</code></td></tr>
+              <tr><td>2</td><td><code>fw_major</code></td><td><code>u8</code></td><td>firmware major</td></tr>
+              <tr><td>3</td><td><code>fw_minor</code></td><td><code>u8</code></td><td>firmware minor</td></tr>
+              <tr><td>4</td><td><code>fw_patch</code></td><td><code>u8</code></td><td>firmware patch</td></tr>
+              <tr><td>5</td><td><code>mac</code></td><td><code>u8[6]</code></td><td>box MAC, a stable per-box id</td></tr>
+              <tr><td>11..</td><td><code>name</code></td><td><code>ascii</code></td><td>human-readable box name (may be empty), delimited by the frame <code>LEN</code></td></tr>
+            </tbody>
+          </table>
+        </div>
       </DocSection>
 
       <DocSection id="hello" title="Ready hello" caption="Unsolicited RESP(VERSION), twice per boot">
@@ -82,15 +86,17 @@ const Connection: Component = () => {
           Treat either hello as ready and skip the{' '}
           <A href="/native/commands/requests#version"><code>QUERY(VERSION)</code></A>.
         </p>
-        <table class="api-params">
-          <thead>
-            <tr><th>Trigger</th><th>When</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>Power-on</td><td>Once, as the device chip boots, before any other frame.</td></tr>
-            <tr><td>First contact</td><td>Once, on the device chip's first valid frame after boot, ahead of that frame's reply. A program opening the port after another has spoken gets neither hello and sends <code>QUERY(VERSION)</code>.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Trigger</th><th>When</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Power-on</td><td>Once, as the device chip boots, before any other frame.</td></tr>
+              <tr><td>First contact</td><td>Once, on the device chip's first valid frame after boot, ahead of that frame's reply. A program opening the port after another has spoken gets neither hello and sends <code>QUERY(VERSION)</code>.</td></tr>
+            </tbody>
+          </table>
+        </div>
         <pre class="diagram">{`  device chip boots         -->  hello, SEQ 0
   first valid frame         -->  hello, SEQ 0, then that frame's reply
   every later frame         -->  no hello

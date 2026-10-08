@@ -56,14 +56,16 @@ for ev in device.input_events([CatchFilter::watch(Key::F)])? {
           <A href="/library/catch#event-stream"><code>EventStream</code></A> receives every event any
           of them matches.
         </p>
-        <table class="api-params">
-          <thead>
-            <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><code>filters</code></td><td>anything iterable of <A href="/library/types/structs#catch-filter"><code>CatchFilter</code></A></td><td>The subscription table: one filter, an array, or a <code>Vec</code>.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>filters</code></td><td>anything iterable of <A href="/library/types/structs#catch-filter"><code>CatchFilter</code></A></td><td>The subscription table: one filter, an array, or a <code>Vec</code>.</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`use medius::{Capture, CatchEvent, CatchFilter, Device, TrafficClass};
 
@@ -99,20 +101,22 @@ while let Ok(CatchEvent::Traffic(t)) = events.recv() {
           union of every subscription in the process, and the decoder filters the wider snapshots back
           down.
         </p>
-        <table class="api-params">
-          <thead>
-            <tr><th>Method</th><th>Returns</th><th>Description</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><code>recv()</code></td><td><code>Result&lt;InputEvent&gt;</code></td><td>Block until the next edge.</td></tr>
-            <tr><td><code>try_recv()</code></td><td><code>Option&lt;InputEvent&gt;</code></td><td>The next decoded edge, or <code>None</code> (never blocks).</td></tr>
-            <tr><td><code>recv_timeout(dur)</code></td><td><code>Option&lt;InputEvent&gt;</code></td><td>Block up to <code>dur</code>; <code>None</code> on timeout.</td></tr>
-            <tr><td><code>recv_async().await</code></td><td><code>Result&lt;InputEvent&gt;</code></td><td>Await the next edge (<code>async</code> feature).</td></tr>
-            <tr><td><code>is_connected()</code></td><td><code>bool</code></td><td>Whether the box is still delivering; <code>try_recv</code> and <code>recv_timeout</code> return <code>None</code> for both "nothing yet" and "nothing ever again".</td></tr>
-            <tr><td><code>held(class)</code></td><td><code>&amp;[Usage]</code></td><td>What this stream holds for one class.</td></tr>
-            <tr><td><code>dropped()</code></td><td><code>u64</code></td><td>Events lost host-side because this consumer fell behind.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Method</th><th>Returns</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>recv()</code></td><td><code>Result&lt;InputEvent&gt;</code></td><td>Block until the next edge.</td></tr>
+              <tr><td><code>try_recv()</code></td><td><code>Option&lt;InputEvent&gt;</code></td><td>The next decoded edge, or <code>None</code> (never blocks).</td></tr>
+              <tr><td><code>recv_timeout(dur)</code></td><td><code>Option&lt;InputEvent&gt;</code></td><td>Block up to <code>dur</code>; <code>None</code> on timeout.</td></tr>
+              <tr><td><code>recv_async().await</code></td><td><code>Result&lt;InputEvent&gt;</code></td><td>Await the next edge (<code>async</code> feature).</td></tr>
+              <tr><td><code>is_connected()</code></td><td><code>bool</code></td><td>Whether the box is still delivering; <code>try_recv</code> and <code>recv_timeout</code> return <code>None</code> for both "nothing yet" and "nothing ever again".</td></tr>
+              <tr><td><code>held(class)</code></td><td><code>&amp;[Usage]</code></td><td>What this stream holds for one class.</td></tr>
+              <tr><td><code>dropped()</code></td><td><code>u64</code></td><td>Events lost host-side because this consumer fell behind.</td></tr>
+            </tbody>
+          </table>
+        </div>
       </DocSection>
 
       <DocSection id="event-stream" title="EventStream" caption="Receive raw events">
@@ -120,21 +124,23 @@ while let Ok(CatchEvent::Traffic(t)) = events.recv() {
           Returned by <A href="/library/catch#catch-events"><code>catch_events</code></A>. Clones share
           the queue; the subscription ends when the stream and every clone drop.
         </p>
-        <table class="api-params">
-          <thead>
-            <tr><th>Method</th><th>Returns</th><th>Description</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><code>recv()</code></td><td><code>Result&lt;CatchEvent&gt;</code></td><td>Block until the next event.</td></tr>
-            <tr><td><code>try_recv()</code></td><td><code>Option&lt;CatchEvent&gt;</code></td><td>The next buffered event, or <code>None</code> (never blocks).</td></tr>
-            <tr><td><code>recv_timeout(dur)</code></td><td><code>Option&lt;CatchEvent&gt;</code></td><td>Block up to <code>dur</code>; <code>None</code> on timeout.</td></tr>
-            <tr><td><code>iter() / try_iter()</code></td><td><code>impl Iterator</code></td><td>Blocking, or drain what is buffered. The stream is itself an <code>Iterator</code>.</td></tr>
-            <tr><td><code>recv_async().await</code></td><td><code>Result&lt;CatchEvent&gt;</code></td><td>Await the next event (<code>async</code> feature), runtime-agnostic.</td></tr>
-            <tr><td><code>stream()</code></td><td><code>impl Stream</code></td><td>The same queue as a <code>futures</code> stream (<code>async</code> feature).</td></tr>
-            <tr><td><code>is_connected()</code></td><td><code>bool</code></td><td>Whether the box is still delivering; a <code>None</code> from the two above can't tell.</td></tr>
-            <tr><td><code>dropped()</code></td><td><code>u64</code></td><td>Events lost host-side because this consumer fell behind.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Method</th><th>Returns</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>recv()</code></td><td><code>Result&lt;CatchEvent&gt;</code></td><td>Block until the next event.</td></tr>
+              <tr><td><code>try_recv()</code></td><td><code>Option&lt;CatchEvent&gt;</code></td><td>The next buffered event, or <code>None</code> (never blocks).</td></tr>
+              <tr><td><code>recv_timeout(dur)</code></td><td><code>Option&lt;CatchEvent&gt;</code></td><td>Block up to <code>dur</code>; <code>None</code> on timeout.</td></tr>
+              <tr><td><code>iter() / try_iter()</code></td><td><code>impl Iterator</code></td><td>Blocking, or drain what is buffered. The stream is itself an <code>Iterator</code>.</td></tr>
+              <tr><td><code>recv_async().await</code></td><td><code>Result&lt;CatchEvent&gt;</code></td><td>Await the next event (<code>async</code> feature), runtime-agnostic.</td></tr>
+              <tr><td><code>stream()</code></td><td><code>impl Stream</code></td><td>The same queue as a <code>futures</code> stream (<code>async</code> feature).</td></tr>
+              <tr><td><code>is_connected()</code></td><td><code>bool</code></td><td>Whether the box is still delivering; a <code>None</code> from the two above can't tell.</td></tr>
+              <tr><td><code>dropped()</code></td><td><code>u64</code></td><td>Events lost host-side because this consumer fell behind.</td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           Each event is a <A href="/library/types/enums#catch-event"><code>CatchEvent</code></A>{' '}
           variant; <code>class()</code>, <code>id()</code>, <code>direction()</code>,{' '}
@@ -200,13 +206,15 @@ for event in &device.catch_events([filter])? {
           <A href="/library/types/enums#clock-domain"><code>ClockDomain</code></A> that produced it.
           The two chips boot independently, so a stamp is only meaningful within its own domain.
         </p>
-        <table class="api-params">
-          <thead><tr><th>Domain</th><th>Stamped</th><th>Covers</th></tr></thead>
-          <tbody>
-            <tr><td><code>ClockDomain::HostChip</code></td><td>in USB interrupt context, the instant the real device's transfer completed</td><td>motion, usages, <code>HidIn</code>, the device's vendor IN</td></tr>
-            <tr><td><code>ClockDomain::DeviceChip</code></td><td>at the tap on the device chip</td><td><code>HidOut</code>, every OUT direction, a <A href="/library/advanced/raw">raw</A> vendor IN packet, <code>Control</code>, <code>Emit</code>, <code>Bus</code>, <code>ClipTransfer</code></td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Domain</th><th>Stamped</th><th>Covers</th></tr></thead>
+            <tbody>
+              <tr><td><code>ClockDomain::HostChip</code></td><td>in USB interrupt context, the instant the real device's transfer completed</td><td>motion, usages, <code>HidIn</code>, the device's vendor IN</td></tr>
+              <tr><td><code>ClockDomain::DeviceChip</code></td><td>at the tap on the device chip</td><td><code>HidOut</code>, every OUT direction, a <A href="/library/advanced/raw">raw</A> vendor IN packet, <code>Control</code>, <code>Emit</code>, <code>Bus</code>, <code>ClipTransfer</code></td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           Stamps are <code>u32</code> microseconds from that chip's boot, so they{' '}
           <A href="/library/types/enums#clock-domain">wrap and restart at zero on reboot</A>.{' '}

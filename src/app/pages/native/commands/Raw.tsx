@@ -49,40 +49,46 @@ const Raw: Component = () => {
         <pre class="api-signature">RAW  0x19  ·  payload 2 + n bytes</pre>
         <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
         <div class="api-response-label">PAYLOAD</div>
-        <table class="byte-table">
-          <thead>
-            <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>0</td><td><code>ep_num</code></td><td><code>u8</code></td><td>endpoint number; low four bits used</td></tr>
-            <tr><td>1</td><td><code>dir</code></td><td><code>u8</code></td><td><code>1</code> IN, <code>2</code> OUT (the <A href="/native/commands/lock"><code>LOCK</code></A> direction byte)</td></tr>
-            <tr><td>2</td><td><code>bytes</code></td><td><code>u8[]</code></td><td>packet, verbatim; delimited by the frame <A href="/native/frame#layout"><code>LEN</code></A>, so at most 510 bytes</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="byte-table">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>0</td><td><code>ep_num</code></td><td><code>u8</code></td><td>endpoint number; low four bits used</td></tr>
+              <tr><td>1</td><td><code>dir</code></td><td><code>u8</code></td><td><code>1</code> IN, <code>2</code> OUT (the <A href="/native/commands/lock"><code>LOCK</code></A> direction byte)</td></tr>
+              <tr><td>2</td><td><code>bytes</code></td><td><code>u8[]</code></td><td>packet, verbatim; delimited by the frame <A href="/native/frame#layout"><code>LEN</code></A>, so at most 510 bytes</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">DIRECTION</div>
-        <table class="api-params">
-          <thead>
-            <tr><th>Value</th><th>Name</th><th>Effect</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><code>1</code></td><td>IN</td><td>queued on the clone's IN endpoint <code>ep_num</code> (HID interrupt, vendor interrupt or bulk) for the game PC to read</td></tr>
-            <tr><td><code>2</code></td><td>OUT</td><td>relayed through the host chip to OUT endpoint <code>ep_num</code> (HID interrupt, vendor interrupt or bulk) on the real device</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Value</th><th>Name</th><th>Effect</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>1</code></td><td>IN</td><td>queued on the clone's IN endpoint <code>ep_num</code> (HID interrupt, vendor interrupt or bulk) for the game PC to read</td></tr>
+              <tr><td><code>2</code></td><td>OUT</td><td>relayed through the host chip to OUT endpoint <code>ep_num</code> (HID interrupt, vendor interrupt or bulk) on the real device</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">REFUSALS</div>
-        <table class="api-params">
-          <thead>
-            <tr><th>Refused when</th><th>Why</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>payload under 2 bytes</td><td>no endpoint address</td></tr>
-            <tr><td>clone not yet configured by the game PC</td><td>clone endpoints are unarmed until the PC's <code>SET_CONFIGURATION</code></td></tr>
-            <tr><td><code>dir</code> is not <code>1</code> or <code>2</code></td><td>only <code>1</code> (IN) and <code>2</code> (OUT) name an address</td></tr>
-            <tr><td>IN: no cloned HID or vendor IN endpoint <code>ep_num</code></td><td>the box writes only IN endpoints it cloned</td></tr>
-            <tr><td>OUT: no real-device OUT endpoint <code>ep_num</code></td><td>the host chip drops it, with no endpoint to submit to</td></tr>
-            <tr><td>an interrupt packet past its <A href="/native/commands/raw#packets">limit</A></td><td>an interrupt transfer is one packet, so a split would reach the PC as two reports</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Refused when</th><th>Why</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>payload under 2 bytes</td><td>no endpoint address</td></tr>
+              <tr><td>clone not yet configured by the game PC</td><td>clone endpoints are unarmed until the PC's <code>SET_CONFIGURATION</code></td></tr>
+              <tr><td><code>dir</code> is not <code>1</code> or <code>2</code></td><td>only <code>1</code> (IN) and <code>2</code> (OUT) name an address</td></tr>
+              <tr><td>IN: no cloned HID or vendor IN endpoint <code>ep_num</code></td><td>the box writes only IN endpoints it cloned</td></tr>
+              <tr><td>OUT: no real-device OUT endpoint <code>ep_num</code></td><td>the host chip drops it, with no endpoint to submit to</td></tr>
+              <tr><td>an interrupt packet past its <A href="/native/commands/raw#packets">limit</A></td><td>an interrupt transfer is one packet, so a split would reach the PC as two reports</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">EFFECT</div>
         <p>
           The bytes reach the endpoint as given. <code>RAW</code> has no reply; an{' '}
@@ -147,16 +153,18 @@ const Raw: Component = () => {
           An OUT packet is the endpoint's <code>wMaxPacketSize</code> on the wire, as IN; the
           inter-chip relay carries a bulk payload in pieces of at most 64 bytes.
         </p>
-        <table class="api-params">
-          <thead>
-            <tr><th>Aspect</th><th><code>dir = 1</code>, IN</th><th><code>dir = 2</code>, OUT</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>Interrupt</td><td>one packet, at most the endpoint's <code>wMaxPacketSize</code> and at most 64 bytes; on a HID endpoint, one of exactly <code>wMaxPacketSize</code> is ended by a ZLP when the endpoint's largest Input report is longer, as a native report of that length is</td><td>one packet, at most the endpoint's <code>wMaxPacketSize</code></td></tr>
-            <tr><td>Bulk</td><td colspan="2">split at <code>wMaxPacketSize</code></td></tr>
-            <tr><td>Bulk end</td><td colspan="2">a short packet, or a zero-length packet (ZLP) when the payload is an exact multiple of <code>wMaxPacketSize</code>; an empty <code>bytes</code> sends one ZLP</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Aspect</th><th><code>dir = 1</code>, IN</th><th><code>dir = 2</code>, OUT</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Interrupt</td><td>one packet, at most the endpoint's <code>wMaxPacketSize</code> and at most 64 bytes; on a HID endpoint, one of exactly <code>wMaxPacketSize</code> is ended by a ZLP when the endpoint's largest Input report is longer, as a native report of that length is</td><td>one packet, at most the endpoint's <code>wMaxPacketSize</code></td></tr>
+              <tr><td>Bulk</td><td colspan="2">split at <code>wMaxPacketSize</code></td></tr>
+              <tr><td>Bulk end</td><td colspan="2">a short packet, or a zero-length packet (ZLP) when the payload is an exact multiple of <code>wMaxPacketSize</code>; an empty <code>bytes</code> sends one ZLP</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">SPLIT</div>
         <pre class="diagram">{`  bulk, wMaxPacketSize = 64
 
@@ -169,17 +177,19 @@ const Raw: Component = () => {
   bytes = 7     -->   [ 7 ]                    a short packet ends the transfer
   bytes = 8     -->   [ 8 ] [ ZLP ]            a whole packet short of 20: the PC's read ends at the ZLP`}</pre>
         <div class="api-response-label">QUEUES</div>
-        <table class="api-params">
-          <thead>
-            <tr><th>Name</th><th>Behaviour</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>HID IN, 8 reports</td><td>drops the device's oldest zero-length packet when full, counted in <code>relay_drops</code>; else the oldest native report, else the oldest <code>RAW</code> one, counted in <A href="/native/commands/requests#stats"><code>tx_drops</code></A></td></tr>
-            <tr><td>vendor interrupt IN, 8 packets</td><td>drops the oldest packet when full, counted in <A href="/native/commands/requests#stats"><code>relay_drops</code></A></td></tr>
-            <tr><td>vendor bulk IN, 8 packets</td><td>drops the new packet when full, counted in <code>relay_drops</code>; at 6 queued it pauses the native bulk stream until the queue drains to 2</td></tr>
-            <tr><td>OUT relay, 16 packets across all endpoints</td><td>each waits its turn behind the device's two-packet hold, as the PC's writes do, and the PC's writes to that endpoint wait behind it (one the clone had already taken a read for goes first); one past 16 is dropped, counted in <code>relay_drops</code></td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Name</th><th>Behaviour</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>HID IN, 8 reports</td><td>drops the device's oldest zero-length packet when full, counted in <code>relay_drops</code>; else the oldest native report, else the oldest <code>RAW</code> one, counted in <A href="/native/commands/requests#stats"><code>tx_drops</code></A></td></tr>
+              <tr><td>vendor interrupt IN, 8 packets</td><td>drops the oldest packet when full, counted in <A href="/native/commands/requests#stats"><code>relay_drops</code></A></td></tr>
+              <tr><td>vendor bulk IN, 8 packets</td><td>drops the new packet when full, counted in <code>relay_drops</code>; at 6 queued it pauses the native bulk stream until the queue drains to 2</td></tr>
+              <tr><td>OUT relay, 16 packets across all endpoints</td><td>each waits its turn behind the device's two-packet hold, as the PC's writes do, and the PC's writes to that endpoint wait behind it (one the clone had already taken a read for goes first); one past 16 is dropped, counted in <code>relay_drops</code></td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           The device's own reports take at most one place in an interrupt IN queue: the box polls the device
           only as the PC takes what the last poll brought, so the rest of the queue is room for{' '}
@@ -217,15 +227,17 @@ const Raw: Component = () => {
           <A href="/native/commands/option#render">rendering</A> and{' '}
           <A href="/native/injection">injection</A>.
         </p>
-        <table class="api-params">
-          <thead>
-            <tr><th>Mechanism</th><th>Effect</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>report merging</td><td>sums motion between other queued reports and keeps each <code>RAW</code> report whole, byte for byte</td></tr>
-            <tr><td>change suppression</td><td>records a <code>RAW</code> report shaped like the mouse, keyboard or media report the box injects into as the last report emitted, the baseline for injected frames</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Mechanism</th><th>Effect</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>report merging</td><td>sums motion between other queued reports and keeps each <code>RAW</code> report whole, byte for byte</td></tr>
+              <tr><td>change suppression</td><td>records a <code>RAW</code> report shaped like the mouse, keyboard or media report the box injects into as the last report emitted, the baseline for injected frames</td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           A <A href="/native/commands/clip#items">clip raw item</A> is the same packet on a
           clip tick, with its own release rule.
@@ -239,16 +251,18 @@ const Raw: Component = () => {
           passes. The <A href="/native/commands/catch#catch"><code>HID_IN</code></A> and OUT taps sit
           upstream of <code>RAW</code>'s entry point.
         </p>
-        <table class="api-params">
-          <thead>
-            <tr><th>When</th><th>Raises</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>the game PC reads a <code>RAW</code> report off a HID IN endpoint</td><td><A href="/native/commands/catch#catch"><code>EMIT</code></A> (<code>9</code>), <code>dir = 1</code></td></tr>
-            <tr><td>a <code>RAW</code> packet enters a vendor IN queue</td><td><A href="/native/commands/catch#catch"><code>VEND_INTR</code></A> (<code>6</code>) or <A href="/native/commands/catch#catch"><code>VEND_BULK</code></A> (<code>7</code>), <code>dir = 1</code>, stamped <A href="/native/commands/catch#clocks"><code>clk = 1</code></A> by the device chip; an empty packet carries the ZLP <A href="/native/commands/catch#traffic-event">flag</A>, and bulk the end-of-transfer flag too</td></tr>
-            <tr><td>the game PC reads a <code>RAW</code> packet off a vendor IN endpoint, an empty one with the ZLP flag</td><td><code>EMIT</code> (<code>9</code>), <code>dir = 1</code></td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>When</th><th>Raises</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>the game PC reads a <code>RAW</code> report off a HID IN endpoint</td><td><A href="/native/commands/catch#catch"><code>EMIT</code></A> (<code>9</code>), <code>dir = 1</code></td></tr>
+              <tr><td>a <code>RAW</code> packet enters a vendor IN queue</td><td><A href="/native/commands/catch#catch"><code>VEND_INTR</code></A> (<code>6</code>) or <A href="/native/commands/catch#catch"><code>VEND_BULK</code></A> (<code>7</code>), <code>dir = 1</code>, stamped <A href="/native/commands/catch#clocks"><code>clk = 1</code></A> by the device chip; an empty packet carries the ZLP <A href="/native/commands/catch#traffic-event">flag</A>, and bulk the end-of-transfer flag too</td></tr>
+              <tr><td>the game PC reads a <code>RAW</code> packet off a vendor IN endpoint, an empty one with the ZLP flag</td><td><code>EMIT</code> (<code>9</code>), <code>dir = 1</code></td></tr>
+            </tbody>
+          </table>
+        </div>
       </DocSection>
     </>
   );

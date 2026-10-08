@@ -44,16 +44,18 @@ const Raw: Component = () => {
       <DocSection id="raw" title="raw" caption="One report on one endpoint, fire-and-forget">
         <pre class="api-signature">fn raw(&self, ep: u8, direction: Direction, bytes: &[u8]) -&gt; Result&lt;()&gt;</pre>
         <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
-        <table class="api-params">
-          <thead>
-            <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><code>ep</code></td><td><code>u8</code></td><td>Cloned endpoint number, 0 to 15.</td></tr>
-            <tr><td><code>direction</code></td><td><A href="/library/types/enums#direction"><code>Direction</code></A></td><td><code>IN</code> emits toward the game PC, <code>OUT</code> relays to the real device. Any other is <A href="/library/types/errors#errors"><code>Error::RawDirection</code></A>.</td></tr>
-            <tr><td><code>bytes</code></td><td><code>&amp;[u8]</code></td><td>The report, sent as given, at most 510 bytes. An interrupt report fits one packet; a bulk payload is split, per <A href="/library/advanced/raw#size">packet size</A>.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>ep</code></td><td><code>u8</code></td><td>Cloned endpoint number, 0 to 15.</td></tr>
+              <tr><td><code>direction</code></td><td><A href="/library/types/enums#direction"><code>Direction</code></A></td><td><code>IN</code> emits toward the game PC, <code>OUT</code> relays to the real device. Any other is <A href="/library/types/errors#errors"><code>Error::RawDirection</code></A>.</td></tr>
+              <tr><td><code>bytes</code></td><td><code>&amp;[u8]</code></td><td>The report, sent as given, at most 510 bytes. An interrupt report fits one packet; a bulk payload is split, per <A href="/library/advanced/raw#size">packet size</A>.</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`use medius::{Device, Direction};
 
@@ -114,12 +116,14 @@ device.raw(1, Direction::IN, &[0x00, 0x01, 0x00, 0x00])?;  // one report on inte
           <A href="/library/advanced/patch#apply-patch"><code>apply_patch</code></A> read the opt-in
           before sending; <code>raw</code> runs per report, so it sends without asking.
         </p>
-        <table class="api-params">
-          <thead><tr><th>Error</th><th>Returned on</th></tr></thead>
-          <tbody>
-            <tr><td><A href="/library/types/errors#errors"><code>ImperfectRequired</code></A></td><td><code>set_rewrite</code> or <code>apply_patch</code>, when the box reports the opt-in off. Turn it on with <A href="/library/options#allow-imperfect-clones"><code>allow_imperfect_clones(true)</code></A>.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Error</th><th>Returned on</th></tr></thead>
+            <tbody>
+              <tr><td><A href="/library/types/errors#errors"><code>ImperfectRequired</code></A></td><td><code>set_rewrite</code> or <code>apply_patch</code>, when the box reports the opt-in off. Turn it on with <A href="/library/options#allow-imperfect-clones"><code>allow_imperfect_clones(true)</code></A>.</td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           The opt-in is a persistent <A href="/library/options">box option</A>, read back with{' '}
           <A href="/library/options#query-imperfect"><code>query_imperfect</code></A>; the native{' '}

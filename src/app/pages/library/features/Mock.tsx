@@ -43,30 +43,32 @@ let device = Device::with_mock(mock.clone());
         <p><span class="api-badge api-badge--responded">Blocks</span></p>
 
         <div class="api-response-label">CONSTRUCTORS</div>
-        <table class="api-params">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Handshake</th>
-              <th>Returns</th>
-              <th>Description</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>with_mock</code></td>
-              <td>No</td>
-              <td><code>Device</code></td>
-              <td>Wraps the fake.</td>
-            </tr>
-            <tr>
-              <td><code>open_mock</code></td>
-              <td>Yes</td>
-              <td><A href="/library/types/errors"><code>Result&lt;Device&gt;</code></A></td>
-              <td>Also runs the version handshake, so it can fail as a real port can.</td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Handshake</th>
+                <th>Returns</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>with_mock</code></td>
+                <td>No</td>
+                <td><code>Device</code></td>
+                <td>Wraps the fake.</td>
+              </tr>
+              <tr>
+                <td><code>open_mock</code></td>
+                <td>Yes</td>
+                <td><A href="/library/types/errors"><code>Result&lt;Device&gt;</code></A></td>
+                <td>Also runs the version handshake, so it can fail as a real port can.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`use medius::{Device, MockBox};
@@ -154,38 +156,40 @@ assert!(!device.query_health()?.mouse_attached);`}</code></pre>
         </p>
 
         <div class="api-response-label">METHODS</div>
-        <table class="api-params">
-          <thead>
-            <tr><th>Name</th><th>Raises</th><th>Notes</th></tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>push_log</code></td>
-              <td>a <A href="/library/types/structs#log-line"><code>LogLine</code></A> on <A href="/library/diagnostics#logs"><code>logs()</code></A></td>
-              <td>-</td>
-            </tr>
-            <tr>
-              <td><code>push_raw</code></td>
-              <td>arbitrary bytes</td>
-              <td>-</td>
-            </tr>
-            <tr>
-              <td><code>push_motion</code></td>
-              <td><code>Motion</code> on an <A href="/library/catch#event-stream"><code>EventStream</code></A></td>
-              <td>Stamps itself <A href="/library/types/enums#clock-domain"><code>ClockDomain::HostChip</code></A>, the only domain the box stamps this frame in.</td>
-            </tr>
-            <tr>
-              <td><code>push_usages</code></td>
-              <td><code>Usages</code> on an <A href="/library/catch#event-stream"><code>EventStream</code></A></td>
-              <td>Stamps itself <code>HostChip</code> for the same reason, and carries its own <code>class</code>, so a test can push the empty snapshot.</td>
-            </tr>
-            <tr>
-              <td><code>push_traffic</code></td>
-              <td><code>Traffic</code> on an <A href="/library/catch#event-stream"><code>EventStream</code></A></td>
-              <td><code>true_len</code> may differ from <code>bytes.len()</code>, to exercise <code>truncated()</code> with no real capture.</td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Name</th><th>Raises</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>push_log</code></td>
+                <td>a <A href="/library/types/structs#log-line"><code>LogLine</code></A> on <A href="/library/diagnostics#logs"><code>logs()</code></A></td>
+                <td>-</td>
+              </tr>
+              <tr>
+                <td><code>push_raw</code></td>
+                <td>arbitrary bytes</td>
+                <td>-</td>
+              </tr>
+              <tr>
+                <td><code>push_motion</code></td>
+                <td><code>Motion</code> on an <A href="/library/catch#event-stream"><code>EventStream</code></A></td>
+                <td>Stamps itself <A href="/library/types/enums#clock-domain"><code>ClockDomain::HostChip</code></A>, the only domain the box stamps this frame in.</td>
+              </tr>
+              <tr>
+                <td><code>push_usages</code></td>
+                <td><code>Usages</code> on an <A href="/library/catch#event-stream"><code>EventStream</code></A></td>
+                <td>Stamps itself <code>HostChip</code> for the same reason, and carries its own <code>class</code>, so a test can push the empty snapshot.</td>
+              </tr>
+              <tr>
+                <td><code>push_traffic</code></td>
+                <td><code>Traffic</code> on an <A href="/library/catch#event-stream"><code>EventStream</code></A></td>
+                <td><code>true_len</code> may differ from <code>bytes.len()</code>, to exercise <code>truncated()</code> with no real capture.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
         <p>
           The three event rows each name one{' '}
@@ -230,37 +234,39 @@ assert!(matches!(stream.recv()?, CatchEvent::Traffic(t) if t.truncated()));`}</c
         <p><span class="api-badge api-badge--executed">No round-trip</span></p>
 
         <div class="api-response-label">METHODS</div>
-        <table class="api-params">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Returns</th>
-              <th>Description</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>recorded_frames</code></td>
-              <td><A href="/library/types/frames"><code>Vec&lt;DecodedFrame&gt;</code></A></td>
-              <td>Every command the host sent so far, decoded, in order.</td>
-            </tr>
-            <tr>
-              <td><code>recorded</code></td>
-              <td><code>usize</code></td>
-              <td>Commands recorded so far.</td>
-            </tr>
-            <tr>
-              <td><code>saw</code></td>
-              <td><code>bool</code></td>
-              <td>Whether the host sent at least one frame of the given type.</td>
-            </tr>
-            <tr>
-              <td><code>clear_recorded</code></td>
-              <td><code>()</code></td>
-              <td>Drops the recorded history, so later asserts see only the next phase.</td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Returns</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>recorded_frames</code></td>
+                <td><A href="/library/types/frames"><code>Vec&lt;DecodedFrame&gt;</code></A></td>
+                <td>Every command the host sent so far, decoded, in order.</td>
+              </tr>
+              <tr>
+                <td><code>recorded</code></td>
+                <td><code>usize</code></td>
+                <td>Commands recorded so far.</td>
+              </tr>
+              <tr>
+                <td><code>saw</code></td>
+                <td><code>bool</code></td>
+                <td>Whether the host sent at least one frame of the given type.</td>
+              </tr>
+              <tr>
+                <td><code>clear_recorded</code></td>
+                <td><code>()</code></td>
+                <td>Drops the recorded history, so later asserts see only the next phase.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
         <p>
           A <A href="/library/types/frames"><code>DecodedFrame</code></A> from a{' '}
@@ -299,41 +305,45 @@ mock.clear_recorded(); // next assertions start from an empty record`}</code></p
         <p><span class="api-badge api-badge--executed">No round-trip</span></p>
 
         <div class="api-response-label">METHODS</div>
-        <table class="api-params">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Returns</th>
-              <th>Description</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>with_clip_settings</code>, <code>set_clip_settings</code></td>
-              <td><code>MockBox</code>, nothing</td>
-              <td>Set the <A href="/library/types/structs#clip-settings"><code>ClipSettings</code></A> <code>query_config</code> replies with. Its packet triggers are bound in order, as <code>bind_packet</code> binds them, under the opt-in the mock holds when scripted; script the opt-in first for a consuming one.</td>
-            </tr>
-            <tr>
-              <td><code>clip_packet</code></td>
-              <td><code>(Option&lt;ClipAction&gt;, bool)</code></td>
-              <td>Run one packet through the <A href="/library/clip#packet-triggers">packet triggers</A>, as the box does. The most specific trigger the packet matches counts it in its <code>hits</code>. The action is <code>None</code> when no trigger matches, and when that trigger is <code>once_per_run</code> and the packet continues a run; the bool is whether that trigger consumes the packet.</td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Returns</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>with_clip_settings</code>, <code>set_clip_settings</code></td>
+                <td><code>MockBox</code>, nothing</td>
+                <td>Set the <A href="/library/types/structs#clip-settings"><code>ClipSettings</code></A> <code>query_config</code> replies with. Its packet triggers are bound in order, as <code>bind_packet</code> binds them, under the opt-in the mock holds when scripted; script the opt-in first for a consuming one.</td>
+              </tr>
+              <tr>
+                <td><code>clip_packet</code></td>
+                <td><code>(Option&lt;ClipAction&gt;, bool)</code></td>
+                <td>Run one packet through the <A href="/library/clip#packet-triggers">packet triggers</A>, as the box does. The most specific trigger the packet matches counts it in its <code>hits</code>. The action is <code>None</code> when no trigger matches, and when that trigger is <code>once_per_run</code> and the packet continues a run; the bool is whether that trigger consumes the packet.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">EFFECT</div>
-        <table class="api-params">
-          <thead>
-            <tr><th>Call</th><th>Effect</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><code>query_status</code></td><td>Replies with the scripted <A href="/library/types/structs#clip-status"><code>ClipStatus</code></A>.</td></tr>
-            <tr><td><code>query_config</code></td><td>Replies with the scripted settings plus the mock's bound packet triggers, each with its <code>hits</code>.</td></tr>
-            <tr><td><code>bind_packet</code>, <code>unbind_packet</code></td><td>Add to or remove from the mock's packet triggers, through the box's checks, the 112-byte pool and the opt-in included, in the box's order.</td></tr>
-            <tr><td><code>clear_triggers</code></td><td>Clears both kinds; <code>reset</code> clears the whole clip config.</td></tr>
-            <tr><td><code>set_imperfect_status</code>, <code>with_imperfect</code>, <code>allow_imperfect_clones</code></td><td>With the opt-in off, the mock drops its consuming packet triggers, as the box does.</td></tr>
-            <tr><td><code>set_retain</code>, <code>finalize</code>, <code>bind</code>, <code>append</code>, the engine verbs</td><td>Recorded frames. The <code>query_config</code> and <code>query_status</code> replies stay as scripted.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Call</th><th>Effect</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>query_status</code></td><td>Replies with the scripted <A href="/library/types/structs#clip-status"><code>ClipStatus</code></A>.</td></tr>
+              <tr><td><code>query_config</code></td><td>Replies with the scripted settings plus the mock's bound packet triggers, each with its <code>hits</code>.</td></tr>
+              <tr><td><code>bind_packet</code>, <code>unbind_packet</code></td><td>Add to or remove from the mock's packet triggers, through the box's checks, the 112-byte pool and the opt-in included, in the box's order.</td></tr>
+              <tr><td><code>clear_triggers</code></td><td>Clears both kinds; <code>reset</code> clears the whole clip config.</td></tr>
+              <tr><td><code>set_imperfect_status</code>, <code>with_imperfect</code>, <code>allow_imperfect_clones</code></td><td>With the opt-in off, the mock drops its consuming packet triggers, as the box does.</td></tr>
+              <tr><td><code>set_retain</code>, <code>finalize</code>, <code>bind</code>, <code>append</code>, the engine verbs</td><td>Recorded frames. The <code>query_config</code> and <code>query_status</code> replies stay as scripted.</td></tr>
+            </tbody>
+          </table>
+        </div>
 
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`use medius::{ClipAction, ClipPacketTrigger, Device, Direction, MockBox, TrafficClass};
@@ -403,33 +413,35 @@ assert!(matches!(err, Error::BadProtoVer { got: 10 }));`}</code></pre>
         </p>
 
         <div class="api-response-label">METHODS</div>
-        <table class="api-params">
-          <thead>
-            <tr><th>Name</th><th>Simulates</th><th>Detected by</th></tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>restart</code></td>
-              <td>A device-chip boot. A <code>RESET</code> with its store flag and <code>reboot(RebootTarget::DeviceRun)</code> restart the mock too.</td>
-              <td>The hello, now and again on the next frame the mock receives; <code>session</code> back at 0.</td>
-            </tr>
-            <tr>
-              <td><code>link_lost</code></td>
-              <td>The link between the box's chips dropping and coming back. The clone stays up.</td>
-              <td><A href="/library/types/structs#stats"><code>Stats::session</code></A> moving.</td>
-            </tr>
-            <tr>
-              <td><code>detach</code></td>
-              <td>The real device detaching. With <code>back_within_grace</code> it re-attaches inside the 250 ms grace and the clone stays up; without, the clone is down until <code>attach</code>.</td>
-              <td><code>session</code> moving; the recovery waits for a clone.</td>
-            </tr>
-            <tr>
-              <td><code>attach</code></td>
-              <td>A device attaching. A clone that was up is cloned again, which releases the session; one that was down comes up with nothing to release.</td>
-              <td>A clone for the recovery to re-send to.</td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Name</th><th>Simulates</th><th>Detected by</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>restart</code></td>
+                <td>A device-chip boot. A <code>RESET</code> with its store flag and <code>reboot(RebootTarget::DeviceRun)</code> restart the mock too.</td>
+                <td>The hello, now and again on the next frame the mock receives; <code>session</code> back at 0.</td>
+              </tr>
+              <tr>
+                <td><code>link_lost</code></td>
+                <td>The link between the box's chips dropping and coming back. The clone stays up.</td>
+                <td><A href="/library/types/structs#stats"><code>Stats::session</code></A> moving.</td>
+              </tr>
+              <tr>
+                <td><code>detach</code></td>
+                <td>The real device detaching. With <code>back_within_grace</code> it re-attaches inside the 250 ms grace and the clone stays up; without, the clone is down until <code>attach</code>.</td>
+                <td><code>session</code> moving; the recovery waits for a clone.</td>
+              </tr>
+              <tr>
+                <td><code>attach</code></td>
+                <td>A device attaching. A clone that was up is cloned again, which releases the session; one that was down comes up with nothing to release.</td>
+                <td>A clone for the recovery to re-send to.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           As on the box, <code>session</code> counts a release only when a command other than a{' '}
           <code>QUERY</code> arrived since the last one.

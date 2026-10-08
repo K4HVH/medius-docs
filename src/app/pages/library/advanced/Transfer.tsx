@@ -38,14 +38,16 @@ const Transfer: Component = () => {
         <pre class="api-signature">fn transfer(&self, ep: u8, setup: Setup, out: &[u8]) -&gt; Result&lt;TransferOutcome&gt;</pre>
         <pre class="api-signature">fn transfer_timeout(&self, ep: u8, setup: Setup, out: &[u8], timeout: Duration) -&gt; Result&lt;TransferOutcome&gt;</pre>
         <p><span class="api-badge api-badge--responded">Blocks</span></p>
-        <table class="api-params">
-          <thead><tr><th>Parameter</th><th>Type</th><th>Description</th></tr></thead>
-          <tbody>
-            <tr><td><code>ep</code></td><td><code>u8</code></td><td><code>0</code> for EP0, or a control endpoint number the device declares.</td></tr>
-            <tr><td><code>setup</code></td><td><A href="/library/types/structs#setup"><code>Setup</code></A></td><td>Eight-byte setup packet.</td></tr>
-            <tr><td><code>out</code></td><td><code>&amp;[u8]</code></td><td>OUT data stage, sent after the setup packet. Empty for an IN transfer.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Parameter</th><th>Type</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td><code>ep</code></td><td><code>u8</code></td><td><code>0</code> for EP0, or a control endpoint number the device declares.</td></tr>
+              <tr><td><code>setup</code></td><td><A href="/library/types/structs#setup"><code>Setup</code></A></td><td>Eight-byte setup packet.</td></tr>
+              <tr><td><code>out</code></td><td><code>&amp;[u8]</code></td><td>OUT data stage, sent after the setup packet. Empty for an IN transfer.</td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           <code>Ok(_)</code> means the box replied; a{' '}
           <A href="/library/types/enums#transfer-status"><code>TransferStatus</code></A> other than{' '}

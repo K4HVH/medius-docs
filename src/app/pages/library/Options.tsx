@@ -13,18 +13,20 @@ const Options: Component = () => {
           command; <A href="/library/admin#factory-reset"><code>factory_reset</code></A> returns all
           seven to their defaults.
         </p>
-        <table class="api-params">
-          <thead><tr><th>Option</th><th>Set</th><th>Read</th></tr></thead>
-          <tbody>
-            <tr><td>imperfect clone</td><td><A href="/library/options#allow-imperfect-clones"><code>allow_imperfect_clones</code></A></td><td><A href="/library/options#query-imperfect"><code>query_imperfect</code></A></td></tr>
-            <tr><td>movement riding</td><td><A href="/library/options#set-movement-riding"><code>set_movement_riding</code></A></td><td><A href="/library/options#query-movement-riding"><code>query_movement_riding</code></A></td></tr>
-            <tr><td>emit-rate pacing</td><td><A href="/library/options#set-emit-pace"><code>set_emit_pace</code></A></td><td><A href="/library/options#query-emit-pace"><code>query_emit_pace</code></A></td></tr>
-            <tr><td>box name</td><td><A href="/library/options#set-name"><code>set_name</code></A> / <A href="/library/options#clear-name"><code>clear_name</code></A></td><td><A href="/library/types/structs#version"><code>Version::name</code></A></td></tr>
-            <tr><td>bearing</td><td><A href="/library/options#set-bearing"><code>set_bearing</code></A></td><td><A href="/library/options#query-bearing"><code>query_bearing</code></A></td></tr>
-            <tr><td>motion texture</td><td><A href="/library/options#set-render"><code>set_render</code></A></td><td><A href="/library/options#query-render"><code>query_render</code></A></td></tr>
-            <tr><td>injection spreading</td><td><A href="/library/options#set-spread"><code>set_spread</code></A></td><td><A href="/library/options#query-spread"><code>query_spread</code></A></td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Option</th><th>Set</th><th>Read</th></tr></thead>
+            <tbody>
+              <tr><td>imperfect clone</td><td><A href="/library/options#allow-imperfect-clones"><code>allow_imperfect_clones</code></A></td><td><A href="/library/options#query-imperfect"><code>query_imperfect</code></A></td></tr>
+              <tr><td>movement riding</td><td><A href="/library/options#set-movement-riding"><code>set_movement_riding</code></A></td><td><A href="/library/options#query-movement-riding"><code>query_movement_riding</code></A></td></tr>
+              <tr><td>emit-rate pacing</td><td><A href="/library/options#set-emit-pace"><code>set_emit_pace</code></A></td><td><A href="/library/options#query-emit-pace"><code>query_emit_pace</code></A></td></tr>
+              <tr><td>box name</td><td><A href="/library/options#set-name"><code>set_name</code></A> / <A href="/library/options#clear-name"><code>clear_name</code></A></td><td><A href="/library/types/structs#version"><code>Version::name</code></A></td></tr>
+              <tr><td>bearing</td><td><A href="/library/options#set-bearing"><code>set_bearing</code></A></td><td><A href="/library/options#query-bearing"><code>query_bearing</code></A></td></tr>
+              <tr><td>motion texture</td><td><A href="/library/options#set-render"><code>set_render</code></A></td><td><A href="/library/options#query-render"><code>query_render</code></A></td></tr>
+              <tr><td>injection spreading</td><td><A href="/library/options#set-spread"><code>set_spread</code></A></td><td><A href="/library/options#query-spread"><code>query_spread</code></A></td></tr>
+            </tbody>
+          </table>
+        </div>
       </PageHeader>
 
       <DocSection id="allow-imperfect-clones" title="allow_imperfect_clones" caption="Clone anyway, and admit the advanced control layer">
@@ -38,29 +40,33 @@ const Options: Component = () => {
           <A href="/library/advanced/patch">patch set</A> it serves: turned on, a stored set the box
           has not refused; turned off, a set it is serving.
         </p>
-        <table class="api-params">
-          <thead>
-            <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><code>allow</code></td><td><code>bool</code></td><td>Clone anyway, or stay faithful-only.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>allow</code></td><td><code>bool</code></td><td>Clone anyway, or stay faithful-only.</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">GATES</div>
-        <table class="api-params">
-          <thead>
-            <tr><th>What</th><th>Opt-in off</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>a device the box can't clone exactly</td><td>Refused: no clone appears.</td></tr>
-            <tr><td>a forced rate, <A href="/library/options#set-emit-pace"><code>set_emit_pace</code></A>'s <code>force_hz</code></td><td>Not applied.</td></tr>
-            <tr><td><A href="/library/advanced/rewrite">rewrite rules</A></td><td><code>set_rewrite</code> returns <A href="/library/types/errors#errors"><code>ImperfectRequired</code></A>; <code>clear_rewrite</code> still runs, and turning the opt-in off clears the table.</td></tr>
-            <tr><td><A href="/library/advanced/patch">descriptor patches</A></td><td>Stored, not applied; <code>apply_patch</code> returns <code>ImperfectRequired</code>.</td></tr>
-            <tr><td><A href="/library/advanced/transfer">control transfers</A></td><td>Replied <code>Refused</code>.</td></tr>
-            <tr><td><A href="/library/advanced/raw">raw reports</A>, and a clip's raw and transfer items</td><td>Dropped by the box; turning the opt-in off drops queued clip transfers.</td></tr>
-            <tr><td>a <A href="/library/clip#packet-triggers">clip packet trigger</A> that consumes</td><td>Refused by the box; turning the opt-in off removes held ones.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>What</th><th>Opt-in off</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>a device the box can't clone exactly</td><td>Refused: no clone appears.</td></tr>
+              <tr><td>a forced rate, <A href="/library/options#set-emit-pace"><code>set_emit_pace</code></A>'s <code>force_hz</code></td><td>Not applied.</td></tr>
+              <tr><td><A href="/library/advanced/rewrite">rewrite rules</A></td><td><code>set_rewrite</code> returns <A href="/library/types/errors#errors"><code>ImperfectRequired</code></A>; <code>clear_rewrite</code> still runs, and turning the opt-in off clears the table.</td></tr>
+              <tr><td><A href="/library/advanced/patch">descriptor patches</A></td><td>Stored, not applied; <code>apply_patch</code> returns <code>ImperfectRequired</code>.</td></tr>
+              <tr><td><A href="/library/advanced/transfer">control transfers</A></td><td>Replied <code>Refused</code>.</td></tr>
+              <tr><td><A href="/library/advanced/raw">raw reports</A>, and a clip's raw and transfer items</td><td>Dropped by the box; turning the opt-in off drops queued clip transfers.</td></tr>
+              <tr><td>a <A href="/library/clip#packet-triggers">clip packet trigger</A> that consumes</td><td>Refused by the box; turning the opt-in off removes held ones.</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="callout callout--info">
           <p>
             A device the box can't clone exactly has more than four IN endpoints live at once, or more
@@ -109,14 +115,16 @@ device.allow_imperfect_clones(true)?;   // re-clones if the attached device need
             <code>Against</code> scale stops applying at once.
           </p>
         </div>
-        <table class="api-params">
-          <thead>
-            <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><code>window</code></td><td><code>Option&lt;Duration&gt;</code></td><td><code>Some</code> with the ride window, or <code>None</code> to turn it off.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>window</code></td><td><code>Option&lt;Duration&gt;</code></td><td><code>Some</code> with the ride window, or <code>None</code> to turn it off.</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`use std::time::Duration;
 use medius::Device;
@@ -142,15 +150,17 @@ device.set_movement_riding(None)?;                             // back to gaples
             re-clones the box, which drops the control port for a few seconds.
           </p>
         </div>
-        <table class="api-params">
-          <thead>
-            <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><code>pace</code></td><td><A href="/library/types/enums#emit-pace"><code>EmitPace</code></A></td><td>Rate ceiling for injected motion.</td></tr>
-            <tr><td><code>force_hz</code></td><td><code>Option&lt;u16&gt;</code></td><td>The rate the clone advertises and the box polls the device at; <code>None</code> leaves the native interval.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>pace</code></td><td><A href="/library/types/enums#emit-pace"><code>EmitPace</code></A></td><td>Rate ceiling for injected motion.</td></tr>
+              <tr><td><code>force_hz</code></td><td><code>Option&lt;u16&gt;</code></td><td>The rate the clone advertises and the box polls the device at; <code>None</code> leaves the native interval.</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`use medius::{Device, EmitPace};
 
@@ -168,14 +178,16 @@ device.set_emit_pace(EmitPace::Learned, None)?;       // back to the default`}</
           run, capped at 32 bytes; an empty string clears it. It reads back on{' '}
           <A href="/library/types/structs#version"><code>Version::name</code></A>.
         </p>
-        <table class="api-params">
-          <thead>
-            <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><code>name</code></td><td><code>&amp;str</code></td><td>The new name, 1 to 32 printable ASCII characters.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>name</code></td><td><code>&amp;str</code></td><td>The new name, 1 to 32 printable ASCII characters.</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`use medius::Device;
 
@@ -208,15 +220,17 @@ device.clear_name()?;                  // back to "Medius-XXXX"`}</code></pre>
           direction of its last injected delta for <code>window</code> past the last one still owed,
           then has none and both relative directions stop applying.
         </p>
-        <table class="api-params">
-          <thead>
-            <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><code>window</code></td><td><code>Option&lt;Duration&gt;</code></td><td><code>Some</code> with the hold window, or <code>None</code> to turn the bearing off, leaving the relative directions inert whatever their scale.</td></tr>
-            <tr><td><code>mode</code></td><td><A href="/library/types/enums#bearing-mode"><code>BearingMode</code></A></td><td><code>PerAxis</code> or <code>Vector</code>.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>window</code></td><td><code>Option&lt;Duration&gt;</code></td><td><code>Some</code> with the hold window, or <code>None</code> to turn the bearing off, leaving the relative directions inert whatever their scale.</td></tr>
+              <tr><td><code>mode</code></td><td><A href="/library/types/enums#bearing-mode"><code>BearingMode</code></A></td><td><code>PerAxis</code> or <code>Vector</code>.</td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           <code>BEARING_WINDOW_DEFAULT</code> (20 ms) in <code>PerAxis</code> is the factory
           setting.
@@ -273,15 +287,17 @@ device.set_bearing(None, BearingMode::PerAxis)?; // and off again`}</code></pre>
             <A href="/library/options#query-render"><code>query_render</code></A> reports both.
           </p>
         </div>
-        <table class="api-params">
-          <thead>
-            <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><code>mode</code></td><td><A href="/library/types/enums#render-mode"><code>RenderMode</code></A></td><td>Rendering texture; the box boots at <code>Despiked</code>.</td></tr>
-            <tr><td><code>full</code></td><td><code>bool</code></td><td>Render native motion instead of relaying it; the box boots with it off.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>mode</code></td><td><A href="/library/types/enums#render-mode"><code>RenderMode</code></A></td><td>Rendering texture; the box boots at <code>Despiked</code>.</td></tr>
+              <tr><td><code>full</code></td><td><code>bool</code></td><td>Render native motion instead of relaying it; the box boots with it off.</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`use medius::{Device, RenderMode};
 
@@ -300,14 +316,16 @@ device.set_render(RenderMode::Off, false)?;        // renderer out of the path, 
           across: <code>0</code> puts the whole delta on the next report, <code>100</code> spreads it
           evenly over one interval, and above <code>100</code> carries a standing backlog.
         </p>
-        <table class="api-params">
-          <thead>
-            <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><code>percent</code></td><td><code>u16</code></td><td>Share of the command interval, in percent; the box boots at <code>100</code>.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>percent</code></td><td><code>u16</code></td><td>Share of the command interval, in percent; the box boots at <code>100</code>.</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="callout callout--warning">
           <p>
             Spreading adds half the interval of latency on average, about 4 ms on a 125 Hz loop. The

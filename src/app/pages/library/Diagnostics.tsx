@@ -43,58 +43,60 @@ const Diagnostics: Component = () => {
 
       <DocSection id="reading-logs" title="Reading the stream" caption="Blocking, polling, and draining">
         <div class="api-response-label">METHODS</div>
-        <table class="api-params">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Returns</th>
-              <th>Blocks</th>
-              <th>Description</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>recv()</code></td>
-              <td><code>Result&lt;LogLine&gt;</code></td>
-              <td>Yes</td>
-              <td>
-                Waits for the next line. <code>Err</code> is{' '}
-                <A href="/library/types/errors"><code>Error::Disconnected</code></A> once the link
-                is gone.
-              </td>
-            </tr>
-            <tr>
-              <td><code>try_recv()</code></td>
-              <td><code>Option&lt;LogLine&gt;</code></td>
-              <td>No</td>
-              <td>One queued line, or <code>None</code>.</td>
-            </tr>
-            <tr>
-              <td><code>recv_timeout(d)</code></td>
-              <td><code>Option&lt;LogLine&gt;</code></td>
-              <td>Up to <code>d</code></td>
-              <td>The next line within the window, or <code>None</code> on timeout.</td>
-            </tr>
-            <tr>
-              <td><code>try_iter()</code></td>
-              <td><code>impl Iterator</code></td>
-              <td>No</td>
-              <td>Drains every queued line, then stops.</td>
-            </tr>
-            <tr>
-              <td><code>recv_async().await</code></td>
-              <td><code>Result&lt;LogLine&gt;</code></td>
-              <td>Awaits</td>
-              <td>Awaits the next line (<code>async</code> feature), runtime-agnostic.</td>
-            </tr>
-            <tr>
-              <td><code>for line in stream</code></td>
-              <td><code>LogLine</code></td>
-              <td>Yes</td>
-              <td>Blocking <code>IntoIterator</code>; yields each line until the link closes.</td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Returns</th>
+                <th>Blocks</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>recv()</code></td>
+                <td><code>Result&lt;LogLine&gt;</code></td>
+                <td>Yes</td>
+                <td>
+                  Waits for the next line. <code>Err</code> is{' '}
+                  <A href="/library/types/errors"><code>Error::Disconnected</code></A> once the link
+                  is gone.
+                </td>
+              </tr>
+              <tr>
+                <td><code>try_recv()</code></td>
+                <td><code>Option&lt;LogLine&gt;</code></td>
+                <td>No</td>
+                <td>One queued line, or <code>None</code>.</td>
+              </tr>
+              <tr>
+                <td><code>recv_timeout(d)</code></td>
+                <td><code>Option&lt;LogLine&gt;</code></td>
+                <td>Up to <code>d</code></td>
+                <td>The next line within the window, or <code>None</code> on timeout.</td>
+              </tr>
+              <tr>
+                <td><code>try_iter()</code></td>
+                <td><code>impl Iterator</code></td>
+                <td>No</td>
+                <td>Drains every queued line, then stops.</td>
+              </tr>
+              <tr>
+                <td><code>recv_async().await</code></td>
+                <td><code>Result&lt;LogLine&gt;</code></td>
+                <td>Awaits</td>
+                <td>Awaits the next line (<code>async</code> feature), runtime-agnostic.</td>
+              </tr>
+              <tr>
+                <td><code>for line in stream</code></td>
+                <td><code>LogLine</code></td>
+                <td>Yes</td>
+                <td>Blocking <code>IntoIterator</code>; yields each line until the link closes.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
         <p>
           <code>try_iter()</code> or <code>try_recv()</code> for a per-frame loop;{' '}

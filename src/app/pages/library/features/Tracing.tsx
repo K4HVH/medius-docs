@@ -20,34 +20,36 @@ const Tracing: Component = () => {
       </PageHeader>
 
       <DocSection id="targets" title="Targets and levels" caption="What the crate emits and where">
-        <table class="api-params">
-          <thead>
-            <tr><th>Target</th><th>Levels</th><th>Emitted</th></tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>medius::device</code></td>
-              <td><code>INFO</code>, <code>DEBUG</code>, <code>WARN</code></td>
-              <td>
-                The <code>connect</code> span and <code>connected</code> event (<code>INFO</code>),
-                handshake retries (<code>DEBUG</code>) and failures (<code>WARN</code>), query resolved
-                (<code>DEBUG</code>) and timed out (<code>WARN</code>), the <code>reconnected</code>{' '}
-                event (<code>INFO</code>), plus box logs re-emitted with{' '}
-                <code>device_log=true</code>.
-              </td>
-            </tr>
-            <tr>
-              <td><code>medius::transport</code></td>
-              <td><code>TRACE</code></td>
-              <td>One event per frame written or read, with <code>dir</code>, <code>opcode</code>, <code>seq</code>, and <code>len</code>.</td>
-            </tr>
-            <tr>
-              <td><code>medius::flash</code></td>
-              <td><code>INFO</code>, <code>ERROR</code></td>
-              <td><A href="/library/update">Firmware update</A> progress and refusals.</td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Target</th><th>Levels</th><th>Emitted</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>medius::device</code></td>
+                <td><code>INFO</code>, <code>DEBUG</code>, <code>WARN</code></td>
+                <td>
+                  The <code>connect</code> span and <code>connected</code> event (<code>INFO</code>),
+                  handshake retries (<code>DEBUG</code>) and failures (<code>WARN</code>), query resolved
+                  (<code>DEBUG</code>) and timed out (<code>WARN</code>), the <code>reconnected</code>{' '}
+                  event (<code>INFO</code>), plus box logs re-emitted with{' '}
+                  <code>device_log=true</code>.
+                </td>
+              </tr>
+              <tr>
+                <td><code>medius::transport</code></td>
+                <td><code>TRACE</code></td>
+                <td>One event per frame written or read, with <code>dir</code>, <code>opcode</code>, <code>seq</code>, and <code>len</code>.</td>
+              </tr>
+              <tr>
+                <td><code>medius::flash</code></td>
+                <td><code>INFO</code>, <code>ERROR</code></td>
+                <td><A href="/library/update">Firmware update</A> progress and refusals.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
         <div class="callout callout--info">
           <p>
             Keepalive frames show up as ordinary <code>medius::transport</code> tx events.

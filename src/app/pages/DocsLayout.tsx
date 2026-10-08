@@ -12,7 +12,6 @@ import { routeFor } from '../routes';
 import { useBoxes, useNativeFlash } from './dashboard/context';
 import { BoxList } from './dashboard/BoxList';
 import Prism from '../prism';
-import '../../styles/docs.css';
 
 const BOX_ROUTES = new Set([
   '/dashboard',
@@ -22,8 +21,9 @@ const BOX_ROUTES = new Set([
   '/dashboard/advanced',
 ]);
 
-export const REVEAL_DOCS =
-  '.doc-section > p, .doc-h2, .doc-section .table-scroll, .doc-section .callout, .doc-section pre, .bytes, .go';
+// Each block of a section eases in on its own; an anchor group inside a section reveals its blocks, not
+// itself, so nothing moves twice.
+export const REVEAL_DOCS = '.doc-section > :not(div[id]), .doc-section > div[id] > *';
 
 const fontsReady = (): Promise<unknown> => document.fonts?.ready ?? Promise.resolve();
 

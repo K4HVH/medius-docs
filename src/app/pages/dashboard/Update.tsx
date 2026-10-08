@@ -11,7 +11,6 @@ import { useDashboard } from './context';
 import { ConnectPanel } from './ConnectPanel';
 import { WiringPorts } from './PortDiagram';
 import { PageHeader } from '../../shell/PageHeader';
-import '../../../styles/docs.css';
 
 type Step = 'choose' | 'update' | 'done' | 'sent';
 const row = { display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' } as const;

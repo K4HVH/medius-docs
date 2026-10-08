@@ -78,16 +78,18 @@ println!("{v}, link_up={}", h.link_up);`}</code></pre>
           <code>DEFAULT_KEEPALIVE_CADENCE</code> (500 ms) while anything is held, and re-sends held
           catch subscriptions, rewrite rules and transforms.
         </p>
-        <table class="api-params">
-          <thead>
-            <tr><th>State</th><th>Behaviour</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>Override held</td><td>Keepalive thread runs; the reply's <A href="/library/types/structs#stats"><code>session</code></A> counter says whether the box released the session.</td></tr>
-            <tr><td>Clip held</td><td>Keepalive thread runs while a <A href="/library/clip#clip">clip</A> is loaded (from <code>append</code> to <code>clear</code>), a clip setting is off its default, or a trigger of either kind is bound.</td></tr>
-            <tr><td>Idle</td><td>No <code>QUERY(STATS)</code> ticks. A <A href="/library/lifecycle#restart">device-chip restart</A> still starts a recovery: <code>QUERY(CAPS)</code> every 50 ms, every 500 ms after the first 5 s, until the box has a clone, then one <code>QUERY(STATS)</code> and one <code>QUERY(CLIP)</code>.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>State</th><th>Behaviour</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Override held</td><td>Keepalive thread runs; the reply's <A href="/library/types/structs#stats"><code>session</code></A> counter says whether the box released the session.</td></tr>
+              <tr><td>Clip held</td><td>Keepalive thread runs while a <A href="/library/clip#clip">clip</A> is loaded (from <code>append</code> to <code>clear</code>), a clip setting is off its default, or a trigger of either kind is bound.</td></tr>
+              <tr><td>Idle</td><td>No <code>QUERY(STATS)</code> ticks. A <A href="/library/lifecycle#restart">device-chip restart</A> still starts a recovery: <code>QUERY(CAPS)</code> every 50 ms, every 500 ms after the first 5 s, until the box has a clone, then one <code>QUERY(STATS)</code> and one <code>QUERY(CLIP)</code>.</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`device.press(Button::LEFT)?;
 
@@ -114,16 +116,18 @@ device.reset()?;`}</code></pre>
           <a href="https://doc.rust-lang.org/std/ops/trait.Drop.html" target="_blank" rel="noreferrer"><code>Drop</code></a>{' '}
           and tears the connection down.
         </p>
-        <table class="api-params">
-          <thead>
-            <tr><th>Step</th><th>What drop does</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>Signal</td><td>Sets the stop flag the reader and keepalive threads watch.</td></tr>
-            <tr><td>Join</td><td>Waits for both threads to exit.</td></tr>
-            <tr><td>Close</td><td>Releases the serial port as the transport drops.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Step</th><th>What drop does</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Signal</td><td>Sets the stop flag the reader and keepalive threads watch.</td></tr>
+              <tr><td>Join</td><td>Waits for both threads to exit.</td></tr>
+              <tr><td>Close</td><td>Releases the serial port as the transport drops.</td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           To return the box to passthrough at once, call <A href="/library/admin#reset"><code>reset</code></A> before drop.
         </p>

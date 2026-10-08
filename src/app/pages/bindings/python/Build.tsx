@@ -20,20 +20,22 @@ const Build: Component = () => {
           crate. On import, Python sets <code>medius.HAS_MOCK</code> from what the loaded library
           exposes.
         </p>
-        <table class="api-params">
-          <thead>
-            <tr><th>Feature</th><th>Cargo flag</th><th>Python surface</th><th><code>medius.HAS_MOCK</code></th><th>Adds</th></tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>mock</code></td>
-              <td><code>--features mock</code></td>
-              <td><code>MockBox().open()</code> / <code>.with_device()</code></td>
-              <td><code>HAS_MOCK</code></td>
-              <td>A scriptable in-process fake box. See <A href="/bindings/python/api#mock">Mock box</A>.</td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Feature</th><th>Cargo flag</th><th>Python surface</th><th><code>medius.HAS_MOCK</code></th><th>Adds</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>mock</code></td>
+                <td><code>--features mock</code></td>
+                <td><code>MockBox().open()</code> / <code>.with_device()</code></td>
+                <td><code>HAS_MOCK</code></td>
+                <td>A scriptable in-process fake box. See <A href="/bindings/python/api#mock">Mock box</A>.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
         <div class="callout callout--warning">
           <p>
             The <code><a href="https://pip.pypa.io" target="_blank" rel="noreferrer">pip</a> install medius</code>{' '}

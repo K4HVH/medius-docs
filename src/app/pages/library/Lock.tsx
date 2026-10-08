@@ -38,16 +38,18 @@ const Lock: Component = () => {
       <DocSection id="scale" title="scale" caption="Keep a percentage of a physical input">
         <pre class="api-signature">fn scale(&self, target: impl Into&lt;LockTarget&gt;, direction: Direction, scale: i16) -&gt; Result&lt;()&gt;</pre>
         <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
-        <table class="api-params">
-          <thead>
-            <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><code>target</code></td><td><code>impl Into&lt;<A href="/library/types/enums#lock-target">LockTarget</A>&gt;</code></td><td>An <A href="/library/types/enums#axis"><code>Axis</code></A> (X, Y, wheel, or pan) or any <A href="/library/types/structs#usage"><code>Usage</code></A> (button, key, or media).</td></tr>
-            <tr><td><code>direction</code></td><td><A href="/library/types/enums#direction"><code>Direction</code></A></td><td>A fixed sign or edge, or <code>With</code> / <code>Against</code> relative to the bearing. A relative direction on anything but an axis is <A href="/library/types/errors#errors"><code>Error::RelativeDirection</code></A>. Media has no edges, so an edge on it goes out as <code>Both</code>.</td></tr>
-            <tr><td><code>scale</code></td><td><code>i16</code></td><td>Percent of the physical value kept. <code>LOCK_SCALE_BLOCK</code> (0) blocks, <code>LOCK_SCALE_PASS</code> (100) passes untouched, up to <code>LOCK_SCALE_MAX</code> (255) amplifies, and down to <code>LOCK_SCALE_MIN</code> (-255) reverses. Outside that is <A href="/library/types/errors#errors"><code>Error::LockScaleRange</code></A>.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>target</code></td><td><code>impl Into&lt;<A href="/library/types/enums#lock-target">LockTarget</A>&gt;</code></td><td>An <A href="/library/types/enums#axis"><code>Axis</code></A> (X, Y, wheel, or pan) or any <A href="/library/types/structs#usage"><code>Usage</code></A> (button, key, or media).</td></tr>
+              <tr><td><code>direction</code></td><td><A href="/library/types/enums#direction"><code>Direction</code></A></td><td>A fixed sign or edge, or <code>With</code> / <code>Against</code> relative to the bearing. A relative direction on anything but an axis is <A href="/library/types/errors#errors"><code>Error::RelativeDirection</code></A>. Media has no edges, so an edge on it goes out as <code>Both</code>.</td></tr>
+              <tr><td><code>scale</code></td><td><code>i16</code></td><td>Percent of the physical value kept. <code>LOCK_SCALE_BLOCK</code> (0) blocks, <code>LOCK_SCALE_PASS</code> (100) passes untouched, up to <code>LOCK_SCALE_MAX</code> (255) amplifies, and down to <code>LOCK_SCALE_MIN</code> (-255) reverses. Outside that is <A href="/library/types/errors#errors"><code>Error::LockScaleRange</code></A>.</td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           A delta gets one fixed-direction scale times one relative one, so a block in either zeroes
           the product. <code>With</code> and <code>Against</code> need a live bearing (
@@ -85,15 +87,17 @@ device.scale(Axis::Y, Direction::Both, -100)?;   // Y inverted`}</code></pre>
           <A href="/library/types/enums#direction"><code>Direction</code></A> picks the sign or edge,
           also spelled <code>Direction::PRESS</code> and <code>Direction::RELEASE</code>.
         </p>
-        <table class="api-params">
-          <thead>
-            <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><code>target</code></td><td><code>impl Into&lt;<A href="/library/types/enums#lock-target">LockTarget</A>&gt;</code></td><td>An <A href="/library/types/enums#axis"><code>Axis</code></A> (X, Y, wheel, or pan) or any <A href="/library/types/structs#usage"><code>Usage</code></A> (button, key, or media).</td></tr>
-            <tr><td><code>direction</code></td><td><A href="/library/types/enums#direction"><code>Direction</code></A></td><td>Which sign or edge to block. An axis also takes the bearing-relative <code>With</code> / <code>Against</code>.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>target</code></td><td><code>impl Into&lt;<A href="/library/types/enums#lock-target">LockTarget</A>&gt;</code></td><td>An <A href="/library/types/enums#axis"><code>Axis</code></A> (X, Y, wheel, or pan) or any <A href="/library/types/structs#usage"><code>Usage</code></A> (button, key, or media).</td></tr>
+              <tr><td><code>direction</code></td><td><A href="/library/types/enums#direction"><code>Direction</code></A></td><td>Which sign or edge to block. An axis also takes the bearing-relative <code>With</code> / <code>Against</code>.</td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           A lock holds until <A href="/library/lock#unlock"><code>unlock</code></A>, control-PC
           silence, <A href="/library/admin#reset"><code>reset</code></A>, inter-chip link loss, or the

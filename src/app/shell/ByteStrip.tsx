@@ -8,6 +8,9 @@ export interface ByteField {
 
 const FRAMING = new Set(['sof', 'type', 'seq', 'len', 'crc16']);
 
+// Past this many characters a value is wider than a phone's strip.
+const LONG = 20;
+
 const bytesIn = (value: string) => Math.max(1, value.trim().split(/\s+/).length);
 
 // A frame on the wire: each value over its field name, the payload lit apart from the framing. The cells
@@ -64,7 +67,10 @@ export function ByteStrip(props: { fields: ByteField[] }) {
     <div class="bytes" ref={strip}>
       <For each={props.fields}>
         {(f) => (
-          <div classList={{ pl: !FRAMING.has(f.name.toLowerCase()) }} style={{ '--w': String(bytesIn(f.value)) }}>
+          <div
+            classList={{ pl: !FRAMING.has(f.name.toLowerCase()), long: f.value.length > LONG }}
+            style={{ '--w': String(bytesIn(f.value)) }}
+          >
             <b>{f.value}</b>
             <span>{f.name}</span>
           </div>

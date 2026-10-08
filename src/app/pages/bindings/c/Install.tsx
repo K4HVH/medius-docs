@@ -21,16 +21,18 @@ const Install: Component = () => {
           <a href="https://github.com/K4HVH/medius/releases" target="_blank" rel="noreferrer">Releases page</a>{' '}
           and unzip it.
         </p>
-        <table class="api-params">
-          <thead><tr><th>Platform</th><th>File</th></tr></thead>
-          <tbody>
-            <tr><td>Windows (64-bit)</td><td><code>medius-capi-x86_64-pc-windows-msvc.tar.gz</code></td></tr>
-            <tr><td>macOS (Apple Silicon, M1+)</td><td><code>medius-capi-aarch64-apple-darwin.tar.gz</code></td></tr>
-            <tr><td>macOS (Intel)</td><td><code>medius-capi-x86_64-apple-darwin.tar.gz</code></td></tr>
-            <tr><td>Linux (Intel/AMD 64-bit)</td><td><code>medius-capi-x86_64-unknown-linux-gnu.tar.gz</code></td></tr>
-            <tr><td>Linux (ARM64)</td><td><code>medius-capi-aarch64-unknown-linux-gnu.tar.gz</code></td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Platform</th><th>File</th></tr></thead>
+            <tbody>
+              <tr><td>Windows (64-bit)</td><td><code>medius-capi-x86_64-pc-windows-msvc.tar.gz</code></td></tr>
+              <tr><td>macOS (Apple Silicon, M1+)</td><td><code>medius-capi-aarch64-apple-darwin.tar.gz</code></td></tr>
+              <tr><td>macOS (Intel)</td><td><code>medius-capi-x86_64-apple-darwin.tar.gz</code></td></tr>
+              <tr><td>Linux (Intel/AMD 64-bit)</td><td><code>medius-capi-x86_64-unknown-linux-gnu.tar.gz</code></td></tr>
+              <tr><td>Linux (ARM64)</td><td><code>medius-capi-aarch64-unknown-linux-gnu.tar.gz</code></td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>Inside are two folders:</p>
         <pre class="diagram">{`medius-capi-<your-platform>/
 ├── include/

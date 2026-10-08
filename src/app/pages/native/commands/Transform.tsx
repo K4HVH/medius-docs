@@ -22,15 +22,17 @@ const Transform: Component = () => {
                                          |
                                          +-- button -> key / media, held on the
                                              destination's own interface`}</pre>
-        <table class="api-params">
-          <thead>
-            <tr><th>op</th><th>Name</th><th>Effect</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><code>0</code></td><td><code>REMAP</code></td><td>move the source field into the destination and clear the source</td></tr>
-            <tr><td><code>1</code></td><td><code>SWAP</code></td><td>exchange two axes: read both, then write both</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>op</th><th>Name</th><th>Effect</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>0</code></td><td><code>REMAP</code></td><td>move the source field into the destination and clear the source</td></tr>
+              <tr><td><code>1</code></td><td><code>SWAP</code></td><td>exchange two axes: read both, then write both</td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           To weigh a field, or reverse it, use{' '}
           <A href="/native/commands/lock#scale"><code>LOCK</code></A>, whose percent is signed. An{' '}
@@ -57,19 +59,21 @@ const Transform: Component = () => {
         <pre class="api-signature">TRANSFORM  0x1E  ·  payload 8 bytes</pre>
         <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
         <div class="api-response-label">PAYLOAD</div>
-        <table class="byte-table">
-          <thead>
-            <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>0</td><td><code>op</code></td><td><code>u8</code></td><td>operation (<A href="/native/commands/transform">table above</A>)</td></tr>
-            <tr><td>1</td><td><code>sclass</code></td><td><code>u8</code></td><td>source class: <code>0</code> button, <code>1</code> key, <code>2</code> media, <code>3</code> axis</td></tr>
-            <tr><td>2</td><td><code>sid</code></td><td><code>u16</code></td><td>source id within the class, little-endian</td></tr>
-            <tr><td>4</td><td><code>dclass</code></td><td><code>u8</code></td><td>destination class</td></tr>
-            <tr><td>5</td><td><code>did</code></td><td><code>u16</code></td><td>destination id, little-endian</td></tr>
-            <tr><td>7</td><td><code>state</code></td><td><code>u8</code></td><td><code>1</code> set (add or overwrite), <code>0</code> remove the keyed entry</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="byte-table">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>0</td><td><code>op</code></td><td><code>u8</code></td><td>operation (<A href="/native/commands/transform">table above</A>)</td></tr>
+              <tr><td>1</td><td><code>sclass</code></td><td><code>u8</code></td><td>source class: <code>0</code> button, <code>1</code> key, <code>2</code> media, <code>3</code> axis</td></tr>
+              <tr><td>2</td><td><code>sid</code></td><td><code>u16</code></td><td>source id within the class, little-endian</td></tr>
+              <tr><td>4</td><td><code>dclass</code></td><td><code>u8</code></td><td>destination class</td></tr>
+              <tr><td>5</td><td><code>did</code></td><td><code>u16</code></td><td>destination id, little-endian</td></tr>
+              <tr><td>7</td><td><code>state</code></td><td><code>u8</code></td><td><code>1</code> set (add or overwrite), <code>0</code> remove the keyed entry</td></tr>
+            </tbody>
+          </table>
+        </div>
 
         <div id="weighing" data-search-target>
           <div class="api-response-label">WITH A SCALE</div>
@@ -84,18 +88,20 @@ const Transform: Component = () => {
         </div>
 
         <div class="api-response-label">REFUSALS</div>
-        <table class="api-params">
-          <thead>
-            <tr><th>Refused when</th><th>Why</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><code>op</code> above <code>1</code></td><td>only remap and swap exist</td></tr>
-            <tr><td>a <A href="/native/commands/transform#pairs">class pair</A> the op doesn't admit</td><td>each op names the shapes it can read and write</td></tr>
-            <tr><td>source and destination are the same field</td><td>a move needs two; to weigh a field in place, use the <A href="/native/commands/lock#scale">lock</A></td></tr>
-            <tr><td>a field the clone doesn't declare</td><td>the box stores no unreachable address; re-send after a re-clone</td></tr>
-            <tr><td>table already at 32 entries</td><td>nothing is evicted; the readback's full flag marks the refusal</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Refused when</th><th>Why</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>op</code> above <code>1</code></td><td>only remap and swap exist</td></tr>
+              <tr><td>a <A href="/native/commands/transform#pairs">class pair</A> the op doesn't admit</td><td>each op names the shapes it can read and write</td></tr>
+              <tr><td>source and destination are the same field</td><td>a move needs two; to weigh a field in place, use the <A href="/native/commands/lock#scale">lock</A></td></tr>
+              <tr><td>a field the clone doesn't declare</td><td>the box stores no unreachable address; re-send after a re-clone</td></tr>
+              <tr><td>table already at 32 entries</td><td>nothing is evicted; the readback's full flag marks the refusal</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">EFFECT</div>
         <p>
           An entry applies from the device's next report. The box walks the table in install order,
@@ -163,15 +169,17 @@ const Transform: Component = () => {
           button i  ---------->  media       the consumer collection
 
   every pair is two different fields`}</pre>
-        <table class="api-params">
-          <thead>
-            <tr><th>Name</th><th>Behaviour</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><code>swap</code></td><td>Reads both axes, then writes both; two remaps would leave the pair equal.</td></tr>
-            <tr><td><code>remap</code></td><td>Adds the source to the destination's value, then zeroes the source. A button destination is OR'd the press instead, and the source bit cleared.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Name</th><th>Behaviour</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>swap</code></td><td>Reads both axes, then writes both; two remaps would leave the pair equal.</td></tr>
+              <tr><td><code>remap</code></td><td>Adds the source to the destination's value, then zeroes the source. A button destination is OR'd the press instead, and the source bit cleared.</td></tr>
+            </tbody>
+          </table>
+        </div>
       </DocSection>
 
       <DocSection id="cross" title="Button to key or media" caption="The one remap that crosses collections">
@@ -245,16 +253,18 @@ const Transform: Component = () => {
        |
        v
   emitted report`}</pre>
-        <table class="api-params">
-          <thead>
-            <tr><th>Stage</th><th>Reads</th><th>Acts on</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><A href="/native/commands/lock"><code>LOCK</code></A></td><td>the physical field</td><td>a lock applies on the sign the device reported, not where the value ends up, so a swap never moves a lock with it</td></tr>
-            <tr><td><A href="/native/commands/option#render">rendering</A></td><td>the transformed, weighed cursor delta</td><td>the model gets the numbers the wire would have carried, so a scale changes what it renders, not what it corrects</td></tr>
-            <tr><td><A href="/native/injection">injection</A></td><td>nothing the table wrote</td><td>injected motion drains into the axis after the pass, so a remap that zeroed that axis doesn't remove it</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Stage</th><th>Reads</th><th>Acts on</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><A href="/native/commands/lock"><code>LOCK</code></A></td><td>the physical field</td><td>a lock applies on the sign the device reported, not where the value ends up, so a swap never moves a lock with it</td></tr>
+              <tr><td><A href="/native/commands/option#render">rendering</A></td><td>the transformed, weighed cursor delta</td><td>the model gets the numbers the wire would have carried, so a scale changes what it renders, not what it corrects</td></tr>
+              <tr><td><A href="/native/injection">injection</A></td><td>nothing the table wrote</td><td>injected motion drains into the axis after the pass, so a remap that zeroed that axis doesn't remove it</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">CATCH</div>
         <p>
           <A href="/native/commands/catch#catch"><code>CATCH</code></A> input classes tap the

@@ -13,19 +13,21 @@ const Frame: Component = () => {
           Every message, both directions, has this shape.
         </p>
         <pre class="api-signature">[SOF 0xA5][TYPE u8][SEQ u8][LEN u16 LE][PAYLOAD 0..512][CRC16 u16 LE]</pre>
-        <table class="byte-table">
-          <thead>
-            <tr><th>Field</th><th>Bytes</th><th>Notes</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><code>SOF</code></td><td>1</td><td>start-of-frame marker, always <code>0xA5</code></td></tr>
-            <tr><td><code>TYPE</code></td><td>1</td><td>opcode</td></tr>
-            <tr><td><code>SEQ</code></td><td>1</td><td>per-frame sequence number</td></tr>
-            <tr><td><code>LEN</code></td><td>2</td><td>payload byte count, little-endian</td></tr>
-            <tr><td><code>PAYLOAD</code></td><td>0-512</td><td>command data; empty for argument-free commands</td></tr>
-            <tr><td><code>CRC16</code></td><td>2</td><td>checksum over the frame body</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="byte-table">
+            <thead>
+              <tr><th>Field</th><th>Bytes</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>SOF</code></td><td>1</td><td>start-of-frame marker, always <code>0xA5</code></td></tr>
+              <tr><td><code>TYPE</code></td><td>1</td><td>opcode</td></tr>
+              <tr><td><code>SEQ</code></td><td>1</td><td>per-frame sequence number</td></tr>
+              <tr><td><code>LEN</code></td><td>2</td><td>payload byte count, little-endian</td></tr>
+              <tr><td><code>PAYLOAD</code></td><td>0-512</td><td>command data; empty for argument-free commands</td></tr>
+              <tr><td><code>CRC16</code></td><td>2</td><td>checksum over the frame body</td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           Max payload 512 bytes, max frame 519. Multi-byte numbers are little-endian: 16-bit{' '}
           <code>100</code> is <code>64 00</code>.
@@ -37,60 +39,64 @@ const Frame: Component = () => {
           <code>SEQ</code> is a one-byte, caller-set counter per frame, typically incrementing and
           wrapping at 255.
         </p>
-        <table class="api-params">
-          <thead>
-            <tr><th>Command</th><th>Role</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>Ordinary commands</td><td>Dropped-frame detection only.</td></tr>
-            <tr><td><A href="/native/commands/requests#requests"><code>QUERY</code></A></td><td>Copied onto the <A href="/native/commands/requests#resp"><code>RESP</code></A>, pairing each reply with its request when several are outstanding.</td></tr>
-            <tr><td><A href="/native/commands/transfer#transfer"><code>TRANSFER</code></A></td><td>Copied onto the <A href="/native/commands/transfer#transfer-resp"><code>TRANSFER_RESP</code></A>.</td></tr>
-            <tr><td><A href="/native/commands/update#update"><code>UPDATE</code></A></td><td>An <A href="/native/commands/update#resp"><code>UPDATE_RESP</code></A> matches its request by the echoed op. <code>DATA</code> acknowledgements carry a rolling <code>SEQ</code>, since one covers a whole window of chunks.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Command</th><th>Role</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Ordinary commands</td><td>Dropped-frame detection only.</td></tr>
+              <tr><td><A href="/native/commands/requests#requests"><code>QUERY</code></A></td><td>Copied onto the <A href="/native/commands/requests#resp"><code>RESP</code></A>, pairing each reply with its request when several are outstanding.</td></tr>
+              <tr><td><A href="/native/commands/transfer#transfer"><code>TRANSFER</code></A></td><td>Copied onto the <A href="/native/commands/transfer#transfer-resp"><code>TRANSFER_RESP</code></A>.</td></tr>
+              <tr><td><A href="/native/commands/update#update"><code>UPDATE</code></A></td><td>An <A href="/native/commands/update#resp"><code>UPDATE_RESP</code></A> matches its request by the echoed op. <code>DATA</code> acknowledgements carry a rolling <code>SEQ</code>, since one covers a whole window of chunks.</td></tr>
+            </tbody>
+          </table>
+        </div>
       </DocSection>
 
       <DocSection id="opcodes" title="Opcodes" caption="The TYPE byte">
         <p>
           Opcodes run <code>0x01</code> to <code>0x1E</code>. An unrecognised opcode is ignored.
         </p>
-        <table class="api-params">
-          <thead>
-            <tr><th>Opcode</th><th>Name</th><th>Direction</th><th>Payload</th><th>Reply</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><code>0x01</code></td><td><A href="/native/commands/move#move"><code>MOVE</code></A></td><td>PC→box</td><td>4 or 6 bytes</td><td>none</td></tr>
-            <tr><td><code>0x02</code></td><td>reserved</td><td>-</td><td>-</td><td>-</td></tr>
-            <tr><td><code>0x03</code></td><td><A href="/native/commands/inject#inject"><code>INJECT</code></A></td><td>PC→box</td><td>4 bytes</td><td>none</td></tr>
-            <tr><td><code>0x04</code></td><td><A href="/native/commands/admin#reset"><code>RESET</code></A></td><td>PC→box</td><td>1 byte</td><td>none</td></tr>
-            <tr><td><code>0x05</code></td><td><A href="/native/commands/requests#requests"><code>QUERY</code></A></td><td>PC→box</td><td>1 or 2 bytes</td><td><A href="/native/commands/requests#resp"><code>RESP</code></A></td></tr>
-            <tr><td><code>0x06</code></td><td><A href="/native/commands/requests#resp"><code>RESP</code></A></td><td>box→PC</td><td>varies</td><td>none</td></tr>
-            <tr><td><code>0x07</code></td><td><A href="/native/commands/admin#reboot"><code>REBOOT</code></A></td><td>PC→box</td><td>1 byte</td><td>none</td></tr>
-            <tr><td><code>0x08</code></td><td><A href="/native/commands/admin#log"><code>LOG</code></A></td><td>box→PC</td><td>varies</td><td>none</td></tr>
-            <tr><td><code>0x09</code></td><td><A href="/native/commands/led#led"><code>LED</code></A></td><td>PC→box</td><td>3 bytes</td><td>none</td></tr>
-            <tr><td><code>0x0A</code></td><td><A href="/native/commands/lock#lock"><code>LOCK</code></A></td><td>PC→box</td><td>6 bytes</td><td>none</td></tr>
-            <tr><td><code>0x0B</code></td><td><A href="/native/commands/catch#catch"><code>CATCH</code></A></td><td>PC→box</td><td>6 bytes</td><td>none</td></tr>
-            <tr><td><code>0x0C</code></td><td><A href="/native/commands/catch#motion-event"><code>MOTION_EVENT</code></A></td><td>box→PC</td><td>13 bytes</td><td>none</td></tr>
-            <tr><td><code>0x0D</code></td><td>reserved</td><td>-</td><td>-</td><td>-</td></tr>
-            <tr><td><code>0x0E</code></td><td>reserved</td><td>-</td><td>-</td><td>-</td></tr>
-            <tr><td><code>0x0F</code></td><td><A href="/native/commands/catch#usage-event"><code>USAGE_EVENT</code></A></td><td>box→PC</td><td>varies</td><td>none</td></tr>
-            <tr><td><code>0x10</code></td><td>reserved</td><td>-</td><td>-</td><td>-</td></tr>
-            <tr><td><code>0x11</code></td><td><A href="/native/commands/option#option"><code>OPTION</code></A></td><td>PC→box</td><td>varies</td><td>none</td></tr>
-            <tr><td><code>0x12</code></td><td><A href="/native/commands/clip#append"><code>CLIP_APPEND</code></A></td><td>PC→box</td><td>varies</td><td>none</td></tr>
-            <tr><td><code>0x13</code></td><td><A href="/native/commands/clip#ctrl"><code>CLIP_CTRL</code></A></td><td>PC→box</td><td>1 byte</td><td>none</td></tr>
-            <tr><td><code>0x14</code></td><td><A href="/native/commands/clip#set"><code>CLIP_SET</code></A></td><td>PC→box</td><td>2 bytes</td><td>none</td></tr>
-            <tr><td><code>0x15</code></td><td><A href="/native/commands/clip#trigger"><code>CLIP_TRIGGER</code></A></td><td>PC→box</td><td>6 to 40 bytes</td><td>none</td></tr>
-            <tr><td><code>0x16</code></td><td><A href="/native/commands/catch#traffic-event"><code>TRAFFIC_EVENT</code></A></td><td>box→PC</td><td>varies</td><td>none</td></tr>
-            <tr><td><code>0x17</code></td><td><A href="/native/commands/update#update"><code>UPDATE</code></A></td><td>PC→box</td><td>2 to 508 bytes</td><td><A href="/native/commands/update#resp"><code>UPDATE_RESP</code></A></td></tr>
-            <tr><td><code>0x18</code></td><td><A href="/native/commands/update#resp"><code>UPDATE_RESP</code></A></td><td>box→PC</td><td>7 bytes</td><td>none</td></tr>
-            <tr><td><code>0x19</code></td><td><A href="/native/commands/raw#raw"><code>RAW</code></A></td><td>PC→box</td><td>2 to 512 bytes</td><td>none</td></tr>
-            <tr><td><code>0x1A</code></td><td><A href="/native/commands/transfer#transfer"><code>TRANSFER</code></A></td><td>PC→box</td><td>9 to 512 bytes</td><td><A href="/native/commands/transfer#transfer-resp"><code>TRANSFER_RESP</code></A></td></tr>
-            <tr><td><code>0x1B</code></td><td><A href="/native/commands/transfer#transfer-resp"><code>TRANSFER_RESP</code></A></td><td>box→PC</td><td>2 to 506 bytes</td><td>none</td></tr>
-            <tr><td><code>0x1C</code></td><td><A href="/native/commands/rewrite#rewrite"><code>REWRITE</code></A></td><td>PC→box</td><td>9 to 510 bytes</td><td>none</td></tr>
-            <tr><td><code>0x1D</code></td><td><A href="/native/commands/patch#patch"><code>PATCH</code></A></td><td>PC→box</td><td>1 to 510 bytes</td><td>none</td></tr>
-            <tr><td><code>0x1E</code></td><td><A href="/native/commands/transform#transform"><code>TRANSFORM</code></A></td><td>PC→box</td><td>8 bytes</td><td>none</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Opcode</th><th>Name</th><th>Direction</th><th>Payload</th><th>Reply</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>0x01</code></td><td><A href="/native/commands/move#move"><code>MOVE</code></A></td><td>PC→box</td><td>4 or 6 bytes</td><td>none</td></tr>
+              <tr><td><code>0x02</code></td><td>reserved</td><td>-</td><td>-</td><td>-</td></tr>
+              <tr><td><code>0x03</code></td><td><A href="/native/commands/inject#inject"><code>INJECT</code></A></td><td>PC→box</td><td>4 bytes</td><td>none</td></tr>
+              <tr><td><code>0x04</code></td><td><A href="/native/commands/admin#reset"><code>RESET</code></A></td><td>PC→box</td><td>1 byte</td><td>none</td></tr>
+              <tr><td><code>0x05</code></td><td><A href="/native/commands/requests#requests"><code>QUERY</code></A></td><td>PC→box</td><td>1 or 2 bytes</td><td><A href="/native/commands/requests#resp"><code>RESP</code></A></td></tr>
+              <tr><td><code>0x06</code></td><td><A href="/native/commands/requests#resp"><code>RESP</code></A></td><td>box→PC</td><td>varies</td><td>none</td></tr>
+              <tr><td><code>0x07</code></td><td><A href="/native/commands/admin#reboot"><code>REBOOT</code></A></td><td>PC→box</td><td>1 byte</td><td>none</td></tr>
+              <tr><td><code>0x08</code></td><td><A href="/native/commands/admin#log"><code>LOG</code></A></td><td>box→PC</td><td>varies</td><td>none</td></tr>
+              <tr><td><code>0x09</code></td><td><A href="/native/commands/led#led"><code>LED</code></A></td><td>PC→box</td><td>3 bytes</td><td>none</td></tr>
+              <tr><td><code>0x0A</code></td><td><A href="/native/commands/lock#lock"><code>LOCK</code></A></td><td>PC→box</td><td>6 bytes</td><td>none</td></tr>
+              <tr><td><code>0x0B</code></td><td><A href="/native/commands/catch#catch"><code>CATCH</code></A></td><td>PC→box</td><td>6 bytes</td><td>none</td></tr>
+              <tr><td><code>0x0C</code></td><td><A href="/native/commands/catch#motion-event"><code>MOTION_EVENT</code></A></td><td>box→PC</td><td>13 bytes</td><td>none</td></tr>
+              <tr><td><code>0x0D</code></td><td>reserved</td><td>-</td><td>-</td><td>-</td></tr>
+              <tr><td><code>0x0E</code></td><td>reserved</td><td>-</td><td>-</td><td>-</td></tr>
+              <tr><td><code>0x0F</code></td><td><A href="/native/commands/catch#usage-event"><code>USAGE_EVENT</code></A></td><td>box→PC</td><td>varies</td><td>none</td></tr>
+              <tr><td><code>0x10</code></td><td>reserved</td><td>-</td><td>-</td><td>-</td></tr>
+              <tr><td><code>0x11</code></td><td><A href="/native/commands/option#option"><code>OPTION</code></A></td><td>PC→box</td><td>varies</td><td>none</td></tr>
+              <tr><td><code>0x12</code></td><td><A href="/native/commands/clip#append"><code>CLIP_APPEND</code></A></td><td>PC→box</td><td>varies</td><td>none</td></tr>
+              <tr><td><code>0x13</code></td><td><A href="/native/commands/clip#ctrl"><code>CLIP_CTRL</code></A></td><td>PC→box</td><td>1 byte</td><td>none</td></tr>
+              <tr><td><code>0x14</code></td><td><A href="/native/commands/clip#set"><code>CLIP_SET</code></A></td><td>PC→box</td><td>2 bytes</td><td>none</td></tr>
+              <tr><td><code>0x15</code></td><td><A href="/native/commands/clip#trigger"><code>CLIP_TRIGGER</code></A></td><td>PC→box</td><td>6 to 40 bytes</td><td>none</td></tr>
+              <tr><td><code>0x16</code></td><td><A href="/native/commands/catch#traffic-event"><code>TRAFFIC_EVENT</code></A></td><td>box→PC</td><td>varies</td><td>none</td></tr>
+              <tr><td><code>0x17</code></td><td><A href="/native/commands/update#update"><code>UPDATE</code></A></td><td>PC→box</td><td>2 to 508 bytes</td><td><A href="/native/commands/update#resp"><code>UPDATE_RESP</code></A></td></tr>
+              <tr><td><code>0x18</code></td><td><A href="/native/commands/update#resp"><code>UPDATE_RESP</code></A></td><td>box→PC</td><td>7 bytes</td><td>none</td></tr>
+              <tr><td><code>0x19</code></td><td><A href="/native/commands/raw#raw"><code>RAW</code></A></td><td>PC→box</td><td>2 to 512 bytes</td><td>none</td></tr>
+              <tr><td><code>0x1A</code></td><td><A href="/native/commands/transfer#transfer"><code>TRANSFER</code></A></td><td>PC→box</td><td>9 to 512 bytes</td><td><A href="/native/commands/transfer#transfer-resp"><code>TRANSFER_RESP</code></A></td></tr>
+              <tr><td><code>0x1B</code></td><td><A href="/native/commands/transfer#transfer-resp"><code>TRANSFER_RESP</code></A></td><td>box→PC</td><td>2 to 506 bytes</td><td>none</td></tr>
+              <tr><td><code>0x1C</code></td><td><A href="/native/commands/rewrite#rewrite"><code>REWRITE</code></A></td><td>PC→box</td><td>9 to 510 bytes</td><td>none</td></tr>
+              <tr><td><code>0x1D</code></td><td><A href="/native/commands/patch#patch"><code>PATCH</code></A></td><td>PC→box</td><td>1 to 510 bytes</td><td>none</td></tr>
+              <tr><td><code>0x1E</code></td><td><A href="/native/commands/transform#transform"><code>TRANSFORM</code></A></td><td>PC→box</td><td>8 bytes</td><td>none</td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           <code>0x02</code>, <code>0x0D</code>, and <code>0x0E</code> were <code>WHEEL</code>,{' '}
           <code>KEY</code>, and <code>CONSUMER</code>, now{' '}
@@ -108,17 +114,19 @@ const Frame: Component = () => {
           <code>TYPE | SEQ | LEN | PAYLOAD</code>, stored little-endian. On a mismatch the box
           drops the frame with no reply and resyncs at the next <code>0xA5</code>.
         </p>
-        <table class="api-params">
-          <thead>
-            <tr><th>Parameter</th><th>Value</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>Polynomial</td><td><code>0x1021</code></td></tr>
-            <tr><td>Initial value</td><td><code>0xFFFF</code></td></tr>
-            <tr><td>Bit reflection</td><td>None</td></tr>
-            <tr><td>Final XOR</td><td>None</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Parameter</th><th>Value</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Polynomial</td><td><code>0x1021</code></td></tr>
+              <tr><td>Initial value</td><td><code>0xFFFF</code></td></tr>
+              <tr><td>Bit reflection</td><td>None</td></tr>
+              <tr><td>Final XOR</td><td>None</td></tr>
+            </tbody>
+          </table>
+        </div>
         <pre><code class="language-python">{`def crc16_ccitt(data):
     crc = 0xFFFF
     for b in data:

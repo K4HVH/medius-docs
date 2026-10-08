@@ -22,17 +22,19 @@ const Install: Component = () => {
       </PageHeader>
 
       <DocSection id="requirements" title="Requirements" caption="Python version and platform">
-        <table class="api-params">
-          <thead>
-            <tr><th>Requirement</th><th>Value</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>Python</td><td><code>3.8</code> or newer</td></tr>
-            <tr><td>Platforms with a prebuilt <a href="https://packaging.python.org/en/latest/specifications/binary-distribution-format/" target="_blank" rel="noreferrer">wheel</a></td><td>Linux (<a href="https://www.gnu.org/software/libc/" target="_blank" rel="noreferrer">glibc</a> / <a href="https://github.com/pypa/manylinux" target="_blank" rel="noreferrer">manylinux</a>), macOS, Windows x64</td></tr>
-            <tr><td><a href="https://rustup.rs" target="_blank" rel="noreferrer">Rust toolchain</a></td><td>not needed</td></tr>
-            <tr><td>Other Python packages</td><td>none</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Requirement</th><th>Value</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Python</td><td><code>3.8</code> or newer</td></tr>
+              <tr><td>Platforms with a prebuilt <a href="https://packaging.python.org/en/latest/specifications/binary-distribution-format/" target="_blank" rel="noreferrer">wheel</a></td><td>Linux (<a href="https://www.gnu.org/software/libc/" target="_blank" rel="noreferrer">glibc</a> / <a href="https://github.com/pypa/manylinux" target="_blank" rel="noreferrer">manylinux</a>), macOS, Windows x64</td></tr>
+              <tr><td><a href="https://rustup.rs" target="_blank" rel="noreferrer">Rust toolchain</a></td><td>not needed</td></tr>
+              <tr><td>Other Python packages</td><td>none</td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           <a href="https://musl.libc.org" target="_blank" rel="noreferrer">musl</a> Linux and 32-bit
           Windows have no wheel: <code>pip</code> builds from source and needs a Rust toolchain (see{' '}

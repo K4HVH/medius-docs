@@ -1,6 +1,5 @@
 import { A } from '@solidjs/router';
 import { Card, CardHeader } from '../../components/surfaces/Card';
-import '../../styles/docs.css';
 
 const NotFound = () => (
   <div id="not-found" data-search-target>

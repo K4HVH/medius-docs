@@ -71,6 +71,13 @@ describe('ByteStrip', () => {
     expect(cells(container).map((d) => d.style.getPropertyValue('--w'))).toEqual(['1', '2', '4']);
   });
 
+  it('marks a value too long for a phone so it can take its own row', () => {
+    const { container } = render(() => (
+      <ByteStrip fields={[{ value: '12 01 00 02 00 00 00 40 ... (18 bytes)', name: 'data' }, { value: '12 34 56 78 9A BC', name: 'mac' }]} />
+    ));
+    expect(cells(container).map((d) => d.classList.contains('long'))).toEqual([true, false]);
+  });
+
   it('lights the cells in wire order once it is on screen, then again on hover, never twice at once', () => {
     const { container } = render(() => <ByteStrip fields={INJECT} />);
     enter!();

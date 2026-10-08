@@ -12,73 +12,77 @@ const Introduction: Component = () => {
           The <a href="https://crates.io/crates/medius" target="_blank" rel="noreferrer"><code>medius</code></a> crate
           injects input on top of a real mouse, keyboard, or combo over a USB-serial link.
         </p>
-        <table class="api-params">
-          <thead>
-            <tr>
-              <th>Property</th>
-              <th>Value</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>Crate version</td>
-              <td><code>3.4.3</code></td>
-            </tr>
-            <tr>
-              <td><a href="https://doc.rust-lang.org/edition-guide/rust-2024/index.html" target="_blank" rel="noreferrer">Edition</a></td>
-              <td><code>2024</code></td>
-            </tr>
-            <tr>
-              <td><a href="https://doc.rust-lang.org/cargo/reference/rust-version.html" target="_blank" rel="noreferrer">MSRV</a> (minimum supported Rust version)</td>
-              <td><code>1.85</code></td>
-            </tr>
-            <tr>
-              <td>License</td>
-              <td><a href="https://opensource.org/license/mit" target="_blank" rel="noreferrer"><code>MIT</code></a></td>
-            </tr>
-            <tr>
-              <td>Transport</td>
-              <td>6 Mbaud, framed-only</td>
-            </tr>
-            <tr>
-              <td>Thread safety</td>
-              <td><code>Send + Sync</code> (clone freely)</td>
-            </tr>
-            <tr>
-              <td>Safety</td>
-              <td><code>#![forbid(unsafe_code)]</code>; on Windows, <code>unsafe</code> only in the serial read's comm-event wait</td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr>
+                <th>Property</th>
+                <th>Value</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Crate version</td>
+                <td><code>3.4.3</code></td>
+              </tr>
+              <tr>
+                <td><a href="https://doc.rust-lang.org/edition-guide/rust-2024/index.html" target="_blank" rel="noreferrer">Edition</a></td>
+                <td><code>2024</code></td>
+              </tr>
+              <tr>
+                <td><a href="https://doc.rust-lang.org/cargo/reference/rust-version.html" target="_blank" rel="noreferrer">MSRV</a> (minimum supported Rust version)</td>
+                <td><code>1.85</code></td>
+              </tr>
+              <tr>
+                <td>License</td>
+                <td><a href="https://opensource.org/license/mit" target="_blank" rel="noreferrer"><code>MIT</code></a></td>
+              </tr>
+              <tr>
+                <td>Transport</td>
+                <td>6 Mbaud, framed-only</td>
+              </tr>
+              <tr>
+                <td>Thread safety</td>
+                <td><code>Send + Sync</code> (clone freely)</td>
+              </tr>
+              <tr>
+                <td>Safety</td>
+                <td><code>#![forbid(unsafe_code)]</code>; on Windows, <code>unsafe</code> only in the serial read's comm-event wait</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </PageHeader>
 
       <DocSection id="installation" title="Installation">
         <pre><code class="language-bash">cargo add medius</code></pre>
         <p>With optional features:</p>
         <pre><code class="language-bash">cargo add medius --features async,mock</code></pre>
-        <table class="api-params">
-          <thead>
-            <tr>
-              <th>Feature</th>
-              <th>Description</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><A href="/library/features/async"><code>async</code></A></td>
-              <td>Runtime-agnostic <code>AsyncDevice</code>, async queries.</td>
-            </tr>
-            <tr>
-              <td><A href="/library/features/mock"><code>mock</code></A></td>
-              <td>In-process fake box for tests.</td>
-            </tr>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr>
+                <th>Feature</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><A href="/library/features/async"><code>async</code></A></td>
+                <td>Runtime-agnostic <code>AsyncDevice</code>, async queries.</td>
+              </tr>
+              <tr>
+                <td><A href="/library/features/mock"><code>mock</code></A></td>
+                <td>In-process fake box for tests.</td>
+              </tr>
 
-            <tr>
-              <td><A href="/library/features/tracing"><code>tracing</code></A></td>
-              <td>Tracing across the connection lifecycle.</td>
-            </tr>
-          </tbody>
-        </table>
+              <tr>
+                <td><A href="/library/features/tracing"><code>tracing</code></A></td>
+                <td>Tracing across the connection lifecycle.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </DocSection>
 
       <DocSection id="getting-started" title="Getting started">

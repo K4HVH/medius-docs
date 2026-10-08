@@ -8,15 +8,17 @@ const Lifecycle: Component = () => {
     <>
       <PageHeader lead="Held state after a dropped link or released session">
         <p>The library holds overrides past the box's <A href="/native/injection#safety">silence-timeout clear</A>, and restores them after a dropped link or when the box drops them.</p>
-        <table class="api-params">
-          <thead><tr><th>Call</th><th>Does</th></tr></thead>
-          <tbody>
-            <tr><td><A href="/library/guides/connection#keepalive"><code>keepalive</code></A> (automatic)</td><td>Holds an override past the silence timeout.</td></tr>
-            <tr><td><A href="/library/lifecycle#reapply"><code>reapply</code></A></td><td>Re-sends the held overrides so the box matches the library.</td></tr>
-            <tr><td><A href="/library/lifecycle#reconnect"><code>reconnect</code></A></td><td>Rescans, reopens the port, and restores held state after a dropped link.</td></tr>
-            <tr><td><A href="/library/lifecycle#restart">session recovery</A> (automatic)</td><td>Re-sends held state once the box has a clone again after a device-chip restart or a session release.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Call</th><th>Does</th></tr></thead>
+            <tbody>
+              <tr><td><A href="/library/guides/connection#keepalive"><code>keepalive</code></A> (automatic)</td><td>Holds an override past the silence timeout.</td></tr>
+              <tr><td><A href="/library/lifecycle#reapply"><code>reapply</code></A></td><td>Re-sends the held overrides so the box matches the library.</td></tr>
+              <tr><td><A href="/library/lifecycle#reconnect"><code>reconnect</code></A></td><td>Rescans, reopens the port, and restores held state after a dropped link.</td></tr>
+              <tr><td><A href="/library/lifecycle#restart">session recovery</A> (automatic)</td><td>Re-sends held state once the box has a clone again after a device-chip restart or a session release.</td></tr>
+            </tbody>
+          </table>
+        </div>
       </PageHeader>
 
       <DocSection id="reapply" title="reapply" caption="Re-send held overrides">
@@ -120,25 +122,29 @@ assert!(after > before);`}</code></pre>
            <--- QUERY(CLIP) ---------------------------
            ---- RESP(CLIP) --------------------------->  an empty ring: the loaded clip is lost
                                                          restarts += 1, for a restart only`}</pre>
-        <table class="api-params">
-          <thead><tr><th>Trigger</th><th>Detected by</th></tr></thead>
-          <tbody>
-            <tr><td>A device-chip restart</td><td>The box's <A href="/native/connection#hello">ready hello</A>, unasked, on a link the box has already answered.</td></tr>
-            <tr><td>A session release: a <code>RESET</code> the library did not send, the link between the box's chips dropping, the device detaching, a re-clone (<A href="/library/advanced/patch#apply-patch"><code>apply_patch</code></A>, <A href="/library/advanced/patch#clear-patch"><code>clear_patch</code></A>, an <A href="/library/options#allow-imperfect-clones">opt-in</A> toggle that re-presents the clone, another device), a configuration switch by the game PC that unbinds a role, control-PC silence, the opt-in turned off</td><td><code>Stats::session</code> moving. The keepalive reads it each tick while anything is held, and every 20 ms for 5 s after <code>apply_patch</code>, <code>clear_patch</code> or <code>allow_imperfect_clones</code>.</td></tr>
-            <tr><td>The library's own <A href="/library/admin#reset"><code>reset</code></A></td><td>Counted by the box; the library holds nothing after it, so nothing is re-sent.</td></tr>
-          </tbody>
-        </table>
-        <table class="api-params">
-          <thead><tr><th>Held state</th><th>After a recovery</th></tr></thead>
-          <tbody>
-            <tr><td>Held presses, locks and scales, catch subscriptions, rewrite rules, transforms</td><td>Re-sent once the clone is up: at once when it stayed up, and after a detach whenever a device is cloned again.</td></tr>
-            <tr><td>Clip settings, input triggers and packet triggers</td><td>Re-sent.</td></tr>
-            <tr><td>Rewrite rules and consuming packet triggers, after <code>allow_imperfect_clones(false)</code></td><td>Dropped by the library as the box drops them.</td></tr>
-            <tr><td>A loaded clip</td><td>Gone with the ring; <A href="/library/clip#lost"><code>ClipHandle::lost</code></A> reports it.</td></tr>
-            <tr><td>An <A href="/library/led#led">LED</A> override</td><td>Not held, so not re-sent: call <code>led</code> again.</td></tr>
-            <tr><td><A href="/library/options">Options</A> and <A href="/library/advanced/patch">patch sets</A></td><td>Kept in the box's NVS.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Trigger</th><th>Detected by</th></tr></thead>
+            <tbody>
+              <tr><td>A device-chip restart</td><td>The box's <A href="/native/connection#hello">ready hello</A>, unasked, on a link the box has already answered.</td></tr>
+              <tr><td>A session release: a <code>RESET</code> the library did not send, the link between the box's chips dropping, the device detaching, a re-clone (<A href="/library/advanced/patch#apply-patch"><code>apply_patch</code></A>, <A href="/library/advanced/patch#clear-patch"><code>clear_patch</code></A>, an <A href="/library/options#allow-imperfect-clones">opt-in</A> toggle that re-presents the clone, another device), a configuration switch by the game PC that unbinds a role, control-PC silence, the opt-in turned off</td><td><code>Stats::session</code> moving. The keepalive reads it each tick while anything is held, and every 20 ms for 5 s after <code>apply_patch</code>, <code>clear_patch</code> or <code>allow_imperfect_clones</code>.</td></tr>
+              <tr><td>The library's own <A href="/library/admin#reset"><code>reset</code></A></td><td>Counted by the box; the library holds nothing after it, so nothing is re-sent.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Held state</th><th>After a recovery</th></tr></thead>
+            <tbody>
+              <tr><td>Held presses, locks and scales, catch subscriptions, rewrite rules, transforms</td><td>Re-sent once the clone is up: at once when it stayed up, and after a detach whenever a device is cloned again.</td></tr>
+              <tr><td>Clip settings, input triggers and packet triggers</td><td>Re-sent.</td></tr>
+              <tr><td>Rewrite rules and consuming packet triggers, after <code>allow_imperfect_clones(false)</code></td><td>Dropped by the library as the box drops them.</td></tr>
+              <tr><td>A loaded clip</td><td>Gone with the ring; <A href="/library/clip#lost"><code>ClipHandle::lost</code></A> reports it.</td></tr>
+              <tr><td>An <A href="/library/led#led">LED</A> override</td><td>Not held, so not re-sent: call <code>led</code> again.</td></tr>
+              <tr><td><A href="/library/options">Options</A> and <A href="/library/advanced/patch">patch sets</A></td><td>Kept in the box's NVS.</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`use medius::{Axis, ClipBuilder, Device, Direction};
 

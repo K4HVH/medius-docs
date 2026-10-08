@@ -14,7 +14,6 @@ import DeviceClip from './DeviceClip';
 import DeviceLed from './DeviceLed';
 import { col, columns, row } from './ui';
 import { PageHeader } from '../../shell/PageHeader';
-import '../../../styles/docs.css';
 
 // Everything here is momentary: the box drops it after 1 s of control-link silence. Persistent
 // options live on the Device tab.

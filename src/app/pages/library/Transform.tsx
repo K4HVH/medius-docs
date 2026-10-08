@@ -46,14 +46,16 @@ const Transform: Component = () => {
       <DocSection id="transform" title="transform" caption="Install or overwrite one field transform">
         <pre class="api-signature">fn transform(&self, t: &Transform) -&gt; Result&lt;()&gt;</pre>
         <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
-        <table class="api-params">
-          <thead>
-            <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><code>t</code></td><td><A href="/library/types/structs#transform"><code>Transform</code></A></td><td>The <A href="/library/types/enums#transform-op">operation</A>, source and destination <A href="/library/types/enums#lock-target">fields</A>. A pair the op cannot address, or one field named as both ends, is <A href="/library/types/errors#errors"><code>Error::TransformOpFields</code></A>; installing one past <code>Transforms::CAPACITY</code> is <code>Error::TransformTableFull</code>; one the box refuses is absent from <A href="/library/transform#query-transforms"><code>query_transforms</code></A>.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>t</code></td><td><A href="/library/types/structs#transform"><code>Transform</code></A></td><td>The <A href="/library/types/enums#transform-op">operation</A>, source and destination <A href="/library/types/enums#lock-target">fields</A>. A pair the op cannot address, or one field named as both ends, is <A href="/library/types/errors#errors"><code>Error::TransformOpFields</code></A>; installing one past <code>Transforms::CAPACITY</code> is <code>Error::TransformTableFull</code>; one the box refuses is absent from <A href="/library/transform#query-transforms"><code>query_transforms</code></A>.</td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           Entries are keyed by{' '}
           <A href="/library/types/structs#transform-key"><code>(source, dest)</code></A>; setting an

@@ -88,25 +88,27 @@ const Rewrite: Component = () => {
           <code>id = 0xFFFF</code>, <code>state = 0</code> clears the whole table.
         </p>
         <div class="api-response-label">REFUSALS</div>
-        <table class="api-params">
-          <thead>
-            <tr><th>Refused when</th><th>Why</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><code>OPTION(IMPERFECT)</code> off, for any frame but the whole-table clear</td><td>the advanced layer needs the opt-in</td></tr>
-            <tr><td>frame shorter than <code>9 + 2 x mlen</code></td><td>malformed</td></tr>
-            <tr><td><code>11 + 2 x mlen + plen</code> above 512</td><td>a rule must fit its own <A href="/native/commands/requests#rewrite-entry">readback</A> in one frame</td></tr>
-            <tr><td><code>cls</code> is not <code>4</code>-<code>9</code> or <code>0xFF</code></td><td>other classes carry no packet</td></tr>
-            <tr><td><code>dir</code> above <code>2</code></td><td>a packet travels IN or OUT</td></tr>
-            <tr><td><code>mlen</code> above <code>16</code></td><td>the head compare reads at most 16 bytes</td></tr>
-            <tr><td>action invalid on <code>cls</code></td><td>the <A href="/native/commands/rewrite#actions">action table</A> lists each action's classes</td></tr>
-            <tr><td><code>off + plen</code> of a <code>PATCH</code> or <code>REPLY_PATCH</code> passes 64 on a report class or <code>ANY</code>, or 2056 on <code>CONTROL</code></td><td>the write lands past the largest packet the surface carries</td></tr>
-            <tr><td>a <code>REPLACE</code> payload above 64 bytes on a report class or <code>ANY</code></td><td>a report is at most 64 bytes</td></tr>
-            <tr><td>all rule payloads would pass 2048 bytes</td><td>one shared pool; an overwrite is costed with its old payload returned, and a refused one keeps the old rule; <A href="/native/commands/requests#rewrite"><code>RESP(REWRITE)</code></A> sets its full flag</td></tr>
-            <tr><td>a 33rd rule</td><td>nothing is evicted; <A href="/native/commands/requests#rewrite"><code>RESP(REWRITE)</code></A> sets its full flag</td></tr>
-            <tr><td><code>state = 0</code> with no rule under that key</td><td>nothing to remove</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Refused when</th><th>Why</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>OPTION(IMPERFECT)</code> off, for any frame but the whole-table clear</td><td>the advanced layer needs the opt-in</td></tr>
+              <tr><td>frame shorter than <code>9 + 2 x mlen</code></td><td>malformed</td></tr>
+              <tr><td><code>11 + 2 x mlen + plen</code> above 512</td><td>a rule must fit its own <A href="/native/commands/requests#rewrite-entry">readback</A> in one frame</td></tr>
+              <tr><td><code>cls</code> is not <code>4</code>-<code>9</code> or <code>0xFF</code></td><td>other classes carry no packet</td></tr>
+              <tr><td><code>dir</code> above <code>2</code></td><td>a packet travels IN or OUT</td></tr>
+              <tr><td><code>mlen</code> above <code>16</code></td><td>the head compare reads at most 16 bytes</td></tr>
+              <tr><td>action invalid on <code>cls</code></td><td>the <A href="/native/commands/rewrite#actions">action table</A> lists each action's classes</td></tr>
+              <tr><td><code>off + plen</code> of a <code>PATCH</code> or <code>REPLY_PATCH</code> passes 64 on a report class or <code>ANY</code>, or 2056 on <code>CONTROL</code></td><td>the write lands past the largest packet the surface carries</td></tr>
+              <tr><td>a <code>REPLACE</code> payload above 64 bytes on a report class or <code>ANY</code></td><td>a report is at most 64 bytes</td></tr>
+              <tr><td>all rule payloads would pass 2048 bytes</td><td>one shared pool; an overwrite is costed with its old payload returned, and a refused one keeps the old rule; <A href="/native/commands/requests#rewrite"><code>RESP(REWRITE)</code></A> sets its full flag</td></tr>
+              <tr><td>a 33rd rule</td><td>nothing is evicted; <A href="/native/commands/requests#rewrite"><code>RESP(REWRITE)</code></A> sets its full flag</td></tr>
+              <tr><td><code>state = 0</code> with no rule under that key</td><td>nothing to remove</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">EFFECT</div>
         <p>
           A rule applies from the next packet at its surface. A refused frame changes nothing, so
@@ -172,40 +174,44 @@ const Rewrite: Component = () => {
         <p>
           Report classes are <code>4</code>-<code>7</code> and <code>9</code>.
         </p>
-        <table class="api-params">
-          <thead>
-            <tr><th>Name</th><th>Value</th><th>Effect</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><code>PASS</code></td><td><code>0</code></td><td>Any class. The packet passes unchanged, and a broader rule it outranks doesn't act.</td></tr>
-            <tr><td><code>DROP</code></td><td><code>1</code></td><td>Report classes. The packet is dropped.</td></tr>
-            <tr><td><code>PATCH</code></td><td><code>2</code></td><td>Any class. Writes the payload at <code>off</code> and keeps the length; a write past the packet's end is left unapplied.</td></tr>
-            <tr><td><code>REPLACE</code></td><td><code>3</code></td><td>Any class. A report becomes the payload, length included.</td></tr>
-            <tr><td><code>ANSWER</code></td><td><code>4</code></td><td><code>CONTROL</code>. The box completes the request itself.</td></tr>
-            <tr><td><code>STALL</code></td><td><code>5</code></td><td><code>CONTROL</code>. The request ends in a STALL handshake.</td></tr>
-            <tr><td><code>NAK</code></td><td><code>6</code></td><td><code>CONTROL</code>. EP0 NAKs until the PC times out; a control endpoint above 0 STALLs.</td></tr>
-            <tr><td><code>REPLY_PATCH</code></td><td><code>7</code></td><td><code>CONTROL</code>. Writes the payload into the device's IN reply at <code>off</code>, unapplied past the reply's end.</td></tr>
-            <tr><td><code>REPLY_REPLACE</code></td><td><code>8</code></td><td><code>CONTROL</code>. The IN reply becomes the payload, cut to <code>wLength</code>.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Name</th><th>Value</th><th>Effect</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>PASS</code></td><td><code>0</code></td><td>Any class. The packet passes unchanged, and a broader rule it outranks doesn't act.</td></tr>
+              <tr><td><code>DROP</code></td><td><code>1</code></td><td>Report classes. The packet is dropped.</td></tr>
+              <tr><td><code>PATCH</code></td><td><code>2</code></td><td>Any class. Writes the payload at <code>off</code> and keeps the length; a write past the packet's end is left unapplied.</td></tr>
+              <tr><td><code>REPLACE</code></td><td><code>3</code></td><td>Any class. A report becomes the payload, length included.</td></tr>
+              <tr><td><code>ANSWER</code></td><td><code>4</code></td><td><code>CONTROL</code>. The box completes the request itself.</td></tr>
+              <tr><td><code>STALL</code></td><td><code>5</code></td><td><code>CONTROL</code>. The request ends in a STALL handshake.</td></tr>
+              <tr><td><code>NAK</code></td><td><code>6</code></td><td><code>CONTROL</code>. EP0 NAKs until the PC times out; a control endpoint above 0 STALLs.</td></tr>
+              <tr><td><code>REPLY_PATCH</code></td><td><code>7</code></td><td><code>CONTROL</code>. Writes the payload into the device's IN reply at <code>off</code>, unapplied past the reply's end.</td></tr>
+              <tr><td><code>REPLY_REPLACE</code></td><td><code>8</code></td><td><code>CONTROL</code>. The IN reply becomes the payload, cut to <code>wLength</code>.</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">CONTROL</div>
         <p>
           On <code>CONTROL</code> an action depends on the request's direction. The reply actions
           apply only when the device completed the request.
         </p>
-        <table class="api-params">
-          <thead>
-            <tr><th>Action</th><th>IN request</th><th>OUT request</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><code>PASS</code></td><td>proxied unchanged</td><td>proxied unchanged</td></tr>
-            <tr><td><code>PATCH</code></td><td>proxied unchanged</td><td>the data stage is patched at <code>off</code> before the device gets it</td></tr>
-            <tr><td><code>REPLACE</code></td><td>proxied unchanged</td><td>the payload overwrites the start of the data stage; <code>wLength</code> is kept</td></tr>
-            <tr><td><code>ANSWER</code></td><td>the payload is the reply, cut to <code>wLength</code></td><td>the status stage is ACKed and the data goes no further</td></tr>
-            <tr><td><code>STALL</code>, <code>NAK</code></td><td>refused</td><td>refused</td></tr>
-            <tr><td><code>REPLY_PATCH</code>, <code>REPLY_REPLACE</code></td><td>the device's reply is rewritten</td><td>proxied unchanged</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Action</th><th>IN request</th><th>OUT request</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>PASS</code></td><td>proxied unchanged</td><td>proxied unchanged</td></tr>
+              <tr><td><code>PATCH</code></td><td>proxied unchanged</td><td>the data stage is patched at <code>off</code> before the device gets it</td></tr>
+              <tr><td><code>REPLACE</code></td><td>proxied unchanged</td><td>the payload overwrites the start of the data stage; <code>wLength</code> is kept</td></tr>
+              <tr><td><code>ANSWER</code></td><td>the payload is the reply, cut to <code>wLength</code></td><td>the status stage is ACKed and the data goes no further</td></tr>
+              <tr><td><code>STALL</code>, <code>NAK</code></td><td>refused</td><td>refused</td></tr>
+              <tr><td><code>REPLY_PATCH</code>, <code>REPLY_REPLACE</code></td><td>the device's reply is rewritten</td><td>proxied unchanged</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="callout callout--info">
           <p>
             On EP0 the table matches class and vendor requests, and the standard requests the clone passes
@@ -279,18 +285,20 @@ const Rewrite: Component = () => {
         |
         v
   delivered                  to the game PC (IN) or the real device (OUT)`}</pre>
-        <table class="api-params">
-          <thead>
-            <tr><th>Name</th><th>Behaviour</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><A href="/native/commands/clip#packet-triggers">packet triggers</A></td><td>A packet can fire a trigger and then match a rule. A report a trigger consumes reaches no rule and counts no hit.</td></tr>
-            <tr><td><code>HID_IN</code></td><td>Buttons, keys, media and a secondary mouse's report are read from the rewritten bytes by <A href="/native/commands/lock"><code>LOCK</code></A>, <A href="/native/commands/transform#order"><code>TRANSFORM</code></A> and injection. A <code>DROP</code> removes the native report; injection still emits on the frame clock.</td></tr>
-            <tr><td><code>EMIT</code></td><td>Acts last, on native, injected and rendered reports and a clip's entries. A rewritten report that carries no event against the last one sent is suppressed, unless the device reports every poll.</td></tr>
-            <tr><td><A href="/native/commands/raw"><code>RAW</code></A></td><td>Goes straight to the endpoint, past every rule and trigger, as a clip's <A href="/native/commands/clip#items">raw items</A> do.</td></tr>
-            <tr><td><A href="/native/commands/transfer"><code>TRANSFER</code></A></td><td>Runs on its own messages to the device, past every rule.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Name</th><th>Behaviour</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><A href="/native/commands/clip#packet-triggers">packet triggers</A></td><td>A packet can fire a trigger and then match a rule. A report a trigger consumes reaches no rule and counts no hit.</td></tr>
+              <tr><td><code>HID_IN</code></td><td>Buttons, keys, media and a secondary mouse's report are read from the rewritten bytes by <A href="/native/commands/lock"><code>LOCK</code></A>, <A href="/native/commands/transform#order"><code>TRANSFORM</code></A> and injection. A <code>DROP</code> removes the native report; injection still emits on the frame clock.</td></tr>
+              <tr><td><code>EMIT</code></td><td>Acts last, on native, injected and rendered reports and a clip's entries. A rewritten report that carries no event against the last one sent is suppressed, unless the device reports every poll.</td></tr>
+              <tr><td><A href="/native/commands/raw"><code>RAW</code></A></td><td>Goes straight to the endpoint, past every rule and trigger, as a clip's <A href="/native/commands/clip#items">raw items</A> do.</td></tr>
+              <tr><td><A href="/native/commands/transfer"><code>TRANSFER</code></A></td><td>Runs on its own messages to the device, past every rule.</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="callout callout--warning">
           <p>
             The host chip weighs the bound mouse's relative axes from the report as it arrived.
@@ -329,17 +337,19 @@ opt-in off  OPTION(IMPERFECT) turned off`}</pre>
         </p>
         <p>Every clear here but remove and clear moves the <A href="/native/commands/requests#stats"><code>session</code></A> count.</p>
         <div class="api-response-label">GEN</div>
-        <table class="api-params">
-          <thead>
-            <tr><th>Event</th><th>Effect</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>a rule added, overwritten or removed</td><td><code>gen</code> goes up by one, wrapping at 255.</td></tr>
-            <tr><td>a re-send identical to the stored rule</td><td><code>gen</code> stays.</td></tr>
-            <tr><td>a clear or silence that empties a non-empty table</td><td><code>gen</code> goes up by one.</td></tr>
-            <tr><td><A href="/native/commands/admin#reset"><code>RESET</code></A>, link loss, detach, re-clone, opt-in off</td><td>The table and <code>gen</code> both return to <code>0</code>.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Event</th><th>Effect</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>a rule added, overwritten or removed</td><td><code>gen</code> goes up by one, wrapping at 255.</td></tr>
+              <tr><td>a re-send identical to the stored rule</td><td><code>gen</code> stays.</td></tr>
+              <tr><td>a clear or silence that empties a non-empty table</td><td><code>gen</code> goes up by one.</td></tr>
+              <tr><td><A href="/native/commands/admin#reset"><code>RESET</code></A>, link loss, detach, re-clone, opt-in off</td><td>The table and <code>gen</code> both return to <code>0</code>.</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">READBACK</div>
         <p>
           <A href="/native/commands/requests#rewrite"><code>QUERY(REWRITE)</code></A> returns{' '}

@@ -79,22 +79,24 @@ const Clip: Component = () => {
           <A href="/library/types/enums#action"><code>Action</code></A> that stays held until a later frame
           changes it; a <code>gap</code> NAKs like an idle mouse.
         </p>
-        <table class="api-params">
-          <thead>
-            <tr><th>Method</th><th>Appends</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><code>gap(frames)</code></td><td>N idle frames (0 is a no-op).</td></tr>
-            <tr><td><code>move_by(dx, dy)</code></td><td>a cursor-motion frame.</td></tr>
-            <tr><td><code>wheel(dz)</code></td><td>a wheel frame.</td></tr>
-            <tr><td><code>pan(dpan)</code></td><td>a pan (horizontal scroll) frame.</td></tr>
-            <tr><td><code>press / release / force_release(usage)</code></td><td>a one-frame press, soft-release, or force-release of any <A href="/library/types/structs#usage"><code>Usage</code></A> (button, key, or media), like <A href="/library/inject#inject"><code>Device::press</code></A>.</td></tr>
-            <tr><td><code>edge(usage, action)</code></td><td>a one-edge frame for any <A href="/library/types/structs#usage"><code>Usage</code></A> with an explicit <A href="/library/types/enums#action"><code>Action</code></A>.</td></tr>
-            <tr><td><code>raw(ep, direction, bytes)</code></td><td>a frame carrying one raw report.</td></tr>
-            <tr><td><code>transfer(ep, setup, out)</code></td><td>a frame carrying one control transfer.</td></tr>
-            <tr><td><code>frame(frame)</code></td><td>one frame carrying whatever a <A href="/library/clip#frame"><code>ClipFrame</code></A> holds.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Method</th><th>Appends</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>gap(frames)</code></td><td>N idle frames (0 is a no-op).</td></tr>
+              <tr><td><code>move_by(dx, dy)</code></td><td>a cursor-motion frame.</td></tr>
+              <tr><td><code>wheel(dz)</code></td><td>a wheel frame.</td></tr>
+              <tr><td><code>pan(dpan)</code></td><td>a pan (horizontal scroll) frame.</td></tr>
+              <tr><td><code>press / release / force_release(usage)</code></td><td>a one-frame press, soft-release, or force-release of any <A href="/library/types/structs#usage"><code>Usage</code></A> (button, key, or media), like <A href="/library/inject#inject"><code>Device::press</code></A>.</td></tr>
+              <tr><td><code>edge(usage, action)</code></td><td>a one-edge frame for any <A href="/library/types/structs#usage"><code>Usage</code></A> with an explicit <A href="/library/types/enums#action"><code>Action</code></A>.</td></tr>
+              <tr><td><code>raw(ep, direction, bytes)</code></td><td>a frame carrying one raw report.</td></tr>
+              <tr><td><code>transfer(ep, setup, out)</code></td><td>a frame carrying one control transfer.</td></tr>
+              <tr><td><code>frame(frame)</code></td><td>one frame carrying whatever a <A href="/library/clip#frame"><code>ClipFrame</code></A> holds.</td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           They take <code>&amp;mut self</code> and return <code>&amp;mut Self</code>, for chaining or a
           loop; <code>clear()</code> reuses the allocation, and <code>byte_len()</code> is
@@ -137,20 +139,22 @@ clip.release(Button::LEFT);`}</code></pre>
           encoded bytes (<code>CLIP_ENTRY_MAX</code>). Each method takes <code>self</code> and returns
           the frame.
         </p>
-        <table class="api-params">
-          <thead>
-            <tr><th>Method</th><th>Does</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><code>move_by(dx, dy)</code></td><td>Set the cursor motion, a relative delta.</td></tr>
-            <tr><td><code>wheel(dz)</code> / <code>pan(dpan)</code></td><td>Set the wheel or the pan (horizontal scroll) motion.</td></tr>
-            <tr><td><code>press / release / force_release(usage)</code></td><td>Add a press, soft-release, or force-release edge of any <A href="/library/types/structs#usage"><code>Usage</code></A>.</td></tr>
-            <tr><td><code>edge(usage, action)</code></td><td>Add an edge with an explicit <A href="/library/types/enums#action"><code>Action</code></A>. A frame holds up to 8 (<code>CLIP_EDGES_MAX</code>).</td></tr>
-            <tr><td><code>raw(ep, direction, bytes)</code></td><td>Add a raw report, as <A href="/library/advanced/raw#raw"><code>Device::raw</code></A> sends one. A frame holds up to 8 (<code>CLIP_RAW_MAX</code>), sent in order ahead of the frame's report.</td></tr>
-            <tr><td><code>transfer(ep, setup, out)</code></td><td>Add a control transfer, as <A href="/library/advanced/transfer#transfer"><code>Device::transfer</code></A> runs one: <code>out</code> is <code>setup.length</code> bytes for an OUT request, empty for an IN one. Each reply is a <A href="/library/types/enums#traffic-class"><code>TrafficClass::ClipTransfer</code></A> catch event.</td></tr>
-            <tr><td><code>byte_len()</code></td><td>The ring bytes the frame takes, at most 512 for a frame <code>append</code> accepts.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Method</th><th>Does</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>move_by(dx, dy)</code></td><td>Set the cursor motion, a relative delta.</td></tr>
+              <tr><td><code>wheel(dz)</code> / <code>pan(dpan)</code></td><td>Set the wheel or the pan (horizontal scroll) motion.</td></tr>
+              <tr><td><code>press / release / force_release(usage)</code></td><td>Add a press, soft-release, or force-release edge of any <A href="/library/types/structs#usage"><code>Usage</code></A>.</td></tr>
+              <tr><td><code>edge(usage, action)</code></td><td>Add an edge with an explicit <A href="/library/types/enums#action"><code>Action</code></A>. A frame holds up to 8 (<code>CLIP_EDGES_MAX</code>).</td></tr>
+              <tr><td><code>raw(ep, direction, bytes)</code></td><td>Add a raw report, as <A href="/library/advanced/raw#raw"><code>Device::raw</code></A> sends one. A frame holds up to 8 (<code>CLIP_RAW_MAX</code>), sent in order ahead of the frame's report.</td></tr>
+              <tr><td><code>transfer(ep, setup, out)</code></td><td>Add a control transfer, as <A href="/library/advanced/transfer#transfer"><code>Device::transfer</code></A> runs one: <code>out</code> is <code>setup.length</code> bytes for an OUT request, empty for an IN one. Each reply is a <A href="/library/types/enums#traffic-class"><code>TrafficClass::ClipTransfer</code></A> catch event.</td></tr>
+              <tr><td><code>byte_len()</code></td><td>The ring bytes the frame takes, at most 512 for a frame <code>append</code> accepts.</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="callout callout--warning">
           <p>
             Raw reports and transfers need{' '}
@@ -213,19 +217,21 @@ device.clip().append(&clip)?;`}</code></pre>
         </table>
         </div>
         <div class="api-response-label">ENGINE VERBS</div>
-        <table class="api-params">
-          <thead>
-            <tr><th>Method</th><th>Does</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><code>start()</code></td><td>Rewind to the clip start and play (resume from a pause).</td></tr>
-            <tr><td><code>stop()</code></td><td>Stop, release held input and the clip lock; a streaming clip flushes, a retained clip rewinds and is kept.</td></tr>
-            <tr><td><code>pause()</code> / <code>resume()</code></td><td>Halt mid-clip keeping the cursor and held input / continue from the paused cursor.</td></tr>
-            <tr><td><code>restart()</code></td><td>Force a rewind and play, even mid-playback.</td></tr>
-            <tr><td><code>toggle()</code></td><td>Play if idle/paused, stop if playing.</td></tr>
-            <tr><td><code>clear()</code></td><td>Discard the loaded clip, free the ring, clear a fault.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Method</th><th>Does</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>start()</code></td><td>Rewind to the clip start and play (resume from a pause).</td></tr>
+              <tr><td><code>stop()</code></td><td>Stop, release held input and the clip lock; a streaming clip flushes, a retained clip rewinds and is kept.</td></tr>
+              <tr><td><code>pause()</code> / <code>resume()</code></td><td>Halt mid-clip keeping the cursor and held input / continue from the paused cursor.</td></tr>
+              <tr><td><code>restart()</code></td><td>Force a rewind and play, even mid-playback.</td></tr>
+              <tr><td><code>toggle()</code></td><td>Play if idle/paused, stop if playing.</td></tr>
+              <tr><td><code>clear()</code></td><td>Discard the loaded clip, free the ring, clear a fault.</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="callout callout--info">
           <p>
             A dropped append or an overflow faults the clip (
@@ -239,13 +245,15 @@ device.clip().append(&clip)?;`}</code></pre>
         <pre class="api-signature">fn lost(&self) -&gt; bool</pre>
         <p><span class="api-badge api-badge--executed">No round-trip</span></p>
         <div class="api-response-label">RETURNS</div>
-        <table class="api-params">
-          <thead><tr><th>Value</th><th>When</th></tr></thead>
-          <tbody>
-            <tr><td><code>true</code></td><td>A clip appended since the last <code>clear</code> is gone from the box: its device chip restarted, the box <A href="/library/lifecycle#restart">released the session</A>, or a <A href="/library/lifecycle#reconnect">reconnect</A> found the ring empty. Set once the box takes a reload again.</td></tr>
-            <tr><td><code>false</code></td><td>Nothing appended, the clip still on the box, or an <code>append</code> or <code>clear</code> since.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Value</th><th>When</th></tr></thead>
+            <tbody>
+              <tr><td><code>true</code></td><td>A clip appended since the last <code>clear</code> is gone from the box: its device chip restarted, the box <A href="/library/lifecycle#restart">released the session</A>, or a <A href="/library/lifecycle#reconnect">reconnect</A> found the ring empty. Set once the box takes a reload again.</td></tr>
+              <tr><td><code>false</code></td><td>Nothing appended, the clip still on the box, or an <code>append</code> or <code>clear</code> since.</td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           A recovery restores the settings and triggers, not the ring's content; the caller rebuilds
           and appends the clip.
@@ -265,20 +273,22 @@ if handle.lost() {
           <A href="/library/clip#handle"><code>set_retain</code></A> picks the shape before the first{' '}
           <A href="/library/clip#handle"><code>append</code></A>.
         </p>
-        <table class="api-params">
-          <thead>
-            <tr><th>Aspect</th><th>Streaming (default)</th><th>Retained</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>Turn on</td><td>default</td><td><code>set_retain(true)</code> before the first <code>append</code></td></tr>
-            <tr><td>The ring</td><td>each entry freed as it plays; unbounded</td><td>entries kept after playing, up to 64 KiB</td></tr>
-            <tr><td>Top up mid-play</td><td>yes, appends to the tail in real time</td><td>until <code>finalize</code>, then sealed</td></tr>
-            <tr><td>Replay</td><td>no, plays once</td><td>yes, rewinds and replays</td></tr>
-            <tr><td><code>loop</code></td><td>not available</td><td>available once <code>finalize</code>d</td></tr>
-            <tr><td><code>stop</code></td><td>flushes the buffer</td><td>rewinds and keeps the clip</td></tr>
-            <tr><td>Best for</td><td>open-ended or generated input</td><td>a fixed macro replayed on a trigger</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Aspect</th><th>Streaming (default)</th><th>Retained</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Turn on</td><td>default</td><td><code>set_retain(true)</code> before the first <code>append</code></td></tr>
+              <tr><td>The ring</td><td>each entry freed as it plays; unbounded</td><td>entries kept after playing, up to 64 KiB</td></tr>
+              <tr><td>Top up mid-play</td><td>yes, appends to the tail in real time</td><td>until <code>finalize</code>, then sealed</td></tr>
+              <tr><td>Replay</td><td>no, plays once</td><td>yes, rewinds and replays</td></tr>
+              <tr><td><code>loop</code></td><td>not available</td><td>available once <code>finalize</code>d</td></tr>
+              <tr><td><code>stop</code></td><td>flushes the buffer</td><td>rewinds and keeps the clip</td></tr>
+              <tr><td>Best for</td><td>open-ended or generated input</td><td>a fixed macro replayed on a trigger</td></tr>
+            </tbody>
+          </table>
+        </div>
         <pre class="diagram">{`streaming (drain-and-discard)
     append --> [ e4 e3 e2 ] --> play --> freed     (unbounded, top up forever)
                    box reclaims each entry once played; no replay
@@ -361,32 +371,36 @@ handle.stop()?;`}</code></pre>
 
         <div id="input-triggers" data-search-target>
           <div class="api-response-label">INPUT TRIGGERS</div>
-          <table class="api-params">
-            <thead>
-              <tr><th>Part</th><th>Is</th><th>Example</th></tr>
-            </thead>
-            <tbody>
-              <tr><td>usage</td><td>the button, key, or media the edge is on (or any of a class)</td><td><code>Key::F1</code></td></tr>
-              <tr><td>edge</td><td>which transition fires it: press, release, or both</td><td><code>Edge::Press</code></td></tr>
-              <tr><td>action</td><td>the engine verb to run</td><td><code>ClipAction::Start</code></td></tr>
-            </tbody>
-          </table>
+          <div class="table-scroll">
+            <table class="api-params">
+              <thead>
+                <tr><th>Part</th><th>Is</th><th>Example</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>usage</td><td>the button, key, or media the edge is on (or any of a class)</td><td><code>Key::F1</code></td></tr>
+                <tr><td>edge</td><td>which transition fires it: press, release, or both</td><td><code>Edge::Press</code></td></tr>
+                <tr><td>action</td><td>the engine verb to run</td><td><code>ClipAction::Start</code></td></tr>
+              </tbody>
+            </table>
+          </div>
           <p>
             Input triggers are keyed by <code>(usage, edge)</code>, like a{' '}
             <A href="/library/lock">lock</A>. A physical edge runs only the most specific match:{' '}
             <code>Key::F1</code> before an any-key trigger.
           </p>
-          <table class="api-params">
-            <thead>
-              <tr><th>To get</th><th>Bind</th></tr>
-            </thead>
-            <tbody>
-              <tr><td>Hold to play</td><td><code>F1 Press -&gt; Start</code> and <code>F1 Release -&gt; Stop</code></td></tr>
-              <tr><td>Toggle play/stop on one key</td><td><code>Side1 Press -&gt; Toggle</code></td></tr>
-              <tr><td>Separate play and stop keys</td><td><code>F1 Press -&gt; Start</code> and <code>F2 Press -&gt; Stop</code></td></tr>
-              <tr><td>Pause, then resume</td><td><code>F3 Press -&gt; Pause</code> and <code>F4 Press -&gt; Resume</code></td></tr>
-            </tbody>
-          </table>
+          <div class="table-scroll">
+            <table class="api-params">
+              <thead>
+                <tr><th>To get</th><th>Bind</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Hold to play</td><td><code>F1 Press -&gt; Start</code> and <code>F1 Release -&gt; Stop</code></td></tr>
+                <tr><td>Toggle play/stop on one key</td><td><code>Side1 Press -&gt; Toggle</code></td></tr>
+                <tr><td>Separate play and stop keys</td><td><code>F1 Press -&gt; Start</code> and <code>F2 Press -&gt; Stop</code></td></tr>
+                <tr><td>Pause, then resume</td><td><code>F3 Press -&gt; Pause</code> and <code>F4 Press -&gt; Resume</code></td></tr>
+              </tbody>
+            </table>
+          </div>
           <div class="callout callout--info">
             <p>
               <code>.consume()</code> locks the trigger usage while it stays active, on the press edge
@@ -426,37 +440,43 @@ clip.bind(ClipTrigger::new(Button::SIDE1, Edge::Press, ClipAction::Toggle))?;`}<
             <code>bytes</code> are the report. The box's rules are on{' '}
             <A href="/native/commands/clip#packet-triggers"><code>CLIP_TRIGGER</code></A>.
           </p>
-          <table class="api-params">
-            <thead>
-              <tr><th>Part</th><th>Is</th></tr>
-            </thead>
-            <tbody>
-              <tr><td>address</td><td>the <A href="/library/types/enums#traffic-class"><code>TrafficClass</code></A>, the id within it (the interface number for <code>HidIn</code>, the endpoint number for the rest, or <code>ANY_ID</code>), and the <A href="/library/types/enums#direction"><code>Direction</code></A></td></tr>
-              <tr><td>action</td><td>the engine verb to run, on the frame clock's next tick: within one frame of the matching packet, 1&nbsp;ms at the default pace</td></tr>
-              <tr><td><code>.matching()</code></td><td>head bytes and their mask, one length, 16 at most; left out, every packet on the address matches</td></tr>
-              <tr><td><code>.consume()</code></td><td>drop every packet the trigger matches as the top-ranked trigger, whether or not the action runs on it; a consumed <code>HidIn</code> report is the whole report, the motion and buttons in it included, and a release edge in it reaches the PC with the next report</td></tr>
-              <tr><td><code>.once_per_run()</code></td><td>run the action on the first packet of a run of matching ones; the first <code>selector_len</code> match bytes select the stream, such as a report ID, and the rest are the condition</td></tr>
-            </tbody>
-          </table>
-          <table class="api-params">
-            <thead>
-              <tr><th>What</th><th>Needs the opt-in</th><th>Why</th></tr>
-            </thead>
-            <tbody>
-              <tr><td>a trigger that watches</td><td>no</td><td>It alters no byte the PC or the device sees.</td></tr>
-              <tr><td>a trigger that consumes</td><td>yes</td><td>It drops traffic, as a <code>Drop</code> rewrite rule does.</td></tr>
-            </tbody>
-          </table>
-          <table class="api-params">
-            <thead>
-              <tr><th>To get</th><th>Bind</th></tr>
-            </thead>
-            <tbody>
-              <tr><td>Hold a vendor button to play</td><td>two <code>once_per_run</code> triggers: the pressed bytes to <code>Start</code>, the released bytes to <code>Stop</code></td></tr>
-              <tr><td>Keep that button from the PC</td><td><code>.consume()</code> on the pressed trigger, under <A href="/library/options#allow-imperfect-clones"><code>allow_imperfect_clones(true)</code></A></td></tr>
-              <tr><td>Restart when the PC writes a report</td><td><code>HidOut</code> or <code>Control</code>, <code>Direction::OUT</code>, to <code>Restart</code></td></tr>
-            </tbody>
-          </table>
+          <div class="table-scroll">
+            <table class="api-params">
+              <thead>
+                <tr><th>Part</th><th>Is</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>address</td><td>the <A href="/library/types/enums#traffic-class"><code>TrafficClass</code></A>, the id within it (the interface number for <code>HidIn</code>, the endpoint number for the rest, or <code>ANY_ID</code>), and the <A href="/library/types/enums#direction"><code>Direction</code></A></td></tr>
+                <tr><td>action</td><td>the engine verb to run, on the frame clock's next tick: within one frame of the matching packet, 1&nbsp;ms at the default pace</td></tr>
+                <tr><td><code>.matching()</code></td><td>head bytes and their mask, one length, 16 at most; left out, every packet on the address matches</td></tr>
+                <tr><td><code>.consume()</code></td><td>drop every packet the trigger matches as the top-ranked trigger, whether or not the action runs on it; a consumed <code>HidIn</code> report is the whole report, the motion and buttons in it included, and a release edge in it reaches the PC with the next report</td></tr>
+                <tr><td><code>.once_per_run()</code></td><td>run the action on the first packet of a run of matching ones; the first <code>selector_len</code> match bytes select the stream, such as a report ID, and the rest are the condition</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="table-scroll">
+            <table class="api-params">
+              <thead>
+                <tr><th>What</th><th>Needs the opt-in</th><th>Why</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>a trigger that watches</td><td>no</td><td>It alters no byte the PC or the device sees.</td></tr>
+                <tr><td>a trigger that consumes</td><td>yes</td><td>It drops traffic, as a <code>Drop</code> rewrite rule does.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="table-scroll">
+            <table class="api-params">
+              <thead>
+                <tr><th>To get</th><th>Bind</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Hold a vendor button to play</td><td>two <code>once_per_run</code> triggers: the pressed bytes to <code>Start</code>, the released bytes to <code>Stop</code></td></tr>
+                <tr><td>Keep that button from the PC</td><td><code>.consume()</code> on the pressed trigger, under <A href="/library/options#allow-imperfect-clones"><code>allow_imperfect_clones(true)</code></A></td></tr>
+                <tr><td>Restart when the PC writes a report</td><td><code>HidOut</code> or <code>Control</code>, <code>Direction::OUT</code>, to <code>Restart</code></td></tr>
+              </tbody>
+            </table>
+          </div>
           <div class="callout callout--info">
             <p>
               A run starts on the first matching packet the trigger sees. A trigger whose condition
@@ -474,16 +494,18 @@ clip.bind(ClipTrigger::new(Button::SIDE1, Edge::Press, ClipAction::Toggle))?;`}<
             counts only packets matched as the top-ranked trigger; an outranked trigger's{' '}
             <code>hits</code> stays still while it keeps tracking its run.
           </p>
-          <table class="api-params">
-            <thead>
-              <tr><th>Report</th><th>Top-ranked trigger</th><th>Result</th></tr>
-            </thead>
-            <tbody>
-              <tr><td><code>07 20 ..</code></td><td><code>[07 20]/[FF 20]</code>, 9 masked bits</td><td>its action runs and the report reaches the PC</td></tr>
-              <tr><td><code>07 00 ..</code></td><td>a consuming <code>[07]/[FF]</code>, 8 masked bits</td><td>its action runs and the report is dropped</td></tr>
-              <tr><td><code>08 20 ..</code></td><td>neither</td><td>the report reaches the PC</td></tr>
-            </tbody>
-          </table>
+          <div class="table-scroll">
+            <table class="api-params">
+              <thead>
+                <tr><th>Report</th><th>Top-ranked trigger</th><th>Result</th></tr>
+              </thead>
+              <tbody>
+                <tr><td><code>07 20 ..</code></td><td><code>[07 20]/[FF 20]</code>, 9 masked bits</td><td>its action runs and the report reaches the PC</td></tr>
+                <tr><td><code>07 00 ..</code></td><td>a consuming <code>[07]/[FF]</code>, 8 masked bits</td><td>its action runs and the report is dropped</td></tr>
+                <tr><td><code>08 20 ..</code></td><td>neither</td><td>the report reaches the PC</td></tr>
+              </tbody>
+            </table>
+          </div>
           <div class="api-response-label">REFUSED</div>
           <p>
             <code>bind_packet</code> returns{' '}

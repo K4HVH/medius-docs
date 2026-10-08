@@ -12,7 +12,6 @@ import { type BoxEntry, type Snapshot, useBoxes, useNativeFlash } from './contex
 import { BAD_BROWSER, BAD_CONTEXT, ConnectView } from './ConnectPanel';
 import { ClearPort, InstallPorts, type PortId } from './PortDiagram';
 import { PageHeader } from '../../shell/PageHeader';
-import '../../../styles/docs.css';
 
 type Step = 'main' | 'unplug' | 'mouse' | 'unplug3' | 'cables';
 

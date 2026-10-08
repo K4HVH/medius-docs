@@ -4,7 +4,6 @@ import { Chip } from '../../../components/display/Chip';
 import { type FirmwareRelease, fetchReleases } from '../../../dashboard/firmware';
 import { type Block, inlineRuns, parseBlocks, splitRelease } from '../../../dashboard/firmware/notes';
 import { PageHeader } from '../../shell/PageHeader';
-import '../../../styles/docs.css';
 
 const fmtDate = (iso: string) => {
   const d = new Date(iso);

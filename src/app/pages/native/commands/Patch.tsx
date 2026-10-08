@@ -23,16 +23,18 @@ const Patch: Component = () => {
                             |  clone checks, consistency checks
                             v
   game PC <---USB1----- the clone      patched, or unpatched when a check fails`}</pre>
-        <table class="api-params">
-          <thead>
-            <tr><th>Action</th><th>Value</th><th>Effect</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><A href="/native/commands/patch#patch">store</A></td><td><code>0</code> to <code>4</code></td><td>add, overwrite or remove one patch in the stored set</td></tr>
-            <tr><td><A href="/native/commands/patch#apply">APPLY</A></td><td><code>0xFE</code></td><td>present the clone again with the stored set</td></tr>
-            <tr><td><A href="/native/commands/patch#clear">CLEAR</A></td><td><code>0xFF</code></td><td>erase the set; a clone serving patches is presented again without them</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Action</th><th>Value</th><th>Effect</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><A href="/native/commands/patch#patch">store</A></td><td><code>0</code> to <code>4</code></td><td>add, overwrite or remove one patch in the stored set</td></tr>
+              <tr><td><A href="/native/commands/patch#apply">APPLY</A></td><td><code>0xFE</code></td><td>present the clone again with the stored set</td></tr>
+              <tr><td><A href="/native/commands/patch#clear">CLEAR</A></td><td><code>0xFF</code></td><td>erase the set; a clone serving patches is presented again without them</td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           The value is the first payload byte. Read the set back with{' '}
           <A href="/native/commands/requests#patches"><code>QUERY(PATCHES)</code></A> and one patch in
@@ -55,62 +57,70 @@ const Patch: Component = () => {
         <pre class="api-signature">PATCH  0x1D  ·  payload 5 + n bytes</pre>
         <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
         <div class="api-response-label">PAYLOAD</div>
-        <table class="byte-table">
-          <thead>
-            <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>0</td><td><code>section</code></td><td><code>u8</code></td><td>descriptor (table below)</td></tr>
-            <tr><td>1</td><td><code>cfg</code></td><td><code>u8</code></td><td>configuration's position in capture order, <code>0</code> first</td></tr>
-            <tr><td>2</td><td><code>index</code></td><td><code>u8</code></td><td>interface number for REPORT, string index for STRING</td></tr>
-            <tr><td>3</td><td><code>offset</code></td><td><code>u16</code></td><td>first byte overwritten, counted from the descriptor's first byte; little-endian</td></tr>
-            <tr><td>5</td><td><code>bytes</code></td><td><code>u8[]</code></td><td>overwrite, 0 to 505 bytes, delimited by the frame <A href="/native/frame#layout"><code>LEN</code></A></td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="byte-table">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>0</td><td><code>section</code></td><td><code>u8</code></td><td>descriptor (table below)</td></tr>
+              <tr><td>1</td><td><code>cfg</code></td><td><code>u8</code></td><td>configuration's position in capture order, <code>0</code> first</td></tr>
+              <tr><td>2</td><td><code>index</code></td><td><code>u8</code></td><td>interface number for REPORT, string index for STRING</td></tr>
+              <tr><td>3</td><td><code>offset</code></td><td><code>u16</code></td><td>first byte overwritten, counted from the descriptor's first byte; little-endian</td></tr>
+              <tr><td>5</td><td><code>bytes</code></td><td><code>u8[]</code></td><td>overwrite, 0 to 505 bytes, delimited by the frame <A href="/native/frame#layout"><code>LEN</code></A></td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">SECTION</div>
-        <table class="api-params">
-          <thead>
-            <tr><th>Value</th><th>Name</th><th>Effect</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><code>0</code></td><td>DEVICE</td><td>the 18-byte device descriptor; <code>cfg</code> and <code>index</code> ignored</td></tr>
-            <tr><td><code>1</code></td><td>CONFIG</td><td>configuration <code>cfg</code>, every byte of its <code>wTotalLength</code>; <code>index</code> ignored</td></tr>
-            <tr><td><code>2</code></td><td>REPORT</td><td>the HID report descriptor of interface <code>index</code> in configuration <code>cfg</code></td></tr>
-            <tr><td><code>3</code></td><td>STRING</td><td>string <code>index</code>, replaced whole; <code>cfg</code> and <code>offset</code> ignored</td></tr>
-            <tr><td><code>4</code></td><td>BOS</td><td>the BOS descriptor; <code>cfg</code> and <code>index</code> ignored</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Value</th><th>Name</th><th>Effect</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>0</code></td><td>DEVICE</td><td>the 18-byte device descriptor; <code>cfg</code> and <code>index</code> ignored</td></tr>
+              <tr><td><code>1</code></td><td>CONFIG</td><td>configuration <code>cfg</code>, every byte of its <code>wTotalLength</code>; <code>index</code> ignored</td></tr>
+              <tr><td><code>2</code></td><td>REPORT</td><td>the HID report descriptor of interface <code>index</code> in configuration <code>cfg</code></td></tr>
+              <tr><td><code>3</code></td><td>STRING</td><td>string <code>index</code>, replaced whole; <code>cfg</code> and <code>offset</code> ignored</td></tr>
+              <tr><td><code>4</code></td><td>BOS</td><td>the BOS descriptor; <code>cfg</code> and <code>index</code> ignored</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">KEY</div>
         <p>
           A patch is stored under <code>(section, cfg, index, offset)</code> exactly as sent, ignored
           fields included, so send <code>0</code> in those.
         </p>
-        <table class="api-params">
-          <thead>
-            <tr><th>Sent</th><th>Effect</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>bytes at a new key</td><td>appended to the set</td></tr>
-            <tr><td>other bytes at a stored key</td><td>replaced and moved to the end of the set</td></tr>
-            <tr><td>the bytes already stored at that key</td><td>no change: the patch keeps its place and NVS is untouched</td></tr>
-            <tr><td>zero bytes at a stored key</td><td>removed</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Sent</th><th>Effect</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>bytes at a new key</td><td>appended to the set</td></tr>
+              <tr><td>other bytes at a stored key</td><td>replaced and moved to the end of the set</td></tr>
+              <tr><td>the bytes already stored at that key</td><td>no change: the patch keeps its place and NVS is untouched</td></tr>
+              <tr><td>zero bytes at a stored key</td><td>removed</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">REFUSALS</div>
-        <table class="api-params">
-          <thead>
-            <tr><th>Refused when</th><th>Why</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>no device attached</td><td>the set is keyed on the attached device; a device the box refuses to clone still counts as attached</td></tr>
-            <tr><td>store payload under 5 bytes</td><td>the first five are the address</td></tr>
-            <tr><td><code>section</code> is <code>5</code> to <code>0xFD</code></td><td>five descriptor kinds, then APPLY and CLEAR</td></tr>
-            <tr><td><code>bytes</code> longer than 505</td><td>the patch must fit its <A href="/native/commands/requests#patch-entry"><code>RESP(PATCH_ENTRY)</code></A> read-back in one frame</td></tr>
-            <tr><td>a 17th key</td><td>16 patches per device; <A href="/native/commands/requests#patches"><code>RESP(PATCHES)</code></A> sets <code>FULL</code></td></tr>
-            <tr><td>the set's bytes would pass 1024</td><td>one pool holds every patch's bytes; <code>FULL</code> is set, and an overwrite that does not fit leaves the old patch in place</td></tr>
-            <tr><td>zero <code>bytes</code> at an unstored key</td><td>nothing to remove</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Refused when</th><th>Why</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>no device attached</td><td>the set is keyed on the attached device; a device the box refuses to clone still counts as attached</td></tr>
+              <tr><td>store payload under 5 bytes</td><td>the first five are the address</td></tr>
+              <tr><td><code>section</code> is <code>5</code> to <code>0xFD</code></td><td>five descriptor kinds, then APPLY and CLEAR</td></tr>
+              <tr><td><code>bytes</code> longer than 505</td><td>the patch must fit its <A href="/native/commands/requests#patch-entry"><code>RESP(PATCH_ENTRY)</code></A> read-back in one frame</td></tr>
+              <tr><td>a 17th key</td><td>16 patches per device; <A href="/native/commands/requests#patches"><code>RESP(PATCHES)</code></A> sets <code>FULL</code></td></tr>
+              <tr><td>the set's bytes would pass 1024</td><td>one pool holds every patch's bytes; <code>FULL</code> is set, and an overwrite that does not fit leaves the old patch in place</td></tr>
+              <tr><td>zero <code>bytes</code> at an unstored key</td><td>nothing to remove</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">EFFECT</div>
         <p>
           A change is written to NVS at once and reaches the game PC at the clone's next{' '}
@@ -151,14 +161,16 @@ const Patch: Component = () => {
         <pre class="api-signature">PATCH  0x1D  ·  payload 1 byte</pre>
         <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
         <div class="api-response-label">PAYLOAD</div>
-        <table class="byte-table">
-          <thead>
-            <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>0</td><td><code>section</code></td><td><code>u8</code></td><td><code>0xFE</code></td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="byte-table">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>0</td><td><code>section</code></td><td><code>u8</code></td><td><code>0xFE</code></td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">EFFECT</div>
         <p>
           When the stored set differs from the one the clone serves, the box{' '}
@@ -167,17 +179,19 @@ const Patch: Component = () => {
           set presents it unpatched.
         </p>
         <div class="api-response-label">REFUSALS</div>
-        <table class="api-params">
-          <thead>
-            <tr><th>Refused when</th><th>Why</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>the stored set is the one the clone serves</td><td>it would change nothing and cost the game PC a re-enumeration</td></tr>
-            <tr><td>the stored set failed a check at its last presentation and is unchanged since</td><td>it would fail the same way; <A href="/native/commands/requests#patches"><code>PATCHES</code></A> b2 is set</td></tr>
-            <tr><td><A href="/native/commands/option#imperfect"><code>OPTION(IMPERFECT)</code></A> off</td><td>the clone serves no patches without the opt-in</td></tr>
-            <tr><td>no device attached</td><td>the box rebuilds the clone from the snapshot taken at attach</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Refused when</th><th>Why</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>the stored set is the one the clone serves</td><td>it would change nothing and cost the game PC a re-enumeration</td></tr>
+              <tr><td>the stored set failed a check at its last presentation and is unchanged since</td><td>it would fail the same way; <A href="/native/commands/requests#patches"><code>PATCHES</code></A> b2 is set</td></tr>
+              <tr><td><A href="/native/commands/option#imperfect"><code>OPTION(IMPERFECT)</code></A> off</td><td>the clone serves no patches without the opt-in</td></tr>
+              <tr><td>no device attached</td><td>the box rebuilds the clone from the snapshot taken at attach</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">EXAMPLE</div>
         <p>Present the stored set:</p>
         <ByteStrip
@@ -204,24 +218,28 @@ const Patch: Component = () => {
         <pre class="api-signature">PATCH  0x1D  ·  payload 1 byte</pre>
         <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
         <div class="api-response-label">PAYLOAD</div>
-        <table class="byte-table">
-          <thead>
-            <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>0</td><td><code>section</code></td><td><code>u8</code></td><td><code>0xFF</code></td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="byte-table">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>0</td><td><code>section</code></td><td><code>u8</code></td><td><code>0xFF</code></td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">EFFECT</div>
-        <table class="api-params">
-          <thead>
-            <tr><th>State</th><th>Effect</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>the clone serves patches</td><td>the set and its NVS key are erased, and the clone is <A href="/native/commands/patch#presentation">presented</A> again unpatched, as APPLY presents it</td></tr>
-            <tr><td>the clone serves none</td><td>the set and its NVS key are erased; the clone is unchanged</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>State</th><th>Effect</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>the clone serves patches</td><td>the set and its NVS key are erased, and the clone is <A href="/native/commands/patch#presentation">presented</A> again unpatched, as APPLY presents it</td></tr>
+              <tr><td>the clone serves none</td><td>the set and its NVS key are erased; the clone is unchanged</td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           Either way <A href="/native/commands/requests#patches"><code>RESP(PATCHES)</code></A> then
           reads with <code>REFUSED</code> and <code>FULL</code> clear. With the device unplugged,
@@ -257,18 +275,20 @@ const Patch: Component = () => {
                   |  presentation: attach, APPLY, CLEAR, opt-in toggle
                   v
               served set        what the game PC reads at enumeration`}</pre>
-        <table class="api-params">
-          <thead>
-            <tr><th>Event</th><th>Presents when</th><th>Serves</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>the device attaches</td><td>always</td><td>the stored set, under the opt-in</td></tr>
-            <tr><td><A href="/native/commands/patch#apply">APPLY</A></td><td>the stored set differs from the served one</td><td>the stored set, or none when it is empty</td></tr>
-            <tr><td><A href="/native/commands/patch#clear">CLEAR</A></td><td>the clone serves patches</td><td>none</td></tr>
-            <tr><td>the <A href="/native/commands/patch#gate">opt-in</A> turned on</td><td>the stored set differs from the served one and is not <A href="/native/commands/patch#ladder">refused</A></td><td>the stored set</td></tr>
-            <tr><td>the opt-in turned off</td><td>the clone serves patches</td><td>none</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Event</th><th>Presents when</th><th>Serves</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>the device attaches</td><td>always</td><td>the stored set, under the opt-in</td></tr>
+              <tr><td><A href="/native/commands/patch#apply">APPLY</A></td><td>the stored set differs from the served one</td><td>the stored set, or none when it is empty</td></tr>
+              <tr><td><A href="/native/commands/patch#clear">CLEAR</A></td><td>the clone serves patches</td><td>none</td></tr>
+              <tr><td>the <A href="/native/commands/patch#gate">opt-in</A> turned on</td><td>the stored set differs from the served one and is not <A href="/native/commands/patch#ladder">refused</A></td><td>the stored set</td></tr>
+              <tr><td>the opt-in turned off</td><td>the clone serves patches</td><td>none</td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           <A href="/native/commands/requests#patches"><code>RESP(PATCHES)</code></A> lists the stored
           set; its flags say whether the clone serves it.
@@ -296,18 +316,20 @@ const Patch: Component = () => {
         <pre class="diagram">{`  device descriptor   00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F 10 11
   offset 12, 2 bytes                                      xx xx                  lands
   offset 17, 2 bytes                                                     xx xx   past the end: skipped`}</pre>
-        <table class="api-params">
-          <thead>
-            <tr><th>Name</th><th>Behaviour</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>DEVICE</td><td>Writes the served identity, which <A href="/native/commands/requests#device-info"><code>QUERY(DEVICE_INFO)</code></A> then reports. The set and every learned setting stay keyed on the real VID:PID. Byte 17, <code>bNumConfigurations</code>, is set to the captured configuration count after the patch lands.</td></tr>
-            <tr><td>CONFIG</td><td>Writes the served configuration, which the box then parses for its interfaces and endpoints, so a patched endpoint faces the same clone checks a native one does.</td></tr>
-            <tr><td>REPORT</td><td>Writes the report descriptor before the box parses it, so <A href="/native/commands/inject"><code>INJECT</code></A>, <A href="/native/commands/lock"><code>LOCK</code></A> and the emitted report follow the patched layout.</td></tr>
-            <tr><td>STRING</td><td>Serves the bytes as the whole string, any length up to 126, one UTF-16 code unit per byte; a <code>0x00</code> byte ends it. Index <code>0</code>, the language list, is not patched.</td></tr>
-            <tr><td>BOS</td><td>Writes the BOS descriptor, on a device that has one.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Name</th><th>Behaviour</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>DEVICE</td><td>Writes the served identity, which <A href="/native/commands/requests#device-info"><code>QUERY(DEVICE_INFO)</code></A> then reports. The set and every learned setting stay keyed on the real VID:PID. Byte 17, <code>bNumConfigurations</code>, is set to the captured configuration count after the patch lands.</td></tr>
+              <tr><td>CONFIG</td><td>Writes the served configuration, which the box then parses for its interfaces and endpoints, so a patched endpoint faces the same clone checks a native one does.</td></tr>
+              <tr><td>REPORT</td><td>Writes the report descriptor before the box parses it, so <A href="/native/commands/inject"><code>INJECT</code></A>, <A href="/native/commands/lock"><code>LOCK</code></A> and the emitted report follow the patched layout.</td></tr>
+              <tr><td>STRING</td><td>Serves the bytes as the whole string, any length up to 126, one UTF-16 code unit per byte; a <code>0x00</code> byte ends it. Index <code>0</code>, the language list, is not patched.</td></tr>
+              <tr><td>BOS</td><td>Writes the BOS descriptor, on a device that has one.</td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           With two STRING patches on one index, the one listed first in{' '}
           <A href="/native/commands/requests#patches"><code>RESP(PATCHES)</code></A> is served. An
@@ -339,18 +361,20 @@ const Patch: Component = () => {
         +-- all hold   -->  clone served patched, PATCHES b0, HEALTH PATCH_ON
         +-- one fails  -->  clone served unpatched, PATCHES b1 + b2, one LOG line`}</pre>
         <div class="api-response-label">CHECKS</div>
-        <table class="api-params">
-          <thead>
-            <tr><th>Refused when</th><th>Why</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>a clone check fails, such as an endpoint <code>wMaxPacketSize</code> above 64</td><td>the patched descriptors face the checks every device does</td></tr>
-            <tr><td>a patch changes the device descriptor's <code>bLength</code> or <code>bDescriptorType</code>, or a configuration's or the BOS's <code>bLength</code>, <code>bDescriptorType</code> or <code>wTotalLength</code></td><td>the box serves these as written: a larger length reads the host past the descriptor, a smaller one hides its tail</td></tr>
-            <tr><td><code>bcdUSB</code> <code>0x0201</code> or above with no BOS</td><td>a host requests the BOS of any 2.01 device</td></tr>
-            <tr><td>a HID descriptor's <code>wDescriptorLength</code> differs from its served report descriptor, in any configuration</td><td>the game PC would ask for one length and get another</td></tr>
-            <tr><td>an interrupt-IN endpoint of a HID interface, in the configuration in force, has a <code>wMaxPacketSize</code> below that interface's report</td><td>the report would not fit the packet the endpoint advertises</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Refused when</th><th>Why</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>a clone check fails, such as an endpoint <code>wMaxPacketSize</code> above 64</td><td>the patched descriptors face the checks every device does</td></tr>
+              <tr><td>a patch changes the device descriptor's <code>bLength</code> or <code>bDescriptorType</code>, or a configuration's or the BOS's <code>bLength</code>, <code>bDescriptorType</code> or <code>wTotalLength</code></td><td>the box serves these as written: a larger length reads the host past the descriptor, a smaller one hides its tail</td></tr>
+              <tr><td><code>bcdUSB</code> <code>0x0201</code> or above with no BOS</td><td>a host requests the BOS of any 2.01 device</td></tr>
+              <tr><td>a HID descriptor's <code>wDescriptorLength</code> differs from its served report descriptor, in any configuration</td><td>the game PC would ask for one length and get another</td></tr>
+              <tr><td>an interrupt-IN endpoint of a HID interface, in the configuration in force, has a <code>wMaxPacketSize</code> below that interface's report</td><td>the report would not fit the packet the endpoint advertises</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">REFUSED SET</div>
         <p>
           The set stays stored with{' '}
@@ -366,17 +390,19 @@ const Patch: Component = () => {
           <A href="/native/commands/option#imperfect"><code>OPTION(IMPERFECT)</code></A> gates
           whether the stored set reaches the clone.
         </p>
-        <table class="api-params">
-          <thead>
-            <tr><th>Item</th><th>Opt-in off</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><A href="/native/commands/patch#patch"><code>PATCH</code></A></td><td>stored and written to NVS</td></tr>
-            <tr><td><A href="/native/commands/patch#apply">APPLY</A></td><td>ignored</td></tr>
-            <tr><td><A href="/native/commands/patch#clear">CLEAR</A></td><td>runs</td></tr>
-            <tr><td>a clone of the device</td><td>presented unpatched, with <A href="/native/commands/requests#patches"><code>PATCHES</code></A> b1 set while a set is stored</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Item</th><th>Opt-in off</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><A href="/native/commands/patch#patch"><code>PATCH</code></A></td><td>stored and written to NVS</td></tr>
+              <tr><td><A href="/native/commands/patch#apply">APPLY</A></td><td>ignored</td></tr>
+              <tr><td><A href="/native/commands/patch#clear">CLEAR</A></td><td>runs</td></tr>
+              <tr><td>a clone of the device</td><td>presented unpatched, with <A href="/native/commands/requests#patches"><code>PATCHES</code></A> b1 set while a set is stored</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">TOGGLE</div>
         <p>
           A toggle <A href="/native/commands/patch#presentation">presents</A> the clone again when
@@ -404,15 +430,17 @@ const Patch: Component = () => {
         <pre class="diagram">{`remove      a PATCH with zero bytes at the patch's key
 CLEAR       a PATCH with section 0xFF: the whole set
 RESET       a RESET carrying the NVS flag: the whole store`}</pre>
-        <table class="api-params">
-          <thead>
-            <tr><th>Event</th><th>Effect</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>the device detaches</td><td>the clone, <code>PATCH_ON</code> and <code>REFUSED</code> go; the set stays stored and readable until another device attaches</td></tr>
-            <tr><td>another device attaches</td><td>that device's set loads in its place, cloned or refused</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Event</th><th>Effect</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>the device detaches</td><td>the clone, <code>PATCH_ON</code> and <code>REFUSED</code> go; the set stays stored and readable until another device attaches</td></tr>
+              <tr><td>another device attaches</td><td>that device's set loads in its place, cloned or refused</td></tr>
+            </tbody>
+          </table>
+        </div>
       </DocSection>
     </>
   );
