@@ -23,7 +23,8 @@
   position: relative; min-width: 0; min-height: 320px; padding: 0 0 32px 24px; border-left: 1px solid var(--line);
   display: grid; grid-template-rows: auto 1fr auto; animation: fade 1s ease 0.2s both;
 }
-.tape-head, .row { display: grid; grid-template-columns: 40px 22px minmax(0, 1fr) auto; gap: 10px; padding-inline: 8px; }
+.tape-head, .row { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; gap: 10px; padding-inline: 8px; }
+.row { grid-template-columns: 40px minmax(0, 1fr); }
 .tape-head { position: relative; padding-bottom: 12px; color: var(--dim); }
 .tape-head::after, .tape-foot::before {
   content: ""; position: absolute; left: 0; right: 0; height: 1px; background: var(--line);
@@ -40,6 +41,7 @@
 .tape-body { position: relative; overflow: hidden; -webkit-mask: linear-gradient(transparent, #000 45%); mask: linear-gradient(transparent, #000 45%); }
 .rows { position: absolute; left: 0; right: 0; bottom: 0; font: 400 12.5px/26px var(--mono); color: #474747; }
 .row { white-space: nowrap; transition: color 0.2s ease, background 0.2s ease; }
+.row .b + .b { margin-left: var(--byte-gap, 1ch); }
 .row .api { color: var(--accent); }
 .row.now { color: var(--text); background: rgba(0, 128, 255, 0.08); box-shadow: inset 2px 0 var(--accent); }
 .tape-foot { position: relative; padding: 12px 8px 0; color: var(--dim); }
@@ -121,7 +123,6 @@
   .hero-copy { display: block; padding: 0; }
   .actions { display: grid; margin-top: 36px; }
   .tape { height: 300px; min-height: 0; margin-top: 40px; padding-left: 0; border-left: 0; }
-  .rows { font-size: 11.5px; }
   .vitals { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .vitals div:nth-child(3) { padding-left: 0; border-left: 0; }
   .vitals div:nth-child(n+3) { border-top: 1px solid var(--line); }
