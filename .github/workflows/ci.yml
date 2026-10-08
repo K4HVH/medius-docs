@@ -80,6 +80,11 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Date each page from its last commit
+        run: node scripts/lastmod.mjs
 
       - name: Set lowercase image name
         run: |
