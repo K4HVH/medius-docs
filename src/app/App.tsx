@@ -4,6 +4,7 @@ import { NotificationProvider } from '../components/feedback/Notification';
 import RouteMeta from './RouteMeta';
 import Home from './pages/Home';
 import NotFound from './pages/NotFound';
+import GuidePending from './pages/guide/Pending';
 import DocsLayout from './pages/DocsLayout';
 import NativeIntroduction from './pages/native/Introduction';
 import NativeQuickstart from './pages/native/Quickstart';
@@ -102,6 +103,12 @@ const App: Component = () => {
         <Router root={RootLayout}>
         <Route path="/" component={Home} />
         <Route path="/" component={DocsLayout}>
+          <Route path="/guide" component={GuidePending} />
+          <Route path="/guide/update" component={GuidePending} />
+          <Route path="/guide/compatibility" component={GuidePending} />
+          <Route path="/guide/faq" component={GuidePending} />
+          <Route path="/guide/troubleshooting" component={GuidePending} />
+          <Route path="/guide/device-fixes" component={GuidePending} />
           <Route path="/native" component={NativeIntroduction} />
           <Route path="/native/quickstart" component={NativeQuickstart} />
           <Route path="/native/architecture" component={NativeArchitecture} />

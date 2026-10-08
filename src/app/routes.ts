@@ -1,6 +1,6 @@
 // Every page's metadata, in sidebar order. Plain data, so the prerender and server can load it too.
 
-export type Section = 'home' | 'native' | 'library' | 'bindings' | 'dashboard' | 'ai' | 'notfound';
+export type Section = 'home' | 'guide' | 'native' | 'library' | 'bindings' | 'dashboard' | 'ai' | 'notfound';
 export type Lang = 'c' | 'python';
 export type Kind = 'home' | 'article' | 'app';
 
@@ -20,6 +20,7 @@ export interface RouteInfo {
 
 export const SECTION_LABEL: Record<Section, string> = {
   home: 'Medius',
+  guide: 'Guide',
   native: 'Native API',
   library: 'Rust Library',
   bindings: 'Bindings',
@@ -29,6 +30,7 @@ export const SECTION_LABEL: Record<Section, string> = {
 };
 
 export const SECTION_ROOT: Partial<Record<Section, string>> = {
+  guide: '/guide',
   native: '/native',
   library: '/library',
   bindings: '/bindings',
@@ -41,6 +43,8 @@ export const LANG_ROOT: Record<Lang, string> = { c: '/bindings/c', python: '/bin
 
 type Entry = Omit<RouteInfo, 'kind' | 'index'> & { kind?: Kind; index?: boolean };
 
+const guide = (path: string, nav: string, icon: string, title: string, description: string, fullTitle?: string): Entry =>
+  ({ path, section: 'guide', group: 'Guide', nav, icon, title, description, fullTitle });
 const native = (path: string, group: string, nav: string, icon: string, title: string, description: string, fullTitle?: string): Entry =>
   ({ path, section: 'native', group, nav, icon, title, description, fullTitle });
 const library = (path: string, group: string, nav: string, icon: string, title: string, description: string, fullTitle?: string): Entry =>
@@ -56,6 +60,25 @@ const ENTRIES: Entry[] = [
     fullTitle: 'Medius: replacement firmware for the MAKCU box',
     description: 'Medius is replacement firmware for the MAKCU box: it clones your mouse or keyboard to the PC and adds input sent over an open protocol.',
   },
+
+  guide('/guide', 'Install', 'BsBoxArrowInDown', 'Install Medius on a MAKCU box',
+    'Install Medius on a MAKCU box from Chrome or Edge in five steps: what you need, which port goes where, and what happens if a flash fails.',
+    'Install Medius on a MAKCU box'),
+  guide('/guide/update', 'Update', 'BsArrowRepeat', 'Update Medius on a MAKCU box',
+    'Update a MAKCU box already running Medius in one click, when to use Set up instead, and how a failed update rolls itself back.',
+    'Update Medius on a MAKCU box'),
+  guide('/guide/compatibility', 'Compatibility', 'BsCpu', 'MAKCU compatibility: mice and keyboards',
+    'Which mice and keyboards work through a MAKCU box running Medius, which need a setting changed, and how many boxes run each one.',
+    'MAKCU compatibility: mice and keyboards · Medius'),
+  guide('/guide/faq', 'FAQ', 'BsInfoCircle', 'Medius FAQ',
+    'Answers for MAKCU owners about Medius: software support, price, controllers, browsers, drivers, and reporting a device that does not work.',
+    'Medius FAQ'),
+  guide('/guide/troubleshooting', 'Troubleshooting', 'BsExclamationTriangle', 'Troubleshooting a MAKCU box',
+    'Fixes for common MAKCU box problems with Medius: the box is not found, a blue screen, a device that will not clone, an update that reverted.',
+    'Troubleshooting a MAKCU box · Medius'),
+  guide('/guide/device-fixes', 'Device fixes', 'BsWrench', 'Device fixes',
+    'Settings that make specific mice and keyboards work through a MAKCU box running Medius, such as imperfect cloning and a forced report rate.',
+    'Device fixes for the MAKCU box · Medius'),
 
   native('/native', 'Overview', 'Introduction', 'BsInfoCircle', 'Native API',
     'The Medius control protocol for the MAKCU box: the frames and commands a program sends over the USB-serial port to inject input.',
@@ -217,8 +240,7 @@ const ENTRIES: Entry[] = [
     'Building the medius Python package from source, enabling its mock feature, and how it finds the native library.'),
 
   dashboard('/dashboard/setup', 'Set up', 'BsUsbPlug', 'Set up',
-    'Install Medius on a MAKCU box from Chrome or Edge with nothing to download: flash each chip over USB, then wire the box.',
-    'Install Medius on a MAKCU box'),
+    'The Medius installer: flash each chip of a MAKCU box over USB from Chrome or Edge, then wire the box. The Install guide explains each step.'),
   dashboard('/dashboard', 'Device', 'BsCpu', 'Device',
     'Connect a MAKCU box running Medius from Chrome or Edge, no driver needed, and see its firmware, health, cloned device and log.',
     'MAKCU box dashboard in the browser · Medius'),
@@ -227,8 +249,7 @@ const ENTRIES: Entry[] = [
   dashboard('/dashboard/advanced-control', 'Advanced control', 'BsCodeSlash', 'Advanced control',
     'Rewrite rules, descriptor patches, raw reports and control transfers for a connected Medius box, from the browser.'),
   dashboard('/dashboard/update', 'Update', 'BsArrowRepeat', 'Update',
-    'Update both chips of a MAKCU box running Medius to the latest firmware in one click from Chrome or Edge, over the control port.',
-    'Update a MAKCU box to the latest Medius'),
+    'The Medius updater: update both chips of a MAKCU box to the latest firmware in one click over the control port, from Chrome or Edge.'),
   dashboard('/dashboard/advanced', 'Advanced', 'BsBoxArrowInDown', 'Advanced',
     'Flash any firmware image onto either chip of a MAKCU box from the browser, from a release or a file of your own.',
     'Flash any firmware onto a MAKCU box · Medius'),
