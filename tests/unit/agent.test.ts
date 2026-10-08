@@ -68,6 +68,11 @@ describe('planAgentResponse', () => {
     });
   });
 
+  it('serves a prerendered dashboard page like any other page', () => {
+    const withDash = (p: string) => p === '/dashboard/setup.html' || has(p);
+    expect(planAgentResponse('/dashboard/setup', 'text/html', withDash)).toEqual({ kind: 'html', path: '/dashboard/setup.html' });
+  });
+
   it('passes through non-doc routes (no prerendered .html): dashboard, root, assets, mcp', () => {
     expect(planAgentResponse('/dashboard/control', 'text/markdown', has)).toEqual({ kind: 'pass' });
     expect(planAgentResponse('/', 'text/markdown', has)).toEqual({ kind: 'pass' });
