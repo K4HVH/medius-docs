@@ -6,18 +6,19 @@ import { SITE } from '../src/app/site';
 import { COMPAT, KIND_LABEL, VERDICT_LABEL } from '../src/app/data/compatibility';
 import { mergeCompat } from '../src/app/data/compatMerge';
 import type { StatsSummary } from './stats/types';
-import { getReleases } from './firmware';
 import { getStatsSummary } from './stats';
 import { figureText, type HomeFigures } from '../src/app/data/homeFigures';
-import { getDiscordMembers, getHomeFigures } from './home';
+import { getHomeFigures, liveReleases } from './home';
 
 export interface FillSources {
   releases: () => Promise<FirmwareRelease[] | null>;
   stats: () => Promise<StatsSummary | null>;
   discord?: () => Promise<number | null>;
+  home?: () => Promise<HomeFigures>;
 }
 
-const LIVE: FillSources = { releases: getReleases, stats: getStatsSummary, discord: getDiscordMembers };
+// The changelog waits up to 5 s for releases it has never had, short of the server's 10 s request limit.
+const LIVE: FillSources = { releases: () => liveReleases(5_000), stats: getStatsSummary, home: () => getHomeFigures() };
 
 const esc = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -111,7 +112,8 @@ async function fresh(path: string, sources: FillSources, html: string): Promise<
 
 const VITALS: (keyof HomeFigures)[] = ['firmware', 'devices', 'boxes', 'discord'];
 
-// Each vital's cell holds its figure, or stays empty while its source is down.
+// Each vital's cell holds its figure, or stays empty while its source is down. The boxes figure carries the
+// live dot, as the app draws it.
 function homeHtml(html: string, figures: HomeFigures): string {
   let out = html;
   for (const k of VITALS) {
@@ -119,7 +121,8 @@ function homeHtml(html: string, figures: HomeFigures): string {
     if (v === undefined) continue;
     out = out.replace(
       new RegExp(`(<(\\w+)[^>]*\\sdata-fill="vital-${k}"[^>]*>)[\\s\\S]*?(</\\2>)`),
-      (_m, open: string, _t: string, close: string) => `${open}${esc(figureText(k, v))}${close}`,
+      (_m, open: string, _t: string, close: string) =>
+        `${k === 'boxes' ? open.replace(/>$/, ' class="live">') : open}${esc(figureText(k, v))}${close}`,
     );
   }
   return out.replace('</body>', () => `${embed('home-data', figures)}</body>`);
@@ -148,7 +151,7 @@ export async function fillPage(
 ): Promise<string | null> {
   if (path === '/') {
     const none = async () => null;
-    return homeHtml(html, await getHomeFigures({ ...sources, discord: sources.discord ?? none }));
+    return homeHtml(html, await (sources.home?.() ?? getHomeFigures({ ...sources, discord: sources.discord ?? none })));
   }
   if (path === '/guide/compatibility') {
     const stats = await read(sources.stats);
