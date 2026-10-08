@@ -519,3 +519,21 @@ pre code[class*="language-"] {
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: var(--g-spacing-lg) calc(var(--g-spacing) * 2);
 }
+
+/* Sidebar entries: router links wearing MidnightUI's tab classes (src/app/NavLinks.tsx). */
+a.tabs__tab:hover,
+a.tabs__tab:active {
+  text-decoration: none;
+}
+
+a.tabs__tab:active {
+  color: var(--g-text-primary);
+}
+
+.tabs--disabled a.tabs__tab:hover {
+  color: var(--g-text-muted);
+}
+
+.tabs--disabled a.tabs__tab:hover::before {
+  background: transparent;
+}
