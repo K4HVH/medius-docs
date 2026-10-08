@@ -1,13 +1,14 @@
 import { chromium } from 'playwright';
 import sirv from 'sirv';
 import { createServer, type Server } from 'node:http';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { getDocRoutes } from './lib/routes';
 import { htmlToMarkdown } from './lib/htmlToMarkdown';
 import { assemblePageMarkdown } from './lib/pageDoc';
 import { buildArtifacts, type PageRecord } from './lib/artifacts';
+import { ROUTES, routeFor } from '../src/app/routes';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const DIST = join(ROOT, 'dist');
@@ -33,16 +34,20 @@ async function startStaticServer(dir: string, port: number): Promise<Server> {
 }
 
 interface Captured {
-  title: string;
-  description: string;
+  rendered: boolean;
   contentHtml: string;
   outerHtml: string;
 }
 
+// Dates from scripts/lastmod.mjs, which CI runs with the full git history. A local build has none.
+function readLastmod(): Record<string, string> {
+  const file = join(ROOT, 'src/generated/lastmod.json');
+  return existsSync(file) ? (JSON.parse(readFileSync(file, 'utf8')) as Record<string, string>) : {};
+}
+
 async function main(): Promise<void> {
-  const appSrc = readFileSync(join(ROOT, 'src/app/App.tsx'), 'utf8');
-  const routes = getDocRoutes(appSrc);
-  if (routes.length === 0) throw new Error('No doc routes parsed from App.tsx');
+  const routes = getDocRoutes();
+  const lastmod = readLastmod();
 
   const server = await startStaticServer(DIST, PORT);
   const browser = await chromium.launch();
@@ -70,14 +75,8 @@ async function main(): Promise<void> {
             document.head.appendChild(link);
           }
           const content = document.querySelector(sel);
-          const h = content?.querySelector('.card__header h3');
-          const sub = content?.querySelector('.card__header small');
-          const firstP = content?.querySelector('p');
-          const title = (h?.textContent || '').trim();
-          const description = ((sub?.textContent || firstP?.textContent || '').trim()).slice(0, 200);
           return {
-            title,
-            description,
+            rendered: !!content?.querySelector('.card__header h3'),
             contentHtml: content ? content.innerHTML : '',
             outerHtml: '<!DOCTYPE html>\n' + document.documentElement.outerHTML,
           };
@@ -86,7 +85,9 @@ async function main(): Promise<void> {
       )) as Captured;
 
       if (!cap.contentHtml.trim()) throw new Error(`Empty ${CONTENT} content for ${route.path}`);
-      if (!cap.title) throw new Error(`No page title (card header) for ${route.path}`);
+      if (!cap.rendered) throw new Error(`No card header rendered for ${route.path}`);
+      const info = routeFor(route.path);
+      if (!info) throw new Error(`${route.path} is not in the route registry`);
 
       const sourceUrl = SITE + route.path;
       const contentMd = htmlToMarkdown(cap.contentHtml);
@@ -101,9 +102,10 @@ async function main(): Promise<void> {
       records.push({
         path: route.path,
         section: route.section,
-        title: cap.title,
-        description: cap.description,
+        title: info.title,
+        description: info.description,
         markdown,
+        lastmod: lastmod[route.path],
       });
       process.stdout.write(`  ${route.path} -> ${route.path}.html + ${route.path}.md\n`);
     }
@@ -119,12 +121,23 @@ async function main(): Promise<void> {
     if (!/<h1[\s>]/i.test(homeHtml)) throw new Error('Home page did not render (no <h1>)');
     writeFile(join(DIST, 'index.html'), homeHtml);
     process.stdout.write('  / -> index.html (Home prerendered)\n');
+
+    // Any path the app has no route for renders the NotFound page; the server answers unknown URLs
+    // with this snapshot and a 404 status.
+    await page.goto(`http://localhost:${PORT}/__not_found__`, { waitUntil: 'load', timeout: 30000 });
+    await page.waitForSelector(`${CONTENT} #not-found`, { timeout: 20000 });
+    await page.evaluate(
+      () => new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r()))),
+    );
+    writeFile(join(DIST, '404.html'), await page.evaluate(() => '<!DOCTYPE html>\n' + document.documentElement.outerHTML));
+    process.stdout.write('  404 -> 404.html\n');
   } finally {
     await browser.close();
     server.close();
   }
 
-  buildArtifacts({ dist: DIST, site: SITE, pages: records });
+  writeFile(join(DIST, 'routes.json'), JSON.stringify(ROUTES.map((r) => r.path)) + '\n');
+  buildArtifacts({ dist: DIST, site: SITE, pages: records, homeLastmod: lastmod['/'] });
   process.stdout.write(`prerendered ${records.length} routes + agent artifacts into ${DIST}\n`);
 }
 
