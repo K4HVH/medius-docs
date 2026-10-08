@@ -3,16 +3,20 @@
 import type { FirmwareRelease } from '../src/dashboard/firmware/client';
 import { inlineRuns, parseBlocks, splitRelease, type Block } from '../src/dashboard/firmware/notes';
 import { SITE } from '../src/app/site';
+import { COMPAT, KIND_LABEL, VERDICT_LABEL } from '../src/app/data/compatibility';
+import { mergeCompat } from '../src/app/data/compatMerge';
 import type { StatsSummary } from './stats/types';
 import { getReleases } from './firmware';
 import { getStatsSummary } from './stats';
+import { getDiscordMembers, getHomeFigures, type HomeFigures } from './home';
 
 export interface FillSources {
   releases: () => Promise<FirmwareRelease[] | null>;
   stats: () => Promise<StatsSummary | null>;
+  discord?: () => Promise<number | null>;
 }
 
-const LIVE: FillSources = { releases: getReleases, stats: getStatsSummary };
+const LIVE: FillSources = { releases: getReleases, stats: getStatsSummary, discord: getDiscordMembers };
 
 const esc = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -104,14 +108,51 @@ async function fresh(path: string, sources: FillSources, html: string): Promise<
   return stats ? replaceFill(html, 'stats', statsHtml(stats)) : null;
 }
 
+const VITALS: (keyof HomeFigures)[] = ['firmware', 'devices', 'boxes', 'discord'];
+
+// Each vital's cell holds its figure, or stays empty while its source is down.
+function homeHtml(html: string, figures: HomeFigures): string {
+  let out = html;
+  for (const k of VITALS) {
+    const v = figures[k];
+    if (v === undefined) continue;
+    out = out.replace(
+      new RegExp(`(<(\\w+)[^>]*\\sdata-fill="vital-${k}"[^>]*>)[\\s\\S]*?(</\\2>)`),
+      (_m, open: string, _t: string, close: string) => `${open}${esc(String(v))}${close}`,
+    );
+  }
+  return out.replace('</body>', () => `${embed('home-data', figures)}</body>`);
+}
+
+function compatHtml(html: string, stats: StatsSummary): string {
+  const rows = mergeCompat(COMPAT, stats.devices.top)
+    .map(
+      (r) =>
+        `<tr><td>${esc(r.name)}${r.vidpid ? `<span class="vp">${esc(r.vidpid)}</span>` : ''}</td>` +
+        `<td>${KIND_LABEL[r.kind]}</td><td><span class="verdict verdict--${r.verdict}">${VERDICT_LABEL[r.verdict]}</span></td>` +
+        `<td>${esc(r.note ?? '')}</td><td>${r.boxes ?? ''}</td></tr>`,
+    )
+    .join('');
+  return html.replace(/(<tbody[^>]*\sdata-fill="compat"[^>]*>)[\s\S]*?(<\/tbody>)/, (_m, open: string, close: string) => open + rows + close);
+}
+
 // The page with its live block filled, the last good copy while the source is down, or null when the
-// source has never answered. Any other page comes back unchanged.
+// source has never answered. The landing and compatibility pages always come back: what their sources
+// can't give stays as prerendered. Any other page comes back unchanged.
 export async function fillPage(
   path: string,
   html: string,
   sources: FillSources = LIVE,
   memory: Map<string, string> = LAST_GOOD,
 ): Promise<string | null> {
+  if (path === '/') {
+    const none = async () => null;
+    return homeHtml(html, await getHomeFigures({ ...sources, discord: sources.discord ?? none }));
+  }
+  if (path === '/guide/compatibility') {
+    const stats = await read(sources.stats);
+    return stats ? compatHtml(html, stats) : html;
+  }
   if (path !== '/dashboard/changelog' && path !== '/dashboard/stats') return html;
   const filled = await fresh(path, sources, html);
   if (filled) memory.set(path, filled);

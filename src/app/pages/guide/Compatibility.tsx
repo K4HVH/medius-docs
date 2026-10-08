@@ -2,12 +2,9 @@ import { createMemo, createResource, createSignal, For, Show, type Component } f
 import { A } from '@solidjs/router';
 import { PageHeader } from '../../shell/PageHeader';
 import { DocSection } from '../../shell/DocSection';
-import { COMPAT, type Verdict } from '../../data/compatibility';
+import { COMPAT, KIND_LABEL, VERDICT_LABEL } from '../../data/compatibility';
 import { mergeCompat } from '../../data/compatMerge';
 import { fetchStats } from '../../../dashboard/stats';
-
-const VERDICT: Record<Verdict, string> = { works: 'Works', partial: 'Partial', doesnt: "Doesn't" };
-const KIND = { mouse: 'Mouse', keyboard: 'Keyboard', other: 'Other' };
 
 const Compatibility: Component = () => {
   // A failed load shows the reports alone.
@@ -39,8 +36,8 @@ const Compatibility: Component = () => {
                       {r.name}
                       <Show when={r.vidpid}>{(vp) => <span class="vp">{vp()}</span>}</Show>
                     </td>
-                    <td>{KIND[r.kind]}</td>
-                    <td><span class={`verdict verdict--${r.verdict}`}>{VERDICT[r.verdict]}</span></td>
+                    <td>{KIND_LABEL[r.kind]}</td>
+                    <td><span class={`verdict verdict--${r.verdict}`}>{VERDICT_LABEL[r.verdict]}</span></td>
                     <td>{r.note ?? ''}</td>
                     <td>{r.boxes ?? ''}</td>
                   </tr>

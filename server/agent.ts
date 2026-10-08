@@ -2,7 +2,7 @@
 // HTML, all with Vary: Accept so caches split the variants.
 import { existsSync } from 'node:fs';
 import { resolve, sep } from 'node:path';
-import { LIVE_PATHS, SITE } from '../src/app/site';
+import { LIVE_PATHS, SITE, SOFT_FILL_PATHS } from '../src/app/site';
 import { fillMarkdown, fillPage } from './fill';
 
 const DIST = resolve(process.env.PUBLIC_DIR || './dist');
@@ -94,7 +94,7 @@ export function markdownLink(mdPath: string): string {
 export const NOINDEX_ARTIFACTS = /^\/(llms\.txt|llms-full\.txt|agent-index\.json|routes\.json)$/;
 export const DOC_CACHE = 'public, max-age=300, s-maxage=3600, stale-while-revalidate=86400';
 // The changelog and stats change without a deploy: cache them as briefly as their sources.
-const LIVE_CACHE = 'public, max-age=60';
+export const LIVE_CACHE = 'public, max-age=60';
 const MD_HEADERS = {
   'content-type': 'text/markdown; charset=utf-8',
   vary: 'Accept',
@@ -109,6 +109,20 @@ const HTML_HEADERS = {
 };
 
 const LIVE_DOWN = { 'retry-after': '120', 'cache-control': 'no-store' };
+
+// A page the server fills: a live page never filled answers 503 with its snapshot, so crawlers retry
+// rather than index "Loading..."; a soft page always answers 200, filled as far as its sources allow.
+// Null for any other page.
+export async function livePage(
+  path: string,
+  snapshot: string,
+  fill: (path: string, html: string) => Promise<string | null> = fillPage,
+): Promise<{ status: number; html: string } | null> {
+  if (SOFT_FILL_PATHS.has(path)) return { status: 200, html: (await fill(path, snapshot)) ?? snapshot };
+  if (!LIVE_PATHS.has(path)) return null;
+  const html = await fill(path, snapshot);
+  return html ? { status: 200, html } : { status: 503, html: snapshot };
+}
 
 // `routes` (the registry paths) limits pages to real addresses: //native or /%6Eative decode to a file
 // on disk but are not pages.
@@ -144,12 +158,10 @@ export async function handleAgentDocs(req: Request, routes?: ReadonlySet<string>
     case 'html': {
       const abs = distFile(action.path)!;
       const live = action.path.replace(/\.html$/, '');
-      if (LIVE_PATHS.has(live)) {
-        const snapshot = await Bun.file(abs).text();
-        const html = await fillPage(live, snapshot);
-        // Never a 200 that reads "Loading...": crawlers retry a 503, and a browser still runs the app.
-        if (!html) return new Response(snapshot, { status: 503, headers: { ...HTML_HEADERS, ...LIVE_DOWN } });
-        return new Response(html, { headers: { ...HTML_HEADERS, 'cache-control': LIVE_CACHE } });
+      const page = LIVE_PATHS.has(live) || SOFT_FILL_PATHS.has(live) ? await livePage(live, await Bun.file(abs).text()) : null;
+      if (page) {
+        const headers = page.status === 503 ? { ...HTML_HEADERS, ...LIVE_DOWN } : { ...HTML_HEADERS, 'cache-control': LIVE_CACHE };
+        return new Response(page.html, { status: page.status, headers });
       }
       return new Response(Bun.file(abs), { headers: HTML_HEADERS });
     }

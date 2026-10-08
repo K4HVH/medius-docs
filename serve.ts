@@ -2,7 +2,8 @@ import { existsSync, readFileSync } from "fs";
 import { join } from "path";
 import { handleFirmwareApi } from "./server/firmware";
 import { handleStatsApi } from "./server/stats";
-import { handleAgentDocs, DOC_CACHE, LLMS_LINK, NOINDEX_ARTIFACTS } from "./server/agent";
+import { handleAgentDocs, livePage, DOC_CACHE, LIVE_CACHE, LLMS_LINK, NOINDEX_ARTIFACTS } from "./server/agent";
+import { handleHomeApi } from "./server/home";
 import { handleMcp } from "./server/mcp";
 import { planRedirect } from "./server/routing";
 
@@ -42,6 +43,9 @@ Bun.serve({
     const stats = await handleStatsApi(req, server.requestIP(req)?.address);
     if (stats) return stats;
 
+    const home = await handleHomeApi(req);
+    if (home) return home;
+
     const mcp = await handleMcp(req);
     if (mcp) return mcp;
 
@@ -58,7 +62,14 @@ Bun.serve({
     const last = pathname.slice(pathname.lastIndexOf("/") + 1);
     if (pathname === "/index.html" || (/\.[A-Za-z0-9]+$/.test(last) && !last.endsWith(".html"))) {
       const file = Bun.file(join(PUBLIC_DIR, pathname));
-      if (await file.exists()) return new Response(file, { headers: cacheHeaders(pathname) });
+      if (await file.exists()) {
+        // Home carries the live figures, filled as far as their sources allow.
+        if (pathname === "/index.html") {
+          const page = (await livePage("/", await file.text()))!;
+          return new Response(page.html, { headers: { ...cacheHeaders(pathname), "cache-control": LIVE_CACHE } });
+        }
+        return new Response(file, { headers: cacheHeaders(pathname) });
+      }
     }
 
     if (await Bun.file(join(PUBLIC_DIR, "404.html")).exists()) return notFound();
