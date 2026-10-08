@@ -1,8 +1,7 @@
-import { createSignal, createEffect, onCleanup, onMount, Show, For, createMemo } from 'solid-js';
+import { createSignal, createEffect, onCleanup, onMount, Show, For, createMemo, type Component } from 'solid-js';
 import { type RouteSectionProps, useBeforeLeave, useLocation, useNavigate } from '@solidjs/router';
 import { GridBackground } from '../../components/surfaces/GridBackground';
 import { Pane, type PaneState } from '../../components/navigation/Pane';
-import { Tabs } from '../../components/navigation/Tabs';
 import { Divider } from '../../components/display/Divider';
 import { Titlebar } from '../../components/navigation/Titlebar';
 import { Button } from '../../components/inputs/Button';
@@ -15,167 +14,36 @@ import {
   BsLightbulb, BsSliders, BsLock, BsHash, BsPuzzle, BsDiscord,
   BsBoxes, BsFiletypePy, BsUsbPlug, BsCodeSlash,
 } from 'solid-icons/bs';
-import type { TabOption } from '../../components/navigation/Tabs';
 import { buildSearchItems } from '../searchIndex';
 import AiActions from '../AiActions';
+import { NavLinks, type NavItem } from '../NavLinks';
+import { LANG_LABEL, LANG_ROOT, routeFor, sidebarGroups, type Lang, type RouteInfo } from '../routes';
 import { useBoxes, useNativeFlash } from './dashboard/context';
 import { BoxList } from './dashboard/BoxList';
 import Prism from '../prism';
 import '../../styles/docs.css';
 
-const sectionTabs: TabOption[] = [
-  { value: 'native', label: 'Native API', icon: BsTerminal },
-  { value: 'library', label: 'Rust Library', icon: BsBook },
-  { value: 'bindings', label: 'Bindings', icon: BsBoxes },
-  { value: 'dashboard', label: 'Dashboard', icon: BsBroadcast },
-];
-
-const nativeOverviewTabs: TabOption[] = [
-  { value: '/native', label: 'Introduction', icon: BsInfoCircle },
-  { value: '/native/quickstart', label: 'Quickstart', icon: BsLightning },
-  { value: '/native/architecture', label: 'Architecture', icon: BsStack },
-  { value: '/native/hardware', label: 'Hardware', icon: BsCpu },
-];
-
-const nativeProtocolTabs: TabOption[] = [
-  { value: '/native/transport', label: 'Transport', icon: BsPlug },
-  { value: '/native/connection', label: 'Connection', icon: BsLink45deg },
-  { value: '/native/frame', label: 'Frame Format', icon: BsFileCode },
-  { value: '/native/injection', label: 'Injection Model', icon: BsBroadcast },
-];
-
-const nativeCommandTabs: TabOption[] = [
-  { value: '/native/commands/inject', label: 'Inject', icon: BsCursor },
-  { value: '/native/commands/move', label: 'Move', icon: BsArrowsMove },
-  { value: '/native/commands/lock', label: 'Lock', icon: BsLock },
-  { value: '/native/commands/catch', label: 'Catch', icon: BsActivity },
-  { value: '/native/commands/transform', label: 'Transform', icon: BsSliders },
-  { value: '/native/commands/option', label: 'Option', icon: BsPuzzle },
-  { value: '/native/commands/clip', label: 'Clip', icon: BsStack },
-  { value: '/native/commands/requests', label: 'Requests', icon: BsArrowLeftRight },
-  { value: '/native/commands/led', label: 'LED', icon: BsLightbulb },
-  { value: '/native/commands/admin', label: 'Admin', icon: BsGear },
-  { value: '/native/commands/update', label: 'Update', icon: BsDownload },
-  { value: '/native/commands/usage', label: 'Usage IDs', icon: BsHash },
-];
-
-const nativeAdvancedTabs: TabOption[] = [
-  { value: '/native/commands/raw', label: 'Raw', icon: BsBroadcast },
-  { value: '/native/commands/transfer', label: 'Transfer', icon: BsArrowLeftRight },
-  { value: '/native/commands/rewrite', label: 'Rewrite', icon: BsCodeSlash },
-  { value: '/native/commands/patch', label: 'Patch', icon: BsFileCode },
-];
-
-const nativeReferenceTabs: TabOption[] = [
-  { value: '/native/flashing', label: 'Flashing', icon: BsBoxArrowInDown },
-  { value: '/native/troubleshooting', label: 'Troubleshooting', icon: BsExclamationTriangle },
-];
-
-// AI access group, at the foot of every code section.
-const aiAccessTabs: TabOption[] = [{ value: '/ai', label: 'AI & LLMs', icon: BsStars }];
-
-const allNativeTabs = [
-  ...nativeOverviewTabs, ...nativeProtocolTabs, ...nativeCommandTabs, ...nativeAdvancedTabs, ...nativeReferenceTabs,
-];
-
-const libraryGettingStartedTabs: TabOption[] = [
-  { value: '/library', label: 'Introduction', icon: BsInfoCircle },
-  { value: '/library/connection', label: 'Connection', icon: BsLink45deg },
-  { value: '/library/discovery', label: 'Discovery', icon: BsBoxes },
-];
-
-const libraryApiTabs: TabOption[] = [
-  { value: '/library/inject', label: 'Inject', icon: BsCursor },
-  { value: '/library/move', label: 'Move', icon: BsArrowsMove },
-  { value: '/library/lock', label: 'Lock', icon: BsLock },
-  { value: '/library/catch', label: 'Catch', icon: BsActivity },
-  { value: '/library/transform', label: 'Transform', icon: BsSliders },
-  { value: '/library/options', label: 'Options', icon: BsPuzzle },
-  { value: '/library/clip', label: 'Clip', icon: BsStack },
-  { value: '/library/requests', label: 'Requests', icon: BsArrowLeftRight },
-  { value: '/library/led', label: 'LED', icon: BsLightbulb },
-  { value: '/library/admin', label: 'Admin', icon: BsGear },
-  { value: '/library/update', label: 'Update', icon: BsDownload },
-  { value: '/library/lifecycle', label: 'Lifecycle', icon: BsArrowRepeat },
-  { value: '/library/diagnostics', label: 'Logs & Counters', icon: BsJournalText },
-];
-
-const libraryAdvancedTabs: TabOption[] = [
-  { value: '/library/advanced/raw', label: 'Raw injection', icon: BsBroadcast },
-  { value: '/library/advanced/transfer', label: 'Control transfers', icon: BsArrowLeftRight },
-  { value: '/library/advanced/rewrite', label: 'Rewrite rules', icon: BsCodeSlash },
-  { value: '/library/advanced/patch', label: 'Descriptor patches', icon: BsFileCode },
-];
-
-const libraryFeatureTabs: TabOption[] = [
-  { value: '/library/features/async', label: 'Async', icon: BsStars },
-  { value: '/library/features/mock', label: 'Mock', icon: BsWrench },
-  { value: '/library/features/tracing', label: 'Tracing', icon: BsActivity },
-];
-
-const libraryGuidesTabs: TabOption[] = [
-  { value: '/library/guides/calls', label: 'Calls & input', icon: BsLightning },
-  { value: '/library/guides/connection', label: 'Connection', icon: BsArrowRepeat },
-  { value: '/library/guides/testing', label: 'Testing', icon: BsWrench },
-];
-
-const libraryReferenceTabs: TabOption[] = [
-  { value: '/library/types', label: 'Types overview', icon: BsFileCode },
-  { value: '/library/types/enums', label: 'Enums', icon: BsFileCode },
-  { value: '/library/types/structs', label: 'Structs', icon: BsFileCode },
-  { value: '/library/types/frames', label: 'Frames', icon: BsFileCode },
-  { value: '/library/types/errors', label: 'Errors', icon: BsExclamationTriangle },
-];
-
-const allLibraryTabs = [
-  ...libraryGettingStartedTabs, ...libraryApiTabs, ...libraryAdvancedTabs, ...libraryFeatureTabs,
-  ...libraryGuidesTabs, ...libraryReferenceTabs,
-];
-
-const bindingsSwitcherTabs: TabOption[] = [
-  { value: '/bindings', label: 'Overview', icon: BsBoxes },
-  { value: '/bindings/c', label: 'C / C++', icon: BsFileCode },
-  { value: '/bindings/python', label: 'Python', icon: BsFiletypePy },
-];
-
-const makeBindingGroups = (root: string): { label: string; tabs: TabOption[] }[] => [
-  { label: 'Getting Started', tabs: [
-    { value: root, label: 'Install', icon: BsBoxArrowInDown },
-    { value: `${root}/quickstart`, label: 'First program', icon: BsLightning },
-  ] },
-  { label: 'Usage', tabs: [
-    { value: `${root}/usage`, label: 'Calls & errors', icon: BsTerminal },
-    { value: `${root}/streams`, label: 'Streams', icon: BsActivity },
-  ] },
-  { label: 'Reference', tabs: [
-    { value: `${root}/api`, label: 'API index', icon: BsList },
-    { value: `${root}/types`, label: 'Types & errors', icon: BsFileCode },
-  ] },
-  { label: 'Build', tabs: [
-    { value: `${root}/build`, label: 'Build & features', icon: BsWrench },
-  ] },
-];
-
-const bindingRoots = ['/bindings/c', '/bindings/python'];
-const bindingGroupsByRoot: Record<string, { label: string; tabs: TabOption[] }[]> = {
-  '/bindings/c': makeBindingGroups('/bindings/c'),
-  '/bindings/python': makeBindingGroups('/bindings/python'),
+const ICONS: Record<string, Component> = {
+  BsList, BsInfoCircle, BsLightning, BsStack, BsCpu, BsPlug, BsLink45deg, BsFileCode, BsBroadcast,
+  BsArrowsMove, BsCursor, BsArrowLeftRight, BsGear, BsDownload, BsJournalText, BsBoxArrowInDown,
+  BsExclamationTriangle, BsArrowRepeat, BsBarChart, BsStars, BsWrench, BsActivity, BsTerminal, BsBook,
+  BsLightbulb, BsSliders, BsLock, BsHash, BsPuzzle, BsBoxes, BsFiletypePy, BsUsbPlug, BsCodeSlash,
 };
 
-const allBindingsTabs: TabOption[] = [
-  { value: '/bindings', label: 'Overview', icon: BsBoxes },
-  ...bindingRoots.flatMap((root) => makeBindingGroups(root).flatMap((g) => g.tabs)),
+const items = (routes: RouteInfo[]): NavItem[] =>
+  routes.map((r) => ({ href: r.path, label: r.nav, icon: ICONS[r.icon] }));
+
+const sectionItems: NavItem[] = [
+  { href: '/native', label: 'Native API', icon: BsTerminal },
+  { href: '/library', label: 'Rust Library', icon: BsBook },
+  { href: '/bindings', label: 'Bindings', icon: BsBoxes },
+  { href: '/dashboard', label: 'Dashboard', icon: BsBroadcast },
 ];
 
-const dashboardTabs: TabOption[] = [
-  { value: '/dashboard/setup', label: 'Set up', icon: BsUsbPlug },
-  { value: '/dashboard', label: 'Device', icon: BsCpu },
-  { value: '/dashboard/control', label: 'Control', icon: BsSliders },
-  { value: '/dashboard/advanced-control', label: 'Advanced control', icon: BsCodeSlash },
-  { value: '/dashboard/update', label: 'Update', icon: BsArrowRepeat },
-  { value: '/dashboard/advanced', label: 'Advanced', icon: BsBoxArrowInDown },
-  { value: '/dashboard/changelog', label: 'Changelog', icon: BsJournalText },
-  { value: '/dashboard/stats', label: 'Stats', icon: BsBarChart },
+const bindingSwitcher: NavItem[] = [
+  { href: '/bindings', label: 'Overview', icon: BsBoxes },
+  { href: LANG_ROOT.c, label: LANG_LABEL.c, icon: BsFileCode },
+  { href: LANG_ROOT.python, label: LANG_LABEL.python, icon: BsFiletypePy },
 ];
 
 const BOX_ROUTES = new Set([
@@ -277,8 +145,7 @@ const DocsLayout = (props: RouteSectionProps) => {
   };
 
   const pageTitle = createMemo(() => {
-    const all = [...allNativeTabs, ...allLibraryTabs, ...allBindingsTabs, ...dashboardTabs, ...aiAccessTabs];
-    const label = all.find(t => t.value === location.pathname)?.label ?? '';
+    const label = routeFor(location.pathname)?.nav ?? '';
     const box = BOX_ROUTES.has(location.pathname) ? boxes.selected()?.session.name() : null;
     return box ? `${label} - ${box}` : label;
   });
@@ -305,11 +172,25 @@ const DocsLayout = (props: RouteSectionProps) => {
     });
   });
 
-  const handlePageNav = (value: string) => {
-    if (flashing()) return;
-    navigate(value);
+  const closeOnMobile = () => {
     if (isMobile()) setPaneState('closed');
   };
+
+  const bindingLang = (): Lang | undefined => {
+    const root = bindingRoot();
+    return root === LANG_ROOT.c ? 'c' : root === LANG_ROOT.python ? 'python' : undefined;
+  };
+
+  const Groups = (p: { groups: { label: string; routes: RouteInfo[] }[]; disabled?: boolean }) => (
+    <For each={p.groups}>
+      {(group) => (
+        <>
+          <Divider spacing="compact" label={group.label} labelAlign="start" />
+          <NavLinks items={items(group.routes)} active={location.pathname} disabled={p.disabled} onNavigate={closeOnMobile} />
+        </>
+      )}
+    </For>
+  );
 
   const handleBoxPick = () => {
     const p = location.pathname;
@@ -335,174 +216,34 @@ const DocsLayout = (props: RouteSectionProps) => {
           onStateChange={setPaneState}
         >
           <Divider spacing="compact" label="Section" labelAlign="start" />
-          <Tabs
-            orientation="vertical"
-            variant="subtle"
-            value={activeSection()}
+          <NavLinks
+            items={sectionItems}
+            active={`/${activeSection()}`}
             disabled={flashing()}
-            onChange={(value: string) => {
-              const prefix =
-                value === 'dashboard' ? '/dashboard'
-                  : value === 'bindings' ? '/bindings'
-                  : value === 'library' ? '/library' : '/native';
-              if (!location.pathname.startsWith(prefix)) navigate(prefix);
-            }}
-            options={sectionTabs}
+            onNavigate={closeOnMobile}
           />
           <Show when={activeSection() === 'native'}>
-            <Divider spacing="compact" label="Overview" labelAlign="start" />
-            <Tabs
-              orientation="vertical"
-              variant="subtle"
-              value={location.pathname}
-              onChange={handlePageNav}
-              options={nativeOverviewTabs}
-            />
-            <Divider spacing="compact" label="Protocol" labelAlign="start" />
-            <Tabs
-              orientation="vertical"
-              variant="subtle"
-              value={location.pathname}
-              onChange={handlePageNav}
-              options={nativeProtocolTabs}
-            />
-            <Divider spacing="compact" label="Commands" labelAlign="start" />
-            <Tabs
-              orientation="vertical"
-              variant="subtle"
-              value={location.pathname}
-              onChange={handlePageNav}
-              options={nativeCommandTabs}
-            />
-            <Divider spacing="compact" label="Advanced control" labelAlign="start" />
-            <Tabs
-              orientation="vertical"
-              variant="subtle"
-              value={location.pathname}
-              onChange={handlePageNav}
-              options={nativeAdvancedTabs}
-            />
-            <Divider spacing="compact" label="Reference" labelAlign="start" />
-            <Tabs
-              orientation="vertical"
-              variant="subtle"
-              value={location.pathname}
-              onChange={handlePageNav}
-              options={nativeReferenceTabs}
-            />
-            <Divider spacing="compact" label="AI Access" labelAlign="start" />
-            <Tabs
-              orientation="vertical"
-              variant="subtle"
-              value={location.pathname}
-              onChange={handlePageNav}
-              options={aiAccessTabs}
-            />
+            <Groups groups={sidebarGroups('native')} />
+            <Groups groups={sidebarGroups('ai')} />
           </Show>
           <Show when={activeSection() === 'library'}>
-            <Divider spacing="compact" label="Getting Started" labelAlign="start" />
-            <Tabs
-              orientation="vertical"
-              variant="subtle"
-              value={location.pathname}
-              onChange={handlePageNav}
-              options={libraryGettingStartedTabs}
-            />
-            <Divider spacing="compact" label="API" labelAlign="start" />
-            <Tabs
-              orientation="vertical"
-              variant="subtle"
-              value={location.pathname}
-              onChange={handlePageNav}
-              options={libraryApiTabs}
-            />
-            <Divider spacing="compact" label="Advanced control" labelAlign="start" />
-            <Tabs
-              orientation="vertical"
-              variant="subtle"
-              value={location.pathname}
-              onChange={handlePageNav}
-              options={libraryAdvancedTabs}
-            />
-            <Divider spacing="compact" label="Features" labelAlign="start" />
-            <Tabs
-              orientation="vertical"
-              variant="subtle"
-              value={location.pathname}
-              onChange={handlePageNav}
-              options={libraryFeatureTabs}
-            />
-            <Divider spacing="compact" label="Guides" labelAlign="start" />
-            <Tabs
-              orientation="vertical"
-              variant="subtle"
-              value={location.pathname}
-              onChange={handlePageNav}
-              options={libraryGuidesTabs}
-            />
-            <Divider spacing="compact" label="Reference" labelAlign="start" />
-            <Tabs
-              orientation="vertical"
-              variant="subtle"
-              value={location.pathname}
-              onChange={handlePageNav}
-              options={libraryReferenceTabs}
-            />
-            <Divider spacing="compact" label="AI Access" labelAlign="start" />
-            <Tabs
-              orientation="vertical"
-              variant="subtle"
-              value={location.pathname}
-              onChange={handlePageNav}
-              options={aiAccessTabs}
-            />
+            <Groups groups={sidebarGroups('library')} />
+            <Groups groups={sidebarGroups('ai')} />
           </Show>
           <Show when={activeSection() === 'bindings'}>
             <Divider spacing="compact" label="Bindings" labelAlign="start" />
-            <Tabs
-              orientation="vertical"
-              variant="subtle"
-              value={bindingRoot()}
-              onChange={handlePageNav}
-              options={bindingsSwitcherTabs}
-            />
-            <For each={bindingGroupsByRoot[bindingRoot()] ?? []}>
-              {(group) => (
-                <>
-                  <Divider spacing="compact" label={group.label} labelAlign="start" />
-                  <Tabs
-                    orientation="vertical"
-                    variant="subtle"
-                    value={location.pathname}
-                    onChange={handlePageNav}
-                    options={group.tabs}
-                  />
-                </>
-              )}
-            </For>
-            <Divider spacing="compact" label="AI Access" labelAlign="start" />
-            <Tabs
-              orientation="vertical"
-              variant="subtle"
-              value={location.pathname}
-              onChange={handlePageNav}
-              options={aiAccessTabs}
-            />
+            <NavLinks items={bindingSwitcher} active={bindingRoot()} onNavigate={closeOnMobile} />
+            <Show when={bindingLang()} keyed>
+              {(lang) => <Groups groups={sidebarGroups('bindings', lang)} />}
+            </Show>
+            <Groups groups={sidebarGroups('ai')} />
           </Show>
           <Show when={activeSection() === 'dashboard'}>
             <Show when={boxes.supported && boxes.secure}>
               <Divider spacing="compact" label="Boxes" labelAlign="start" />
               <BoxList onPick={handleBoxPick} disabled={flashing()} />
             </Show>
-            <Divider spacing="compact" label="Dashboard" labelAlign="start" />
-            <Tabs
-              orientation="vertical"
-              variant="subtle"
-              value={location.pathname}
-              onChange={handlePageNav}
-              options={dashboardTabs}
-              disabled={flashing()}
-            />
+            <Groups groups={sidebarGroups('dashboard')} disabled={flashing()} />
           </Show>
         </Pane>
 

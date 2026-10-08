@@ -120,16 +120,29 @@ describe('DocsLayout and the boxes', () => {
   it('locks the tabs and the box list during a flash over a chip USB, and not during a box update', async () => {
     const r = mount('/dashboard');
     await waitFor(() => expect(row(r)).toBeTruthy());
-    const setupTab = () => [...r.container.querySelectorAll('[role="tab"]')].find((t) => /Set up/.test(t.textContent ?? '')) as HTMLButtonElement;
+    const setupTab = () => [...r.container.querySelectorAll('a.tabs__tab')].find((t) => /Set up/.test(t.textContent ?? '')) as HTMLAnchorElement;
+    const inert = () => setupTab().getAttribute('aria-disabled') === 'true';
     r.setStatus('flashing');
     await new Promise((res) => setTimeout(res, 0));
-    expect(setupTab().disabled).toBe(false);
+    expect(inert()).toBe(false);
     expect((row(r) as HTMLButtonElement).disabled).toBe(false);
     r.setRunning(true);
-    await waitFor(() => expect(setupTab().disabled).toBe(true));
+    await waitFor(() => expect(inert()).toBe(true));
+    fireEvent.click(setupTab());
+    await new Promise((res) => setTimeout(res, 0));
+    expect(r.container.textContent).toContain('device page');
     expect((row(r) as HTMLButtonElement).disabled).toBe(true);
     fireEvent.click(row(r));
     expect(r.select).not.toHaveBeenCalled();
+  });
+
+  it('makes every sidebar entry a link a crawler can follow', async () => {
+    const r = mount('/native');
+    await waitFor(() => expect(r.container.textContent).toContain('native'));
+    const pane = r.container.querySelector('.pane')!;
+    expect(pane.querySelectorAll('button.tabs__tab')).toHaveLength(0);
+    const hrefs = [...pane.querySelectorAll('a.tabs__tab')].map((a) => a.getAttribute('href'));
+    expect(hrefs).toEqual(expect.arrayContaining(['/native', '/library', '/bindings', '/dashboard', '/native/commands/inject', '/ai']));
   });
 
   it('shows no Boxes section where the browser cannot reach a port', async () => {
