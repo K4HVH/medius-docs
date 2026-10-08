@@ -49,7 +49,7 @@ export const COMPAT: readonly CompatEntry[] = [
   { name: 'Logitech G PRO X', kind: 'mouse', verdict: 'works' },
   { name: 'Logitech G PRO X SUPERLIGHT', kind: 'mouse', verdict: 'works' },
   { name: 'Logitech G PRO X SUPERLIGHT 2', kind: 'mouse', verdict: 'works', note: '125 Hz without imperfect clone and a forced 1000 Hz rate' },
-  { name: 'Logitech G PRO X2 SUPERSTRIKE', kind: 'mouse', verdict: 'partial', note: 'Wireless needs imperfect clone and a forced 1000 Hz rate' },
+  { name: 'Logitech G PRO X2 SUPERSTRIKE', kind: 'mouse', verdict: 'works', note: 'Wireless needs imperfect clone and a forced 1000 Hz rate' },
   { name: 'Logitech G402', kind: 'mouse', verdict: 'works' },
   { name: 'Logitech G502 HERO', kind: 'mouse', verdict: 'works', vidpid: '046d:c08b' },
   { name: 'Logitech G502 X LIGHTSPEED', kind: 'mouse', verdict: 'works' },

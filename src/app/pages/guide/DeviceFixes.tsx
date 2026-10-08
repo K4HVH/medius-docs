@@ -6,7 +6,7 @@ import { LINKS } from '../../site';
 
 const DeviceFixes: Component = () => (
   <>
-    <PageHeader lead="Settings some devices need, set once from the dashboard's Options and kept on the box." />
+    <PageHeader lead="Settings some devices need, set once from the dashboard's Options and kept on the box" />
 
     <DocSection id="fixes" title="Fixes" caption="Device and setting">
       <div class="table-scroll">
@@ -52,13 +52,13 @@ const DeviceFixes: Component = () => (
       </div>
     </DocSection>
 
-    <DocSection id="older-firmware" title="Older firmware" caption="v3.2.0 to v3.4.3">
+    <DocSection id="older-firmware" title="Older firmware" caption="v3.2.0 to v3.4.1">
       <p>
-        A box whose firmware is older than the dashboard's options can take the same fix from a script:
+        The dashboard shows Options from v3.4.2 on. An older box takes the fix from a script:
         logitech_fix.bat on Windows, logitech_fix.sh on Linux, in the{' '}
         <a href={LINKS.discord} target="_blank" rel="noreferrer">Discord</a> #tools channel. It turns on
-        imperfect clones, paces injection at a fixed 1000 Hz and forces the wire rate to 1000 Hz. After an
-        update, the dashboard sets them instead.
+        imperfect clones, forces the wire rate to 1000 Hz and also paces injection at a fixed 1000 Hz. After
+        an update, the dashboard sets them instead.
       </p>
     </DocSection>
   </>

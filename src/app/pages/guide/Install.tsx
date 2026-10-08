@@ -8,14 +8,14 @@ import { HAZARD } from '../dashboard/Setup';
 
 const Install: Component = () => (
   <>
-    <PageHeader lead="Flash Medius onto a MAKCU box from Chrome or Edge, with nothing to download." />
+    <PageHeader lead="Flash Medius onto a MAKCU box from Chrome or Edge, with nothing to download" />
 
     <DocSection id="need" title="Requirements" caption="One computer, two cables">
       <div class="table-scroll">
         <table class="api-params">
           <thead><tr><th>Item</th><th>Detail</th></tr></thead>
           <tbody>
-            <tr><td>Box</td><td>A MAKCU box. Its ports are numbered USB1, USB2 and USB3, each with a button beside it.</td></tr>
+            <tr><td>Box</td><td>A MAKCU box. Its ports are numbered USB1, USB2 and USB3, with a button beside USB1 and one beside USB3.</td></tr>
             <tr><td>Browser</td><td>Chrome or Edge on a computer. The installer reaches the box through Web Serial.</td></tr>
             <tr><td>Cables</td><td>Two USB cables, for USB1 and USB2. USB3 takes the mouse or keyboard cable.</td></tr>
             <tr><td>Firmware</td><td>None to fetch. The installer downloads the latest release itself.</td></tr>
@@ -52,8 +52,8 @@ const Install: Component = () => (
         <p>{HAZARD}</p>
         <p>
           USB3's 5 V is wired to the board's power rail. With USB1 in the same computer, the box feeds power
-          back into that computer: it has shut a laptop down and drained its battery. Keep USB3 for the mouse
-          or keyboard.
+          back into that computer: it has shut a laptop down and drained its battery. USB3 goes into a computer
+          only to install, with USB1 out; otherwise it takes the mouse or keyboard.
         </p>
       </div>
     </DocSection>

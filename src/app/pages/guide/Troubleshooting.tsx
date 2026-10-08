@@ -6,7 +6,7 @@ import { HAZARD } from '../dashboard/Setup';
 
 const Troubleshooting: Component = () => (
   <>
-    <PageHeader lead="What the dashboard's messages mean, and the fixes for problems it can't see." />
+    <PageHeader lead="The dashboard's messages, and fixes for problems it can't see" />
 
     <DocSection id="messages" title="Dashboard messages" caption="Shown where Connect was">
       <div class="table-scroll">
