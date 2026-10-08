@@ -16,9 +16,11 @@ describe('NotFound', () => {
         <Route path="*" component={NotFound} />
       </MemoryRouter>
     ));
-    expect(r.container.textContent).toContain('Page not found');
-    const hrefs = [...r.container.querySelectorAll('a')].map((a) => a.getAttribute('href'));
-    expect(hrefs).toEqual(expect.arrayContaining(['/', '/native', '/library', '/dashboard/setup']));
+    const h1 = r.container.querySelectorAll('h1');
+    expect(h1).toHaveLength(1);
+    expect(h1[0].textContent).toBe('Page not found');
+    const hrefs = [...r.container.querySelectorAll('a.go')].map((a) => a.getAttribute('href'));
+    expect(hrefs).toEqual(['/guide', '/native', '/library', '/dashboard', '/']);
     expect(r.container.querySelector('#not-found[data-search-target]')).not.toBeNull();
     expect(history.get()).toBe('/zzz');
   });
