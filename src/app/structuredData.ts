@@ -1,5 +1,6 @@
 import { SITE, LINKS } from './site';
 import { breadcrumbTrail, documentTitle, routeFor, type RouteInfo } from './routes';
+import { FAQ } from './data/faq';
 
 const WEBSITE_ID = `${SITE}/#website`;
 const MEDIUS_ID = `${SITE}/#medius`;
@@ -49,6 +50,14 @@ export function buildJsonLd(route: RouteInfo, lastmod?: string): object {
       description: route.description,
       isPartOf: { '@id': WEBSITE_ID },
       about: { '@id': MEDIUS_ID },
+    });
+  }
+
+  if (route.path === '/guide/faq') {
+    graph.push({
+      '@type': 'FAQPage',
+      url,
+      mainEntity: FAQ.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
     });
   }
 
