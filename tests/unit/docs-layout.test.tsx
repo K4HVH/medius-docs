@@ -65,6 +65,7 @@ const mount = (path: string, w = world()) => {
     >
       <Route path="/" component={DocsLayout}>
         <Route path="/native" component={() => <p>native</p>} />
+        <Route path="/native/commands/inject" component={() => <p>inject page</p>} />
         <Route path="/dashboard" component={() => <p>device page</p>} />
         <Route path="/dashboard/setup" component={() => <p>setup page</p>} />
         <Route path="/dashboard/changelog" component={() => <p>changelog page</p>} />
@@ -143,6 +144,17 @@ describe('DocsLayout and the boxes', () => {
     expect(pane.querySelectorAll('button.tabs__tab')).toHaveLength(0);
     const hrefs = [...pane.querySelectorAll('a.tabs__tab')].map((a) => a.getAttribute('href'));
     expect(hrefs).toEqual(expect.arrayContaining(['/native', '/library', '/bindings', '/dashboard', '/native/commands/inject', '/ai']));
+  });
+
+  it('puts the breadcrumb trail above the page content, not inside it', async () => {
+    const r = mount('/native/commands/inject');
+    await waitFor(() => expect(r.container.textContent).toContain('inject page'));
+    const crumbs = r.container.querySelector('nav.docs-breadcrumbs')!;
+    expect([...crumbs.querySelectorAll('a')].map((a) => a.getAttribute('href'))).toEqual(['/', '/native']);
+    expect(crumbs.querySelector('[aria-current="page"]')?.textContent).toBe('Inject');
+    expect(r.container.querySelector('.docs-page nav.docs-breadcrumbs')).toBeNull();
+    expect(r.container.querySelector('.docs-page footer')).toBeNull();
+    expect(r.container.querySelector('footer.site-footer')).not.toBeNull();
   });
 
   it('shows no Boxes section where the browser cannot reach a port', async () => {
