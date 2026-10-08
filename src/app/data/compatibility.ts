@@ -8,6 +8,9 @@ export interface CompatEntry {
   vidpid?: string;
 }
 
+export const VERDICT_LABEL: Record<Verdict, string> = { works: 'Works', partial: 'Partial', doesnt: "Doesn't" };
+export const KIND_LABEL: Record<CompatEntry['kind'], string> = { mouse: 'Mouse', keyboard: 'Keyboard', other: 'Other' };
+
 // Owners' reports from the Discord #compatibility channel, newest report first where two disagree, and a
 // release that names a device over a report that predates it. Names follow the maker's spelling.
 export const COMPAT: readonly CompatEntry[] = [

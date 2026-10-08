@@ -4,6 +4,7 @@ import devtools from 'solid-devtools/vite';
 import { handleFirmwareApi } from './server/firmware';
 import { MAX_BODY, handleStatsApi } from './server/stats';
 import { agentDocsDev } from './server/agentDevMiddleware';
+import { handleHomeApi } from './server/home';
 
 // Serve the firmware proxy under the dev server, mirroring serve.ts in prod.
 function firmwareApi(): Plugin {
@@ -14,6 +15,26 @@ function firmwareApi(): Plugin {
         if (!req.url || !req.url.startsWith('/api/firmware')) return next();
         const request = new Request(`http://localhost${req.url}`, { method: req.method });
         handleFirmwareApi(request)
+          .then(async (response) => {
+            if (!response) return next();
+            res.statusCode = response.status;
+            response.headers.forEach((v, k) => res.setHeader(k, v));
+            res.end(Buffer.from(await response.arrayBuffer()));
+          })
+          .catch(() => next());
+      });
+    },
+  };
+}
+
+// The landing page's figures under the dev server, mirroring serve.ts.
+function homeApi(): Plugin {
+  return {
+    name: 'home-api',
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        if (req.url !== '/api/home') return next();
+        handleHomeApi(new Request(`http://localhost${req.url}`, { method: req.method }))
           .then(async (response) => {
             if (!response) return next();
             res.statusCode = response.status;
@@ -85,7 +106,7 @@ export default defineConfig(({ mode }) => {
   process.env.GITHUB_REPO = process.env.GITHUB_REPO ?? env.GITHUB_REPO;
 
   return {
-    plugins: [firmwareApi(), statsApi(), agentDocs(), devtools(), solidPlugin()],
+    plugins: [firmwareApi(), statsApi(), homeApi(), agentDocs(), devtools(), solidPlugin()],
     root: 'src',
     publicDir: '../public',
     server: {

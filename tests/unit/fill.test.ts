@@ -119,3 +119,36 @@ describe('fillMarkdown', () => {
     expect(await fillMarkdown('/dashboard/changelog', { releases: async () => null, stats: async () => null }, memory)).toBe(good);
   });
 });
+
+const HOME =
+  '<html><body><div id="root"><dl><dd data-fill="vital-firmware"></dd><dd data-fill="vital-devices"></dd>' +
+  '<dd data-fill="vital-boxes"></dd></dl><span data-fill="vital-discord"></span></div></body></html>';
+const COMPAT = '<table><tbody data-fill="compat"><tr><td>Seed row</td></tr></tbody></table>';
+
+describe('fillPage on the soft pages', () => {
+  it('fills the landing vitals and carries the figures for the app', async () => {
+    const html = (await fillPage('/', HOME, { ...SOURCES, discord: async () => 590 }, new Map()))!;
+    expect(html).toContain('<dd data-fill="vital-firmware">v3.4.5</dd>');
+    expect(html).toContain('<dd data-fill="vital-devices">62</dd>');
+    expect(html).toContain('<dd data-fill="vital-boxes">87</dd>');
+    expect(html).toContain('<span data-fill="vital-discord">590</span>');
+    expect(html).toMatch(/<script id="home-data" type="application\/json">\{"firmware":"v3.4.5"/);
+  });
+
+  it('answers the landing page with empty cells, never null and never Loading, when no source ever answered', async () => {
+    const off = async () => null;
+    const html = await fillPage('/', HOME, { releases: off, stats: off, discord: off }, new Map());
+    expect(html).toContain('<dd data-fill="vital-boxes"></dd>');
+    expect(html).not.toContain('Loading');
+  });
+
+  it('puts the merged compatibility rows in the table, and leaves the seed rows while the stats are down', async () => {
+    const top = [{ vid: 0x31e3, pid: 0x1322, kind: 1, product: 'Wooting 60HE+', boxes: 45 }];
+    const stats = async () => ({ ...(await SOURCES.stats())!, devices: { unique: 1, byKind: [], top } });
+    const html = (await fillPage('/guide/compatibility', COMPAT, { ...SOURCES, stats }, new Map()))!;
+    expect(html).not.toContain('Seed row');
+    expect(html).toMatch(/<tr><td>Wooting 60HE\+<span class="vp">31e3:1322<\/span><\/td><td>Keyboard<\/td>.*<td>45<\/td><\/tr>/);
+    expect(await fillPage('/guide/compatibility', COMPAT, { ...SOURCES, stats: async () => null }, new Map())).toBe(COMPAT);
+  });
+});
+

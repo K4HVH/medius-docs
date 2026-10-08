@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { planAgentResponse, acceptsMarkdown, isCandidateRoute, markdownLink, NOINDEX_ARTIFACTS } from '../../server/agent';
+import { planAgentResponse, acceptsMarkdown, isCandidateRoute, markdownLink, NOINDEX_ARTIFACTS, livePage } from '../../server/agent';
 
 const FILES = new Set([
   '/library/clip.html',
@@ -101,3 +101,24 @@ describe('Markdown twin headers', () => {
     expect(NOINDEX_ARTIFACTS.test('/robots.txt')).toBe(false);
   });
 });
+
+describe('livePage', () => {
+  const fill = (out: string | null) => async () => out;
+
+  it('answers a live page 503 with its snapshot when no fill was ever possible', async () => {
+    expect(await livePage('/dashboard/stats', 'snap', fill(null))).toEqual({ status: 503, html: 'snap' });
+    expect(await livePage('/dashboard/stats', 'snap', fill('filled'))).toEqual({ status: 200, html: 'filled' });
+  });
+
+  it('answers the landing and compatibility pages 200 with their snapshot whatever the sources do', async () => {
+    for (const p of ['/', '/guide/compatibility']) {
+      expect(await livePage(p, 'snap', fill(null))).toEqual({ status: 200, html: 'snap' });
+      expect(await livePage(p, 'snap', fill('filled'))).toEqual({ status: 200, html: 'filled' });
+    }
+  });
+
+  it('serves any other page as it is', async () => {
+    expect(await livePage('/native', 'snap', fill('filled'))).toBeNull();
+  });
+});
+
