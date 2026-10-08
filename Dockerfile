@@ -57,6 +57,7 @@ COPY --from=builder --chown=bunuser:nodejs /app/src/app/site.ts /app/src/app/sit
 COPY --from=builder --chown=bunuser:nodejs /app/src/dashboard/firmware/notes.ts /app/src/dashboard/firmware/notes.ts
 COPY --from=builder --chown=bunuser:nodejs /app/src/app/data/compatibility.ts /app/src/app/data/compatibility.ts
 COPY --from=builder --chown=bunuser:nodejs /app/src/app/data/compatMerge.ts /app/src/app/data/compatMerge.ts
+COPY --from=builder --chown=bunuser:nodejs /app/src/app/data/homeFigures.ts /app/src/app/data/homeFigures.ts
 COPY --from=builder --chown=bunuser:nodejs /app/node_modules/mcp-lite /app/node_modules/mcp-lite
 
 USER bunuser

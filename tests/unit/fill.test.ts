@@ -131,7 +131,7 @@ describe('fillPage on the soft pages', () => {
     expect(html).toContain('<dd data-fill="vital-firmware">v3.4.5</dd>');
     expect(html).toContain('<dd data-fill="vital-devices">62</dd>');
     expect(html).toContain('<dd data-fill="vital-boxes">87</dd>');
-    expect(html).toContain('<span data-fill="vital-discord">590</span>');
+    expect(html).toContain('<span data-fill="vital-discord">590 members</span>');
     expect(html).toMatch(/<script id="home-data" type="application\/json">\{"firmware":"v3.4.5"/);
   });
 

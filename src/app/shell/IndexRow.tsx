@@ -1,9 +1,9 @@
-import { Show } from 'solid-js';
+import { Show, type JSX } from 'solid-js';
 import { A } from '@solidjs/router';
 import { Arrow, ArrowOut } from './Arrow';
 
 // A ruled link row: the name on the left, a short tag and an arrow on the right.
-export function IndexRow(props: { href: string; title: string; tag?: string; external?: boolean }) {
+export function IndexRow(props: { href: string; title: string; tag?: JSX.Element; external?: boolean }) {
   const inner = () => (
     <>
       <h3>{props.title}</h3>

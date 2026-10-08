@@ -2,16 +2,12 @@
 // Each is absent while its source is down; none of them ever holds the page up.
 import type { FirmwareRelease } from '../src/dashboard/firmware/client';
 import { LINKS } from '../src/app/site';
+import type { HomeFigures } from '../src/app/data/homeFigures';
 import type { StatsSummary } from './stats/types';
 import { getReleases } from './firmware';
 import { getStatsSummary } from './stats';
 
-export interface HomeFigures {
-  firmware?: string;
-  devices?: number;
-  boxes?: number;
-  discord?: number;
-}
+export type { HomeFigures } from '../src/app/data/homeFigures';
 
 export interface HomeSources {
   releases: () => Promise<FirmwareRelease[] | null>;
