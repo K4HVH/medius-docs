@@ -248,9 +248,7 @@ pre code[class*="language-"] {
   grid-column: 1 / -1;
 }
 
-/* Search scroll targets */
 [data-search-target] {
-  scroll-margin-top: 80px;
   min-width: 0;
 }
 
@@ -582,10 +580,6 @@ a.tabs__tab:active {
 }
 
 /* Changelog releases: Changelog.tsx renders them, server/fill.ts writes the same markup for crawlers. */
-.release {
-  scroll-margin-top: 80px;
-}
-
 .releases {
   display: flex;
   flex-direction: column;

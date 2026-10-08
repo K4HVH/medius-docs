@@ -3,7 +3,13 @@ import { render, cleanup, fireEvent } from '@solidjs/testing-library';
 import { MemoryRouter, Route, createMemoryHistory } from '@solidjs/router';
 import { DocsSidebar } from '../../src/app/shell/DocsSidebar';
 
-const mount = (at: string, props: { disabled?: boolean; onSearch?: () => void; boxes?: boolean } = {}) => {
+let made = 0;
+const Slot = () => {
+  made++;
+  return <div id="boxes-slot">boxes</div>;
+};
+
+const mount = (at: string, props: { disabled?: boolean; onSearch?: () => void; boxes?: boolean; title?: string } = {}) => {
   const history = createMemoryHistory();
   history.set({ value: at });
   const onSearch = props.onSearch ?? vi.fn();
@@ -16,7 +22,8 @@ const mount = (at: string, props: { disabled?: boolean; onSearch?: () => void; b
             pathname={p.location.pathname}
             disabled={props.disabled}
             onSearch={onSearch}
-            boxes={props.boxes ? <div id="boxes-slot">boxes</div> : undefined}
+            title={props.title}
+            boxes={props.boxes ? <Slot /> : undefined}
           />
         )}
       />
@@ -77,10 +84,17 @@ describe('DocsSidebar', () => {
     ]);
   });
 
-  it('shows the box list on dashboard pages', () => {
+  it('shows the box list on dashboard pages, built once', () => {
+    made = 0;
     const r = mount('/dashboard', { boxes: true });
-    expect(r.side().querySelector('#boxes-slot')).not.toBeNull();
+    expect(r.side().querySelectorAll('#boxes-slot')).toHaveLength(1);
+    expect(made).toBe(1);
     expect(r.link('Device').getAttribute('aria-current')).toBe('page');
+  });
+
+  it('puts the title it is given in the page bar', () => {
+    const r = mount('/dashboard', { title: 'Device - Desk' });
+    expect(r.docbar().querySelector('b')?.textContent).toBe('Device - Desk');
   });
 
   it('opens search from its button', () => {

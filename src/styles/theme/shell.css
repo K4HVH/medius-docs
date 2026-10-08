@@ -24,6 +24,30 @@
 .btn.primary:hover::before { transform: scaleX(1); }
 .btn.sm { height: 36px; padding-inline: 14px; gap: 10px; font-size: 12px; }
 
+/* The window scrolls. MidnightUI pins html, body and #root to the viewport for an inner scroller. */
+html, body { height: auto; overflow: visible; }
+#root { height: auto; min-height: 100%; }
+html { scroll-padding-top: calc(var(--nav-h) + 24px); }
+
+/* Docs: a ruled sidebar, the article centred in its column, the rail on wide screens. */
+.docs {
+  --side: 264px; position: relative; z-index: 1; display: grid;
+  grid-template-columns: var(--side) minmax(0, 1fr) 200px; align-content: start; padding-top: var(--nav-h); min-height: 100svh;
+  background: linear-gradient(var(--line), var(--line)) calc(var(--side) - 1px) 0 / 1px 100% no-repeat;
+}
+.doc {
+  min-width: 0; width: 100%; max-width: 880px; justify-self: center;
+  padding: 56px clamp(24px, 4vw, 56px) 24px;
+}
+@media (max-width: 1240px) {
+  .docs { --side: 248px; grid-template-columns: var(--side) minmax(0, 1fr); }
+}
+@media (max-width: 900px) {
+  html { scroll-padding-top: calc(var(--nav-h) + 49px + 24px); }
+  .docs { grid-template-columns: minmax(0, 1fr); background: none; }
+  .doc { padding: 36px var(--gutter) 24px; }
+}
+
 /* Nav: transparent over the landing hero, frosted once the page moves; a blue line tracks scroll. */
 .nav {
   position: fixed; top: env(safe-area-inset-top, 0px); left: 0; right: 0; z-index: 20;
