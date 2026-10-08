@@ -52,8 +52,7 @@ async function main(): Promise<void> {
   const server = await startStaticServer(DIST, PORT);
   const browser = await chromium.launch();
   const page = await browser.newPage();
-  // Leave every API request unanswered: the changelog and stats snapshots stay on "Loading...", the
-  // block the server fills per request, instead of capturing an error from the static server.
+  // Unanswered API calls hold the changelog and stats on the "Loading..." block the server fills.
   await page.route('**/api/**', () => {});
   const records: PageRecord[] = [];
 
@@ -113,9 +112,8 @@ async function main(): Promise<void> {
       process.stdout.write(`  ${route.path} -> ${route.path}.html + ${route.path}.md\n`);
     }
 
-    // Any path the app has no route for renders the NotFound page; the server answers unknown URLs
-    // with this snapshot and a 404 status. It goes before Home: sirv serves the SPA fallback with the
-    // size index.html had at startup, so a page loaded after Home overwrites it gets cut short.
+    // Served for unknown URLs with status 404. Taken before Home's: sirv keeps the size index.html had
+    // at startup, so a page loaded after Home rewrites it arrives cut short.
     await page.goto(`http://localhost:${PORT}/__not_found__`, { waitUntil: 'load', timeout: 30000 });
     await page.waitForSelector(`${CONTENT} #not-found`, { timeout: 20000 });
     await page.evaluate(

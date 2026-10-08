@@ -66,7 +66,7 @@ describe('buildLlmsTxt', () => {
     expect(out).toContain('- [Clip](https://s/native/commands/clip.md): CLIP commands');
     expect(out).toContain('- [Introduction](https://s/native.md): Native API overview');
   });
-  it('lists the dashboard under its own heading after the code sections', () => {
+  it('lists the dashboard under a Dashboard heading after the code sections', () => {
     expect(out.indexOf('## Dashboard')).toBeGreaterThan(out.indexOf('## Rust Library'));
     expect(out).toContain('- [Set up](https://s/dashboard/setup.md): Install Medius');
     expect(out).toContain('- [Changelog](https://s/dashboard/changelog.md)');
