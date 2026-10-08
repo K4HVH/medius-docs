@@ -6,6 +6,7 @@ import type { HomeFigures } from '../src/app/data/homeFigures';
 import type { StatsSummary } from './stats/types';
 import { getReleases } from './firmware';
 import { getStatsSummary } from './stats';
+import { cached } from './cached';
 
 export type { HomeFigures } from '../src/app/data/homeFigures';
 
@@ -47,7 +48,15 @@ export function createDiscordMembers(fetchImpl: typeof fetch = fetch, now: () =>
 
 export const getDiscordMembers = createDiscordMembers();
 
-const LIVE: HomeSources = { releases: getReleases, stats: getStatsSummary, discord: getDiscordMembers };
+// The landing waits at most 1.5 s on a source it has never heard from; after that it answers from the last
+// figures while one refresh per source runs.
+const live = { freshMs: 60_000, budgetMs: 1_500 };
+export const liveReleases = cached(getReleases, live);
+const LIVE: HomeSources = {
+  releases: () => liveReleases(),
+  stats: cached(getStatsSummary, live),
+  discord: cached(getDiscordMembers, live),
+};
 
 async function read<T>(source: () => Promise<T | null>): Promise<T | null> {
   try {
