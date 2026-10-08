@@ -30,7 +30,7 @@ export const entries: SearchEntry[] = [
   { label: 'Update', description: 'Update a box over USB2, and roll back', path: '/guide/update', group: 'Guide', icon: BsArrowRepeat, keywords: ['update', 'upgrade', 'rollback', 'roll back', 'revert', 'version', 'old firmware', 'stock firmware', 'makcu firmware'] },
   { label: 'Compatibility', description: 'Mice and keyboards owners have tried through the box', path: '/guide/compatibility', group: 'Guide', icon: BsBoxes, keywords: ['compatibility', 'compatible', 'supported', 'devices', 'mouse', 'mice', 'keyboard', 'works', 'does it work', 'list'] },
   { label: 'FAQ', description: 'Answers from the Discord FAQ', path: '/guide/faq', group: 'Guide', icon: BsInfoCircle, keywords: ['faq', 'questions', 'help'] },
-  { label: 'Troubleshooting', description: "The dashboard's messages and what fixes them", path: '/guide/troubleshooting', group: 'Guide', icon: BsWrench, keywords: ['troubleshooting', 'problem', 'error', 'not found', "can't see", 'not answering', 'blue screen', 'bsod', 'in use'] },
+  { label: 'Troubleshooting', description: 'Dashboard messages and their fixes', path: '/guide/troubleshooting', group: 'Guide', icon: BsWrench, keywords: ['troubleshooting', 'problem', 'error', 'not found', "can't see", 'not answering', 'blue screen', 'bsod', 'in use'] },
   { label: 'Device fixes', description: 'Settings some devices need, such as the Superstrike', path: '/guide/device-fixes', group: 'Guide', icon: BsSliders, keywords: ['fix', 'device fixes', 'superstrike', 'logitech', 'wooting', '125 hz', '1000 hz', 'imperfect', 'wire rate', 'logitech_fix'] },
   ...FAQ.map((f) => ({ label: f.q, description: f.a, path: `/guide/faq#${f.id}`, group: 'Guide', icon: BsInfoCircle })),
 
