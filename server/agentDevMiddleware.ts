@@ -8,6 +8,10 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import { resolve, sep } from 'node:path';
 import { LLMS_LINK, planAgentResponse } from './agent';
 import { handleMcp } from './mcp';
+import { planRedirect } from './routing';
+import { ROUTES } from '../src/app/routes';
+
+const ROUTE_PATHS: ReadonlySet<string> = new Set(ROUTES.map((r) => r.path));
 
 const DIST = resolve('dist');
 
@@ -44,7 +48,17 @@ type Next = (err?: unknown) => void;
 
 export async function agentDocsDev(req: IncomingMessage, res: ServerResponse, next: Next): Promise<void> {
   try {
-    const pathname = new URL(req.url ?? '/', 'http://localhost').pathname;
+    const url = new URL(req.url ?? '/', 'http://localhost');
+    const pathname = url.pathname;
+
+    // Vite's /@vite, /@fs, /src and /node_modules requests never match a route, so they pass.
+    const location = planRedirect(pathname, url.search, ROUTE_PATHS);
+    if (location) {
+      res.statusCode = 301;
+      res.setHeader('location', location);
+      res.end();
+      return;
+    }
 
     if (pathname === '/mcp') {
       const chunks: Buffer[] = [];
