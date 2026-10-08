@@ -2,7 +2,7 @@ import { For, Match, Show, Switch, createResource } from 'solid-js';
 import { Card, CardHeader } from '../../../components/surfaces/Card';
 import { Chip } from '../../../components/display/Chip';
 import { type FirmwareRelease, fetchReleases } from '../../../dashboard/firmware';
-import { type Block, linkify, parseBlocks, splitRelease } from '../../../dashboard/firmware/notes';
+import { type Block, inlineRuns, parseBlocks, splitRelease } from '../../../dashboard/firmware/notes';
 import '../../../styles/docs.css';
 
 const fmtDate = (iso: string) => {
@@ -13,8 +13,18 @@ const fmtDate = (iso: string) => {
 };
 
 const Text = (props: { text: string }) => (
-  <For each={linkify(props.text)}>
-    {(run) => (run.href ? <a href={run.href} target="_blank" rel="noreferrer">{run.text}</a> : run.text)}
+  <For each={inlineRuns(props.text)}>
+    {(run) =>
+      run.href ? (
+        <a href={run.href} target="_blank" rel="noreferrer">{run.text}</a>
+      ) : run.strong ? (
+        <strong>{run.text}</strong>
+      ) : run.code ? (
+        <code>{run.text}</code>
+      ) : (
+        run.text
+      )
+    }
   </For>
 );
 

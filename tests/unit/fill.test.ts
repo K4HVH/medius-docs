@@ -43,6 +43,13 @@ describe('fillPage', () => {
     expect(html.indexOf('Fixed')).toBeLessThan(html.indexOf('<details>'));
   });
 
+  it('renders the bold and code the notes are written in', async () => {
+    const md: FillSources = { ...SOURCES, releases: async () => [release('v3.4.4', `## Notes\nthere is **almost **no difference, protocol \`8\`\n\n${COMMITS_MARKER}\n- c (1)`)] };
+    const html = await fillPage('/dashboard/changelog', CHANGELOG, md);
+    expect(html).toContain('<strong>almost </strong>');
+    expect(html).toContain('<code>8</code>');
+  });
+
   it('escapes what the notes say', async () => {
     const html = await fillPage('/dashboard/changelog', CHANGELOG, SOURCES);
     expect(html).not.toContain('<script>');

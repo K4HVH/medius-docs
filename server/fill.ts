@@ -1,7 +1,7 @@
 // The changelog and stats pages read the server at run time, so their prerendered snapshots hold only
 // "Loading...". These fill that block per request, for crawlers that run no JavaScript.
 import type { FirmwareRelease } from '../src/dashboard/firmware/client';
-import { linkify, parseBlocks, splitRelease, type Block } from '../src/dashboard/firmware/notes';
+import { inlineRuns, parseBlocks, splitRelease, type Block } from '../src/dashboard/firmware/notes';
 import { SITE } from '../src/app/site';
 import type { StatsSummary } from './stats/types';
 import { getReleases } from './firmware';
@@ -18,8 +18,16 @@ const esc = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 const runs = (text: string) =>
-  linkify(text)
-    .map((r) => (r.href ? `<a href="${esc(r.href)}">${esc(r.text)}</a>` : esc(r.text)))
+  inlineRuns(text)
+    .map((r) =>
+      r.href
+        ? `<a href="${esc(r.href)}">${esc(r.text)}</a>`
+        : r.strong
+          ? `<strong>${esc(r.text)}</strong>`
+          : r.code
+            ? `<code>${esc(r.text)}</code>`
+            : esc(r.text),
+    )
     .join('');
 
 const blocks = (list: Block[]) =>
