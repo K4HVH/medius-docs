@@ -88,7 +88,11 @@ vi.mock('../../src/app/pages/dashboard/AdvancedUsb2', () => ({
 }));
 
 const navigate = vi.hoisted(() => vi.fn());
-vi.mock('@solidjs/router', () => ({ useNavigate: () => navigate }));
+vi.mock('@solidjs/router', () => ({
+  useNavigate: () => navigate,
+  useLocation: () => ({ pathname: '/dashboard/advanced', hash: '' }),
+  A: (p: { children: unknown }) => p.children,
+}));
 
 import Advanced from '../../src/app/pages/dashboard/Advanced';
 

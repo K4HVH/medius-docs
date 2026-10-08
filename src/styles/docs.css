@@ -435,7 +435,6 @@ pre code[class*="language-"] {
 
 .stat-bars__track {
   height: 8px;
-  border-radius: 4px;
   background: var(--g-background-subtle);
   overflow: hidden;
 }
@@ -444,8 +443,7 @@ pre code[class*="language-"] {
   display: block;
   height: 100%;
   min-width: 2px;
-  border-radius: 4px;
-  background: var(--color-primary);
+  background: var(--primary);
 }
 
 .stat-bars__value {
@@ -462,7 +460,7 @@ pre code[class*="language-"] {
 
 /* A thin gap between stacked parts, so neighbours of close brightness stay apart. */
 .stat-columns rect {
-  stroke: var(--color-gray-800);
+  stroke: #0a0a0a;
   stroke-width: 1px;
   vector-effect: non-scaling-stroke;
 }
@@ -487,12 +485,12 @@ pre code[class*="language-"] {
 }
 
 /* Each at 3:1 or more against the card, and apart in hue where close in brightness. */
-.stat-fill--primary { fill: var(--color-primary); }
-.stat-fill--success { fill: var(--color-green-400); background: var(--color-green-400); }
-.stat-fill--written { fill: var(--color-blue-400); background: var(--color-blue-400); }
-.stat-fill--warning { fill: var(--color-yellow-400); background: var(--color-yellow-400); }
-.stat-fill--muted { fill: var(--color-gray-300); background: var(--color-gray-300); }
-.stat-fill--danger { fill: var(--color-red-500); background: var(--color-red-500); }
+.stat-fill--primary { fill: var(--primary); }
+.stat-fill--success { fill: var(--ok); background: var(--ok); }
+.stat-fill--written { fill: var(--accent); background: var(--accent); }
+.stat-fill--warning { fill: var(--warn); background: var(--warn); }
+.stat-fill--muted { fill: var(--muted); background: var(--muted); }
+.stat-fill--danger { fill: var(--bad); background: var(--bad); }
 
 .stat-legend {
   display: flex;

@@ -1,7 +1,18 @@
+import { MemoryRouter, Route, createMemoryHistory } from '@solidjs/router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, waitFor } from '@solidjs/testing-library';
 import type { StatsSummary } from '../../src/dashboard/stats';
 import Stats from '../../src/app/pages/dashboard/Stats';
+
+const InRoute = () => {
+  const history = createMemoryHistory();
+  history.set({ value: '/dashboard/stats' });
+  return (
+    <MemoryRouter history={history}>
+      <Route path="*" component={Stats} />
+    </MemoryRouter>
+  );
+};
 
 const weeks = (n: number, at: (i: number) => number = () => 0) =>
   Array.from({ length: 26 }, (_, i) => ({ key: `2026-04-${String(i + 1).padStart(2, '0')}`, n: i < n ? at(i) : 0 }));
@@ -82,7 +93,7 @@ afterEach(() => {
 describe('Stats page', () => {
   it('shows the totals', async () => {
     answer(FULL);
-    const r = render(() => <Stats />);
+    const r = render(() => <InRoute />);
     const figures = await r.findByTestId('figures');
     expect(figures.textContent).toContain('1,204');
     expect(figures.textContent).toContain('Unique boxes');
@@ -94,7 +105,7 @@ describe('Stats page', () => {
 
   it('draws each breakdown with its labels and numbers', async () => {
     answer(FULL);
-    const r = render(() => <Stats />);
+    const r = render(() => <InRoute />);
     await r.findByTestId('figures');
     const text = r.container.textContent!;
     for (const s of [
@@ -115,15 +126,16 @@ describe('Stats page', () => {
       expect(text).toContain(s);
   });
 
-  it('carries no notes and no list of what is collected, and each subtitle names a scope', async () => {
+  it('carries no notes and no list of what is collected, and the lead and each subtitle name a scope', async () => {
     answer(FULL);
-    const r = render(() => <Stats />);
+    const r = render(() => <InRoute />);
     await r.findByTestId('figures');
     expect(r.container.querySelector('#collected')).toBeNull();
     expect(r.container.textContent).not.toMatch(/Counted since|recounts|different versions|Data collected/);
+    expect(r.container.querySelector('.page-header h1')?.textContent).toBe('Usage stats');
+    expect(r.container.querySelector('.page-header .lead')?.textContent).toBe('All boxes, all time');
     const subtitles = [...r.container.querySelectorAll('.card__header small')].map((e) => e.textContent);
     expect(subtitles).toEqual([
-      'All boxes, all time',
       'Last 26 weeks and 90 days',
       'Last 30 days',
       'Cloned by the boxes',
@@ -134,7 +146,7 @@ describe('Stats page', () => {
 
   it('shows the totals as tiles, each a value over its label', async () => {
     answer(FULL);
-    const r = render(() => <Stats />);
+    const r = render(() => <InRoute />);
     const figures = await r.findByTestId('figures');
     const tiles = [...figures.querySelectorAll('.stat-figure')].map((t) => [
       t.querySelector('.stat-figure__value')!.textContent,
@@ -155,13 +167,13 @@ describe('Stats page', () => {
 
   it('rounds the success rate down, and says None with no flashes', async () => {
     answer({ ...FULL, flashes: { ...FULL.flashes, total: 200, succeeded: 199 } });
-    const r = render(() => <Stats />);
+    const r = render(() => <InRoute />);
     const figures = await r.findByTestId('figures');
     expect(figures.textContent).toContain('99%');
     expect(figures.textContent).toContain('Success rate');
     cleanup();
     answer({ ...EMPTY, boxes: { ...EMPTY.boxes, total: 3 } });
-    const e = render(() => <Stats />);
+    const e = render(() => <InRoute />);
     const f2 = await e.findByTestId('figures');
     expect(f2.textContent).toContain('None');
     expect(e.container.querySelector('#firmware')!.textContent).toContain('None.');
@@ -169,7 +181,7 @@ describe('Stats page', () => {
 
   it('names release or file as the source, as Advanced does, and kind 0 as Unknown', async () => {
     answer(FULL);
-    const r = render(() => <Stats />);
+    const r = render(() => <InRoute />);
     await r.findByTestId('figures');
     expect(r.container.querySelector('#flashes')!.textContent).toContain('Source');
     expect(r.container.querySelector('#flashes')!.textContent).not.toMatch(/\bImage\b/);
@@ -179,7 +191,7 @@ describe('Stats page', () => {
   it('scales the bars to the largest named row, not to Others', async () => {
     const countries = [{ key: 'AU', n: 100 }, ...Array.from({ length: 30 }, (_, i) => ({ key: `Z${String.fromCharCode(65 + (i % 26))}${i}`, n: 90 }))];
     answer({ ...FULL, countries });
-    const r = render(() => <Stats />);
+    const r = render(() => <InRoute />);
     await r.findByTestId('figures');
     const fills = [...r.container.querySelector('#countries .stat-bars')!.querySelectorAll('.stat-bars__fill')] as HTMLElement[];
     expect(fills[0].style.width).toBe('100%');
@@ -189,7 +201,7 @@ describe('Stats page', () => {
   it('gives each week the split by result in its tooltip', async () => {
     const perWeek = FULL.flashes.perWeek.map((w, i) => (i === 25 ? { ...w, verified: 20, written: 9, failed: 2 } : w));
     answer({ ...FULL, flashes: { ...FULL.flashes, perWeek } });
-    const r = render(() => <Stats />);
+    const r = render(() => <InRoute />);
     await r.findByTestId('figures');
     const titles = [...r.container.querySelectorAll('#flashes svg title')].map((t) => t.textContent);
     expect(titles.at(-1)).toMatch(/: 31 \(Verified 20, Written \(ROM download\) 9, Failed 2\)$/);
@@ -197,7 +209,7 @@ describe('Stats page', () => {
 
   it('shows zeros and an empty note for each chart with nothing counted', async () => {
     answer(EMPTY);
-    const r = render(() => <Stats />);
+    const r = render(() => <InRoute />);
     const figures = await r.findByTestId('figures');
     expect(figures.textContent).toContain('0');
     expect(figures.textContent).not.toContain('NaN');
@@ -206,7 +218,7 @@ describe('Stats page', () => {
 
   it('names a device with no product string by its kind, and no label says what something lacks', async () => {
     answer({ ...FULL, devices: { ...FULL.devices, top: [{ vid: 0x1915, pid: 0xaf28, kind: 1, product: null, boxes: 2 }] } });
-    const r = render(() => <Stats />);
+    const r = render(() => <InRoute />);
     await r.findByTestId('figures');
     // The second table, Most used; the first is By kind.
     const cell = r.container.querySelectorAll('#devices table')[1].querySelector('tbody td')!;
@@ -216,7 +228,7 @@ describe('Stats page', () => {
 
   it('an empty most used list says None', async () => {
     answer({ ...FULL, devices: { ...FULL.devices, top: [] } });
-    const r = render(() => <Stats />);
+    const r = render(() => <InRoute />);
     await r.findByTestId('figures');
     expect(r.container.querySelector('#devices')!.textContent).toContain('None.');
   });
@@ -229,7 +241,7 @@ describe('Stats page', () => {
       return new Response(JSON.stringify(FULL), { status: 200 });
     });
     vi.stubGlobal('fetch', f);
-    const r = render(() => <Stats />);
+    const r = render(() => <InRoute />);
     await waitFor(() => expect(r.getByRole('alert').textContent).toContain("Couldn't load the stats (500)."));
     fireEvent.click(r.getByRole('button', { name: 'Retry' }));
     await waitFor(() => expect(r.container.textContent).toContain('Loading...'));

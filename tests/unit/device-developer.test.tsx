@@ -35,6 +35,7 @@ const mock = vi.hoisted(() => ({
 vi.mock('@solidjs/router', () => ({
   A: (p: { children: unknown }) => p.children,
   useNavigate: () => () => {},
+  useLocation: () => ({ pathname: '/dashboard/advanced-control', hash: '' }),
 }));
 
 vi.mock('../../src/app/pages/dashboard/context', async () => {

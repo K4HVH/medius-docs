@@ -20,6 +20,7 @@ import { Usb2Flash } from './AdvancedUsb2';
 import { BAD_BROWSER, BAD_CONTEXT } from './ConnectPanel';
 import { InstallPorts, WiringPorts } from './PortDiagram';
 import { note, row, section } from './ui';
+import { PageHeader } from '../../shell/PageHeader';
 import '../../../styles/docs.css';
 
 const isUserCancel = (e: unknown) => e instanceof DOMException && e.name === 'NotFoundError';
@@ -169,6 +170,7 @@ const Advanced = () => {
 
   return (
     <>
+      <PageHeader lead="Manual flash, any chip or image" />
       <Show when={native.running() || updating()}>
         <div id="flashing" data-search-target>
           <Card>
@@ -184,7 +186,6 @@ const Advanced = () => {
       <Show when={!native.running() && !updating()}>
         <div id="advanced" data-search-target>
           <Card>
-            <CardHeader title="Advanced" subtitle="Manual flash, any chip or image" />
             <Show
               when={via() === 'rom'}
               fallback={

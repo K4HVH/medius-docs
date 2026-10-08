@@ -11,6 +11,7 @@ import DeviceOptions from './DeviceOptions';
 import { ConnectPanel } from './ConnectPanel';
 import UpdateOnlyCard from './UpdateOnlyCard';
 import { row } from './ui';
+import { PageHeader } from '../../shell/PageHeader';
 import '../../../styles/docs.css';
 
 const healthItems = (h: Health) => [
@@ -54,6 +55,7 @@ const Device = () => {
 
   return (
     <>
+      <PageHeader />
       <div style={{ display: 'flex', gap: 'var(--g-spacing)', 'flex-wrap': 'wrap', 'align-items': 'flex-start' }}>
         <div style={col}>
           <div id="your-box" data-search-target>

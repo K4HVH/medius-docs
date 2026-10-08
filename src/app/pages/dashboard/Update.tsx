@@ -10,6 +10,7 @@ import { parseVersion } from '../../../dashboard/flash';
 import { useDashboard } from './context';
 import { ConnectPanel } from './ConnectPanel';
 import { WiringPorts } from './PortDiagram';
+import { PageHeader } from '../../shell/PageHeader';
 import '../../../styles/docs.css';
 
 type Step = 'choose' | 'update' | 'done' | 'sent';
@@ -158,6 +159,7 @@ const Update = () => {
 
   return (
     <>
+      <PageHeader lead="Latest firmware" />
       <Show when={dash.status() === 'flashing'}>
         <div id="updating" data-search-target>
           <Card>
@@ -170,7 +172,6 @@ const Update = () => {
       <Show when={dash.status() !== 'flashing'}>
         <div id="update" data-search-target>
           <Card>
-            <CardHeader title="Update" subtitle="Latest firmware" />
             <Show when={err()}>
               {(msg) => <div class="callout callout--danger" role="alert">{msg()}</div>}
             </Show>

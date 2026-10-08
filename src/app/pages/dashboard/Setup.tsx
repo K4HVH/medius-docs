@@ -11,6 +11,7 @@ import { type ConnectVerdict, requestRomPort } from '../../../dashboard/serial';
 import { type BoxEntry, type Snapshot, useBoxes, useNativeFlash } from './context';
 import { BAD_BROWSER, BAD_CONTEXT, ConnectView } from './ConnectPanel';
 import { ClearPort, InstallPorts, type PortId } from './PortDiagram';
+import { PageHeader } from '../../shell/PageHeader';
 import '../../../styles/docs.css';
 
 type Step = 'main' | 'unplug' | 'mouse' | 'unplug3' | 'cables';
@@ -101,6 +102,7 @@ const Setup = () => {
 
   return (
     <>
+      <PageHeader />
       <Show when={native.running()}>
         <div id="installing" data-search-target>
           <Card>

@@ -104,7 +104,11 @@ vi.mock('../../src/dashboard/firmware', () => ({
 }));
 
 const navigate = vi.hoisted(() => vi.fn());
-vi.mock('@solidjs/router', () => ({ useNavigate: () => navigate }));
+vi.mock('@solidjs/router', () => ({
+  useNavigate: () => navigate,
+  useLocation: () => ({ pathname: '/dashboard/update', hash: '' }),
+  A: (p: { children: unknown }) => p.children,
+}));
 
 import Update from '../../src/app/pages/dashboard/Update';
 

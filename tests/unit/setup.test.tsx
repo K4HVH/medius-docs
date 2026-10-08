@@ -91,7 +91,11 @@ vi.mock('../../src/dashboard/serial', () => ({
 }));
 
 const navigate = vi.hoisted(() => vi.fn());
-vi.mock('@solidjs/router', () => ({ useNavigate: () => navigate }));
+vi.mock('@solidjs/router', () => ({
+  useNavigate: () => navigate,
+  useLocation: () => ({ pathname: '/dashboard/setup', hash: '' }),
+  A: (p: { children: unknown }) => p.children,
+}));
 
 import Setup from '../../src/app/pages/dashboard/Setup';
 
