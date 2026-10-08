@@ -47,6 +47,7 @@
 
 /* Chips: square mono caps labels in their status colour. */
 .chip {
+  max-width: 100%;
   border-radius: 0;
   padding: 2px 8px;
   background: transparent;
