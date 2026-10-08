@@ -119,3 +119,54 @@
   border-left-color: var(--accent);
   background: linear-gradient(90deg, rgba(0, 128, 255, 0.08), transparent 70%);
 }
+
+/* Box names run to 32 characters; the sidebar tabs were sized for short labels. */
+.box-tabs .tabs__tab {
+  min-width: 0;
+}
+
+.box-tabs .tabs__tab-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* A box's icon opens its icon menu, so it takes clicks beyond the glyph. */
+.box-icon .menu__trigger {
+  display: flex;
+}
+
+.box-tabs .tabs__tab:disabled .menu__trigger {
+  cursor: inherit;
+}
+
+.box-icon__hit {
+  display: flex;
+  /* Clicks land on all 32 px; the hover square is the inner 24, clear of the name. */
+  padding: var(--g-spacing-xs);
+  border: var(--g-spacing-xs) solid transparent;
+  margin: calc(-1 * var(--g-spacing-sm));
+  background-clip: padding-box;
+  border-radius: calc(var(--g-radius) + var(--g-spacing-xs));
+  transition: background-color var(--g-transition);
+}
+
+@media (hover: hover) {
+  .box-tabs .tabs__tab:not(:disabled) .box-icon__hit:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+}
+
+.menu.box-icon-menu {
+  display: flex;
+  gap: var(--g-spacing-xs);
+  min-width: 0;
+}
+
+.box-icon-menu .menu__item {
+  width: auto;
+  padding: var(--g-spacing-sm);
+}
+
+.box-icon-menu .menu__item.box-icon-menu__current::before {
+  background: rgba(255, 255, 255, 0.1);
+}

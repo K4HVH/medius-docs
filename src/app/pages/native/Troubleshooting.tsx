@@ -59,15 +59,17 @@ const Troubleshooting: Component = () => {
         <p>
           The box clears all injection when the program goes quiet, so input can't stick.
         </p>
-        <table class="api-params">
-          <thead>
-            <tr><th>Event</th><th>Effect</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>Silence timeout (default <code>1000 ms</code> with no valid inbound frame)</td><td>Drops every held button and pending move, returns to plain passthrough.</td></tr>
-            <tr><td>Any frame passing its <A href="/native/frame#crc">checksum</A> (including a <A href="/native/commands/requests#requests"><code>QUERY</code></A>)</td><td>Resets the timer.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Event</th><th>Effect</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Silence timeout (default <code>1000 ms</code> with no valid inbound frame)</td><td>Drops every held button and pending move, returns to plain passthrough.</td></tr>
+              <tr><td>Any frame passing its <A href="/native/frame#crc">checksum</A> (including a <A href="/native/commands/requests#requests"><code>QUERY</code></A>)</td><td>Resets the timer.</td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           To hold an injected button, keep the link busy with periodic frames (a{' '}
           <A href="/native/commands/requests#health"><code>QUERY(HEALTH)</code></A> is enough), or
@@ -86,16 +88,18 @@ const Troubleshooting: Component = () => {
           <A href="/native/hardware"><code>USB3</code></A> share one internal 5V rail that firmware
           can't pull low, so wiring both to one machine back-feeds power into it. Keep them apart:
         </p>
-        <table class="api-params">
-          <thead>
-            <tr><th>Port</th><th>Carries</th><th>Connects to</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><A href="/native/hardware"><code>USB1</code></A></td><td>clone</td><td>game PC</td></tr>
-            <tr><td><A href="/native/hardware"><code>USB2</code></A></td><td>control link</td><td>control PC</td></tr>
-            <tr><td><A href="/native/hardware"><code>USB3</code></A></td><td>real mouse</td><td>mouse</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Port</th><th>Carries</th><th>Connects to</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><A href="/native/hardware"><code>USB1</code></A></td><td>clone</td><td>game PC</td></tr>
+              <tr><td><A href="/native/hardware"><code>USB2</code></A></td><td>control link</td><td>control PC</td></tr>
+              <tr><td><A href="/native/hardware"><code>USB3</code></A></td><td>real mouse</td><td>mouse</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="callout callout--danger">
           <p>
             ⚠️ <A href="/native/hardware"><code>USB1</code></A> and{' '}

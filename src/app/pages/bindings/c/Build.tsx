@@ -23,19 +23,21 @@ const Build: Component = () => {
           <a href="https://en.cppreference.com/w/c/preprocessor/conditional" target="_blank" rel="noreferrer"><code>#ifdef</code></a>{' '}
           in the header.
         </p>
-        <table class="api-params">
-          <thead>
-            <tr><th>Cargo feature</th><th>Header macro</th><th>Declares</th><th>What it does</th></tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>mock</code></td>
-              <td><code>MEDIUS_FEATURE_MOCK</code></td>
-              <td><A href="/bindings/c/api#mock"><code>MediusMockBox</code></A>, the <code>medius_mock_*</code> calls, <code>medius_device_with_mock</code> / <code>_open_mock</code></td>
-              <td>A scriptable fake box for tests. See <A href="/library/features/mock">Mock box</A>.</td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Cargo feature</th><th>Header macro</th><th>Declares</th><th>What it does</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>mock</code></td>
+                <td><code>MEDIUS_FEATURE_MOCK</code></td>
+                <td><A href="/bindings/c/api#mock"><code>MediusMockBox</code></A>, the <code>medius_mock_*</code> calls, <code>medius_device_with_mock</code> / <code>_open_mock</code></td>
+                <td>A scriptable fake box for tests. See <A href="/library/features/mock">Mock box</A>.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-bash">{`# build the library with mock
 cargo build -p medius-capi --release --features mock
@@ -63,28 +65,32 @@ cc app.c -DMEDIUS_FEATURE_MOCK \\
         <pre class="diagram">{`  compile  ──▶  needs your code + medius.h
   link     ──▶  adds libmedius_capi
   run      ──▶  loads libmedius_capi`}</pre>
-        <table class="api-params">
-          <thead>
-            <tr><th>Flag</th><th>Points at</th><th>Example</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><code>-I&lt;dir&gt;</code></td><td>the directory holding <code>medius.h</code></td><td><code>-I medius-capi/include</code></td></tr>
-            <tr><td><code>-L&lt;dir&gt;</code></td><td>the directory holding the library</td><td><code>-L target/release</code></td></tr>
-            <tr><td><code>-lmedius_capi</code></td><td>the library (the linker adds the <code>lib</code> prefix and extension)</td><td>resolves <code>libmedius_capi.so</code></td></tr>
-            <tr><td><a href="https://man7.org/linux/man-pages/man7/pthreads.7.html" target="_blank" rel="noreferrer"><code>-lpthread</code></a></td><td>Linux only; the core spawns reader/keepalive threads</td><td>append after <code>-lmedius_capi</code></td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Flag</th><th>Points at</th><th>Example</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>-I&lt;dir&gt;</code></td><td>the directory holding <code>medius.h</code></td><td><code>-I medius-capi/include</code></td></tr>
+              <tr><td><code>-L&lt;dir&gt;</code></td><td>the directory holding the library</td><td><code>-L target/release</code></td></tr>
+              <tr><td><code>-lmedius_capi</code></td><td>the library (the linker adds the <code>lib</code> prefix and extension)</td><td>resolves <code>libmedius_capi.so</code></td></tr>
+              <tr><td><a href="https://man7.org/linux/man-pages/man7/pthreads.7.html" target="_blank" rel="noreferrer"><code>-lpthread</code></a></td><td>Linux only; the core spawns reader/keepalive threads</td><td>append after <code>-lmedius_capi</code></td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">LIBRARY FILENAMES</div>
-        <table class="api-params">
-          <thead>
-            <tr><th>OS</th><th>Shared library</th><th>Static library</th><th>Note</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>Linux</td><td><code>libmedius_capi.so</code></td><td><code>libmedius_capi.a</code></td><td>add <code>-lpthread</code></td></tr>
-            <tr><td>macOS</td><td><code>libmedius_capi.dylib</code></td><td><code>libmedius_capi.a</code></td><td>none</td></tr>
-            <tr><td>Windows</td><td><code>medius_capi.dll</code></td><td><code>medius_capi.lib</code></td><td>link <code>medius_capi.dll.lib</code> (import) or <code>.lib</code> (static); no <code>lib</code> prefix</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>OS</th><th>Shared library</th><th>Static library</th><th>Note</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Linux</td><td><code>libmedius_capi.so</code></td><td><code>libmedius_capi.a</code></td><td>add <code>-lpthread</code></td></tr>
+              <tr><td>macOS</td><td><code>libmedius_capi.dylib</code></td><td><code>libmedius_capi.a</code></td><td>none</td></tr>
+              <tr><td>Windows</td><td><code>medius_capi.dll</code></td><td><code>medius_capi.lib</code></td><td>link <code>medius_capi.dll.lib</code> (import) or <code>.lib</code> (static); no <code>lib</code> prefix</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">SANITY CHECK</div>
         <pre><code class="language-c">{`// hello.c: proves the library links and loads
 #include <medius.h>
@@ -115,15 +121,17 @@ LD_LIBRARY_PATH=target/release ./hello
           Release</a> attaches one tarball per platform,{' '}
           <code>medius-capi-&lt;target-triple&gt;.tar.gz</code>. Unpack it and use the flags above.
         </p>
-        <table class="api-params">
-          <thead>
-            <tr><th>Inside the tarball</th><th>Contents</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><code>include/medius.h</code></td><td>the header (mock declarations gated by the macro)</td></tr>
-            <tr><td><code>lib/</code></td><td>the prebuilt <code>libmedius_capi</code>, shared and static, with mock off</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Inside the tarball</th><th>Contents</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>include/medius.h</code></td><td>the header (mock declarations gated by the macro)</td></tr>
+              <tr><td><code>lib/</code></td><td>the prebuilt <code>libmedius_capi</code>, shared and static, with mock off</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="callout callout--info">
           <p>
             No <a href="https://vcpkg.io" target="_blank" rel="noreferrer">vcpkg</a> or{' '}

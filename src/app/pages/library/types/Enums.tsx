@@ -24,14 +24,16 @@ const Enums: Component = () => {
           <A href="/library/discovery#find-keyboard-box"><code>find_keyboard_box</code></A>.{' '}
           <code>Display</code> prints the lowercase name.
         </p>
-        <table class="api-params">
-          <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
-          <tbody>
-            <tr><td><code>Unknown</code></td><td><code>0</code></td><td>Neither a mouse nor a keyboard (a device with no HID interface reads this), or nothing cloned: <A href="/library/types/structs#device-info"><code>DeviceInfo::is_cloned</code></A> tells them apart.</td></tr>
-            <tr><td><code>Keyboard</code></td><td><code>1</code></td><td>A keyboard.</td></tr>
-            <tr><td><code>Mouse</code></td><td><code>2</code></td><td>A mouse.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>Unknown</code></td><td><code>0</code></td><td>Neither a mouse nor a keyboard (a device with no HID interface reads this), or nothing cloned: <A href="/library/types/structs#device-info"><code>DeviceInfo::is_cloned</code></A> tells them apart.</td></tr>
+              <tr><td><code>Keyboard</code></td><td><code>1</code></td><td>A keyboard.</td></tr>
+              <tr><td><code>Mouse</code></td><td><code>2</code></td><td>A mouse.</td></tr>
+            </tbody>
+          </table>
+        </div>
       </DocSection>
       <DocSection id="action" title="Action" caption="Press / release tri-state">
         <pre class="api-signature">enum Action {'{'} SoftRelease, Press, ForceRelease {'}'}</pre>
@@ -42,23 +44,27 @@ const Enums: Component = () => {
           discriminant is the wire byte; convert with <code>as_u8()</code> and{' '}
           <code>from_u8(u8) -&gt; Option&lt;Action&gt;</code>.
         </p>
-        <table class="api-params">
-          <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
-          <tbody>
-            <tr><td><code>SoftRelease</code></td><td><code>0</code></td><td>Drop the box's override, press or force; a physical hold stays down.</td></tr>
-            <tr><td><code>Press</code></td><td><code>1</code></td><td>Force the input down.</td></tr>
-            <tr><td><code>ForceRelease</code></td><td><code>2</code></td><td>Force the input up, masking a physical hold.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>SoftRelease</code></td><td><code>0</code></td><td>Drop the box's override, press or force; a physical hold stays down.</td></tr>
+              <tr><td><code>Press</code></td><td><code>1</code></td><td>Force the input down.</td></tr>
+              <tr><td><code>ForceRelease</code></td><td><code>2</code></td><td>Force the input up, masking a physical hold.</td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>The two releases differ only under a physical hold:</p>
-        <table class="api-params">
-          <thead><tr><th>Variant</th><th>Not held</th><th>Physically held</th></tr></thead>
-          <tbody>
-            <tr><td><code>Press</code></td><td>down</td><td>down</td></tr>
-            <tr><td><code>SoftRelease</code></td><td>up</td><td>down (the physical bit stands)</td></tr>
-            <tr><td><code>ForceRelease</code></td><td>up</td><td>up (masks physical)</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Variant</th><th>Not held</th><th>Physically held</th></tr></thead>
+            <tbody>
+              <tr><td><code>Press</code></td><td>down</td><td>down</td></tr>
+              <tr><td><code>SoftRelease</code></td><td>up</td><td>down (the physical bit stands)</td></tr>
+              <tr><td><code>ForceRelease</code></td><td>up</td><td>up (masks physical)</td></tr>
+            </tbody>
+          </table>
+        </div>
       </DocSection>
       <DocSection id="class" title="Class" caption="The class of a momentary usage">
         <pre class="api-signature">enum Class {'{'} Button, Key, Media {'}'}</pre>
@@ -69,14 +75,16 @@ const Enums: Component = () => {
           <A href="/native/commands/catch"><code>CATCH</code></A>. Convert with <code>as_u8()</code> and{' '}
           <code>from_u8(u8) -&gt; Option&lt;Class&gt;</code>.
         </p>
-        <table class="api-params">
-          <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
-          <tbody>
-            <tr><td><code>Button</code></td><td><code>0</code></td><td>A mouse button; id is a <A href="/library/types/structs#button"><code>Button</code></A> id (0 = LEFT .. 4 = SIDE2).</td></tr>
-            <tr><td><code>Key</code></td><td><code>1</code></td><td>A keyboard key; id is a HID keycode (0xE0 .. 0xE7 is a modifier).</td></tr>
-            <tr><td><code>Media</code></td><td><code>2</code></td><td>A media usage; id is a 16-bit Consumer usage.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>Button</code></td><td><code>0</code></td><td>A mouse button; id is a <A href="/library/types/structs#button"><code>Button</code></A> id (0 = LEFT .. 4 = SIDE2).</td></tr>
+              <tr><td><code>Key</code></td><td><code>1</code></td><td>A keyboard key; id is a HID keycode (0xE0 .. 0xE7 is a modifier).</td></tr>
+              <tr><td><code>Media</code></td><td><code>2</code></td><td>A media usage; id is a 16-bit Consumer usage.</td></tr>
+            </tbody>
+          </table>
+        </div>
       </DocSection>
       <DocSection id="catch-class" title="CatchClass" caption="What a catch subscription addresses">
         <pre class="api-signature">enum CatchClass {'{'} Button, Key, Media, Axis, HidIn, HidOut, VendorInterrupt, VendorBulk, Control, Emit, Bus, ClipTransfer {'}'}</pre>
@@ -94,23 +102,25 @@ const Enums: Component = () => {
           <A href="/library/types/enums#traffic-class"><code>TrafficClass</code></A> is that half on
           its own.
         </p>
-        <table class="api-params">
-          <thead><tr><th>Variant</th><th>Byte</th><th>id is</th><th>Blanket covers</th></tr></thead>
-          <tbody>
-            <tr><td><code>Button</code></td><td><code>0</code></td><td>a <A href="/library/types/structs#button"><code>Button</code></A> id (0 = LEFT .. 4 = SIDE2).</td><td>every mouse button.</td></tr>
-            <tr><td><code>Key</code></td><td><code>1</code></td><td>a HID keycode (<code>0xE0 .. 0xE7</code> is a modifier).</td><td>every key and modifier.</td></tr>
-            <tr><td><code>Media</code></td><td><code>2</code></td><td>a 16-bit Consumer usage.</td><td>every media usage.</td></tr>
-            <tr><td><code>Axis</code></td><td><code>3</code></td><td>an <A href="/library/types/enums#axis"><code>Axis</code></A>: X, Y, the wheel, or pan.</td><td>every axis.</td></tr>
-            <tr><td><code>HidIn</code></td><td><code>4</code></td><td>an interface number on the real device.</td><td>every HID interface.</td></tr>
-            <tr><td><code>HidOut</code></td><td><code>5</code></td><td>an endpoint number.</td><td>every interrupt-OUT endpoint.</td></tr>
-            <tr><td><code>VendorInterrupt</code></td><td><code>6</code></td><td>an endpoint number.</td><td>every vendor interrupt endpoint.</td></tr>
-            <tr><td><code>VendorBulk</code></td><td><code>7</code></td><td>an endpoint number.</td><td>every vendor bulk endpoint.</td></tr>
-            <tr><td><code>Control</code></td><td><code>8</code></td><td>an endpoint number (<code>0</code> = EP0; on EP0, the requests the clone passes to the device).</td><td>every control endpoint.</td></tr>
-            <tr><td><code>Emit</code></td><td><code>9</code></td><td>an endpoint number on the clone.</td><td>every emitting endpoint.</td></tr>
-            <tr><td><code>Bus</code></td><td><code>10</code></td><td>unused; a bus event has no id.</td><td>every bus event.</td></tr>
-            <tr><td><code>ClipTransfer</code></td><td><code>11</code></td><td>the endpoint number (<code>0</code> = EP0) a <A href="/library/clip#frame">clip</A>'s transfer ran on.</td><td>every control endpoint.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Variant</th><th>Byte</th><th>id is</th><th>Blanket covers</th></tr></thead>
+            <tbody>
+              <tr><td><code>Button</code></td><td><code>0</code></td><td>a <A href="/library/types/structs#button"><code>Button</code></A> id (0 = LEFT .. 4 = SIDE2).</td><td>every mouse button.</td></tr>
+              <tr><td><code>Key</code></td><td><code>1</code></td><td>a HID keycode (<code>0xE0 .. 0xE7</code> is a modifier).</td><td>every key and modifier.</td></tr>
+              <tr><td><code>Media</code></td><td><code>2</code></td><td>a 16-bit Consumer usage.</td><td>every media usage.</td></tr>
+              <tr><td><code>Axis</code></td><td><code>3</code></td><td>an <A href="/library/types/enums#axis"><code>Axis</code></A>: X, Y, the wheel, or pan.</td><td>every axis.</td></tr>
+              <tr><td><code>HidIn</code></td><td><code>4</code></td><td>an interface number on the real device.</td><td>every HID interface.</td></tr>
+              <tr><td><code>HidOut</code></td><td><code>5</code></td><td>an endpoint number.</td><td>every interrupt-OUT endpoint.</td></tr>
+              <tr><td><code>VendorInterrupt</code></td><td><code>6</code></td><td>an endpoint number.</td><td>every vendor interrupt endpoint.</td></tr>
+              <tr><td><code>VendorBulk</code></td><td><code>7</code></td><td>an endpoint number.</td><td>every vendor bulk endpoint.</td></tr>
+              <tr><td><code>Control</code></td><td><code>8</code></td><td>an endpoint number (<code>0</code> = EP0; on EP0, the requests the clone passes to the device).</td><td>every control endpoint.</td></tr>
+              <tr><td><code>Emit</code></td><td><code>9</code></td><td>an endpoint number on the clone.</td><td>every emitting endpoint.</td></tr>
+              <tr><td><code>Bus</code></td><td><code>10</code></td><td>unused; a bus event has no id.</td><td>every bus event.</td></tr>
+              <tr><td><code>ClipTransfer</code></td><td><code>11</code></td><td>the endpoint number (<code>0</code> = EP0) a <A href="/library/clip#frame">clip</A>'s transfer ran on.</td><td>every control endpoint.</td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           A blanket is one table entry, not one per id. <code>CatchFilter::watch_class(c)</code> and{' '}
           <code>traffic_class(c)</code> are the per-class blankets and{' '}
@@ -188,14 +198,16 @@ let trace = device.catch_events([
           <code>i16</code> range. A lock names a single{' '}
           <A href="/library/types/enums#axis"><code>Axis</code></A> instead.
         </p>
-        <table class="api-params">
-          <thead><tr><th>Variant</th><th>Payload</th><th>Meaning</th></tr></thead>
-          <tbody>
-            <tr><td><code>Cursor</code></td><td><code>{'{'} dx: i16, dy: i16 {'}'}</code></td><td>Relative pointer movement.</td></tr>
-            <tr><td><code>Wheel</code></td><td><code>i16</code></td><td>Relative scroll.</td></tr>
-            <tr><td><code>Pan</code></td><td><code>i16</code></td><td>Relative AC Pan (horizontal scroll), a full peer of the wheel.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Variant</th><th>Payload</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>Cursor</code></td><td><code>{'{'} dx: i16, dy: i16 {'}'}</code></td><td>Relative pointer movement.</td></tr>
+              <tr><td><code>Wheel</code></td><td><code>i16</code></td><td>Relative scroll.</td></tr>
+              <tr><td><code>Pan</code></td><td><code>i16</code></td><td>Relative AC Pan (horizontal scroll), a full peer of the wheel.</td></tr>
+            </tbody>
+          </table>
+        </div>
       </DocSection>
       <DocSection id="move-timing" title="MoveTiming" caption="When a delta reaches the game PC">
         <pre class="api-signature">enum MoveTiming {'{'} Ride, Now {'}'}</pre>
@@ -204,13 +216,15 @@ let trace = device.catch_events([
           <A href="/library/options#set-movement-riding">movement riding</A>. Defaults to{' '}
           <code>Ride</code>.
         </p>
-        <table class="api-params">
-          <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
-          <tbody>
-            <tr><td><code>Ride</code></td><td><code>0x00</code></td><td>Wait for a real cursor move to carry this delta, as movement riding asks.</td></tr>
-            <tr><td><code>Now</code></td><td><code>0x01</code></td><td>Leave on the box's next mouse report, native or its own, whatever movement riding is set to.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>Ride</code></td><td><code>0x00</code></td><td>Wait for a real cursor move to carry this delta, as movement riding asks.</td></tr>
+              <tr><td><code>Now</code></td><td><code>0x01</code></td><td>Leave on the box's next mouse report, native or its own, whatever movement riding is set to.</td></tr>
+            </tbody>
+          </table>
+        </div>
       </DocSection>
       <DocSection id="pending-motion" title="PendingMotion" caption="What a move does to held motion">
         <pre class="api-signature">enum PendingMotion {'{'} Keep, Flush, Discard {'}'}</pre>
@@ -218,14 +232,16 @@ let trace = device.catch_events([
           The <A href="/library/move#move"><code>move_axis</code></A> pending argument: what happens to
           motion already held for a real move. Defaults to <code>Keep</code>.
         </p>
-        <table class="api-params">
-          <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
-          <tbody>
-            <tr><td><code>Keep</code></td><td><code>0x00</code></td><td>Leave it held.</td></tr>
-            <tr><td><code>Flush</code></td><td><code>0x02</code></td><td>Emit it now, ignoring the ride window (<A href="/library/move#flush-motion"><code>flush_motion</code></A>).</td></tr>
-            <tr><td><code>Discard</code></td><td><code>0x04</code></td><td>Drop it (<A href="/library/move#discard-motion"><code>discard_motion</code></A>).</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>Keep</code></td><td><code>0x00</code></td><td>Leave it held.</td></tr>
+              <tr><td><code>Flush</code></td><td><code>0x02</code></td><td>Emit it now, ignoring the ride window (<A href="/library/move#flush-motion"><code>flush_motion</code></A>).</td></tr>
+              <tr><td><code>Discard</code></td><td><code>0x04</code></td><td>Drop it (<A href="/library/move#discard-motion"><code>discard_motion</code></A>).</td></tr>
+            </tbody>
+          </table>
+        </div>
       </DocSection>
       <DocSection id="axis" title="Axis" caption="A single relative axis">
         <pre class="api-signature">enum Axis {'{'} X, Y, Wheel, Pan {'}'}</pre>
@@ -235,15 +251,17 @@ let trace = device.catch_events([
           <A href="/library/types/enums#direction"><code>Direction</code></A> for the sign.
           Convert with <code>as_u16()</code> and <code>from_u16()</code>.
         </p>
-        <table class="api-params">
-          <thead><tr><th>Variant</th><th>id</th><th>Meaning</th></tr></thead>
-          <tbody>
-            <tr><td><code>X</code></td><td><code>0</code></td><td>The X cursor axis.</td></tr>
-            <tr><td><code>Y</code></td><td><code>1</code></td><td>The Y cursor axis.</td></tr>
-            <tr><td><code>Wheel</code></td><td><code>2</code></td><td>The wheel.</td></tr>
-            <tr><td><code>Pan</code></td><td><code>3</code></td><td>AC Pan (horizontal scroll).</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Variant</th><th>id</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>X</code></td><td><code>0</code></td><td>The X cursor axis.</td></tr>
+              <tr><td><code>Y</code></td><td><code>1</code></td><td>The Y cursor axis.</td></tr>
+              <tr><td><code>Wheel</code></td><td><code>2</code></td><td>The wheel.</td></tr>
+              <tr><td><code>Pan</code></td><td><code>3</code></td><td>AC Pan (horizontal scroll).</td></tr>
+            </tbody>
+          </table>
+        </div>
       </DocSection>
       <DocSection id="reboot-target" title="RebootTarget" caption="Which chip to restart, and how">
         <pre class="api-signature">enum RebootTarget {'{'} DeviceDownload, HostDownload, DeviceRun, HostRun {'}'}</pre>
@@ -252,15 +270,17 @@ let trace = device.catch_events([
           into what mode. Convert with <code>as_u8()</code> and{' '}
           <code>from_u8(u8) -&gt; Option&lt;RebootTarget&gt;</code>.
         </p>
-        <table class="api-params">
-          <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
-          <tbody>
-            <tr><td><code>DeviceDownload</code></td><td><code>0</code></td><td>Device chip into ROM download mode, ready to flash over the serial link.</td></tr>
-            <tr><td><code>HostDownload</code></td><td><code>1</code></td><td>Host chip into ROM download mode, ready to flash over USB3.</td></tr>
-            <tr><td><code>DeviceRun</code></td><td><code>2</code></td><td>Restart the device chip and run its firmware.</td></tr>
-            <tr><td><code>HostRun</code></td><td><code>3</code></td><td>Restart the host chip and run its firmware.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>DeviceDownload</code></td><td><code>0</code></td><td>Device chip into ROM download mode, ready to flash over the serial link.</td></tr>
+              <tr><td><code>HostDownload</code></td><td><code>1</code></td><td>Host chip into ROM download mode, ready to flash over USB3.</td></tr>
+              <tr><td><code>DeviceRun</code></td><td><code>2</code></td><td>Restart the device chip and run its firmware.</td></tr>
+              <tr><td><code>HostRun</code></td><td><code>3</code></td><td>Restart the host chip and run its firmware.</td></tr>
+            </tbody>
+          </table>
+        </div>
       </DocSection>
       <DocSection id="emit-pace" title="EmitPace" caption="What paces injected motion">
         <pre class="api-signature">enum EmitPace {'{'} Learned, Interval, Fixed(u16) {'}'}</pre>
@@ -270,14 +290,16 @@ let trace = device.catch_events([
           <A href="/library/types/structs#emit-pace-status"><code>EmitPaceStatus</code></A>. It raises
           the ceiling only, so idle stays idle.
         </p>
-        <table class="api-params">
-          <thead><tr><th>Variant</th><th>Meaning</th></tr></thead>
-          <tbody>
-            <tr><td><code>Learned</code></td><td>Pace to the learnt native report rate (the default).</td></tr>
-            <tr><td><code>Interval</code></td><td>Pace to the cloned mouse's declared poll rate (its <code>bInterval</code>).</td></tr>
-            <tr><td><code>Fixed(u16)</code></td><td>Pace to a fixed rate in Hz; snaps to <code>1000/n</code> and caps at 1 kHz.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Variant</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>Learned</code></td><td>Pace to the learnt native report rate (the default).</td></tr>
+              <tr><td><code>Interval</code></td><td>Pace to the cloned mouse's declared poll rate (its <code>bInterval</code>).</td></tr>
+              <tr><td><code>Fixed(u16)</code></td><td>Pace to a fixed rate in Hz; snaps to <code>1000/n</code> and caps at 1 kHz.</td></tr>
+            </tbody>
+          </table>
+        </div>
       </DocSection>
       <DocSection id="render-mode" title="RenderMode" caption="The texture the box renders motion with">
         <pre class="api-signature">enum RenderMode {'{'} Off, Stock, Despiked, Unsmoothed {'}'}</pre>
@@ -288,15 +310,17 @@ let trace = device.catch_events([
           <a href="https://github.com/optima-manent/ABCurves" target="_blank" rel="noreferrer">ABCurves</a>{' '}
           (MIT).
         </p>
-        <table class="api-params">
-          <thead><tr><th>Variant</th><th>Meaning</th></tr></thead>
-          <tbody>
-            <tr><td><code>Off</code></td><td>Even fill at the paced rate, no model.</td></tr>
-            <tr><td><code>Stock</code></td><td>Render with the bit-exact triangular smoother.</td></tr>
-            <tr><td><code>Despiked</code></td><td>Render with the smoother's onset ramped rather than stepped (the default).</td></tr>
-            <tr><td><code>Unsmoothed</code></td><td>Render with no smoother; the model receives the raw injection.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Variant</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>Off</code></td><td>Even fill at the paced rate, no model.</td></tr>
+              <tr><td><code>Stock</code></td><td>Render with the bit-exact triangular smoother.</td></tr>
+              <tr><td><code>Despiked</code></td><td>Render with the smoother's onset ramped rather than stepped (the default).</td></tr>
+              <tr><td><code>Unsmoothed</code></td><td>Render with no smoother; the model receives the raw injection.</td></tr>
+            </tbody>
+          </table>
+        </div>
       </DocSection>
       <DocSection id="led-target" title="LedTarget" caption="Which chip's status LED to drive">
         <pre class="api-signature">enum LedTarget {'{'} Device, Host, Both {'}'}</pre>
@@ -305,14 +329,16 @@ let trace = device.catch_events([
           discriminant is the wire <code>target</code> byte. Convert with <code>as_u8()</code> and{' '}
           <code>from_u8(u8) -&gt; Option&lt;LedTarget&gt;</code>.
         </p>
-        <table class="api-params">
-          <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
-          <tbody>
-            <tr><td><code>Device</code></td><td><code>0</code></td><td>The device chip's LED.</td></tr>
-            <tr><td><code>Host</code></td><td><code>1</code></td><td>The host chip's LED, relayed over the inter-chip link.</td></tr>
-            <tr><td><code>Both</code></td><td><code>2</code></td><td>Both LEDs at once.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>Device</code></td><td><code>0</code></td><td>The device chip's LED.</td></tr>
+              <tr><td><code>Host</code></td><td><code>1</code></td><td>The host chip's LED, relayed over the inter-chip link.</td></tr>
+              <tr><td><code>Both</code></td><td><code>2</code></td><td>Both LEDs at once.</td></tr>
+            </tbody>
+          </table>
+        </div>
       </DocSection>
       <DocSection id="led-mode" title="LedMode" caption="What to drive the LED to">
         <pre class="api-signature">enum LedMode {'{'} Auto, Off, Solid, Blink {'}'}</pre>
@@ -322,15 +348,17 @@ let trace = device.catch_events([
           <code>mode</code> byte. Convert with <code>as_u8()</code> and{' '}
           <code>from_u8(u8) -&gt; Option&lt;LedMode&gt;</code>.
         </p>
-        <table class="api-params">
-          <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
-          <tbody>
-            <tr><td><code>Auto</code></td><td><code>0</code></td><td>Restore the chip's status display.</td></tr>
-            <tr><td><code>Off</code></td><td><code>1</code></td><td>LED dark.</td></tr>
-            <tr><td><code>Solid</code></td><td><code>2</code></td><td>Lit steadily at the command's <code>level</code>.</td></tr>
-            <tr><td><code>Blink</code></td><td><code>3</code></td><td>Blinks at the command's <code>level</code>.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>Auto</code></td><td><code>0</code></td><td>Restore the chip's status display.</td></tr>
+              <tr><td><code>Off</code></td><td><code>1</code></td><td>LED dark.</td></tr>
+              <tr><td><code>Solid</code></td><td><code>2</code></td><td>Lit steadily at the command's <code>level</code>.</td></tr>
+              <tr><td><code>Blink</code></td><td><code>3</code></td><td>Blinks at the command's <code>level</code>.</td></tr>
+            </tbody>
+          </table>
+        </div>
       </DocSection>
       <DocSection id="lock-target" title="LockTarget" caption="One addressable input field: an axis or a usage">
         <pre class="api-signature">enum LockTarget {'{'} Axis(Axis), Usage(Usage) {'}'}</pre>
@@ -341,21 +369,25 @@ let trace = device.catch_events([
           <code>impl Into&lt;Usage&gt;</code> convert <code>Into&lt;LockTarget&gt;</code>, so either
           passes straight in. A button locks exactly like a key.
         </p>
-        <table class="api-params">
-          <thead><tr><th>Variant</th><th>Payload</th><th>Locked by</th></tr></thead>
-          <tbody>
-            <tr><td><code>Axis</code></td><td><A href="/library/types/enums#axis"><code>Axis</code></A>: X, Y, the wheel, or pan</td><td>The sign, a <A href="/library/types/enums#direction"><code>Direction</code></A> of positive, negative or both, or the bearing-relative <code>With</code> / <code>Against</code>.</td></tr>
-            <tr><td><code>Usage</code></td><td><A href="/library/types/structs#usage"><code>Usage</code></A>: a button, key, or media usage</td><td>The press or release edge, a <A href="/library/types/enums#direction"><code>Direction</code></A>.</td></tr>
-          </tbody>
-        </table>
-        <table class="api-params">
-          <thead><tr><th>Method</th><th>Returns</th><th>Meaning</th></tr></thead>
-          <tbody>
-            <tr><td><code>.class_id()</code></td><td><code>(u8, u16)</code></td><td>The wire <code>(class, id)</code> this field encodes to.</td></tr>
-            <tr><td><code>LockTarget::from_class_id(class, id)</code></td><td><code>Option&lt;LockTarget&gt;</code></td><td>The inverse; <code>None</code> for a class no field names or an axis id past the declared axes.</td></tr>
-            <tr><td><code>.as_axis()</code></td><td><code>Option&lt;<A href="/library/types/enums#axis">Axis</A>&gt;</code></td><td>The axis this field names, or <code>None</code> for a momentary usage.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Variant</th><th>Payload</th><th>Locked by</th></tr></thead>
+            <tbody>
+              <tr><td><code>Axis</code></td><td><A href="/library/types/enums#axis"><code>Axis</code></A>: X, Y, the wheel, or pan</td><td>The sign, a <A href="/library/types/enums#direction"><code>Direction</code></A> of positive, negative or both, or the bearing-relative <code>With</code> / <code>Against</code>.</td></tr>
+              <tr><td><code>Usage</code></td><td><A href="/library/types/structs#usage"><code>Usage</code></A>: a button, key, or media usage</td><td>The press or release edge, a <A href="/library/types/enums#direction"><code>Direction</code></A>.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Method</th><th>Returns</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>.class_id()</code></td><td><code>(u8, u16)</code></td><td>The wire <code>(class, id)</code> this field encodes to.</td></tr>
+              <tr><td><code>LockTarget::from_class_id(class, id)</code></td><td><code>Option&lt;LockTarget&gt;</code></td><td>The inverse; <code>None</code> for a class no field names or an axis id past the declared axes.</td></tr>
+              <tr><td><code>.as_axis()</code></td><td><code>Option&lt;<A href="/library/types/enums#axis">Axis</A>&gt;</code></td><td>The axis this field names, or <code>None</code> for a momentary usage.</td></tr>
+            </tbody>
+          </table>
+        </div>
       </DocSection>
       <DocSection id="lock-scope" title="LockScope" caption="What a reported lock covers">
         <pre class="api-signature">enum LockScope {'{'} Target(LockTarget), Blanket(Class) {'}'}</pre>
@@ -363,13 +395,15 @@ let trace = device.catch_events([
           What a <A href="/library/types/structs#lock-entry"><code>LockEntry</code></A> in a{' '}
           <A href="/library/requests#query-locks"><code>query_locks</code></A> reply covers.
         </p>
-        <table class="api-params">
-          <thead><tr><th>Variant</th><th>Payload</th><th>Covers</th></tr></thead>
-          <tbody>
-            <tr><td><code>Target</code></td><td><A href="/library/types/enums#lock-target"><code>LockTarget</code></A></td><td>A specific axis or usage.</td></tr>
-            <tr><td><code>Blanket</code></td><td><A href="/library/types/enums#class"><code>Class</code></A></td><td>Every button, key, or media usage of the class.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Variant</th><th>Payload</th><th>Covers</th></tr></thead>
+            <tbody>
+              <tr><td><code>Target</code></td><td><A href="/library/types/enums#lock-target"><code>LockTarget</code></A></td><td>A specific axis or usage.</td></tr>
+              <tr><td><code>Blanket</code></td><td><A href="/library/types/enums#class"><code>Class</code></A></td><td>Every button, key, or media usage of the class.</td></tr>
+            </tbody>
+          </table>
+        </div>
       </DocSection>
       <DocSection id="direction" title="Direction" caption="Which way, which edge, or which transfer direction">
         <pre class="api-signature">enum Direction {'{'} Both, Positive, Negative, With, Against {'}'}</pre>
@@ -381,16 +415,18 @@ let trace = device.catch_events([
           two. Convert with <code>as_u8()</code> and{' '}
           <code>from_u8(u8) -&gt; Option&lt;Direction&gt;</code>.
         </p>
-        <table class="api-params">
-          <thead><tr><th>Variant</th><th>Byte</th><th>On an axis</th><th>On a button or key</th><th>On a traffic class</th></tr></thead>
-          <tbody>
-            <tr><td><code>Both</code></td><td><code>0</code></td><td>both signs; on a scale, a full pass to the relative pair</td><td>press and release</td><td>IN and OUT</td></tr>
-            <tr><td><code>Positive</code></td><td><code>1</code></td><td><code>+</code></td><td>press</td><td>IN: device to PC</td></tr>
-            <tr><td><code>Negative</code></td><td><code>2</code></td><td><code>-</code></td><td>release</td><td>OUT: PC to device</td></tr>
-            <tr><td><code>With</code></td><td><code>3</code></td><td>the sign the box is injecting</td><td>refused</td><td>no meaning</td></tr>
-            <tr><td><code>Against</code></td><td><code>4</code></td><td>the sign opposing it</td><td>refused</td><td>no meaning</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Variant</th><th>Byte</th><th>On an axis</th><th>On a button or key</th><th>On a traffic class</th></tr></thead>
+            <tbody>
+              <tr><td><code>Both</code></td><td><code>0</code></td><td>both signs; on a scale, a full pass to the relative pair</td><td>press and release</td><td>IN and OUT</td></tr>
+              <tr><td><code>Positive</code></td><td><code>1</code></td><td><code>+</code></td><td>press</td><td>IN: device to PC</td></tr>
+              <tr><td><code>Negative</code></td><td><code>2</code></td><td><code>-</code></td><td>release</td><td>OUT: PC to device</td></tr>
+              <tr><td><code>With</code></td><td><code>3</code></td><td>the sign the box is injecting</td><td>refused</td><td>no meaning</td></tr>
+              <tr><td><code>Against</code></td><td><code>4</code></td><td>the sign opposing it</td><td>refused</td><td>no meaning</td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           A media usage has no edges: an edge on one goes out, and reads back in{' '}
           <A href="/library/requests#query-locks"><code>query_locks</code></A>, as <code>Both</code>.
@@ -418,13 +454,15 @@ let trace = device.catch_events([
           <code>Direction::With</code> and <code>Against</code>. Convert with{' '}
           <code>as_u8()</code> and <code>from_u8(u8) -&gt; Option&lt;BearingMode&gt;</code>.
         </p>
-        <table class="api-params">
-          <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
-          <tbody>
-            <tr><td><code>PerAxis</code></td><td><code>0</code></td><td>Each axis compares its sign against its own bearing. The default.</td></tr>
-            <tr><td><code>Vector</code></td><td><code>1</code></td><td>The physical delta is projected onto the injected XY vector, and the relative scale weighs only the part along it.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>PerAxis</code></td><td><code>0</code></td><td>Each axis compares its sign against its own bearing. The default.</td></tr>
+              <tr><td><code>Vector</code></td><td><code>1</code></td><td>The physical delta is projected onto the injected XY vector, and the relative scale weighs only the part along it.</td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           In <code>Vector</code> the relative pair addresses X and Y as one vector: the box takes the
           lower of X's and Y's scale and applies it to both axes, so address them together with{' '}
@@ -445,16 +483,18 @@ let trace = device.catch_events([
           <A href="/library/lock#lock-all"><code>lock_all</code></A> weigh in one call, and the members of a
           clip's <A href="/library/types/structs#clip-settings"><code>ClipSettings</code></A> auto-lock.
         </p>
-        <table class="api-params">
-          <thead><tr><th>Variant</th><th>Meaning</th><th>What direction picks</th></tr></thead>
-          <tbody>
-            <tr><td><code>Aim</code></td><td>The X and Y cursor axes.</td><td>A sign on each axis, or the relative pair, which is how <code>Vector</code> mode is addressed.</td></tr>
-            <tr><td><code>Wheel</code></td><td>The wheel.</td><td>A sign.</td></tr>
-            <tr><td><code>Buttons</code></td><td>Every mouse button.</td><td>An edge, on each button.</td></tr>
-            <tr><td><code>Keys</code></td><td>Every keyboard key and modifier.</td><td>An edge: <code>Positive</code> blocks presses, <code>Negative</code> releases, <code>Both</code> both.</td></tr>
-            <tr><td><code>Media</code></td><td>Every media (Consumer) usage.</td><td>Nothing; media has no edges.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Variant</th><th>Meaning</th><th>What direction picks</th></tr></thead>
+            <tbody>
+              <tr><td><code>Aim</code></td><td>The X and Y cursor axes.</td><td>A sign on each axis, or the relative pair, which is how <code>Vector</code> mode is addressed.</td></tr>
+              <tr><td><code>Wheel</code></td><td>The wheel.</td><td>A sign.</td></tr>
+              <tr><td><code>Buttons</code></td><td>Every mouse button.</td><td>An edge, on each button.</td></tr>
+              <tr><td><code>Keys</code></td><td>Every keyboard key and modifier.</td><td>An edge: <code>Positive</code> blocks presses, <code>Negative</code> releases, <code>Both</code> both.</td></tr>
+              <tr><td><code>Media</code></td><td>Every media (Consumer) usage.</td><td>Nothing; media has no edges.</td></tr>
+            </tbody>
+          </table>
+        </div>
       </DocSection>
       <DocSection id="log-level" title="LogLevel" caption="Severity tag on a log line">
         <pre class="api-signature">enum LogLevel {'{'} Error, Warn, Info, Debug, Verbose {'}'}</pre>
@@ -462,16 +502,18 @@ let trace = device.catch_events([
           The severity tag on a <A href="/library/types/structs#log-line"><code>LogLine</code></A>.{' '}
           <code>from_u8(u8)</code> is infallible: an unknown byte falls back to <code>Info</code>.
         </p>
-        <table class="api-params">
-          <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
-          <tbody>
-            <tr><td><code>Error</code></td><td><code>0</code></td><td>A failure the box could not recover from.</td></tr>
-            <tr><td><code>Warn</code></td><td><code>1</code></td><td>Something off that the box handled.</td></tr>
-            <tr><td><code>Info</code></td><td><code>2</code></td><td>Normal operational notices.</td></tr>
-            <tr><td><code>Debug</code></td><td><code>3</code></td><td>Detail for diagnosing a problem.</td></tr>
-            <tr><td><code>Verbose</code></td><td><code>4</code></td><td>The finest-grained trace output.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>Error</code></td><td><code>0</code></td><td>A failure the box could not recover from.</td></tr>
+              <tr><td><code>Warn</code></td><td><code>1</code></td><td>Something off that the box handled.</td></tr>
+              <tr><td><code>Info</code></td><td><code>2</code></td><td>Normal operational notices.</td></tr>
+              <tr><td><code>Debug</code></td><td><code>3</code></td><td>Detail for diagnosing a problem.</td></tr>
+              <tr><td><code>Verbose</code></td><td><code>4</code></td><td>The finest-grained trace output.</td></tr>
+            </tbody>
+          </table>
+        </div>
       </DocSection>
       <DocSection id="catch-event" title="CatchEvent" caption="One caught event off the stream">
         <pre class="api-signature">enum CatchEvent {'{'} Motion(MotionEvent), Usages(UsageSnapshot), Traffic(TrafficEvent) {'}'}</pre>
@@ -479,14 +521,16 @@ let trace = device.catch_events([
           What an <A href="/library/catch#event-stream"><code>EventStream</code></A> yields, one
           variant per event frame the box pushes.
         </p>
-        <table class="api-params">
-          <thead><tr><th>Variant</th><th>Payload</th><th>Raised by</th></tr></thead>
-          <tbody>
-            <tr><td><code>Motion</code></td><td><A href="/library/types/structs#motion-event"><code>MotionEvent</code></A></td><td>A cursor or wheel change, from a <A href="/library/types/enums#catch-class"><code>CatchClass::Axis</code></A> filter.</td></tr>
-            <tr><td><code>Usages</code></td><td><A href="/library/types/structs#usage-snapshot"><code>UsageSnapshot</code></A></td><td>A button, key, or media change, from a <code>Button / Key / Media</code> filter.</td></tr>
-            <tr><td><code>Traffic</code></td><td><A href="/library/types/structs#traffic-event"><code>TrafficEvent</code></A></td><td>Bytes off a pipe, from any <A href="/library/types/enums#traffic-class"><code>TrafficClass</code></A> filter.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Variant</th><th>Payload</th><th>Raised by</th></tr></thead>
+            <tbody>
+              <tr><td><code>Motion</code></td><td><A href="/library/types/structs#motion-event"><code>MotionEvent</code></A></td><td>A cursor or wheel change, from a <A href="/library/types/enums#catch-class"><code>CatchClass::Axis</code></A> filter.</td></tr>
+              <tr><td><code>Usages</code></td><td><A href="/library/types/structs#usage-snapshot"><code>UsageSnapshot</code></A></td><td>A button, key, or media change, from a <code>Button / Key / Media</code> filter.</td></tr>
+              <tr><td><code>Traffic</code></td><td><A href="/library/types/structs#traffic-event"><code>TrafficEvent</code></A></td><td>Bytes off a pipe, from any <A href="/library/types/enums#traffic-class"><code>TrafficClass</code></A> filter.</td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           All three carry <code>ts_us</code> and a{' '}
           <A href="/library/types/enums#clock-domain"><code>ClockDomain</code></A>: a stamp compares
@@ -518,20 +562,24 @@ match stream.recv()? {
           with{' '}
           <code>as_u8()</code> and <code>from_u8(u8) -&gt; Option&lt;ClockDomain&gt;</code>.
         </p>
-        <table class="api-params">
-          <thead><tr><th>Variant</th><th>Byte</th><th>Stamped</th></tr></thead>
-          <tbody>
-            <tr><td><code>HostChip</code></td><td><code>0</code></td><td>On the host chip, in USB interrupt context, when the real device's transfer completed.</td></tr>
-            <tr><td><code>DeviceChip</code></td><td><code>1</code></td><td>On the device chip, at the tap.</td></tr>
-          </tbody>
-        </table>
-        <table class="api-params">
-          <thead><tr><th>Domain</th><th>Classes stamped there</th></tr></thead>
-          <tbody>
-            <tr><td><code>HostChip</code></td><td>the input classes (raising <code>Motion</code> and <code>Usages</code>), <code>HidIn</code>, and native IN traffic on the vendor classes.</td></tr>
-            <tr><td><code>DeviceChip</code></td><td><code>HidOut</code>, the OUT direction of both vendor classes, a <A href="/library/advanced/raw">raw</A> packet on a vendor IN endpoint, and <code>Control / Emit / Bus / ClipTransfer</code>.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Variant</th><th>Byte</th><th>Stamped</th></tr></thead>
+            <tbody>
+              <tr><td><code>HostChip</code></td><td><code>0</code></td><td>On the host chip, in USB interrupt context, when the real device's transfer completed.</td></tr>
+              <tr><td><code>DeviceChip</code></td><td><code>1</code></td><td>On the device chip, at the tap.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Domain</th><th>Classes stamped there</th></tr></thead>
+            <tbody>
+              <tr><td><code>HostChip</code></td><td>the input classes (raising <code>Motion</code> and <code>Usages</code>), <code>HidIn</code>, and native IN traffic on the vendor classes.</td></tr>
+              <tr><td><code>DeviceChip</code></td><td><code>HidOut</code>, the OUT direction of both vendor classes, a <A href="/library/advanced/raw">raw</A> packet on a vendor IN endpoint, and <code>Control / Emit / Bus / ClipTransfer</code>.</td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           Both timers are box-local, unrelated to any clock on this machine. They wrap every ~71.6
           minutes (a <code>u32</code> of microseconds) and restart at zero when their chip reboots.
@@ -553,15 +601,17 @@ match stream.recv()? {
           <code>flags</code> bits 0-1; bit 7 is{' '}
           <A href="/library/types/structs#traffic-event"><code>rule_acted()</code></A>.
         </p>
-        <table class="api-params">
-          <thead><tr><th>Variant</th><th>flags b0-b1</th><th>Meaning</th></tr></thead>
-          <tbody>
-            <tr><td><code>Ok</code></td><td><code>0</code></td><td>The transaction completed.</td></tr>
-            <tr><td><code>Stalled</code></td><td><code>1</code></td><td>The PC got a STALL: from the device, from a rule that refused the request, or, above endpoint 0, for a request that failed.</td></tr>
-            <tr><td><code>Naked</code></td><td><code>2</code></td><td>NAKed until the host gave up, on endpoint 0 only: the device never replied, or a <code>Nak</code> rule.</td></tr>
-            <tr><td><code>Other(u8)</code></td><td><code>3</code></td><td>A handshake value with no variant in this build, carried verbatim.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Variant</th><th>flags b0-b1</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>Ok</code></td><td><code>0</code></td><td>The transaction completed.</td></tr>
+              <tr><td><code>Stalled</code></td><td><code>1</code></td><td>The PC got a STALL: from the device, from a rule that refused the request, or, above endpoint 0, for a request that failed.</td></tr>
+              <tr><td><code>Naked</code></td><td><code>2</code></td><td>NAKed until the host gave up, on endpoint 0 only: the device never replied, or a <code>Nak</code> rule.</td></tr>
+              <tr><td><code>Other(u8)</code></td><td><code>3</code></td><td>A handshake value with no variant in this build, carried verbatim.</td></tr>
+            </tbody>
+          </table>
+        </div>
       </DocSection>
 
       <DocSection id="bus-event" title="BusEvent" caption="What happened on the USB bus">
@@ -574,21 +624,23 @@ match stream.recv()? {
           <code>Option&lt;BusEvent&gt;</code>: <code>None</code> for a kind byte this build does not
           name. The two kinds with operands parse them into their own fields.
         </p>
-        <table class="api-params">
-          <thead><tr><th>Variant</th><th>Byte</th><th>bytes</th><th>Meaning</th></tr></thead>
-          <tbody>
-            <tr><td><code>Reset</code></td><td><code>0</code></td><td>-</td><td>The game PC reset the clone's bus.</td></tr>
-            <tr><td><code>Suspend</code></td><td><code>1</code></td><td>-</td><td>The bus went idle and the PC suspended the clone.</td></tr>
-            <tr><td><code>Resume</code></td><td><code>2</code></td><td>-</td><td>The bus came back.</td></tr>
-            <tr><td><code>Configured</code></td><td><code>3</code></td><td><code>a</code> = configuration index</td><td>The PC selected a configuration; the clone is live.</td></tr>
-            <tr><td><code>Deconfigured</code></td><td><code>4</code></td><td>-</td><td>The PC dropped the clone back to configuration 0.</td></tr>
-            <tr><td><code>SetInterface</code></td><td><code>5</code></td><td><code>a</code> = interface, <code>b</code> = alternate setting</td><td>The PC switched an interface's alternate setting.</td></tr>
-            <tr><td><code>DeviceAttached</code></td><td><code>6</code></td><td>-</td><td>The real device appeared on the host chip.</td></tr>
-            <tr><td><code>DeviceDetached</code></td><td><code>7</code></td><td>-</td><td>The real device went away.</td></tr>
-            <tr><td><code>CloneUp</code></td><td><code>8</code></td><td>-</td><td>The box started presenting the clone to the game PC.</td></tr>
-            <tr><td><code>CloneDown</code></td><td><code>9</code></td><td>-</td><td>The box stopped presenting it.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Variant</th><th>Byte</th><th>bytes</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>Reset</code></td><td><code>0</code></td><td>-</td><td>The game PC reset the clone's bus.</td></tr>
+              <tr><td><code>Suspend</code></td><td><code>1</code></td><td>-</td><td>The bus went idle and the PC suspended the clone.</td></tr>
+              <tr><td><code>Resume</code></td><td><code>2</code></td><td>-</td><td>The bus came back.</td></tr>
+              <tr><td><code>Configured</code></td><td><code>3</code></td><td><code>a</code> = configuration index</td><td>The PC selected a configuration; the clone is live.</td></tr>
+              <tr><td><code>Deconfigured</code></td><td><code>4</code></td><td>-</td><td>The PC dropped the clone back to configuration 0.</td></tr>
+              <tr><td><code>SetInterface</code></td><td><code>5</code></td><td><code>a</code> = interface, <code>b</code> = alternate setting</td><td>The PC switched an interface's alternate setting.</td></tr>
+              <tr><td><code>DeviceAttached</code></td><td><code>6</code></td><td>-</td><td>The real device appeared on the host chip.</td></tr>
+              <tr><td><code>DeviceDetached</code></td><td><code>7</code></td><td>-</td><td>The real device went away.</td></tr>
+              <tr><td><code>CloneUp</code></td><td><code>8</code></td><td>-</td><td>The box started presenting the clone to the game PC.</td></tr>
+              <tr><td><code>CloneDown</code></td><td><code>9</code></td><td>-</td><td>The box stopped presenting it.</td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           <code>DeviceAttached</code> and <code>DeviceDetached</code> are the real device on USB3;
           the other eight are native USB1 bus, which the control PC is not on.
@@ -635,15 +687,17 @@ if let CatchEvent::Traffic(t) = stream.recv()? {
           <A href="/library/types/structs#clip-status"><code>ClipStatus::state</code></A>, from{' '}
           <A href="/library/requests#clip-status"><code>ClipHandle::query_status()</code></A>.
         </p>
-        <table class="api-params">
-          <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
-          <tbody>
-            <tr><td><code>Idle</code></td><td><code>0</code></td><td>No clip playing (empty, or a loaded clip parked at its start).</td></tr>
-            <tr><td><code>Playing</code></td><td><code>1</code></td><td>Draining the ring, one entry per native frame.</td></tr>
-            <tr><td><code>Paused</code></td><td><code>2</code></td><td>Held mid-clip, keeping the cursor and any held input; resumes from the same spot.</td></tr>
-            <tr><td><code>Faulted</code></td><td><code>3</code></td><td>An append was dropped or the ring overflowed; recover with <code>clear</code>.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>Idle</code></td><td><code>0</code></td><td>No clip playing (empty, or a loaded clip parked at its start).</td></tr>
+              <tr><td><code>Playing</code></td><td><code>1</code></td><td>Draining the ring, one entry per native frame.</td></tr>
+              <tr><td><code>Paused</code></td><td><code>2</code></td><td>Held mid-clip, keeping the cursor and any held input; resumes from the same spot.</td></tr>
+              <tr><td><code>Faulted</code></td><td><code>3</code></td><td>An append was dropped or the ring overflowed; recover with <code>clear</code>.</td></tr>
+            </tbody>
+          </table>
+        </div>
       </DocSection>
       <DocSection id="edge" title="Edge" caption="Which edge fires a clip trigger">
         <pre class="api-signature">enum Edge {'{'} Both, Press, Release {'}'}</pre>
@@ -653,14 +707,16 @@ if let CatchEvent::Traffic(t) = stream.recv()? {
           values with{' '}
           <A href="/library/types/enums#direction"><code>Direction</code></A>.
         </p>
-        <table class="api-params">
-          <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
-          <tbody>
-            <tr><td><code>Both</code></td><td><code>0</code></td><td>Fire on either edge.</td></tr>
-            <tr><td><code>Press</code></td><td><code>1</code></td><td>Fire on the press edge.</td></tr>
-            <tr><td><code>Release</code></td><td><code>2</code></td><td>Fire on the release edge.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>Both</code></td><td><code>0</code></td><td>Fire on either edge.</td></tr>
+              <tr><td><code>Press</code></td><td><code>1</code></td><td>Fire on the press edge.</td></tr>
+              <tr><td><code>Release</code></td><td><code>2</code></td><td>Fire on the release edge.</td></tr>
+            </tbody>
+          </table>
+        </div>
       </DocSection>
       <DocSection id="clip-action" title="ClipAction" caption="What a fired clip trigger does">
         <pre class="api-signature">enum ClipAction {'{'} Start, Stop, Pause, Resume, Restart, Toggle {'}'}</pre>
@@ -672,27 +728,31 @@ if let CatchEvent::Traffic(t) = stream.recv()? {
           <A href="/native/commands/clip#ctrl"><code>CLIP_CTRL</code></A> op byte for the same
           action.
         </p>
-        <table class="api-params">
-          <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
-          <tbody>
-            <tr><td><code>Start</code></td><td><code>0</code></td><td>Play from the ring's head, or resume a pause.</td></tr>
-            <tr><td><code>Stop</code></td><td><code>1</code></td><td>Stop playback and rewind to the head.</td></tr>
-            <tr><td><code>Pause</code></td><td><code>2</code></td><td>Hold playback mid-clip.</td></tr>
-            <tr><td><code>Resume</code></td><td><code>3</code></td><td>Continue a paused clip from where it stopped.</td></tr>
-            <tr><td><code>Restart</code></td><td><code>4</code></td><td>Rewind to the head and play from the start.</td></tr>
-            <tr><td><code>Toggle</code></td><td><code>5</code></td><td>Play if idle or paused, stop if playing.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>Start</code></td><td><code>0</code></td><td>Play from the ring's head, or resume a pause.</td></tr>
+              <tr><td><code>Stop</code></td><td><code>1</code></td><td>Stop playback and rewind to the head.</td></tr>
+              <tr><td><code>Pause</code></td><td><code>2</code></td><td>Hold playback mid-clip.</td></tr>
+              <tr><td><code>Resume</code></td><td><code>3</code></td><td>Continue a paused clip from where it stopped.</td></tr>
+              <tr><td><code>Restart</code></td><td><code>4</code></td><td>Rewind to the head and play from the start.</td></tr>
+              <tr><td><code>Toggle</code></td><td><code>5</code></td><td>Play if idle or paused, stop if playing.</td></tr>
+            </tbody>
+          </table>
+        </div>
       </DocSection>
       <DocSection id="update-target" title="UpdateTarget" caption="Which chip an update op addresses">
         <pre class="api-signature">enum UpdateTarget {'{'} Device, Host {'}'}</pre>
-        <table class="api-params">
-          <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
-          <tbody>
-            <tr><td><code>Device</code></td><td><code>0</code></td><td>The PC-facing chip, written directly over the control port.</td></tr>
-            <tr><td><code>Host</code></td><td><code>1</code></td><td>The chip that reads the real device, relayed over the inter-chip link.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>Device</code></td><td><code>0</code></td><td>The PC-facing chip, written directly over the control port.</td></tr>
+              <tr><td><code>Host</code></td><td><code>1</code></td><td>The chip that reads the real device, relayed over the inter-chip link.</td></tr>
+            </tbody>
+          </table>
+        </div>
       </DocSection>
 
       <DocSection id="image-state" title="ImageState" caption="Where a booted image is in its probation">
@@ -701,17 +761,19 @@ if let CatchEvent::Traffic(t) = stream.recv()? {
           The bootloader's record for a slot; see{' '}
           <A href="/native/commands/update#rollback">rollback</A>.
         </p>
-        <table class="api-params">
-          <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
-          <tbody>
-            <tr><td><code>New</code></td><td><code>0</code></td><td>Selected but not yet booted.</td></tr>
-            <tr><td><code>PendingVerify</code></td><td><code>1</code></td><td>Booted and on probation; the window rollback lives in.</td></tr>
-            <tr><td><code>Valid</code></td><td><code>2</code></td><td>Confirmed by the image itself.</td></tr>
-            <tr><td><code>Invalid</code></td><td><code>3</code></td><td>The image asked to be rolled back.</td></tr>
-            <tr><td><code>Aborted</code></td><td><code>4</code></td><td>Booted once and never confirmed.</td></tr>
-            <tr><td><code>Unknown</code></td><td><code>0xFF</code></td><td>No entry for this slot.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>New</code></td><td><code>0</code></td><td>Selected but not yet booted.</td></tr>
+              <tr><td><code>PendingVerify</code></td><td><code>1</code></td><td>Booted and on probation; the window rollback lives in.</td></tr>
+              <tr><td><code>Valid</code></td><td><code>2</code></td><td>Confirmed by the image itself.</td></tr>
+              <tr><td><code>Invalid</code></td><td><code>3</code></td><td>The image asked to be rolled back.</td></tr>
+              <tr><td><code>Aborted</code></td><td><code>4</code></td><td>Booted once and never confirmed.</td></tr>
+              <tr><td><code>Unknown</code></td><td><code>0xFF</code></td><td>No entry for this slot.</td></tr>
+            </tbody>
+          </table>
+        </div>
       </DocSection>
 
       <DocSection id="transfer-status" title="TransferStatus" caption="How a control transfer ended">

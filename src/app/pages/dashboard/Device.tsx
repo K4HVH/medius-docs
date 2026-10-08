@@ -12,7 +12,6 @@ import { ConnectPanel } from './ConnectPanel';
 import UpdateOnlyCard from './UpdateOnlyCard';
 import { row } from './ui';
 import { PageHeader } from '../../shell/PageHeader';
-import '../../../styles/docs.css';
 
 const healthItems = (h: Health) => [
   { label: 'Host link', value: h.linkUp },

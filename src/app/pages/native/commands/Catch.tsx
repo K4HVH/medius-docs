@@ -56,54 +56,60 @@ const Catch: Component = () => {
         <pre class="api-signature">CATCH  0x0B  ·  payload 6 bytes</pre>
         <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
         <div class="api-response-label">PAYLOAD</div>
-        <table class="byte-table">
-          <thead>
-            <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>0</td><td><code>class</code></td><td><code>u8</code></td><td>address class (table below), or <code>0xFF</code> = every class</td></tr>
-            <tr><td>1</td><td><code>id</code></td><td><code>u16</code></td><td>class-specific, or <code>0xFFFF</code> = every id in that class, little-endian</td></tr>
-            <tr><td>3</td><td><code>dir</code></td><td><code>u8</code></td><td>0 <code>BOTH</code>, 1 <code>POS</code>/IN, 2 <code>NEG</code>/OUT (the <A href="/native/commands/lock"><code>LOCK</code></A> direction byte)</td></tr>
-            <tr><td>4</td><td><code>state</code></td><td><code>u8</code></td><td><code>1</code> = subscribe, <code>0</code> = unsubscribe</td></tr>
-            <tr><td>5</td><td><code>snaplen</code></td><td><code>u8</code></td><td>bytes captured per event; <code>0</code> = the whole packet</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="byte-table">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>0</td><td><code>class</code></td><td><code>u8</code></td><td>address class (table below), or <code>0xFF</code> = every class</td></tr>
+              <tr><td>1</td><td><code>id</code></td><td><code>u16</code></td><td>class-specific, or <code>0xFFFF</code> = every id in that class, little-endian</td></tr>
+              <tr><td>3</td><td><code>dir</code></td><td><code>u8</code></td><td>0 <code>BOTH</code>, 1 <code>POS</code>/IN, 2 <code>NEG</code>/OUT (the <A href="/native/commands/lock"><code>LOCK</code></A> direction byte)</td></tr>
+              <tr><td>4</td><td><code>state</code></td><td><code>u8</code></td><td><code>1</code> = subscribe, <code>0</code> = unsubscribe</td></tr>
+              <tr><td>5</td><td><code>snaplen</code></td><td><code>u8</code></td><td>bytes captured per event; <code>0</code> = the whole packet</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">ADDRESS CLASSES</div>
         <p>
           Classes 0 to 3 are the <A href="/native/commands/lock"><code>LOCK</code></A> classes; 4
           and up are byte-oriented traffic.
         </p>
-        <table class="api-params">
-          <thead>
-            <tr><th>Name</th><th>Value</th><th><code>id</code> means</th><th>With <code>id = 0xFFFF</code></th></tr>
-          </thead>
-          <tbody>
-            <tr><td><code>BTN</code></td><td><code>0</code></td><td>button id</td><td>every button</td></tr>
-            <tr><td><code>KEY</code></td><td><code>1</code></td><td>HID keyboard usage</td><td>every key and modifier</td></tr>
-            <tr><td><code>MEDIA</code></td><td><code>2</code></td><td>16-bit Consumer usage</td><td>every media usage</td></tr>
-            <tr><td><code>AXIS</code></td><td><code>3</code></td><td><code>TGT_X</code> / <code>TGT_Y</code> / <code>TGT_WHEEL</code> / <code>TGT_PAN</code></td><td>every axis</td></tr>
-            <tr><td><code>HID_IN</code></td><td><code>4</code></td><td>interface number</td><td>every HID interface</td></tr>
-            <tr><td><code>HID_OUT</code></td><td><code>5</code></td><td>endpoint number</td><td>every interrupt-OUT endpoint</td></tr>
-            <tr><td><code>VEND_INTR</code></td><td><code>6</code></td><td>endpoint number</td><td>every vendor interrupt endpoint</td></tr>
-            <tr><td><code>VEND_BULK</code></td><td><code>7</code></td><td>endpoint number</td><td>every vendor bulk endpoint</td></tr>
-            <tr><td><code>CONTROL</code></td><td><code>8</code></td><td>endpoint number (<code>0</code> = EP0; on EP0, the requests the clone passes to the device)</td><td>every control endpoint</td></tr>
-            <tr><td><code>EMIT</code></td><td><code>9</code></td><td>endpoint number</td><td>every emitting endpoint</td></tr>
-            <tr><td><code>BUS</code></td><td><code>10</code></td><td>unused</td><td>-</td></tr>
-            <tr><td><code>CLIP_XFER</code></td><td><code>11</code></td><td>endpoint number (<code>0</code> = EP0)</td><td>every control endpoint</td></tr>
-            <tr><td><code>ANY</code></td><td><code>0xFF</code></td><td>must be <code>0xFFFF</code></td><td>every class</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Name</th><th>Value</th><th><code>id</code> means</th><th>With <code>id = 0xFFFF</code></th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>BTN</code></td><td><code>0</code></td><td>button id</td><td>every button</td></tr>
+              <tr><td><code>KEY</code></td><td><code>1</code></td><td>HID keyboard usage</td><td>every key and modifier</td></tr>
+              <tr><td><code>MEDIA</code></td><td><code>2</code></td><td>16-bit Consumer usage</td><td>every media usage</td></tr>
+              <tr><td><code>AXIS</code></td><td><code>3</code></td><td><code>TGT_X</code> / <code>TGT_Y</code> / <code>TGT_WHEEL</code> / <code>TGT_PAN</code></td><td>every axis</td></tr>
+              <tr><td><code>HID_IN</code></td><td><code>4</code></td><td>interface number</td><td>every HID interface</td></tr>
+              <tr><td><code>HID_OUT</code></td><td><code>5</code></td><td>endpoint number</td><td>every interrupt-OUT endpoint</td></tr>
+              <tr><td><code>VEND_INTR</code></td><td><code>6</code></td><td>endpoint number</td><td>every vendor interrupt endpoint</td></tr>
+              <tr><td><code>VEND_BULK</code></td><td><code>7</code></td><td>endpoint number</td><td>every vendor bulk endpoint</td></tr>
+              <tr><td><code>CONTROL</code></td><td><code>8</code></td><td>endpoint number (<code>0</code> = EP0; on EP0, the requests the clone passes to the device)</td><td>every control endpoint</td></tr>
+              <tr><td><code>EMIT</code></td><td><code>9</code></td><td>endpoint number</td><td>every emitting endpoint</td></tr>
+              <tr><td><code>BUS</code></td><td><code>10</code></td><td>unused</td><td>-</td></tr>
+              <tr><td><code>CLIP_XFER</code></td><td><code>11</code></td><td>endpoint number (<code>0</code> = EP0)</td><td>every control endpoint</td></tr>
+              <tr><td><code>ANY</code></td><td><code>0xFF</code></td><td>must be <code>0xFFFF</code></td><td>every class</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">DIRECTION</div>
-        <table class="api-params">
-          <thead>
-            <tr><th>Value</th><th>Input classes (0 to 3)</th><th>Traffic classes (4 to 11)</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><code>0</code> <code>BOTH</code></td><td>press and release</td><td>IN and OUT</td></tr>
-            <tr><td><code>1</code> <code>POS</code></td><td>the press edge, or the <code>+</code> sign of an axis</td><td>IN: device to PC</td></tr>
-            <tr><td><code>2</code> <code>NEG</code></td><td>the release edge, or the <code>-</code> sign of an axis</td><td>OUT: PC to device</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Value</th><th>Input classes (0 to 3)</th><th>Traffic classes (4 to 11)</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>0</code> <code>BOTH</code></td><td>press and release</td><td>IN and OUT</td></tr>
+              <tr><td><code>1</code> <code>POS</code></td><td>the press edge, or the <code>+</code> sign of an axis</td><td>IN: device to PC</td></tr>
+              <tr><td><code>2</code> <code>NEG</code></td><td>the release edge, or the <code>-</code> sign of an axis</td><td>OUT: PC to device</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">SNAPLEN</div>
         <p>
           <code>snaplen</code> is per entry: one subscription can take a 64-byte report whole while
@@ -199,17 +205,19 @@ const Catch: Component = () => {
           <A href="/native/commands/requests#catch"><code>RESP(CATCH)</code></A>, whose header
           carries the table-full flag.
         </p>
-        <table class="api-params">
-          <thead>
-            <tr><th>Refused when</th><th>Why</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>table already at 32 entries</td><td>nothing is evicted; the header's <code>b0</code> flag marks the refusal</td></tr>
-            <tr><td>unknown <code>class</code></td><td>no tap to attach to</td></tr>
-            <tr><td><code>dir</code> outside <code>0..2</code></td><td>a subscription is addressed before any bearing is read, so only <code>0</code>-<code>2</code> name anything a tap can match</td></tr>
-            <tr><td><code>class = 0xFF</code> with a specific <code>id</code></td><td><code>id</code> is class-specific, so a wildcard class with a real id addresses nothing coherent</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Refused when</th><th>Why</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>table already at 32 entries</td><td>nothing is evicted; the header's <code>b0</code> flag marks the refusal</td></tr>
+              <tr><td>unknown <code>class</code></td><td>no tap to attach to</td></tr>
+              <tr><td><code>dir</code> outside <code>0..2</code></td><td>a subscription is addressed before any bearing is read, so only <code>0</code>-<code>2</code> name anything a tap can match</td></tr>
+              <tr><td><code>class = 0xFF</code> with a specific <code>id</code></td><td><code>id</code> is class-specific, so a wildcard class with a real id addresses nothing coherent</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">LIFECYCLE</div>
         <p>
           A subscription is PC-owned state, cleared by control-PC silence (the ~1&nbsp;s timeout), a{' '}
@@ -235,15 +243,17 @@ const Catch: Component = () => {
           ESP32-S3s boot independently with unrelated timers, so a stamp compares only against
           another from the same domain.
         </p>
-        <table class="api-params">
-          <thead>
-            <tr><th><code>clk</code></th><th>Stamped by</th><th>Classes</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><code>0</code></td><td>the <strong>host</strong> chip, in USB interrupt context, when the real device's transfer completed</td><td><code>MOTION</code> / <code>USAGE</code>, <code>HID_IN</code>, the device's <code>VEND_INTR</code> / <code>VEND_BULK</code> IN</td></tr>
-            <tr><td><code>1</code></td><td>the <strong>device</strong> chip, at the tap</td><td><code>HID_OUT</code>, both OUT directions, a vendor IN packet from <A href="/native/commands/raw#catch"><code>RAW</code></A> or a <A href="/native/commands/clip#items">clip raw entry</A>, <code>CONTROL</code>, <code>CLIP_XFER</code>, <code>EMIT</code>, <code>BUS</code></td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th><code>clk</code></th><th>Stamped by</th><th>Classes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>0</code></td><td>the <strong>host</strong> chip, in USB interrupt context, when the real device's transfer completed</td><td><code>MOTION</code> / <code>USAGE</code>, <code>HID_IN</code>, the device's <code>VEND_INTR</code> / <code>VEND_BULK</code> IN</td></tr>
+              <tr><td><code>1</code></td><td>the <strong>device</strong> chip, at the tap</td><td><code>HID_OUT</code>, both OUT directions, a vendor IN packet from <A href="/native/commands/raw#catch"><code>RAW</code></A> or a <A href="/native/commands/clip#items">clip raw entry</A>, <code>CONTROL</code>, <code>CLIP_XFER</code>, <code>EMIT</code>, <code>BUS</code></td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           Both clocks are box-local, unrelated to any control-PC clock.
         </p>
@@ -296,19 +306,21 @@ const Catch: Component = () => {
         <pre class="api-signature">MOTION_EVENT  0x0C  ·  payload 13 bytes</pre>
         <p><span class="api-badge api-badge--warning">Unsolicited</span></p>
         <div class="api-response-label">PAYLOAD</div>
-        <table class="byte-table">
-          <thead>
-            <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>0</td><td><code>ts_us</code></td><td><code>u32</code></td><td>report arrival time in box microseconds, little-endian</td></tr>
-            <tr><td>4</td><td><code>clk</code></td><td><code>u8</code></td><td>always <code>0</code> (host chip); see <A href="/native/commands/catch#clocks">the clk byte</A></td></tr>
-            <tr><td>5</td><td><code>dx</code></td><td><code>i16</code></td><td>physical X this report; + = right, little-endian</td></tr>
-            <tr><td>7</td><td><code>dy</code></td><td><code>i16</code></td><td>physical Y this report; + = down, little-endian</td></tr>
-            <tr><td>9</td><td><code>dz</code></td><td><code>i16</code></td><td>physical wheel delta this report; + = up, little-endian</td></tr>
-            <tr><td>11</td><td><code>dpan</code></td><td><code>i16</code></td><td>physical AC Pan (horizontal scroll) delta this report; + = right, little-endian</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="byte-table">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>0</td><td><code>ts_us</code></td><td><code>u32</code></td><td>report arrival time in box microseconds, little-endian</td></tr>
+              <tr><td>4</td><td><code>clk</code></td><td><code>u8</code></td><td>always <code>0</code> (host chip); see <A href="/native/commands/catch#clocks">the clk byte</A></td></tr>
+              <tr><td>5</td><td><code>dx</code></td><td><code>i16</code></td><td>physical X this report; + = right, little-endian</td></tr>
+              <tr><td>7</td><td><code>dy</code></td><td><code>i16</code></td><td>physical Y this report; + = down, little-endian</td></tr>
+              <tr><td>9</td><td><code>dz</code></td><td><code>i16</code></td><td>physical wheel delta this report; + = up, little-endian</td></tr>
+              <tr><td>11</td><td><code>dpan</code></td><td><code>i16</code></td><td>physical AC Pan (horizontal scroll) delta this report; + = right, little-endian</td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           The stamp is taken when the device's interrupt-IN transfer completes, so it is always the
           host chip's.
@@ -345,20 +357,22 @@ const Catch: Component = () => {
         <pre class="api-signature">USAGE_EVENT  0x0F  ·  payload 8 + 3n bytes</pre>
         <p><span class="api-badge api-badge--warning">Unsolicited</span></p>
         <div class="api-response-label">PAYLOAD</div>
-        <table class="byte-table">
-          <thead>
-            <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>0</td><td><code>ts_us</code></td><td><code>u32</code></td><td>report arrival time in box microseconds, little-endian</td></tr>
-            <tr><td>4</td><td><code>clk</code></td><td><code>u8</code></td><td>always <code>0</code> (host chip); see <A href="/native/commands/catch#clocks">the clk byte</A></td></tr>
-            <tr><td>5</td><td><code>cls</code></td><td><code>u8</code></td><td>snapshot class: 0=button 1=key 2=media</td></tr>
-            <tr><td>6</td><td><code>dir</code></td><td><code>u8</code></td><td>the edge that produced it: <code>POS</code> the set grew, <code>NEG</code> it shrank</td></tr>
-            <tr><td>7</td><td><code>n</code></td><td><code>u8</code></td><td>number of held usages that follow</td></tr>
-            <tr><td>+</td><td><code>class</code></td><td><code>u8</code></td><td>per usage: same vocabulary as <code>cls</code> (as <A href="/native/commands/inject#inject"><code>INJECT</code></A>)</td></tr>
-            <tr><td>+</td><td><code>id</code></td><td><code>u16</code></td><td>held usage id (a button id, HID keycode with 0xE0-0xE7 modifiers, or Consumer usage), little-endian</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="byte-table">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>0</td><td><code>ts_us</code></td><td><code>u32</code></td><td>report arrival time in box microseconds, little-endian</td></tr>
+              <tr><td>4</td><td><code>clk</code></td><td><code>u8</code></td><td>always <code>0</code> (host chip); see <A href="/native/commands/catch#clocks">the clk byte</A></td></tr>
+              <tr><td>5</td><td><code>cls</code></td><td><code>u8</code></td><td>snapshot class: 0=button 1=key 2=media</td></tr>
+              <tr><td>6</td><td><code>dir</code></td><td><code>u8</code></td><td>the edge that produced it: <code>POS</code> the set grew, <code>NEG</code> it shrank</td></tr>
+              <tr><td>7</td><td><code>n</code></td><td><code>u8</code></td><td>number of held usages that follow</td></tr>
+              <tr><td>+</td><td><code>class</code></td><td><code>u8</code></td><td>per usage: same vocabulary as <code>cls</code> (as <A href="/native/commands/inject#inject"><code>INJECT</code></A>)</td></tr>
+              <tr><td>+</td><td><code>id</code></td><td><code>u16</code></td><td>held usage id (a button id, HID keycode with 0xE0-0xE7 modifiers, or Consumer usage), little-endian</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">SNAPSHOT</div>
         <p>
           Each entry is 3 bytes and the snapshot is <code>n</code> of them, all one class, since
@@ -410,21 +424,23 @@ const Catch: Component = () => {
         <pre class="api-signature">TRAFFIC_EVENT  0x16  ·  payload 12 + n bytes</pre>
         <p><span class="api-badge api-badge--warning">Unsolicited</span></p>
         <div class="api-response-label">PAYLOAD</div>
-        <table class="byte-table">
-          <thead>
-            <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>0</td><td><code>ts_us</code></td><td><code>u32</code></td><td>when the tap fired, little-endian</td></tr>
-            <tr><td>4</td><td><code>clk</code></td><td><code>u8</code></td><td>stamping chip's clock; see <A href="/native/commands/catch#clocks">the clk byte</A></td></tr>
-            <tr><td>5</td><td><code>class</code></td><td><code>u8</code></td><td>address class (<A href="/native/commands/catch#catch">table above</A>)</td></tr>
-            <tr><td>6</td><td><code>id</code></td><td><code>u16</code></td><td>endpoint number or interface number, little-endian</td></tr>
-            <tr><td>8</td><td><code>dir</code></td><td><code>u8</code></td><td><code>1</code> = IN (device to PC), <code>2</code> = OUT (PC to device), <code>0</code> for <code>BUS</code>, which is not a transfer</td></tr>
-            <tr><td>9</td><td><code>flags</code></td><td><code>u8</code></td><td>class-specific (table below)</td></tr>
-            <tr><td>10</td><td><code>true_len</code></td><td><code>u16</code></td><td>packet length <em>before</em> truncation (by <code>snaplen</code> or the 172-byte control data-stage cap), little-endian</td></tr>
-            <tr><td>12</td><td><code>bytes</code></td><td><code>u8[]</code></td><td>up to <code>snaplen</code> bytes; the frame <A href="/native/frame#layout"><code>LEN</code></A> gives how many arrived</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="byte-table">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>0</td><td><code>ts_us</code></td><td><code>u32</code></td><td>when the tap fired, little-endian</td></tr>
+              <tr><td>4</td><td><code>clk</code></td><td><code>u8</code></td><td>stamping chip's clock; see <A href="/native/commands/catch#clocks">the clk byte</A></td></tr>
+              <tr><td>5</td><td><code>class</code></td><td><code>u8</code></td><td>address class (<A href="/native/commands/catch#catch">table above</A>)</td></tr>
+              <tr><td>6</td><td><code>id</code></td><td><code>u16</code></td><td>endpoint number or interface number, little-endian</td></tr>
+              <tr><td>8</td><td><code>dir</code></td><td><code>u8</code></td><td><code>1</code> = IN (device to PC), <code>2</code> = OUT (PC to device), <code>0</code> for <code>BUS</code>, which is not a transfer</td></tr>
+              <tr><td>9</td><td><code>flags</code></td><td><code>u8</code></td><td>class-specific (table below)</td></tr>
+              <tr><td>10</td><td><code>true_len</code></td><td><code>u16</code></td><td>packet length <em>before</em> truncation (by <code>snaplen</code> or the 172-byte control data-stage cap), little-endian</td></tr>
+              <tr><td>12</td><td><code>bytes</code></td><td><code>u8[]</code></td><td>up to <code>snaplen</code> bytes; the frame <A href="/native/frame#layout"><code>LEN</code></A> gives how many arrived</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">TRUNCATION</div>
         <pre class="diagram">{`  frame LEN = 12 + 16   ->  16 bytes arrived
   true_len  = 64        ->  the packet was 64 bytes
@@ -434,34 +450,38 @@ const Catch: Component = () => {
   frame LEN = 12 + 4    ->  4 bytes arrived
   true_len  = 4         ->  the packet really was 4 bytes long`}</pre>
         <div class="api-response-label">FLAGS BY CLASS</div>
-        <table class="api-params">
-          <thead>
-            <tr><th>Class</th><th><code>flags</code></th></tr>
-          </thead>
-          <tbody>
-            <tr><td><code>HID_IN</code>, <code>EMIT</code></td><td>b1 zero-length packet, on a HID endpoint also one that ended the report after the event's bytes; b7 <A href="/native/commands/catch#rules"><code>RULE</code></A></td></tr>
-            <tr><td><code>HID_OUT</code>, <code>VEND_INTR</code></td><td>b1 zero-length packet, b7 <code>RULE</code></td></tr>
-            <tr><td><code>VEND_BULK</code></td><td>b0 end-of-transfer, b1 zero-length packet, b7 <code>RULE</code></td></tr>
-            <tr><td><code>CONTROL</code></td><td>b0-b1 the handshake the game PC received: <code>0</code> OK, <code>1</code> STALL, <code>2</code> NAK until the host gave up (endpoint 0 only); b7 <code>RULE</code></td></tr>
-            <tr><td><code>CLIP_XFER</code></td><td>how the transfer ended, as <A href="/native/commands/transfer#transfer-resp"><code>TRANSFER_RESP</code></A>'s status: <code>0</code> OK, <code>0xFD</code> STALL, <code>0xFE</code> no answer (NAKed past the host chip's timeout, failed on the bus, an undeclared endpoint, or no reply within 4&nbsp;s), <code>0xFF</code> no device, <code>0xFC</code> refused</td></tr>
-            <tr><td><code>BUS</code></td><td>the event kind (table below)</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Class</th><th><code>flags</code></th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>HID_IN</code>, <code>EMIT</code></td><td>b1 zero-length packet, on a HID endpoint also one that ended the report after the event's bytes; b7 <A href="/native/commands/catch#rules"><code>RULE</code></A></td></tr>
+              <tr><td><code>HID_OUT</code>, <code>VEND_INTR</code></td><td>b1 zero-length packet, b7 <code>RULE</code></td></tr>
+              <tr><td><code>VEND_BULK</code></td><td>b0 end-of-transfer, b1 zero-length packet, b7 <code>RULE</code></td></tr>
+              <tr><td><code>CONTROL</code></td><td>b0-b1 the handshake the game PC received: <code>0</code> OK, <code>1</code> STALL, <code>2</code> NAK until the host gave up (endpoint 0 only); b7 <code>RULE</code></td></tr>
+              <tr><td><code>CLIP_XFER</code></td><td>how the transfer ended, as <A href="/native/commands/transfer#transfer-resp"><code>TRANSFER_RESP</code></A>'s status: <code>0</code> OK, <code>0xFD</code> STALL, <code>0xFE</code> no answer (NAKed past the host chip's timeout, failed on the bus, an undeclared endpoint, or no reply within 4&nbsp;s), <code>0xFF</code> no device, <code>0xFC</code> refused</td></tr>
+              <tr><td><code>BUS</code></td><td>the event kind (table below)</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">ZERO-LENGTH PACKETS</div>
         <p>
           An event is one packet, except a <code>HID_IN</code> or <code>EMIT</code> event on a HID
           endpoint: that one carries a report of up to 64 bytes whole, however many packets it took. A
           longer report comes a packet at a time.
         </p>
-        <table class="api-params">
-          <thead><tr><th>A HID endpoint's device sends</th><th>Events</th></tr></thead>
-          <tbody>
-            <tr><td>a report it ends with a zero-length packet</td><td>one event carrying the report's bytes, b1 set: the PC's read ends only at the packet</td></tr>
-            <tr><td>a zero-length packet alone, its answer to a poll it had nothing for</td><td>one event of no bytes, b1 set, in <code>HID_IN</code> as it came and in <code>EMIT</code> as the PC took it</td></tr>
-            <tr><td>a zero-length packet whose poll went to a report of the box's own</td><td>its <code>HID_IN</code> event, and no <code>EMIT</code> event</td></tr>
-            <tr><td>a zero-length packet answering a poll the PC missed: what the device sent before it still waits for the PC</td><td>its <code>HID_IN</code> event, and no <code>EMIT</code> event</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>A HID endpoint's device sends</th><th>Events</th></tr></thead>
+            <tbody>
+              <tr><td>a report it ends with a zero-length packet</td><td>one event carrying the report's bytes, b1 set: the PC's read ends only at the packet</td></tr>
+              <tr><td>a zero-length packet alone, its answer to a poll it had nothing for</td><td>one event of no bytes, b1 set, in <code>HID_IN</code> as it came and in <code>EMIT</code> as the PC took it</td></tr>
+              <tr><td>a zero-length packet whose poll went to a report of the box's own</td><td>its <code>HID_IN</code> event, and no <code>EMIT</code> event</td></tr>
+              <tr><td>a zero-length packet answering a poll the PC missed: what the device sent before it still waits for the PC</td><td>its <code>HID_IN</code> event, and no <code>EMIT</code> event</td></tr>
+            </tbody>
+          </table>
+        </div>
         <pre class="diagram">{`  the device sends            HID_IN              the PC takes               EMIT
 
   [ 32 ] [ ZLP ]      -->  32 bytes, b1     [ 32 ] [ ZLP ]         -->  32 bytes, b1
@@ -483,30 +503,34 @@ const Catch: Component = () => {
         <pre class="diagram">{`  bytes = A1 01 00 01 00 00 08 00   01 00 00 00 00 00 00 00
           '------ setup (8) ------'   '---- data stage -------'
           HID GET_REPORT(Input)       dir = 1 (IN), flags = 0 (completed OK)`}</pre>
-        <table class="api-params">
-          <thead>
-            <tr><th>Part</th><th>Carries</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>setup</td><td>The 8 setup bytes, from byte 0 of <code>bytes</code>.</td></tr>
-            <tr><td>IN data</td><td>The reply the PC received: after a <code>REPLY_PATCH</code> or <code>REPLY_REPLACE</code> <A href="/native/commands/rewrite#actions">rule</A>, or an <code>ANSWER</code>'s payload.</td></tr>
-            <tr><td>OUT data</td><td>The data stage the PC sent, before a <code>PATCH</code> or <code>REPLACE</code> rule rewrote it for the device.</td></tr>
-            <tr><td>b0-b1</td><td>The handshake the PC got. A request a rule refused reads STALL, or NAK for a <code>NAK</code> rule on endpoint 0; a failed request above endpoint 0 reads STALL, as the clone STALLs it there.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Part</th><th>Carries</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>setup</td><td>The 8 setup bytes, from byte 0 of <code>bytes</code>.</td></tr>
+              <tr><td>IN data</td><td>The reply the PC received: after a <code>REPLY_PATCH</code> or <code>REPLY_REPLACE</code> <A href="/native/commands/rewrite#actions">rule</A>, or an <code>ANSWER</code>'s payload.</td></tr>
+              <tr><td>OUT data</td><td>The data stage the PC sent, before a <code>PATCH</code> or <code>REPLACE</code> rule rewrote it for the device.</td></tr>
+              <tr><td>b0-b1</td><td>The handshake the PC got. A request a rule refused reads STALL, or NAK for a <code>NAK</code> rule on endpoint 0; a failed request above endpoint 0 reads STALL, as the clone STALLs it there.</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">NO EVENT</div>
-        <table class="api-params">
-          <thead>
-            <tr><th>Transaction</th><th>Why</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>a standard request on endpoint 0, such as <code>GET_DESCRIPTOR</code> or <code>SET_CONFIGURATION</code></td><td>the clone serves it itself, and a configuration or interface change still raises a <code>BUS</code> event. Some standard requests go to the device and raise a <code>CONTROL</code> event: an interface's <code>GET_DESCRIPTOR</code> for a class descriptor other than the HID and report descriptors, and, while the clone is configured, a device qualifier or other-speed configuration the box did not keep (one too long for it, or at an index past 0)</td></tr>
-            <tr><td>a string the box did not keep</td><td>the clone asks the device for it directly, with no event</td></tr>
-            <tr><td>one a bus reset cut short</td><td>it never completed</td></tr>
-            <tr><td>on endpoint 0, a request with an OUT data stage past 2048 bytes; above endpoint 0, any data stage past 2048 bytes</td><td>the box STALLs it before proxying it</td></tr>
-            <tr><td>a request a new SETUP on its endpoint replaced, or, above endpoint 0, one the box had no room to queue</td><td>the box abandons it</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Transaction</th><th>Why</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>a standard request on endpoint 0, such as <code>GET_DESCRIPTOR</code> or <code>SET_CONFIGURATION</code></td><td>the clone serves it itself, and a configuration or interface change still raises a <code>BUS</code> event. Some standard requests go to the device and raise a <code>CONTROL</code> event: an interface's <code>GET_DESCRIPTOR</code> for a class descriptor other than the HID and report descriptors, and, while the clone is configured, a device qualifier or other-speed configuration the box did not keep (one too long for it, or at an index past 0)</td></tr>
+              <tr><td>a string the box did not keep</td><td>the clone asks the device for it directly, with no event</td></tr>
+              <tr><td>one a bus reset cut short</td><td>it never completed</td></tr>
+              <tr><td>on endpoint 0, a request with an OUT data stage past 2048 bytes; above endpoint 0, any data stage past 2048 bytes</td><td>the box STALLs it before proxying it</td></tr>
+              <tr><td>a request a new SETUP on its endpoint replaced, or, above endpoint 0, one the box had no room to queue</td><td>the box abandons it</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">CLIP_XFER EVENTS</div>
         <p>
           <code>CLIP_XFER</code> carries one event per control transfer a{' '}
@@ -527,23 +551,25 @@ const Catch: Component = () => {
           <A href="/native/commands/requests#stats">STATS</A> counters; here they carry a timestamp
           and their place in the stream.
         </p>
-        <table class="api-params">
-          <thead>
-            <tr><th>Kind</th><th>Meaning</th><th><code>a</code>, <code>b</code></th></tr>
-          </thead>
-          <tbody>
-            <tr><td><code>0</code></td><td><code>RESET</code></td><td>-</td></tr>
-            <tr><td><code>1</code></td><td><code>SUSPEND</code></td><td>-</td></tr>
-            <tr><td><code>2</code></td><td><code>RESUME</code></td><td>-</td></tr>
-            <tr><td><code>3</code></td><td><code>CONFIGURED</code></td><td>configuration index</td></tr>
-            <tr><td><code>4</code></td><td><code>DECONFIGURED</code></td><td>-</td></tr>
-            <tr><td><code>5</code></td><td><code>SET_INTERFACE</code></td><td>interface, alternate setting</td></tr>
-            <tr><td><code>6</code></td><td><code>DEV_ATTACHED</code></td><td>-</td></tr>
-            <tr><td><code>7</code></td><td><code>DEV_DETACHED</code></td><td>-</td></tr>
-            <tr><td><code>8</code></td><td><code>CLONE_UP</code></td><td>-</td></tr>
-            <tr><td><code>9</code></td><td><code>CLONE_DOWN</code></td><td>-</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Kind</th><th>Meaning</th><th><code>a</code>, <code>b</code></th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>0</code></td><td><code>RESET</code></td><td>-</td></tr>
+              <tr><td><code>1</code></td><td><code>SUSPEND</code></td><td>-</td></tr>
+              <tr><td><code>2</code></td><td><code>RESUME</code></td><td>-</td></tr>
+              <tr><td><code>3</code></td><td><code>CONFIGURED</code></td><td>configuration index</td></tr>
+              <tr><td><code>4</code></td><td><code>DECONFIGURED</code></td><td>-</td></tr>
+              <tr><td><code>5</code></td><td><code>SET_INTERFACE</code></td><td>interface, alternate setting</td></tr>
+              <tr><td><code>6</code></td><td><code>DEV_ATTACHED</code></td><td>-</td></tr>
+              <tr><td><code>7</code></td><td><code>DEV_DETACHED</code></td><td>-</td></tr>
+              <tr><td><code>8</code></td><td><code>CLONE_UP</code></td><td>-</td></tr>
+              <tr><td><code>9</code></td><td><code>CLONE_DOWN</code></td><td>-</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">EXAMPLE</div>
         <p>
           A 64-byte vendor interrupt report arriving IN on endpoint <code>0x83</code>, captured
@@ -630,18 +656,20 @@ const Catch: Component = () => {
      +--> tap: vendor IN, EMIT                the bytes delivered
      v
   game PC or real device`}</pre>
-        <table class="api-params">
-          <thead>
-            <tr><th>Class</th><th>Bytes</th><th><code>RULE</code> set when</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><code>HID_IN</code></td><td>the device's report as it arrived</td><td>a rule then changed or dropped it</td></tr>
-            <tr><td><code>HID_OUT</code>, <code>VEND_INTR</code> / <code>VEND_BULK</code> OUT</td><td>what the PC sent</td><td>a rule then changed or dropped it on its way to the device</td></tr>
-            <tr><td><code>VEND_INTR</code> / <code>VEND_BULK</code> IN</td><td>what the PC receives</td><td>a rule changed it; a packet a rule drops raises no event</td></tr>
-            <tr><td><code>EMIT</code></td><td>the wire</td><td>a rule changed the report, or a report merged into it; never on a vendor endpoint, whose rules act at <code>VEND_INTR</code> and <code>VEND_BULK</code>; a dropped report raises no event</td></tr>
-            <tr><td><code>CONTROL</code></td><td>the transaction the PC received, on every control endpoint</td><td>a rule rewrote its data, answered it or refused it</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Class</th><th>Bytes</th><th><code>RULE</code> set when</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>HID_IN</code></td><td>the device's report as it arrived</td><td>a rule then changed or dropped it</td></tr>
+              <tr><td><code>HID_OUT</code>, <code>VEND_INTR</code> / <code>VEND_BULK</code> OUT</td><td>what the PC sent</td><td>a rule then changed or dropped it on its way to the device</td></tr>
+              <tr><td><code>VEND_INTR</code> / <code>VEND_BULK</code> IN</td><td>what the PC receives</td><td>a rule changed it; a packet a rule drops raises no event</td></tr>
+              <tr><td><code>EMIT</code></td><td>the wire</td><td>a rule changed the report, or a report merged into it; never on a vendor endpoint, whose rules act at <code>VEND_INTR</code> and <code>VEND_BULK</code>; a dropped report raises no event</td></tr>
+              <tr><td><code>CONTROL</code></td><td>the transaction the PC received, on every control endpoint</td><td>a rule rewrote its data, answered it or refused it</td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           <code>CLIP_XFER</code> carries a transfer status in its flags byte and never{' '}
           <code>RULE</code>: a clip's transfer runs past every rule.

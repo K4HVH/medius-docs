@@ -28,28 +28,30 @@ const Connection: Component = () => {
           <code>0x55D3</code>), the WCH CH343 bridge in every box.
         </p>
         <div class="api-response-label">FUNCTIONS</div>
-        <table class="api-params">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Description</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>open</code></td>
-              <td>Opens a serial path (Linux <code>/dev/ttyACM0</code>, Windows <code>COM3</code>).</td>
-            </tr>
-            <tr>
-              <td><code>find</code></td>
-              <td>Opens the first matching port, or returns <A href="/library/types/errors"><code>Error::NotFound</code></A>.</td>
-            </tr>
-            <tr>
-              <td><code>find_medius</code></td>
-              <td>Lists every match as a <A href="/library/types/structs#port-info"><code>PortInfo</code></A> without opening one.</td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>open</code></td>
+                <td>Opens a serial path (Linux <code>/dev/ttyACM0</code>, Windows <code>COM3</code>).</td>
+              </tr>
+              <tr>
+                <td><code>find</code></td>
+                <td>Opens the first matching port, or returns <A href="/library/types/errors"><code>Error::NotFound</code></A>.</td>
+              </tr>
+              <tr>
+                <td><code>find_medius</code></td>
+                <td>Lists every match as a <A href="/library/types/structs#port-info"><code>PortInfo</code></A> without opening one.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`use medius::Device;
 
@@ -66,28 +68,30 @@ let dev = Device::open("/dev/ttyACM0")?;`}</code></pre>
           <A href="/native/commands/requests#requests"><code>QUERY</code></A> wait and the keepalive
           timer.
         </p>
-        <table class="api-params">
-          <thead>
-            <tr>
-              <th>Constant</th>
-              <th>Value</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>DEFAULT_QUERY_TIMEOUT</code></td>
-              <td><code>1 s</code></td>
-            </tr>
-            <tr>
-              <td><code>DEFAULT_KEEPALIVE_CADENCE</code></td>
-              <td><code>500 ms</code></td>
-            </tr>
-            <tr>
-              <td><code>PROTO_VER</code></td>
-              <td><code>9</code></td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr>
+                <th>Constant</th>
+                <th>Value</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>DEFAULT_QUERY_TIMEOUT</code></td>
+                <td><code>1 s</code></td>
+              </tr>
+              <tr>
+                <td><code>DEFAULT_KEEPALIVE_CADENCE</code></td>
+                <td><code>500 ms</code></td>
+              </tr>
+              <tr>
+                <td><code>PROTO_VER</code></td>
+                <td><code>9</code></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           <code>PROTO_VER</code> is the{' '}
           <A href="/native/frame#layout"><code>control protocol</code></A> version this build speaks.

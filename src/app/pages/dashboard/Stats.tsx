@@ -4,7 +4,6 @@ import { Button } from '../../../components/inputs/Button';
 import { type Count, type StatsSummary, type WeekFlashes, fetchStats } from '../../../dashboard/stats';
 import { Section } from './Section';
 import { PageHeader } from '../../shell/PageHeader';
-import '../../../styles/docs.css';
 
 // Longer lists end in one row summing the rest.
 const MAX_ROWS = 12;
@@ -242,57 +241,61 @@ const Summary = (props: { s: StatsSummary }) => {
           <CardHeader title="Devices" subtitle="Cloned by the boxes" />
           <Section title="By kind" first>
             <Show when={s().devices.byKind.length > 0} fallback={<Empty />}>
-              <table class="api-params">
-                <thead>
-                  <tr>
-                    <th>Kind</th>
-                    <th>Devices</th>
-                    <th>Boxes</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <For each={s().devices.byKind}>
-                    {(k) => (
-                      <tr>
-                        <td>{KIND[k.kind] ?? 'Unknown'}</td>
-                        <td>{num(k.devices)}</td>
-                        <td>{num(k.boxes)}</td>
-                      </tr>
-                    )}
-                  </For>
-                </tbody>
-              </table>
+              <div class="table-scroll">
+                <table class="api-params">
+                  <thead>
+                    <tr>
+                      <th>Kind</th>
+                      <th>Devices</th>
+                      <th>Boxes</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <For each={s().devices.byKind}>
+                      {(k) => (
+                        <tr>
+                          <td>{KIND[k.kind] ?? 'Unknown'}</td>
+                          <td>{num(k.devices)}</td>
+                          <td>{num(k.boxes)}</td>
+                        </tr>
+                      )}
+                    </For>
+                  </tbody>
+                </table>
+              </div>
             </Show>
           </Section>
           <Section title="Most used">
             <Show when={s().devices.top.length > 0} fallback={<Empty />}>
-              <table class="api-params">
-                <thead>
-                  <tr>
-                    <th>Device</th>
-                    <th>VID:PID</th>
-                    <th>Boxes</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <For each={s().devices.top}>
-                    {(d) => (
-                      <tr>
-                        <td class="stat-wrap">
-                          <Show when={d.product} fallback={KIND[d.kind] ?? 'Unknown'}>
-                            {d.product}
-                            <div class="stat-sub">{KIND[d.kind] ?? 'Unknown'}</div>
-                          </Show>
-                        </td>
-                        <td>
-                          {hex4(d.vid)}:{hex4(d.pid)}
-                        </td>
-                        <td>{num(d.boxes)}</td>
-                      </tr>
-                    )}
-                  </For>
-                </tbody>
-              </table>
+              <div class="table-scroll">
+                <table class="api-params">
+                  <thead>
+                    <tr>
+                      <th>Device</th>
+                      <th>VID:PID</th>
+                      <th>Boxes</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <For each={s().devices.top}>
+                      {(d) => (
+                        <tr>
+                          <td class="stat-wrap">
+                            <Show when={d.product} fallback={KIND[d.kind] ?? 'Unknown'}>
+                              {d.product}
+                              <div class="stat-sub">{KIND[d.kind] ?? 'Unknown'}</div>
+                            </Show>
+                          </td>
+                          <td>
+                            {hex4(d.vid)}:{hex4(d.pid)}
+                          </td>
+                          <td>{num(d.boxes)}</td>
+                        </tr>
+                      )}
+                    </For>
+                  </tbody>
+                </table>
+              </div>
             </Show>
           </Section>
         </Card>

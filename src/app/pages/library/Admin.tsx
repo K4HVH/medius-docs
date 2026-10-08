@@ -31,25 +31,27 @@ device.reset()?;                // back to passthrough`}</code></pre>
         <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
 
         <div class="api-response-label">EFFECT</div>
-        <table class="api-params">
-          <thead>
-            <tr><th>State</th><th>What reset does</th></tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>Box accumulator</td>
-              <td>Zeroed: the running total of injected motion and scroll not yet emitted to the PC.</td>
-            </tr>
-            <tr>
-              <td>Box overrides</td>
-              <td>All released. An <A href="/library/inject">override</A> holds one usage down or up.</td>
-            </tr>
-            <tr>
-              <td>Library held-state</td>
-              <td>Cleared, so a later <A href="/library/lifecycle#reapply"><code>reapply</code></A> or <A href="/library/lifecycle#reconnect"><code>reconnect</code></A> re-asserts nothing, and the <A href="/library/lifecycle#restart">session release</A> the box counts for it restores nothing.</td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>State</th><th>What reset does</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Box accumulator</td>
+                <td>Zeroed: the running total of injected motion and scroll not yet emitted to the PC.</td>
+              </tr>
+              <tr>
+                <td>Box overrides</td>
+                <td>All released. An <A href="/library/inject">override</A> holds one usage down or up.</td>
+              </tr>
+              <tr>
+                <td>Library held-state</td>
+                <td>Cleared, so a later <A href="/library/lifecycle#reapply"><code>reapply</code></A> or <A href="/library/lifecycle#reconnect"><code>reconnect</code></A> re-asserts nothing, and the <A href="/library/lifecycle#restart">session release</A> the box counts for it restores nothing.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
         <p>
           Sends one <A href="/native/commands/admin#reset"><code>RESET</code></A> frame.
@@ -74,25 +76,27 @@ device.reset()?;                // drop all of the above, back to passthrough`}<
         </p>
 
         <div class="api-response-label">ERASED</div>
-        <table class="api-params">
-          <thead>
-            <tr><th>Stored</th><th>After</th></tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>Box name</td>
-              <td>The MAC-derived default, as on a new box (<A href="/library/options#set-name"><code>set_name</code></A>).</td>
-            </tr>
-            <tr>
-              <td><A href="/library/options">Options</A></td>
-              <td>All seven at their defaults, imperfect-clone opt-in included.</td>
-            </tr>
-            <tr>
-              <td>Learned per-device data</td>
-              <td>Gone for every device the box has seen, <A href="/library/advanced/patch"><code>patch</code></A> sets included.</td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Stored</th><th>After</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Box name</td>
+                <td>The MAC-derived default, as on a new box (<A href="/library/options#set-name"><code>set_name</code></A>).</td>
+              </tr>
+              <tr>
+                <td><A href="/library/options">Options</A></td>
+                <td>All seven at their defaults, imperfect-clone opt-in included.</td>
+              </tr>
+              <tr>
+                <td>Learned per-device data</td>
+                <td>Gone for every device the box has seen, <A href="/library/advanced/patch"><code>patch</code></A> sets included.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
         <p>
           Sends one <A href="/native/commands/admin#reset"><code>RESET</code></A> frame with its NVS

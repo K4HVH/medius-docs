@@ -22,23 +22,25 @@ const Update: Component = () => {
             from the dashboard's <A href="/dashboard/update">Update page</A>.
           </p>
         </div>
-        <table class="api-params">
-          <thead>
-            <tr><th>Update a...</th><th>Write</th><th>Write and commit</th></tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>single chip</td>
-              <td><A href="/library/update#stage-firmware"><code>stage_firmware</code></A></td>
-              <td><A href="/library/update#update-firmware"><code>update_firmware</code></A></td>
-            </tr>
-            <tr>
-              <td>both chips</td>
-              <td><A href="/library/update#stage-firmware"><code>stage_firmware</code></A> twice</td>
-              <td>then <A href="/library/update#activate-firmware"><code>activate_firmware</code></A> once</td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Update a...</th><th>Write</th><th>Write and commit</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>single chip</td>
+                <td><A href="/library/update#stage-firmware"><code>stage_firmware</code></A></td>
+                <td><A href="/library/update#update-firmware"><code>update_firmware</code></A></td>
+              </tr>
+              <tr>
+                <td>both chips</td>
+                <td><A href="/library/update#stage-firmware"><code>stage_firmware</code></A> twice</td>
+                <td>then <A href="/library/update#activate-firmware"><code>activate_firmware</code></A> once</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
         <pre class="diagram">{`  stage_firmware(Host, ..)   --> host image into the host chip's spare slot
   stage_firmware(Device, ..) --> device image into the device chip's spare slot
   activate_firmware()        --> commit both, host chip reboots first`}</pre>
@@ -69,16 +71,18 @@ device.activate_firmware()?;`}</code></pre>
           <A href="/library/types/errors"><code>Error::Update</code></A> with{' '}
           <code>ON_PROBATION</code>.
         </p>
-        <table class="api-params">
-          <thead>
-            <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><code>target</code></td><td><A href="/library/types/enums#update-target"><code>UpdateTarget</code></A></td><td>Which chip to write: <code>Device</code> or <code>Host</code>.</td></tr>
-            <tr><td><code>image</code></td><td><code>&amp;[u8]</code></td><td>The whole <code>.bin</code>. Larger than <code>slot_size</code> is refused with <code>TOO_BIG</code> before a byte is sent.</td></tr>
-            <tr><td><code>progress</code></td><td><code>&amp;mut dyn FnMut(</code><A href="/library/types/structs#update-progress"><code>UpdateProgress</code></A><code>)</code></td><td>Called once per acknowledged window, not once per chunk.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>target</code></td><td><A href="/library/types/enums#update-target"><code>UpdateTarget</code></A></td><td>Which chip to write: <code>Device</code> or <code>Host</code>.</td></tr>
+              <tr><td><code>image</code></td><td><code>&amp;[u8]</code></td><td>The whole <code>.bin</code>. Larger than <code>slot_size</code> is refused with <code>TOO_BIG</code> before a byte is sent.</td></tr>
+              <tr><td><code>progress</code></td><td><code>&amp;mut dyn FnMut(</code><A href="/library/types/structs#update-progress"><code>UpdateProgress</code></A><code>)</code></td><td>Called once per acknowledged window, not once per chunk.</td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           Returns the bytes the box wrote. A box on the single-app layout replies{' '}
           <code>NO_SLOT</code> and needs one <A href="/native/flashing">ROM download</A> flash first.
@@ -136,14 +140,16 @@ println!("now on ota_{} ({})", fw.device.slot, fw.device.state);`}</code></pre>
           Drops what is staged or in flight for one target. The clone returns without a reboot; the
           running slot is untouched. An abandoned session times out on the box after ten seconds.
         </p>
-        <table class="api-params">
-          <thead>
-            <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><code>target</code></td><td><A href="/library/types/enums#update-target"><code>UpdateTarget</code></A></td><td>Which chip to clear: <code>Device</code> or <code>Host</code>.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>target</code></td><td><A href="/library/types/enums#update-target"><code>UpdateTarget</code></A></td><td>Which chip to clear: <code>Device</code> or <code>Host</code>.</td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           Sent while an <A href="/native/commands/update#activate">activate</A> is waiting on the
           host chip, it abandons that wait and disarms both chips whichever target it names.
@@ -167,16 +173,18 @@ if let Err(e) = device.activate_firmware() {
           both chips together need the two calls separately. If the activate refuses, the staged image
           is cleared before the error returns.
         </p>
-        <table class="api-params">
-          <thead>
-            <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><code>target</code></td><td><A href="/library/types/enums#update-target"><code>UpdateTarget</code></A></td><td>Which chip to write: <code>Device</code> or <code>Host</code>.</td></tr>
-            <tr><td><code>image</code></td><td><code>&amp;[u8]</code></td><td>The whole <code>.bin</code>.</td></tr>
-            <tr><td><code>progress</code></td><td><code>&amp;mut dyn FnMut(</code><A href="/library/types/structs#update-progress"><code>UpdateProgress</code></A><code>)</code></td><td>Called once per acknowledged window.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>target</code></td><td><A href="/library/types/enums#update-target"><code>UpdateTarget</code></A></td><td>Which chip to write: <code>Device</code> or <code>Host</code>.</td></tr>
+              <tr><td><code>image</code></td><td><code>&amp;[u8]</code></td><td>The whole <code>.bin</code>.</td></tr>
+              <tr><td><code>progress</code></td><td><code>&amp;mut dyn FnMut(</code><A href="/library/types/structs#update-progress"><code>UpdateProgress</code></A><code>)</code></td><td>Called once per acknowledged window.</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`use medius::{Device, UpdateTarget};
 

@@ -38,40 +38,44 @@ const Requests: Component = () => {
         <pre class="api-signature">QUERY  0x05  ·  payload 1 byte (2 for OPTIONS, REWRITE_ENTRY and PATCH_ENTRY)</pre>
         <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
         <div class="api-response-label">PAYLOAD</div>
-        <table class="byte-table">
-          <thead>
-            <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>state to read (below)</td></tr>
-            <tr><td>1</td><td><code>id</code></td><td><code>u8</code></td><td>option (<code>what = 9</code>), rule (<code>13</code>) or patch (<code>15</code>); omitted otherwise</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="byte-table">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>state to read (below)</td></tr>
+              <tr><td>1</td><td><code>id</code></td><td><code>u8</code></td><td>option (<code>what = 9</code>), rule (<code>13</code>) or patch (<code>15</code>); omitted otherwise</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">SELECTORS</div>
-        <table class="api-params">
-          <thead>
-            <tr><th><code>what</code></th><th>Reads</th><th>Reply</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><code>0</code></td><td>Firmware version.</td><td><A href="/native/commands/requests#version"><code>VERSION</code></A></td></tr>
-            <tr><td><code>1</code></td><td>Box health.</td><td><A href="/native/commands/requests#health"><code>HEALTH</code></A></td></tr>
-            <tr><td><code>2</code></td><td>Cloned device's USB identity, kind, and product.</td><td><A href="/native/commands/requests#device-info"><code>DEVICE_INFO</code></A></td></tr>
-            <tr><td><code>3</code></td><td>Whole-device capabilities (mouse + keyboard).</td><td><A href="/native/commands/requests#caps"><code>CAPS</code></A></td></tr>
-            <tr><td><code>4</code></td><td>Native report rate.</td><td><A href="/native/commands/requests#rate"><code>RATE</code></A></td></tr>
-            <tr><td><code>5</code></td><td>Delivery and telemetry counters.</td><td><A href="/native/commands/requests#stats"><code>STATS</code></A></td></tr>
-            <tr><td><code>6</code></td><td>Active input locks.</td><td><A href="/native/commands/requests#locks"><code>LOCKS</code></A></td></tr>
-            <tr><td><code>7</code></td><td>Active catch subscription table, its drop counts, and the cross-chip clock estimate.</td><td><A href="/native/commands/requests#catch"><code>CATCH</code></A></td></tr>
-            <tr><td><code>8</code></td><td>retired; folded into <A href="/native/commands/requests#caps"><code>CAPS</code></A></td><td>-</td></tr>
-            <tr><td><code>9</code></td><td>Persistent box option, by <code>id</code>.</td><td><A href="/native/commands/requests#options"><code>OPTIONS</code></A></td></tr>
-            <tr><td><code>10</code></td><td>Buffered-clip ring depth, playback state, and config.</td><td><A href="/native/commands/requests#clip"><code>CLIP</code></A></td></tr>
-            <tr><td><code>11</code></td><td>Both chips' firmware versions, the slot each runs, and what is staged.</td><td><A href="/native/commands/requests#firmware"><code>FIRMWARE</code></A></td></tr>
-            <tr><td><code>12</code></td><td>Rewrite-rule table summary.</td><td><A href="/native/commands/requests#rewrite"><code>REWRITE</code></A></td></tr>
-            <tr><td><code>13</code></td><td>One rewrite rule in full, in the <A href="/native/commands/rewrite#rewrite"><code>REWRITE</code></A> command's shape.</td><td><A href="/native/commands/requests#rewrite-entry"><code>REWRITE_ENTRY</code></A></td></tr>
-            <tr><td><code>14</code></td><td>Descriptor-patch set summary.</td><td><A href="/native/commands/requests#patches"><code>PATCHES</code></A></td></tr>
-            <tr><td><code>15</code></td><td>One descriptor patch in full, in the <A href="/native/commands/patch#patch"><code>PATCH</code></A> command's shape.</td><td><A href="/native/commands/requests#patch-entry"><code>PATCH_ENTRY</code></A></td></tr>
-            <tr><td><code>16</code></td><td>Active field-transform table.</td><td><A href="/native/commands/requests#transforms"><code>TRANSFORMS</code></A></td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th><code>what</code></th><th>Reads</th><th>Reply</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>0</code></td><td>Firmware version.</td><td><A href="/native/commands/requests#version"><code>VERSION</code></A></td></tr>
+              <tr><td><code>1</code></td><td>Box health.</td><td><A href="/native/commands/requests#health"><code>HEALTH</code></A></td></tr>
+              <tr><td><code>2</code></td><td>Cloned device's USB identity, kind, and product.</td><td><A href="/native/commands/requests#device-info"><code>DEVICE_INFO</code></A></td></tr>
+              <tr><td><code>3</code></td><td>Whole-device capabilities (mouse + keyboard).</td><td><A href="/native/commands/requests#caps"><code>CAPS</code></A></td></tr>
+              <tr><td><code>4</code></td><td>Native report rate.</td><td><A href="/native/commands/requests#rate"><code>RATE</code></A></td></tr>
+              <tr><td><code>5</code></td><td>Delivery and telemetry counters.</td><td><A href="/native/commands/requests#stats"><code>STATS</code></A></td></tr>
+              <tr><td><code>6</code></td><td>Active input locks.</td><td><A href="/native/commands/requests#locks"><code>LOCKS</code></A></td></tr>
+              <tr><td><code>7</code></td><td>Active catch subscription table, its drop counts, and the cross-chip clock estimate.</td><td><A href="/native/commands/requests#catch"><code>CATCH</code></A></td></tr>
+              <tr><td><code>8</code></td><td>retired; folded into <A href="/native/commands/requests#caps"><code>CAPS</code></A></td><td>-</td></tr>
+              <tr><td><code>9</code></td><td>Persistent box option, by <code>id</code>.</td><td><A href="/native/commands/requests#options"><code>OPTIONS</code></A></td></tr>
+              <tr><td><code>10</code></td><td>Buffered-clip ring depth, playback state, and config.</td><td><A href="/native/commands/requests#clip"><code>CLIP</code></A></td></tr>
+              <tr><td><code>11</code></td><td>Both chips' firmware versions, the slot each runs, and what is staged.</td><td><A href="/native/commands/requests#firmware"><code>FIRMWARE</code></A></td></tr>
+              <tr><td><code>12</code></td><td>Rewrite-rule table summary.</td><td><A href="/native/commands/requests#rewrite"><code>REWRITE</code></A></td></tr>
+              <tr><td><code>13</code></td><td>One rewrite rule in full, in the <A href="/native/commands/rewrite#rewrite"><code>REWRITE</code></A> command's shape.</td><td><A href="/native/commands/requests#rewrite-entry"><code>REWRITE_ENTRY</code></A></td></tr>
+              <tr><td><code>14</code></td><td>Descriptor-patch set summary.</td><td><A href="/native/commands/requests#patches"><code>PATCHES</code></A></td></tr>
+              <tr><td><code>15</code></td><td>One descriptor patch in full, in the <A href="/native/commands/patch#patch"><code>PATCH</code></A> command's shape.</td><td><A href="/native/commands/requests#patch-entry"><code>PATCH_ENTRY</code></A></td></tr>
+              <tr><td><code>16</code></td><td>Active field-transform table.</td><td><A href="/native/commands/requests#transforms"><code>TRANSFORMS</code></A></td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">EFFECT</div>
         <p>
           The box replies with a <A href="/native/commands/requests#resp"><code>RESP</code></A>{' '}
@@ -125,15 +129,17 @@ const Requests: Component = () => {
         <pre class="api-signature">RESP  0x06  ·  box → PC</pre>
         <p><span class="api-badge api-badge--responded">Reply</span></p>
         <div class="api-response-label">PAYLOAD</div>
-        <table class="byte-table">
-          <thead>
-            <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>echoes the request's selector</td></tr>
-            <tr><td>1..</td><td><code>data</code></td><td><code>varies</code></td><td>layout for the requested <code>what</code> (see <A href="/native/commands/requests#requests">selectors</A>)</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="byte-table">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>echoes the request's selector</td></tr>
+              <tr><td>1..</td><td><code>data</code></td><td><code>varies</code></td><td>layout for the requested <code>what</code> (see <A href="/native/commands/requests#requests">selectors</A>)</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">EFFECT</div>
         <p>
           Exactly one <code>RESP</code> per <code>QUERY</code>, its{' '}
@@ -151,20 +157,22 @@ const Requests: Component = () => {
         <pre class="api-signature">QUERY  what = 0  ·  RESP 11-byte header + name</pre>
         <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
         <div class="api-response-label">PAYLOAD</div>
-        <table class="byte-table">
-          <thead>
-            <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x00</td></tr>
-            <tr><td>1</td><td><code>proto_ver</code></td><td><code>u8</code></td><td>protocol version, expected 9</td></tr>
-            <tr><td>2</td><td><code>fw_major</code></td><td><code>u8</code></td><td>firmware major</td></tr>
-            <tr><td>3</td><td><code>fw_minor</code></td><td><code>u8</code></td><td>firmware minor</td></tr>
-            <tr><td>4</td><td><code>fw_patch</code></td><td><code>u8</code></td><td>firmware patch</td></tr>
-            <tr><td>5</td><td><code>mac</code></td><td><code>u8[6]</code></td><td>the device chip's base MAC; the stable per-box id, rendered as 12 lowercase hex digits</td></tr>
-            <tr><td>11..</td><td><code>name</code></td><td><code>ascii</code></td><td>human-readable box name, filling the rest of the payload (delimited by the frame <code>LEN</code>); a synthesised <code>Medius-XXXX</code> default when unset, set via <A href="/native/commands/option#name"><code>OPTION(NAME)</code></A></td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="byte-table">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x00</td></tr>
+              <tr><td>1</td><td><code>proto_ver</code></td><td><code>u8</code></td><td>protocol version, expected 9</td></tr>
+              <tr><td>2</td><td><code>fw_major</code></td><td><code>u8</code></td><td>firmware major</td></tr>
+              <tr><td>3</td><td><code>fw_minor</code></td><td><code>u8</code></td><td>firmware minor</td></tr>
+              <tr><td>4</td><td><code>fw_patch</code></td><td><code>u8</code></td><td>firmware patch</td></tr>
+              <tr><td>5</td><td><code>mac</code></td><td><code>u8[6]</code></td><td>the device chip's base MAC; the stable per-box id, rendered as 12 lowercase hex digits</td></tr>
+              <tr><td>11..</td><td><code>name</code></td><td><code>ascii</code></td><td>human-readable box name, filling the rest of the payload (delimited by the frame <code>LEN</code>); a synthesised <code>Medius-XXXX</code> default when unset, set via <A href="/native/commands/option#name"><code>OPTION(NAME)</code></A></td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">EFFECT</div>
         <p>
           The box also sends this unprompted at boot and on the first frame it receives, as a{' '}
@@ -202,34 +210,38 @@ const Requests: Component = () => {
         <pre class="api-signature">QUERY  what = 1  ·  RESP 3 bytes</pre>
         <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
         <div class="api-response-label">PAYLOAD</div>
-        <table class="byte-table">
-          <thead>
-            <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x01</td></tr>
-            <tr><td>1</td><td><code>flags</code></td><td><code>u16</code></td><td>status bits below, little-endian</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="byte-table">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x01</td></tr>
+              <tr><td>1</td><td><code>flags</code></td><td><code>u16</code></td><td>status bits below, little-endian</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">FLAGS</div>
-        <table class="api-params">
-          <thead>
-            <tr><th>Bit</th><th>Mask</th><th>Set when</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>b0</td><td><code>0x01</code></td><td>the host-chip link is up</td></tr>
-            <tr><td>b1</td><td><code>0x02</code></td><td>a real mouse is attached</td></tr>
-            <tr><td>b2</td><td><code>0x04</code></td><td>the PC has set up the cloned mouse</td></tr>
-            <tr><td>b3</td><td><code>0x08</code></td><td><A href="/native/injection">injection</A> is active</td></tr>
-            <tr><td>b4</td><td><code>0x10</code></td><td><code>RATE_CONFIDENT</code>: the native-rate estimator window is full, so the <A href="/native/commands/requests#rate"><code>RATE</code></A> value is trustworthy</td></tr>
-            <tr><td>b5</td><td><code>0x20</code></td><td><code>LOCK_ON</code>: at least one input is off a full pass under <A href="/native/commands/lock"><code>LOCK</code></A>, blocked or merely weighed</td></tr>
-            <tr><td>b6</td><td><code>0x40</code></td><td><code>CATCH_ON</code>: the <A href="/native/commands/catch"><code>CATCH</code></A> subscription table is non-empty, so events are streaming; <A href="/native/commands/requests#catch"><code>QUERY(CATCH)</code></A> reads <em>what</em> is subscribed</td></tr>
-            <tr><td>b7</td><td><code>0x80</code></td><td><code>KBD_ATT</code>: a keyboard is attached on the host chip, cloned and injectable</td></tr>
-            <tr><td>b8</td><td><code>0x0100</code></td><td><code>REWRITE_ON</code>: the <A href="/native/commands/rewrite">rewrite rule</A> table is non-empty</td></tr>
-            <tr><td>b9</td><td><code>0x0200</code></td><td><code>PATCH_ON</code>: the clone is serving a <A href="/native/commands/patch">descriptor-patch</A> set, as <A href="/native/commands/requests#patches"><code>PATCHES</code></A> b0</td></tr>
-            <tr><td>b10</td><td><code>0x0400</code></td><td><code>TRANSFORM_ON</code>: a <A href="/native/commands/transform">field transform</A> is active (the table is non-empty)</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Bit</th><th>Mask</th><th>Set when</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>b0</td><td><code>0x01</code></td><td>the host-chip link is up</td></tr>
+              <tr><td>b1</td><td><code>0x02</code></td><td>a real mouse is attached</td></tr>
+              <tr><td>b2</td><td><code>0x04</code></td><td>the PC has set up the cloned mouse</td></tr>
+              <tr><td>b3</td><td><code>0x08</code></td><td><A href="/native/injection">injection</A> is active</td></tr>
+              <tr><td>b4</td><td><code>0x10</code></td><td><code>RATE_CONFIDENT</code>: the native-rate estimator window is full, so the <A href="/native/commands/requests#rate"><code>RATE</code></A> value is trustworthy</td></tr>
+              <tr><td>b5</td><td><code>0x20</code></td><td><code>LOCK_ON</code>: at least one input is off a full pass under <A href="/native/commands/lock"><code>LOCK</code></A>, blocked or merely weighed</td></tr>
+              <tr><td>b6</td><td><code>0x40</code></td><td><code>CATCH_ON</code>: the <A href="/native/commands/catch"><code>CATCH</code></A> subscription table is non-empty, so events are streaming; <A href="/native/commands/requests#catch"><code>QUERY(CATCH)</code></A> reads <em>what</em> is subscribed</td></tr>
+              <tr><td>b7</td><td><code>0x80</code></td><td><code>KBD_ATT</code>: a keyboard is attached on the host chip, cloned and injectable</td></tr>
+              <tr><td>b8</td><td><code>0x0100</code></td><td><code>REWRITE_ON</code>: the <A href="/native/commands/rewrite">rewrite rule</A> table is non-empty</td></tr>
+              <tr><td>b9</td><td><code>0x0200</code></td><td><code>PATCH_ON</code>: the clone is serving a <A href="/native/commands/patch">descriptor-patch</A> set, as <A href="/native/commands/requests#patches"><code>PATCHES</code></A> b0</td></tr>
+              <tr><td>b10</td><td><code>0x0400</code></td><td><code>TRANSFORM_ON</code>: a <A href="/native/commands/transform">field transform</A> is active (the table is non-empty)</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">EFFECT</div>
         <p>
           With the first three bits set, input reaches the PC.
@@ -259,42 +271,48 @@ const Requests: Component = () => {
         <pre class="api-signature">QUERY  what = 2  ·  RESP 11-byte header + product</pre>
         <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
         <div class="api-response-label">PAYLOAD</div>
-        <table class="byte-table">
-          <thead>
-            <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x02</td></tr>
-            <tr><td>1</td><td><code>vid</code></td><td><code>u16</code></td><td>idVendor, little-endian</td></tr>
-            <tr><td>3</td><td><code>pid</code></td><td><code>u16</code></td><td>idProduct, little-endian</td></tr>
-            <tr><td>5</td><td><code>bcd_device</code></td><td><code>u16</code></td><td>bcdDevice, the device release</td></tr>
-            <tr><td>7</td><td><code>bcd_usb</code></td><td><code>u16</code></td><td>bcdUSB, e.g. 0x0200 or 0x0201</td></tr>
-            <tr><td>9</td><td><code>flags</code></td><td><code>u8</code></td><td>the bits below</td></tr>
-            <tr><td>10</td><td><code>primary_kind</code></td><td><code>u8</code></td><td>cloned device kind, from its HID report descriptors and Boot declarations: one carrying both kinds reads keyboard with a full key bitmap (unless it declares Boot for both) or a Boot keyboard alone, and mouse otherwise (below)</td></tr>
-            <tr><td>11..</td><td><code>product</code></td><td><code>ASCII</code></td><td>product string, filling the rest of the payload, with <code>?</code> for each character outside ASCII; in English when the device lists it, else in its first language; may be empty</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="byte-table">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x02</td></tr>
+              <tr><td>1</td><td><code>vid</code></td><td><code>u16</code></td><td>idVendor, little-endian</td></tr>
+              <tr><td>3</td><td><code>pid</code></td><td><code>u16</code></td><td>idProduct, little-endian</td></tr>
+              <tr><td>5</td><td><code>bcd_device</code></td><td><code>u16</code></td><td>bcdDevice, the device release</td></tr>
+              <tr><td>7</td><td><code>bcd_usb</code></td><td><code>u16</code></td><td>bcdUSB, e.g. 0x0200 or 0x0201</td></tr>
+              <tr><td>9</td><td><code>flags</code></td><td><code>u8</code></td><td>the bits below</td></tr>
+              <tr><td>10</td><td><code>primary_kind</code></td><td><code>u8</code></td><td>cloned device kind, from its HID report descriptors and Boot declarations: one carrying both kinds reads keyboard with a full key bitmap (unless it declares Boot for both) or a Boot keyboard alone, and mouse otherwise (below)</td></tr>
+              <tr><td>11..</td><td><code>product</code></td><td><code>ASCII</code></td><td>product string, filling the rest of the payload, with <code>?</code> for each character outside ASCII; in English when the device lists it, else in its first language; may be empty</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">FLAGS</div>
-        <table class="api-params">
-          <thead>
-            <tr><th>Bit</th><th>Mask</th><th>Set when</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>b0</td><td><code>0x01</code></td><td><code>HAS_SERIAL</code>: the clone serves a serial string</td></tr>
-            <tr><td>b1</td><td><code>0x02</code></td><td><code>HAS_BOS</code>: the clone serves a BOS descriptor</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Bit</th><th>Mask</th><th>Set when</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>b0</td><td><code>0x01</code></td><td><code>HAS_SERIAL</code>: the clone serves a serial string</td></tr>
+              <tr><td>b1</td><td><code>0x02</code></td><td><code>HAS_BOS</code>: the clone serves a BOS descriptor</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">PRIMARY_KIND</div>
-        <table class="api-params">
-          <thead>
-            <tr><th>Value</th><th>Kind</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><code>0</code></td><td>unknown: neither a mouse nor a keyboard (a clone with no HID interface reads this), or nothing cloned</td></tr>
-            <tr><td><code>1</code></td><td>keyboard</td></tr>
-            <tr><td><code>2</code></td><td>mouse</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Value</th><th>Kind</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>0</code></td><td>unknown: neither a mouse nor a keyboard (a clone with no HID interface reads this), or nothing cloned</td></tr>
+              <tr><td><code>1</code></td><td>keyboard</td></tr>
+              <tr><td><code>2</code></td><td>mouse</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">EFFECT</div>
         <p>
           A <code>vid</code> and <code>pid</code> of <code>0</code> mean nothing is cloned yet; a clone with
@@ -337,45 +355,51 @@ const Requests: Component = () => {
         <pre class="api-signature">QUERY  what = 3  ·  RESP 7 bytes</pre>
         <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
         <div class="api-response-label">PAYLOAD</div>
-        <table class="byte-table">
-          <thead>
-            <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x03</td></tr>
-            <tr><td>1</td><td><code>n_buttons</code></td><td><code>u8</code></td><td>buttons the mouse report carries; the cap on an injectable or lockable button id</td></tr>
-            <tr><td>2</td><td><code>axis_flags</code></td><td><code>u8</code></td><td>mouse axes, the bits below</td></tr>
-            <tr><td>3</td><td><code>n_hid</code></td><td><code>u8</code></td><td>cloned HID interfaces; &gt;1 = composite, 0 with nothing cloned or for a clone with no HID interface (a vendor-class pad), which <A href="#device-info"><code>DEVICE_INFO</code></A>'s identity tells apart</td></tr>
-            <tr><td>4</td><td><code>n_keys</code></td><td><code>u8</code></td><td>keycode-array slots, or 0xFF for NKRO; 0 = no keyboard</td></tr>
-            <tr><td>5</td><td><code>kbd_flags</code></td><td><code>u8</code></td><td>keyboard, the bits below</td></tr>
-            <tr><td>6</td><td><code>change_driven</code></td><td><code>u8</code></td><td>per class: b0 mouse (continuous, 0), b1 keyboard/media (change-driven, 1 when bound)</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="byte-table">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x03</td></tr>
+              <tr><td>1</td><td><code>n_buttons</code></td><td><code>u8</code></td><td>buttons the mouse report carries; the cap on an injectable or lockable button id</td></tr>
+              <tr><td>2</td><td><code>axis_flags</code></td><td><code>u8</code></td><td>mouse axes, the bits below</td></tr>
+              <tr><td>3</td><td><code>n_hid</code></td><td><code>u8</code></td><td>cloned HID interfaces; &gt;1 = composite, 0 with nothing cloned or for a clone with no HID interface (a vendor-class pad), which <A href="#device-info"><code>DEVICE_INFO</code></A>'s identity tells apart</td></tr>
+              <tr><td>4</td><td><code>n_keys</code></td><td><code>u8</code></td><td>keycode-array slots, or 0xFF for NKRO; 0 = no keyboard</td></tr>
+              <tr><td>5</td><td><code>kbd_flags</code></td><td><code>u8</code></td><td>keyboard, the bits below</td></tr>
+              <tr><td>6</td><td><code>change_driven</code></td><td><code>u8</code></td><td>per class: b0 mouse (continuous, 0), b1 keyboard/media (change-driven, 1 when bound)</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">AXIS_FLAGS</div>
-        <table class="api-params">
-          <thead>
-            <tr><th>Bit</th><th>Mask</th><th>Set when</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>b0</td><td><code>0x01</code></td><td><code>X</code>: the report carries an X axis</td></tr>
-            <tr><td>b1</td><td><code>0x02</code></td><td><code>Y</code>: the report carries a Y axis</td></tr>
-            <tr><td>b2</td><td><code>0x04</code></td><td><code>WHEEL</code>: the report carries a wheel</td></tr>
-            <tr><td>b3</td><td><code>0x08</code></td><td><code>REPORT_ID</code>: the mouse report sits behind a HID report ID</td></tr>
-            <tr><td>b4</td><td><code>0x10</code></td><td><code>PAN</code>: the report carries an AC Pan (horizontal scroll) axis</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Bit</th><th>Mask</th><th>Set when</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>b0</td><td><code>0x01</code></td><td><code>X</code>: the report carries an X axis</td></tr>
+              <tr><td>b1</td><td><code>0x02</code></td><td><code>Y</code>: the report carries a Y axis</td></tr>
+              <tr><td>b2</td><td><code>0x04</code></td><td><code>WHEEL</code>: the report carries a wheel</td></tr>
+              <tr><td>b3</td><td><code>0x08</code></td><td><code>REPORT_ID</code>: the mouse report sits behind a HID report ID</td></tr>
+              <tr><td>b4</td><td><code>0x10</code></td><td><code>PAN</code>: the report carries an AC Pan (horizontal scroll) axis</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">KBD_FLAGS</div>
-        <table class="api-params">
-          <thead>
-            <tr><th>Bit</th><th>Mask</th><th>Set when</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>b0</td><td><code>0x01</code></td><td><code>NKRO</code>: the keyboard reports an NKRO bitmap</td></tr>
-            <tr><td>b1</td><td><code>0x02</code></td><td><code>CONSUMER</code>: a Consumer collection is present, so media keys are injectable</td></tr>
-            <tr><td>b2</td><td><code>0x04</code></td><td><code>SYSTEM</code>: a system-control collection is present (passthrough-only)</td></tr>
-            <tr><td>b3</td><td><code>0x08</code></td><td><code>REPORT_ID</code>: the keyboard report sits behind a HID report ID</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Bit</th><th>Mask</th><th>Set when</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>b0</td><td><code>0x01</code></td><td><code>NKRO</code>: the keyboard reports an NKRO bitmap</td></tr>
+              <tr><td>b1</td><td><code>0x02</code></td><td><code>CONSUMER</code>: a Consumer collection is present, so media keys are injectable</td></tr>
+              <tr><td>b2</td><td><code>0x04</code></td><td><code>SYSTEM</code>: a system-control collection is present (passthrough-only)</td></tr>
+              <tr><td>b3</td><td><code>0x08</code></td><td><code>REPORT_ID</code>: the keyboard report sits behind a HID report ID</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">EFFECT</div>
         <p>
           Library binding: <A href="/library/requests#caps"><code>caps</code></A>.
@@ -406,37 +430,43 @@ const Requests: Component = () => {
           <code>what = 4</code>: how fast the active input reports, plus the poll period the clone
           advertises. Which field to read depends on the input kind.
         </p>
-        <table class="api-params">
-          <thead><tr><th>Input kind</th><th><code>CHANGE_DRIVEN</code></th><th>Read</th><th>Gives</th></tr></thead>
-          <tbody>
-            <tr><td>continuous (moving mouse)</td><td><code>0</code></td><td><code>native_period_us</code></td><td>Hz = 1e6 / period; reads 0 until learned</td></tr>
-            <tr><td>change-driven (keyboard, media)</td><td><code>1</code></td><td><code>poll_period_us</code></td><td>no steady cadence, so <code>native_period_us</code> is 0</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Input kind</th><th><code>CHANGE_DRIVEN</code></th><th>Read</th><th>Gives</th></tr></thead>
+            <tbody>
+              <tr><td>continuous (moving mouse)</td><td><code>0</code></td><td><code>native_period_us</code></td><td>Hz = 1e6 / period; reads 0 until learned</td></tr>
+              <tr><td>change-driven (keyboard, media)</td><td><code>1</code></td><td><code>poll_period_us</code></td><td>no steady cadence, so <code>native_period_us</code> is 0</td></tr>
+            </tbody>
+          </table>
+        </div>
         <pre class="api-signature">QUERY  what = 4  ·  RESP 6 bytes</pre>
         <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
         <div class="api-response-label">PAYLOAD</div>
-        <table class="byte-table">
-          <thead>
-            <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x04</td></tr>
-            <tr><td>1</td><td><code>native_period_us</code></td><td><code>u16</code></td><td>realised native period in µs; 0 = not learned, or change-driven (see flags), Hz = 1e6/period</td></tr>
-            <tr><td>3</td><td><code>poll_period_us</code></td><td><code>u16</code></td><td>cloned inject-endpoint bInterval poll period in µs; the figure to read for a change-driven input</td></tr>
-            <tr><td>5</td><td><code>flags</code></td><td><code>u8</code></td><td>the bits below</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="byte-table">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x04</td></tr>
+              <tr><td>1</td><td><code>native_period_us</code></td><td><code>u16</code></td><td>realised native period in µs; 0 = not learned, or change-driven (see flags), Hz = 1e6/period</td></tr>
+              <tr><td>3</td><td><code>poll_period_us</code></td><td><code>u16</code></td><td>cloned inject-endpoint bInterval poll period in µs; the figure to read for a change-driven input</td></tr>
+              <tr><td>5</td><td><code>flags</code></td><td><code>u8</code></td><td>the bits below</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">FLAGS</div>
-        <table class="api-params">
-          <thead>
-            <tr><th>Bit</th><th>Mask</th><th>Set when</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>b0</td><td><code>0x01</code></td><td><code>CONFIDENT</code>: the estimator window is full, same source as HEALTH <A href="/native/commands/requests#health"><code>RATE_CONFIDENT</code></A></td></tr>
-            <tr><td>b1</td><td><code>0x02</code></td><td><code>CHANGE_DRIVEN</code>: the active input is event-driven (keyboard / media), so there is no continuous cadence and <code>native_period_us</code> is 0</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Bit</th><th>Mask</th><th>Set when</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>b0</td><td><code>0x01</code></td><td><code>CONFIDENT</code>: the estimator window is full, same source as HEALTH <A href="/native/commands/requests#health"><code>RATE_CONFIDENT</code></A></td></tr>
+              <tr><td>b1</td><td><code>0x02</code></td><td><code>CHANGE_DRIVEN</code>: the active input is event-driven (keyboard / media), so there is no continuous cadence and <code>native_period_us</code> is 0</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">EFFECT</div>
         <p>
           A 1 kHz mouse reads ~1000 µs once learned. Library binding:{' '}
@@ -491,26 +521,28 @@ const Requests: Component = () => {
         <pre class="api-signature">QUERY  what = 5  ·  RESP 31 bytes</pre>
         <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
         <div class="api-response-label">PAYLOAD</div>
-        <table class="byte-table">
-          <thead>
-            <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x05</td></tr>
-            <tr><td>1</td><td><code>inject_emits</code></td><td><code>u32</code></td><td>pure-injection reports emitted, little-endian</td></tr>
-            <tr><td>5</td><td><code>tx_drops</code></td><td><code>u16</code></td><td>reports the clone's IN queue couldn't hold, never reaching the game PC; should stay 0</td></tr>
-            <tr><td>7</td><td><code>tx_merges</code></td><td><code>u16</code></td><td>backed-up reports merged instead of queued</td></tr>
-            <tr><td>9</td><td><code>tx_maxdepth</code></td><td><code>u8</code></td><td>TX queue high-water mark</td></tr>
-            <tr><td>10</td><td><code>tx_wedges</code></td><td><code>u8</code></td><td>wedged-endpoint recoveries</td></tr>
-            <tr><td>11</td><td><code>wakeups</code></td><td><code>u16</code></td><td>remote-wakeups issued</td></tr>
-            <tr><td>13</td><td><code>reset_count</code></td><td><code>u16</code></td><td>USB bus resets seen</td></tr>
-            <tr><td>15</td><td><code>config_count</code></td><td><code>u16</code></td><td>SET_CONFIGURATION events (re-enumerations)</td></tr>
-            <tr><td>17</td><td><code>link_rx_drops</code></td><td><code>u32</code></td><td>host-chip input frames the device chip couldn't take off the link; should stay 0</td></tr>
-            <tr><td>21</td><td><code>host_rx_drops</code></td><td><code>u32</code></td><td>the same count on the host chip, relayed over the link; should stay 0</td></tr>
-            <tr><td>25</td><td><code>relay_drops</code></td><td><code>u32</code></td><td>relayed traffic and commands that went no further, none of it native input: a vendor IN packet that found its endpoint's queue full of the control PC's <code>RAW</code> packets, or a device's zero-length packet answering a poll the PC did not make (the one poll the box runs ahead of a suspended PC); an OUT packet the box could not queue, that failed three times on the device's bus, or that a bus reset or <code>SET_INTERFACE</code> overtook; a relayed request or a flagged <code>MOVE</code> the box could not queue; and any frame other than native input that either chip's link receive ring dropped</td></tr>
-            <tr><td>29</td><td><code>session</code></td><td><code>u16</code></td><td>releases of host-set state; wraps at 0xFFFF, so compare for inequality</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="byte-table">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x05</td></tr>
+              <tr><td>1</td><td><code>inject_emits</code></td><td><code>u32</code></td><td>pure-injection reports emitted, little-endian</td></tr>
+              <tr><td>5</td><td><code>tx_drops</code></td><td><code>u16</code></td><td>reports the clone's IN queue couldn't hold, never reaching the game PC; should stay 0</td></tr>
+              <tr><td>7</td><td><code>tx_merges</code></td><td><code>u16</code></td><td>backed-up reports merged instead of queued</td></tr>
+              <tr><td>9</td><td><code>tx_maxdepth</code></td><td><code>u8</code></td><td>TX queue high-water mark</td></tr>
+              <tr><td>10</td><td><code>tx_wedges</code></td><td><code>u8</code></td><td>wedged-endpoint recoveries</td></tr>
+              <tr><td>11</td><td><code>wakeups</code></td><td><code>u16</code></td><td>remote-wakeups issued</td></tr>
+              <tr><td>13</td><td><code>reset_count</code></td><td><code>u16</code></td><td>USB bus resets seen</td></tr>
+              <tr><td>15</td><td><code>config_count</code></td><td><code>u16</code></td><td>SET_CONFIGURATION events (re-enumerations)</td></tr>
+              <tr><td>17</td><td><code>link_rx_drops</code></td><td><code>u32</code></td><td>host-chip input frames the device chip couldn't take off the link; should stay 0</td></tr>
+              <tr><td>21</td><td><code>host_rx_drops</code></td><td><code>u32</code></td><td>the same count on the host chip, relayed over the link; should stay 0</td></tr>
+              <tr><td>25</td><td><code>relay_drops</code></td><td><code>u32</code></td><td>relayed traffic and commands that went no further, none of it native input: a vendor IN packet that found its endpoint's queue full of the control PC's <code>RAW</code> packets, or a device's zero-length packet answering a poll the PC did not make (the one poll the box runs ahead of a suspended PC); an OUT packet the box could not queue, that failed three times on the device's bus, or that a bus reset or <code>SET_INTERFACE</code> overtook; a relayed request or a flagged <code>MOVE</code> the box could not queue; and any frame other than native input that either chip's link receive ring dropped</td></tr>
+              <tr><td>29</td><td><code>session</code></td><td><code>u16</code></td><td>releases of host-set state; wraps at 0xFFFF, so compare for inequality</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">EFFECT</div>
         <p>
           <code>inject_emits</code> counts reports the box emitted from injection alone. Library binding:{' '}
@@ -529,22 +561,24 @@ const Requests: Component = () => {
           once, however many of these it clears; a release of everything counts only if a command
           other than <code>QUERY</code> or <code>RESET</code> arrived since the last count.
         </p>
-        <table class="api-params">
-          <thead><tr><th>Event</th><th>Counts</th></tr></thead>
-          <tbody>
-            <tr><td><A href="/native/commands/admin#reset"><code>RESET</code></A></td><td>once</td></tr>
-            <tr><td>the inter-chip link drops</td><td>once per outage</td></tr>
-            <tr><td>the real device detaches</td><td>once; the clone's teardown after the detach grace counts again only if a command arrived during the grace</td></tr>
-            <tr><td>another device attaches</td><td>once</td></tr>
-            <tr><td>a <code>PATCH</code> <code>APPLY</code> or <code>CLEAR</code>, or an <A href="/native/commands/option#imperfect"><code>OPTION(IMPERFECT)</code></A> toggle, that <A href="/native/commands/patch#presentation">presents</A> the clone again</td><td>once</td></tr>
-            <tr><td>an <A href="/native/commands/update">update</A> takes the clone down</td><td>once</td></tr>
-            <tr><td>control-PC <A href="/native/injection#safety">silence</A></td><td>once per silence, when it released anything</td></tr>
-            <tr><td><code>OPTION(IMPERFECT)</code> turned off</td><td>when it drops rewrite rules, consuming packet triggers or queued clip transfers; a re-clone it causes counts again</td></tr>
-            <tr><td>a configuration switch by the game PC that unbinds a role</td><td>when a host held a lock, an injected usage or owed motion on that role</td></tr>
-            <tr><td>state the box refused on arrival: a rule with the opt-in off, a patch with no device attached</td><td>not counted</td></tr>
-            <tr><td>the host's own clear: a whole-table <code>REWRITE</code> clear, a <code>CATCH</code> unsubscribe, <code>CLIP_CTRL</code> <code>CLEAR</code></td><td>not counted</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Event</th><th>Counts</th></tr></thead>
+            <tbody>
+              <tr><td><A href="/native/commands/admin#reset"><code>RESET</code></A></td><td>once</td></tr>
+              <tr><td>the inter-chip link drops</td><td>once per outage</td></tr>
+              <tr><td>the real device detaches</td><td>once; the clone's teardown after the detach grace counts again only if a command arrived during the grace</td></tr>
+              <tr><td>another device attaches</td><td>once</td></tr>
+              <tr><td>a <code>PATCH</code> <code>APPLY</code> or <code>CLEAR</code>, or an <A href="/native/commands/option#imperfect"><code>OPTION(IMPERFECT)</code></A> toggle, that <A href="/native/commands/patch#presentation">presents</A> the clone again</td><td>once</td></tr>
+              <tr><td>an <A href="/native/commands/update">update</A> takes the clone down</td><td>once</td></tr>
+              <tr><td>control-PC <A href="/native/injection#safety">silence</A></td><td>once per silence, when it released anything</td></tr>
+              <tr><td><code>OPTION(IMPERFECT)</code> turned off</td><td>when it drops rewrite rules, consuming packet triggers or queued clip transfers; a re-clone it causes counts again</td></tr>
+              <tr><td>a configuration switch by the game PC that unbinds a role</td><td>when a host held a lock, an injected usage or owed motion on that role</td></tr>
+              <tr><td>state the box refused on arrival: a rule with the opt-in off, a patch with no device attached</td><td>not counted</td></tr>
+              <tr><td>the host's own clear: a whole-table <code>REWRITE</code> clear, a <code>CATCH</code> unsubscribe, <code>CLIP_CTRL</code> <code>CLEAR</code></td><td>not counted</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">EXAMPLE</div>
         <p>4096 emits, nothing dropped on any of the three wires, <code>session</code> at 2:</p>
         <ByteStrip
@@ -581,53 +615,59 @@ const Requests: Component = () => {
         <pre class="api-signature">QUERY  what = 6  ·  RESP 2 + 6n bytes</pre>
         <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
         <div class="api-response-label">PAYLOAD</div>
-        <table class="byte-table">
-          <thead>
-            <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x06</td></tr>
-            <tr><td>1</td><td><code>n</code></td><td><code>u8</code></td><td>number of entries that follow, up to 85</td></tr>
-            <tr><td>+</td><td><code>class</code></td><td><code>u8</code></td><td>per entry: 0=button 1=key 2=media 3=axis (as <A href="/native/commands/lock"><code>LOCK</code></A>)</td></tr>
-            <tr><td>+</td><td><code>id</code></td><td><code>u16</code></td><td>weighed field id, or 0xFFFF for a whole-class blanket, little-endian</td></tr>
-            <tr><td>+</td><td><code>direction</code></td><td><code>u8</code></td><td>direction, as <A href="/native/commands/lock"><code>LOCK</code></A></td></tr>
-            <tr><td>+</td><td><code>scale</code></td><td><code>i16</code></td><td>percent of the physical value kept, little-endian, <code>-255 to 255</code> (as <A href="/native/commands/lock#scale"><code>LOCK</code></A>); <code>0</code> = blocked, above <code>100</code> amplifies, negative reverses</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="byte-table">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x06</td></tr>
+              <tr><td>1</td><td><code>n</code></td><td><code>u8</code></td><td>number of entries that follow, up to 85</td></tr>
+              <tr><td>+</td><td><code>class</code></td><td><code>u8</code></td><td>per entry: 0=button 1=key 2=media 3=axis (as <A href="/native/commands/lock"><code>LOCK</code></A>)</td></tr>
+              <tr><td>+</td><td><code>id</code></td><td><code>u16</code></td><td>weighed field id, or 0xFFFF for a whole-class blanket, little-endian</td></tr>
+              <tr><td>+</td><td><code>direction</code></td><td><code>u8</code></td><td>direction, as <A href="/native/commands/lock"><code>LOCK</code></A></td></tr>
+              <tr><td>+</td><td><code>scale</code></td><td><code>i16</code></td><td>percent of the physical value kept, little-endian, <code>-255 to 255</code> (as <A href="/native/commands/lock#scale"><code>LOCK</code></A>); <code>0</code> = blocked, above <code>100</code> amplifies, negative reverses</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">READBACK</div>
         <p>
           Entries mirror the <A href="/native/commands/lock"><code>LOCK</code></A> frame field for
           field, so a readback replays as commands.
         </p>
-        <table class="api-params">
-          <thead>
-            <tr><th>State</th><th>Reports as</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>An axis or button weighed on a direction</td><td>One entry under its own <code>class</code> and <code>id</code>, per direction.</td></tr>
-            <tr><td>A target passing on every direction</td><td>Absent.</td></tr>
-            <tr><td>A <A href="/native/commands/lock#blanket">blanket</A> button or axis lock</td><td>One entry per member, under its own <code>id</code>; never <code>0xFFFF</code>.</td></tr>
-            <tr><td>A blanket key lock</td><td>One entry per blocked edge, <code>id = 0xFFFF</code>, direction <code>1</code> and/or <code>2</code>; never <code>0</code>.</td></tr>
-            <tr><td>A media lock, blanket or specific</td><td>Direction <code>0</code>, always. Media has no edges.</td></tr>
-            <tr><td>A relative direction in <A href="/native/commands/option#bearing">vector</A> mode</td><td>The effective scale, the lower of X's and Y's, on both axes.</td></tr>
-            <tr><td>Any momentary usage</td><td><code>scale</code> of <code>0</code> or <code>100</code> only; the box stores the block or pass it renders, not the number sent, and never a negative.</td></tr>
-            <tr><td>A reversed axis</td><td>Its negative scale, sign and all. A reader that takes the field as a <code>u8</code> sees <code>156</code> where the box holds <code>-100</code>, and takes a reversal for an amplification.</td></tr>
-            <tr><td>A relative direction with no <A href="/native/commands/lock#bearing">bearing</A> live</td><td>Its stored scale, unchanged. A lapsed window, or an <A href="/native/commands/option#bearing"><code>OPTION(BEARING)</code></A> window of <code>0</code>, stops <code>with</code> and <code>against</code> weighing without clearing them, so an entry can report <code>40</code> while that axis passes untouched.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>State</th><th>Reports as</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>An axis or button weighed on a direction</td><td>One entry under its own <code>class</code> and <code>id</code>, per direction.</td></tr>
+              <tr><td>A target passing on every direction</td><td>Absent.</td></tr>
+              <tr><td>A <A href="/native/commands/lock#blanket">blanket</A> button or axis lock</td><td>One entry per member, under its own <code>id</code>; never <code>0xFFFF</code>.</td></tr>
+              <tr><td>A blanket key lock</td><td>One entry per blocked edge, <code>id = 0xFFFF</code>, direction <code>1</code> and/or <code>2</code>; never <code>0</code>.</td></tr>
+              <tr><td>A media lock, blanket or specific</td><td>Direction <code>0</code>, always. Media has no edges.</td></tr>
+              <tr><td>A relative direction in <A href="/native/commands/option#bearing">vector</A> mode</td><td>The effective scale, the lower of X's and Y's, on both axes.</td></tr>
+              <tr><td>Any momentary usage</td><td><code>scale</code> of <code>0</code> or <code>100</code> only; the box stores the block or pass it renders, not the number sent, and never a negative.</td></tr>
+              <tr><td>A reversed axis</td><td>Its negative scale, sign and all. A reader that takes the field as a <code>u8</code> sees <code>156</code> where the box holds <code>-100</code>, and takes a reversal for an amplification.</td></tr>
+              <tr><td>A relative direction with no <A href="/native/commands/lock#bearing">bearing</A> live</td><td>Its stored scale, unchanged. A lapsed window, or an <A href="/native/commands/option#bearing"><code>OPTION(BEARING)</code></A> window of <code>0</code>, stops <code>with</code> and <code>against</code> weighing without clearing them, so an entry can report <code>40</code> while that axis passes untouched.</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">BUDGET</div>
-        <table class="api-params">
-          <thead>
-            <tr><th>Order</th><th>Source</th><th>Max entries</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>1</td><td>Mouse axes and buttons</td><td>48: 4 axes x 4 directions, plus 16 buttons x 2 edges. A button has no relative pair, so its other two slots are out of reach.</td></tr>
-            <tr><td>2</td><td>The blanket key lock</td><td>2, one per blocked edge</td></tr>
-            <tr><td>3</td><td>The blanket media lock</td><td>1</td></tr>
-            <tr><td>4</td><td>Specific media usages</td><td>8, the whole media-lock table</td></tr>
-            <tr><td>5</td><td>Specific keys</td><td>the rest of the 85, so at least 26, one per blocked edge</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Order</th><th>Source</th><th>Max entries</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>1</td><td>Mouse axes and buttons</td><td>48: 4 axes x 4 directions, plus 16 buttons x 2 edges. A button has no relative pair, so its other two slots are out of reach.</td></tr>
+              <tr><td>2</td><td>The blanket key lock</td><td>2, one per blocked edge</td></tr>
+              <tr><td>3</td><td>The blanket media lock</td><td>1</td></tr>
+              <tr><td>4</td><td>Specific media usages</td><td>8, the whole media-lock table</td></tr>
+              <tr><td>5</td><td>Specific keys</td><td>the rest of the 85, so at least 26, one per blocked edge</td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           The frame is the cap: <code>2 + 85 x 6</code> is exactly the 512-byte payload. Rows 1 to 4
           are capped by the box's tables at 59 combined, so they always fit. Keyboard usages are the
@@ -675,26 +715,28 @@ const Requests: Component = () => {
         <pre class="api-signature">QUERY  what = 7  ·  RESP 19 + 7n bytes</pre>
         <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
         <div class="api-response-label">PAYLOAD</div>
-        <table class="byte-table">
-          <thead>
-            <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x07</td></tr>
-            <tr><td>1</td><td><code>flags</code></td><td><code>u8</code></td><td>b0 = the table is full and an entry was refused</td></tr>
-            <tr><td>2</td><td><code>dropped</code></td><td><code>u32</code></td><td>box-wide events that could not be queued, little-endian</td></tr>
-            <tr><td>6</td><td><code>clk_offset_us</code></td><td><code>i32</code></td><td>the host chip's clock minus the device chip's, measured (below), little-endian</td></tr>
-            <tr><td>10</td><td><code>clk_rate_ppb</code></td><td><code>i32</code></td><td>relative drift between the two chips in parts per billion; <code>INT32_MIN</code> = no fit made, little-endian</td></tr>
-            <tr><td>14</td><td><code>clk_delay_us</code></td><td><code>u16</code></td><td>best measured round trip; the offset's error bound is half this, little-endian</td></tr>
-            <tr><td>16</td><td><code>clk_age_ms</code></td><td><code>u16</code></td><td>age of the exchange the offset rests on; <code>0xFFFF</code> = no estimate, little-endian</td></tr>
-            <tr><td>18</td><td><code>n</code></td><td><code>u8</code></td><td>number of entries following</td></tr>
-            <tr><td>+</td><td><code>class</code></td><td><code>u8</code></td><td>per entry: the <A href="/native/commands/catch#catch">address class</A></td></tr>
-            <tr><td>+</td><td><code>id</code></td><td><code>u16</code></td><td>entry id, or <code>0xFFFF</code> for a class blanket, little-endian</td></tr>
-            <tr><td>+</td><td><code>dir</code></td><td><code>u8</code></td><td>entry direction</td></tr>
-            <tr><td>+</td><td><code>snaplen</code></td><td><code>u8</code></td><td>bytes captured per event, <code>0</code> = whole packet</td></tr>
-            <tr><td>+</td><td><code>dropped</code></td><td><code>u16</code></td><td>events <em>this entry</em> could not queue, little-endian</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="byte-table">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x07</td></tr>
+              <tr><td>1</td><td><code>flags</code></td><td><code>u8</code></td><td>b0 = the table is full and an entry was refused</td></tr>
+              <tr><td>2</td><td><code>dropped</code></td><td><code>u32</code></td><td>box-wide events that could not be queued, little-endian</td></tr>
+              <tr><td>6</td><td><code>clk_offset_us</code></td><td><code>i32</code></td><td>the host chip's clock minus the device chip's, measured (below), little-endian</td></tr>
+              <tr><td>10</td><td><code>clk_rate_ppb</code></td><td><code>i32</code></td><td>relative drift between the two chips in parts per billion; <code>INT32_MIN</code> = no fit made, little-endian</td></tr>
+              <tr><td>14</td><td><code>clk_delay_us</code></td><td><code>u16</code></td><td>best measured round trip; the offset's error bound is half this, little-endian</td></tr>
+              <tr><td>16</td><td><code>clk_age_ms</code></td><td><code>u16</code></td><td>age of the exchange the offset rests on; <code>0xFFFF</code> = no estimate, little-endian</td></tr>
+              <tr><td>18</td><td><code>n</code></td><td><code>u8</code></td><td>number of entries following</td></tr>
+              <tr><td>+</td><td><code>class</code></td><td><code>u8</code></td><td>per entry: the <A href="/native/commands/catch#catch">address class</A></td></tr>
+              <tr><td>+</td><td><code>id</code></td><td><code>u16</code></td><td>entry id, or <code>0xFFFF</code> for a class blanket, little-endian</td></tr>
+              <tr><td>+</td><td><code>dir</code></td><td><code>u8</code></td><td>entry direction</td></tr>
+              <tr><td>+</td><td><code>snaplen</code></td><td><code>u8</code></td><td>bytes captured per event, <code>0</code> = whole packet</td></tr>
+              <tr><td>+</td><td><code>dropped</code></td><td><code>u16</code></td><td>events <em>this entry</em> could not queue, little-endian</td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           The box-wide <code>dropped</code> counts every lost event; the per-entry one attributes them to a
           subscription.
@@ -723,16 +765,18 @@ const Requests: Component = () => {
 
       offset = ((t2 - t1) + (t3 - t4)) / 2
       delay  =  (t4 - t1) - (t3 - t2)     ->  the error bound is delay / 2`}</pre>
-        <table class="api-params">
-          <thead>
-            <tr><th>Field</th><th>Use</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><code>clk_delay_us</code></td><td>Round trip of the best exchange in the window; the offset is accurate to about half of it, a hard bound.</td></tr>
-            <tr><td><code>clk_rate_ppb</code></td><td>Extrapolates between exchanges, since two independent crystals drift a stale offset by up to 20&nbsp;µs per second. <code>INT32_MIN</code> means no fit yet, distinct from a fitted <code>0</code> (matched crystals).</td></tr>
-            <tr><td><code>clk_age_ms</code></td><td>Age of the exchange the offset <em>rests on</em>: the least-delayed one in the window, often older than the newest. <code>0xFFFF</code> marks "no estimate yet", which an offset of 0 alone can't tell from a true zero.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Field</th><th>Use</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>clk_delay_us</code></td><td>Round trip of the best exchange in the window; the offset is accurate to about half of it, a hard bound.</td></tr>
+              <tr><td><code>clk_rate_ppb</code></td><td>Extrapolates between exchanges, since two independent crystals drift a stale offset by up to 20&nbsp;µs per second. <code>INT32_MIN</code> means no fit yet, distinct from a fitted <code>0</code> (matched crystals).</td></tr>
+              <tr><td><code>clk_age_ms</code></td><td>Age of the exchange the offset <em>rests on</em>: the least-delayed one in the window, often older than the newest. <code>0xFFFF</code> marks "no estimate yet", which an offset of 0 alone can't tell from a true zero.</td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           Applying the offset is optional; the <code>clk</code> byte on each event stays
           authoritative.
@@ -778,32 +822,36 @@ const Requests: Component = () => {
         <pre class="api-signature">QUERY  what = 9, id  ·  RESP varies</pre>
         <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
         <div class="api-response-label">PAYLOAD</div>
-        <table class="byte-table">
-          <thead>
-            <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x09</td></tr>
-            <tr><td>1</td><td><code>id</code></td><td><code>u8</code></td><td>option id</td></tr>
-            <tr><td>2..</td><td><code>value</code></td><td><code>varies</code></td><td>id-specific, mirroring the matching <A href="/native/commands/option"><code>OPTION</code></A> value</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="byte-table">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x09</td></tr>
+              <tr><td>1</td><td><code>id</code></td><td><code>u8</code></td><td>option id</td></tr>
+              <tr><td>2..</td><td><code>value</code></td><td><code>varies</code></td><td>id-specific, mirroring the matching <A href="/native/commands/option"><code>OPTION</code></A> value</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">IMPERFECT VALUE</div>
         <p>
           The <A href="/native/commands/option#imperfect"><code>IMPERFECT</code></A> opt-in (id 0) plus
           two derived clone-status bytes. Each is <code>0</code> or <code>1</code>; a faithful clone
           reads all-zero.
         </p>
-        <table class="api-params">
-          <thead>
-            <tr><th>Offset</th><th>Field</th><th>Notes</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>2</td><td><code>allowed</code></td><td>the opt-in toggle; <code>1</code> = opted in</td></tr>
-            <tr><td>3</td><td><code>over_capacity</code></td><td>the attached device has more IN endpoints live at once than the box has transmit FIFOs (four), or more than six HID interfaces, or runs at high speed</td></tr>
-            <tr><td>4</td><td><code>clone_imperfect</code></td><td>the live clone is not an exact copy: an opted-in device the box can't clone exactly, a forced rate, or a descriptor-patch set it serves</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>2</td><td><code>allowed</code></td><td>the opt-in toggle; <code>1</code> = opted in</td></tr>
+              <tr><td>3</td><td><code>over_capacity</code></td><td>the attached device has more IN endpoints live at once than the box has transmit FIFOs (four), or more than six HID interfaces, or runs at high speed</td></tr>
+              <tr><td>4</td><td><code>clone_imperfect</code></td><td>the live clone is not an exact copy: an opted-in device the box can't clone exactly, a forced rate, or a descriptor-patch set it serves</td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           It shows why a clone is missing (<code>over_capacity = 1</code>,{' '}
           <code>allowed = 0</code>) or confirms an imperfect clone is live
@@ -814,14 +862,16 @@ const Requests: Component = () => {
         <p>
           The current <A href="/native/commands/option#move-ride"><code>MOVE_RIDE</code></A> window (id 1).
         </p>
-        <table class="api-params">
-          <thead>
-            <tr><th>Offset</th><th>Field</th><th>Notes</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>2</td><td><code>timeout</code></td><td><code>u16</code>, little-endian; the ride window in ms, <code>0</code> = off</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>2</td><td><code>timeout</code></td><td><code>u16</code>, little-endian; the ride window in ms, <code>0</code> = off</td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           Library binding:{' '}
           <A href="/library/options#query-movement-riding"><code>query_movement_riding</code></A>.
@@ -831,19 +881,21 @@ const Requests: Component = () => {
           The current <A href="/native/commands/option#emit"><code>EMIT</code></A> pace and wire rate
           (id 2).
         </p>
-        <table class="api-params">
-          <thead>
-            <tr><th>Offset</th><th>Field</th><th>Notes</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>2</td><td><code>mode</code></td><td>the pace: <code>0</code> learnt, <code>1</code> interval, <code>2</code> fixed</td></tr>
-            <tr><td>3</td><td><code>fixed_hz</code></td><td><code>u16</code>, little-endian; the configured fixed rate</td></tr>
-            <tr><td>5</td><td><code>resolved_hz</code></td><td><code>u16</code>, little-endian; the ceiling in effect, <code>0</code> = learnt/adaptive or no device yet, <code>1000</code> once the renderer has a profile</td></tr>
-            <tr><td>7</td><td><code>force_hz</code></td><td><code>u16</code>, little-endian; the requested wire rate, <code>0</code> = off</td></tr>
-            <tr><td>9</td><td><code>advertised_hz</code></td><td><code>u16</code>, little-endian; what the clone's input endpoints advertise now, forced or native, <code>0</code> = no clone</td></tr>
-            <tr><td>11</td><td><code>force_active</code></td><td><code>1</code> when a forced interval is in the served descriptor</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>2</td><td><code>mode</code></td><td>the pace: <code>0</code> learnt, <code>1</code> interval, <code>2</code> fixed</td></tr>
+              <tr><td>3</td><td><code>fixed_hz</code></td><td><code>u16</code>, little-endian; the configured fixed rate</td></tr>
+              <tr><td>5</td><td><code>resolved_hz</code></td><td><code>u16</code>, little-endian; the ceiling in effect, <code>0</code> = learnt/adaptive or no device yet, <code>1000</code> once the renderer has a profile</td></tr>
+              <tr><td>7</td><td><code>force_hz</code></td><td><code>u16</code>, little-endian; the requested wire rate, <code>0</code> = off</td></tr>
+              <tr><td>9</td><td><code>advertised_hz</code></td><td><code>u16</code>, little-endian; what the clone's input endpoints advertise now, forced or native, <code>0</code> = no clone</td></tr>
+              <tr><td>11</td><td><code>force_active</code></td><td><code>1</code> when a forced interval is in the served descriptor</td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           A <code>force_hz</code> set while{' '}
           <A href="/native/commands/option#imperfect"><code>IMPERFECT</code></A> is off reads back with{' '}
@@ -858,15 +910,17 @@ const Requests: Component = () => {
           The current <A href="/native/commands/option#bearing"><code>BEARING</code></A> setting
           (id 4): window and geometry mode.
         </p>
-        <table class="api-params">
-          <thead>
-            <tr><th>Offset</th><th>Field</th><th>Notes</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>2</td><td><code>window</code></td><td><code>u16</code>, little-endian; the bearing window in ms, <code>0</code> = off</td></tr>
-            <tr><td>4</td><td><code>mode</code></td><td><code>0</code> per axis, <code>1</code> vector</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>2</td><td><code>window</code></td><td><code>u16</code>, little-endian; the bearing window in ms, <code>0</code> = off</td></tr>
+              <tr><td>4</td><td><code>mode</code></td><td><code>0</code> per axis, <code>1</code> vector</td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           Library binding:{' '}
           <A href="/library/options#query-bearing"><code>query_bearing</code></A>.
@@ -876,16 +930,18 @@ const Requests: Component = () => {
           The current <A href="/native/commands/option#render"><code>RENDER</code></A> setting (id 5),
           and whether a render profile has been learned.
         </p>
-        <table class="api-params">
-          <thead>
-            <tr><th>Offset</th><th>Field</th><th>Notes</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>2</td><td><code>mode</code></td><td>the texture: <code>0</code> off, <code>1</code> stock, <code>2</code> de-spiked <em>(default)</em>, <code>3</code> unsmoothed</td></tr>
-            <tr><td>3</td><td><code>full</code></td><td><code>1</code> when native motion is rendered by the model rather than relayed</td></tr>
-            <tr><td>4</td><td><code>ready</code></td><td><code>1</code> once a profile has armed for the attached device</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>2</td><td><code>mode</code></td><td>the texture: <code>0</code> off, <code>1</code> stock, <code>2</code> de-spiked <em>(default)</em>, <code>3</code> unsmoothed</td></tr>
+              <tr><td>3</td><td><code>full</code></td><td><code>1</code> when native motion is rendered by the model rather than relayed</td></tr>
+              <tr><td>4</td><td><code>ready</code></td><td><code>1</code> once a profile has armed for the attached device</td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           Nothing is rendered while <code>ready</code> reads <code>0</code>, which also covers a box
           whose two chips have not yet agreed which holds the motion: motion is relayed and
@@ -900,15 +956,17 @@ const Requests: Component = () => {
           The current <A href="/native/commands/option#spread"><code>SPREAD</code></A> setting (id 6),
           and the interval injected deltas are released across.
         </p>
-        <table class="api-params">
-          <thead>
-            <tr><th>Offset</th><th>Field</th><th>Notes</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>2</td><td><code>percent</code></td><td><code>u16</code>, little-endian; share of the command interval, <code>100</code> = one whole interval <em>(default)</em></td></tr>
-            <tr><td>4</td><td><code>span_us</code></td><td><code>u32</code>, little-endian; the interval in effect in microseconds, <code>0</code> = nothing is being spread</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>2</td><td><code>percent</code></td><td><code>u16</code>, little-endian; share of the command interval, <code>100</code> = one whole interval <em>(default)</em></td></tr>
+              <tr><td>4</td><td><code>span_us</code></td><td><code>u32</code>, little-endian; the interval in effect in microseconds, <code>0</code> = nothing is being spread</td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           <code>span_us</code> reads <code>0</code> while <code>percent</code> is <code>0</code>,
           while no command period has been learned, and while the box's two chips have not yet
@@ -948,58 +1006,62 @@ const Requests: Component = () => {
         <pre class="api-signature">QUERY  what = 10  ·  RESP 31-byte prefix + held usages + config</pre>
         <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
         <div class="api-response-label">PAYLOAD</div>
-        <table class="byte-table">
-          <thead>
-            <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>10</td></tr>
-            <tr><td>1</td><td><code>state</code></td><td><code>u8</code></td><td>0 idle / 1 playing / 2 paused / 3 faulted (recover with <code>CLEAR</code>)</td></tr>
-            <tr><td>2</td><td><code>free</code></td><td><code>u32</code></td><td>ring bytes free; pace <A href="/native/commands/clip#append"><code>CLIP_APPEND</code></A> top-ups off this, little-endian</td></tr>
-            <tr><td>6</td><td><code>total</code></td><td><code>u32</code></td><td>retained clip size in bytes (streaming: buffered-but-undrained bytes)</td></tr>
-            <tr><td>10</td><td><code>played</code></td><td><code>u32</code></td><td>bytes played from the clip start (retained progress; ~0 while streaming)</td></tr>
-            <tr><td>14</td><td><code>ticks</code></td><td><code>u32</code></td><td>content ticks played (diagnostic)</td></tr>
-            <tr><td>18</td><td><code>underruns</code></td><td><code>u16</code></td><td>empty-ring episodes</td></tr>
-            <tr><td>20</td><td><code>overruns</code></td><td><code>u16</code></td><td>appends dropped whole because the ring was full</td></tr>
-            <tr><td>22</td><td><code>seq_gaps</code></td><td><code>u16</code></td><td>dropped <code>CLIP_APPEND</code> frames detected (SEQ gaps)</td></tr>
-            <tr><td>24</td><td><code>xfers</code></td><td><code>u16</code></td><td>clip transfers the device completed with status 0</td></tr>
-            <tr><td>26</td><td><code>xfer_errs</code></td><td><code>u16</code></td><td>clip transfers that completed with another status, got no answer, found no room in the queue, or were dropped behind a slow <code>0xFE</code></td></tr>
-            <tr><td>28</td><td><code>gated</code></td><td><code>u16</code></td><td>raw reports and transfers discarded because <A href="/native/commands/option#imperfect"><code>OPTION(IMPERFECT)</code></A> was off</td></tr>
-            <tr><td>30</td><td><code>held_n</code></td><td><code>u8</code></td><td>number of held usages that follow</td></tr>
-            <tr><td>+</td><td><code>class</code></td><td><code>u8</code></td><td>per held usage: 0=button 1=key 2=media</td></tr>
-            <tr><td>+</td><td><code>id</code></td><td><code>u16</code></td><td>held usage id (button id, HID keycode, or Consumer usage), little-endian</td></tr>
-            <tr><td>+</td><td><code>autolock</code></td><td><code>u8</code></td><td>config: the <A href="/native/commands/clip#set"><code>CLIP_SET</code></A> autolock bitmask (<code>CLIP_LOCK_*</code>)</td></tr>
-            <tr><td>+</td><td><code>flags</code></td><td><code>u8</code></td><td>config: b0 loop, b1 retain, b2 finalized, b3 ride</td></tr>
-            <tr><td>+</td><td><code>n_trig</code></td><td><code>u8</code></td><td>config: number of bound <A href="/native/commands/clip#trigger">triggers</A> that follow</td></tr>
-            <tr><td>+</td><td><code>class</code></td><td><code>u8</code></td><td>per trigger: 0=button 1=key 2=media 0xFF=any</td></tr>
-            <tr><td>+</td><td><code>id</code></td><td><code>u16</code></td><td>per trigger: the usage id, 0xFFFF=any, little-endian</td></tr>
-            <tr><td>+</td><td><code>edge</code></td><td><code>u8</code></td><td>per trigger: 0 both / 1 press / 2 release</td></tr>
-            <tr><td>+</td><td><code>action</code></td><td><code>u8</code></td><td>per trigger: the <A href="/native/commands/clip#ctrl"><code>CLIP_CTRL</code></A> op 0..5 (start/stop/pause/resume/restart/toggle)</td></tr>
-            <tr><td>+</td><td><code>consume</code></td><td><code>u8</code></td><td>per trigger: 1 = lock the trigger usage while it stays active</td></tr>
-            <tr><td>+</td><td><code>n_pkt</code></td><td><code>u8</code></td><td>config: number of <A href="/native/commands/clip#packet-triggers">packet triggers</A> that follow</td></tr>
-            <tr><td>+</td><td><code>class</code></td><td><code>u8</code></td><td>per packet trigger: the traffic class, 4 to 9</td></tr>
-            <tr><td>+</td><td><code>id</code></td><td><code>u16</code></td><td>per packet trigger: the class's address, 0xFFFF=any, little-endian</td></tr>
-            <tr><td>+</td><td><code>dir</code></td><td><code>u8</code></td><td>per packet trigger: 0 both / 1 IN / 2 OUT</td></tr>
-            <tr><td>+</td><td><code>action</code></td><td><code>u8</code></td><td>per packet trigger: the <code>CLIP_CTRL</code> op 0..5</td></tr>
-            <tr><td>+</td><td><code>flags</code></td><td><code>u8</code></td><td>per packet trigger: b0 clear, b1 consume, b2 <code>RUN</code></td></tr>
-            <tr><td>+</td><td><code>slen</code></td><td><code>u8</code></td><td>per packet trigger: the selector length</td></tr>
-            <tr><td>+</td><td><code>mlen</code></td><td><code>u8</code></td><td>per packet trigger: the match length, 0 to 16</td></tr>
-            <tr><td>+</td><td><code>hits</code></td><td><code>u16</code></td><td>per packet trigger: packets it matched as the top-ranked trigger, saturating, little-endian</td></tr>
-            <tr><td>+</td><td><code>match</code>, <code>mask</code></td><td><code>u8[mlen]</code> each</td><td>per packet trigger: as set</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="byte-table">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>10</td></tr>
+              <tr><td>1</td><td><code>state</code></td><td><code>u8</code></td><td>0 idle / 1 playing / 2 paused / 3 faulted (recover with <code>CLEAR</code>)</td></tr>
+              <tr><td>2</td><td><code>free</code></td><td><code>u32</code></td><td>ring bytes free; pace <A href="/native/commands/clip#append"><code>CLIP_APPEND</code></A> top-ups off this, little-endian</td></tr>
+              <tr><td>6</td><td><code>total</code></td><td><code>u32</code></td><td>retained clip size in bytes (streaming: buffered-but-undrained bytes)</td></tr>
+              <tr><td>10</td><td><code>played</code></td><td><code>u32</code></td><td>bytes played from the clip start (retained progress; ~0 while streaming)</td></tr>
+              <tr><td>14</td><td><code>ticks</code></td><td><code>u32</code></td><td>content ticks played (diagnostic)</td></tr>
+              <tr><td>18</td><td><code>underruns</code></td><td><code>u16</code></td><td>empty-ring episodes</td></tr>
+              <tr><td>20</td><td><code>overruns</code></td><td><code>u16</code></td><td>appends dropped whole because the ring was full</td></tr>
+              <tr><td>22</td><td><code>seq_gaps</code></td><td><code>u16</code></td><td>dropped <code>CLIP_APPEND</code> frames detected (SEQ gaps)</td></tr>
+              <tr><td>24</td><td><code>xfers</code></td><td><code>u16</code></td><td>clip transfers the device completed with status 0</td></tr>
+              <tr><td>26</td><td><code>xfer_errs</code></td><td><code>u16</code></td><td>clip transfers that completed with another status, got no answer, found no room in the queue, or were dropped behind a slow <code>0xFE</code></td></tr>
+              <tr><td>28</td><td><code>gated</code></td><td><code>u16</code></td><td>raw reports and transfers discarded because <A href="/native/commands/option#imperfect"><code>OPTION(IMPERFECT)</code></A> was off</td></tr>
+              <tr><td>30</td><td><code>held_n</code></td><td><code>u8</code></td><td>number of held usages that follow</td></tr>
+              <tr><td>+</td><td><code>class</code></td><td><code>u8</code></td><td>per held usage: 0=button 1=key 2=media</td></tr>
+              <tr><td>+</td><td><code>id</code></td><td><code>u16</code></td><td>held usage id (button id, HID keycode, or Consumer usage), little-endian</td></tr>
+              <tr><td>+</td><td><code>autolock</code></td><td><code>u8</code></td><td>config: the <A href="/native/commands/clip#set"><code>CLIP_SET</code></A> autolock bitmask (<code>CLIP_LOCK_*</code>)</td></tr>
+              <tr><td>+</td><td><code>flags</code></td><td><code>u8</code></td><td>config: b0 loop, b1 retain, b2 finalized, b3 ride</td></tr>
+              <tr><td>+</td><td><code>n_trig</code></td><td><code>u8</code></td><td>config: number of bound <A href="/native/commands/clip#trigger">triggers</A> that follow</td></tr>
+              <tr><td>+</td><td><code>class</code></td><td><code>u8</code></td><td>per trigger: 0=button 1=key 2=media 0xFF=any</td></tr>
+              <tr><td>+</td><td><code>id</code></td><td><code>u16</code></td><td>per trigger: the usage id, 0xFFFF=any, little-endian</td></tr>
+              <tr><td>+</td><td><code>edge</code></td><td><code>u8</code></td><td>per trigger: 0 both / 1 press / 2 release</td></tr>
+              <tr><td>+</td><td><code>action</code></td><td><code>u8</code></td><td>per trigger: the <A href="/native/commands/clip#ctrl"><code>CLIP_CTRL</code></A> op 0..5 (start/stop/pause/resume/restart/toggle)</td></tr>
+              <tr><td>+</td><td><code>consume</code></td><td><code>u8</code></td><td>per trigger: 1 = lock the trigger usage while it stays active</td></tr>
+              <tr><td>+</td><td><code>n_pkt</code></td><td><code>u8</code></td><td>config: number of <A href="/native/commands/clip#packet-triggers">packet triggers</A> that follow</td></tr>
+              <tr><td>+</td><td><code>class</code></td><td><code>u8</code></td><td>per packet trigger: the traffic class, 4 to 9</td></tr>
+              <tr><td>+</td><td><code>id</code></td><td><code>u16</code></td><td>per packet trigger: the class's address, 0xFFFF=any, little-endian</td></tr>
+              <tr><td>+</td><td><code>dir</code></td><td><code>u8</code></td><td>per packet trigger: 0 both / 1 IN / 2 OUT</td></tr>
+              <tr><td>+</td><td><code>action</code></td><td><code>u8</code></td><td>per packet trigger: the <code>CLIP_CTRL</code> op 0..5</td></tr>
+              <tr><td>+</td><td><code>flags</code></td><td><code>u8</code></td><td>per packet trigger: b0 clear, b1 consume, b2 <code>RUN</code></td></tr>
+              <tr><td>+</td><td><code>slen</code></td><td><code>u8</code></td><td>per packet trigger: the selector length</td></tr>
+              <tr><td>+</td><td><code>mlen</code></td><td><code>u8</code></td><td>per packet trigger: the match length, 0 to 16</td></tr>
+              <tr><td>+</td><td><code>hits</code></td><td><code>u16</code></td><td>per packet trigger: packets it matched as the top-ranked trigger, saturating, little-endian</td></tr>
+              <tr><td>+</td><td><code>match</code>, <code>mask</code></td><td><code>u8[mlen]</code> each</td><td>per packet trigger: as set</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">FLAGS</div>
-        <table class="api-params">
-          <thead>
-            <tr><th>Bit</th><th>Mask</th><th>Set when</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>b0</td><td><code>0x01</code></td><td><code>LOOP</code>: playback restarts from the top on drain instead of stopping</td></tr>
-            <tr><td>b1</td><td><code>0x02</code></td><td><code>RETAIN</code>: the buffered content survives a stop instead of clearing</td></tr>
-            <tr><td>b2</td><td><code>0x04</code></td><td><code>FINALIZED</code>: the clip is sealed, no more <A href="/native/commands/clip#append"><code>CLIP_APPEND</code></A> accepted</td></tr>
-            <tr><td>b3</td><td><code>0x08</code></td><td><code>RIDE</code>: the clip's motion waits to ride a native report instead of emitting on the box's own clock</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Bit</th><th>Mask</th><th>Set when</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>b0</td><td><code>0x01</code></td><td><code>LOOP</code>: playback restarts from the top on drain instead of stopping</td></tr>
+              <tr><td>b1</td><td><code>0x02</code></td><td><code>RETAIN</code>: the buffered content survives a stop instead of clearing</td></tr>
+              <tr><td>b2</td><td><code>0x04</code></td><td><code>FINALIZED</code>: the clip is sealed, no more <A href="/native/commands/clip#append"><code>CLIP_APPEND</code></A> accepted</td></tr>
+              <tr><td>b3</td><td><code>0x08</code></td><td><code>RIDE</code>: the clip's motion waits to ride a native report instead of emitting on the box's own clock</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">EFFECT</div>
         <p>
           The held snapshot lists the usages the clip is currently forcing down, one class-tagged
@@ -1075,41 +1137,45 @@ const Requests: Component = () => {
         <pre class="api-signature">QUERY  what = 11  ·  RESP 17 bytes</pre>
         <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
         <div class="api-response-label">PAYLOAD</div>
-        <table class="byte-table">
-          <thead>
-            <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td><code>11</code></td></tr>
-            <tr><td>1</td><td><code>dev_major</code></td><td><code>u8</code></td><td></td></tr>
-            <tr><td>2</td><td><code>dev_minor</code></td><td><code>u8</code></td><td></td></tr>
-            <tr><td>3</td><td><code>dev_patch</code></td><td><code>u8</code></td><td></td></tr>
-            <tr><td>4</td><td><code>dev_slot</code></td><td><code>u8</code></td><td>0 = <code>ota_0</code>, 1 = <code>ota_1</code></td></tr>
-            <tr><td>5</td><td><code>dev_state</code></td><td><code>u8</code></td><td>image state, below</td></tr>
-            <tr><td>6</td><td><code>host_present</code></td><td><code>u8</code></td><td>1 when the host chip has replied over the link</td></tr>
-            <tr><td>7</td><td><code>host_major</code></td><td><code>u8</code></td><td>0 when <code>host_present</code> is 0</td></tr>
-            <tr><td>8</td><td><code>host_minor</code></td><td><code>u8</code></td><td></td></tr>
-            <tr><td>9</td><td><code>host_patch</code></td><td><code>u8</code></td><td></td></tr>
-            <tr><td>10</td><td><code>host_slot</code></td><td><code>u8</code></td><td><code>0xFF</code> when <code>host_present</code> is 0</td></tr>
-            <tr><td>11</td><td><code>host_state</code></td><td><code>u8</code></td><td></td></tr>
-            <tr><td>12</td><td><code>slot_size</code></td><td><code>u32</code></td><td>usable bytes in a spare slot, little-endian; the same on both chips</td></tr>
-            <tr><td>16</td><td><code>staged</code></td><td><code>u8</code></td><td>bit 0 device staged, bit 1 host staged</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="byte-table">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td><code>11</code></td></tr>
+              <tr><td>1</td><td><code>dev_major</code></td><td><code>u8</code></td><td></td></tr>
+              <tr><td>2</td><td><code>dev_minor</code></td><td><code>u8</code></td><td></td></tr>
+              <tr><td>3</td><td><code>dev_patch</code></td><td><code>u8</code></td><td></td></tr>
+              <tr><td>4</td><td><code>dev_slot</code></td><td><code>u8</code></td><td>0 = <code>ota_0</code>, 1 = <code>ota_1</code></td></tr>
+              <tr><td>5</td><td><code>dev_state</code></td><td><code>u8</code></td><td>image state, below</td></tr>
+              <tr><td>6</td><td><code>host_present</code></td><td><code>u8</code></td><td>1 when the host chip has replied over the link</td></tr>
+              <tr><td>7</td><td><code>host_major</code></td><td><code>u8</code></td><td>0 when <code>host_present</code> is 0</td></tr>
+              <tr><td>8</td><td><code>host_minor</code></td><td><code>u8</code></td><td></td></tr>
+              <tr><td>9</td><td><code>host_patch</code></td><td><code>u8</code></td><td></td></tr>
+              <tr><td>10</td><td><code>host_slot</code></td><td><code>u8</code></td><td><code>0xFF</code> when <code>host_present</code> is 0</td></tr>
+              <tr><td>11</td><td><code>host_state</code></td><td><code>u8</code></td><td></td></tr>
+              <tr><td>12</td><td><code>slot_size</code></td><td><code>u32</code></td><td>usable bytes in a spare slot, little-endian; the same on both chips</td></tr>
+              <tr><td>16</td><td><code>staged</code></td><td><code>u8</code></td><td>bit 0 device staged, bit 1 host staged</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">STATE</div>
-        <table class="api-params">
-          <thead>
-            <tr><th>Value</th><th>State</th><th>Means</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><code>0</code></td><td>new</td><td>selected but not yet booted</td></tr>
-            <tr><td><code>1</code></td><td>pending-verify</td><td>booted, on probation: the rollback window</td></tr>
-            <tr><td><code>2</code></td><td>valid</td><td>confirmed by the image itself</td></tr>
-            <tr><td><code>3</code></td><td>invalid</td><td>the image asked to be rolled back</td></tr>
-            <tr><td><code>4</code></td><td>aborted</td><td>booted once and never confirmed</td></tr>
-            <tr><td><code>0xFF</code></td><td>unknown</td><td>no entry for this slot</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Value</th><th>State</th><th>Means</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>0</code></td><td>new</td><td>selected but not yet booted</td></tr>
+              <tr><td><code>1</code></td><td>pending-verify</td><td>booted, on probation: the rollback window</td></tr>
+              <tr><td><code>2</code></td><td>valid</td><td>confirmed by the image itself</td></tr>
+              <tr><td><code>3</code></td><td>invalid</td><td>the image asked to be rolled back</td></tr>
+              <tr><td><code>4</code></td><td>aborted</td><td>booted once and never confirmed</td></tr>
+              <tr><td><code>0xFF</code></td><td>unknown</td><td>no entry for this slot</td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           Library binding:{' '}
           <A href="/library/requests#firmware-info"><code>firmware_info</code></A>.
@@ -1154,34 +1220,38 @@ const Requests: Component = () => {
         <pre class="api-signature">QUERY  what = 12  ·  RESP 4 + 12n bytes</pre>
         <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
         <div class="api-response-label">PAYLOAD</div>
-        <table class="byte-table">
-          <thead>
-            <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x0C</td></tr>
-            <tr><td>1</td><td><code>flags</code></td><td><code>u8</code></td><td>state bits below</td></tr>
-            <tr><td>2</td><td><code>gen</code></td><td><code>u8</code></td><td>moves when the table changes, not on an identical re-send; see <A href="/native/commands/rewrite#lifecycle">lifecycle</A></td></tr>
-            <tr><td>3</td><td><code>n</code></td><td><code>u8</code></td><td>number of rules that follow, up to 32</td></tr>
-            <tr><td>+</td><td><code>cls</code></td><td><code>u8</code></td><td>per rule: the surface, as <A href="/native/commands/rewrite#rewrite"><code>REWRITE</code></A></td></tr>
-            <tr><td>+</td><td><code>id</code></td><td><code>u16</code></td><td>class address, little-endian</td></tr>
-            <tr><td>+</td><td><code>dir</code></td><td><code>u8</code></td><td><code>0</code> both, <code>1</code> IN, <code>2</code> OUT</td></tr>
-            <tr><td>+</td><td><code>action</code></td><td><code>u8</code></td><td>the <A href="/native/commands/rewrite#actions">action</A>, 0-8</td></tr>
-            <tr><td>+</td><td><code>mlen</code></td><td><code>u8</code></td><td>match length; here before <code>off</code>, the reverse of the command</td></tr>
-            <tr><td>+</td><td><code>off</code></td><td><code>u16</code></td><td>patch offset, little-endian</td></tr>
-            <tr><td>+</td><td><code>plen</code></td><td><code>u16</code></td><td>payload length, little-endian</td></tr>
-            <tr><td>+</td><td><code>hits</code></td><td><code>u16</code></td><td>packets this rule matched as the top-ranked rule, a <code>PASS</code> included; saturating at 65535</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="byte-table">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x0C</td></tr>
+              <tr><td>1</td><td><code>flags</code></td><td><code>u8</code></td><td>state bits below</td></tr>
+              <tr><td>2</td><td><code>gen</code></td><td><code>u8</code></td><td>moves when the table changes, not on an identical re-send; see <A href="/native/commands/rewrite#lifecycle">lifecycle</A></td></tr>
+              <tr><td>3</td><td><code>n</code></td><td><code>u8</code></td><td>number of rules that follow, up to 32</td></tr>
+              <tr><td>+</td><td><code>cls</code></td><td><code>u8</code></td><td>per rule: the surface, as <A href="/native/commands/rewrite#rewrite"><code>REWRITE</code></A></td></tr>
+              <tr><td>+</td><td><code>id</code></td><td><code>u16</code></td><td>class address, little-endian</td></tr>
+              <tr><td>+</td><td><code>dir</code></td><td><code>u8</code></td><td><code>0</code> both, <code>1</code> IN, <code>2</code> OUT</td></tr>
+              <tr><td>+</td><td><code>action</code></td><td><code>u8</code></td><td>the <A href="/native/commands/rewrite#actions">action</A>, 0-8</td></tr>
+              <tr><td>+</td><td><code>mlen</code></td><td><code>u8</code></td><td>match length; here before <code>off</code>, the reverse of the command</td></tr>
+              <tr><td>+</td><td><code>off</code></td><td><code>u16</code></td><td>patch offset, little-endian</td></tr>
+              <tr><td>+</td><td><code>plen</code></td><td><code>u16</code></td><td>payload length, little-endian</td></tr>
+              <tr><td>+</td><td><code>hits</code></td><td><code>u16</code></td><td>packets this rule matched as the top-ranked rule, a <code>PASS</code> included; saturating at 65535</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">FLAGS</div>
-        <table class="api-params">
-          <thead>
-            <tr><th>Bit</th><th>Mask</th><th>Set when</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>b0</td><td><code>0x01</code></td><td><code>FULL</code>: the last add was refused for capacity, a 33rd rule or a payload the 2048-byte pool cannot hold, an overwrite included. The next change to the table clears it: an add, an overwrite, a removal or a clear. An identical re-send is no change, so a keepalive leaves it set</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Bit</th><th>Mask</th><th>Set when</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>b0</td><td><code>0x01</code></td><td><code>FULL</code>: the last add was refused for capacity, a 33rd rule or a payload the 2048-byte pool cannot hold, an overwrite included. The next change to the table clears it: an add, an overwrite, a removal or a clear. An identical re-send is no change, so a keepalive leaves it set</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">EFFECT</div>
         <p>
           A line carries no match, mask or payload bytes; read those with{' '}
@@ -1234,25 +1304,27 @@ const Requests: Component = () => {
         <pre class="api-signature">QUERY  what = 13  ·  RESP 11 + 2 x mlen + plen bytes</pre>
         <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
         <div class="api-response-label">PAYLOAD</div>
-        <table class="byte-table">
-          <thead>
-            <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x0D</td></tr>
-            <tr><td>1</td><td><code>index</code></td><td><code>u8</code></td><td>requested index</td></tr>
-            <tr><td>2</td><td><code>cls</code></td><td><code>u8</code></td><td>from here on, the <A href="/native/commands/rewrite#rewrite"><code>REWRITE</code></A> payload</td></tr>
-            <tr><td>3</td><td><code>id</code></td><td><code>u16</code></td><td>little-endian</td></tr>
-            <tr><td>5</td><td><code>dir</code></td><td><code>u8</code></td><td><code>0</code> both, <code>1</code> IN, <code>2</code> OUT</td></tr>
-            <tr><td>6</td><td><code>state</code></td><td><code>u8</code></td><td>always <code>1</code></td></tr>
-            <tr><td>7</td><td><code>action</code></td><td><code>u8</code></td><td>0-8</td></tr>
-            <tr><td>8</td><td><code>off</code></td><td><code>u16</code></td><td>little-endian</td></tr>
-            <tr><td>10</td><td><code>mlen</code></td><td><code>u8</code></td><td>0-16</td></tr>
-            <tr><td>11</td><td><code>match</code></td><td><code>u8[]</code></td><td><code>mlen</code> bytes</td></tr>
-            <tr><td>11+mlen</td><td><code>mask</code></td><td><code>u8[]</code></td><td><code>mlen</code> bytes</td></tr>
-            <tr><td>11+2 x mlen</td><td><code>payload</code></td><td><code>u8[]</code></td><td>the rest, <code>plen</code> bytes</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="byte-table">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x0D</td></tr>
+              <tr><td>1</td><td><code>index</code></td><td><code>u8</code></td><td>requested index</td></tr>
+              <tr><td>2</td><td><code>cls</code></td><td><code>u8</code></td><td>from here on, the <A href="/native/commands/rewrite#rewrite"><code>REWRITE</code></A> payload</td></tr>
+              <tr><td>3</td><td><code>id</code></td><td><code>u16</code></td><td>little-endian</td></tr>
+              <tr><td>5</td><td><code>dir</code></td><td><code>u8</code></td><td><code>0</code> both, <code>1</code> IN, <code>2</code> OUT</td></tr>
+              <tr><td>6</td><td><code>state</code></td><td><code>u8</code></td><td>always <code>1</code></td></tr>
+              <tr><td>7</td><td><code>action</code></td><td><code>u8</code></td><td>0-8</td></tr>
+              <tr><td>8</td><td><code>off</code></td><td><code>u16</code></td><td>little-endian</td></tr>
+              <tr><td>10</td><td><code>mlen</code></td><td><code>u8</code></td><td>0-16</td></tr>
+              <tr><td>11</td><td><code>match</code></td><td><code>u8[]</code></td><td><code>mlen</code> bytes</td></tr>
+              <tr><td>11+mlen</td><td><code>mask</code></td><td><code>u8[]</code></td><td><code>mlen</code> bytes</td></tr>
+              <tr><td>11+2 x mlen</td><td><code>payload</code></td><td><code>u8[]</code></td><td>the rest, <code>plen</code> bytes</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">EFFECT</div>
         <p>
           Past the first two bytes it is a{' '}
@@ -1292,33 +1364,37 @@ const Requests: Component = () => {
         <pre class="api-signature">QUERY  what = 14  ·  RESP 3 + 7n bytes</pre>
         <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
         <div class="api-response-label">PAYLOAD</div>
-        <table class="byte-table">
-          <thead>
-            <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x0E</td></tr>
-            <tr><td>1</td><td><code>flags</code></td><td><code>u8</code></td><td>state bits below</td></tr>
-            <tr><td>2</td><td><code>n</code></td><td><code>u8</code></td><td>number of patches that follow, up to 16</td></tr>
-            <tr><td>+</td><td><code>section</code></td><td><code>u8</code></td><td>per patch, as <A href="/native/commands/patch#patch"><code>PATCH</code></A></td></tr>
-            <tr><td>+</td><td><code>cfg</code></td><td><code>u8</code></td><td>configuration index</td></tr>
-            <tr><td>+</td><td><code>index</code></td><td><code>u8</code></td><td>interface number (REPORT) or string index (STRING)</td></tr>
-            <tr><td>+</td><td><code>offset</code></td><td><code>u16</code></td><td>little-endian</td></tr>
-            <tr><td>+</td><td><code>len</code></td><td><code>u16</code></td><td>length, little-endian</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="byte-table">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x0E</td></tr>
+              <tr><td>1</td><td><code>flags</code></td><td><code>u8</code></td><td>state bits below</td></tr>
+              <tr><td>2</td><td><code>n</code></td><td><code>u8</code></td><td>number of patches that follow, up to 16</td></tr>
+              <tr><td>+</td><td><code>section</code></td><td><code>u8</code></td><td>per patch, as <A href="/native/commands/patch#patch"><code>PATCH</code></A></td></tr>
+              <tr><td>+</td><td><code>cfg</code></td><td><code>u8</code></td><td>configuration index</td></tr>
+              <tr><td>+</td><td><code>index</code></td><td><code>u8</code></td><td>interface number (REPORT) or string index (STRING)</td></tr>
+              <tr><td>+</td><td><code>offset</code></td><td><code>u16</code></td><td>little-endian</td></tr>
+              <tr><td>+</td><td><code>len</code></td><td><code>u16</code></td><td>length, little-endian</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">FLAGS</div>
-        <table class="api-params">
-          <thead>
-            <tr><th>Bit</th><th>Mask</th><th>Set when</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>b0</td><td><code>0x01</code></td><td><code>APPLIED</code>: the clone is serving a non-empty patched set</td></tr>
-            <tr><td>b1</td><td><code>0x02</code></td><td><code>PENDING</code>: the stored set differs from the one the clone serves, in its patches, their bytes or their order: not yet applied, changed or emptied since, refused, or stored with the <A href="/native/commands/patch#gate">opt-in</A> off</td></tr>
-            <tr><td>b2</td><td><code>0x04</code></td><td><code>REFUSED</code>: the stored set failed a <A href="/native/commands/patch#ladder">check</A> at the clone's last presentation and has not changed since, so the clone serves the device unpatched; the <A href="/native/commands/admin#log"><code>LOG</code></A> line names the check. A change to the set, <code>CLEAR</code>, a presentation that does not refuse it, or a detach clears it</td></tr>
-            <tr><td>b3</td><td><code>0x08</code></td><td><code>FULL</code>: the last add was refused for capacity, a 17th patch or bytes the 1024-byte pool cannot hold, an overwrite included; the next change to the set, or <code>CLEAR</code>, clears it</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Bit</th><th>Mask</th><th>Set when</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>b0</td><td><code>0x01</code></td><td><code>APPLIED</code>: the clone is serving a non-empty patched set</td></tr>
+              <tr><td>b1</td><td><code>0x02</code></td><td><code>PENDING</code>: the stored set differs from the one the clone serves, in its patches, their bytes or their order: not yet applied, changed or emptied since, refused, or stored with the <A href="/native/commands/patch#gate">opt-in</A> off</td></tr>
+              <tr><td>b2</td><td><code>0x04</code></td><td><code>REFUSED</code>: the stored set failed a <A href="/native/commands/patch#ladder">check</A> at the clone's last presentation and has not changed since, so the clone serves the device unpatched; the <A href="/native/commands/admin#log"><code>LOG</code></A> line names the check. A change to the set, <code>CLEAR</code>, a presentation that does not refuse it, or a detach clears it</td></tr>
+              <tr><td>b3</td><td><code>0x08</code></td><td><code>FULL</code>: the last add was refused for capacity, a 17th patch or bytes the 1024-byte pool cannot hold, an overwrite included; the next change to the set, or <code>CLEAR</code>, clears it</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">EFFECT</div>
         <p>
           A line carries no patch bytes; read those with{' '}
@@ -1366,20 +1442,22 @@ const Requests: Component = () => {
         <pre class="api-signature">QUERY  what = 15  ·  RESP 7 + len bytes</pre>
         <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
         <div class="api-response-label">PAYLOAD</div>
-        <table class="byte-table">
-          <thead>
-            <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x0F</td></tr>
-            <tr><td>1</td><td><code>entry</code></td><td><code>u8</code></td><td>requested entry</td></tr>
-            <tr><td>2</td><td><code>section</code></td><td><code>u8</code></td><td>from here on, the <A href="/native/commands/patch#patch"><code>PATCH</code></A> payload</td></tr>
-            <tr><td>3</td><td><code>cfg</code></td><td><code>u8</code></td><td>configuration index</td></tr>
-            <tr><td>4</td><td><code>index</code></td><td><code>u8</code></td><td>interface number (REPORT) or string index (STRING)</td></tr>
-            <tr><td>5</td><td><code>offset</code></td><td><code>u16</code></td><td>little-endian</td></tr>
-            <tr><td>7</td><td><code>bytes</code></td><td><code>u8[]</code></td><td>the rest, <code>len</code> bytes</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="byte-table">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x0F</td></tr>
+              <tr><td>1</td><td><code>entry</code></td><td><code>u8</code></td><td>requested entry</td></tr>
+              <tr><td>2</td><td><code>section</code></td><td><code>u8</code></td><td>from here on, the <A href="/native/commands/patch#patch"><code>PATCH</code></A> payload</td></tr>
+              <tr><td>3</td><td><code>cfg</code></td><td><code>u8</code></td><td>configuration index</td></tr>
+              <tr><td>4</td><td><code>index</code></td><td><code>u8</code></td><td>interface number (REPORT) or string index (STRING)</td></tr>
+              <tr><td>5</td><td><code>offset</code></td><td><code>u16</code></td><td>little-endian</td></tr>
+              <tr><td>7</td><td><code>bytes</code></td><td><code>u8[]</code></td><td>the rest, <code>len</code> bytes</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">EFFECT</div>
         <p>
           Past the first two bytes it is a{' '}
@@ -1417,47 +1495,53 @@ const Requests: Component = () => {
         <pre class="api-signature">QUERY  what = 16  ·  RESP 3 + 7n bytes</pre>
         <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
         <div class="api-response-label">PAYLOAD</div>
-        <table class="byte-table">
-          <thead>
-            <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x10</td></tr>
-            <tr><td>1</td><td><code>flags</code></td><td><code>u8</code></td><td>b0 = the table is full and an entry was refused</td></tr>
-            <tr><td>2</td><td><code>n</code></td><td><code>u8</code></td><td>number of entries that follow, up to 32</td></tr>
-            <tr><td>+</td><td><code>op</code></td><td><code>u8</code></td><td>per entry: 0 remap, 1 swap (as <A href="/native/commands/transform#transform"><code>TRANSFORM</code></A>)</td></tr>
-            <tr><td>+</td><td><code>sclass</code></td><td><code>u8</code></td><td>per entry: source class, 0=button 1=key 2=media 3=axis</td></tr>
-            <tr><td>+</td><td><code>sid</code></td><td><code>u16</code></td><td>source id within the class, little-endian</td></tr>
-            <tr><td>+</td><td><code>dclass</code></td><td><code>u8</code></td><td>destination class</td></tr>
-            <tr><td>+</td><td><code>did</code></td><td><code>u16</code></td><td>destination id, little-endian</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="byte-table">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x10</td></tr>
+              <tr><td>1</td><td><code>flags</code></td><td><code>u8</code></td><td>b0 = the table is full and an entry was refused</td></tr>
+              <tr><td>2</td><td><code>n</code></td><td><code>u8</code></td><td>number of entries that follow, up to 32</td></tr>
+              <tr><td>+</td><td><code>op</code></td><td><code>u8</code></td><td>per entry: 0 remap, 1 swap (as <A href="/native/commands/transform#transform"><code>TRANSFORM</code></A>)</td></tr>
+              <tr><td>+</td><td><code>sclass</code></td><td><code>u8</code></td><td>per entry: source class, 0=button 1=key 2=media 3=axis</td></tr>
+              <tr><td>+</td><td><code>sid</code></td><td><code>u16</code></td><td>source id within the class, little-endian</td></tr>
+              <tr><td>+</td><td><code>dclass</code></td><td><code>u8</code></td><td>destination class</td></tr>
+              <tr><td>+</td><td><code>did</code></td><td><code>u16</code></td><td>destination id, little-endian</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">READBACK</div>
         <p>
           An entry mirrors the <A href="/native/commands/transform#transform"><code>TRANSFORM</code></A>{' '}
           frame field for field except the <code>state</code> byte, so a readback replays as
           commands.
         </p>
-        <table class="api-params">
-          <thead>
-            <tr><th>State</th><th>Reports as</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>An installed entry</td><td>One 7-byte line, under its own <code>(source, dest)</code> key.</td></tr>
-            <tr><td>An entry the box refused</td><td>Absent. <code>TRANSFORM</code> is fire-and-forget, so this reply is the only confirmation an entry landed.</td></tr>
-            <tr><td>An entry the 32-slot table turned away</td><td>Absent, with <code>flags</code> b0 (full) set.</td></tr>
-            <tr><td>An entry whose destination this configuration doesn't declare</td><td>Present and unchanged. It is <A href="/native/commands/transform#cross">inert</A>, not removed, and works again once the destination binds.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>State</th><th>Reports as</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>An installed entry</td><td>One 7-byte line, under its own <code>(source, dest)</code> key.</td></tr>
+              <tr><td>An entry the box refused</td><td>Absent. <code>TRANSFORM</code> is fire-and-forget, so this reply is the only confirmation an entry landed.</td></tr>
+              <tr><td>An entry the 32-slot table turned away</td><td>Absent, with <code>flags</code> b0 (full) set.</td></tr>
+              <tr><td>An entry whose destination this configuration doesn't declare</td><td>Present and unchanged. It is <A href="/native/commands/transform#cross">inert</A>, not removed, and works again once the destination binds.</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">FLAGS</div>
-        <table class="api-params">
-          <thead>
-            <tr><th>Bit</th><th>Mask</th><th>Set when</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>b0</td><td><code>0x01</code></td><td><code>FULL</code>: an entry was refused because the table already held 32. Nothing is evicted, and removing any entry clears the bit</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Bit</th><th>Mask</th><th>Set when</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>b0</td><td><code>0x01</code></td><td><code>FULL</code>: an entry was refused because the table already held 32. Nothing is evicted, and removing any entry clears the bit</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">EFFECT</div>
         <p>
           <A href="/native/commands/requests#health"><code>HEALTH</code></A> sets its{' '}

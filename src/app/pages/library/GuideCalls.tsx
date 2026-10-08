@@ -13,14 +13,16 @@ const GuideCalls: Component = () => {
           tagged with a badge on the <A href="/library">API pages</A>.
         </p>
 
-        <table class="api-params">
-          <thead><tr><th>Badge</th><th>What the call does</th></tr></thead>
-          <tbody>
-            <tr><td><span class="api-badge api-badge--executed">Fire-and-forget</span></td><td>Writes one frame, returns once the bytes are out, no reply.</td></tr>
-            <tr><td><span class="api-badge api-badge--responded">Blocks</span></td><td>Sends a <A href="/native/commands/requests#requests"><code>QUERY</code></A> and waits for the correlated <A href="/native/commands/requests#resp"><code>RESP</code></A>.</td></tr>
-            <tr><td><span class="api-badge api-badge--executed">No round-trip</span></td><td>Reads state the library already holds; can't fail on the link.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Badge</th><th>What the call does</th></tr></thead>
+            <tbody>
+              <tr><td><span class="api-badge api-badge--executed">Fire-and-forget</span></td><td>Writes one frame, returns once the bytes are out, no reply.</td></tr>
+              <tr><td><span class="api-badge api-badge--responded">Blocks</span></td><td>Sends a <A href="/native/commands/requests#requests"><code>QUERY</code></A> and waits for the correlated <A href="/native/commands/requests#resp"><code>RESP</code></A>.</td></tr>
+              <tr><td><span class="api-badge api-badge--executed">No round-trip</span></td><td>Reads state the library already holds; can't fail on the link.</td></tr>
+            </tbody>
+          </table>
+        </div>
 
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`device.move_rel(100, -50)?;      // fire-and-forget: one frame out, no reply

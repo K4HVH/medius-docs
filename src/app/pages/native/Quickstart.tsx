@@ -129,16 +129,18 @@ port.write(frame)`}</code></pre>
           bits in the <A href="/native/commands/requests#resp"><code>RESP</code></A>'s{' '}
           <code>flags</code> word.
         </p>
-        <table class="api-params">
-          <thead>
-            <tr><th>Flag</th><th>Mask</th><th>Means</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><code>LINK_UP</code></td><td><code>0x01</code></td><td>Host-chip link is up.</td></tr>
-            <tr><td><code>MOUSE_ATTACHED</code></td><td><code>0x02</code></td><td>A mouse is on <code>USB3</code>.</td></tr>
-            <tr><td><code>CLONE_CONFIGURED</code></td><td><code>0x04</code></td><td>The game PC has enumerated the clone.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Flag</th><th>Mask</th><th>Means</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>LINK_UP</code></td><td><code>0x01</code></td><td>Host-chip link is up.</td></tr>
+              <tr><td><code>MOUSE_ATTACHED</code></td><td><code>0x02</code></td><td>A mouse is on <code>USB3</code>.</td></tr>
+              <tr><td><code>CLONE_CONFIGURED</code></td><td><code>0x04</code></td><td>The game PC has enumerated the clone.</td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           A flag is set when <code>(flags &amp; mask)</code> is non-zero. With all three set, a{' '}
           <A href="/native/commands/move#move"><code>MOVE</code></A> reaches the game PC. Full

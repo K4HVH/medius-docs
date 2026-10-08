@@ -14,7 +14,6 @@ import DeviceRaw from './DeviceRaw';
 import DeviceTransfer from './DeviceTransfer';
 import { col, columns } from './ui';
 import { PageHeader } from '../../shell/PageHeader';
-import '../../../styles/docs.css';
 
 const DeviceDeveloper = () => {
   const dash = useDashboard();

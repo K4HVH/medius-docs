@@ -37,15 +37,17 @@ const Patch: Component = () => {
             <A href="/library/types/errors#errors"><code>Error::ImperfectRequired</code></A>.
           </p>
         </div>
-        <table class="api-params">
-          <thead><tr><th>Re-presented at</th><th>With</th></tr></thead>
-          <tbody>
-            <tr><td><A href="/library/advanced/patch#apply-patch"><code>apply_patch</code></A></td><td>The stored set, when it differs from the one the clone serves.</td></tr>
-            <tr><td><A href="/library/options#allow-imperfect-clones"><code>allow_imperfect_clones</code></A> changing the set the clone serves</td><td>Turned on: the stored set, unless the box refused it. Turned off: no patches, when the clone serves some.</td></tr>
-            <tr><td>The device attaching</td><td>The stored set, under the opt-in.</td></tr>
-            <tr><td><A href="/library/advanced/patch#clear-patch"><code>clear_patch</code></A></td><td>No patches, when the clone serves some.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Re-presented at</th><th>With</th></tr></thead>
+            <tbody>
+              <tr><td><A href="/library/advanced/patch#apply-patch"><code>apply_patch</code></A></td><td>The stored set, when it differs from the one the clone serves.</td></tr>
+              <tr><td><A href="/library/options#allow-imperfect-clones"><code>allow_imperfect_clones</code></A> changing the set the clone serves</td><td>Turned on: the stored set, unless the box refused it. Turned off: no patches, when the clone serves some.</td></tr>
+              <tr><td>The device attaching</td><td>The stored set, under the opt-in.</td></tr>
+              <tr><td><A href="/library/advanced/patch#clear-patch"><code>clear_patch</code></A></td><td>No patches, when the clone serves some.</td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           Each presentation is a re-clone, which releases the session: the library re-sends what it
           holds once the new clone is up (<A href="/library/lifecycle#restart">session recovery</A>).
@@ -60,14 +62,16 @@ const Patch: Component = () => {
       <DocSection id="set-patch" title="set_patch" caption="Store or overwrite one patch">
         <pre class="api-signature">fn set_patch(&self, patch: &Patch) -&gt; Result&lt;()&gt;</pre>
         <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
-        <table class="api-params">
-          <thead>
-            <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><code>patch</code></td><td><A href="/library/types/structs#patch"><code>Patch</code></A></td><td>Its <A href="/library/types/enums#patch-section">section</A>, address, offset, and bytes.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>patch</code></td><td><A href="/library/types/structs#patch"><code>Patch</code></A></td><td>Its <A href="/library/types/enums#patch-section">section</A>, address, offset, and bytes.</td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           Patches are keyed by <code>(section, cfg, index, offset)</code>: setting an existing key
           overwrites the patch and moves it to the end of the set, unless it holds those bytes
@@ -101,17 +105,19 @@ device.apply_patch()?;`}</code></pre>
           <A href="/library/types/errors#errors"><code>Error::ImperfectRequired</code></A>.
         </p>
         <div class="api-response-label">EFFECT</div>
-        <table class="api-params">
-          <thead>
-            <tr><th>Stored set</th><th>What the box does</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>Differs from the set the clone serves (<A href="/library/types/structs#patch-set"><code>pending</code></A>)</td><td>Re-presents the clone with it, a re-clone that releases the session. An emptied set serves the device unpatched, and one that fails a check is served unpatched with <code>refused</code> set.</td></tr>
-            <tr><td>The set the clone serves</td><td>Nothing.</td></tr>
-            <tr><td>Refused, and unchanged since</td><td>Nothing, though it reads <code>pending</code>: change the set, or clear it.</td></tr>
-            <tr><td>Any, with no device attached</td><td>Nothing.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Stored set</th><th>What the box does</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Differs from the set the clone serves (<A href="/library/types/structs#patch-set"><code>pending</code></A>)</td><td>Re-presents the clone with it, a re-clone that releases the session. An emptied set serves the device unpatched, and one that fails a check is served unpatched with <code>refused</code> set.</td></tr>
+              <tr><td>The set the clone serves</td><td>Nothing.</td></tr>
+              <tr><td>Refused, and unchanged since</td><td>Nothing, though it reads <code>pending</code>: change the set, or clear it.</td></tr>
+              <tr><td>Any, with no device attached</td><td>Nothing.</td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>See the native <A href="/native/commands/patch#apply">APPLY</A>.</p>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`device.allow_imperfect_clones(true)?;
@@ -126,15 +132,17 @@ device.apply_patch()?; // the clone replugs and re-presents patched`}</code></pr
           the last device attached since boot.
         </p>
         <div class="api-response-label">EFFECT</div>
-        <table class="api-params">
-          <thead>
-            <tr><th>The clone</th><th>What the box does</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>Serves patches</td><td>Erases the set and re-presents the clone unpatched: one unplug/replug to the game PC, and a re-clone that releases the session.</td></tr>
-            <tr><td>Serves none</td><td>Erases the set and leaves the clone as it is.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>The clone</th><th>What the box does</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Serves patches</td><td>Erases the set and re-presents the clone unpatched: one unplug/replug to the game PC, and a re-clone that releases the session.</td></tr>
+              <tr><td>Serves none</td><td>Erases the set and leaves the clone as it is.</td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>See the native <A href="/native/commands/patch#clear">CLEAR</A>.</p>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`device.clear_patch()?;`}</code></pre>
@@ -158,14 +166,16 @@ if set.refused {
       <DocSection id="query-patch-entry" title="query_patch_entry" caption="One patch in full">
         <pre class="api-signature">fn query_patch_entry(&self, index: u8) -&gt; Result&lt;Patch&gt;</pre>
         <p><span class="api-badge api-badge--responded">Blocks</span></p>
-        <table class="api-params">
-          <thead>
-            <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><code>index</code></td><td><code>u8</code></td><td>The row in the <A href="/library/advanced/patch#query-patches"><code>query_patches</code></A> summary.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>index</code></td><td><code>u8</code></td><td>The row in the <A href="/library/advanced/patch#query-patches"><code>query_patches</code></A> summary.</td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           Returns one <A href="/library/types/structs#patch"><code>Patch</code></A> in full, in the
           shape <A href="/library/advanced/patch#set-patch"><code>set_patch</code></A> takes.

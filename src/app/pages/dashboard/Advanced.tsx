@@ -21,7 +21,6 @@ import { BAD_BROWSER, BAD_CONTEXT } from './ConnectPanel';
 import { InstallPorts, WiringPorts } from './PortDiagram';
 import { note, row, section } from './ui';
 import { PageHeader } from '../../shell/PageHeader';
-import '../../../styles/docs.css';
 
 const isUserCancel = (e: unknown) => e instanceof DOMException && e.name === 'NotFoundError';
 const fmtBytes = (n: number) => (n < 1024 ? `${n} B` : `${(n / 1024).toFixed(0)} KB`);

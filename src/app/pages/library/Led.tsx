@@ -18,16 +18,18 @@ const Led: Component = () => {
       <DocSection id="led" title="led" caption="Override or restore a status LED">
         <pre class="api-signature">fn led(&self, target: LedTarget, mode: LedMode, level: u8) -&gt; Result&lt;()&gt;</pre>
         <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
-        <table class="api-params">
-          <thead>
-            <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><code>target</code></td><td><A href="/library/types/enums#led-target"><code>LedTarget</code></A></td><td>Which chip's LED.</td></tr>
-            <tr><td><code>mode</code></td><td><A href="/library/types/enums#led-mode"><code>LedMode</code></A></td><td>Restore the chip's status display, or override it.</td></tr>
-            <tr><td><code>level</code></td><td><code>u8</code></td><td>Brightness 0-255 for <code>Solid</code> and <code>Blink</code>; ignored otherwise.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>target</code></td><td><A href="/library/types/enums#led-target"><code>LedTarget</code></A></td><td>Which chip's LED.</td></tr>
+              <tr><td><code>mode</code></td><td><A href="/library/types/enums#led-mode"><code>LedMode</code></A></td><td>Restore the chip's status display, or override it.</td></tr>
+              <tr><td><code>level</code></td><td><code>u8</code></td><td>Brightness 0-255 for <code>Solid</code> and <code>Blink</code>; ignored otherwise.</td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           <code>Auto</code>, control-PC silence,{' '}
           <A href="/library/admin#reset"><code>reset</code></A>, or inter-chip link loss returns an

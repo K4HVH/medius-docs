@@ -29,49 +29,57 @@ const Inject: Component = () => {
         <pre class="api-signature">INJECT  0x03  ·  payload 4 bytes</pre>
         <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
         <div class="api-response-label">PAYLOAD</div>
-        <table class="byte-table">
-          <thead>
-            <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>0</td><td><code>class</code></td><td><code>u8</code></td><td>0=button 1=key 2=media (the input kind)</td></tr>
-            <tr><td>1</td><td><code>id</code></td><td><code>u16</code></td><td>usage within the class, little-endian (see below)</td></tr>
-            <tr><td>3</td><td><code>action</code></td><td><code>u8</code></td><td>0=soft-release 1=press 2=force-release</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="byte-table">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>0</td><td><code>class</code></td><td><code>u8</code></td><td>0=button 1=key 2=media (the input kind)</td></tr>
+              <tr><td>1</td><td><code>id</code></td><td><code>u16</code></td><td>usage within the class, little-endian (see below)</td></tr>
+              <tr><td>3</td><td><code>action</code></td><td><code>u8</code></td><td>0=soft-release 1=press 2=force-release</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">CLASSES</div>
-        <table class="api-params">
-          <thead>
-            <tr><th>Name</th><th>Value</th><th><code>id</code> is</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><A href="/native/commands/inject#button">button</A></td><td><code>0</code></td><td>a semantic <A href="/native/commands/usage#buttons">button id</A> (0=Left .. 4=Side2, then numeric to the declared count)</td></tr>
-            <tr><td><A href="/native/commands/inject#key">key</A></td><td><code>1</code></td><td>a <A href="/native/commands/usage#keycodes">HID keyboard usage</A> (0xE0-0xE7 = modifier)</td></tr>
-            <tr><td><A href="/native/commands/inject#media">media</A></td><td><code>2</code></td><td>a 16-bit <A href="/native/commands/usage#consumer">Consumer usage</A></td></tr>
-          </tbody>
-        </table>
-        <table class="api-params">
-          <thead>
-            <tr><th>Action</th><th>Value</th><th>Effect</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>press</td><td><code>1</code></td><td>Force the usage active regardless of physical state.</td></tr>
-            <tr><td>soft-release</td><td><code>0</code></td><td>Drop the override (press or force-release); a physical hold stays active.</td></tr>
-            <tr><td>force-release</td><td><code>2</code></td><td>Force the usage inactive, masking a physical hold too; used by the <A href="/native/injection#safety">safety auto-clear</A>.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Name</th><th>Value</th><th><code>id</code> is</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><A href="/native/commands/inject#button">button</A></td><td><code>0</code></td><td>a semantic <A href="/native/commands/usage#buttons">button id</A> (0=Left .. 4=Side2, then numeric to the declared count)</td></tr>
+              <tr><td><A href="/native/commands/inject#key">key</A></td><td><code>1</code></td><td>a <A href="/native/commands/usage#keycodes">HID keyboard usage</A> (0xE0-0xE7 = modifier)</td></tr>
+              <tr><td><A href="/native/commands/inject#media">media</A></td><td><code>2</code></td><td>a 16-bit <A href="/native/commands/usage#consumer">Consumer usage</A></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Action</th><th>Value</th><th>Effect</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>press</td><td><code>1</code></td><td>Force the usage active regardless of physical state.</td></tr>
+              <tr><td>soft-release</td><td><code>0</code></td><td>Drop the override (press or force-release); a physical hold stays active.</td></tr>
+              <tr><td>force-release</td><td><code>2</code></td><td>Force the usage inactive, masking a physical hold too; used by the <A href="/native/injection#safety">safety auto-clear</A>.</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">EMITTED STATE</div>
         <p>The releases differ only while the same input is physically held:</p>
-        <table class="api-params">
-          <thead>
-            <tr><th>Action</th><th>Not held</th><th>Held</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><code>press</code></td><td>active</td><td>active</td></tr>
-            <tr><td><code>soft-release</code></td><td>inactive</td><td>active (physical bit passes)</td></tr>
-            <tr><td><code>force-release</code></td><td>inactive</td><td>inactive (masks physical)</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Action</th><th>Not held</th><th>Held</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>press</code></td><td>active</td><td>active</td></tr>
+              <tr><td><code>soft-release</code></td><td>inactive</td><td>active (physical bit passes)</td></tr>
+              <tr><td><code>force-release</code></td><td>inactive</td><td>inactive (masks physical)</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">RULES</div>
         <pre class="diagram">{`additive   layers over physical input at the same merge point as
            MOVE; never evicts native input

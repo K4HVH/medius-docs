@@ -35,23 +35,25 @@ const Flashing: Component = () => {
           The <A href="/native/commands/admin#reboot"><code>REBOOT</code></A> <code>target</code>{' '}
           byte picks the chip.
         </p>
-        <table class="api-params">
-          <thead>
-            <tr><th>Chip</th><th>Reboot</th><th>Flashed over</th></tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><A href="/native/architecture">Device chip</A></td>
-              <td><code>target = 0</code></td>
-              <td>The same <A href="/native/transport">CH343</A> serial link, with <a href="https://github.com/espressif/esptool" target="_blank" rel="noreferrer"><code>esptool</code></a>.</td>
-            </tr>
-            <tr>
-              <td><A href="/native/architecture">Host chip</A></td>
-              <td><code>target = 1</code></td>
-              <td>Its own USB connection; the device relays the reboot over the inter-chip link.</td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Chip</th><th>Reboot</th><th>Flashed over</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><A href="/native/architecture">Device chip</A></td>
+                <td><code>target = 0</code></td>
+                <td>The same <A href="/native/transport">CH343</A> serial link, with <a href="https://github.com/espressif/esptool" target="_blank" rel="noreferrer"><code>esptool</code></a>.</td>
+              </tr>
+              <tr>
+                <td><A href="/native/architecture">Host chip</A></td>
+                <td><code>target = 1</code></td>
+                <td>Its own USB connection; the device relays the reboot over the inter-chip link.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </DocSection>
 
       <DocSection id="version" title="Version scheme" caption="major.minor.patch">

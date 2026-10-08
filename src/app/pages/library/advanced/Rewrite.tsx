@@ -64,29 +64,33 @@ const Rewrite: Component = () => {
       <DocSection id="set-rewrite" title="set_rewrite" caption="Install or overwrite one rule">
         <pre class="api-signature">fn set_rewrite(&self, rule: &RewriteRule) -&gt; Result&lt;()&gt;</pre>
         <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
-        <table class="api-params">
-          <thead>
-            <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><code>rule</code></td><td><A href="/library/types/structs#rewrite-rule"><code>RewriteRule</code></A></td><td>Its <A href="/library/types/enums#rewrite-class">address</A>, <A href="/library/types/enums#rewrite-action"><code>action</code></A>, and any masked match or payload.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>rule</code></td><td><A href="/library/types/structs#rewrite-rule"><code>RewriteRule</code></A></td><td>Its <A href="/library/types/enums#rewrite-class">address</A>, <A href="/library/types/enums#rewrite-action"><code>action</code></A>, and any masked match or payload.</td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           Rules are keyed by <code>(class, id, direction, match, mask)</code>; setting an existing key
           overwrites the rule, resets its hits and moves it to the end of the table. The crate checks
           the box's limits before sending, so a refusal is a real error.
         </p>
         <div class="api-response-label">REFUSALS</div>
-        <table class="api-params">
-          <thead>
-            <tr><th>Limit</th><th>Past it</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>2048 payload bytes across every held rule (<code>REWRITE_PAYLOAD_POOL</code>), checked first; an overwrite gives back the bytes it replaces</td><td><A href="/library/types/errors#errors"><code>Error::RewritePoolFull</code></A></td></tr>
-            <tr><td>32 rules (<code>REWRITE_MAX_ENTRIES</code>), for a new key</td><td><A href="/library/types/errors#errors"><code>Error::RewriteTableFull</code></A></td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Limit</th><th>Past it</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>2048 payload bytes across every held rule (<code>REWRITE_PAYLOAD_POOL</code>), checked first; an overwrite gives back the bytes it replaces</td><td><A href="/library/types/errors#errors"><code>Error::RewritePoolFull</code></A></td></tr>
+              <tr><td>32 rules (<code>REWRITE_MAX_ENTRIES</code>), for a new key</td><td><A href="/library/types/errors#errors"><code>Error::RewriteTableFull</code></A></td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`use medius::{Device, Direction, RewriteRule, RewriteClass, RewriteAction};
 
@@ -149,14 +153,16 @@ for e in &table.entries {
       <DocSection id="query-rewrite-entry" title="query_rewrite_entry" caption="One rule in full">
         <pre class="api-signature">fn query_rewrite_entry(&self, index: u8) -&gt; Result&lt;RewriteRule&gt;</pre>
         <p><span class="api-badge api-badge--responded">Blocks</span></p>
-        <table class="api-params">
-          <thead>
-            <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><code>index</code></td><td><code>u8</code></td><td>The row in the <A href="/library/advanced/rewrite#query-rewrite"><code>query_rewrite</code></A> summary.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>index</code></td><td><code>u8</code></td><td>The row in the <A href="/library/advanced/rewrite#query-rewrite"><code>query_rewrite</code></A> summary.</td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           Returns one <A href="/library/types/structs#rewrite-rule"><code>RewriteRule</code></A> in
           full, in the shape{' '}

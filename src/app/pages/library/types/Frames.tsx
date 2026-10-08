@@ -13,144 +13,148 @@ const Frames: Component = () => {
           parsed frame.
         </p>
 
-        <table class="api-params">
-          <thead>
-            <tr>
-              <th>Variant</th>
-              <th>Opcode</th>
-              <th>Meaning</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>Move</code></td>
-              <td><code>0x01</code></td>
-              <td>Motion-tagged cursor or wheel movement (PC to box).</td>
-            </tr>
-            <tr>
-              <td><code>Inject</code></td>
-              <td><code>0x03</code></td>
-              <td>Class-tagged button, key, or media override (PC to box).</td>
-            </tr>
-            <tr>
-              <td><code>Reset</code></td>
-              <td><code>0x04</code></td>
-              <td>Clear all injection (PC to box).</td>
-            </tr>
-            <tr>
-              <td><code>Query</code></td>
-              <td><code>0x05</code></td>
-              <td>Request a state snapshot (PC to box).</td>
-            </tr>
-            <tr>
-              <td><code>Resp</code></td>
-              <td><code>0x06</code></td>
-              <td>Reply to a query, with the request's seq echoed (box to PC).</td>
-            </tr>
-            <tr>
-              <td><code>RebootDl</code></td>
-              <td><code>0x07</code></td>
-              <td>Reboot a chip to download or run (PC to box).</td>
-            </tr>
-            <tr>
-              <td><code>Log</code></td>
-              <td><code>0x08</code></td>
-              <td>Unsolicited device diagnostics (box to PC).</td>
-            </tr>
-            <tr>
-              <td><code>Led</code></td>
-              <td><code>0x09</code></td>
-              <td>Drive a status LED (PC to box).</td>
-            </tr>
-            <tr>
-              <td><code>Lock</code></td>
-              <td><code>0x0A</code></td>
-              <td>Weigh a physical input: block, pass, or amplify (PC to box).</td>
-            </tr>
-            <tr>
-              <td><code>Catch</code></td>
-              <td><code>0x0B</code></td>
-              <td>Add or remove one subscription-table entry (PC to box).</td>
-            </tr>
-            <tr>
-              <td><code>MotionEvent</code></td>
-              <td><code>0x0C</code></td>
-              <td>An unsolicited relative-axis catch event, dx/dy/dz (box to PC).</td>
-            </tr>
-            <tr>
-              <td><code>UsageEvent</code></td>
-              <td><code>0x0F</code></td>
-              <td>An unsolicited held-usage snapshot: button, key, or media (box to PC).</td>
-            </tr>
-            <tr>
-              <td><code>Option</code></td>
-              <td><code>0x11</code></td>
-              <td>Set a persistent box option by id, e.g. imperfect-clone opt-in or movement riding (PC to box).</td>
-            </tr>
-            <tr>
-              <td><code>ClipAppend</code></td>
-              <td><code>0x12</code></td>
-              <td>Append buffered-clip entries to the device ring; seq = append seq (PC to box).</td>
-            </tr>
-            <tr>
-              <td><code>ClipCtrl</code></td>
-              <td><code>0x13</code></td>
-              <td>Drive clip playback: start, stop, pause, resume, restart, toggle, clear, finalize (PC to box).</td>
-            </tr>
-            <tr>
-              <td><code>ClipSet</code></td>
-              <td><code>0x14</code></td>
-              <td>Set one clip setting: auto-lock, loop, retain, or ride (PC to box).</td>
-            </tr>
-            <tr>
-              <td><code>ClipTrigger</code></td>
-              <td><code>0x15</code></td>
-              <td>Bind a physical edge or a matched packet to a clip engine verb (PC to box).</td>
-            </tr>
-            <tr>
-              <td><code>TrafficEvent</code></td>
-              <td><code>0x16</code></td>
-              <td>An unsolicited byte-oriented catch event: HID, vendor, control, emit, or bus (box to PC).</td>
-            </tr>
-            <tr>
-              <td><code>Update</code></td>
-              <td><code>0x17</code></td>
-              <td>Stage or activate firmware on either chip (PC to box).</td>
-            </tr>
-            <tr>
-              <td><code>UpdateResp</code></td>
-              <td><code>0x18</code></td>
-              <td>The reply to one update op (box to PC).</td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr>
+                <th>Variant</th>
+                <th>Opcode</th>
+                <th>Meaning</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>Move</code></td>
+                <td><code>0x01</code></td>
+                <td>Motion-tagged cursor or wheel movement (PC to box).</td>
+              </tr>
+              <tr>
+                <td><code>Inject</code></td>
+                <td><code>0x03</code></td>
+                <td>Class-tagged button, key, or media override (PC to box).</td>
+              </tr>
+              <tr>
+                <td><code>Reset</code></td>
+                <td><code>0x04</code></td>
+                <td>Clear all injection (PC to box).</td>
+              </tr>
+              <tr>
+                <td><code>Query</code></td>
+                <td><code>0x05</code></td>
+                <td>Request a state snapshot (PC to box).</td>
+              </tr>
+              <tr>
+                <td><code>Resp</code></td>
+                <td><code>0x06</code></td>
+                <td>Reply to a query, with the request's seq echoed (box to PC).</td>
+              </tr>
+              <tr>
+                <td><code>RebootDl</code></td>
+                <td><code>0x07</code></td>
+                <td>Reboot a chip to download or run (PC to box).</td>
+              </tr>
+              <tr>
+                <td><code>Log</code></td>
+                <td><code>0x08</code></td>
+                <td>Unsolicited device diagnostics (box to PC).</td>
+              </tr>
+              <tr>
+                <td><code>Led</code></td>
+                <td><code>0x09</code></td>
+                <td>Drive a status LED (PC to box).</td>
+              </tr>
+              <tr>
+                <td><code>Lock</code></td>
+                <td><code>0x0A</code></td>
+                <td>Weigh a physical input: block, pass, or amplify (PC to box).</td>
+              </tr>
+              <tr>
+                <td><code>Catch</code></td>
+                <td><code>0x0B</code></td>
+                <td>Add or remove one subscription-table entry (PC to box).</td>
+              </tr>
+              <tr>
+                <td><code>MotionEvent</code></td>
+                <td><code>0x0C</code></td>
+                <td>An unsolicited relative-axis catch event, dx/dy/dz (box to PC).</td>
+              </tr>
+              <tr>
+                <td><code>UsageEvent</code></td>
+                <td><code>0x0F</code></td>
+                <td>An unsolicited held-usage snapshot: button, key, or media (box to PC).</td>
+              </tr>
+              <tr>
+                <td><code>Option</code></td>
+                <td><code>0x11</code></td>
+                <td>Set a persistent box option by id, e.g. imperfect-clone opt-in or movement riding (PC to box).</td>
+              </tr>
+              <tr>
+                <td><code>ClipAppend</code></td>
+                <td><code>0x12</code></td>
+                <td>Append buffered-clip entries to the device ring; seq = append seq (PC to box).</td>
+              </tr>
+              <tr>
+                <td><code>ClipCtrl</code></td>
+                <td><code>0x13</code></td>
+                <td>Drive clip playback: start, stop, pause, resume, restart, toggle, clear, finalize (PC to box).</td>
+              </tr>
+              <tr>
+                <td><code>ClipSet</code></td>
+                <td><code>0x14</code></td>
+                <td>Set one clip setting: auto-lock, loop, retain, or ride (PC to box).</td>
+              </tr>
+              <tr>
+                <td><code>ClipTrigger</code></td>
+                <td><code>0x15</code></td>
+                <td>Bind a physical edge or a matched packet to a clip engine verb (PC to box).</td>
+              </tr>
+              <tr>
+                <td><code>TrafficEvent</code></td>
+                <td><code>0x16</code></td>
+                <td>An unsolicited byte-oriented catch event: HID, vendor, control, emit, or bus (box to PC).</td>
+              </tr>
+              <tr>
+                <td><code>Update</code></td>
+                <td><code>0x17</code></td>
+                <td>Stage or activate firmware on either chip (PC to box).</td>
+              </tr>
+              <tr>
+                <td><code>UpdateResp</code></td>
+                <td><code>0x18</code></td>
+                <td>The reply to one update op (box to PC).</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
-        <table class="api-params">
-          <thead>
-            <tr>
-              <th>Field</th>
-              <th>Type</th>
-              <th>Description</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>ty</code></td>
-              <td><code>FrameType</code></td>
-              <td>The frame's opcode.</td>
-            </tr>
-            <tr>
-              <td><code>seq</code></td>
-              <td><code>u8</code></td>
-              <td>The sequence byte; a reply echoes the request's value.</td>
-            </tr>
-            <tr>
-              <td><code>payload</code></td>
-              <td><code>Vec&lt;u8&gt;</code></td>
-              <td>The raw payload bytes, already CRC-checked.</td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr>
+                <th>Field</th>
+                <th>Type</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>ty</code></td>
+                <td><code>FrameType</code></td>
+                <td>The frame's opcode.</td>
+              </tr>
+              <tr>
+                <td><code>seq</code></td>
+                <td><code>u8</code></td>
+                <td>The sequence byte; a reply echoes the request's value.</td>
+              </tr>
+              <tr>
+                <td><code>payload</code></td>
+                <td><code>Vec&lt;u8&gt;</code></td>
+                <td>The raw payload bytes, already CRC-checked.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`use medius::{FrameType, DecodedFrame};

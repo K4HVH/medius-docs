@@ -28,12 +28,14 @@ const Admin: Component = () => {
           A flags byte; <code>0x00</code> is the plain release below.
         </p>
         <div class="api-response-label">FLAGS</div>
-        <table class="api-params">
-          <thead><tr><th>Bit</th><th>Name</th><th>Effect</th></tr></thead>
-          <tbody>
-            <tr><td><code>0x01</code></td><td><code>NVS</code></td><td>Also erases the persistent store and reboots, returning at defaults under the MAC-derived name.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Bit</th><th>Name</th><th>Effect</th></tr></thead>
+            <tbody>
+              <tr><td><code>0x01</code></td><td><code>NVS</code></td><td>Also erases the persistent store and reboots, returning at defaults under the MAC-derived name.</td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           Any other bit refuses the whole frame, release included. A frame with no payload does
           nothing: the byte is required, like every command's payload.
@@ -102,25 +104,29 @@ const Admin: Component = () => {
         <pre class="api-signature">REBOOT  0x07  ·  payload 1 byte</pre>
         <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
         <div class="api-response-label">PAYLOAD</div>
-        <table class="byte-table">
-          <thead>
-            <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>0</td><td><code>target</code></td><td><code>u8</code></td><td>which chip and mode (see below)</td></tr>
-          </tbody>
-        </table>
-        <table class="api-params">
-          <thead>
-            <tr><th>Target</th><th>Value</th><th>Effect</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>device download</td><td><code>0</code></td><td>Device chip enters ROM download, then flash over the <A href="/native/transport">CH343 link</A>.</td></tr>
-            <tr><td>host download</td><td><code>1</code></td><td>Device relays a download reboot to the host chip; the host flashes over USB3.</td></tr>
-            <tr><td>device run</td><td><code>2</code></td><td>Device chip reboots to run firmware.</td></tr>
-            <tr><td>host run</td><td><code>3</code></td><td>Device relays a run reboot to the host chip.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="byte-table">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>0</td><td><code>target</code></td><td><code>u8</code></td><td>which chip and mode (see below)</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Target</th><th>Value</th><th>Effect</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>device download</td><td><code>0</code></td><td>Device chip enters ROM download, then flash over the <A href="/native/transport">CH343 link</A>.</td></tr>
+              <tr><td>host download</td><td><code>1</code></td><td>Device relays a download reboot to the host chip; the host flashes over USB3.</td></tr>
+              <tr><td>device run</td><td><code>2</code></td><td>Device chip reboots to run firmware.</td></tr>
+              <tr><td>host run</td><td><code>3</code></td><td>Device relays a run reboot to the host chip.</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">EFFECT</div>
         <p>
           Reboot-to-run (<code>2</code> or <code>3</code>) is the board's only software cold-reboot;
@@ -150,28 +156,32 @@ const Admin: Component = () => {
         <pre class="api-signature">LOG  0x08  ·  box → PC</pre>
         <p><span class="api-badge api-badge--warning">Unsolicited</span></p>
         <div class="api-response-label">PAYLOAD</div>
-        <table class="byte-table">
-          <thead>
-            <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>0</td><td><code>level</code></td><td><code>u8</code></td><td>severity (see below)</td></tr>
-            <tr><td>1..</td><td><code>text</code></td><td><code>UTF-8</code></td><td>log line, not NUL-terminated, length = <code>LEN - 1</code></td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="byte-table">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>0</td><td><code>level</code></td><td><code>u8</code></td><td>severity (see below)</td></tr>
+              <tr><td>1..</td><td><code>text</code></td><td><code>UTF-8</code></td><td>log line, not NUL-terminated, length = <code>LEN - 1</code></td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">LEVELS</div>
-        <table class="api-params">
-          <thead>
-            <tr><th>Value</th><th>Level</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><code>0</code></td><td>error</td></tr>
-            <tr><td><code>1</code></td><td>warn</td></tr>
-            <tr><td><code>2</code></td><td>info</td></tr>
-            <tr><td><code>3</code></td><td>debug</td></tr>
-            <tr><td><code>4</code></td><td>verbose</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Value</th><th>Level</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>0</code></td><td>error</td></tr>
+              <tr><td><code>1</code></td><td>warn</td></tr>
+              <tr><td><code>2</code></td><td>info</td></tr>
+              <tr><td><code>3</code></td><td>debug</td></tr>
+              <tr><td><code>4</code></td><td>verbose</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">EFFECT</div>
         <p>
           Emitted only while a control PC is attached; logging before first contact is dropped. The

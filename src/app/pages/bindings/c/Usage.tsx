@@ -19,23 +19,25 @@ const Usage: Component = () => {
           Both return a <A href="/bindings/c/types#errors"><code>MediusStatus</code></A>; the{' '}
           <A href="/bindings/c/api">API index</A> badges each call.
         </p>
-        <table class="api-params">
-          <thead>
-            <tr><th>Badge</th><th>Behaviour</th><th>Fails with</th></tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><span class="api-badge api-badge--executed">Fire-and-forget</span></td>
-              <td>Returns once the <A href="/native/frame">frame</A> is queued, without awaiting a reply. Move, inject, lock, <A href="/library/led">LED</A>, <A href="/library/options">options</A>, <A href="/library/clip">clip playback</A>. See <A href="/native/injection#fire-and-forget">fire-and-forget</A>.</td>
-              <td><code>MEDIUS_STATUS_ERR_IO</code> / <code>MEDIUS_STATUS_ERR_DISCONNECTED</code> if the link is down.</td>
-            </tr>
-            <tr>
-              <td><span class="api-badge api-badge--responded">Blocks</span></td>
-              <td>Sends a QUERY and waits for the <A href="/native/hardware">box</A>'s RESP, up to the query timeout. The <A href="/bindings/c/api#queries"><code>medius_device_query_*</code></A> reads and the open/handshake calls. See <A href="/native/commands/requests#requests">Requests</A>.</td>
-              <td><code>MEDIUS_STATUS_ERR_NO_REPLY</code> / <code>MEDIUS_STATUS_ERR_QUERY_TIMEOUT</code>.</td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Badge</th><th>Behaviour</th><th>Fails with</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="api-badge api-badge--executed">Fire-and-forget</span></td>
+                <td>Returns once the <A href="/native/frame">frame</A> is queued, without awaiting a reply. Move, inject, lock, <A href="/library/led">LED</A>, <A href="/library/options">options</A>, <A href="/library/clip">clip playback</A>. See <A href="/native/injection#fire-and-forget">fire-and-forget</A>.</td>
+                <td><code>MEDIUS_STATUS_ERR_IO</code> / <code>MEDIUS_STATUS_ERR_DISCONNECTED</code> if the link is down.</td>
+              </tr>
+              <tr>
+                <td><span class="api-badge api-badge--responded">Blocks</span></td>
+                <td>Sends a QUERY and waits for the <A href="/native/hardware">box</A>'s RESP, up to the query timeout. The <A href="/bindings/c/api#queries"><code>medius_device_query_*</code></A> reads and the open/handshake calls. See <A href="/native/commands/requests#requests">Requests</A>.</td>
+                <td><code>MEDIUS_STATUS_ERR_NO_REPLY</code> / <code>MEDIUS_STATUS_ERR_QUERY_TIMEOUT</code>.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
         <div class="callout callout--info">
           <p>
             <code>MEDIUS_STATUS_OK</code> from a{' '}
@@ -108,67 +110,69 @@ if (medius_device_find(&dev) != MEDIUS_STATUS_OK) {
 
   medius_device_free(handle)  ──▶  drop one owner    (NULL = no-op)
   free the last owner         ──▶  joins the reader + keepalive threads`}</pre>
-        <table class="api-params">
-          <thead>
-            <tr><th>Handle</th><th>Create</th><th>Clone</th><th>Free</th></tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><A href="/library/connection"><code>MediusDevice</code></A></td>
-              <td><code>medius_device_open</code> · <code>_find</code> · <code>_with_mock</code></td>
-              <td><code>medius_device_clone</code></td>
-              <td><code>medius_device_free</code></td>
-            </tr>
-            <tr>
-              <td><A href="/library/catch"><code>MediusEventStream</code></A></td>
-              <td><code>medius_device_catch_events</code></td>
-              <td><code>medius_event_stream_clone</code></td>
-              <td><code>medius_event_stream_free</code></td>
-            </tr>
-            <tr>
-              <td><A href="/bindings/c/streams#input"><code>MediusInputStream</code></A></td>
-              <td><code>medius_device_input_events</code></td>
-              <td>-</td>
-              <td><code>medius_input_stream_free</code></td>
-            </tr>
-            <tr>
-              <td><A href="/bindings/c/streams#timeline"><code>MediusTimeline</code></A></td>
-              <td><code>medius_timeline_new</code></td>
-              <td>-</td>
-              <td><code>medius_timeline_free</code></td>
-            </tr>
-            <tr>
-              <td><A href="/library/diagnostics"><code>MediusLogStream</code></A></td>
-              <td><code>medius_device_logs</code></td>
-              <td><code>medius_log_stream_clone</code></td>
-              <td><code>medius_log_stream_free</code></td>
-            </tr>
-            <tr>
-              <td><A href="/library/features/mock"><code>MediusMockBox</code></A></td>
-              <td><code>medius_mock_new</code></td>
-              <td><code>medius_mock_clone</code></td>
-              <td><code>medius_mock_free</code></td>
-            </tr>
-            <tr>
-              <td><A href="/library/clip#builder"><code>MediusClipBuilder</code></A></td>
-              <td><code>medius_clip_builder_new</code></td>
-              <td>-</td>
-              <td><code>medius_clip_builder_free</code></td>
-            </tr>
-            <tr>
-              <td><A href="/library/clip#frame"><code>MediusClipFrame</code></A></td>
-              <td><code>medius_clip_frame_new</code></td>
-              <td>-</td>
-              <td><code>medius_clip_frame_free</code></td>
-            </tr>
-            <tr>
-              <td><A href="/library/clip#handle"><code>MediusClip</code></A></td>
-              <td><code>medius_device_clip</code></td>
-              <td>-</td>
-              <td><code>medius_clip_free</code></td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Handle</th><th>Create</th><th>Clone</th><th>Free</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><A href="/library/connection"><code>MediusDevice</code></A></td>
+                <td><code>medius_device_open</code> · <code>_find</code> · <code>_with_mock</code></td>
+                <td><code>medius_device_clone</code></td>
+                <td><code>medius_device_free</code></td>
+              </tr>
+              <tr>
+                <td><A href="/library/catch"><code>MediusEventStream</code></A></td>
+                <td><code>medius_device_catch_events</code></td>
+                <td><code>medius_event_stream_clone</code></td>
+                <td><code>medius_event_stream_free</code></td>
+              </tr>
+              <tr>
+                <td><A href="/bindings/c/streams#input"><code>MediusInputStream</code></A></td>
+                <td><code>medius_device_input_events</code></td>
+                <td>-</td>
+                <td><code>medius_input_stream_free</code></td>
+              </tr>
+              <tr>
+                <td><A href="/bindings/c/streams#timeline"><code>MediusTimeline</code></A></td>
+                <td><code>medius_timeline_new</code></td>
+                <td>-</td>
+                <td><code>medius_timeline_free</code></td>
+              </tr>
+              <tr>
+                <td><A href="/library/diagnostics"><code>MediusLogStream</code></A></td>
+                <td><code>medius_device_logs</code></td>
+                <td><code>medius_log_stream_clone</code></td>
+                <td><code>medius_log_stream_free</code></td>
+              </tr>
+              <tr>
+                <td><A href="/library/features/mock"><code>MediusMockBox</code></A></td>
+                <td><code>medius_mock_new</code></td>
+                <td><code>medius_mock_clone</code></td>
+                <td><code>medius_mock_free</code></td>
+              </tr>
+              <tr>
+                <td><A href="/library/clip#builder"><code>MediusClipBuilder</code></A></td>
+                <td><code>medius_clip_builder_new</code></td>
+                <td>-</td>
+                <td><code>medius_clip_builder_free</code></td>
+              </tr>
+              <tr>
+                <td><A href="/library/clip#frame"><code>MediusClipFrame</code></A></td>
+                <td><code>medius_clip_frame_new</code></td>
+                <td>-</td>
+                <td><code>medius_clip_frame_free</code></td>
+              </tr>
+              <tr>
+                <td><A href="/library/clip#handle"><code>MediusClip</code></A></td>
+                <td><code>medius_device_clip</code></td>
+                <td>-</td>
+                <td><code>medius_clip_free</code></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
         <pre><code class="language-c">{`MediusDevice *dev = NULL;
 if (medius_device_find(&dev) != MEDIUS_STATUS_OK) { return 1; }
 
@@ -209,23 +213,25 @@ medius_device_free(dev);      /* last owner -> joins the background threads */`}
           <A href="/native/commands/usage#consumer">Consumer usage</A>; one value serves inject, lock
           and catch.
         </p>
-        <table class="api-params">
-          <thead>
-            <tr><th>Builder</th><th>Returns</th><th>For</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><code>medius_usage_button(MediusButton)</code></td><td><code>MediusUsage</code></td><td rowspan="3"><A href="/library/inject">inject</A> / <A href="/native/injection">injection model</A></td></tr>
-            <tr><td><code>medius_usage_key(MediusKey)</code></td><td><code>MediusUsage</code></td></tr>
-            <tr><td><code>medius_usage_media(MediusMediaKey)</code></td><td><code>MediusUsage</code></td></tr>
-            <tr><td><code>medius_motion_cursor(dx, dy)</code></td><td><code>MediusMotion</code></td><td rowspan="2"><A href="/library/move">move</A> / <A href="/native/commands/move#move">MOVE</A></td></tr>
-            <tr><td><code>medius_motion_wheel(delta)</code></td><td><code>MediusMotion</code></td></tr>
-            <tr><td><code>medius_lock_target_axis(MediusLockTargetKind)</code></td><td><code>MediusLockTarget</code></td><td rowspan="2"><A href="/library/lock">lock</A> / <A href="/native/commands/lock">LOCK</A></td></tr>
-            <tr><td><code>medius_lock_target_usage(MediusUsage)</code></td><td><code>MediusLockTarget</code></td></tr>
-            <tr><td><code>medius_catch_filter_watch(MediusUsage)</code></td><td><code>MediusCatchFilter</code></td><td rowspan="3"><A href="/library/catch">catch</A> / <A href="/bindings/c/api#catch-filters">all helpers</A></td></tr>
-            <tr><td><code>medius_catch_filter_watch_axis(MediusAxis)</code></td><td><code>MediusCatchFilter</code></td></tr>
-            <tr><td><code>medius_catch_filter_traffic(MediusCatchClass, uint16_t)</code></td><td><code>MediusCatchFilter</code></td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Builder</th><th>Returns</th><th>For</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>medius_usage_button(MediusButton)</code></td><td><code>MediusUsage</code></td><td rowspan="3"><A href="/library/inject">inject</A> / <A href="/native/injection">injection model</A></td></tr>
+              <tr><td><code>medius_usage_key(MediusKey)</code></td><td><code>MediusUsage</code></td></tr>
+              <tr><td><code>medius_usage_media(MediusMediaKey)</code></td><td><code>MediusUsage</code></td></tr>
+              <tr><td><code>medius_motion_cursor(dx, dy)</code></td><td><code>MediusMotion</code></td><td rowspan="2"><A href="/library/move">move</A> / <A href="/native/commands/move#move">MOVE</A></td></tr>
+              <tr><td><code>medius_motion_wheel(delta)</code></td><td><code>MediusMotion</code></td></tr>
+              <tr><td><code>medius_lock_target_axis(MediusLockTargetKind)</code></td><td><code>MediusLockTarget</code></td><td rowspan="2"><A href="/library/lock">lock</A> / <A href="/native/commands/lock">LOCK</A></td></tr>
+              <tr><td><code>medius_lock_target_usage(MediusUsage)</code></td><td><code>MediusLockTarget</code></td></tr>
+              <tr><td><code>medius_catch_filter_watch(MediusUsage)</code></td><td><code>MediusCatchFilter</code></td><td rowspan="3"><A href="/library/catch">catch</A> / <A href="/bindings/c/api#catch-filters">all helpers</A></td></tr>
+              <tr><td><code>medius_catch_filter_watch_axis(MediusAxis)</code></td><td><code>MediusCatchFilter</code></td></tr>
+              <tr><td><code>medius_catch_filter_traffic(MediusCatchClass, uint16_t)</code></td><td><code>MediusCatchFilter</code></td></tr>
+            </tbody>
+          </table>
+        </div>
         <pre><code class="language-c">{`/* inject: build a usage, then apply an Action */
 MediusUsage lmb = medius_usage_button(MEDIUS_BUTTON_LEFT);
 medius_device_inject(dev, lmb, MEDIUS_ACTION_PRESS);

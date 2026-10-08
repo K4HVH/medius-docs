@@ -34,41 +34,43 @@ const Async: Component = () => {
         <p><span class="api-badge api-badge--executed">No round-trip</span></p>
 
         <div class="api-response-label">CONSTRUCTORS</div>
-        <table class="api-params">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Description</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>open</code></td>
-              <td>
-                Opens a serial-port path and runs the handshake, blocking like{' '}
-                <A href="/library/connection#open"><code>Device::open</code></A>.
-              </td>
-            </tr>
-            <tr>
-              <td><code>find</code></td>
-              <td>
-                Opens the first medius box by USB id and runs the handshake, blocking like{' '}
-                <A href="/library/connection#open"><code>Device::find</code></A>.
-              </td>
-            </tr>
-            <tr>
-              <td><code>into_async</code></td>
-              <td>
-                Reinterprets an open <A href="/library/connection"><code>Device</code></A>, at zero
-                cost over the same <code>Link</code> core; no new connection.
-              </td>
-            </tr>
-            <tr>
-              <td><code>into_inner</code></td>
-              <td>Returns the sync <code>Device</code>.</td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>open</code></td>
+                <td>
+                  Opens a serial-port path and runs the handshake, blocking like{' '}
+                  <A href="/library/connection#open"><code>Device::open</code></A>.
+                </td>
+              </tr>
+              <tr>
+                <td><code>find</code></td>
+                <td>
+                  Opens the first medius box by USB id and runs the handshake, blocking like{' '}
+                  <A href="/library/connection#open"><code>Device::find</code></A>.
+                </td>
+              </tr>
+              <tr>
+                <td><code>into_async</code></td>
+                <td>
+                  Reinterprets an open <A href="/library/connection"><code>Device</code></A>, at zero
+                  cost over the same <code>Link</code> core; no new connection.
+                </td>
+              </tr>
+              <tr>
+                <td><code>into_inner</code></td>
+                <td>Returns the sync <code>Device</code>.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`// find, open and handshake (blocks)
@@ -105,27 +107,29 @@ let device = Device::find()?.into_async();`}</code></pre>
         </p>
 
         <div class="api-response-label">RETURNS</div>
-        <table class="api-params">
-          <thead>
-            <tr>
-              <th>Method</th>
-              <th>Resolves to</th>
-              <th>Description</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>query_version().await</code></td>
-              <td><A href="/library/types/structs#version"><code>Version</code></A></td>
-              <td>Firmware identity.</td>
-            </tr>
-            <tr>
-              <td><code>query_health().await</code></td>
-              <td><A href="/library/types/structs#health"><code>Health</code></A></td>
-              <td>Whether the box is wired and ready.</td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr>
+                <th>Method</th>
+                <th>Resolves to</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>query_version().await</code></td>
+                <td><A href="/library/types/structs#version"><code>Version</code></A></td>
+                <td>Firmware identity.</td>
+              </tr>
+              <tr>
+                <td><code>query_health().await</code></td>
+                <td><A href="/library/types/structs#health"><code>Health</code></A></td>
+                <td>Whether the box is wired and ready.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           Every other query resolves the same way; the full list is on{' '}
           <A href="/library/requests#async"><code>Requests</code></A>.

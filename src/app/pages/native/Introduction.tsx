@@ -20,80 +20,84 @@ const NativeIntroduction: Component = () => {
         <p>
           Drive it from any language; the Rust <A href="/library">library</A> is the official client.
         </p>
-        <table class="api-params">
-          <thead>
-            <tr>
-              <th>Property</th>
-              <th>Value</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>Firmware version</td>
-              <td><code>3.4.5</code></td>
-            </tr>
-            <tr>
-              <td>Protocol version</td>
-              <td><code>9</code></td>
-            </tr>
-            <tr>
-              <td>Transport</td>
-              <td>6 Mbaud, framed-only (<a href="https://www.wch-ic.com/products/CH343.html" target="_blank" rel="noreferrer">CH343</a>)</td>
-            </tr>
-            <tr>
-              <td>USB ID</td>
-              <td>VID <code>0x1A86</code> / PID <code>0x55D3</code></td>
-            </tr>
-            <tr>
-              <td>Delivery</td>
-              <td>
-                Fire-and-forget;{' '}
-                <A href="/native/commands/requests#requests"><code>QUERY</code></A> →{' '}
-                <A href="/native/commands/requests#resp"><code>RESP</code></A> is the only round-trip
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr>
+                <th>Property</th>
+                <th>Value</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Firmware version</td>
+                <td><code>3.4.5</code></td>
+              </tr>
+              <tr>
+                <td>Protocol version</td>
+                <td><code>9</code></td>
+              </tr>
+              <tr>
+                <td>Transport</td>
+                <td>6 Mbaud, framed-only (<a href="https://www.wch-ic.com/products/CH343.html" target="_blank" rel="noreferrer">CH343</a>)</td>
+              </tr>
+              <tr>
+                <td>USB ID</td>
+                <td>VID <code>0x1A86</code> / PID <code>0x55D3</code></td>
+              </tr>
+              <tr>
+                <td>Delivery</td>
+                <td>
+                  Fire-and-forget;{' '}
+                  <A href="/native/commands/requests#requests"><code>QUERY</code></A> →{' '}
+                  <A href="/native/commands/requests#resp"><code>RESP</code></A> is the only round-trip
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
         <p>Before connecting:</p>
-        <table class="api-params">
-          <thead>
-            <tr>
-              <th>Topic</th>
-              <th>Detail</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>Protocol version</td>
-              <td>
-                These pages cover version <code>9</code>. Check <code>proto_ver</code> in the{' '}
-                <A href="/native/commands/requests#version"><code>VERSION</code></A> reply during
-                the <A href="/native/connection#handshake">handshake</A>; any other value is
-                firmware these pages don't cover.
-              </td>
-            </tr>
-            <tr>
-              <td>Wire format</td>
-              <td>
-                <A href="/native/frame">Framed binary</A> from the first byte; no startup baud or
-                text mode.
-              </td>
-            </tr>
-            <tr>
-              <td>Port discovery</td>
-              <td>Scan for the CH343's VID/PID pair.</td>
-            </tr>
-            <tr>
-              <td>Correlation</td>
-              <td>
-                <A href="/native/injection#fire-and-forget">Fire-and-forget</A> has no ack or echo.{' '}
-                <A href="/native/frame#seq"><code>SEQ</code></A> pairs a{' '}
-                <A href="/native/commands/requests#requests"><code>QUERY</code></A> with its{' '}
-                <A href="/native/commands/requests#resp"><code>RESP</code></A>.
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr>
+                <th>Topic</th>
+                <th>Detail</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Protocol version</td>
+                <td>
+                  These pages cover version <code>9</code>. Check <code>proto_ver</code> in the{' '}
+                  <A href="/native/commands/requests#version"><code>VERSION</code></A> reply during
+                  the <A href="/native/connection#handshake">handshake</A>; any other value is
+                  firmware these pages don't cover.
+                </td>
+              </tr>
+              <tr>
+                <td>Wire format</td>
+                <td>
+                  <A href="/native/frame">Framed binary</A> from the first byte; no startup baud or
+                  text mode.
+                </td>
+              </tr>
+              <tr>
+                <td>Port discovery</td>
+                <td>Scan for the CH343's VID/PID pair.</td>
+              </tr>
+              <tr>
+                <td>Correlation</td>
+                <td>
+                  <A href="/native/injection#fire-and-forget">Fire-and-forget</A> has no ack or echo.{' '}
+                  <A href="/native/frame#seq"><code>SEQ</code></A> pairs a{' '}
+                  <A href="/native/commands/requests#requests"><code>QUERY</code></A> with its{' '}
+                  <A href="/native/commands/requests#resp"><code>RESP</code></A>.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </PageHeader>
 
       <DocSection id="overview" title="Overview">

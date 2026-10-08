@@ -43,48 +43,52 @@ const Overview: Component = () => {
       </PageHeader>
 
       <DocSection id="pick" title="Languages" caption="Same capabilities, different ergonomics">
-        <table class="api-params">
-          <thead>
-            <tr><th>Language</th><th>Install</th><th>Errors</th><th>Cleanup</th><th>Use for</th></tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><A href="/bindings/python"><code>Python</code></A></td>
-              <td><code><a href="https://pip.pypa.io" target="_blank" rel="noreferrer">pip</a> install medius</code></td>
-              <td>raises <A href="/bindings/python/types#errors"><code>MediusError</code></A></td>
-              <td>automatic (<code><a href="https://docs.python.org/3/reference/datamodel.html#context-managers" target="_blank" rel="noreferrer">with</a></code> / <a href="https://docs.python.org/3/glossary.html#term-garbage-collection" target="_blank" rel="noreferrer">GC</a>)</td>
-              <td>scripts, automation, prototyping</td>
-            </tr>
-            <tr>
-              <td><A href="/bindings/c"><code>C / C++</code></A></td>
-              <td>download the prebuilt library</td>
-              <td>returns <A href="/bindings/c/types#errors"><code>MediusStatus</code></A></td>
-              <td>manual (<A href="/bindings/c/api"><code>*_free</code></A>)</td>
-              <td>C or C++ apps, embedding, a base for another <a href="https://en.wikipedia.org/wiki/Foreign_function_interface" target="_blank" rel="noreferrer">FFI</a></td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Language</th><th>Install</th><th>Errors</th><th>Cleanup</th><th>Use for</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><A href="/bindings/python"><code>Python</code></A></td>
+                <td><code><a href="https://pip.pypa.io" target="_blank" rel="noreferrer">pip</a> install medius</code></td>
+                <td>raises <A href="/bindings/python/types#errors"><code>MediusError</code></A></td>
+                <td>automatic (<code><a href="https://docs.python.org/3/reference/datamodel.html#context-managers" target="_blank" rel="noreferrer">with</a></code> / <a href="https://docs.python.org/3/glossary.html#term-garbage-collection" target="_blank" rel="noreferrer">GC</a>)</td>
+                <td>scripts, automation, prototyping</td>
+              </tr>
+              <tr>
+                <td><A href="/bindings/c"><code>C / C++</code></A></td>
+                <td>download the prebuilt library</td>
+                <td>returns <A href="/bindings/c/types#errors"><code>MediusStatus</code></A></td>
+                <td>manual (<A href="/bindings/c/api"><code>*_free</code></A>)</td>
+                <td>C or C++ apps, embedding, a base for another <a href="https://en.wikipedia.org/wiki/Foreign_function_interface" target="_blank" rel="noreferrer">FFI</a></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </DocSection>
 
       <DocSection id="coverage" title="Coverage" caption="Every feature in every language">
-        <table class="api-params">
-          <thead>
-            <tr><th>Capability</th><th>C / C++</th><th>Python</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><A href="/library/connection">Connect, find, clone the link</A></td><td>yes</td><td>yes</td></tr>
-            <tr><td><A href="/library/move">Move &amp; wheel</A></td><td>yes</td><td>yes</td></tr>
-            <tr><td><A href="/library/inject">Inject buttons, keys, media</A></td><td>yes</td><td>yes</td></tr>
-            <tr><td><A href="/library/lock">Lock physical input</A></td><td>yes</td><td>yes</td></tr>
-            <tr><td><A href="/library/catch">Catch live input (streams)</A></td><td>yes</td><td>yes</td></tr>
-            <tr><td><A href="/library/clip">Buffered clip playback</A></td><td>yes</td><td>yes</td></tr>
-            <tr><td><A href="/library/options">Options &amp; LED</A></td><td>yes</td><td>yes</td></tr>
-            <tr><td><A href="/library/requests">Queries (version, health, caps)</A></td><td>yes</td><td>yes</td></tr>
-            <tr><td><A href="/library/features/mock">Mock box (testing)</A></td><td>build flag</td><td>build flag</td></tr>
-            <tr><td><A href="/library/update">Update firmware</A></td><td>yes</td><td>yes</td></tr>
-            <tr><td><A href="/library/features/async">Async</A></td><td colspan="2">sync only; build it on the stream timeouts (see each Streams page)</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Capability</th><th>C / C++</th><th>Python</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><A href="/library/connection">Connect, find, clone the link</A></td><td>yes</td><td>yes</td></tr>
+              <tr><td><A href="/library/move">Move &amp; wheel</A></td><td>yes</td><td>yes</td></tr>
+              <tr><td><A href="/library/inject">Inject buttons, keys, media</A></td><td>yes</td><td>yes</td></tr>
+              <tr><td><A href="/library/lock">Lock physical input</A></td><td>yes</td><td>yes</td></tr>
+              <tr><td><A href="/library/catch">Catch live input (streams)</A></td><td>yes</td><td>yes</td></tr>
+              <tr><td><A href="/library/clip">Buffered clip playback</A></td><td>yes</td><td>yes</td></tr>
+              <tr><td><A href="/library/options">Options &amp; LED</A></td><td>yes</td><td>yes</td></tr>
+              <tr><td><A href="/library/requests">Queries (version, health, caps)</A></td><td>yes</td><td>yes</td></tr>
+              <tr><td><A href="/library/features/mock">Mock box (testing)</A></td><td>build flag</td><td>build flag</td></tr>
+              <tr><td><A href="/library/update">Update firmware</A></td><td>yes</td><td>yes</td></tr>
+              <tr><td><A href="/library/features/async">Async</A></td><td colspan="2">sync only; build it on the stream timeouts (see each Streams page)</td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           Mock is off by default; each binding's <strong>Build &amp; features</strong>{' '}
           page shows how to turn it on.

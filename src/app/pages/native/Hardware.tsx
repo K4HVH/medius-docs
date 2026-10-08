@@ -13,35 +13,37 @@ const Hardware: Component = () => {
           program speaks only to the <code>CH343</code> serial port; the two chips share an internal
           20 Mbaud link, separate from the 6 Mbaud control link.
         </p>
-        <table class="api-params">
-          <thead>
-            <tr>
-              <th>Port</th>
-              <th>Connects to</th>
-              <th>Role</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>USB1</code></td>
-              <td>Game PC</td>
-              <td>
-                The clone (<A href="/native/architecture">device chip</A>), copying the mouse's
-                USB identity so the PC enumerates the same device as a direct connection.
-              </td>
-            </tr>
-            <tr>
-              <td><code>USB2</code></td>
-              <td>Control PC</td>
-              <td><A href="/native/transport">CH343</A> serial control (<code>/dev/ttyACM*</code>)</td>
-            </tr>
-            <tr>
-              <td><code>USB3</code></td>
-              <td>Mouse</td>
-              <td>Real mouse (<A href="/native/architecture">host chip</A>)</td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr>
+                <th>Port</th>
+                <th>Connects to</th>
+                <th>Role</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>USB1</code></td>
+                <td>Game PC</td>
+                <td>
+                  The clone (<A href="/native/architecture">device chip</A>), copying the mouse's
+                  USB identity so the PC enumerates the same device as a direct connection.
+                </td>
+              </tr>
+              <tr>
+                <td><code>USB2</code></td>
+                <td>Control PC</td>
+                <td><A href="/native/transport">CH343</A> serial control (<code>/dev/ttyACM*</code>)</td>
+              </tr>
+              <tr>
+                <td><code>USB3</code></td>
+                <td>Mouse</td>
+                <td>Real mouse (<A href="/native/architecture">host chip</A>)</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </PageHeader>
 
       <DocSection id="hazard" title="USB3 power hazard" caption="The one pairing to avoid">
@@ -62,25 +64,27 @@ const Hardware: Component = () => {
           moment. Injected input never outlives the program that sent it, so a button or move
           can't stick.
         </p>
-        <table class="api-params">
-          <thead>
-            <tr><th>Unplugged</th><th>Effect</th></tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>USB2</code> (control), or the program stops</td>
-              <td>After <code>1 s</code> of silence the box clears all <A href="/native/injection">injection</A> and returns to pure passthrough; the mouse keeps working.</td>
-            </tr>
-            <tr>
-              <td><code>USB1</code> (clone)</td>
-              <td>An ordinary device detach on the game PC; the box drops its injection state.</td>
-            </tr>
-            <tr>
-              <td><code>USB3</code> (mouse)</td>
-              <td>The box tears down the captured mouse and reports it detached.</td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Unplugged</th><th>Effect</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>USB2</code> (control), or the program stops</td>
+                <td>After <code>1 s</code> of silence the box clears all <A href="/native/injection">injection</A> and returns to pure passthrough; the mouse keeps working.</td>
+              </tr>
+              <tr>
+                <td><code>USB1</code> (clone)</td>
+                <td>An ordinary device detach on the game PC; the box drops its injection state.</td>
+              </tr>
+              <tr>
+                <td><code>USB3</code> (mouse)</td>
+                <td>The box tears down the captured mouse and reports it detached.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           For instant passthrough without the{' '}
           <A href="/native/injection#safety">silence timeout</A>, send{' '}

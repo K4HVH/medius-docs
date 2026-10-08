@@ -114,16 +114,18 @@ motion: dx=12 dy=-4 dz=0`}</code></pre>
         </p>
         <pre><code class="language-bash">{`cc first.c -Iinclude -L. -lmedius_capi -o first
 LD_LIBRARY_PATH=. ./first      # so the loader finds libmedius_capi.so`}</code></pre>
-        <table class="api-params">
-          <thead>
-            <tr><th>Flag</th><th>What it does</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><code>-Iinclude</code></td><td>Where <code>medius.h</code> lives.</td></tr>
-            <tr><td><code>-L.</code></td><td>Where <code>libmedius_capi</code> lives (here, the current dir).</td></tr>
-            <tr><td><code>-lmedius_capi</code></td><td>Link the library (file name is <code>libmedius_capi</code>).</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Flag</th><th>What it does</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>-Iinclude</code></td><td>Where <code>medius.h</code> lives.</td></tr>
+              <tr><td><code>-L.</code></td><td>Where <code>libmedius_capi</code> lives (here, the current dir).</td></tr>
+              <tr><td><code>-lmedius_capi</code></td><td>Link the library (file name is <code>libmedius_capi</code>).</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="callout callout--info">
           <p>
             Static linking (<code>libmedius_capi.a</code>), Windows, and the{' '}
@@ -133,65 +135,67 @@ LD_LIBRARY_PATH=. ./first      # so the loader finds libmedius_capi.so`}</code><
       </DocSection>
 
       <DocSection id="mechanics" title="Walkthrough" caption="Errors, out-params, freeing, blocking">
-        <table class="api-params">
-          <thead>
-            <tr><th>Mechanic</th><th>In C</th></tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>Errors</td>
-              <td>
-                Every fallible call returns a <code>MediusStatus</code>:{' '}
-                <code>MEDIUS_STATUS_OK</code> (<code>0</code>) or a failure. Read the text with{' '}
-                <code>medius_last_error_message(buf, cap)</code> right after the failing call.
-              </td>
-            </tr>
-            <tr>
-              <td>Results</td>
-              <td>
-                Data comes back through an out-pointer:{' '}
-                <A href="/bindings/c/api#queries"><code>medius_device_query_version(dev, &amp;v)</code></A> fills <code>v</code>.
-              </td>
-            </tr>
-            <tr>
-              <td>Freeing</td>
-              <td>
-                Each handle has a <code>*_free</code>: <A href="/bindings/c/api#connect"><code>medius_device_free</code></A>,{' '}
-                <A href="/bindings/c/api#streams"><code>medius_event_stream_free</code></A>, <A href="/bindings/c/api#streams"><code>medius_log_stream_free</code></A>, each a no-op on
-                NULL. Catch events are fixed-size structs with nothing to free.
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <span class="api-badge api-badge--executed">Fire-and-forget</span>
-              </td>
-              <td>
-                <A href="/bindings/c/api#move"><code>move_rel</code></A>, <A href="/bindings/c/api#move"><code>wheel</code></A>, <A href="/bindings/c/api#inject"><code>press</code></A>, <A href="/bindings/c/api#inject"><code>inject</code></A>,
-                and the <A href="/bindings/c/api#lock">lock</A> / <A href="/bindings/c/api#led-admin-options">LED</A> calls queue a <A href="/native/frame">frame</A> and return at
-                once (the <A href="/native/injection#fire-and-forget">fire-and-forget</A> model).
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <span class="api-badge api-badge--responded">Blocks</span>
-              </td>
-              <td>
-                <A href="/bindings/c/api#connect"><code>medius_device_find</code></A> / <code>_open</code> (the{' '}
-                <A href="/native/connection#handshake">handshake</A>), every{' '}
-                <code>medius_device_query_*</code>, and <code>medius_event_stream_recv</code> wait
-                for a <A href="/native/commands/requests">reply</A> or an event.
-              </td>
-            </tr>
-            <tr>
-              <td>Sharing</td>
-              <td>
-                <A href="/bindings/c/api#connect"><code>medius_device_clone</code></A> / <A href="/bindings/c/api#streams"><code>medius_event_stream_clone</code></A> return
-                another handle to the same link; free each clone. See{' '}
-                <A href="/library/lifecycle">Lifecycle</A>.
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Mechanic</th><th>In C</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Errors</td>
+                <td>
+                  Every fallible call returns a <code>MediusStatus</code>:{' '}
+                  <code>MEDIUS_STATUS_OK</code> (<code>0</code>) or a failure. Read the text with{' '}
+                  <code>medius_last_error_message(buf, cap)</code> right after the failing call.
+                </td>
+              </tr>
+              <tr>
+                <td>Results</td>
+                <td>
+                  Data comes back through an out-pointer:{' '}
+                  <A href="/bindings/c/api#queries"><code>medius_device_query_version(dev, &amp;v)</code></A> fills <code>v</code>.
+                </td>
+              </tr>
+              <tr>
+                <td>Freeing</td>
+                <td>
+                  Each handle has a <code>*_free</code>: <A href="/bindings/c/api#connect"><code>medius_device_free</code></A>,{' '}
+                  <A href="/bindings/c/api#streams"><code>medius_event_stream_free</code></A>, <A href="/bindings/c/api#streams"><code>medius_log_stream_free</code></A>, each a no-op on
+                  NULL. Catch events are fixed-size structs with nothing to free.
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <span class="api-badge api-badge--executed">Fire-and-forget</span>
+                </td>
+                <td>
+                  <A href="/bindings/c/api#move"><code>move_rel</code></A>, <A href="/bindings/c/api#move"><code>wheel</code></A>, <A href="/bindings/c/api#inject"><code>press</code></A>, <A href="/bindings/c/api#inject"><code>inject</code></A>,
+                  and the <A href="/bindings/c/api#lock">lock</A> / <A href="/bindings/c/api#led-admin-options">LED</A> calls queue a <A href="/native/frame">frame</A> and return at
+                  once (the <A href="/native/injection#fire-and-forget">fire-and-forget</A> model).
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <span class="api-badge api-badge--responded">Blocks</span>
+                </td>
+                <td>
+                  <A href="/bindings/c/api#connect"><code>medius_device_find</code></A> / <code>_open</code> (the{' '}
+                  <A href="/native/connection#handshake">handshake</A>), every{' '}
+                  <code>medius_device_query_*</code>, and <code>medius_event_stream_recv</code> wait
+                  for a <A href="/native/commands/requests">reply</A> or an event.
+                </td>
+              </tr>
+              <tr>
+                <td>Sharing</td>
+                <td>
+                  <A href="/bindings/c/api#connect"><code>medius_device_clone</code></A> / <A href="/bindings/c/api#streams"><code>medius_event_stream_clone</code></A> return
+                  another handle to the same link; free each clone. See{' '}
+                  <A href="/library/lifecycle">Lifecycle</A>.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
         <pre class="api-signature">{`MediusStatus medius_device_find(MediusDevice **out);
 uintptr_t    medius_last_error_message(char *buf, uintptr_t cap);  /* returns full length */`}</pre>
         <div class="callout callout--warning">
@@ -204,37 +208,39 @@ uintptr_t    medius_last_error_message(char *buf, uintptr_t cap);  /* returns fu
       </DocSection>
 
       <DocSection id="commands" title="Call reference" caption="Each call's Library and Native page">
-        <table class="api-params">
-          <thead>
-            <tr><th>Call</th><th>What it means</th></tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>medius_device_find</code></td>
-              <td><A href="/library/connection">Connection</A> · the <A href="/native/connection#handshake">handshake</A></td>
-            </tr>
-            <tr>
-              <td><code>medius_device_query_version</code></td>
-              <td><A href="/library/requests">Requests</A></td>
-            </tr>
-            <tr>
-              <td><code>medius_device_move_rel</code></td>
-              <td><A href="/library/move">Move</A> · <A href="/native/commands/move#move">Native move</A></td>
-            </tr>
-            <tr>
-              <td><code>medius_device_press</code> / <code>_soft_release</code></td>
-              <td><A href="/library/inject">Inject</A> · the <A href="/native/injection">injection model</A></td>
-            </tr>
-            <tr>
-              <td><code>medius_device_catch_events</code> / <code>medius_event_stream_recv</code></td>
-              <td><A href="/library/catch">Catch</A> · in C, <A href="/bindings/c/streams">Streams</A></td>
-            </tr>
-            <tr>
-              <td><code>medius_device_free</code></td>
-              <td><A href="/library/lifecycle">Lifecycle</A></td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Call</th><th>What it means</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>medius_device_find</code></td>
+                <td><A href="/library/connection">Connection</A> · the <A href="/native/connection#handshake">handshake</A></td>
+              </tr>
+              <tr>
+                <td><code>medius_device_query_version</code></td>
+                <td><A href="/library/requests">Requests</A></td>
+              </tr>
+              <tr>
+                <td><code>medius_device_move_rel</code></td>
+                <td><A href="/library/move">Move</A> · <A href="/native/commands/move#move">Native move</A></td>
+              </tr>
+              <tr>
+                <td><code>medius_device_press</code> / <code>_soft_release</code></td>
+                <td><A href="/library/inject">Inject</A> · the <A href="/native/injection">injection model</A></td>
+              </tr>
+              <tr>
+                <td><code>medius_device_catch_events</code> / <code>medius_event_stream_recv</code></td>
+                <td><A href="/library/catch">Catch</A> · in C, <A href="/bindings/c/streams">Streams</A></td>
+              </tr>
+              <tr>
+                <td><code>medius_device_free</code></td>
+                <td><A href="/library/lifecycle">Lifecycle</A></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           <A href="/bindings/c/api">API index</A> and{' '}
           <A href="/bindings/c/types">Types &amp; errors</A> list every call and type; both mirror the{' '}

@@ -18,14 +18,16 @@ const Move: Component = () => {
           The momentary inputs (buttons, keys, media) use{' '}
           <A href="/native/commands/inject#inject"><code>INJECT</code></A>.
         </p>
-        <table class="api-params">
-          <thead><tr><th>motion</th><th>Axis</th><th>carries</th><th>payload</th></tr></thead>
-          <tbody>
-            <tr><td><code>0</code></td><td><A href="/native/commands/move#move">cursor</A> (X, Y)</td><td><code>dx</code>, <code>dy</code> (i16)</td><td>6 bytes</td></tr>
-            <tr><td><code>1</code></td><td><A href="/native/commands/move#wheel">wheel</A></td><td><code>dz</code> (i16)</td><td>4 bytes</td></tr>
-            <tr><td><code>2</code></td><td><A href="/native/commands/move#pan">pan</A> (AC Pan)</td><td><code>dpan</code> (i16)</td><td>4 bytes</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>motion</th><th>Axis</th><th>carries</th><th>payload</th></tr></thead>
+            <tbody>
+              <tr><td><code>0</code></td><td><A href="/native/commands/move#move">cursor</A> (X, Y)</td><td><code>dx</code>, <code>dy</code> (i16)</td><td>6 bytes</td></tr>
+              <tr><td><code>1</code></td><td><A href="/native/commands/move#wheel">wheel</A></td><td><code>dz</code> (i16)</td><td>4 bytes</td></tr>
+              <tr><td><code>2</code></td><td><A href="/native/commands/move#pan">pan</A> (AC Pan)</td><td><code>dpan</code> (i16)</td><td>4 bytes</td></tr>
+            </tbody>
+          </table>
+        </div>
       </PageHeader>
 
       <DocSection id="move" title="MOVE" caption="Relative axis injection">
@@ -36,17 +38,19 @@ const Move: Component = () => {
         <pre class="api-signature">MOVE  0x01  ·  cursor payload 6 bytes</pre>
         <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
         <div class="api-response-label">PAYLOAD (cursor, motion = 0)</div>
-        <table class="byte-table">
-          <thead>
-            <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>0</td><td><code>motion</code></td><td><code>u8</code></td><td><code>0</code> = cursor</td></tr>
-            <tr><td>1</td><td><code>dx</code></td><td><code>i16</code></td><td>horizontal step; +x = right, little-endian</td></tr>
-            <tr><td>3</td><td><code>dy</code></td><td><code>i16</code></td><td>vertical step; +y = down, little-endian</td></tr>
-            <tr><td>5</td><td><code>flags</code></td><td><code>u8</code></td><td>riding override, <code>0</code> for a plain move</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="byte-table">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>0</td><td><code>motion</code></td><td><code>u8</code></td><td><code>0</code> = cursor</td></tr>
+              <tr><td>1</td><td><code>dx</code></td><td><code>i16</code></td><td>horizontal step; +x = right, little-endian</td></tr>
+              <tr><td>3</td><td><code>dy</code></td><td><code>i16</code></td><td>vertical step; +y = down, little-endian</td></tr>
+              <tr><td>5</td><td><code>flags</code></td><td><code>u8</code></td><td>riding override, <code>0</code> for a plain move</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">GUARANTEES</div>
         <pre class="diagram">{`exact   net move = the sum of every delta sent
 range   full i16 per axis, no clamp
@@ -82,16 +86,18 @@ paced   a large move drains across frames; nothing is dropped`}</pre>
         <pre class="api-signature">MOVE  0x01  ·  wheel payload 4 bytes</pre>
         <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
         <div class="api-response-label">PAYLOAD (wheel, motion = 1)</div>
-        <table class="byte-table">
-          <thead>
-            <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>0</td><td><code>motion</code></td><td><code>u8</code></td><td><code>1</code> = wheel</td></tr>
-            <tr><td>1</td><td><code>dz</code></td><td><code>i16</code></td><td>scroll steps; + = up, - = down, little-endian</td></tr>
-            <tr><td>3</td><td><code>flags</code></td><td><code>u8</code></td><td>riding override, <code>0</code> for a plain move</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="byte-table">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>0</td><td><code>motion</code></td><td><code>u8</code></td><td><code>1</code> = wheel</td></tr>
+              <tr><td>1</td><td><code>dz</code></td><td><code>i16</code></td><td>scroll steps; + = up, - = down, little-endian</td></tr>
+              <tr><td>3</td><td><code>flags</code></td><td><code>u8</code></td><td>riding override, <code>0</code> for a plain move</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">EFFECT</div>
         <p>
           The box adds <code>dz</code> to its{' '}
@@ -125,16 +131,18 @@ paced   a large move drains across frames; nothing is dropped`}</pre>
         <pre class="api-signature">MOVE  0x01  ·  pan payload 4 bytes</pre>
         <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
         <div class="api-response-label">PAYLOAD (pan, motion = 2)</div>
-        <table class="byte-table">
-          <thead>
-            <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>0</td><td><code>motion</code></td><td><code>u8</code></td><td><code>2</code> = pan</td></tr>
-            <tr><td>1</td><td><code>dpan</code></td><td><code>i16</code></td><td>pan steps; + = right, - = left, little-endian</td></tr>
-            <tr><td>3</td><td><code>flags</code></td><td><code>u8</code></td><td>riding override, <code>0</code> for a plain move</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="byte-table">
+            <thead>
+              <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>0</td><td><code>motion</code></td><td><code>u8</code></td><td><code>2</code> = pan</td></tr>
+              <tr><td>1</td><td><code>dpan</code></td><td><code>i16</code></td><td>pan steps; + = right, - = left, little-endian</td></tr>
+              <tr><td>3</td><td><code>flags</code></td><td><code>u8</code></td><td>riding override, <code>0</code> for a plain move</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">EFFECT</div>
         <p>
           The box adds <code>dpan</code> to its{' '}
@@ -168,14 +176,16 @@ paced   a large move drains across frames; nothing is dropped`}</pre>
         </p>
         <pre class="api-signature">MOVE  0x01  ·  flags at offset 5 (cursor) / 3 (wheel)</pre>
         <div class="api-response-label">FLAGS</div>
-        <table class="api-params">
-          <thead><tr><th>Bit</th><th>Name</th><th>Effect</th></tr></thead>
-          <tbody>
-            <tr><td><code>0x01</code></td><td><code>NOW</code></td><td>The delta leaves on the next mouse report sent, native or the box's own, without waiting for a native cursor-motion report.</td></tr>
-            <tr><td><code>0x02</code></td><td><code>FLUSH</code></td><td>Emit the motion already held for a ride, ignoring the ride window.</td></tr>
-            <tr><td><code>0x04</code></td><td><code>DISCARD</code></td><td>Drop the motion already held for a ride.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Bit</th><th>Name</th><th>Effect</th></tr></thead>
+            <tbody>
+              <tr><td><code>0x01</code></td><td><code>NOW</code></td><td>The delta leaves on the next mouse report sent, native or the box's own, without waiting for a native cursor-motion report.</td></tr>
+              <tr><td><code>0x02</code></td><td><code>FLUSH</code></td><td>Emit the motion already held for a ride, ignoring the ride window.</td></tr>
+              <tr><td><code>0x04</code></td><td><code>DISCARD</code></td><td>Drop the motion already held for a ride.</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">EFFECT</div>
         <p>
           Order: discard, flush, then the delta. <code>FLUSH</code> and <code>DISCARD</code> together

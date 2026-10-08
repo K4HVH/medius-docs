@@ -15,21 +15,23 @@ const Usage: Component = () => {
       </PageHeader>
 
       <DocSection id="calls" title="Fire-and-forget vs blocking" caption="The two call-kind badges">
-        <table class="api-params">
-          <thead><tr><th>Badge</th><th>Means</th><th>Which calls</th></tr></thead>
-          <tbody>
-            <tr>
-              <td><span class="api-badge api-badge--executed">Fire-and-forget</span></td>
-              <td>Queues a <A href="/native/frame">frame</A> and returns at once; no reply is read (<A href="/native/injection#fire-and-forget">fire-and-forget</A>).</td>
-              <td><A href="/library/move"><code>move_rel</code></A>, <A href="/library/move"><code>wheel</code></A>, <A href="/library/inject"><code>inject</code></A>, <A href="/library/inject"><code>press</code></A>, <A href="/library/inject"><code>soft_release</code></A>, <A href="/library/lock"><code>scale</code></A>/<A href="/library/lock"><code>lock</code></A>/<A href="/library/lock"><code>unlock</code></A>, <A href="/library/led"><code>led</code></A>, <A href="/library/admin"><code>reset</code></A>, <A href="/library/admin"><code>reapply</code></A>, <A href="/library/options"><code>set_movement_riding</code></A>, <A href="/library/options"><code>set_bearing</code></A>, <A href="/library/options"><code>set_emit_pace</code></A> …</td>
-            </tr>
-            <tr>
-              <td><span class="api-badge api-badge--responded">Blocks</span></td>
-              <td>Sends, then waits for the <A href="/native/hardware">box</A>'s reply (or times out).</td>
-              <td><A href="/bindings/python/api#connect"><code>Device.open</code></A> / <A href="/bindings/python/api#connect"><code>find</code></A> (the <A href="/native/connection#handshake">handshake</A>), every <A href="/native/commands/requests"><code>query_*</code></A> / <A href="/native/commands/requests"><code>caps</code></A> / <A href="/library/diagnostics"><code>counters</code></A>, and a stream <A href="/bindings/python/streams"><code>recv()</code></A></td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Badge</th><th>Means</th><th>Which calls</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><span class="api-badge api-badge--executed">Fire-and-forget</span></td>
+                <td>Queues a <A href="/native/frame">frame</A> and returns at once; no reply is read (<A href="/native/injection#fire-and-forget">fire-and-forget</A>).</td>
+                <td><A href="/library/move"><code>move_rel</code></A>, <A href="/library/move"><code>wheel</code></A>, <A href="/library/inject"><code>inject</code></A>, <A href="/library/inject"><code>press</code></A>, <A href="/library/inject"><code>soft_release</code></A>, <A href="/library/lock"><code>scale</code></A>/<A href="/library/lock"><code>lock</code></A>/<A href="/library/lock"><code>unlock</code></A>, <A href="/library/led"><code>led</code></A>, <A href="/library/admin"><code>reset</code></A>, <A href="/library/admin"><code>reapply</code></A>, <A href="/library/options"><code>set_movement_riding</code></A>, <A href="/library/options"><code>set_bearing</code></A>, <A href="/library/options"><code>set_emit_pace</code></A> …</td>
+              </tr>
+              <tr>
+                <td><span class="api-badge api-badge--responded">Blocks</span></td>
+                <td>Sends, then waits for the <A href="/native/hardware">box</A>'s reply (or times out).</td>
+                <td><A href="/bindings/python/api#connect"><code>Device.open</code></A> / <A href="/bindings/python/api#connect"><code>find</code></A> (the <A href="/native/connection#handshake">handshake</A>), every <A href="/native/commands/requests"><code>query_*</code></A> / <A href="/native/commands/requests"><code>caps</code></A> / <A href="/library/diagnostics"><code>counters</code></A>, and a stream <A href="/bindings/python/streams"><code>recv()</code></A></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
         <div class="callout callout--info">
           <p>
             A <span class="api-badge api-badge--executed">Fire-and-forget</span> call returning
@@ -87,29 +89,33 @@ except MediusError as e:
           release it three ways. Connection sharing is on{' '}
           <A href="/library/connection">Connection</A> and <A href="/library/lifecycle">Lifecycle</A>.
         </p>
-        <table class="api-params">
-          <thead><tr><th>Open with</th><th>Does</th></tr></thead>
-          <tbody>
-            <tr><td><code>Device.find()</code></td><td>First box found + handshake. <span class="api-badge api-badge--responded">Blocks</span></td></tr>
-            <tr><td><code>Device.open(path)</code></td><td>One serial path + handshake. <span class="api-badge api-badge--responded">Blocks</span></td></tr>
-            <tr><td><code>dev.clone()</code></td><td>Another handle to the <em>same</em> link.</td></tr>
-            <tr><td><code>MockBox().open()</code></td><td>Open over an in-process <A href="/bindings/python/api#mock">mock box</A> (needs the mock feature).</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Open with</th><th>Does</th></tr></thead>
+            <tbody>
+              <tr><td><code>Device.find()</code></td><td>First box found + handshake. <span class="api-badge api-badge--responded">Blocks</span></td></tr>
+              <tr><td><code>Device.open(path)</code></td><td>One serial path + handshake. <span class="api-badge api-badge--responded">Blocks</span></td></tr>
+              <tr><td><code>dev.clone()</code></td><td>Another handle to the <em>same</em> link.</td></tr>
+              <tr><td><code>MockBox().open()</code></td><td>Open over an in-process <A href="/bindings/python/api#mock">mock box</A> (needs the mock feature).</td></tr>
+            </tbody>
+          </table>
+        </div>
         <pre class="diagram">{`Device.find() ──┐
                 ├──▶  one USB-serial link  (stays up while ANY handle is open)
 dev.clone() ────┘
 
   each handle is freed on its own; the link closes with the last one`}</pre>
         <div class="api-response-label">RELEASE ROUTES</div>
-        <table class="api-params">
-          <thead><tr><th>Route</th><th>When the handle frees</th></tr></thead>
-          <tbody>
-            <tr><td><code>with Device.find() as dev:</code></td><td>When the <a href="https://docs.python.org/3/reference/datamodel.html#context-managers" target="_blank" rel="noreferrer">context manager</a> block exits (<code>__exit__</code>). Preferred.</td></tr>
-            <tr><td><code>dev.close()</code></td><td>Immediately; a second call is a no-op.</td></tr>
-            <tr><td><a href="https://docs.python.org/3/glossary.html#term-garbage-collection" target="_blank" rel="noreferrer">garbage collection</a></td><td>Best-effort via <code>__del__</code>. Don't rely on timing.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Route</th><th>When the handle frees</th></tr></thead>
+            <tbody>
+              <tr><td><code>with Device.find() as dev:</code></td><td>When the <a href="https://docs.python.org/3/reference/datamodel.html#context-managers" target="_blank" rel="noreferrer">context manager</a> block exits (<code>__exit__</code>). Preferred.</td></tr>
+              <tr><td><code>dev.close()</code></td><td>Immediately; a second call is a no-op.</td></tr>
+              <tr><td><a href="https://docs.python.org/3/glossary.html#term-garbage-collection" target="_blank" rel="noreferrer">garbage collection</a></td><td>Best-effort via <code>__del__</code>. Don't rely on timing.</td></tr>
+            </tbody>
+          </table>
+        </div>
         <pre><code class="language-python">{`# preferred: the context manager closes on exit
 with Device.find() as dev:
     dev.move_rel(5, 5)
@@ -135,21 +141,23 @@ dev.close()`}</code></pre>
           <A href="/library/lock">lock</A>, and <A href="/library/catch">catch</A> calls take a{' '}
           <em>target object</em> built with a classmethod, not a bare value.
         </p>
-        <table class="api-params">
-          <thead><tr><th>Builder</th><th>Feeds</th><th>What it makes</th></tr></thead>
-          <tbody>
-            <tr><td><A href="/bindings/python/types#input"><code>Usage.button(button)</code></A></td><td rowspan="3"><code>dev.inject(input, action)</code>, <code>dev.press(input)</code><br />see <A href="/library/inject">Inject</A></td><td>a mouse-button usage</td></tr>
-            <tr><td><code>Usage.key(key)</code></td><td>a keyboard-key usage (<A href="/native/commands/usage#keycodes">keycodes</A>)</td></tr>
-            <tr><td><code>Usage.media(media)</code></td><td>a consumer/media usage (<A href="/native/commands/usage#consumer">usages</A>)</td></tr>
-            <tr><td><A href="/bindings/python/types#motion"><code>Motion.cursor(dx, dy)</code></A></td><td rowspan="2"><code>dev.move_axis(motion, timing, pending)</code><br />see <A href="/library/move">Move</A></td><td>a relative cursor move</td></tr>
-            <tr><td><code>Motion.wheel(delta)</code></td><td>a wheel turn</td></tr>
-            <tr><td><A href="/bindings/python/types#locktarget"><code>LockTarget.x()</code></A> / <code>y()</code> / <code>wheel()</code></td><td rowspan="2"><code>dev.lock(target, direction)</code> / <code>unlock</code><br />see <A href="/library/lock">Lock</A></td><td>an axis lock target</td></tr>
-            <tr><td><code>LockTarget.usage(usage)</code> (or <code>button</code>/<code>key</code>/<code>media</code>)</td><td>a usage lock target</td></tr>
-            <tr><td><A href="/bindings/python/types#catchfilter"><code>CatchFilter.watch(usage)</code></A> / <code>.watch_axis(axis)</code> / <code>.watch_class(cls)</code> / <code>.watch_axes()</code> / <code>.all_input()</code></td><td rowspan="3"><code>dev.catch_events(filters)</code>, <code>dev.input_events(filters)</code><br />see <A href="/library/catch">Catch</A></td><td>one subscription entry on an input class, addressed as a lock is</td></tr>
-            <tr><td><code>.traffic(tc, id)</code> / <code>.traffic_class(tc)</code> / <code>.everything()</code></td><td>one entry on a <A href="/bindings/python/types#trafficclass"><code>TrafficClass</code></A>, or the wildcard across every class</td></tr>
-            <tr><td><code>.with_direction(direction)</code> / <code>.with_capture(n)</code> / <code>.on_press()</code> / <code>.inbound()</code></td><td>a narrowed copy of one</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Builder</th><th>Feeds</th><th>What it makes</th></tr></thead>
+            <tbody>
+              <tr><td><A href="/bindings/python/types#input"><code>Usage.button(button)</code></A></td><td rowspan="3"><code>dev.inject(input, action)</code>, <code>dev.press(input)</code><br />see <A href="/library/inject">Inject</A></td><td>a mouse-button usage</td></tr>
+              <tr><td><code>Usage.key(key)</code></td><td>a keyboard-key usage (<A href="/native/commands/usage#keycodes">keycodes</A>)</td></tr>
+              <tr><td><code>Usage.media(media)</code></td><td>a consumer/media usage (<A href="/native/commands/usage#consumer">usages</A>)</td></tr>
+              <tr><td><A href="/bindings/python/types#motion"><code>Motion.cursor(dx, dy)</code></A></td><td rowspan="2"><code>dev.move_axis(motion, timing, pending)</code><br />see <A href="/library/move">Move</A></td><td>a relative cursor move</td></tr>
+              <tr><td><code>Motion.wheel(delta)</code></td><td>a wheel turn</td></tr>
+              <tr><td><A href="/bindings/python/types#locktarget"><code>LockTarget.x()</code></A> / <code>y()</code> / <code>wheel()</code></td><td rowspan="2"><code>dev.lock(target, direction)</code> / <code>unlock</code><br />see <A href="/library/lock">Lock</A></td><td>an axis lock target</td></tr>
+              <tr><td><code>LockTarget.usage(usage)</code> (or <code>button</code>/<code>key</code>/<code>media</code>)</td><td>a usage lock target</td></tr>
+              <tr><td><A href="/bindings/python/types#catchfilter"><code>CatchFilter.watch(usage)</code></A> / <code>.watch_axis(axis)</code> / <code>.watch_class(cls)</code> / <code>.watch_axes()</code> / <code>.all_input()</code></td><td rowspan="3"><code>dev.catch_events(filters)</code>, <code>dev.input_events(filters)</code><br />see <A href="/library/catch">Catch</A></td><td>one subscription entry on an input class, addressed as a lock is</td></tr>
+              <tr><td><code>.traffic(tc, id)</code> / <code>.traffic_class(tc)</code> / <code>.everything()</code></td><td>one entry on a <A href="/bindings/python/types#trafficclass"><code>TrafficClass</code></A>, or the wildcard across every class</td></tr>
+              <tr><td><code>.with_direction(direction)</code> / <code>.with_capture(n)</code> / <code>.on_press()</code> / <code>.inbound()</code></td><td>a narrowed copy of one</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-python">{`from medius import (Device, Usage, Motion, LockTarget, CatchFilter, TrafficClass,
                     Button, Action, Direction)

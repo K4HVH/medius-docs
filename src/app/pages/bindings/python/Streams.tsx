@@ -44,14 +44,16 @@ const Streams: Component = () => {
           All three are <A href="/bindings/python/api">Device</A> calls that send the box a
           subscribe request.
         </p>
-        <table class="api-params">
-          <thead><tr><th>Call</th><th>Returns</th><th>Channel</th></tr></thead>
-          <tbody>
-            <tr><td><A href="/bindings/python/api#streams"><code>dev.catch_events(filters)</code></A></td><td><code>EventStream</code></td><td>the subscribed traffic: input, raw HID, vendor endpoints, control transactions, bus events (see <A href="/library/catch">Catch</A>)</td></tr>
-            <tr><td><A href="/bindings/python/api#streams"><code>dev.input_events(filters)</code></A></td><td><code>InputStream</code></td><td>the same input, decoded into press and release edges (see <A href="/bindings/python/streams#input">below</A>)</td></tr>
-            <tr><td><A href="/bindings/python/api#streams"><code>dev.logs()</code></A></td><td><code>LogStream</code></td><td>device log lines (see <A href="/library/diagnostics">Logs &amp; counters</A>)</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Call</th><th>Returns</th><th>Channel</th></tr></thead>
+            <tbody>
+              <tr><td><A href="/bindings/python/api#streams"><code>dev.catch_events(filters)</code></A></td><td><code>EventStream</code></td><td>the subscribed traffic: input, raw HID, vendor endpoints, control transactions, bus events (see <A href="/library/catch">Catch</A>)</td></tr>
+              <tr><td><A href="/bindings/python/api#streams"><code>dev.input_events(filters)</code></A></td><td><code>InputStream</code></td><td>the same input, decoded into press and release edges (see <A href="/bindings/python/streams#input">below</A>)</td></tr>
+              <tr><td><A href="/bindings/python/api#streams"><code>dev.logs()</code></A></td><td><code>LogStream</code></td><td>device log lines (see <A href="/library/diagnostics">Logs &amp; counters</A>)</td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           <code>filters</code> is one <A href="/bindings/python/types#catchfilter"><code>CatchFilter</code></A>{' '}
           or an iterable of them, each an address (a{' '}
@@ -105,17 +107,19 @@ CatchFilter.everything()                # every class, every id, one table entry
           <A href="/bindings/python/types#inputevent"><code>InputEvent</code></A> and{' '}
           <A href="/bindings/python/types#logline"><code>LogLine</code></A>.
         </p>
-        <table class="api-params">
-          <thead><tr><th>Method</th><th>Returns</th><th>Behaviour</th></tr></thead>
-          <tbody>
-            <tr><td><code>recv()</code></td><td><code>CatchEvent</code></td><td>Blocks for the next item. Raises <A href="/bindings/python/types#subclasses"><code>DisconnectedError</code></A> when the link drops.</td></tr>
-            <tr><td><code>try_recv()</code></td><td><code>Optional[CatchEvent]</code></td><td>Returns immediately; <code>None</code> if nothing is queued.</td></tr>
-            <tr><td><code>recv_timeout(ms)</code></td><td><code>Optional[CatchEvent]</code></td><td>Waits up to <code>ms</code> milliseconds; <code>None</code> on timeout.</td></tr>
-            <tr><td><code>for ev in stream:</code></td><td>yields each item</td><td>Loops on <code>recv()</code>; ends cleanly when the link drops (no exception).</td></tr>
-            <tr><td><code>clone()</code></td><td><code>EventStream</code></td><td>A second handle to the same subscription; the queue is shared. <code>EventStream</code> and <code>LogStream</code> only.</td></tr>
-            <tr><td><code>close()</code> / <code>with stream:</code></td><td>none</td><td>Release the subscription. Automatic on <code>with</code> exit and GC.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Method</th><th>Returns</th><th>Behaviour</th></tr></thead>
+            <tbody>
+              <tr><td><code>recv()</code></td><td><code>CatchEvent</code></td><td>Blocks for the next item. Raises <A href="/bindings/python/types#subclasses"><code>DisconnectedError</code></A> when the link drops.</td></tr>
+              <tr><td><code>try_recv()</code></td><td><code>Optional[CatchEvent]</code></td><td>Returns immediately; <code>None</code> if nothing is queued.</td></tr>
+              <tr><td><code>recv_timeout(ms)</code></td><td><code>Optional[CatchEvent]</code></td><td>Waits up to <code>ms</code> milliseconds; <code>None</code> on timeout.</td></tr>
+              <tr><td><code>for ev in stream:</code></td><td>yields each item</td><td>Loops on <code>recv()</code>; ends cleanly when the link drops (no exception).</td></tr>
+              <tr><td><code>clone()</code></td><td><code>EventStream</code></td><td>A second handle to the same subscription; the queue is shared. <code>EventStream</code> and <code>LogStream</code> only.</td></tr>
+              <tr><td><code>close()</code> / <code>with stream:</code></td><td>none</td><td>Release the subscription. Automatic on <code>with</code> exit and GC.</td></tr>
+            </tbody>
+          </table>
+        </div>
         <p><code>InputStream</code> has no <code>clone()</code>; open a second one instead.</p>
       </DocSection>
 
@@ -137,16 +141,18 @@ CatchFilter.everything()                # every class, every id, one table entry
  └─ .traffic → TrafficEvent | None     None unless kind == TRAFFIC
                  catch_class, id, direction, flags,
                  true_len, bytes, truncated()`}</pre>
-        <table class="api-params">
-          <thead><tr><th>Payload</th><th>Fields</th><th>Methods</th></tr></thead>
-          <tbody>
-            <tr><td><A href="/bindings/python/types#motionevent"><code>MotionEvent</code></A></td><td><code>dx: int</code>, <code>dy: int</code>, <code>dz: int</code> (the relative deltas at the merge point)</td><td>none</td></tr>
-            <tr><td><A href="/bindings/python/types#usagesnapshot"><code>UsageSnapshot</code></A></td><td><code>usages: List[Usage]</code> (buttons, keys, and media, one shape), <code>cls: Class</code>, <code>direction: Direction</code></td><td><code>is_held(usage)</code>: the built <A href="/bindings/python/types#input"><code>Usage</code></A> is in the snapshot</td></tr>
-            <tr><td><A href="/bindings/python/types#trafficevent"><code>TrafficEvent</code></A></td><td><code>catch_class: CatchClass</code>, <code>id: int</code>, <code>direction: Direction</code>, <code>flags: int</code>, <code>true_len: int</code>, <code>bytes: bytes</code></td><td><code>truncated()</code>, <code>setup()</code>, <code>data()</code>, <code>control_status()</code>, <code>transfer_status()</code>, <code>bus_event()</code>, <code>bulk_end_of_transfer()</code>, <code>zlp()</code></td></tr>
-            <tr><td><A href="/bindings/python/types#inputevent"><code>InputEvent</code></A></td><td><code>kind: InputKind</code>, <code>usage: Optional[Usage]</code>, <code>dx</code>/<code>dy</code>/<code>dz</code>, <code>ts_us</code>, <code>clock</code></td><td><code>is_press</code>, <code>is_release</code></td></tr>
-            <tr><td><A href="/bindings/python/types#logline"><code>LogLine</code></A></td><td><A href="/bindings/python/types#loglevel"><code>level: LogLevel</code></A>, <code>text: str</code></td><td>none</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Payload</th><th>Fields</th><th>Methods</th></tr></thead>
+            <tbody>
+              <tr><td><A href="/bindings/python/types#motionevent"><code>MotionEvent</code></A></td><td><code>dx: int</code>, <code>dy: int</code>, <code>dz: int</code> (the relative deltas at the merge point)</td><td>none</td></tr>
+              <tr><td><A href="/bindings/python/types#usagesnapshot"><code>UsageSnapshot</code></A></td><td><code>usages: List[Usage]</code> (buttons, keys, and media, one shape), <code>cls: Class</code>, <code>direction: Direction</code></td><td><code>is_held(usage)</code>: the built <A href="/bindings/python/types#input"><code>Usage</code></A> is in the snapshot</td></tr>
+              <tr><td><A href="/bindings/python/types#trafficevent"><code>TrafficEvent</code></A></td><td><code>catch_class: CatchClass</code>, <code>id: int</code>, <code>direction: Direction</code>, <code>flags: int</code>, <code>true_len: int</code>, <code>bytes: bytes</code></td><td><code>truncated()</code>, <code>setup()</code>, <code>data()</code>, <code>control_status()</code>, <code>transfer_status()</code>, <code>bus_event()</code>, <code>bulk_end_of_transfer()</code>, <code>zlp()</code></td></tr>
+              <tr><td><A href="/bindings/python/types#inputevent"><code>InputEvent</code></A></td><td><code>kind: InputKind</code>, <code>usage: Optional[Usage]</code>, <code>dx</code>/<code>dy</code>/<code>dz</code>, <code>ts_us</code>, <code>clock</code></td><td><code>is_press</code>, <code>is_release</code></td></tr>
+              <tr><td><A href="/bindings/python/types#logline"><code>LogLine</code></A></td><td><A href="/bindings/python/types#loglevel"><code>level: LogLevel</code></A>, <code>text: str</code></td><td>none</td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           Field meanings are on <A href="/bindings/python/types">Types &amp; errors</A>; held{' '}
           <A href="/native/commands/usage">usage ids</A> come from the{' '}
@@ -241,14 +247,16 @@ print("box-wide dropped:", st.dropped, " clock age:", st.clock.age_ms)`}</code><
           <A href="/bindings/python/api#streams"><code>dev.input_events(filters)</code></A> diffs
           each against what it holds and yields the edges.
         </p>
-        <table class="api-params">
-          <thead><tr><th>Member</th><th>Returns</th><th>Does</th></tr></thead>
-          <tbody>
-            <tr><td><code>recv()</code> / <code>try_recv()</code> / <code>recv_timeout(ms)</code></td><td><A href="/bindings/python/types#inputevent"><code>InputEvent</code></A></td><td>as on <code>EventStream</code>.</td></tr>
-            <tr><td><code>held(input_class)</code></td><td><code>List[Usage]</code></td><td>Which usages of one <A href="/bindings/python/types#class"><code>Class</code></A> this stream currently holds.</td></tr>
-            <tr><td><code>dropped</code></td><td><code>int</code></td><td>Events the queue shed before you read them.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Member</th><th>Returns</th><th>Does</th></tr></thead>
+            <tbody>
+              <tr><td><code>recv()</code> / <code>try_recv()</code> / <code>recv_timeout(ms)</code></td><td><A href="/bindings/python/types#inputevent"><code>InputEvent</code></A></td><td>as on <code>EventStream</code>.</td></tr>
+              <tr><td><code>held(input_class)</code></td><td><code>List[Usage]</code></td><td>Which usages of one <A href="/bindings/python/types#class"><code>Class</code></A> this stream currently holds.</td></tr>
+              <tr><td><code>dropped</code></td><td><code>int</code></td><td>Events the queue shed before you read them.</td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           Every filter must name an input class and cover both edges. A traffic class raises{' '}
           <code>NotAnInputFilterError</code>, <code>everything()</code> raises{' '}
@@ -274,14 +282,16 @@ with Device.find() as dev:
           A catch stamp is microseconds on a chip's clock: it wraps every ~71.6 minutes and relates
           to no clock here. <code>Timeline</code> maps it onto one.
         </p>
-        <table class="api-params">
-          <thead><tr><th>Member</th><th>Returns</th><th>Does</th></tr></thead>
-          <tbody>
-            <tr><td><code>observe(event, now_ns=None)</code></td><td><A href="/bindings/python/types#stamped"><code>Stamped</code></A></td><td>Place one <A href="/bindings/python/types#catchevent"><code>CatchEvent</code></A> on this machine's clock. <code>now_ns</code> defaults to <a href="https://docs.python.org/3/library/time.html#time.monotonic_ns" target="_blank" rel="noreferrer"><code>time.monotonic_ns()</code></a>.</td></tr>
-            <tr><td><code>reset(domain)</code></td><td>none</td><td>Forget one <A href="/bindings/python/types#clockdomain"><code>ClockDomain</code></A>'s rollover count and measured floor, for a chip that rebooted.</td></tr>
-            <tr><td><code>samples(domain)</code></td><td><code>int</code></td><td>Events observed for a domain; the floor is a minimum over these.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Member</th><th>Returns</th><th>Does</th></tr></thead>
+            <tbody>
+              <tr><td><code>observe(event, now_ns=None)</code></td><td><A href="/bindings/python/types#stamped"><code>Stamped</code></A></td><td>Place one <A href="/bindings/python/types#catchevent"><code>CatchEvent</code></A> on this machine's clock. <code>now_ns</code> defaults to <a href="https://docs.python.org/3/library/time.html#time.monotonic_ns" target="_blank" rel="noreferrer"><code>time.monotonic_ns()</code></a>.</td></tr>
+              <tr><td><code>reset(domain)</code></td><td>none</td><td>Forget one <A href="/bindings/python/types#clockdomain"><code>ClockDomain</code></A>'s rollover count and measured floor, for a chip that rebooted.</td></tr>
+              <tr><td><code>samples(domain)</code></td><td><code>int</code></td><td>Events observed for a domain; the floor is a minimum over these.</td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           Feed every event in arrival order. Each domain is tracked separately; the mapping improves
           as it runs.

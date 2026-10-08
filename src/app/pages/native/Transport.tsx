@@ -34,40 +34,42 @@ const Transport: Component = () => {
           A <a href="https://www.wch-ic.com" target="_blank" rel="noreferrer">WCH</a> <a href="https://www.wch-ic.com/products/CH343.html" target="_blank" rel="noreferrer"><code>CH343</code></a> does the USB-to-serial conversion. Match its VID and PID to find
           the box among other serial devices.
         </p>
-        <table class="api-params">
-          <thead>
-            <tr>
-              <th>Property</th>
-              <th>Value</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>VID</td>
-              <td><code>0x1A86</code></td>
-            </tr>
-            <tr>
-              <td>PID</td>
-              <td><code>0x55D3</code></td>
-            </tr>
-            <tr>
-              <td>Baud</td>
-              <td><code>6,000,000</code></td>
-            </tr>
-            <tr>
-              <td>Framing</td>
-              <td><code>8N1</code></td>
-            </tr>
-            <tr>
-              <td>Linux path</td>
-              <td><code>/dev/ttyACM*</code></td>
-            </tr>
-            <tr>
-              <td>Windows path</td>
-              <td><code>COMx</code></td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr>
+                <th>Property</th>
+                <th>Value</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>VID</td>
+                <td><code>0x1A86</code></td>
+              </tr>
+              <tr>
+                <td>PID</td>
+                <td><code>0x55D3</code></td>
+              </tr>
+              <tr>
+                <td>Baud</td>
+                <td><code>6,000,000</code></td>
+              </tr>
+              <tr>
+                <td>Framing</td>
+                <td><code>8N1</code></td>
+              </tr>
+              <tr>
+                <td>Linux path</td>
+                <td><code>/dev/ttyACM*</code></td>
+              </tr>
+              <tr>
+                <td>Windows path</td>
+                <td><code>COMx</code></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           <code>8N1</code> is 8 data bits, no parity, 1 stop bit.
         </p>

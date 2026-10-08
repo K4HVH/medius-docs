@@ -45,15 +45,17 @@ const Streams: Component = () => {
 
 MediusStatus medius_device_logs(struct MediusDevice *dev,
                                 struct MediusLogStream **out);`}</pre>
-        <table class="api-params">
-          <thead><tr><th>Call</th><th>Does</th></tr></thead>
-          <tbody>
-            <tr><td><code>medius_device_catch_events(dev, filters, n_filters, &amp;out)</code></td><td>Subscribe to everything the filters address. See <A href="/library/catch">Catch</A>.</td></tr>
-            <tr><td><code>medius_device_logs(dev, &amp;out)</code></td><td>Open the device LOG channel. See <A href="/library/diagnostics">Logs</A>.</td></tr>
-            <tr><td><code>medius_event_stream_clone(stream)</code> / <code>medius_log_stream_clone(stream)</code></td><td>Another handle to the same subscription. Null in &rarr; null out.</td></tr>
-            <tr><td><code>medius_event_stream_free(stream)</code> / <code>medius_log_stream_free(stream)</code></td><td>Release a handle (unsubscribes when the last clone drops). Null is a no-op.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Call</th><th>Does</th></tr></thead>
+            <tbody>
+              <tr><td><code>medius_device_catch_events(dev, filters, n_filters, &amp;out)</code></td><td>Subscribe to everything the filters address. See <A href="/library/catch">Catch</A>.</td></tr>
+              <tr><td><code>medius_device_logs(dev, &amp;out)</code></td><td>Open the device LOG channel. See <A href="/library/diagnostics">Logs</A>.</td></tr>
+              <tr><td><code>medius_event_stream_clone(stream)</code> / <code>medius_log_stream_clone(stream)</code></td><td>Another handle to the same subscription. Null in &rarr; null out.</td></tr>
+              <tr><td><code>medius_event_stream_free(stream)</code> / <code>medius_log_stream_free(stream)</code></td><td>Release a handle (unsubscribes when the last clone drops). Null is a no-op.</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-c">{`MediusCatchFilter filters[3] = {
     /* every physical button and axis, in full */
@@ -90,23 +92,27 @@ medius_device_catch_events(dev, filters, 3, &events);`}</code></pre>
           <A href="/library/connection">link loss</A>). Each call writes one event through{' '}
           <code>*out</code>.
         </p>
-        <table class="api-params">
-          <thead><tr><th>Function</th><th>Returns</th><th>Blocks?</th></tr></thead>
-          <tbody>
-            <tr><td><code>medius_event_stream_recv(stream, &amp;out)</code></td><td><code>MediusStatus</code> (<code>MEDIUS_STATUS_ERR_DISCONNECTED</code> on close)</td><td>Yes, until the next event</td></tr>
-            <tr><td><code>medius_event_stream_try_recv(stream, &amp;out)</code></td><td><code>bool</code> (<code>false</code> if the queue is empty)</td><td>No, returns at once</td></tr>
-            <tr><td><code>medius_event_stream_recv_timeout(stream, timeout_ms, &amp;out)</code></td><td><code>bool</code> (<code>false</code> on timeout or close)</td><td>Up to <code>timeout_ms</code></td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Function</th><th>Returns</th><th>Blocks?</th></tr></thead>
+            <tbody>
+              <tr><td><code>medius_event_stream_recv(stream, &amp;out)</code></td><td><code>MediusStatus</code> (<code>MEDIUS_STATUS_ERR_DISCONNECTED</code> on close)</td><td>Yes, until the next event</td></tr>
+              <tr><td><code>medius_event_stream_try_recv(stream, &amp;out)</code></td><td><code>bool</code> (<code>false</code> if the queue is empty)</td><td>No, returns at once</td></tr>
+              <tr><td><code>medius_event_stream_recv_timeout(stream, timeout_ms, &amp;out)</code></td><td><code>bool</code> (<code>false</code> on timeout or close)</td><td>Up to <code>timeout_ms</code></td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">LOG STREAM</div>
-        <table class="api-params">
-          <thead><tr><th>Function</th><th>Returns</th></tr></thead>
-          <tbody>
-            <tr><td><code>medius_log_stream_recv(stream, &amp;out)</code></td><td><code>MediusStatus</code> (<code>MEDIUS_STATUS_ERR_DISCONNECTED</code> on close)</td></tr>
-            <tr><td><code>medius_log_stream_try_recv(stream, &amp;out)</code></td><td><code>bool</code> (<code>false</code> if none queued)</td></tr>
-            <tr><td><code>medius_log_stream_recv_timeout(stream, timeout_ms, &amp;out)</code></td><td><code>bool</code> (<code>false</code> on timeout or close)</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Function</th><th>Returns</th></tr></thead>
+            <tbody>
+              <tr><td><code>medius_log_stream_recv(stream, &amp;out)</code></td><td><code>MediusStatus</code> (<code>MEDIUS_STATUS_ERR_DISCONNECTED</code> on close)</td></tr>
+              <tr><td><code>medius_log_stream_try_recv(stream, &amp;out)</code></td><td><code>bool</code> (<code>false</code> if none queued)</td></tr>
+              <tr><td><code>medius_log_stream_recv_timeout(stream, timeout_ms, &amp;out)</code></td><td><code>bool</code> (<code>false</code> on timeout or close)</td></tr>
+            </tbody>
+          </table>
+        </div>
       </DocSection>
 
       <DocSection id="events" title="Event objects" caption="Fixed-size PODs, nothing to free per event">
@@ -154,14 +160,16 @@ typedef struct MediusLogLine {          // from medius_log_stream_recv
     MediusLogLevel level;               // ERROR=0, WARN=1, INFO=2, DEBUG=3, VERBOSE=4
     char text[512];                     // NUL-terminated
 } MediusLogLine;`}</code></pre>
-        <table class="api-params">
-          <thead><tr><th>When <code>kind</code> is</th><th>Read</th><th>Fields</th></tr></thead>
-          <tbody>
-            <tr><td><code>MEDIUS_CATCH_EVENT_KIND_MOTION</code></td><td><code>data.motion</code></td><td><code>dx</code>, <code>dy</code>, <code>dz</code> (cursor and wheel deltas)</td></tr>
-            <tr><td><code>MEDIUS_CATCH_EVENT_KIND_USAGES</code></td><td><code>data.usages</code></td><td><code>usages[0..n]</code>, each a class-tagged <code>MediusUsage</code></td></tr>
-            <tr><td><code>MEDIUS_CATCH_EVENT_KIND_TRAFFIC</code></td><td><code>data.traffic</code></td><td><code>class_</code>, <code>id</code>, <code>direction</code>, <code>flags</code>, and <code>bytes[0..len]</code> of a <code>true_len</code>-byte packet</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>When <code>kind</code> is</th><th>Read</th><th>Fields</th></tr></thead>
+            <tbody>
+              <tr><td><code>MEDIUS_CATCH_EVENT_KIND_MOTION</code></td><td><code>data.motion</code></td><td><code>dx</code>, <code>dy</code>, <code>dz</code> (cursor and wheel deltas)</td></tr>
+              <tr><td><code>MEDIUS_CATCH_EVENT_KIND_USAGES</code></td><td><code>data.usages</code></td><td><code>usages[0..n]</code>, each a class-tagged <code>MediusUsage</code></td></tr>
+              <tr><td><code>MEDIUS_CATCH_EVENT_KIND_TRAFFIC</code></td><td><code>data.traffic</code></td><td><code>class_</code>, <code>id</code>, <code>direction</code>, <code>flags</code>, and <code>bytes[0..len]</code> of a <code>true_len</code>-byte packet</td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           <A href="/native/architecture">Host-chip</A> stamps cover motion, usages,{' '}
           <code>HID_IN</code> and IN traffic; device-chip stamps cover <code>HID_OUT</code>, OUT
@@ -169,14 +177,16 @@ typedef struct MediusLogLine {          // from medius_log_stream_recv
           <A href="/bindings/c/streams#timeline"><code>MediusTimeline</code></A> puts both on your clock.
         </p>
         <div class="api-response-label">INSPECTORS</div>
-        <table class="api-params">
-          <thead><tr><th>Helper</th><th>Does</th></tr></thead>
-          <tbody>
-            <tr><td><code>medius_usage_event_is_held(&amp;ev.data.usages, usage)</code></td><td><code>bool</code>: true if that usage (button, key, or media) is held.</td></tr>
-            <tr><td><code>medius_traffic_event_truncated(&amp;ev.data.traffic)</code></td><td><code>bool</code>: true if <code>len &lt; true_len</code>, meaning the matching entry's <code>capture</code> cut the packet. It separates a cut packet from a short one.</td></tr>
-            <tr><td><code>medius_event_stream_dropped(stream)</code></td><td><code>uint64_t</code>: events dropped because the consumer fell behind (host-side back-pressure).</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Helper</th><th>Does</th></tr></thead>
+            <tbody>
+              <tr><td><code>medius_usage_event_is_held(&amp;ev.data.usages, usage)</code></td><td><code>bool</code>: true if that usage (button, key, or media) is held.</td></tr>
+              <tr><td><code>medius_traffic_event_truncated(&amp;ev.data.traffic)</code></td><td><code>bool</code>: true if <code>len &lt; true_len</code>, meaning the matching entry's <code>capture</code> cut the packet. It separates a cut packet from a short one.</td></tr>
+              <tr><td><code>medius_event_stream_dropped(stream)</code></td><td><code>uint64_t</code>: events dropped because the consumer fell behind (host-side back-pressure).</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="callout callout--info">
           <p>
             <code>medius_event_stream_dropped</code> counts what <em>your</em> consumer lost.{' '}
@@ -247,26 +257,30 @@ medius_event_stream_free(events);`}</code></pre>
           <A href="/bindings/c/api#catch-filters"><code>medius_catch_filter_watch*</code></A>, or
           take all four from <code>medius_catch_filter_all_input</code>.
         </p>
-        <table class="api-params">
-          <thead><tr><th>Function</th><th>Does</th></tr></thead>
-          <tbody>
-            <tr><td><code>medius_input_stream_recv(stream, &amp;out)</code></td><td>Block for the next <A href="/bindings/c/types#input-event"><code>MediusInputEvent</code></A>; <code>MEDIUS_STATUS_ERR_DISCONNECTED</code> on close.</td></tr>
-            <tr><td><code>medius_input_stream_try_recv(stream, &amp;out)</code></td><td><code>bool</code>: the next queued event, or <code>false</code> (never blocks).</td></tr>
-            <tr><td><code>medius_input_stream_recv_timeout(stream, timeout_ms, &amp;out)</code></td><td><code>bool</code>: <code>false</code> on timeout or close.</td></tr>
-            <tr><td><code>medius_input_stream_held(stream, class_, out, cap)</code></td><td>Write that class's held usages into <code>out[0..cap]</code>; returns the count, which exceeds <code>cap</code> when the buffer was short.</td></tr>
-            <tr><td><code>medius_input_stream_dropped(stream)</code></td><td><code>uint64_t</code>: events the subscription dropped behind a slow consumer.</td></tr>
-            <tr><td><code>medius_input_stream_free(stream)</code></td><td>Release the handle; null is a no-op. No clone: the stream owns the held sets it diffs.</td></tr>
-          </tbody>
-        </table>
-        <table class="api-params">
-          <thead><tr><th>Refused with</th><th>Because the filter was</th></tr></thead>
-          <tbody>
-            <tr><td><code>MEDIUS_STATUS_ERR_NOT_AN_INPUT_FILTER</code></td><td>A traffic class, which arrives as bytes and decodes into no edge.</td></tr>
-            <tr><td><code>MEDIUS_STATUS_ERR_WILDCARD_NOT_INPUT</code></td><td><code>medius_catch_filter_everything</code>, which covers traffic too.</td></tr>
-            <tr><td><code>MEDIUS_STATUS_ERR_HALF_EDGE_INPUT_FILTER</code></td><td>Narrowed with <code>_on_press</code> or <code>_on_release</code>: one edge cannot be diffed into two.</td></tr>
-            <tr><td><code>MEDIUS_STATUS_ERR_INVALID_ARG</code></td><td>Carrying a <code>class_</code> or a <code>direction</code> byte no constant names. <code>medius_device_catch_events</code> refuses the same two.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Function</th><th>Does</th></tr></thead>
+            <tbody>
+              <tr><td><code>medius_input_stream_recv(stream, &amp;out)</code></td><td>Block for the next <A href="/bindings/c/types#input-event"><code>MediusInputEvent</code></A>; <code>MEDIUS_STATUS_ERR_DISCONNECTED</code> on close.</td></tr>
+              <tr><td><code>medius_input_stream_try_recv(stream, &amp;out)</code></td><td><code>bool</code>: the next queued event, or <code>false</code> (never blocks).</td></tr>
+              <tr><td><code>medius_input_stream_recv_timeout(stream, timeout_ms, &amp;out)</code></td><td><code>bool</code>: <code>false</code> on timeout or close.</td></tr>
+              <tr><td><code>medius_input_stream_held(stream, class_, out, cap)</code></td><td>Write that class's held usages into <code>out[0..cap]</code>; returns the count, which exceeds <code>cap</code> when the buffer was short.</td></tr>
+              <tr><td><code>medius_input_stream_dropped(stream)</code></td><td><code>uint64_t</code>: events the subscription dropped behind a slow consumer.</td></tr>
+              <tr><td><code>medius_input_stream_free(stream)</code></td><td>Release the handle; null is a no-op. No clone: the stream owns the held sets it diffs.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Refused with</th><th>Because the filter was</th></tr></thead>
+            <tbody>
+              <tr><td><code>MEDIUS_STATUS_ERR_NOT_AN_INPUT_FILTER</code></td><td>A traffic class, which arrives as bytes and decodes into no edge.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_WILDCARD_NOT_INPUT</code></td><td><code>medius_catch_filter_everything</code>, which covers traffic too.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_HALF_EDGE_INPUT_FILTER</code></td><td>Narrowed with <code>_on_press</code> or <code>_on_release</code>: one edge cannot be diffed into two.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_INVALID_ARG</code></td><td>Carrying a <code>class_</code> or a <code>direction</code> byte no constant names. <code>medius_device_catch_events</code> refuses the same two.</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-c">{`MediusCatchFilter filters[4];
 medius_catch_filter_all_input(filters);        /* buttons, keys, media, axes */
@@ -308,14 +322,16 @@ uint64_t medius_timeline_samples(struct MediusTimeline *t, MediusClockDomain dom
           <A href="/bindings/c/types#stamped"><code>MediusStamped</code></A> comes back on that
           scale.
         </p>
-        <table class="api-params">
-          <thead><tr><th>Call</th><th>Does</th></tr></thead>
-          <tbody>
-            <tr><td><code>medius_timeline_observe(t, &amp;ev, now_ns, &amp;out)</code></td><td>Place one event; <code>false</code> on a null argument.</td></tr>
-            <tr><td><code>medius_timeline_reset(t, domain)</code></td><td>Forget that domain's rollover count and measured floor, for a chip that rebooted.</td></tr>
-            <tr><td><code>medius_timeline_samples(t, domain)</code></td><td>Events observed for a domain. The floor is a minimum over these, so a handful is a loose estimate.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Call</th><th>Does</th></tr></thead>
+            <tbody>
+              <tr><td><code>medius_timeline_observe(t, &amp;ev, now_ns, &amp;out)</code></td><td>Place one event; <code>false</code> on a null argument.</td></tr>
+              <tr><td><code>medius_timeline_reset(t, domain)</code></td><td>Forget that domain's rollover count and measured floor, for a chip that rebooted.</td></tr>
+              <tr><td><code>medius_timeline_samples(t, domain)</code></td><td>Events observed for a domain. The floor is a minimum over these, so a handful is a loose estimate.</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-c">{`MediusTimeline *tl = medius_timeline_new();
 

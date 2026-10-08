@@ -11,32 +11,36 @@ const Injection: Component = () => {
           A device is a set of <em>fields</em>, each an <em>Axis</em> (relative motion: X, Y, wheel)
           or a <em>Usage</em> (a momentary button, key, or media control).
         </p>
-        <table class="api-params">
-          <thead>
-            <tr><th>Device</th><th>Axes (<A href="/native/commands/move#move"><code>MOVE</code></A>)</th><th>Momentary (<A href="/native/commands/inject#inject"><code>INJECT</code></A>)</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>mouse</td><td>cursor X/Y, wheel</td><td>buttons</td></tr>
-            <tr><td>keyboard</td><td>none</td><td>keys, modifiers</td></tr>
-            <tr><td>media</td><td>none</td><td>volume, play/pause, ...</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Device</th><th>Axes (<A href="/native/commands/move#move"><code>MOVE</code></A>)</th><th>Momentary (<A href="/native/commands/inject#inject"><code>INJECT</code></A>)</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>mouse</td><td>cursor X/Y, wheel</td><td>buttons</td></tr>
+              <tr><td>keyboard</td><td>none</td><td>keys, modifiers</td></tr>
+              <tr><td>media</td><td>none</td><td>volume, play/pause, ...</td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           Injected input is <em>added to</em> native input:
         </p>
         <pre class="diagram">{`  physical input  (real device)  --+
                                    +-->  one combined report  -->  game PC
   injected input  (control PC)   --+`}</pre>
-        <table class="api-params">
-          <thead>
-            <tr><th>Sent</th><th>Clone emits</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>a <code>MOVE</code> while the mouse moves</td><td>The sum of both.</td></tr>
-            <tr><td>an <code>INJECT</code> press while the user holds nothing</td><td>The injected press.</td></tr>
-            <tr><td>nothing</td><td>Native input only.</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Sent</th><th>Clone emits</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>a <code>MOVE</code> while the mouse moves</td><td>The sum of both.</td></tr>
+              <tr><td>an <code>INJECT</code> press while the user holds nothing</td><td>The injected press.</td></tr>
+              <tr><td>nothing</td><td>Native input only.</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="callout callout--info">
           <p>
             <A href="/native/commands/inject#inject"><code>INJECT</code></A>,{' '}
@@ -57,25 +61,27 @@ const Injection: Component = () => {
           own for each refused chunk.
         </p>
         <p>Correctness comes from:</p>
-        <table class="api-params">
-          <thead>
-            <tr><th>Mechanism</th><th>Effect</th></tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>frame <A href="/native/frame#crc">checksum</A></td>
-              <td>Drops corrupted frames.</td>
-            </tr>
-            <tr>
-              <td><A href="/native/injection#safety">safety rules</A></td>
-              <td>Keep a dropped command from leaving the box stuck.</td>
-            </tr>
-            <tr>
-              <td><A href="/native/commands/requests#health"><code>HEALTH</code></A></td>
-              <td>Reads the box's actual state.</td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Mechanism</th><th>Effect</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>frame <A href="/native/frame#crc">checksum</A></td>
+                <td>Drops corrupted frames.</td>
+              </tr>
+              <tr>
+                <td><A href="/native/injection#safety">safety rules</A></td>
+                <td>Keep a dropped command from leaving the box stuck.</td>
+              </tr>
+              <tr>
+                <td><A href="/native/commands/requests#health"><code>HEALTH</code></A></td>
+                <td>Reads the box's actual state.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
         <p>A lost movement frame costs one millisecond of motion.</p>
       </DocSection>
 
@@ -83,41 +89,43 @@ const Injection: Component = () => {
         <p>
           Pending values the box carries between reports, separate from native input.
         </p>
-        <table class="api-params">
-          <thead>
-            <tr><th>State</th><th>Holds</th></tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>riding accumulator</td>
-              <td>
-                Sent motion and scroll not yet delivered to the PC. An ordinary{' '}
-                <A href="/native/commands/move#move"><code>MOVE</code></A>, cursor or wheel, adds in.
-                Drains into outgoing reports, except with{' '}
-                <A href="/native/commands/option#move-ride">movement riding</A> on, where it waits
-                for a native move to carry it.
-              </td>
-            </tr>
-            <tr>
-              <td>immediate accumulator</td>
-              <td>
-                The same for motion that never waits: a <code>MOVE</code> carrying{' '}
-                <A href="/native/commands/move#flags"><code>NOW</code> or <code>FLUSH</code></A>, and
-                unrendered <A href="/native/commands/clip">clip</A> motion with <code>ride</code> off.
-                Both always exist; riding gates whether the first drains, not which one a move lands
-                in.
-              </td>
-            </tr>
-            <tr>
-              <td>usage override</td>
-              <td>
-                Per usage (button, key, or media): forced active, forced inactive, or left native.
-                Set by <A href="/native/commands/inject#inject"><code>INJECT</code></A> actions:
-                press forces active, force-release forces inactive, soft-release clears both.
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>State</th><th>Holds</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>riding accumulator</td>
+                <td>
+                  Sent motion and scroll not yet delivered to the PC. An ordinary{' '}
+                  <A href="/native/commands/move#move"><code>MOVE</code></A>, cursor or wheel, adds in.
+                  Drains into outgoing reports, except with{' '}
+                  <A href="/native/commands/option#move-ride">movement riding</A> on, where it waits
+                  for a native move to carry it.
+                </td>
+              </tr>
+              <tr>
+                <td>immediate accumulator</td>
+                <td>
+                  The same for motion that never waits: a <code>MOVE</code> carrying{' '}
+                  <A href="/native/commands/move#flags"><code>NOW</code> or <code>FLUSH</code></A>, and
+                  unrendered <A href="/native/commands/clip">clip</A> motion with <code>ride</code> off.
+                  Both always exist; riding gates whether the first drains, not which one a move lands
+                  in.
+                </td>
+              </tr>
+              <tr>
+                <td>usage override</td>
+                <td>
+                  Per usage (button, key, or media): forced active, forced inactive, or left native.
+                  Set by <A href="/native/commands/inject#inject"><code>INJECT</code></A> actions:
+                  press forces active, force-release forces inactive, soft-release clears both.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           A report carries limited movement. A large injected move sends what fits and keeps the
           remainder in its accumulator, spread over as many reports as it takes; nothing is clipped
@@ -129,25 +137,27 @@ const Injection: Component = () => {
         <p>
           Two of the three rows fire on the cloned mouse's tick.
         </p>
-        <table class="api-params">
-          <thead>
-            <tr><th>When</th><th>Sends</th></tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>the mouse reported</td>
-              <td>Native movement plus the drained accumulator; buttons combine physical state and overrides.</td>
-            </tr>
-            <tr>
-              <td>the mouse was still, with motion pending</td>
-              <td>Only the drained accumulator, paced to native report rate (not every millisecond). With <A href="/native/commands/option#move-ride">movement riding</A> on, only motion that <A href="/native/commands/move#flags">bypassed riding</A> goes out this way.</td>
-            </tr>
-            <tr>
-              <td>an <A href="/native/commands/inject#inject"><code>INJECT</code></A> or <A href="/native/commands/admin#reset"><code>RESET</code></A> changed a usage</td>
-              <td>One report with the new state.</td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>When</th><th>Sends</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>the mouse reported</td>
+                <td>Native movement plus the drained accumulator; buttons combine physical state and overrides.</td>
+              </tr>
+              <tr>
+                <td>the mouse was still, with motion pending</td>
+                <td>Only the drained accumulator, paced to native report rate (not every millisecond). With <A href="/native/commands/option#move-ride">movement riding</A> on, only motion that <A href="/native/commands/move#flags">bypassed riding</A> goes out this way.</td>
+              </tr>
+              <tr>
+                <td>an <A href="/native/commands/inject#inject"><code>INJECT</code></A> or <A href="/native/commands/admin#reset"><code>RESET</code></A> changed a usage</td>
+                <td>One report with the new state.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           Otherwise the box sends nothing. A held usage is a single report (the edge), then
           silence until it changes.
@@ -196,33 +206,35 @@ const Injection: Component = () => {
           The box clears all injection (every override and pending move) and returns to plain
           passthrough on any of these:
         </p>
-        <table class="api-params">
-          <thead>
-            <tr><th>Trigger</th><th>Condition</th></tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>silence timeout</td>
-              <td>No valid frame within the timeout (default <code>1000 ms</code>); a crash while holding a button releases it a second later.</td>
-            </tr>
-            <tr>
-              <td>link drop</td>
-              <td>The host-chip link drops.</td>
-            </tr>
-            <tr>
-              <td>mouse unplugged</td>
-              <td>The mouse detaches.</td>
-            </tr>
-            <tr>
-              <td>re-clone</td>
-              <td>The box clones again: another device attaches, a <A href="/native/commands/patch#presentation">patch presentation</A>, or an <A href="/native/commands/update">update</A> takes the clone down.</td>
-            </tr>
-            <tr>
-              <td><A href="/native/commands/admin#reset"><code>RESET</code></A></td>
-              <td>An explicit reset command.</td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Trigger</th><th>Condition</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>silence timeout</td>
+                <td>No valid frame within the timeout (default <code>1000 ms</code>); a crash while holding a button releases it a second later.</td>
+              </tr>
+              <tr>
+                <td>link drop</td>
+                <td>The host-chip link drops.</td>
+              </tr>
+              <tr>
+                <td>mouse unplugged</td>
+                <td>The mouse detaches.</td>
+              </tr>
+              <tr>
+                <td>re-clone</td>
+                <td>The box clones again: another device attaches, a <A href="/native/commands/patch#presentation">patch presentation</A>, or an <A href="/native/commands/update">update</A> takes the clone down.</td>
+              </tr>
+              <tr>
+                <td><A href="/native/commands/admin#reset"><code>RESET</code></A></td>
+                <td>An explicit reset command.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           To hold an injected button, keep the link busy: any valid frame resets the timer, so a
           periodic{' '}
