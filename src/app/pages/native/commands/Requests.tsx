@@ -7,7 +7,7 @@ import { ByteStrip } from '../../../shell/ByteStrip';
 const Requests: Component = () => {
   return (
     <>
-      <PageHeader lead="Query the box for state">
+      <PageHeader>
         <p>
           <A href="/native/commands/requests#requests"><code>QUERY</code></A> gets one{' '}
           <A href="/native/commands/requests#resp"><code>RESP</code></A>. The{' '}

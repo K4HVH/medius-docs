@@ -6,7 +6,7 @@ import { DocSection } from '../../../shell/DocSection';
 const Tracing: Component = () => {
   return (
     <>
-      <PageHeader lead="Structured diagnostics over the link">
+      <PageHeader>
         <p>
           The <code>tracing</code> feature emits a span and events to{' '}
           <a href="https://docs.rs/tracing" target="_blank" rel="noreferrer"><code>tracing</code></a>{' '}

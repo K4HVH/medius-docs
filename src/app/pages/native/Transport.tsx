@@ -6,7 +6,7 @@ import { DocSection } from '../../shell/DocSection';
 const Transport: Component = () => {
   return (
     <>
-      <PageHeader lead="USB-serial port">
+      <PageHeader>
         <p>
           The box enumerates as an ordinary USB-serial port carrying raw bytes. Open it at the fixed
           baud, send <A href="/native/frame">frames</A>, and confirm the box with the{' '}

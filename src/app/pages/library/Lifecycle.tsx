@@ -6,7 +6,7 @@ import { DocSection } from '../../shell/DocSection';
 const Lifecycle: Component = () => {
   return (
     <>
-      <PageHeader lead="Held state after a dropped link or released session">
+      <PageHeader>
         <p>The library holds overrides past the box's <A href="/native/injection#safety">silence-timeout clear</A>, and restores them after a dropped link or when the box drops them.</p>
         <div class="table-scroll">
           <table class="api-params">

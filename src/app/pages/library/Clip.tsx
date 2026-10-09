@@ -6,7 +6,7 @@ import { DocSection } from '../../shell/DocSection';
 const Clip: Component = () => {
   return (
     <>
-      <PageHeader lead="Preload input, box-clocked playback">
+      <PageHeader>
         <p>
           A <A href="/library/clip#builder"><code>ClipBuilder</code></A> builds per-frame input; the{' '}
           <A href="/library/clip#handle"><code>ClipHandle</code></A> from{' '}

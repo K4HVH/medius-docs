@@ -7,7 +7,7 @@ import { ByteStrip } from '../../../shell/ByteStrip';
 const Transfer: Component = () => {
   return (
     <>
-      <PageHeader lead="One control request on the real device">
+      <PageHeader>
         <p>
           <A href="/native/commands/transfer#transfer"><code>TRANSFER</code></A> runs one USB control
           transfer on the real device from the control PC;{' '}

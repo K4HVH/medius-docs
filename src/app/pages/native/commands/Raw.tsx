@@ -7,7 +7,7 @@ import { ByteStrip } from '../../../shell/ByteStrip';
 const Raw: Component = () => {
   return (
     <>
-      <PageHeader lead="Verbatim bytes on a cloned endpoint">
+      <PageHeader>
         <p>
           <A href="/native/commands/raw#raw"><code>RAW</code></A> places one packet or bulk transfer,
           byte for byte, on an endpoint named by number and direction: IN to the game PC, OUT to the

@@ -6,7 +6,7 @@ import { DocSection } from '../shell/DocSection';
 const AiAccess: Component = () => {
   return (
     <>
-      <PageHeader lead="Docs for agents">
+      <PageHeader>
         <p>
           Every page is served as a <A href="/ai#markdown">Markdown twin</A>, indexed in{' '}
           <A href="/ai#llms">llms.txt</A>, and exposed by an <A href="/ai#mcp">MCP server</A>.

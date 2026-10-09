@@ -7,7 +7,7 @@ import { ByteStrip } from '../../../shell/ByteStrip';
 const Lock: Component = () => {
   return (
     <>
-      <PageHeader lead="Weigh one physical input by class">
+      <PageHeader>
         <p>
           <A href="/native/commands/lock#lock"><code>LOCK</code></A> sets how much of one physical
           input reaches the game PC. <A href="/native/injection">Injection</A> drives that input at

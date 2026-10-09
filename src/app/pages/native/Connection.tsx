@@ -6,7 +6,7 @@ import { DocSection } from '../../shell/DocSection';
 const Connection: Component = () => {
   return (
     <>
-      <PageHeader lead="Open, find, and handshake">
+      <PageHeader>
         <p>
           The handshake confirms the serial device is a Medius box speaking a supported protocol
           version: one request, one reply.

@@ -7,7 +7,7 @@ import { ByteStrip } from '../../../shell/ByteStrip';
 const Option: Component = () => {
   return (
     <>
-      <PageHeader lead="Set a persistent box option by id">
+      <PageHeader>
         <p>
           One command (opcode <code>0x11</code>) sets every box-level toggle: an <code>id</code> byte
           picks the option, the rest is its value. All persist in NVS, restore at boot, and are{' '}

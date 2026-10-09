@@ -6,11 +6,11 @@ import { DocSection } from '../../shell/DocSection';
 const Flashing: Component = () => {
   return (
     <>
-      <PageHeader lead="First install and recovery">
+      <PageHeader>
         <p>
           A box already running Medius updates over the control port with{' '}
-          <A href="/native/commands/update"><code>UPDATE</code></A>. This page is for a chip that
-          can't: one never given the two-slot layout, or one whose app won't boot.
+          <A href="/native/commands/update"><code>UPDATE</code></A>. This page is for a first install
+          and for a chip that can't: one never given the two-slot layout, or one whose app won't boot.
         </p>
         <p>
           While firmware runs, no button is needed:{' '}

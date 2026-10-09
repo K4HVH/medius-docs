@@ -6,7 +6,7 @@ import { DocSection } from '../../../shell/DocSection';
 const Install: Component = () => {
   return (
     <>
-      <PageHeader lead="One header, one prebuilt library">
+      <PageHeader>
         <p>
           Download your platform's archive, point the compiler at <code>include/</code> and{' '}
           <code>lib/</code>, and link. <code>medius.h</code> and <code>libmedius_capi</code> serve{' '}

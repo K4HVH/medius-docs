@@ -6,7 +6,7 @@ import { DocSection } from '../../shell/DocSection';
 const Move: Component = () => {
   return (
     <>
-      <PageHeader lead="Cursor motion, scroll, and pan">
+      <PageHeader>
         <p>
           <A href="/library/move#move"><code>move_axis</code></A> drives every relative axis; the rest
           wrap it. Each call queues one{' '}

@@ -6,7 +6,7 @@ import { DocSection } from '../../../shell/DocSection';
 const Usage: Component = () => {
   return (
     <>
-      <PageHeader lead="Status codes, handle lifecycle, builders">
+      <PageHeader>
         <p>
           What each call <em>does</em> is in the <A href="/library">Rust Library</A> and{' '}
           <A href="/native">Native API</A> sections. The <A href="/bindings/c/api">API index</A>{' '}

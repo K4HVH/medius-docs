@@ -7,7 +7,7 @@ import { ByteStrip } from '../../../shell/ByteStrip';
 const Rewrite: Component = () => {
   return (
     <>
-      <PageHeader lead="Match traffic in flight and change it">
+      <PageHeader>
         <p>
           <A href="/native/commands/rewrite#rewrite"><code>REWRITE</code></A> manages up to 32 rules
           on the device chip. A rule matches packets at one surface and passes, drops,

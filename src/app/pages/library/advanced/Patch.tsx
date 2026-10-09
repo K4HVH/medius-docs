@@ -6,7 +6,7 @@ import { DocSection } from '../../../shell/DocSection';
 const Patch: Component = () => {
   return (
     <>
-      <PageHeader lead="Overwrite the bytes the clone presents">
+      <PageHeader>
         <p>
           A descriptor patch overwrites bytes in what the clone presents at enumeration, keyed by{' '}
           <code>(section, cfg, index, offset)</code> and persisted per device (VID:PID) in the box's NVS.

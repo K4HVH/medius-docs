@@ -6,7 +6,7 @@ import { DocSection } from '../../shell/DocSection';
 const GuideCalls: Component = () => {
   return (
     <>
-      <PageHeader id="call-kinds" lead="Fire-and-forget, blocking query, no round-trip">
+      <PageHeader id="call-kinds">
         <p>
           Every <A href="/library/connection"><code>Device</code></A> method is one of three kinds,
           tagged with a badge on the <A href="/library">API pages</A>.

@@ -6,7 +6,7 @@ import { DocSection } from '../../../shell/DocSection';
 const Async: Component = () => {
   return (
     <>
-      <PageHeader lead="AsyncDevice on any executor">
+      <PageHeader>
         <p>
           <code>AsyncDevice</code> is <A href="/library/connection"><code>Device</code></A> with its
           queries as futures, behind the off-by-default <code>async</code> flag.

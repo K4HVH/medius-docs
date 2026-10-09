@@ -6,7 +6,7 @@ import { DocSection } from '../../shell/DocSection';
 const Overview: Component = () => {
   return (
     <>
-      <PageHeader lead="C, C++ and Python clients">
+      <PageHeader>
         <p>
           A <A href="/native/hardware">medius box</A> sits between a mouse and a PC: the mouse passes
           through untouched, and your program <A href="/native/injection">injects input</A> over a{' '}

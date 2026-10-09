@@ -6,7 +6,7 @@ import { DocSection } from '../../../shell/DocSection';
 const Transfer: Component = () => {
   return (
     <>
-      <PageHeader lead="Control requests to the real device">
+      <PageHeader>
         <p>
           <code>transfer</code> runs one USB control transfer on the real device behind the host chip
           and returns the reply as a{' '}

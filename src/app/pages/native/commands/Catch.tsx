@@ -7,7 +7,7 @@ import { ByteStrip } from '../../../shell/ByteStrip';
 const Catch: Component = () => {
   return (
     <>
-      <PageHeader lead="Stream box traffic, addressed like a lock">
+      <PageHeader>
         <p>
           <A href="/native/commands/catch#catch"><code>CATCH</code></A> subscribes to traffic through
           the box: physical input, vendor-interface endpoints, proxied control transactions, raw

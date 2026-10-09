@@ -198,7 +198,6 @@ html { scroll-padding-top: calc(var(--nav-h) + 24px); }
 .page-header h1 {
   margin: 20px 0 0; font: 700 clamp(44px, 5vw, 72px)/1 var(--sans); letter-spacing: -0.035em; color: var(--text);
 }
-.page-header .lead { margin: 20px 0 0; font-size: 19px; line-height: 1.6; color: var(--text-2); }
 
 /* Sections: a rule, a heading, the content. The gaps are set on what is drawn: 44px from the last ink
    above the rule, 44px from the rule to the heading's capitals, 24px from its baseline to the content. */

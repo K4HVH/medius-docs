@@ -6,7 +6,7 @@ import { DocSection } from '../../../shell/DocSection';
 const Streams: Component = () => {
   return (
     <>
-      <PageHeader lead="Live input and device logs">
+      <PageHeader>
         <p>
           <A href="/native/hardware">The box</A> has two live channels: the traffic it carries
           (<A href="/library/catch">Catch</A>: physical input and the USB bytes behind it) and its log

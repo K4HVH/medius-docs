@@ -6,7 +6,7 @@ import { DocSection } from '../../../shell/DocSection';
 const Api: Component = () => {
   return (
     <>
-      <PageHeader lead="Every C function, linked to what it does">
+      <PageHeader>
         <p>
           Every <code>medius_*</code> call in <A href="/bindings/c"><code>medius.h</code></A>, grouped.
           Semantics are in the <A href="/library">Rust library</A> (the{' '}

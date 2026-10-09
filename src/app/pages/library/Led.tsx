@@ -6,7 +6,7 @@ import { DocSection } from '../../shell/DocSection';
 const Led: Component = () => {
   return (
     <>
-      <PageHeader lead="Status LED override">
+      <PageHeader>
         <p>
           <A href="/library/led#led"><code>led</code></A> overrides one of the box's two green status
           LEDs; <A href="/library/types/enums#led-mode"><code>LedMode::Auto</code></A> returns it to the

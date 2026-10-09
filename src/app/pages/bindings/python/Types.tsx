@@ -6,7 +6,7 @@ import { DocSection } from '../../../shell/DocSection';
 const Types: Component = () => {
   return (
     <>
-      <PageHeader lead="Every enum, dataclass, and exception">
+      <PageHeader>
         <p>
           The values the <A href="/bindings/python/api">API</A> takes and returns. Field meanings
           are on the <A href="/library/types">Library types</A> and <A href="/native">Native API</A>;

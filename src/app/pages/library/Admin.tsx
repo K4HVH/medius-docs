@@ -6,7 +6,7 @@ import { DocSection } from '../../shell/DocSection';
 const Admin: Component = () => {
   return (
     <>
-      <PageHeader lead="Reset, store erase, chip reboot">
+      <PageHeader>
         <p>
           <A href="/library/admin#reboot"><code>reboot</code></A> restarts one of the two chips,{' '}
           <A href="/library/admin#factory-reset"><code>factory_reset</code></A> erases what the box keeps

@@ -7,7 +7,7 @@ import { ByteStrip } from '../../../shell/ByteStrip';
 const Patch: Component = () => {
   return (
     <>
-      <PageHeader lead="Overwrite bytes in the clone's descriptors">
+      <PageHeader>
         <p>
           <A href="/native/commands/patch#patch"><code>PATCH</code></A> stores byte overwrites for the
           descriptors the clone serves at enumeration. The set persists in NVS under the device's

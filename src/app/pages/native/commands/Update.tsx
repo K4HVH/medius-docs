@@ -7,7 +7,7 @@ import { ByteStrip } from '../../../shell/ByteStrip';
 const Update: Component = () => {
   return (
     <>
-      <PageHeader lead="Replace either chip's firmware over this port">
+      <PageHeader>
         <p>
           <A href="/native/commands/update#update"><code>UPDATE</code></A> writes new firmware to
           either chip while the box runs, over the control port with no BOOT button: a{' '}

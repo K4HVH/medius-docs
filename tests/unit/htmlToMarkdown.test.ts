@@ -13,13 +13,13 @@ describe('htmlToMarkdown', () => {
     expect(htmlToMarkdown('<div class="card__header"><h3>clip</h3></div>')).toBe('## clip');
   });
 
-  it('renders the page header as the h1, its lead in italics, and drops its crumbs and AI menu', () => {
+  it('renders the page header as the h1, and drops its crumbs and AI menu', () => {
     const md = htmlToMarkdown(
       '<header class="page-header"><div class="page-header__bar"><nav class="crumbs caps" data-agent-hide>' +
         '<a href="/">Medius</a> / <a href="/native">Native API</a></nav><span class="ai-actions">AI</span></div>' +
-        '<h1>Inject</h1><p class="lead">Press and release any input</p><p>Intro.</p></header>',
+        '<h1>Inject</h1><p>Intro.</p></header>',
     );
-    expect(md).toBe('# Inject\n\n_Press and release any input_\n\nIntro.');
+    expect(md).toBe('# Inject\n\nIntro.');
   });
 
   it('renders a section heading as an h2 with its caption in italics, not run together', () => {

@@ -6,7 +6,7 @@ import { DocSection } from '../../shell/DocSection';
 const Update: Component = () => {
   return (
     <>
-      <PageHeader lead="Either chip's firmware, over the open connection">
+      <PageHeader>
         <p>
           <A href="/library/update#stage-firmware"><code>stage_firmware</code></A> writes an image and{' '}
           <A href="/library/update#activate-firmware"><code>activate_firmware</code></A> commits it;{' '}

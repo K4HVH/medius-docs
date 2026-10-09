@@ -6,7 +6,7 @@ import { DocSection } from '../../../shell/DocSection';
 const Build: Component = () => {
   return (
     <>
-      <PageHeader lead="Linking and optional features">
+      <PageHeader>
         <p>
           Two files: the header <A href="/bindings/c"><code>medius.h</code></A> and the library{' '}
           <A href="/bindings/c"><code>libmedius_capi</code></A>. C++ uses the same header with{' '}

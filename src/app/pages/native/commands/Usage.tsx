@@ -6,7 +6,7 @@ import { DocSection } from '../../../shell/DocSection';
 const Usage: Component = () => {
   return (
     <>
-      <PageHeader lead="Ids for INJECT and LOCK">
+      <PageHeader>
         <p>
           <A href="/native/commands/inject#inject"><code>INJECT</code></A> and{' '}
           <A href="/native/commands/lock#lock"><code>LOCK</code></A> name an input by an{' '}

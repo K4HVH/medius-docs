@@ -6,7 +6,7 @@ import { DocSection } from '../../shell/DocSection';
 const Catch: Component = () => {
   return (
     <>
-      <PageHeader lead="Observe box traffic, addressed like a lock">
+      <PageHeader>
         <p>
           <A href="/library/catch#input-events"><code>input_events</code></A> yields press and release
           edges; <A href="/library/catch#catch-events"><code>catch_events</code></A> yields the raw
@@ -16,8 +16,8 @@ const Catch: Component = () => {
         </p>
         <p>
           A subscription is a table of{' '}
-          <A href="/library/types/structs#catch-filter"><code>CatchFilter</code></A> entries; the
-          address is the filter, down to one endpoint, since vendor bulk alone measures ~250&nbsp;KiB/s
+          <A href="/library/types/structs#catch-filter"><code>CatchFilter</code></A> entries, addressed like
+          a <A href="/library/lock"><code>lock</code></A>; the address is the filter, down to one endpoint, since vendor bulk alone measures ~250&nbsp;KiB/s
           on a 6&nbsp;Mbaud control link.
         </p>
       </PageHeader>
