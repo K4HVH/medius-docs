@@ -96,8 +96,11 @@ export interface BoxSession {
     source?: FlashSource,
   ) => Promise<'verified' | 'sent' | 'failed'>;
   deviceLog: Accessor<string[]>;
+  // Every line ever added, so a view of a log at its cap still knows which lines are new.
+  deviceLogAdded: Accessor<number>;
   clearDeviceLog: () => void;
   inputEvents: Accessor<InputEventEntry[]>;
+  inputEventsAdded: Accessor<number>;
   clearInputEvents: () => void;
   // A raw catch-stream tap for a consumer that buffers events itself; returns an unsubscribe.
   subscribeEvents: (fn: (ev: CatchEvent, seq: number) => void) => () => void;
@@ -204,8 +207,15 @@ export function createBoxSession(
     const [updateProgress, setUpdateProgress] = createSignal<FlashProgress | null>(null);
     const [update, setUpdate] = createSignal<UpdateRun | null>(null);
     const [firmwareInfo, setFirmwareInfo] = createSignal<FirmwareInfo | null>(null);
-    const [deviceLog, setDeviceLog] = createSignal<string[]>([]);
-    const [inputEvents, setInputEvents] = createSignal<InputEventEntry[]>([]);
+    // A list and its count of everything added change together, in one signal.
+    const [log, setLog] = createSignal<{ lines: string[]; added: number }>({ lines: [], added: 0 });
+    const deviceLog = () => log().lines;
+    const deviceLogAdded = () => log().added;
+    const setDeviceLog = (lines: string[]) => setLog((l) => ({ lines, added: l.added }));
+    const [events, setEvents] = createSignal<{ list: InputEventEntry[]; added: number }>({ list: [], added: 0 });
+    const inputEvents = () => events().list;
+    const inputEventsAdded = () => events().added;
+    const setInputEvents = (list: InputEventEntry[]) => setEvents((e) => ({ list, added: e.added }));
     const [seenName, setSeenName] = createSignal<string | null>(versionOf(init.probe ?? null)?.name ?? null);
     const eventTaps = new Set<(ev: CatchEvent, seq: number) => void>();
 
@@ -295,9 +305,9 @@ export function createBoxSession(
 
     const makeLink = (p: SerialPort): SerialLink => {
       const nl: SerialLink = build(p, {
-        onLog: (ln) => setDeviceLog((prev) => [...prev, formatLogLine(ln)].slice(-500)),
+        onLog: (ln) => setLog((l) => ({ lines: [...l.lines, formatLogLine(ln)].slice(-500), added: l.added + 1 })),
         onEvent: (ev, seq) => {
-          setInputEvents((prev) => [...prev, { seq, ev }].slice(-200));
+          setEvents((e) => ({ list: [...e.list, { seq, ev }].slice(-200), added: e.added + 1 }));
           eventTaps.forEach((fn) => fn(ev, seq));
         },
         onClose: () => {
@@ -775,8 +785,10 @@ export function createBoxSession(
       readFirmwareInfo,
       updateOverControl,
       deviceLog,
+      deviceLogAdded,
       clearDeviceLog,
       inputEvents,
+      inputEventsAdded,
       clearInputEvents,
       subscribeEvents,
     };

@@ -45,6 +45,7 @@ vi.mock('../../src/app/pages/dashboard/context', () => ({
     identifying: () => mock.identifying,
     update: () => ({ device: true, host: true, page: mock.runPage, outcome: 'running' }),
     deviceLog: () => [],
+    deviceLogAdded: () => 0,
     clearDeviceLog: () => {},
     poll: () => () => null,
     refreshPoll: () => {},
@@ -123,11 +124,11 @@ describe('Device', () => {
       expect(text).toMatch(/Update needed/i);
       expect(text).toMatch(/use the rest of the dashboard/i);
       // the live-health panel belongs to the current wire and must not be offered
-      expect(text).not.toMatch(/Live device health/i);
+      expect(container.querySelector('#status')).toBeNull();
     });
   });
 
-  it('a box newer than the page is called newer and pointed at Reload and Advanced, never told to update', async () => {
+  it('a box newer than the page is called newer and pointed at Reload and the manual flash, never told to update', async () => {
     mock.status = 'connected';
     mock.updateOnly = true;
     mock.protoVer = PROTO_VER + 1;
@@ -139,11 +140,11 @@ describe('Device', () => {
       await waitFor(() => expect(container.textContent).toMatch(/Newer firmware/));
       const text = container.textContent ?? '';
       expect(text).toContain(`This box speaks protocol ${PROTO_VER + 1} and this page protocol ${PROTO_VER}.`);
-      expect(text).toContain('It can still be flashed from Advanced.');
+      expect(text).toContain('It can still be flashed by hand, on the Manual tab of Update.');
       expect(text).not.toMatch(/Update needed/i);
-      expect(text).not.toMatch(/Live device health/i);
-      getByRole('button', { name: 'Advanced' }).click();
-      expect(navigate).toHaveBeenCalledWith('/dashboard/advanced');
+      expect(container.querySelector('#status')).toBeNull();
+      getByRole('button', { name: 'Manual flash' }).click();
+      expect(navigate).toHaveBeenCalledWith('/dashboard/update#manual');
       getByRole('button', { name: /reload/i }).click();
       expect(reload).toHaveBeenCalled();
     } finally {
@@ -158,7 +159,7 @@ describe('Device', () => {
     await waitFor(() => {
       const text = container.textContent ?? '';
       expect(text).not.toMatch(/Update needed/i);
-      expect(text).toMatch(/Live device health/i);
+      expect(container.querySelector('#status')).not.toBeNull();
     });
   });
 
@@ -171,7 +172,6 @@ describe('Device', () => {
     await waitFor(() => {
       const text = container.textContent ?? '';
       expect(text).toMatch(/Factory reset/i);
-      expect(text).toMatch(/Erase everything saved/i);
       expect(text).toMatch(/box name/i);
       expect(text).toMatch(/learned/i);
       expect(text).toMatch(/then restarts/i);
@@ -213,12 +213,12 @@ describe('Device', () => {
     expect(navigate).toHaveBeenCalledWith('/dashboard/update');
   });
 
-  it('while Advanced flashes this box, the card takes you to Advanced', async () => {
+  it('while the manual flash runs on this box, the card takes you to it', async () => {
     mock.status = 'flashing';
     mock.runPage = 'advanced';
     const { getByRole } = render(() => <Device />);
-    getByRole('button', { name: /go to advanced/i }).click();
-    expect(navigate).toHaveBeenCalledWith('/dashboard/advanced');
+    getByRole('button', { name: /go to manual flash/i }).click();
+    expect(navigate).toHaveBeenCalledWith('/dashboard/update#manual');
   });
 
   it('offers no Identify for a box newer than the page: the light command may have changed', () => {

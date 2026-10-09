@@ -192,7 +192,7 @@ describe('DeviceInfo: the Performance card', () => {
   };
 
   const chip = (container: HTMLElement, row: string) =>
-    [...container.querySelectorAll('div')].find((d) => d.firstElementChild?.textContent === row)?.querySelector('.chip');
+    [...container.querySelectorAll('tr')].find((tr) => tr.firstElementChild?.textContent === row)?.querySelector('.chip');
 
   it('a box losing nothing shows every counter at zero', async () => {
     mouse();
