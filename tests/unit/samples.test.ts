@@ -22,11 +22,12 @@ describe('descriptor sample', () => {
     ]);
   });
 
-  it('names the device, its ids, the firmware and the day', () => {
+  it('names the device, its ids and the firmware, and carries no capture date', () => {
     expect(DESCRIPTOR_SAMPLE.device).not.toBe('');
     expect(DESCRIPTOR_SAMPLE.vidpid).toMatch(/^[0-9a-f]{4}:[0-9a-f]{4}$/);
     expect(DESCRIPTOR_SAMPLE.firmware).toMatch(/^\d+\.\d+\.\d+$/);
-    expect(DESCRIPTOR_SAMPLE.captured).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(DESCRIPTOR_SAMPLE).not.toHaveProperty('captured');
+    expect(FEED_SAMPLE).not.toHaveProperty('captured');
   });
 });
 

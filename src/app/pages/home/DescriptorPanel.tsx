@@ -280,7 +280,7 @@ export function DescriptorPanel(props: { sample: DescriptorSample }) {
           </table>
         </div>
         <p class="desc-src caps">
-          {props.sample.device} · {props.sample.vidpid} · v{props.sample.firmware} · captured {props.sample.captured}
+          {props.sample.device} · {props.sample.vidpid} · v{props.sample.firmware}
         </p>
       </div>
     </section>
