@@ -1,7 +1,7 @@
 // The changelog and stats pages read the server at run time, so their prerendered snapshots hold only
 // "Loading...". These fill that block per request, for crawlers that run no JavaScript.
 import type { FirmwareRelease } from '../src/dashboard/firmware/client';
-import { inlineRuns, parseBlocks, splitRelease, type Block } from '../src/dashboard/firmware/notes';
+import { groupCommits, inlineRuns, parseBlocks, splitRelease, type Block, type CommitGroup } from '../src/dashboard/firmware/notes';
 import { SITE } from '../src/app/site';
 import { COMPAT, KIND_LABEL, VERDICT_LABEL } from '../src/app/data/compatibility';
 import { mergeCompat } from '../src/app/data/compatMerge';
@@ -40,7 +40,7 @@ const blocks = (list: Block[]) =>
   list
     .map((b) =>
       b.kind === 'heading'
-        ? `<div class="release__heading">${esc(b.text)}</div>`
+        ? `<p class="sublabel">${esc(b.text)}</p>`
         : b.kind === 'list'
           ? `<ul>${b.items.map((i) => `<li>${runs(i)}</li>`).join('')}</ul>`
           : `<p>${runs(b.text)}</p>`,
@@ -54,13 +54,30 @@ const date = (iso: string) => {
     : d.toLocaleDateString('en', { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' });
 };
 
+const groups = (list: CommitGroup[]) =>
+  '<div class="cmts">' +
+  list
+    .map(
+      (g) =>
+        (g.repo ? `<p class="sublabel">${esc(g.repo)}</p>` : '') +
+        `<ol>${g.commits.map((c) => `<li>${esc(c.subject)}${c.hash ? `<code>${c.hash}</code>` : ''}</li>`).join('')}</ol>`,
+    )
+    .join('') +
+  '</div>';
+
+// As Changelog.tsx draws a release, with the commits in a <details> that opens where no script runs.
 function releaseHtml(r: FirmwareRelease): string {
   const { notes, commits } = splitRelease(r.notes);
-  const folded = commits ? `<details><summary>Show commits</summary>${blocks(parseBlocks(commits))}</details>` : '';
-  const pre = r.prerelease ? ' <span class="release__pre">Pre-release</span>' : '';
+  const listed = commits ? groupCommits(commits) : null;
+  const folded = commits
+    ? `<details><summary>Show commits</summary>${listed ? groups(listed) : blocks(parseBlocks(commits))}</details>`
+    : '';
+  const old = commits ? null : groupCommits(notes);
+  const pre = r.prerelease ? '<span class="chip chip--warning"><span class="chip__label">Pre-release</span></span>' : '';
   return (
-    `<section id="${esc(r.tag)}" class="release"><div class="release__title"><h4>${esc(r.tag)}</h4>${pre}` +
-    `<span class="release__date">${esc(date(r.publishedAt))}</span></div>${blocks(parseBlocks(notes))}${folded}</section>`
+    `<section id="${esc(r.tag)}" class="rel"><div class="rel-l"><h2>${esc(r.tag)}</h2>` +
+    `<time class="caps" datetime="${esc(r.publishedAt)}">${esc(date(r.publishedAt))}</time>${pre}</div>` +
+    `<div class="rel-r">${old ? groups(old) : blocks(parseBlocks(notes))}${folded}</div></section>`
   );
 }
 
@@ -102,7 +119,7 @@ async function fresh(path: string, sources: FillSources, html: string): Promise<
     const releases = await read(sources.releases);
     if (!releases) return null;
     // The data goes outside #root, which the client clears before it renders.
-    const list = `<div class="releases">${releases.map(releaseHtml).join('')}</div>`;
+    const list = `<div class="rels">${releases.map(releaseHtml).join('')}</div>`;
     return replaceFill(html, 'changelog', list).replace('</body>', () => `${embed('releases-data', releases)}</body>`);
   }
   const stats = await read(sources.stats);
