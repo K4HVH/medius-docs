@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { COMMITS_MARKER, splitRelease, parseBlocks, linkify, inlineRuns } from '../../src/dashboard/firmware/notes';
+import { COMMITS_MARKER, splitRelease, parseBlocks, linkify, inlineRuns, groupCommits } from '../../src/dashboard/firmware/notes';
 
 const BODY = [
   '## Changes',
@@ -67,5 +67,46 @@ describe('inlineRuns', () => {
 
   it('leaves a lone asterisk or backtick as text', () => {
     expect(inlineRuns('2 * 3 and a ` tick')).toEqual([{ text: '2 * 3 and a ` tick' }]);
+  });
+});
+
+describe('groupCommits', () => {
+  it('groups commits under the bold line naming their repo, each subject apart from its hash', () => {
+    const md = [
+      '**Firmware**',
+      '- firmware: control requests are answered from RAM (bf6e62f)',
+      '- release v3.4.5 (95a4d53)',
+      '',
+      '**Docs**',
+      '- dashboard: fewer words on the Update page (8b0a097)',
+      '**Library**',
+    ].join('\n');
+    expect(groupCommits(md)).toEqual([
+      {
+        repo: 'Firmware',
+        commits: [
+          { subject: 'firmware: control requests are answered from RAM', hash: 'bf6e62f' },
+          { subject: 'release v3.4.5', hash: '95a4d53' },
+        ],
+      },
+      { repo: 'Docs', commits: [{ subject: 'dashboard: fewer words on the Update page', hash: '8b0a097' }] },
+    ]);
+  });
+
+  it('keeps a commit with no hash, and one before any repo line in a group with no name', () => {
+    expect(groupCommits('- fw: a fix (a1b2c3d)\n- fw: (with brackets) inside')).toEqual([
+      {
+        repo: null,
+        commits: [
+          { subject: 'fw: a fix', hash: 'a1b2c3d' },
+          { subject: 'fw: (with brackets) inside', hash: null },
+        ],
+      },
+    ]);
+  });
+
+  it('reads nothing as a commit list that carries prose, so such notes render as written', () => {
+    expect(groupCommits('**Firmware**\nThis release fixes updates.\n- fw: a fix (a1b2c3d)')).toBeNull();
+    expect(groupCommits('')).toBeNull();
   });
 });

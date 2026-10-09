@@ -38,6 +38,32 @@ export function parseBlocks(md: string): Block[] {
   return blocks;
 }
 
+export interface CommitGroup {
+  repo: string | null;
+  commits: { subject: string; hash: string | null }[];
+}
+
+// A release's commit list: a bold line names a repo and the bullets under it are its commits, each
+// "subject (hash)". Null for anything holding other lines, which renders as written. A repo with no
+// commits is left out.
+export function groupCommits(md: string): CommitGroup[] | null {
+  const groups: CommitGroup[] = [];
+  for (const raw of md.split('\n')) {
+    const line = raw.trim();
+    if (!line) continue;
+    const repo = line.match(/^\*\*(.+?)\*\*$/);
+    const bullet = line.match(/^[-*]\s+(.*)$/);
+    if (repo) groups.push({ repo: repo[1], commits: [] });
+    else if (bullet) {
+      if (!groups.length) groups.push({ repo: null, commits: [] });
+      const c = bullet[1].match(/^(.*?)\s+\(([0-9a-f]{7,40})\)$/);
+      groups[groups.length - 1].commits.push(c ? { subject: c[1], hash: c[2] } : { subject: bullet[1], hash: null });
+    } else return null;
+  }
+  const kept = groups.filter((g) => g.commits.length);
+  return kept.length ? kept : null;
+}
+
 export interface Run {
   text: string;
   href?: string;

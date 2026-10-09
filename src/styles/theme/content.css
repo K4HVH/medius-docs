@@ -143,52 +143,44 @@ pre code[class*='language-'] { font: inherit; color: #bdbdbd; }
   .bytes .long b { white-space: normal; line-height: 1.3; }
 }
 
-/* Changelog releases: Changelog.tsx renders them, server/fill.ts writes the same markup for crawlers. */
-.release { overflow-wrap: break-word; }
-
-.releases {
-  display: flex;
-  flex-direction: column;
-  gap: var(--g-spacing);
+/* Changelog: each release's version and date stay beside its notes while they scroll, and its commits
+   fold under them, grouped by repo. Changelog.tsx renders them; server/fill.ts writes the same markup for
+   crawlers, with the commits in a <details>. */
+.rels { margin-top: 40px; }
+.rel {
+  display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); gap: 0 48px; align-items: start;
+  padding: 40px 0 44px; border-top: 1px solid var(--line); overflow-wrap: break-word;
 }
-
-.release__title {
-  display: flex;
-  align-items: baseline;
-  gap: var(--g-spacing-sm);
-  flex-wrap: wrap;
+.rel-l { position: sticky; top: calc(var(--nav-h) + 28px); display: grid; gap: 14px; align-content: start; justify-items: start; }
+.doc .rel-l h2 { margin: 0; padding: 0; border: 0; font: 700 clamp(40px, 4.4vw, 64px)/0.9 var(--sans); letter-spacing: -0.04em; color: var(--text); }
+.rel time { color: var(--dim); }
+.rel ul { margin: 10px 0 0; padding-left: 20px; color: var(--text-2); }
+.rel li { margin: 6px 0 0; }
+.rel p { margin: 12px 0 0; color: var(--text-2); }
+.doc .rel p.sublabel { margin: 22px 0 0; }
+.doc .rel-r > p.sublabel:first-child, .doc .cmts > p.sublabel:first-child { margin-top: 0; }
+.rel strong { color: var(--text); font-weight: 600; }
+.rel code { padding: 1px 5px; border: 1px solid var(--line-2); background: var(--ground); font: 500 0.88em/1 var(--mono); }
+.more { margin-top: 20px; }
+.more > button svg { transition: transform 0.35s var(--ease); }
+.more.open > button svg { transform: rotate(90deg); }
+.more .body { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.45s var(--ease); }
+.more.open .body { grid-template-rows: 1fr; }
+.more .body > div { overflow: hidden; }
+.more .cmts { padding-top: 18px; }
+.cmts ol { list-style: none; margin: 6px 0 0; padding: 0; font: 400 13px/1.9 var(--mono); color: var(--text-2); }
+.cmts ol code { margin-left: 10px; padding: 0; border: 0; background: none; font: 400 12px/1 var(--mono); color: var(--dim); }
+.rel details { margin-top: 20px; }
+@media (max-width: 900px) {
+  .rel { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .rel-l {
+    top: calc(var(--nav-h) + 49px); z-index: 4; display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px;
+    padding: 10px 0; background: var(--ground); border-bottom: 1px solid var(--line);
+  }
+  .doc .rel-l h2 { font-size: 40px; }
 }
-
-.release__title h4 {
-  margin: 0;
-  font-size: var(--font-size-lg);
-}
-
-.release__date {
-  color: var(--g-text-secondary);
-}
-
-.release__heading {
-  font-weight: 600;
-  margin-top: var(--g-spacing-sm);
-}
-
-.release ul {
-  margin: var(--g-spacing-xs) 0 0;
-  padding-left: var(--g-spacing);
-}
-
-.release p {
-  margin: var(--g-spacing-xs) 0 0;
-}
-
-.release details {
-  margin-top: var(--g-spacing-sm);
-}
-
-.release summary {
-  cursor: pointer;
-  color: var(--g-text-link);
+@media (prefers-reduced-motion: reduce) {
+  .more .body, .more > button svg { transition: none; }
 }
 
 /* Compatibility: a filter over the table; verdicts as mono caps in their colour. */

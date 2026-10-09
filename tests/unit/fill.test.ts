@@ -38,8 +38,9 @@ describe('fillPage', () => {
     const html = (await fillPage('/dashboard/changelog', CHANGELOG, SOURCES))!;
     expect(html).not.toContain('Loading...');
     expect(html).toContain('id="v3.4.5"');
-    expect(html).toContain('<details><summary>Show commits</summary>');
-    expect(html).toContain('firmware: answered from RAM (bf6e62f)');
+    expect(html).toContain('<section id="v3.4.5" class="rel"><div class="rel-l"><h2>v3.4.5</h2>');
+    // Folded where no script runs, grouped by repo as the page groups them.
+    expect(html).toContain('<details><summary>Show commits</summary><div class="cmts"><p class="sublabel">Firmware</p><ol><li>firmware: answered from RAM<code>bf6e62f</code></li></ol></div></details>');
     expect(html.indexOf('Fixed')).toBeLessThan(html.indexOf('<details>'));
   });
 
@@ -59,7 +60,7 @@ describe('fillPage', () => {
   it('shows an older release its commit list directly, with nothing to unfold', async () => {
     const html = (await fillPage('/dashboard/changelog', CHANGELOG, SOURCES))!;
     const old = html.slice(html.indexOf('id="v2.2.0"'));
-    expect(old).toContain('fw: older commit list (1234567)');
+    expect(old).toContain('<div class="cmts"><p class="sublabel">Firmware</p><ol><li>fw: older commit list<code>1234567</code></li></ol></div>');
     expect(old).not.toContain('<details>');
   });
 
