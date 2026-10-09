@@ -18,4 +18,9 @@ export const SOFT_FILL_PATHS: ReadonlySet<string> = new Set(['/', '/guide/compat
 export const MOVED: Readonly<Record<string, string>> = {
   '/dashboard/advanced-control': '/dashboard/control#advanced',
   '/dashboard/advanced': '/dashboard/update#manual',
+  // An anchor on the old page carries over where the new one keeps it (the FAQ's answers).
+  '/guide/update': '/guide/help#q-update',
+  '/guide/faq': '/guide/help',
+  '/guide/troubleshooting': '/guide/help',
+  '/guide/device-fixes': '/guide/compatibility#device-fixes',
 };

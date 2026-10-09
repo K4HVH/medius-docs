@@ -51,9 +51,9 @@ describe('mergeCompat', () => {
     expect(rows).toHaveLength(entries.length);
   });
 
-  it('adds a device cloned on two boxes with no report, named by its product or else its ids, in name order', () => {
+  it('adds a device cloned on two boxes with no report, named by its product or else its ids, in name order, ids last', () => {
     const rows = mergeCompat(entries, [top(0x31e3, 0x1322, 2, 'Wooting 60HE+', 1), top(0x3837, 0x100a, 3, null), top(0x3838, 0x100b, 2, 'None')]);
-    expect(rows.map((r) => r.name)).toEqual(['3837:100a', '3838:100b', 'Logitech G502 HERO', 'Wooting 60HE+', 'Wooting Two HE']);
+    expect(rows.map((r) => r.name)).toEqual(['Logitech G502 HERO', 'Wooting 60HE+', 'Wooting Two HE', '3837:100a', '3838:100b']);
     expect(rows.find((r) => r.name === 'Wooting 60HE+')).toEqual({ name: 'Wooting 60HE+', kind: 'keyboard', verdict: 'works', vidpid: '31e3:1322', boxes: 2 });
   });
 });
@@ -67,6 +67,7 @@ describe('COMPAT seed', () => {
       expect(['mouse', 'keyboard', 'other']).toContain(e.kind);
       if (e.vidpid) expect(e.vidpid).toMatch(/^[0-9a-f]{4}:[0-9a-f]{4}$/);
       if (e.note) expect(e.note).not.toMatch(/\.$/);
+      expect(e.reported, e.name).toMatch(/^v\d+\.\d+\.\d+$/);
     }
   });
 

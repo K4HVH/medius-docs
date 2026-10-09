@@ -84,7 +84,7 @@ describe('PageTabs', () => {
 
   it('brings an element the hash names into view once its tab is open, and leaves a tab named alone', async () => {
     const seen: string[] = [];
-    // jsdom has no scrollIntoView.
+    const was = Element.prototype.scrollIntoView;
     Element.prototype.scrollIntoView = function (this: Element) {
       seen.push(this.id);
     };
@@ -99,11 +99,12 @@ describe('PageTabs', () => {
     setOff(false);
     await new Promise((r) => setTimeout(r, 40));
     expect(seen).toEqual(['o-emit']);
-    delete (Element.prototype as { scrollIntoView?: unknown }).scrollIntoView;
+    Element.prototype.scrollIntoView = was;
   });
 
   it('opens the tab for an element the hash named before it existed, once it appears', async () => {
     const seen: string[] = [];
+    const was = Element.prototype.scrollIntoView;
     Element.prototype.scrollIntoView = function (this: Element) {
       seen.push(this.id);
     };
@@ -135,7 +136,7 @@ describe('PageTabs', () => {
     await new Promise((r) => setTimeout(r, 40));
     expect(visible(container)).toEqual(['options']);
     expect(seen).toEqual(['emit-rate']);
-    delete (Element.prototype as { scrollIntoView?: unknown }).scrollIntoView;
+    Element.prototype.scrollIntoView = was;
   });
 
   it('forgets an element the hash named once the reader picks a tab', async () => {

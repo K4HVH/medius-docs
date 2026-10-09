@@ -9,7 +9,8 @@ const NotFound = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const moved = MOVED[location.pathname.replace(/\/$/, '').toLowerCase()];
-  if (moved) queueMicrotask(() => navigate(moved, { replace: true }));
+  // An anchor on the old address carries over unless the new one names its own, as a 301 does.
+  if (moved) queueMicrotask(() => navigate(moved.includes('#') ? moved : moved + location.hash, { replace: true }));
   return (
     <>
       <PageHeader id="not-found" lead="No page at this address" />

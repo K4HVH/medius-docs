@@ -1,6 +1,6 @@
 import type { Component } from 'solid-js';
 import type { CommandPaletteItem } from '../components/navigation/CommandPalette';
-import { FAQ } from './data/faq';
+import { HELP_ITEMS } from './data/help';
 import {
   BsInfoCircle, BsLightning, BsStack, BsCpu, BsPlug, BsLink45deg, BsFileCode, BsDownload,
   BsBroadcast, BsArrowsMove, BsCursor, BsArrowLeftRight, BsGear, BsBoxArrowInDown,
@@ -26,13 +26,15 @@ export const entries: SearchEntry[] = [
   { label: 'Discord', description: 'Medius Discord (opens in a new tab)', path: 'https://discord.gg/ArRqcA84pB', external: true, group: 'Community', icon: BsDiscord, keywords: ['discord', 'community', 'chat', 'support', 'help', 'invite', 'server'] },
 
   // Guide
-  { label: 'Install', description: 'Flash Medius onto a MAKCU box from the browser', path: '/guide', group: 'Guide', icon: BsUsbPlug, keywords: ['install', 'set up', 'setup', 'flash', 'first time', 'new box', 'usb1', 'usb3', 'button', 'steps', 'guide'] },
-  { label: 'Update', description: 'Update a box over USB2, and roll back', path: '/guide/update', group: 'Guide', icon: BsArrowRepeat, keywords: ['update', 'upgrade', 'rollback', 'roll back', 'revert', 'version', 'old firmware', 'stock firmware', 'makcu firmware'] },
-  { label: 'Compatibility', description: 'Mice and keyboards owners have tried through the box', path: '/guide/compatibility', group: 'Guide', icon: BsBoxes, keywords: ['compatibility', 'compatible', 'supported', 'devices', 'mouse', 'mice', 'keyboard', 'works', 'does it work', 'list'] },
-  { label: 'FAQ', description: 'Answers from the Discord FAQ', path: '/guide/faq', group: 'Guide', icon: BsInfoCircle, keywords: ['faq', 'questions', 'help'] },
-  { label: 'Troubleshooting', description: 'Dashboard messages and their fixes', path: '/guide/troubleshooting', group: 'Guide', icon: BsWrench, keywords: ['troubleshooting', 'problem', 'error', 'not found', "can't see", 'not answering', 'blue screen', 'bsod', 'in use'] },
-  { label: 'Device fixes', description: 'Settings some devices need, such as the Superstrike', path: '/guide/device-fixes', group: 'Guide', icon: BsSliders, keywords: ['fix', 'device fixes', 'superstrike', 'logitech', 'wooting', '125 hz', '1000 hz', 'imperfect', 'wire rate', 'logitech_fix'] },
-  ...FAQ.map((f) => ({ label: f.q, description: f.a, path: `/guide/faq#${f.id}`, group: 'Guide', icon: BsInfoCircle })),
+  { label: 'Start here', description: 'Ports, requirements, and where to go next', path: '/guide', group: 'Guide', icon: BsUsbPlug, keywords: ['start', 'start here', 'guide', 'getting started', 'install', 'set up', 'setup', 'first time', 'new box'] },
+  { label: 'Ports', description: 'USB1 to the game PC, USB2 to this computer, USB3 to the mouse or keyboard', path: '/guide#ports', group: 'Guide', icon: BsUsbPlug, keywords: ['ports', 'usb1', 'usb2', 'usb3', 'wiring', 'cables', 'which port', 'plug'] },
+  { label: 'Requirements', description: 'A browser, two cables, nothing to download', path: '/guide#requirements', group: 'Guide', icon: BsUsbPlug, keywords: ['requirements', 'browser', 'chrome', 'edge', 'cables', 'what do i need'] },
+  { label: 'Devices', description: 'Mice and keyboards owners have tried through the box', path: '/guide/compatibility', group: 'Guide', icon: BsBoxes, keywords: ['compatibility', 'compatible', 'supported', 'devices', 'mouse', 'mice', 'keyboard', 'works', 'does it work', 'list', 'reported'] },
+  { label: 'Limits', description: 'Report rate, box capacity, one device, full speed', path: '/guide/compatibility#limits', group: 'Guide', icon: BsBoxes, keywords: ['limits', '8k', '4k', '8000 hz', '1000 hz', 'polling rate', 'capacity', 'endpoints', 'high speed', 'full speed', 'two devices'] },
+  { label: 'Device fixes', description: 'Settings some devices need, such as the Superstrike', path: '/guide/compatibility#device-fixes', group: 'Guide', icon: BsSliders, keywords: ['fix', 'device fixes', 'superstrike', 'logitech', 'wooting', '125 hz', '1000 hz', 'imperfect', 'wire rate', 'logitech_fix'] },
+  { label: 'Reporting a device', description: 'Send a device that does not work', path: '/guide/compatibility#reporting', group: 'Guide', icon: BsBoxes, keywords: ['report', 'not working', 'usb device tree viewer', 'support ticket', 'broken device'] },
+  { label: 'Help', description: 'Troubleshooting and FAQ', path: '/guide/help', group: 'Guide', icon: BsInfoCircle, keywords: ['help', 'faq', 'questions', 'troubleshooting', 'problem', 'error', 'support'] },
+  ...HELP_ITEMS.map((f) => ({ label: f.q, description: f.a, path: `/guide/help#${f.id}`, group: 'Guide', icon: BsInfoCircle })),
 
   // Dashboard
   { label: 'Dashboard', description: 'Connect, view and flash a box in the browser', path: '/dashboard', group: 'Dashboard', icon: BsLink45deg, keywords: ['dashboard', 'tool', 'connect', 'flash', 'web serial', 'device'] },

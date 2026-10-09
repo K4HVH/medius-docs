@@ -169,7 +169,7 @@ describe('DocsLayout and the boxes', () => {
       r.container.querySelector('header.nav .links a[href="/guide"]'),
       r.container.querySelector('header.nav a.btn'),
       r.container.querySelector('.side a[href="/dashboard/changelog"]'),
-      r.container.querySelector('footer.site-footer a[href="/guide/faq"]'),
+      r.container.querySelector('footer.site-footer a[href="/guide/help"]'),
       r.container.querySelector('footer.site-footer a[href="/native"]'),
     ];
     for (const a of links) {
