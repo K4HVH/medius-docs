@@ -1,6 +1,6 @@
 import { Show, createSignal } from 'solid-js';
 import { Button } from '../../../components/inputs/Button';
-import { Slider } from '../../../components/inputs/Slider';
+import { Range } from '../../shell/Range';
 import { Chip } from '../../../components/display/Chip';
 import { LedMode, LedTarget } from '../../../dashboard/protocol';
 import { useDashboard } from './context';
@@ -55,16 +55,8 @@ const DeviceLed = () => {
             />
           </div>
           <div class="labelled">
-            <span class="field-l" id="led-level-label">Brightness</span>
-            <Slider
-              aria-labelledby="led-level-label"
-              value={level()}
-              onChange={(v) => {
-                setLevel(Array.isArray(v) ? v[0] : v);
-              }}
-              min={0}
-              max={255}
-            />
+            <span class="field-l">Brightness</span>
+            <Range label="Brightness" value={level()} onChange={setLevel} min={0} max={255} />
           </div>
           <div class="acts mid">
             <Button variant="secondary" disabled={cmd.busy()} onClick={() => send(LedMode.Auto)}>Status</Button>

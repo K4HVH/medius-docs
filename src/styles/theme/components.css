@@ -2,7 +2,7 @@
    their own classes. Values follow the approved mockup. */
 
 /* Buttons: square caps. The primary's fill grows from the left and shrinks back to it; the secondary
-   and subtle light a hairline. */
+   (a dark fill and an edge), the subtle and the danger light their edge. */
 .button {
   isolation: isolate;
   min-height: 36px;
@@ -20,17 +20,17 @@
 .button--icon-only.button--compact { min-width: 30px; }
 
 .button--primary { border-color: transparent; }
-/* Danger rests dark with a red edge and text, and fills red under the pointer. */
+/* Danger rests dark with a red edge and text; under the pointer the edge goes red and the text white. */
 .button--danger {
   background: color-mix(in srgb, var(--bad) 7%, var(--ground));
   border-color: color-mix(in srgb, var(--bad) 40%, transparent);
   color: color-mix(in srgb, var(--bad) 45%, var(--text));
 }
 @media (hover: hover) {
-  .button--danger:hover:not(:disabled) { border-color: transparent; color: var(--text); }
+  .button--danger:hover:not(:disabled) { border-color: var(--bad); color: var(--text); }
 }
-.button--primary::before,
-.button--danger::before {
+.button--danger::before { display: none; }
+.button--primary::before {
   display: block;
   z-index: -1;
   background: var(--accent);
@@ -38,15 +38,12 @@
   transform-origin: left;
   transition: transform 0.45s var(--ease);
 }
-.button--danger::before { background: var(--color-red-400); }
 @media (hover: hover) {
   .button--primary:hover:not(:disabled)::before { background: var(--accent); transform: scaleX(1); }
-  .button--danger:hover:not(:disabled)::before { background: var(--color-red-400); transform: scaleX(1); }
 }
 .button--primary:active:not(:disabled)::before { background: var(--accent); transform: scaleX(1); }
-.button--danger:active:not(:disabled)::before { background: var(--color-red-400); transform: scaleX(1); }
 
-.button--secondary { background: transparent; border-color: var(--line-2); color: var(--text); }
+.button--secondary { background: var(--g-background); border-color: var(--line-3); color: var(--text); }
 .button--subtle { border-color: transparent; color: var(--text-2); }
 @media (hover: hover) {
   .button--secondary:hover:not(:disabled),

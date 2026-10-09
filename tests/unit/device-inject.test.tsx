@@ -187,6 +187,17 @@ describe('DeviceInject', () => {
     ]);
   });
 
+  it('reads the running total of the cursor in the middle of the arrows', async () => {
+    mock.setHealth(health());
+    const { container, findByLabelText } = render(() => <DeviceInject />);
+    const total = () => container.querySelector('.dpad .dpad-c')!.textContent;
+    expect(total()).toBe('0, 0');
+    fireEvent.click(await findByLabelText('Move right'));
+    fireEvent.click(await findByLabelText('Move up'));
+    fireEvent.click(await findByLabelText('Move up'));
+    expect(total()).toBe('20, -40');
+  });
+
   it('hides the cursor and button controls when no mouse is cloned', async () => {
     mock.setHealth(health({ cloneConfigured: false }));
     const { queryByText, findByText } = render(() => <DeviceInject />);

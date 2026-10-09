@@ -42,7 +42,7 @@ import {
 } from '../../../dashboard/protocol';
 import type { InputEventEntry } from './context';
 import { useDashboard } from './context';
-import { LogBox } from '../../shell/LogBox';
+import { LogBox, logText } from '../../shell/LogBox';
 import { Panel, Panels, Stack } from '../../shell/Panel';
 import { Segmented } from '../../shell/Segmented';
 import { Select } from '../../shell/Select';
@@ -350,6 +350,19 @@ const DeviceEventCatch = () => {
   // A line keeps the text it was drawn with, so each is formatted once; a baseline moved back
   // formats them all again, and the log is drawn again.
   const moved = createMemo(() => baseline().moved);
+  // Where the clipboard is refused, the log's text is selected for the reader to copy.
+  const [copied, setCopied] = createSignal(false);
+  let copiedTimer: ReturnType<typeof setTimeout> | undefined;
+  onCleanup(() => clearTimeout(copiedTimer));
+  const copyLog = () => {
+    const pick = () => getSelection()?.selectAllChildren(document.querySelector('#catch-events .lg')!);
+    if (!navigator.clipboard) return pick();
+    navigator.clipboard.writeText(logText(logRows())).then(() => {
+      setCopied(true);
+      clearTimeout(copiedTimer);
+      copiedTimer = setTimeout(() => setCopied(false), 1200);
+    }, pick);
+  };
   let linesAt = -1;
   let lines = new WeakMap<InputEventEntry, string[]>();
   const logRows = (): string[][] => {
@@ -436,8 +449,7 @@ const DeviceEventCatch = () => {
             <Show when={mode() === 'preset'}>
               <div class="labelled">
                 <span class="field-l">Preset</span>
-                <Segmented
-                  name="catch-preset"
+                <Select
                   label="Preset"
                   value={preset()}
                   onChange={setPreset}
@@ -480,7 +492,7 @@ const DeviceEventCatch = () => {
                     ]}
                   />
                   <Show when={anyId() === 'one'}>
-                    <div style={{ 'max-width': '9rem' }}>
+                    <div class="fw-s">
                       <NumberInput label="Id" value={id()} min={0} max={65534} precision={0} onChange={(v) => setId(v ?? 0)} />
                     </div>
                   </Show>
@@ -503,7 +515,7 @@ const DeviceEventCatch = () => {
               <Show when={!isInputClass(cls())}>
                 <div class="labelled">
                   <span class="field-l">Capture</span>
-                  <div style={{ 'max-width': '9rem' }}>
+                  <div class="fw-s">
                     <NumberInput
                       label="Bytes (0 = all)"
                       value={capture()}
@@ -609,6 +621,11 @@ const DeviceEventCatch = () => {
 
         <Stack>
           <Panel id="catch-events" title="Recent events">
+            <div class="acts">
+              <Button variant="secondary" disabled={events().length === 0} onClick={copyLog}>
+                {copied() ? 'Copied' : 'Copy'}
+              </Button>
+            </div>
             <LogBox
               rows={logRows}
               added={dash.inputEventsAdded}

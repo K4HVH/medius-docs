@@ -6,6 +6,10 @@
 
 .page-header__row { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px 40px; flex-wrap: wrap; }
 .page-header__row h1 { margin: 20px 0 0; }
+@media (max-width: 900px) {
+  /* Under an empty header bar, which takes no room on a phone, the title starts at the top. */
+  .page-header__bar:not(:has(> .ai-actions)) + .page-header__row h1 { margin-top: 0; }
+}
 .page-header__aside { display: grid; justify-items: end; gap: 6px; padding-bottom: 8px; }
 .page-header__aside > p { margin: 0; }
 @media (max-width: 900px) {
@@ -85,6 +89,7 @@
 .fw-m { width: 11rem; max-width: 100%; }
 .fw-l { flex: 1 1 12rem; max-width: 16rem; }
 .grow { flex: 1 1 220px; min-width: 0; }
+.mut.wrap { margin: 4px 0 0; overflow-wrap: anywhere; }
 
 .seg { position: relative; display: inline-flex; flex-wrap: wrap; max-width: 100%; justify-self: start; align-self: start; background: var(--g-background); border: 1px solid var(--line-2); }
 .seg button {
@@ -140,7 +145,6 @@
 .number-input__stepper { min-width: 0; width: 24px; padding: 0; border: 0; border-left: 1px solid var(--line-2); color: var(--muted); }
 .number-input__stepper--increment { grid-column: 3; grid-row: 1; }
 .number-input__stepper--decrement { grid-column: 3; grid-row: 2; border-right: 0; border-top: 1px solid var(--line-2); }
-.number-input__stepper svg { width: 9px; height: 9px; }
 .number-input__label, .textfield__label { font: 500 10.5px/1.3 var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
 
 .textfield__wrapper { min-height: 36px; border-color: var(--line-2); background: var(--g-background); }
@@ -151,12 +155,28 @@
 .checkbox:hover .checkbox__box { border-color: var(--primary); }
 .checkbox__label { font-size: 14.5px; color: var(--text-2); }
 
-/* A slider: a hairline, a blue fill, a square handle; a mark shows zero on a scale through it. */
-.slider__track { height: 2px; }
-.slider__thumb { width: 10px; height: 18px; background: var(--accent); border: 0; }
-.slider__thumb:hover, .slider__thumb:focus-visible { background: var(--text); }
-.slider__mark-dot { width: 1px; height: 14px; border-radius: 0; background: var(--dim); }
-.slider__mark-label { font: 500 10.5px/1 var(--mono); color: var(--dim); }
+/* A stepper: the value, its unit, and two chevrons stacked on the right. */
+.number-input__stepper { display: grid; place-items: center; }
+.number-input__stepper > * { display: none; }
+.number-input__stepper::after { content: ""; width: 5px; height: 5px; border-right: 1.4px solid currentColor; border-bottom: 1.4px solid currentColor; transform: translateY(-1px) rotate(45deg); }
+.number-input__stepper--increment::after { transform: translateY(1px) rotate(-135deg); }
+.number-input__stepper:hover:not(:disabled) { color: var(--text); }
+
+/* A slider: a hairline, a blue fill from zero to a square handle, the value beside it. A mark shows zero
+   on a scale through it. The native input lies over the drawing, unseen, and takes the pointer and keys. */
+.labelled:has(> .sl) { justify-items: stretch; }
+.sl { display: flex; align-items: center; gap: 16px; width: 100%; }
+.sl-t { --inset: 5px; position: relative; flex: 1; height: 26px; }
+.sl-t::before { content: ""; position: absolute; left: 0; right: 0; top: 12px; height: 2px; background: var(--line-2); }
+.sl-z { position: absolute; top: 6px; left: calc(var(--inset) + var(--z) * (100% - 2 * var(--inset))); width: 1px; height: 14px; margin-left: -0.5px; background: var(--dim); }
+.sl-fill { position: absolute; top: 12px; height: 2px; left: calc(var(--inset) + var(--a) * (100% - 2 * var(--inset))); width: calc(var(--w) * (100% - 2 * var(--inset))); background: var(--accent); }
+.sl-h { position: absolute; top: 4px; left: calc(var(--inset) + var(--p) * (100% - 2 * var(--inset))); width: 10px; height: 18px; margin-left: -5px; background: var(--accent); transition: background 0.2s; }
+.sl-t input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.sl-t:hover .sl-h, .sl-t:has(input:focus-visible) .sl-h, .sl-t:has(input:active) .sl-h { background: var(--text); }
+.sl-t:has(input:focus-visible) { outline: 1px solid var(--primary); outline-offset: 4px; }
+.sl output { min-width: 5ch; font: 500 13px/1 var(--mono); color: var(--text); text-align: right; font-variant-numeric: tabular-nums; }
+.sl.dis { opacity: 0.4; }
+.sl.dis input { cursor: not-allowed; }
 
 /* Logs: read from the top, newest line last and lit; a log scrolled to its end follows new lines. */
 .lg {
@@ -265,11 +285,12 @@
 }
 
 /* A step: the line to act on, big; a button to hold has an amber square before it. */
-.cue { margin: 0; font: 600 26px/1.3 var(--sans); letter-spacing: -0.015em; text-wrap: balance; color: var(--text); }
+/* The same size in a panel as on its own: a panel's paragraph rule must not shrink it. */
+.cue, .pb > p.cue { margin: 0; font: 600 26px/1.3 var(--sans); letter-spacing: -0.015em; text-wrap: balance; color: var(--text); }
 .cue.hold { display: flex; align-items: baseline; gap: 14px; }
 .cue.hold::before { content: ""; flex: none; width: 10px; height: 10px; background: var(--warn); transform: translateY(-2px); }
 @media (max-width: 900px) {
-  .cue { font-size: 21px; }
+  .cue, .pb > p.cue { font-size: 21px; }
 }
 
 /* Device: the connection at the title's right, the box's state, the health flags as lamps in a ruled
@@ -293,7 +314,6 @@
 .lp.on::before { background: var(--ok); }
 @media (max-width: 900px) {
   .flags { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .lp.blank { display: none; }
 }
 .vals { width: 100%; border-collapse: collapse; font-size: 14px; }
 .vals td { height: 46px; padding: 0; border-bottom: 1px solid var(--line); vertical-align: middle; line-height: 22px; }
@@ -309,7 +329,7 @@
 /* Control: Clear everything at the title's right, with what it clears under it. */
 .page-header__aside p { margin: 0; }
 .safety { display: grid; justify-items: end; gap: 6px; }
-.safety .sub2 { max-width: 52ch; text-align: right; color: var(--muted); font-size: 14.5px; }
+.safety .sub2 { text-align: right; color: var(--muted); font-size: 14.5px; }
 @media (max-width: 900px) {
   .safety { justify-items: start; }
   .safety .sub2 { text-align: left; }
@@ -389,8 +409,6 @@
 .doc .sub2 { margin: 0; color: var(--muted); font-size: 14.5px; }
 .checks { display: flex; flex-wrap: wrap; gap: 10px 22px; }
 .checks.col { flex-direction: column; align-items: flex-start; }
-/* The slider's track starts at the edge the other controls share. */
-.pb .slider { padding-inline: 5px; }
 
 /* Injection: a drag pad on a 20 px grid, and a d-pad of four steps. */
 .pad {
@@ -404,7 +422,9 @@
 .pad.on .caps { color: var(--text); }
 .nudge { display: flex; flex-wrap: wrap; gap: 20px 28px; align-items: flex-start; }
 .nudge-c { display: grid; gap: 14px; justify-items: start; }
-.dpad { display: grid; grid-template-areas: ". u ." "l . r" ". d ."; grid-template-columns: repeat(3, 36px); grid-template-rows: repeat(3, 36px); gap: 4px; }
+.dpad { display: grid; grid-template-areas: ". u ." "l c r" ". d ."; grid-template-columns: 36px 72px 36px; grid-template-rows: repeat(3, 36px); gap: 4px; }
+.dpad > .button { width: 36px; min-width: 36px; justify-self: center; }
+.dpad-c { grid-area: c; display: grid; place-items: center; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .dpad > :nth-child(1) { grid-area: u; }
 .dpad > :nth-child(2) { grid-area: l; }
 .dpad > :nth-child(3) { grid-area: r; }
@@ -455,3 +475,4 @@
 @media (prefers-reduced-motion: reduce) {
   .cols i, .bars .t i { transition: none; }
 }
+.held-none { line-height: 28px; }
