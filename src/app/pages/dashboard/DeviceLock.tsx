@@ -3,10 +3,8 @@
 
 import { For, Show, createMemo, createSignal } from 'solid-js';
 import { A } from '@solidjs/router';
-import { Card, CardHeader } from '../../../components/surfaces/Card';
 import { Button } from '../../../components/inputs/Button';
 import { Chip } from '../../../components/display/Chip';
-import { RadioGroup } from '../../../components/inputs/RadioGroup';
 import { Slider } from '../../../components/inputs/Slider';
 import {
   type LockEntry,
@@ -29,7 +27,8 @@ import { useDashboard } from './context';
 import { createCommand } from './action';
 import { displayName } from './hex';
 import { UsagePicker, type PickerClass, type UsageValue } from './UsagePicker';
-import { chips, label, row, section } from './ui';
+import { Panel, Panels } from '../../shell/Panel';
+import { Segmented } from '../../shell/Segmented';
 
 const AXES: NamedUsage[] = [
   { id: LockAxis.X, name: 'X (left/right)', group: 'Axes' },
@@ -149,10 +148,8 @@ const DeviceLock = () => {
 
   return (
     <Show when={dash.status() === 'connected'}>
-      <div id="input-locks" data-search-target>
-        <Card>
-          <CardHeader title="Input locks" subtitle="Weigh native input" />
-
+      <Panels>
+        <Panel id="input-locks" title="Lock">
           <UsagePicker
             classes={classes()}
             name="lock-target"
@@ -161,10 +158,11 @@ const DeviceLock = () => {
             usageLabel="Input"
           />
 
-          <div style={section}>
-            <div style={label}>Direction</div>
-            <RadioGroup
+          <div class="labelled">
+            <span class="field-l">Direction</span>
+            <Segmented
               name="lock-direction"
+              label="Direction"
               value={direction()}
               onChange={setDirection}
               options={dirLabel()}
@@ -172,31 +170,32 @@ const DeviceLock = () => {
           </div>
 
           <Show when={isAxis()}>
-            <div style={section}>
-              <div style={label}>
+            <div class="labelled">
+              <span class="field-l" id="lock-scale-label">
                 {scale() < 0
                   ? `Reverse physical motion, keeping ${Math.abs(scale())}%`
                   : `Keep ${scale()}% of physical motion`}
-              </div>
+              </span>
               <Slider
+                aria-labelledby="lock-scale-label"
                 value={scale()}
                 min={LOCK_SCALE_MIN}
                 max={LOCK_SCALE_MAX}
                 step={5}
+                marks={[{ value: 0 }]}
                 onChange={(v) => setScale(Array.isArray(v) ? v[0] : v)}
               />
             </div>
           </Show>
 
-
           <Show when={isAxis() && isRelativeDirection(dir())}>
-            <div class="callout callout--info" style={section}>
+            <p class="mut">
               With and against follow the injected direction on that axis. See{' '}
               <A href="/native/commands/lock#bearing">the bearing</A>.
-            </div>
+            </p>
           </Show>
 
-          <div style={{ ...section, ...row }}>
+          <div class="acts">
             <Show when={isAxis()}>
               <Button variant="primary" disabled={cmd.busy()} onClick={() => applyScale(scale())}>
                 Apply {scale()}%
@@ -214,23 +213,22 @@ const DeviceLock = () => {
             </Button>
           </div>
           <Show when={cmd.error()}>
-            <div class="callout callout--danger" role="alert" style={section}>
+            <div class="callout callout--danger" role="alert">
               {cmd.error()}
             </div>
           </Show>
+        </Panel>
 
-          <div style={section}>
-            <div style={label}>Active</div>
-            <Show when={active().length > 0} fallback={<p>None.</p>}>
-              <div style={chips}>
-                <For each={active()}>
-                  {(item) => <Chip variant={item.blocked ? 'warning' : 'info'}>{item.text}</Chip>}
-                </For>
-              </div>
-            </Show>
-          </div>
-        </Card>
-      </div>
+        <Panel id="active-locks" title="Active">
+          <Show when={active().length > 0} fallback={<p class="mut">None.</p>}>
+            <div class="chips">
+              <For each={active()}>
+                {(item) => <Chip variant={item.blocked ? 'warning' : 'info'}>{item.text}</Chip>}
+              </For>
+            </div>
+          </Show>
+        </Panel>
+      </Panels>
     </Show>
   );
 };

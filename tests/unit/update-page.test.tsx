@@ -110,7 +110,7 @@ vi.mock('@solidjs/router', () => ({
   A: (p: { children: unknown }) => p.children,
 }));
 
-import Update from '../../src/app/pages/dashboard/Update';
+import { Latest as Update } from '../../src/app/pages/dashboard/Update';
 
 // The box runs the release it is offered: 3.4.2 on the current wire. One that reverts lands on 3.4.1,
 // protocol 8.
@@ -151,8 +151,8 @@ const runUpdate = async (choice: RegExp) => {
   mock.s!.setStatus('connected');
   await waitFor(() => r.getByRole('button', { name: choice }));
   r.getByRole('button', { name: choice }).click();
-  await waitFor(() => r.getByRole('button', { name: /^update$/i }));
-  r.getByRole('button', { name: /^update$/i }).click();
+  await waitFor(() => r.getByRole('button', { name: /^update (both chips|main chip|mouse-side chip)$/i }));
+  r.getByRole('button', { name: /^update (both chips|main chip|mouse-side chip)$/i }).click();
   return r;
 };
 
@@ -329,7 +329,7 @@ describe('Update', () => {
     expect(back.className).toContain('button--secondary');
     expect(back.className).not.toContain('compact');
     // Same row as Update, so it reads as the pair it is.
-    const update = r.getByRole('button', { name: /^update$/i });
+    const update = r.getByRole('button', { name: /^update (both chips|main chip|mouse-side chip)$/i });
     expect(back.parentElement).toBe(update.parentElement);
   });
 
@@ -358,8 +358,8 @@ describe('Update', () => {
     mock.s!.setStatus('connected');
     await waitFor(() => r.getByRole('button', { name: /update both chips/i }));
     r.getByRole('button', { name: /update both chips/i }).click();
-    await waitFor(() => r.getByRole('button', { name: /^update$/i }));
-    expect(r.getByRole('button', { name: /^update$/i })).toBeDisabled();
+    await waitFor(() => r.getByRole('button', { name: /^update (both chips|main chip|mouse-side chip)$/i }));
+    expect(r.getByRole('button', { name: /^update (both chips|main chip|mouse-side chip)$/i })).toBeDisabled();
   });
 
   it("choosing an update leaves a result Advanced is still showing alone", async () => {

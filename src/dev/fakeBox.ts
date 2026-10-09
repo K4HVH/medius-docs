@@ -60,7 +60,7 @@ const ANSWERS: Record<string, unknown> = {
   queryRender: { mode: RenderMode.Despiked, full: false, ready: true },
   querySpread: { percent: 100, spanUs: 1000 },
   queryClip: {
-    state: ClipState.Idle, freeBytes: 65536, totalBytes: 65536, played: 0, ticks: 0, underruns: 0, overruns: 0,
+    state: ClipState.Idle, freeBytes: 65536, totalBytes: 0, played: 0, ticks: 0, underruns: 0, overruns: 0,
     seqGaps: 0, xfers: 0, xferErrs: 0, gated: 0, held: [], autolock: 0, loop: false, retain: true,
     finalized: false, ride: false, triggers: [], packetTriggers: [],
   },

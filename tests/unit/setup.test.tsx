@@ -146,7 +146,7 @@ const walk = async () => {
 describe('Setup', () => {
   it('starts on the first install, with no questions to answer first', async () => {
     const r = mount();
-    await waitFor(() => expect(r.container.textContent).toMatch(/step 1 of 5/i));
+    await waitFor(() => expect(r.container.querySelector('.stages .now')?.textContent).toMatch(/main chip/i));
     expect(r.getByRole('button', { name: /^install$/i })).toBeTruthy();
   });
 
@@ -229,12 +229,13 @@ describe('Setup', () => {
     const r = mount();
     await waitFor(() => r.getByRole('button', { name: /^install$/i }));
     install(r);
-    await waitFor(() => expect(r.container.textContent).toMatch(/can kill it/i));
+    const now = () => r.container.querySelector('.stages .now')?.textContent ?? '';
+    await waitFor(() => expect(now()).toMatch(/unplug usb1/i));
     expect(r.queryByRole('button', { name: /^install$/i })).toBeNull();
     r.getByRole('button', { name: /^done$/i }).click();
     await waitFor(() => r.getByRole('button', { name: /^install$/i }));
     install(r);
-    await waitFor(() => expect(r.container.textContent).toMatch(/step 4 of 5/i));
+    await waitFor(() => expect(now()).toMatch(/unplug usb3/i));
     expect(r.queryByRole('button', { name: /^connect$/i })).toBeNull();
   });
 
@@ -284,7 +285,7 @@ describe('Setup', () => {
   it('an unsupported browser sees the first step, with the reason where Install was', async () => {
     mock.supported = false;
     const r = mount();
-    expect(r.container.textContent).toContain('Install Medius');
+    expect(r.container.querySelector('.stages .now')?.textContent).toMatch(/main chip/i);
     expect(r.container.textContent).toMatch(/Hold the button next to USB1/);
     expect(r.container.textContent).toMatch(/Open this page in Chrome/);
     expect(r.container.textContent).not.toMatch(/Browser not supported/);
@@ -294,7 +295,7 @@ describe('Setup', () => {
   it('an insecure origin sees the first step, with the reason where Install was', async () => {
     mock.secure = false;
     const r = mount();
-    expect(r.container.textContent).toContain('Install Medius');
+    expect(r.container.querySelector('.stages .now')?.textContent).toMatch(/main chip/i);
     expect(r.container.textContent).toMatch(/isn't secure/);
     expect(r.queryByRole('button')).toBeNull();
   });

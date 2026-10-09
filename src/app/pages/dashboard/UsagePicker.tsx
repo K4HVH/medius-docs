@@ -3,11 +3,9 @@
 
 import { For, Show, createMemo, createSignal } from 'solid-js';
 import { Chip } from '../../../components/display/Chip';
-import { Combobox } from '../../../components/inputs/Combobox';
-import { RadioGroup } from '../../../components/inputs/RadioGroup';
-import { TextField } from '../../../components/inputs/TextField';
 import type { NamedUsage } from '../../../dashboard/protocol';
-import { chips, label, muted, section } from './ui';
+import { Segmented } from '../../shell/Segmented';
+import { Select } from '../../shell/Select';
 
 export interface PickerClass {
   value: number;
@@ -78,40 +76,29 @@ export const UsagePicker = (props: {
   return (
     <>
       <Show when={props.classes.length > 1}>
-        <div style={label}>{props.classLabel ?? 'Class'}</div>
-        <RadioGroup
-          name={props.name}
-          value={String(props.value.cls)}
-          onChange={pickClass}
-          options={props.classes.map((c) => ({ value: String(c.value), label: c.label }))}
-        />
-      </Show>
-      <div style={section}>
-        <div style={label}>{props.usageLabel ?? 'Input'}</div>
-        <div style={{ 'max-width': '20rem', 'margin-bottom': 'var(--g-spacing-sm)' }}>
-          <TextField
-            value={filter()}
-            placeholder="Filter by name or id"
-            onChange={setFilter}
-            clearable
-            size="compact"
+        <div class="labelled">
+          <span class="field-l">{props.classLabel ?? 'Class'}</span>
+          <Segmented
+            name={props.name}
+            label={props.classLabel ?? 'Class'}
+            value={String(props.value.cls)}
+            onChange={pickClass}
+            options={props.classes.map((c) => ({ value: String(c.value), label: c.label }))}
           />
         </div>
-        <Show
-          when={shown().length > 0}
-          fallback={<p style={muted}>No matches.</p>}
-        >
-          <Combobox
-            value={String(props.value.id)}
-            onChange={(v) => props.onChange({ cls: props.value.cls, id: Number(Array.isArray(v) ? v[0] : v) })}
-            options={shown()}
-          />
-        </Show>
-        <Show when={cut() > 0}>
-          <p style={{ ...muted, 'margin-top': '4px' }}>
-            {cut()} more {cut() === 1 ? 'match' : 'matches'}. Narrow the filter.
-          </p>
-        </Show>
+      </Show>
+      <div class="labelled">
+        <span class="field-l">{props.usageLabel ?? 'Input'}</span>
+        <Select
+          value={String(props.value.id)}
+          options={shown()}
+          onChange={(v) => props.onChange({ cls: props.value.cls, id: Number(v) })}
+          filter="Filter by name or id"
+          query={filter()}
+          onQuery={setFilter}
+          footer={cut() > 0 ? `${cut()} more ${cut() === 1 ? 'match' : 'matches'}. Narrow the filter.` : undefined}
+          label={props.usageLabel ?? 'Input'}
+        />
       </div>
     </>
   );
@@ -123,7 +110,7 @@ export const UsageChips = (props: {
   onRemove?: (key: string) => void;
   variant?: 'primary' | 'success' | 'warning' | 'error' | 'info' | 'neutral';
 }) => (
-  <div style={chips}>
+  <div class="chips">
     <For each={props.items}>
       {(it) => (
         <Chip

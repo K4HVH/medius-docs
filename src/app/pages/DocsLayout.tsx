@@ -16,9 +16,7 @@ import Prism from '../prism';
 const BOX_ROUTES = new Set([
   '/dashboard',
   '/dashboard/control',
-  '/dashboard/advanced-control',
   '/dashboard/update',
-  '/dashboard/advanced',
 ]);
 
 // Each block of a section eases in on its own; an anchor group inside a section reveals its blocks, not

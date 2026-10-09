@@ -1,10 +1,7 @@
 /// <reference types="w3c-web-serial" />
-import { Match, Show, Switch, createResource, createSignal } from 'solid-js';
+import { For, Match, Show, Switch, createResource, createSignal } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
-import { Card, CardHeader } from '../../../components/surfaces/Card';
 import { Button } from '../../../components/inputs/Button';
-import { Chip } from '../../../components/display/Chip';
-import { Progress } from '../../../components/feedback/Progress';
 import { type FirmwareAsset, downloadAsset, fetchReleases } from '../../../dashboard/firmware';
 import type { FlashChip } from '../../../dashboard/flash';
 import { type ConnectVerdict, requestRomPort } from '../../../dashboard/serial';
@@ -18,8 +15,6 @@ type Step = 'main' | 'unplug' | 'mouse' | 'unplug3' | 'cables';
 const STEPS: Step[] = ['main', 'unplug', 'mouse', 'unplug3', 'cables'];
 
 const isUserCancel = (e: unknown) => e instanceof DOMException && e.name === 'NotFoundError';
-export const HAZARD = 'USB1 and USB3 in one computer can kill it.';
-const row = { display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' } as const;
 
 const Setup = () => {
   const native = useNativeFlash();
@@ -44,7 +39,6 @@ const Setup = () => {
       return null;
     }
   };
-  const counter = () => `Step ${STEPS.indexOf(step()) + 1} of ${STEPS.length}`;
   const pct = () => {
     const p = native.progress();
     return p?.phase === 'writing' && p.total
@@ -99,56 +93,84 @@ const Setup = () => {
   // The first step shows in any browser; Install needs Web Serial on a secure page.
   const blocked = () => (!boxes.supported ? BAD_BROWSER : !boxes.secure ? BAD_CONTEXT : null);
 
+  const LABELS: Record<Step, string> = {
+    main: 'Main chip',
+    unplug: 'Unplug USB1',
+    mouse: 'Mouse-side chip',
+    unplug3: 'Unplug USB3',
+    cables: 'Wire the box',
+  };
+  const at = () => STEPS.indexOf(step());
+  const finished = () => installed()?.session.status() === 'connected';
+
   return (
     <>
       <PageHeader />
-      <Show when={native.running()}>
-        <div id="installing" data-search-target>
-          <Card>
-            <CardHeader title="Installing" subtitle="Don't unplug or leave this page" />
-            <Progress type="linear" value={pct()} showLabel={pct() !== undefined} />
-          </Card>
+      <div class="flow" id="install" data-search-target>
+        <div class="stages">
+          <For each={STEPS}>
+            {(s, i) => (
+              <span classList={{ now: !finished() && i() === at(), done: i() < at() || finished() }}>
+                <em>{i() + 1}</em>
+                <i>{LABELS[s]}</i>
+              </span>
+            )}
+          </For>
         </div>
-      </Show>
 
-      <Show when={!native.running()}>
-        <div id="install" data-search-target>
-          <Card>
-            <CardHeader title="Install Medius" subtitle="Ports are numbered on the box" />
-            <div style={{ 'margin-bottom': 'var(--g-spacing-sm)' }}>
-              <Chip variant="neutral">{counter()}</Chip>
+        <Show when={err()}>
+          {(msg) => (
+            <div class="callout callout--danger" role="alert">
+              {msg()}
             </div>
-            <Show when={err()}>
-              {(msg) => (
-                <div class="callout callout--danger" role="alert">
-                  {msg()}
-                </div>
-              )}
-            </Show>
+          )}
+        </Show>
 
-            <Switch>
-              <Match when={step() === 'main'}>
+        <Show
+          when={!native.running()}
+          fallback={
+            <div class="step" id="installing" data-search-target>
+              <p class="cue">Installing</p>
+              <p class="sub2">Don't unplug or close this tab</p>
+              <div class="prog">
+                <div class="pct">
+                  {pct() ?? 0}
+                  <small>%</small>
+                </div>
+                <div class="track">
+                  <i style={{ '--p': (pct() ?? 0) / 100 }} />
+                </div>
+              </div>
+            </div>
+          }
+        >
+          <Switch>
+            <Match when={step() === 'main'}>
+              <div class="step">
                 <InstallPorts socket="usb1" />
                 <Show
                   when={blocked()}
                   fallback={
-                    <Button
-                      variant="primary"
-                      disabled={busy() || releases.loading}
-                      onClick={() => void install('device', 'unplug')}
-                    >
-                      {busy() ? 'Installing...' : 'Install'}
-                    </Button>
+                    <div class="acts">
+                      <Button variant="primary" disabled={busy() || releases.loading} onClick={() => void install('device', 'unplug')}>
+                        {busy() ? 'Installing...' : 'Install'}
+                      </Button>
+                    </div>
                   }
                 >
-                  {(reason) => <div class="callout callout--warning" role="alert">{reason()}</div>}
+                  {(reason) => (
+                    <div class="callout callout--warning" role="alert">
+                      {reason()}
+                    </div>
+                  )}
                 </Show>
-              </Match>
+              </div>
+            </Match>
 
-              <Match when={step() === 'unplug'}>
+            <Match when={step() === 'unplug'}>
+              <div class="step">
                 <ClearPort socket="usb1" />
-                <div class="callout callout--danger">{HAZARD}</div>
-                <div style={row}>
+                <div class="acts">
                   <Button variant="primary" onClick={go('mouse')}>
                     Done
                   </Button>
@@ -156,36 +178,38 @@ const Setup = () => {
                     Back
                   </Button>
                 </div>
-              </Match>
+              </div>
+            </Match>
 
-              <Match when={step() === 'mouse'}>
+            <Match when={step() === 'mouse'}>
+              <div class="step">
                 <InstallPorts socket="usb3" />
-                <div class="callout callout--danger">{HAZARD}</div>
-                <div style={row}>
-                  <Button
-                    variant="primary"
-                    disabled={busy() || releases.loading}
-                    onClick={() => void install('host', 'unplug3')}
-                  >
+                <div class="acts">
+                  <Button variant="primary" disabled={busy() || releases.loading} onClick={() => void install('host', 'unplug3')}>
                     {busy() ? 'Installing...' : 'Install'}
                   </Button>
                   <Button variant="secondary" disabled={busy()} onClick={go('unplug')}>
                     Back
                   </Button>
                 </div>
-              </Match>
+              </div>
+            </Match>
 
-              <Match when={step() === 'unplug3'}>
+            <Match when={step() === 'unplug3'}>
+              <div class="step">
                 <ClearPort socket="usb3" />
-                <div class="callout callout--danger">{HAZARD}</div>
-                <Button variant="primary" onClick={go('cables')}>
-                  Done
-                </Button>
-              </Match>
+                <div class="acts">
+                  <Button variant="primary" onClick={go('cables')}>
+                    Done
+                  </Button>
+                </div>
+              </div>
+            </Match>
 
-              <Match when={step() === 'cables'}>
+            <Match when={step() === 'cables'}>
+              <div class="step">
                 <Show
-                  when={installed()?.session.status() === 'connected'}
+                  when={finished()}
                   fallback={
                     <ConnectView
                       supported={boxes.supported}
@@ -198,16 +222,21 @@ const Setup = () => {
                     />
                   }
                 >
-                  <div class="callout callout--info">Installed.</div>
-                  <Button variant="primary" onClick={() => navigate('/dashboard')}>
-                    Finish
-                  </Button>
+                  <p class="state">
+                    <span class="dot ok" />
+                    Installed.
+                  </p>
+                  <div class="acts">
+                    <Button variant="primary" onClick={() => navigate('/dashboard')}>
+                      Finish
+                    </Button>
+                  </div>
                 </Show>
-              </Match>
-            </Switch>
-          </Card>
-        </div>
-      </Show>
+              </div>
+            </Match>
+          </Switch>
+        </Show>
+      </div>
     </>
   );
 };

@@ -27,6 +27,10 @@ describe('planRedirect', () => {
     ['/mcp/', '', null],
     ['/.well-known/mcp/server-card.json', '', null],
     ['/native//', '', null],
+    // A page that moved goes to where its content is now, its anchor included.
+    ['/dashboard/advanced-control', '', '/dashboard/control#advanced'],
+    ['/dashboard/advanced', '?x=1', '/dashboard/update?x=1#manual'],
+    ['/Dashboard/Advanced/', '', '/dashboard/update#manual'],
   ])('%s%s -> %s', (pathname, search, expected) => {
     expect(planRedirect(pathname, search, ROUTES)).toBe(expected);
   });

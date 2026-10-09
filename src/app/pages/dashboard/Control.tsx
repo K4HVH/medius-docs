@@ -1,6 +1,5 @@
 import { Match, Show, Switch, createSignal } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
-import { Card, CardHeader } from '../../../components/surfaces/Card';
 import { Button } from '../../../components/inputs/Button';
 import { useDashboard } from './context';
 import UpdateOnlyCard from './UpdateOnlyCard';
@@ -12,11 +11,26 @@ import DeviceTransform from './DeviceTransform';
 import DeviceEventCatch from './DeviceEventCatch';
 import DeviceClip from './DeviceClip';
 import DeviceLed from './DeviceLed';
-import { col, columns, row } from './ui';
+import DeviceRewrite from './DeviceRewrite';
+import DevicePatch from './DevicePatch';
+import DeviceRaw from './DeviceRaw';
+import DeviceTransfer from './DeviceTransfer';
 import { PageHeader } from '../../shell/PageHeader';
+import { PageTabs, Pane } from '../../shell/PageTabs';
+import { Panel, Panels, Stack } from '../../shell/Panel';
 
-// Everything here is momentary: the box drops it after 1 s of control-link silence. Persistent
-// options live on the Device tab.
+const TABS = [
+  { key: 'injection', label: 'Injection' },
+  { key: 'locks', label: 'Input locks' },
+  { key: 'transforms', label: 'Transforms' },
+  { key: 'catch', label: 'Input catch' },
+  { key: 'clips', label: 'Clip playback' },
+  { key: 'light', label: 'Status light' },
+  { key: 'advanced', label: 'Advanced' },
+];
+
+// Everything here but the Advanced tab's patches is momentary: the box drops it after 1 s of
+// control-link silence. Persistent options live on the Device page.
 const Control = () => {
   const dash = useDashboard();
   const navigate = useNavigate();
@@ -26,6 +40,7 @@ const Control = () => {
     dash.refreshPoll('catch');
     dash.refreshPoll('clip');
   });
+  const full = () => dash.status() === 'connected' && !dash.updateOnly();
 
   const safetyClear = () => {
     setCleared(false);
@@ -38,73 +53,93 @@ const Control = () => {
 
   return (
     <>
-      <PageHeader />
+      <PageHeader
+        aside={
+          <Show when={full()}>
+            <div class="safety" id="safety-clear" data-search-target>
+              <Button variant="danger" disabled={cmd.busy()} onClick={safetyClear}>
+                Clear everything
+              </Button>
+              <p class="sub2">Clears injection, locks, subscriptions and the clip</p>
+              <div aria-live="polite">
+                <Show when={cleared()}>
+                  <p class="mut">Sent.</p>
+                </Show>
+                <Show when={cmd.error()}>
+                  <div class="callout callout--danger" role="alert">{cmd.error()}</div>
+                </Show>
+              </div>
+            </div>
+          </Show>
+        }
+      />
       <Show
-        when={dash.status() === 'connected' && !dash.updateOnly()}
+        when={full()}
         fallback={
-          <Show
-            when={!dash.updateOnly()}
-            fallback={<UpdateOnlyCard use="these controls" />}
-          >
-            <div id="controls" data-search-target>
-              <Card>
-                <CardHeader title="Controls" subtitle="Test the box" />
-                <div aria-live="polite">
+          <Panels>
+            <Show when={!dash.updateOnly()} fallback={<UpdateOnlyCard use="these controls" />}>
+              <Panel id="controls" title="Your box" wide>
+                <div aria-live="polite" class="boxstate">
                   <Switch>
                     <Match when={dash.status() === 'connecting'}>
-                      <Button loading disabled>Connecting...</Button>
+                      <div class="acts">
+                        <Button loading disabled>
+                          Connecting...
+                        </Button>
+                      </div>
                     </Match>
 
                     <Match when={dash.status() === 'flashing'}>
                       <p>Updating.</p>
-                      <Button variant="primary" onClick={() => navigate('/dashboard/update')}>
-                        Go to Update
-                      </Button>
+                      <div class="acts">
+                        <Button variant="primary" onClick={() => navigate('/dashboard/update')}>
+                          Go to Update
+                        </Button>
+                      </div>
                     </Match>
 
                     <Match when={dash.status() === 'error' || dash.status() === 'disconnected' || dash.status() === 'lost'}>
                       <ConnectPanel />
                     </Match>
-
                   </Switch>
                 </div>
-              </Card>
-            </div>
-          </Show>
+              </Panel>
+            </Show>
+          </Panels>
         }
       >
-        <>
-        <div style={columns}>
-          <div style={col}>
+        <PageTabs id="control" tabs={TABS}>
+          <Pane key="injection">
             <DeviceInject />
+          </Pane>
+          <Pane key="locks">
             <DeviceLock />
+          </Pane>
+          <Pane key="transforms">
             <DeviceTransform />
-            <DeviceLed />
-            <div id="safety-clear" data-search-target>
-              <Card>
-                <CardHeader title="Safety clear" subtitle="Clears injection, locks, subscriptions and the clip" />
-                <div style={row}>
-                  <Button variant="danger" disabled={cmd.busy()} onClick={safetyClear}>
-                    Clear everything
-                  </Button>
-                </div>
-                <div aria-live="polite">
-                  <Show when={cleared()}>
-                    <p>Sent.</p>
-                  </Show>
-                  <Show when={cmd.error()}>
-                    <div class="callout callout--danger" role="alert">{cmd.error()}</div>
-                  </Show>
-                </div>
-              </Card>
-            </div>
-          </div>
-          <div style={col}>
+          </Pane>
+          <Pane key="catch">
             <DeviceEventCatch />
+          </Pane>
+          <Pane key="clips">
             <DeviceClip />
-          </div>
-        </div>
-        </>
+          </Pane>
+          <Pane key="light">
+            <DeviceLed />
+          </Pane>
+          <Pane key="advanced">
+            <Panels>
+              <Stack>
+                <DeviceRewrite />
+                <DevicePatch />
+              </Stack>
+              <Stack>
+                <DeviceRaw />
+                <DeviceTransfer />
+              </Stack>
+            </Panels>
+          </Pane>
+        </PageTabs>
       </Show>
     </>
   );

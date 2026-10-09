@@ -96,8 +96,10 @@ const stub = (over: Partial<Record<string, unknown>> = {}): DashboardContextValu
     held: () => true,
     present: () => true,
     deviceLog: () => [],
+    deviceLogAdded: () => 0,
     clearDeviceLog: () => {},
     inputEvents: () => [],
+    inputEventsAdded: () => 0,
     clearInputEvents: () => {},
     poll: (key: string) => () => ({ ...VALUES, ...over })[key] ?? null,
     pollUnreadable: () => () => false,
@@ -165,14 +167,19 @@ describe('Control page', () => {
     await findByText('Status light');
     await findByText('Input catch');
     await findByText('Clip playback');
-    await findByText('Safety clear');
+    await findByText('Clear everything');
+    // The Advanced tab: what was the Advanced control page.
+    await findByText('Rewrite rules');
+    await findByText('Descriptor patches');
+    await findByText('Raw report');
+    await findByText('Control transfer');
   });
 
   it('shows only the connect prompt when disconnected', async () => {
     const { findByText, queryByText } = mount(
       stub({ status: () => 'disconnected', health: () => null }),
     );
-    await findByText('Controls');
+    await findByText('Your box');
     expect(queryByText('Injection')).toBeNull();
     expect(queryByText('Clip playback')).toBeNull();
   });
@@ -194,7 +201,7 @@ describe('Control page', () => {
     // It is the box-wide clear: locks, the catch table and the loaded clip go with it. A button
     // labelled "release the keys" would be a trap next to a live event stream.
     const { findByText } = mount();
-    // The card subtitle carries this now; the paragraph under it only restated the subtitle.
+    // The line under the button says it.
     const body = (await findByText(/Clears injection/)).textContent ?? '';
     expect(body).toMatch(/lock/i);
     expect(body).toMatch(/subscription/i);
@@ -213,9 +220,10 @@ describe('Control page', () => {
   });
 
   it('surfaces the cross-chip clock estimate rather than dropping it', async () => {
-    const { findByText, container } = mount();
-    // The catch card only shows the clock while streaming, so start the stream first.
-    (await findByText('Watch')).click();
+    const { findByRole, container } = mount();
+    // The catch tab only reads the clock while streaming, so open it and start the stream first.
+    (await findByRole('tab', { name: 'Input catch' })).click();
+    (await findByRole('button', { name: 'Watch' })).click();
     await new Promise((r) => setTimeout(r, 20));
     expect(container.textContent).toMatch(/Host clock leads the device clock/);
   });

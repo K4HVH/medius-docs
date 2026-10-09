@@ -6,7 +6,6 @@ import { versionString } from '../../../dashboard/protocol';
 import type { ConnectVerdict } from '../../../dashboard/serial';
 import { useDashboard } from './context';
 import { WiringPorts } from './PortDiagram';
-import { row } from './ui';
 
 // Shared by every page that gates on these two conditions.
 export const BAD_BROWSER = "This browser can't talk to your box. Open this page in Chrome.";
@@ -87,7 +86,7 @@ export const ConnectView = (props: ConnectViewProps) => {
             This computer can't see your box. Plug USB2 into it.
           </div>
           <WiringPorts />
-          <div style={{ display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' }}>
+          <div class="acts">
             <Connect label="Try again" />
             <NeverInstalled />
           </div>
@@ -119,7 +118,7 @@ export const ConnectView = (props: ConnectViewProps) => {
             The box isn't answering. Check USB1 is plugged in too.
           </div>
           <WiringPorts />
-          <div style={{ display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' }}>
+          <div class="acts">
             <Connect label="Try again" />
             <NeverInstalled />
           </div>
@@ -151,7 +150,7 @@ export const ConnectView = (props: ConnectViewProps) => {
             return (
               <div class="callout callout--danger" role="alert">
                 That didn't work. Unplug everything and plug it back in.
-                <div style={{ 'margin-top': '6px', 'font-size': '0.85em', opacity: '0.75' }}>
+                <div class="callout-detail">
                   {v?.kind === 'other' ? v.message : ''}
                 </div>
               </div>
@@ -192,7 +191,7 @@ export const ConnectPanel = (props: { onSetup?: () => void }) => {
         <div class="callout callout--danger" role="alert">
           The box isn't answering. Check USB1 is plugged in too.
         </div>
-        <div style={row}>
+        <div class="acts">
           <Button loading disabled>
             Reconnecting...
           </Button>

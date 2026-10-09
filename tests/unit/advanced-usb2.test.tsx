@@ -150,21 +150,22 @@ afterEach(() => {
 });
 
 const mount = () => render(() => <Usb2Flash via={() => <p>via field</p>} />);
-const combos = (r: ReturnType<typeof render>) => [...r.container.querySelectorAll('[role="combobox"]')] as HTMLElement[];
-const options = async (box: HTMLElement) => {
-  fireEvent.click(box);
-  fireEvent.keyDown(box, { key: 'Enter' });
-  await new Promise((res) => setTimeout(res, 20));
-  return [...document.querySelectorAll('[role="option"]')] as HTMLElement[];
+// Chip and Source are segmented choices, each in a field under its label.
+const radios = (r: ReturnType<typeof render>, label: 'Chip' | 'Source') => {
+  const f = [...r.container.querySelectorAll('.labelled')].find((el) => el.querySelector('.field-l')?.textContent === label);
+  if (!f) throw new Error(`no ${label} field`);
+  return [...f.querySelectorAll('[role="radiogroup"] [role="radio"]')] as HTMLButtonElement[];
 };
-const pick = async (box: HTMLElement, label: RegExp) => {
-  const o = (await options(box)).find((x) => label.test(x.textContent ?? ''));
-  if (!o) throw new Error(`no option ${label}`);
+const checked = (r: ReturnType<typeof render>, label: 'Chip' | 'Source') =>
+  radios(r, label).find((b) => b.getAttribute('aria-checked') === 'true')?.textContent;
+const pick = async (r: ReturnType<typeof render>, label: 'Chip' | 'Source', option: RegExp) => {
+  const o = radios(r, label).find((x) => option.test(x.textContent ?? ''));
+  if (!o) throw new Error(`no ${label} option ${option}`);
   fireEvent.click(o);
   await new Promise((res) => setTimeout(res, 20));
 };
-const chips = (r: ReturnType<typeof render>, label: RegExp) => pick(combos(r)[0], label);
-const upload = (r: ReturnType<typeof render>) => pick(combos(r)[1], /upload a file/i);
+const chips = (r: ReturnType<typeof render>, label: RegExp) => pick(r, 'Chip', label);
+const upload = (r: ReturnType<typeof render>) => pick(r, 'Source', /upload a file/i);
 const flashButton = (r: ReturnType<typeof render>) => r.getByRole('button', { name: /^flash$/i });
 // Drops a file on the picker with this label.
 const drop = (r: ReturnType<typeof render>, label: string, bytes: Uint8Array<ArrayBuffer>) => {
@@ -196,20 +197,17 @@ describe('Advanced over USB2', () => {
 
   it('offers both chips, the main chip or the mouse-side chip, both by default', async () => {
     const r = mount();
-    expect(combos(r)[0].textContent).toContain('Both chips');
-    const labels = (await options(combos(r)[0])).map((o) => o.textContent);
-    expect(labels).toEqual(['Both chips', 'Main chip', 'Mouse-side chip']);
+    expect(checked(r, 'Chip')).toBe('Both chips');
+    expect(radios(r, 'Chip').map((o) => o.textContent)).toEqual(['Both chips', 'Main chip', 'Mouse-side chip']);
   });
 
   it('with no mouse-side chip answering, offers the main chip alone and says where the other is flashed', async () => {
     mock.s!.setFirmwareInfo(info('3.4.2', null));
     const r = mount();
-    await waitFor(() => expect(combos(r)[0].textContent).toContain('Main chip'));
+    await waitFor(() => expect(checked(r, 'Chip')).toBe('Main chip'));
     expect(r.container.textContent).toContain("The mouse-side chip isn't answering. Flash it over USB3.");
-    const opts = await options(combos(r)[0]);
-    const disabled = opts.filter((o) => o.getAttribute('aria-disabled') === 'true').map((o) => o.textContent);
+    const disabled = radios(r, 'Chip').filter((o) => o.disabled).map((o) => o.textContent);
     expect(disabled).toEqual(['Both chips', 'Mouse-side chip']);
-    fireEvent.keyDown(combos(r)[0], { key: 'Escape' });
     await waitFor(() => expect(flashButton(r)).not.toBeDisabled());
     flashButton(r).click();
     await waitFor(() => expect(mock.sent).toHaveLength(1));
@@ -223,8 +221,7 @@ describe('Advanced over USB2', () => {
     await waitFor(() => expect(mock.firmwareReads).toBeGreaterThan(1), { timeout: 4000 });
     mock.s!.setFirmwareInfo(info('3.4.2', '3.4.2'));
     await waitFor(() => expect(r.container.textContent).not.toContain("The mouse-side chip isn't answering."));
-    const disabled = (await options(combos(r)[0])).filter((o) => o.getAttribute('aria-disabled') === 'true');
-    expect(disabled).toEqual([]);
+    await waitFor(() => expect(radios(r, 'Chip').filter((o) => o.disabled)).toEqual([]));
   });
 
   it("waits for the box's firmware before it can judge a flash, then allows it", async () => {

@@ -659,27 +659,29 @@ export function createBoxSession(
       try {
         // Host first: the device chip's running firmware relays its image.
         if (images.host) {
-          setUpdateProgress({ phase: 'writing', written: 0, total: images.host.length });
+          setUpdateProgress({ phase: 'writing', chip: 'host', written: 0, total: images.host.length });
           await l.stageFirmware(OTA_TGT_HOST, images.host, (written, total) =>
-            setUpdateProgress({ phase: 'writing', written, total }),
+            setUpdateProgress({ phase: 'writing', chip: 'host', written, total }),
           );
         }
         if (images.device) {
-          setUpdateProgress({ phase: 'writing', written: 0, total: images.device.length });
+          setUpdateProgress({ phase: 'writing', chip: 'device', written: 0, total: images.device.length });
           await l.stageFirmware(OTA_TGT_DEVICE, images.device, (written, total) =>
-            setUpdateProgress({ phase: 'writing', written, total }),
+            setUpdateProgress({ phase: 'writing', chip: 'device', written, total }),
           );
         }
         // A mouse-side chip that answered before the activate has to answer after it, whatever was sent.
         const hostBefore = ((await read()) ?? (await read()))?.host != null;
-        setUpdateProgress({ phase: 'connecting' });
+        setUpdateProgress({ phase: 'restarting' });
         updating = true;
         await l.activateFirmware();
         // The link is reopened either way; the main chip reboots unless only the mouse-side chip was sent.
         resetView();
         await l.close().catch(() => undefined);
         const hostExpected = images.host !== undefined || hostBefore;
-        const result = (await tryReconnect(ctrlPort)) ? await awaitVerdict(ctrlPort, hostExpected) : 'gone';
+        const back = await tryReconnect(ctrlPort);
+        if (back) setUpdateProgress({ phase: 'verifying' });
+        const result = back ? await awaitVerdict(ctrlPort, hostExpected) : 'gone';
         setUpdateProgress({ phase: 'done' });
         if (result !== 'ok') {
           // Shared, not page-local, so it survives a tab change; Device, Control and Update show it.

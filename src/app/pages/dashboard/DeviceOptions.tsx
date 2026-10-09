@@ -18,7 +18,6 @@ import { useDashboard } from './context';
 import { createCommand } from './action';
 import { Panel } from '../../shell/Panel';
 import { Segmented } from '../../shell/Segmented';
-import { controls, muted, section, status } from './ui';
 
 const EMIT_MODES: Record<string, EmitMode> = {
   learned: EmitMode.Learned,
@@ -240,8 +239,8 @@ const DeviceOptions = () => {
         <p>
           Up to {NAME_MAX} letters, numbers and symbols.
         </p>
-        <div style={controls}>
-          <div style={{ 'max-width': '16rem', flex: '1 1 12rem' }}>
+        <div class="acts">
+          <div class="fw-l">
             <TextField
               label="Name"
               value={name()}
@@ -257,8 +256,8 @@ const DeviceOptions = () => {
             Clear
           </Button>
         </div>
-        <Show when={version()} fallback={<p style={status}>Reading...</p>}>
-          <div style={status}>
+        <Show when={version()} fallback={<p class="mut">Reading...</p>}>
+          <div class="chips">
             <Chip variant="neutral">{version()!.name}</Chip>
           </div>
         </Show>
@@ -268,7 +267,7 @@ const DeviceOptions = () => {
         <p>
           Clones a device the box can't copy exactly, and unlocks the Advanced tab on Control.
         </p>
-        <div style={controls}>
+        <div class="acts">
           <Button variant="primary" disabled={cmd.busy()} onClick={() => allowImperfect(true)}>
             Allow imperfect
           </Button>
@@ -276,9 +275,9 @@ const DeviceOptions = () => {
             Faithful only
           </Button>
         </div>
-        <Show when={imperfect()} fallback={<p style={status}>Reading...</p>}>
+        <Show when={imperfect()} fallback={<p class="mut">Reading...</p>}>
           {(s) => (
-            <div style={{ ...status, display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' }}>
+            <div class="chips">
               <Chip variant={s().allowed ? 'success' : 'neutral'}>
                 {s().allowed ? 'Allowed' : 'Faithful only'}
               </Chip>
@@ -295,8 +294,8 @@ const DeviceOptions = () => {
           Injected motion waits up to the window to ride a physical report, and is dropped if none
           arrives, so reports keep native timing.
         </p>
-        <div style={controls}>
-          <div style={{ 'max-width': '8rem' }}>
+        <div class="acts">
+          <div class="fw-s">
             <NumberInput
               label="Window"
               suffix="ms"
@@ -319,13 +318,13 @@ const DeviceOptions = () => {
             </Button>
           </Show>
         </div>
-        <Show when={ride() !== null} fallback={<p style={status}>Reading...</p>}>
-          <div style={status}>
+        <Show when={ride() !== null} fallback={<p class="mut">Reading...</p>}>
+          <div class="chips">
             <Chip variant={ride()! > 0 ? 'success' : 'neutral'}>
               {ride()! > 0 ? `On · ${ride()} ms` : 'Off'}
             </Chip>
             <Show when={rideDirty()}>
-              <span style={{ ...muted, 'margin-left': 'var(--g-spacing-sm)' }}>Not applied</span>
+              <span class="mut">Not applied</span>
             </Show>
           </div>
         </Show>
@@ -345,13 +344,13 @@ const DeviceOptions = () => {
             { value: String(BearingMode.Vector), label: 'Vector' },
           ]}
         />
-        <p style={muted}>
+        <p class="mut">
           {bearGeometry() === BearingMode.Vector
             ? 'Only the part of the physical delta along the injected vector is weighed.'
             : 'Each axis is weighed against its bearing.'}
         </p>
-        <div style={controls}>
-          <div style={{ 'max-width': '8rem' }}>
+        <div class="acts">
+          <div class="fw-s">
             <NumberInput
               label="Window"
               suffix="ms"
@@ -374,15 +373,15 @@ const DeviceOptions = () => {
             </Button>
           </Show>
         </div>
-        <Show when={bearing() !== null} fallback={<p style={status}>Reading...</p>}>
-          <div style={status}>
+        <Show when={bearing() !== null} fallback={<p class="mut">Reading...</p>}>
+          <div class="chips">
             <Chip variant={bearing()!.windowMs > 0 ? 'success' : 'neutral'}>
               {bearing()!.windowMs > 0
                 ? `${bearing()!.mode === BearingMode.Vector ? 'Vector' : 'Per axis'} · ${bearing()!.windowMs} ms`
                 : 'Off'}
             </Chip>
             <Show when={bearDirty()}>
-              <span style={{ ...muted, 'margin-left': 'var(--g-spacing-sm)' }}>Not applied</span>
+              <span class="mut">Not applied</span>
             </Show>
           </div>
         </Show>
@@ -403,9 +402,9 @@ const DeviceOptions = () => {
             { value: 'unsmoothed', label: 'Unsmoothed' },
           ]}
         />
-        <p style={muted}>{RENDER_BLURB[renderKey()]}</p>
-        <div id="render-full" data-search-target>
-          <div class="api-response-label" style={section}>Rendered motion</div>
+        <p class="mut">{RENDER_BLURB[renderKey()]}</p>
+        <div id="render-full" class="labelled" data-search-target>
+          <span class="field-l">Rendered motion</span>
           <Segmented
             name="render-full"
             value={fullOn() ? 'both' : 'injected'}
@@ -415,7 +414,7 @@ const DeviceOptions = () => {
               { value: 'both', label: 'Injected and native' },
             ]}
           />
-          <p style={muted}>
+          <p class="mut">
             {!fullOn()
               ? "Native motion is relayed untouched."
               : renderKey() === 'off'
@@ -423,7 +422,7 @@ const DeviceOptions = () => {
                 : 'Both go through the model as one stream.'}
           </p>
         </div>
-        <div style={controls}>
+        <div class="acts">
           <Button variant="primary" disabled={cmd.busy()} onClick={applyRender}>
             Apply
           </Button>
@@ -433,9 +432,9 @@ const DeviceOptions = () => {
             </Button>
           </Show>
         </div>
-        <Show when={render()} fallback={<p style={status}>Reading...</p>}>
+        <Show when={render()} fallback={<p class="mut">Reading...</p>}>
           {(r) => (
-            <div style={{ ...status, display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' }}>
+            <div class="chips">
               <Chip variant={r().mode === RenderMode.Off || r().mode === null ? 'neutral' : 'success'}>
                 {r().mode != null ? RENDER_LABEL[r().mode!] || 'Off' : 'Unknown'}
               </Chip>
@@ -451,7 +450,7 @@ const DeviceOptions = () => {
                 <Chip variant="neutral">Move the mouse to start</Chip>
               </Show>
               <Show when={renderDirty()}>
-                <span style={{ ...muted, 'margin-left': 'var(--g-spacing-sm)' }}>
+                <span class="mut">
                   Not applied
                 </span>
               </Show>
@@ -475,8 +474,8 @@ const DeviceOptions = () => {
             { value: 'full', label: 'Full' },
           ]}
         />
-        <p style={muted}>{SPREAD_BLURB[spreadKey()] ?? 'Injected motion over its share of the command interval.'}</p>
-        <div style={controls}>
+        <p class="mut">{SPREAD_BLURB[spreadKey()] ?? 'Injected motion over its share of the command interval.'}</p>
+        <div class="acts">
           <Button variant="primary" disabled={cmd.busy()} onClick={applySpread}>
             Apply
           </Button>
@@ -486,16 +485,16 @@ const DeviceOptions = () => {
             </Button>
           </Show>
         </div>
-        <Show when={spread()} fallback={<p style={status}>Reading...</p>}>
+        <Show when={spread()} fallback={<p class="mut">Reading...</p>}>
           {(sp) => (
-            <div style={status}>
+            <div class="chips">
               <Chip variant={sp().percent === 0 ? 'neutral' : 'success'}>{spreadLabel(sp())}</Chip>
               {/* The box learns the interval from injection, so nothing spreads until some arrives. */}
               <Show when={sp().percent > 0 && sp().spanUs === 0}>
                 <Chip variant="neutral">Waiting for injection</Chip>
               </Show>
               <Show when={spreadDirty()}>
-                <span style={{ ...muted, 'margin-left': 'var(--g-spacing-sm)' }}>Not applied</span>
+                <span class="mut">Not applied</span>
               </Show>
             </div>
           )}
@@ -516,9 +515,9 @@ const DeviceOptions = () => {
             { value: 'fixed', label: 'Fixed' },
           ]}
         />
-        <p style={muted}>{MODE_BLURB[mode()]}</p>
-        <div id="wire-rate" data-search-target>
-          <div class="api-response-label" style={section}>Wire rate</div>
+        <p class="mut">{MODE_BLURB[mode()]}</p>
+        <div id="wire-rate" class="labelled" data-search-target>
+          <span class="field-l">Wire rate</span>
           <Segmented
             name="wire-rate"
             value={forceOn() ? 'forced' : 'device'}
@@ -528,15 +527,15 @@ const DeviceOptions = () => {
               { value: 'forced', label: 'Forced' },
             ]}
           />
-          <p style={muted}>
+          <p class="mut">
             {forceOn()
               ? 'Advertises the interval you pick.'
               : 'Advertises the interval the device declares.'}
           </p>
         </div>
-        <div style={controls}>
+        <div class="acts">
           <Show when={mode() === 'fixed'}>
-            <div style={{ 'max-width': '8rem' }}>
+            <div class="fw-s">
               <NumberInput
                 label="Emit rate"
                 suffix="Hz"
@@ -549,7 +548,7 @@ const DeviceOptions = () => {
             </div>
           </Show>
           <Show when={forceOn()}>
-            <div style={{ 'max-width': '8rem' }}>
+            <div class="fw-s">
               <NumberInput
                 label="Wire rate"
                 suffix="Hz"
@@ -570,9 +569,9 @@ const DeviceOptions = () => {
             </Button>
           </Show>
         </div>
-        <Show when={emit()} fallback={<p style={status}>Reading...</p>}>
+        <Show when={emit()} fallback={<p class="mut">Reading...</p>}>
           {(s) => (
-            <div style={{ ...status, display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' }}>
+            <div class="chips">
               <Chip variant={s().mode === EmitMode.Learned || s().mode === null ? 'neutral' : 'success'}>
                 {emitLabel(s())}
               </Chip>
@@ -587,7 +586,7 @@ const DeviceOptions = () => {
                 <Chip variant="warning">Set, but needs Allow imperfect</Chip>
               </Show>
               <Show when={emitDirty()}>
-                <span style={{ ...muted, 'margin-left': 'var(--g-spacing-sm)' }}>
+                <span class="mut">
                   Not applied
                 </span>
               </Show>

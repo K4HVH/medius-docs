@@ -1,5 +1,5 @@
+import { A } from '@solidjs/router';
 import { For, Show, createSignal } from 'solid-js';
-import { Card, CardHeader } from '../../../components/surfaces/Card';
 import { Button } from '../../../components/inputs/Button';
 import { Chip } from '../../../components/display/Chip';
 import { NumberInput } from '../../../components/inputs/NumberInput';
@@ -7,7 +7,7 @@ import { TextField } from '../../../components/inputs/TextField';
 import { type TransferResult, TransferStatus } from '../../../dashboard/protocol';
 import { useDashboard } from './context';
 import { createCommand } from './action';
-import { chips, muted, row, section } from './ui';
+import { Panel } from '../../shell/Panel';
 import { SETUP_DEFAULT, SETUP_FIELDS, decodeSetup, outDataBlurb, parseHex, parseNum, toHex } from './hex';
 
 // No answer covers more than a silent device.
@@ -64,93 +64,82 @@ const DeviceTransfer = () => {
 
   return (
     <Show when={dash.status() === 'connected'}>
-      <div id="control-transfer" data-search-target>
-        <Card>
-          <CardHeader title="Control transfer" subtitle="Send a request to the device" />
-
-          <Show
-            when={allowed()}
-            fallback={
-              <p style={muted}>
-                Control transfers need imperfect clones, on the Device tab.
-              </p>
-            }
-          >
-            <div style={{ ...row, 'align-items': 'flex-end' }}>
-              <div style={{ 'max-width': '9rem' }}>
-                <NumberInput
-                  label="Endpoint"
-                  value={ep()}
-                  min={0}
-                  max={15}
-                  precision={0}
-                  onChange={(v) => setEp(v ?? 0)}
-                />
-              </div>
-              <For each={SETUP_FIELDS}>
-                {(f) => (
-                  <div style={{ 'max-width': '9rem' }}>
-                    <TextField
-                      label={f.label}
-                      value={setup()[f.key]}
-                      onInput={(v) => setSetup((prev) => ({ ...prev, [f.key]: v }))}
-                      placeholder={f.placeholder}
-                    />
-                  </div>
-                )}
-              </For>
-            </div>
-
-            <p style={{ ...muted, 'margin-top': '4px' }}>
-              <Show when={bm() !== null} fallback="bmRequestType must be a number.">
-                {decodeSetup(bm()!, parseNum(setup().req))}
-              </Show>
+      <Panel id="control-transfer" title="Control transfer">
+        <Show
+          when={allowed()}
+          fallback={
+            <p class="mut">
+              Control transfers need <A href="/dashboard#imperfect-clone">imperfect clones</A>, on Device's Options tab.
             </p>
-
-            <div style={section}>
-              <TextField label="Out data (hex)" value={out()} onInput={setOut} placeholder="e.g. 00 01" />
-              <p style={{ ...muted, 'margin-top': '4px' }}>
-                {outDataBlurb(bm())}
-              </p>
+          }
+        >
+          <div class="acts">
+            <div class="fw-s">
+              <NumberInput
+                label="Endpoint"
+                value={ep()}
+                min={0}
+                max={15}
+                precision={0}
+                onChange={(v) => setEp(v ?? 0)}
+              />
             </div>
-
-            <div style={{ ...section, ...row }}>
-              <Button variant="primary" disabled={cmd.busy()} onClick={run}>
-                Run
-              </Button>
-            </div>
-
-            <div aria-live="polite">
-              <Show when={cmd.error()}>
-                <div class="callout callout--danger" role="alert" style={section}>
-                  {cmd.error()}
+            <For each={SETUP_FIELDS}>
+              {(f) => (
+                <div class="fw-s">
+                  <TextField
+                    label={f.label}
+                    value={setup()[f.key]}
+                    onInput={(v) => setSetup((prev) => ({ ...prev, [f.key]: v }))}
+                    placeholder={f.placeholder}
+                  />
                 </div>
-              </Show>
-              <Show when={result()}>
-                {(r) => (
-                  <div style={section}>
-                    <div style={chips}>
-                      <Chip variant={statusVariant(r().status)}>
-                        {STATUS_LABEL[r().status]}
-                      </Chip>
-                      <Chip variant="neutral">{r().data.length} B in</Chip>
-                    </div>
-                    <p style={{ ...muted, 'margin-top': '4px' }}>{STATUS_BLURB[r().status]}</p>
-                    <Show when={r().data.length > 0}>
-                      <pre
-                        class="diagram"
-                        style={{ 'max-height': '10rem', overflow: 'auto', margin: 'var(--g-spacing-sm) 0 0' }}
-                      >
-                        {toHex(r().data)}
-                      </pre>
-                    </Show>
+              )}
+            </For>
+          </div>
+
+          <p class="mut">
+            <Show when={bm() !== null} fallback="bmRequestType must be a number.">
+              {decodeSetup(bm()!, parseNum(setup().req))}
+            </Show>
+          </p>
+
+          <TextField label="Out data (hex)" value={out()} onInput={setOut} placeholder="e.g. 00 01" />
+          <p class="mut">{outDataBlurb(bm())}</p>
+
+          <div class="acts">
+            <Button variant="primary" disabled={cmd.busy()} onClick={run}>
+              Run
+            </Button>
+          </div>
+
+          <div aria-live="polite" class="step">
+            <Show when={cmd.error()}>
+              <div class="callout callout--danger" role="alert">
+                {cmd.error()}
+              </div>
+            </Show>
+            <Show when={result()}>
+              {(r) => (
+                <>
+                  <div class="chips">
+                    <Chip variant={statusVariant(r().status)}>
+                      {STATUS_LABEL[r().status]}
+                    </Chip>
+                    <Chip variant="neutral">{r().data.length} B in</Chip>
                   </div>
-                )}
-              </Show>
-            </div>
-          </Show>
-        </Card>
-      </div>
+                  <p class="mut">{STATUS_BLURB[r().status]}</p>
+                  <Show when={r().data.length > 0}>
+                    <pre class="diagram reply">
+                      {toHex(r().data)}
+                    </pre>
+                  </Show>
+                </>
+              )}
+            </Show>
+          </div>
+        </Show>
+      </Panel>
     </Show>
   );
 };

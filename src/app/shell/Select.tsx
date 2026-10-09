@@ -1,4 +1,4 @@
-import { createMemo, createSignal, For, onCleanup, Show } from 'solid-js';
+import { createEffect, createMemo, createSignal, For, onCleanup, Show } from 'solid-js';
 
 export interface SelectOption {
   value: string;
@@ -9,7 +9,9 @@ export interface SelectOption {
 let uid = 0;
 
 // A dropdown: the button shows the value, the list opens under it with the current one marked, and a
-// long list takes a filter. Arrows move, Enter picks, Escape or leaving the control closes it.
+// long list takes a filter. Arrows move, Enter picks, Escape or leaving the control closes it. A caller
+// that filters for itself (hex ids, a cap on the list) passes `query` and `onQuery`, and a `footer` to
+// say what the cap left out.
 export function Select(props: {
   value?: string;
   options: SelectOption[];
@@ -17,6 +19,9 @@ export function Select(props: {
   disabled?: boolean;
   placeholder?: string;
   filter?: string;
+  query?: string;
+  onQuery?: (q: string) => void;
+  footer?: string;
   id?: string;
   label?: string;
   class?: string;
@@ -31,14 +36,17 @@ export function Select(props: {
   let list: HTMLDivElement | undefined;
 
   const current = () => props.options.find((o) => o.value === props.value);
+  const q = () => (props.onQuery ? props.query ?? '' : query());
   const shown = createMemo(() => {
-    const q = query().trim().toLowerCase();
-    return props.options.filter((o) => !q || o.label.toLowerCase().includes(q) || o.value.toLowerCase().includes(q));
+    if (props.onQuery) return props.options;
+    const f = query().trim().toLowerCase();
+    return props.options.filter((o) => !f || o.label.toLowerCase().includes(f) || o.value.toLowerCase().includes(f));
   });
 
   const close = (refocus = false) => {
     setOpen(false);
-    setQuery('');
+    if (props.onQuery) props.onQuery('');
+    else setQuery('');
     setKb(-1);
     if (refocus) button?.focus();
   };
@@ -49,10 +57,13 @@ export function Select(props: {
     queueMicrotask(() => (input ?? list)?.focus());
   };
   const pick = (o: SelectOption) => {
-    if (o.disabled) return;
+    if (props.disabled || o.disabled) return;
     if (o.value !== props.value) props.onChange?.(o.value);
     close(true);
   };
+  createEffect(() => {
+    if (props.disabled && open()) close();
+  });
   const move = (step: number) => {
     const opts = shown();
     if (!opts.length) return;
@@ -113,14 +124,15 @@ export function Select(props: {
               class="dd-f"
               placeholder={props.filter}
               aria-label={props.filter}
-              value={query()}
+              value={q()}
               onInput={(e) => {
-                setQuery(e.currentTarget.value);
+                if (props.onQuery) props.onQuery(e.currentTarget.value);
+                else setQuery(e.currentTarget.value);
                 setKb(shown().findIndex((o) => !o.disabled));
               }}
             />
           </Show>
-          <For each={shown()} fallback={<p class="dd-none">No match</p>}>
+          <For each={shown()} fallback={<p class="dd-none">No matches.</p>}>
             {(o, i) => (
               <button
                 type="button"
@@ -136,6 +148,9 @@ export function Select(props: {
               </button>
             )}
           </For>
+          <Show when={props.footer}>
+            <p class="dd-none">{props.footer}</p>
+          </Show>
         </div>
       </Show>
     </div>
