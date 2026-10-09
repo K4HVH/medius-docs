@@ -64,19 +64,18 @@ function releaseHtml(r: FirmwareRelease): string {
   );
 }
 
-const figure = (value: number, label: string) =>
-  `<div class="stat-figure"><div class="stat-figure__value">${value}</div><div class="stat-figure__label">${label}</div></div>`;
+const figure = (value: number, label: string) => `<div><dt>${label}</dt><dd class="big">${value}</dd></div>`;
 
 function statsHtml(s: StatsSummary): string {
   const countries = s.countries.filter((c) => c.key !== 'unknown').length;
   return (
-    '<div class="stat-figures">' +
+    '<dl class="vit eight caps">' +
     figure(s.boxes.total, 'Unique boxes') +
     figure(s.boxes.active30, 'Active in 30 days') +
     figure(s.devices.unique, 'Unique devices') +
     figure(s.flashes.total, 'Flashes') +
     figure(countries, 'Countries') +
-    '</div>'
+    '</dl>'
   );
 }
 

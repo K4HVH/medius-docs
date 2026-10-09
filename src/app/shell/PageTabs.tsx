@@ -12,6 +12,8 @@ export interface Tab {
 interface TabsContext {
   active: () => string;
   id: string;
+  // Content arrived: an element the hash named before it existed may be here now.
+  arrived: () => void;
 }
 
 const Ctx = createContext<TabsContext>();
@@ -32,19 +34,39 @@ export function PageTabs(props: { id: string; tabs: Tab[]; children: JSX.Element
   let strip: HTMLDivElement | undefined;
   let mark: HTMLSpanElement | undefined;
 
+  // An element the hash named, brought into view once its tab is open: the layout's own jump finds it
+  // hidden, or not there yet on a page that fetches its content.
+  let target: string | null = null;
+  // An id not on the page yet (a tab whose content waits for a box or a fetch) is looked for again as
+  // content arrives, until the reader picks a tab.
+  let unfound: string | null = null;
+  let jump = 0;
+  onCleanup(() => cancelAnimationFrame(jump));
   const open = (key: string, write = false): boolean => {
     if (!enabled(key)) return false;
     setActive(key);
     setPending(null);
-    if (write) history.replaceState(history.state, '', `${location.pathname}#${key}`);
+    if (write) {
+      history.replaceState(history.state, '', `${location.pathname}#${key}`);
+      unfound = null;
+    }
+    const id = target;
+    target = null;
+    if (id) jump = requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView({ block: 'start' }));
     return true;
   };
 
   const fromHash = (hash: string) => {
     const id = decodeURIComponent(hash.replace(/^#/, ''));
     if (!id) return;
-    const key = props.tabs.some((t) => t.key === id) ? id : paneOf(id);
+    const named = props.tabs.some((t) => t.key === id);
+    const key = named ? id : paneOf(id);
+    target = named ? null : id;
+    unfound = key ? null : id;
     if (key && !open(key)) setPending(key);
+  };
+  const arrived = () => {
+    if (unfound && document.getElementById(unfound)) fromHash(`#${unfound}`);
   };
 
   createEffect(on(() => location.hash, (h) => queueMicrotask(() => fromHash(h))));
@@ -128,7 +150,7 @@ export function PageTabs(props: { id: string; tabs: Tab[]; children: JSX.Element
           )}
         </For>
       </div>
-      <Ctx.Provider value={{ active, id: props.id }}>{props.children}</Ctx.Provider>
+      <Ctx.Provider value={{ active, id: props.id, arrived }}>{props.children}</Ctx.Provider>
     </>
   );
 }
@@ -144,8 +166,9 @@ export function Pane(props: { key: string; children: JSX.Element }) {
   onMount(() => {
     if (typeof MutationObserver === 'undefined' || !el) return;
     const mo = new MutationObserver((records) => {
-      if (!shown() || !el) return;
       const added = records.flatMap((r) => [...r.addedNodes]).filter((n): n is HTMLElement => n instanceof HTMLElement);
+      if (added.length) ctx.arrived();
+      if (!shown() || !el) return;
       const panels = added.flatMap((n) => (n.matches('.pn') ? [n] : [...n.querySelectorAll<HTMLElement>('.pn')]));
       if (panels.length) requestAnimationFrame(() => el && openPanels(el, panels));
     });

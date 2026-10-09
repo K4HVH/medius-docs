@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, cleanup, fireEvent } from '@solidjs/testing-library';
-import { createSignal } from 'solid-js';
+import { Show, createSignal } from 'solid-js';
 
 const loc = vi.hoisted(() => ({ hash: null as null | (() => string), set: null as null | ((h: string) => void) }));
 vi.mock('@solidjs/router', async () => {
@@ -80,6 +80,90 @@ describe('PageTabs', () => {
     loc.set!('#o-emit');
     await settle();
     expect(visible(container)).toEqual(['options']);
+  });
+
+  it('brings an element the hash names into view once its tab is open, and leaves a tab named alone', async () => {
+    const seen: string[] = [];
+    // jsdom has no scrollIntoView.
+    Element.prototype.scrollIntoView = function (this: Element) {
+      seen.push(this.id);
+    };
+    const [off, setOff] = createSignal(true);
+    page({ optionsOff: off });
+    loc.set!('#log');
+    await new Promise((r) => setTimeout(r, 40));
+    expect(seen).toEqual([]);
+    loc.set!('#o-emit');
+    await new Promise((r) => setTimeout(r, 40));
+    expect(seen).toEqual([]);
+    setOff(false);
+    await new Promise((r) => setTimeout(r, 40));
+    expect(seen).toEqual(['o-emit']);
+    delete (Element.prototype as { scrollIntoView?: unknown }).scrollIntoView;
+  });
+
+  it('opens the tab for an element the hash named before it existed, once it appears', async () => {
+    const seen: string[] = [];
+    Element.prototype.scrollIntoView = function (this: Element) {
+      seen.push(this.id);
+    };
+    const [ready, setReady] = createSignal(false);
+    const { container } = render(() => (
+      <PageTabs
+        id="device"
+        tabs={[
+          { key: 'overview', label: 'Overview' },
+          { key: 'options', label: 'Options', disabled: !ready() },
+        ]}
+      >
+        <Pane key="overview">
+          <Panel id="your-box" title="Your box">x</Panel>
+        </Pane>
+        <Pane key="options">
+          <Show when={ready()}>
+            <Panels>
+              <Panel id="emit-rate" title="Emit rate">y</Panel>
+            </Panels>
+          </Show>
+        </Pane>
+      </PageTabs>
+    ));
+    loc.set!('#emit-rate');
+    await new Promise((r) => setTimeout(r, 40));
+    expect(visible(container)).toEqual(['overview']);
+    setReady(true);
+    await new Promise((r) => setTimeout(r, 40));
+    expect(visible(container)).toEqual(['options']);
+    expect(seen).toEqual(['emit-rate']);
+    delete (Element.prototype as { scrollIntoView?: unknown }).scrollIntoView;
+  });
+
+  it('forgets an element the hash named once the reader picks a tab', async () => {
+    const [ready, setReady] = createSignal(false);
+    const { container } = render(() => (
+      <PageTabs
+        id="device"
+        tabs={[
+          { key: 'overview', label: 'Overview' },
+          { key: 'log', label: 'Log' },
+          { key: 'options', label: 'Options', disabled: !ready() },
+        ]}
+      >
+        <Pane key="overview">x</Pane>
+        <Pane key="log">z</Pane>
+        <Pane key="options">
+          <Show when={ready()}>
+            <Panel id="emit-rate" title="Emit rate">y</Panel>
+          </Show>
+        </Pane>
+      </PageTabs>
+    ));
+    loc.set!('#emit-rate');
+    await settle();
+    fireEvent.click(container.querySelector('[data-tab="log"]')!);
+    setReady(true);
+    await new Promise((r) => setTimeout(r, 40));
+    expect(visible(container)).toEqual(['log']);
   });
 
   it('opens a disabled tab the hash named once it is enabled, and leaves one disabled while open', async () => {

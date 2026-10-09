@@ -65,7 +65,8 @@ describe('fillPage', () => {
 
   it('puts the totals into the stats page', async () => {
     const html = (await fillPage('/dashboard/stats', STATS, SOURCES))!;
-    expect(html).toMatch(/87<\/\w+>\s*<\w+[^>]*>Unique boxes/);
+    // As the page draws them: a figure strip, each label over its value.
+    expect(html).toMatch(/<dl class="vit eight caps"><div><dt>Unique boxes<\/dt><dd class="big">87<\/dd><\/div>/);
     expect(html).toContain('Countries');
     expect(html).not.toContain('Loading...');
   });
