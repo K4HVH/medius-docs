@@ -39,7 +39,7 @@ export const COMPAT: readonly CompatEntry[] = [
   { name: 'G-Wolves Vuk', kind: 'mouse', verdict: 'works', reported: 'v3.0.1' },
   { name: 'GK61', kind: 'keyboard', verdict: 'works', reported: 'v2.3.2' },
   { name: 'Glorious Model O- Wireless', kind: 'mouse', verdict: 'works', reported: 'v3.0.1' },
-  { name: 'Glorious Model O3', kind: 'mouse', verdict: 'partial', note: "Works wired at 1000 Hz; wireless doesn't", reported: 'v3.0.1' },
+  { name: 'Glorious Model O3', kind: 'mouse', verdict: 'partial', note: "Works wired at 1000 Hz only; wireless doesn't", reported: 'v3.0.1' },
   { name: 'HyperX Pulsefire', kind: 'mouse', verdict: 'doesnt', reported: 'v3.4.1' },
   { name: 'IQUNIX EV63', kind: 'keyboard', verdict: 'partial', note: "Keystrokes don't reach software properly", reported: 'v3.3.4' },
   { name: 'Keychron Q1 HE', kind: 'keyboard', verdict: 'works', reported: 'v3.3.4' },

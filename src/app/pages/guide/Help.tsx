@@ -8,13 +8,14 @@ import { LINKS } from '../../site';
 const Help: Component = () => {
   const [query, setQuery] = createSignal('');
   const q = () => query().trim().toLowerCase();
-  const shows = (i: HelpItem) => !q() || `${i.q} ${i.a}`.toLowerCase().includes(q());
+  // An answer's anchor word counts too: "bsod" finds the blue screen.
+  const shows = (i: HelpItem) => !q() || `${i.q} ${i.a} ${i.id.replace(/-/g, ' ')}`.toLowerCase().includes(q());
   const count = createMemo(() => HELP_ITEMS.filter(shows).length);
 
   return (
     <>
       <PageHeader />
-      <Filter value={query()} onInput={setQuery} placeholder="Search help" count={count()} noun="answers" />
+      <Filter value={query()} onInput={setQuery} placeholder="Search help" count={count()} noun={['answer', 'answers']} />
       <For each={HELP}>
         {(g) => {
           const shown = () => g.items.filter(shows);

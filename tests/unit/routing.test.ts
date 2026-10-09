@@ -35,6 +35,9 @@ describe('planRedirect', () => {
     ['/guide/troubleshooting', '', '/guide/help'],
     ['/guide/device-fixes', '', '/guide/compatibility#device-fixes'],
     ['/Dashboard/Advanced/', '', '/dashboard/update#manual'],
+    // A moved page's Markdown twin follows it; the twin has no anchors.
+    ['/guide/faq.md', '', '/guide/help.md'],
+    ['/dashboard/advanced-control.md', '', '/dashboard/control.md'],
   ])('%s%s -> %s', (pathname, search, expected) => {
     expect(planRedirect(pathname, search, ROUTES)).toBe(expected);
   });

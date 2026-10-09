@@ -580,7 +580,7 @@ describe('DeviceClip packet triggers', () => {
   const mount = async (clip: Record<string, unknown> = {}) => {
     mock.setClip(status(clip));
     const view = render(() => <DeviceClip />);
-    fireEvent.click(radio(view.container, 'A packet'));
+    fireEvent.click(radio(view.container, 'Packet'));
     await settle();
     return view;
   };
@@ -607,10 +607,10 @@ describe('DeviceClip packet triggers', () => {
   it('opens on an input, and swaps the input fields for the packet fields', async () => {
     mock.setClip(status());
     const { container, queryByLabelText } = render(() => <DeviceClip />);
-    expect(on(radio(container, 'An input'))).toBe(true);
+    expect(on(radio(container, 'Input'))).toBe(true);
     expect(hasRadio(container, 'Press')).toBe(true);
     expect(queryByLabelText('Match (hex)')).toBeNull();
-    fireEvent.click(radio(container, 'A packet'));
+    fireEvent.click(radio(container, 'Packet'));
     await settle();
     expect(hasRadio(container, 'Press')).toBe(false);
     expect(queryByLabelText('Match (hex)')).toBeTruthy();
@@ -1052,7 +1052,7 @@ describe('DeviceClip bind verification', () => {
     mock.setClip(status({ packetTriggers: held }));
     const view = render(() => <DeviceClip />);
     const { container } = view;
-    fireEvent.click(radio(container, 'A packet'));
+    fireEvent.click(radio(container, 'Packet'));
     await settle();
     type(container, 'clip-pkt-id', '2');
     fireEvent.click(radio(container, 'In'));

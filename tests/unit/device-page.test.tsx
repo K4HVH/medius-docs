@@ -140,7 +140,7 @@ describe('Device', () => {
       await waitFor(() => expect(container.textContent).toMatch(/Newer firmware/));
       const text = container.textContent ?? '';
       expect(text).toContain(`This box speaks protocol ${PROTO_VER + 1} and this page protocol ${PROTO_VER}.`);
-      expect(text).toContain('It can still be flashed by hand, on the Manual tab of Update.');
+      expect(text).toContain("It can still be flashed by hand, on Update's Manual tab.");
       expect(text).not.toMatch(/Update needed/i);
       expect(container.querySelector('#status')).toBeNull();
       getByRole('button', { name: 'Manual flash' }).click();

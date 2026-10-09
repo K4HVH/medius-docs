@@ -74,7 +74,7 @@ describe('IndexRows', () => {
   it('links the four places, with the Discord count only when it is known', () => {
     const r = inRouter(() => <IndexRows />);
     expect([...r.container.querySelectorAll('a.go')].map((a) => a.getAttribute('href'))).toEqual([
-      '/guide',
+      '/dashboard/setup',
       '/dashboard',
       '/native',
       'https://discord.gg/ArRqcA84pB',

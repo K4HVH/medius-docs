@@ -64,6 +64,7 @@ export function Select(props: {
   createEffect(() => {
     if (props.disabled && open()) close();
   });
+  const active = () => (kb() >= 0 && shown()[kb()] ? `${id}-o-${kb()}` : undefined);
   const move = (step: number) => {
     const opts = shown();
     if (!opts.length) return;
@@ -117,11 +118,18 @@ export function Select(props: {
         </svg>
       </button>
       <Show when={open()}>
-        <div class="dd-l" id={`${id}-list`} role="listbox" ref={list} tabIndex={-1} onKeyDown={onListKey}>
+        {/* The filter is a combobox over the listbox, which holds the options alone; either one names the
+            option the arrows are on, for a screen reader. */}
+        <div class="dd-l" onKeyDown={onListKey}>
           <Show when={props.filter}>
             <input
               ref={input}
               class="dd-f"
+              role="combobox"
+              aria-expanded="true"
+              aria-autocomplete="list"
+              aria-controls={`${id}-list`}
+              aria-activedescendant={active()}
               placeholder={props.filter}
               aria-label={props.filter}
               value={q()}
@@ -132,22 +140,35 @@ export function Select(props: {
               }}
             />
           </Show>
-          <For each={shown()} fallback={<p class="dd-none">No matches.</p>}>
-            {(o, i) => (
-              <button
-                type="button"
-                role="option"
-                tabIndex={-1}
-                aria-selected={o.value === props.value}
-                disabled={o.disabled}
-                classList={{ kb: kb() === i() }}
-                onPointerMove={() => setKb(i())}
-                onClick={() => pick(o)}
-              >
-                {o.label}
-              </button>
-            )}
-          </For>
+          <div
+            role="listbox"
+            id={`${id}-list`}
+            ref={list}
+            tabIndex={-1}
+            aria-label={props.label}
+            aria-activedescendant={props.filter ? undefined : active()}
+          >
+            <For each={shown()}>
+              {(o, i) => (
+                <button
+                  type="button"
+                  role="option"
+                  id={`${id}-o-${i()}`}
+                  tabIndex={-1}
+                  aria-selected={o.value === props.value}
+                  disabled={o.disabled}
+                  classList={{ kb: kb() === i() }}
+                  onPointerMove={() => setKb(i())}
+                  onClick={() => pick(o)}
+                >
+                  {o.label}
+                </button>
+              )}
+            </For>
+          </div>
+          <Show when={shown().length === 0}>
+            <p class="dd-none">No matches.</p>
+          </Show>
           <Show when={props.footer}>
             <p class="dd-none">{props.footer}</p>
           </Show>

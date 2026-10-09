@@ -42,9 +42,9 @@ export const UsagePicker = (props: {
     const c = current();
     const q = filter().trim().toLowerCase();
     const out: { value: string; label: string }[] = [];
-    if (c.blanket !== undefined) {
-      out.push({ value: String(c.blanket), label: c.blanketLabel ?? `Every ${c.label.toLowerCase()}` });
-    }
+    // The wildcard leads the list, but only while a filter matches it.
+    const blanket = c.blanketLabel ?? `Every ${c.label.toLowerCase()}`;
+    if (c.blanket !== undefined && (!q || blanket.toLowerCase().includes(q))) out.push({ value: String(c.blanket), label: blanket });
     for (const u of c.table) {
       const hex = `0x${u.id.toString(16)}`;
       if (q && !u.name.toLowerCase().includes(q) && !hex.includes(q) && String(u.id) !== q) continue;
@@ -53,15 +53,15 @@ export const UsagePicker = (props: {
     return out;
   });
 
-  // The cut is counted, or a truncated list reads as unaddressable. The selection is always kept, or
-  // filtering past it blanks the control.
+  // The cut is counted, or a truncated list reads as unaddressable. A selection the cut would drop is
+  // kept, last, so Enter still takes the first match.
   const shown = createMemo(() => {
     const all = options();
     const head = all.slice(0, MAX_OPTIONS);
     const selected = String(props.value.id);
     if (head.some((o) => o.value === selected)) return head;
     const keep = all.find((o) => o.value === selected);
-    return keep ? [keep, ...head.slice(0, MAX_OPTIONS - 1)] : head;
+    return keep ? [...head.slice(0, MAX_OPTIONS - 1), keep] : head;
   });
   const cut = createMemo(() => Math.max(0, options().length - shown().length));
 

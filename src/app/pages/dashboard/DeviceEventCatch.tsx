@@ -410,7 +410,7 @@ const DeviceEventCatch = () => {
   const clockLine = createMemo(() => {
     const c = catchState()?.clock;
     if (!c || c.ageMs === null) return 'Cross-chip clock not measured.';
-    return `Host clock leads the device clock by ${ms(c.offsetUs)} ms, +/- ${ms(c.delayUs)} ms, measured ${c.ageMs} ms ago.`;
+    return `The mouse-side chip's clock leads the main chip's by ${ms(c.offsetUs)} ms, +/- ${ms(c.delayUs)} ms, measured ${c.ageMs} ms ago.`;
   });
 
   return (
@@ -609,24 +609,21 @@ const DeviceEventCatch = () => {
 
         <Stack>
           <Panel id="catch-events" title="Recent events">
-            <Show when={moved() + 1} keyed>
-              {(_redraw) => (
-                <LogBox
-                  rows={logRows}
-                  added={dash.inputEventsAdded}
-                  empty={streaming() ? 'Move, click, or type...' : ''}
-                  label="Recent events"
-                  cols="40px 120px minmax(0,1fr)"
-                />
-              )}
-            </Show>
+            <LogBox
+              rows={logRows}
+              added={dash.inputEventsAdded}
+              version={moved}
+              empty={streaming() ? 'Move, click, or type...' : ''}
+              label="Recent events"
+              cols="40px 120px minmax(0,1fr)"
+            />
             <Show when={streaming()}>
               <p class="mut">
                 {events().length} received, {catchState()?.dropped ?? 0} dropped by the box, {entryDrops()}{' '}
                 charged to entries
               </p>
             </Show>
-            <p class="mut">H is the host chip's clock, D the device chip's.</p>
+            <p class="mut">H is the mouse-side chip's clock, D the main chip's.</p>
             <Show when={events().some((e) => e.ev.kind === 'traffic' && trafficRuleActed(e.ev.traffic))}>
               <p class="mut">RULE marks a packet a rewrite rule changed, dropped, answered or refused.</p>
             </Show>

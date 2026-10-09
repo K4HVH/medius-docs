@@ -1,5 +1,8 @@
 /* Base: type, colour, focus, scrollbars. Layout lives in shell.css. */
 
+/* A hidden element stays hidden, whatever display a component gives it. */
+[hidden] { display: none !important; }
+
 html,
 body {
   background: var(--ground);

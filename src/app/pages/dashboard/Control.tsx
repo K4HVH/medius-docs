@@ -60,7 +60,7 @@ const Control = () => {
               <Button variant="danger" disabled={cmd.busy()} onClick={safetyClear}>
                 Clear everything
               </Button>
-              <p class="sub2">Clears injection, locks, subscriptions and the clip</p>
+              <p class="sub2">Clears injection, locks, transforms, rewrite rules, subscriptions, the clip and the status light</p>
               <div aria-live="polite">
                 <Show when={cleared()}>
                   <p class="mut">Sent.</p>

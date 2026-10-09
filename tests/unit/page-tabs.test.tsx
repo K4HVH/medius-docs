@@ -8,7 +8,11 @@ vi.mock('@solidjs/router', async () => {
   const [hash, setHash] = createSignal('');
   loc.hash = hash;
   loc.set = setHash;
-  return { useLocation: () => ({ pathname: '/dashboard', get hash() { return hash(); } }) };
+  return {
+    useLocation: () => ({ pathname: '/dashboard', get hash() { return hash(); } }),
+    // As the router does: a navigation to the same page moves its hash.
+    useNavigate: () => (to: string) => setHash(to.slice(to.indexOf('#'))),
+  };
 });
 
 import { PageTabs, Pane } from '../../src/app/shell/PageTabs';
@@ -80,6 +84,27 @@ describe('PageTabs', () => {
     loc.set!('#o-emit');
     await settle();
     expect(visible(container)).toEqual(['options']);
+  });
+
+  it('keeps the tab the reader picked when the tabs mount again, as they do on a box change', async () => {
+    loc.set!('#options');
+    const first = page();
+    await settle();
+    expect(visible(first.container)).toEqual(['options']);
+    fireEvent.click(first.container.querySelector('[data-tab="log"]')!);
+    await settle();
+    expect(loc.hash!()).toBe('#log');
+    first.unmount();
+    const again = page();
+    await settle();
+    expect(visible(again.container)).toEqual(['log']);
+  });
+
+  it('opens nothing on a hash it cannot decode, and does not throw', async () => {
+    const { container } = page();
+    loc.set!('#%E0%A4%A');
+    await settle();
+    expect(visible(container)).toEqual(['overview']);
   });
 
   it('brings an element the hash names into view once its tab is open, and leaves a tab named alone', async () => {

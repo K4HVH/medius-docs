@@ -47,6 +47,20 @@ describe('NotFound', () => {
     }
   });
 
+  it('follows a moved page reached from another unknown address, not only on arrival', async () => {
+    const history = createMemoryHistory();
+    history.set({ value: '/nope' });
+    render(() => (
+      <MemoryRouter history={history}>
+        <Route path="*" component={NotFound} />
+      </MemoryRouter>
+    ));
+    await new Promise((res) => setTimeout(res, 0));
+    history.set({ value: '/guide/faq#bsod' });
+    await new Promise((res) => setTimeout(res, 0));
+    expect(history.get()).toBe('/guide/help#bsod');
+  });
+
   it('is the catch-all inside the docs layout, not a redirect home', () => {
     const app = readFileSync(join(__dirname, '../../src/app/App.tsx'), 'utf8');
     expect(app).toContain('<Route path="*" component={NotFound} />');

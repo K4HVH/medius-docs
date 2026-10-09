@@ -24,7 +24,7 @@ A static documentation site for Medius: replacement firmware for MAKCU-class mou
 | Vite | Build tool (root set to `src/`) |
 | Bun | Runtime and package manager |
 | TypeScript | Language |
-| MidnightUI | Component library (the CommandPalette, and the dashboard's panels and controls), restyled by the site theme |
+| MidnightUI | Component library (the CommandPalette, and the dashboard's buttons, chips and inputs), restyled by the site theme |
 | solid-icons (`solid-icons/bs`) | Bootstrap icons |
 
 ## Commands
@@ -50,15 +50,19 @@ src/
     RouteMeta.tsx                     # Per-route <head> from the registry, with structuredData.ts
     AiActions.tsx                     # The "use this page with an AI" menu beside the crumbs
     shell/                            # The site shell: SiteNav, SiteFooter, DocsSidebar, PageHeader, DocSection,
-                                      # OnThisPage, IndexRow, ByteStrip, Arrow, motion.ts (scroll reveals)
-    data/                             # FAQ, compatibility reports and their merge with the stats, the landing's
-                                      # figures, and the bench captures the landing draws (never edited by hand)
+                                      # OnThisPage, IndexRow, ByteStrip, Arrow, Filter (a live filter, Marked,
+                                      # FixLink), motion.ts (scroll reveals), Count (a figure counting up), and the
+                                      # dashboard's: PageTabs/Pane, Panels/Stack/Panel, panelMotion.ts, Segmented,
+                                      # Select, LogBox, Board (the box drawn from its board)
+    data/                             # Help answers, compatibility reports and their merge with the stats, the
+                                      # landing's figures, and the bench captures the landing draws (never edited
+                                      # by hand)
     prism.ts                          # Syntax highlighting for code blocks
     searchIndex.ts                    # Curated search index for Ctrl+K search
     pages/
       Home.tsx                        # Landing page: hero and report feed, vitals, descriptor panel, index
       home/                           # The landing's blocks
-      guide/                          # The Guide: install, update, compatibility, FAQ, troubleshooting, device fixes
+      guide/                          # The Guide: Start here (/guide), Devices (/guide/compatibility), Help (/guide/help)
       DocsLayout.tsx                  # Every other page: nav, sidebar, the page in main, on-this-page rail, search
       AiAccess.tsx                    # Markdown twins, llms.txt, the MCP server
       native/
@@ -127,37 +131,31 @@ src/
           Install.tsx  Quickstart.tsx  Usage.tsx  Streams.tsx  Api.tsx  Types.tsx  Build.tsx
         python/                       # /bindings/python
           Install.tsx  Quickstart.tsx  Usage.tsx  Streams.tsx  Api.tsx  Types.tsx  Build.tsx
-      dashboard/                      # the in-browser dashboard: pages and their cards
+      dashboard/                      # the in-browser dashboard: pages on tabs, and the panels they hold
         context.tsx                   # DashboardProvider: connect, status, flash, update
         poll.ts                       # one shared poller behind every card's readback
         action.ts                     # createCommand: busy flag, error, follow-up read
         ConnectPanel.tsx              # Connect, and what a failed connect means
-        PortDiagram.tsx               # the USB1 / USB2 / USB3 wiring diagrams
-        Section.tsx                   # one labelled section inside a card
-        ui.ts                         # style objects the cards share
-        Device.tsx                    # /dashboard: your box, health, device log
-        DeviceInfo.tsx                # Capabilities and Performance cards
-        DeviceOptions.tsx             # Options card (name, imperfect, riding, bearing, emit rate)
-        Control.tsx                   # /dashboard/control: the momentary controls
-        DeviceInject.tsx              # Injection card
-        DeviceLock.tsx                # Input locks card
-        DeviceEventCatch.tsx          # Input catch card
-        DeviceClip.tsx                # Clip playback card
-        DeviceLed.tsx                 # Status light card
+        PortDiagram.tsx               # the box's wiring and install steps, drawn by shell/Board
+        Device.tsx                    # /dashboard: tabs Overview (your box, status, performance, capabilities),
+                                      # Options, Log
+        DeviceInfo.tsx                # Capabilities and Performance panels
+        DeviceOptions.tsx             # Options panels (name, imperfect, riding, bearing, render, spread, emit rate)
+        DeviceFactoryReset.tsx        # Factory reset panel
+        Control.tsx                   # /dashboard/control: tabs Injection, Input locks, Transforms, Input catch,
+                                      # Clip playback, Status light, Advanced
+        DeviceInject.tsx  DeviceLock.tsx  DeviceTransform.tsx  DeviceEventCatch.tsx  DeviceClip.tsx  DeviceLed.tsx
+                                      # one tab's panels each
+        DeviceRewrite.tsx  DevicePatch.tsx  DeviceRaw.tsx  DeviceTransfer.tsx
+                                      # the Advanced tab's panels (they need imperfect clones)
         UsagePicker.tsx               # class + usage picker shared by inject, lock and clip
-        DeviceTransform.tsx           # Field transforms card
-        DeviceDeveloper.tsx           # /dashboard/advanced-control: the advanced control layer
-        DeviceRewrite.tsx             # Rewrite rules card
-        DevicePatch.tsx               # Descriptor patches card (stored vs served, refused, full)
-        DeviceRaw.tsx                 # Raw report card
-        DeviceTransfer.tsx            # Control transfer card
-        DeviceFactoryReset.tsx        # Factory reset card
         hex.ts                        # hex parsing, setup-packet fields, traffic class blurbs
-        Setup.tsx                     # /dashboard/setup: the install wizard
-        Update.tsx                    # /dashboard/update: one-click update
-        Advanced.tsx                  # /dashboard/advanced: manual flash
-        Changelog.tsx                 # /dashboard/changelog: release history
-        Stats.tsx                     # /dashboard/stats: public usage stats
+        Setup.tsx                     # /dashboard/setup: the install flow, one step at a time
+        Update.tsx                    # /dashboard/update: tabs Latest (one-click update) and Manual
+        Advanced.tsx  AdvancedUsb2.tsx
+                                      # Update's Manual tab: any image, over USB2 or ROM download
+        Changelog.tsx                 # /dashboard/changelog: release notes, commits grouped by repo
+        Stats.tsx                     # /dashboard/stats: figures, then tabs of charts and tables
   dashboard/                          # dashboard logic, not pages
     protocol/                         # opcodes, wire constants, payload builders, response parsers
     serial/                           # SerialLink, port discovery, connect verdicts
@@ -178,7 +176,7 @@ src/
 
 ### Routing
 
-`App.tsx` maps every path to its component; `src/app/routes.ts` holds each page's metadata, and a test keeps the two path lists equal. `DocsLayout` wraps each page with the nav, the sidebar, search, the on-this-page rail and the footer; the page renders the `PageHeader` (crumbs, h1, lead). The landing page (`Home.tsx`) sits outside it. The catch-all renders `NotFound.tsx` inside `DocsLayout`.
+`App.tsx` maps every path to its component; `src/app/routes.ts` holds each page's metadata, and a test keeps the two path lists equal. `DocsLayout` wraps each page with the nav, the sidebar, search, the on-this-page rail and the footer; the page renders the `PageHeader` (crumbs, h1, an optional `aside`, the intro body). A page that moved is in `MOVED` (`src/app/site.ts`): the server 301s it and `NotFound` forwards it, both keeping the anchor. The landing page (`Home.tsx`) sits outside it. The catch-all renders `NotFound.tsx` inside `DocsLayout`.
 
 The prerender (`scripts/prerender.ts`, run by `build:full` and the Docker build) snapshots every registry page, the 404 page and Home, and writes `dist/routes.json`. `serve.ts` answers a registry path with its snapshot, 301s a trailing slash, a `.html` suffix or the wrong case to the registry path, and anything else with `dist/404.html` and status 404. The changelog and stats snapshots hold a `data-fill` block the server fills per request (`server/fill.ts`), so crawlers without JavaScript read the releases and totals. The landing's vitals and the compatibility table are filled the same way, but those pages (`SOFT_FILL_PATHS`) answer 200 as prerendered while a source is down, never 503.
 
@@ -256,7 +254,10 @@ The signature, the table, and the example carry the content. Prose is near zero.
 
 ## Styling
 
-- Docs and Guide pages are built from the shell: `PageHeader` first, then a `DocSection` per section, `IndexRow` for a list of links, `ByteStrip` for a frame. The dashboard keeps MidnightUI's `Card` panels and controls.
+- Docs and Guide pages are built from the shell: `PageHeader` first, then a `DocSection` per section, `IndexRow` for a list of links, `ByteStrip` for a frame, `Filter` over a long table or list.
+- Dashboard pages are built from the shell too, never MidnightUI's `Card`: `PageHeader` (its `aside` holds the page's state or action), then `PageTabs` with a `Pane` per tab, each holding `Panels` of `Panel`s (a panel's heading is the docs h2 with its rule; `Stack` makes a column). A choice of a few is `Segmented`, a list is `Select` (with `filter` when long), a log is `LogBox`. MidnightUI's `Button`, `Chip`, `NumberInput`, `TextField`, `Checkbox` and `Slider` stay, restyled by the theme. Dashboard styles live in `src/styles/theme/dashboard.css`; no inline style objects. No subtitles under a page or panel title, no flavour text; a caps label is muted, never blue.
+- A tab is the hash (`/dashboard#options`). An element id inside a tab opens it, even one that renders later (after Connect or a fetch).
+- `bun run dev`, then any dashboard page with `?fakebox`: Connect finds a fake box (`src/dev/fakeBox.ts`) that answers every query, for looking at the connected pages without hardware.
 - Site styles live in `src/styles/theme/`, imported after MidnightUI's `global.css` so its tokens win. Those files are editable; `global.css` and `src/components/` / `src/styles/components/` are not. Element styles take their scope through `:where()` so the spacing rules after a heading or a label win: 44px from the last ink to a section's rule, 44px from the rule to the heading's capitals, 24px from the heading's baseline to the content.
 - No emojis except the ⚠️ on the USB3 hazard callout.
 - Terse, declarative wording. No filler, no marketing language. De-AI it: no "robust/seamless/leverage", no "**Bold**: explanation" bullets, and use contractions.
@@ -266,7 +267,7 @@ The signature, the table, and the example carry the content. Prose is near zero.
 
 | Class | Used on | For |
 |---|---|---|
-| `PageHeader` | first element | The page's one h1 (its registry title), crumbs to the parent, the lead and the intro body. The lead is a plain sentence-case noun phrase, no trailing period |
+| `PageHeader` | first element | The page's one h1 (its registry title), crumbs to the parent, and the intro body. No subtitle: a page opens on its title and first paragraph |
 | `DocSection` | every section | `id` (the anchor), `title`, `caption` (a sentence-case noun phrase, no trailing period) |
 | `ByteStrip` | a frame on the wire | Each value over its field name, the payload lit apart from the framing |
 | `api-signature` | `<pre>` | An opcode or method signature line only |
@@ -330,7 +331,7 @@ Unit tests never count: the provider builds no sink under vitest. A dev server w
 
 ## Adding a page
 
-1. Create the component under `src/app/pages/`: a `PageHeader` (its `lead` and the intro body), then a `DocSection id="..."` per section.
+1. Create the component under `src/app/pages/`: a `PageHeader` (with the intro body), then a `DocSection id="..."` per section.
 2. Add a route in `App.tsx`.
 3. Add its entry to `src/app/routes.ts` in sidebar order: section, group, nav label, icon, title, and a description of 50 to 155 characters that no other page uses.
 4. Add search entries to `searchIndex.ts` (page-level plus key section anchors).

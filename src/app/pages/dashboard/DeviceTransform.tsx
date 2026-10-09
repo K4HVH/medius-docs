@@ -145,7 +145,7 @@ const DeviceTransform = () => {
   return (
     <Show when={dash.status() === 'connected'}>
       <Panels>
-        <Panel id="transforms" title="Transform">
+        <Panel id="transform" title="Transform">
           <div class="labelled">
             <span class="field-l">Operation</span>
             <Segmented name="transform-op" label="Operation" value={op()} onChange={chooseOp} options={OP_LABELS} />

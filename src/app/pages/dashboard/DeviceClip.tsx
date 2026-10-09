@@ -994,8 +994,8 @@ const DeviceClip = () => {
                     value={trigKind()}
                     onChange={setTrigKind}
                     options={[
-                      { value: 'input', label: 'An input' },
-                      { value: 'packet', label: 'A packet' },
+                      { value: 'input', label: 'Input' },
+                      { value: 'packet', label: 'Packet' },
                     ]}
                   />
                 </div>

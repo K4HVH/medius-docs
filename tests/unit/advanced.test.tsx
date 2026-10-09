@@ -392,6 +392,17 @@ describe('Advanced', () => {
     expect(r.queryByRole('button', { name: /^flash$/i })).toBeNull();
   });
 
+  it('names the chip being written, so a two-chip flash does not count to 100 twice unexplained', async () => {
+    mock.s!.setStatus('flashing');
+    mock.s!.setProgress({ phase: 'writing', chip: 'host', written: 10, total: 100 } as never);
+    const r = render(() => <Advanced />);
+    await waitFor(() => expect(r.container.querySelector('#flashing .cue')?.textContent).toBe('Flashing the mouse-side chip'));
+    mock.s!.setProgress({ phase: 'writing', chip: 'device', written: 10, total: 100 } as never);
+    await waitFor(() => expect(r.container.querySelector('#flashing .cue')?.textContent).toBe('Flashing the main chip'));
+    mock.s!.setProgress({ phase: 'restarting' });
+    await waitFor(() => expect(r.container.querySelector('#flashing .cue')?.textContent).toBe('Flashing'));
+  });
+
   it('names a phase with no count and runs the wait, never a 0% figure', async () => {
     mock.s!.setStatus('flashing');
     mock.s!.setProgress({ phase: 'connecting' });
