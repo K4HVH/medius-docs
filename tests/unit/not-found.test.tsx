@@ -19,8 +19,12 @@ describe('NotFound', () => {
     const h1 = r.container.querySelectorAll('h1');
     expect(h1).toHaveLength(1);
     expect(h1[0].textContent).toBe('Page not found');
-    const hrefs = [...r.container.querySelectorAll('a.go')].map((a) => a.getAttribute('href'));
-    expect(hrefs).toEqual(['/guide', '/native', '/library', '/dashboard', '/']);
+    expect(r.container.querySelector('.lost .num')!.textContent).toBe('404');
+    // The request line names the address asked for.
+    expect([...r.container.querySelectorAll('.req span')].map((e) => e.textContent)).toEqual(['GET', '/zzz', '404']);
+    expect(r.container.querySelector('.page-header .lead')).toBeNull();
+    const hrefs = [...r.container.querySelectorAll('nav.index a.go')].map((a) => a.getAttribute('href'));
+    expect(hrefs).toEqual(['/dashboard/setup', '/dashboard', '/native']);
     expect(r.container.querySelector('#not-found[data-search-target]')).not.toBeNull();
     expect(history.get()).toBe('/zzz');
   });

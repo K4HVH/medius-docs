@@ -264,6 +264,23 @@ a.fix .arr { width: 11px; height: 11px; margin: 0; }
   .qa { grid-template-columns: minmax(0, 1fr); }
 }
 
+/* Page not found: the address asked for, and where to go instead. */
+.lost { padding-top: 24px; }
+.doc .lost h1.label { margin: 0; color: var(--muted); }
+.lost .num { display: block; overflow: hidden; margin-top: 18px; font: 700 clamp(96px, 14vw, 200px)/0.85 var(--sans); letter-spacing: -0.05em; color: var(--text); }
+.lost .num > span { display: block; animation: up 1s var(--ease) 0.15s both; }
+.req {
+  display: grid; grid-template-columns: 48px minmax(0, 1fr) auto; gap: 10px; margin-top: 28px; padding: 0 10px;
+  font: 400 12.5px/32px var(--mono); color: var(--text); background: color-mix(in srgb, var(--accent) 8%, transparent);
+  box-shadow: inset 2px 0 var(--accent);
+}
+.req span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.req .x { color: var(--bad); }
+.doc .lost + nav.index { margin-top: 40px; }
+@media (prefers-reduced-motion: reduce) {
+  .lost .num > span { animation: none; }
+}
+
 /* Start here: the next pages, after the requirements. */
 .doc nav.index { margin-top: 48px; }
 .doc nav.index .go { padding-block: 24px; }
