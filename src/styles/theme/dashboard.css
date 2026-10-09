@@ -1,0 +1,74 @@
+/* The dashboard: one shape on every page. A title row with the page's state or action at its right,
+   tabs that each hold about a screen, and panels in two columns. A panel's heading is a docs section
+   heading: the same rule over it, lit while that panel is the one being read. */
+
+.docs.tool .doc { container: doc / inline-size; }
+
+.page-header__row { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px 40px; flex-wrap: wrap; }
+.page-header__row h1 { margin: 20px 0 0; }
+.page-header__aside { display: grid; justify-items: end; gap: 6px; padding-bottom: 8px; }
+.page-header__aside > p { margin: 0; }
+@media (max-width: 900px) {
+  .page-header__aside { justify-items: start; }
+}
+
+/* Tabs: sticky under the nav, a blue mark sliding to the open one; a strip wider than the screen fades
+   its last tabs under a gradient until it is scrolled to the end. */
+.ptabs {
+  position: sticky; top: var(--nav-h); z-index: 6; display: flex; margin-top: 36px;
+  overflow-x: auto; scrollbar-width: none; border-bottom: 1px solid var(--line);
+  background: color-mix(in srgb, var(--ground) 88%, transparent);
+  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+}
+.ptabs::-webkit-scrollbar { display: none; }
+.ptabs::after {
+  content: ""; position: sticky; right: 0; flex: none; width: 48px; margin-left: -48px;
+  background: linear-gradient(90deg, transparent, var(--ground)); pointer-events: none;
+}
+.ptabs.end::after { display: none; }
+.ptabs button {
+  flex: none; padding: 16px 20px 15px; font: 500 11px/1 var(--mono); letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--dim); background: none; border: 0; cursor: pointer; white-space: nowrap; transition: color 0.25s;
+}
+.ptabs button:first-of-type { padding-left: 0; }
+.ptabs button:hover:not(:disabled), .ptabs button[aria-selected="true"] { color: var(--text); }
+.ptabs button:disabled { color: var(--line-2); cursor: not-allowed; }
+.ptabs button:focus-visible { outline: 1px solid var(--primary); outline-offset: -4px; }
+.ptabs .ind {
+  position: absolute; bottom: -1px; left: 0; height: 2px; width: 0; background: var(--accent);
+  transition: left 0.45s var(--ease), width 0.45s var(--ease);
+}
+@media (max-width: 900px) {
+  .ptabs { top: calc(var(--nav-h) + 49px); }
+}
+.pane { padding-bottom: 8px; }
+
+/* Panels: two columns, one in a narrow page. */
+.panels { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-flow: row dense; gap: 0 48px; align-items: start; }
+.pn { min-width: 0; }
+.pn.wide, .stack.wide { grid-column: 1 / -1; }
+.stack { display: grid; align-content: start; min-width: 0; }
+@container doc (max-width: 680px) {
+  .panels { grid-template-columns: minmax(0, 1fr); }
+}
+.ph {
+  position: relative; display: flex; justify-content: space-between; align-items: baseline; gap: 6px 16px; flex-wrap: wrap;
+  margin-top: 44px; padding-top: 38px; border-top: 1px solid var(--line);
+}
+.ph::before {
+  content: ""; position: absolute; left: 0; right: 0; top: -1px; height: 1px; background: var(--accent);
+  transform: scaleX(0); transform-origin: left; transition: transform 0.8s var(--ease);
+}
+.pn.act > .ph::before { transform: scaleX(1); }
+.ph h2 { margin: 0; font: 600 26px/1.2 var(--sans); letter-spacing: -0.02em; color: var(--text); }
+.ph .caps { color: var(--dim); }
+.ph .pr { display: flex; align-items: center; gap: 12px; }
+/* The tab strip's rule heads the first row, so those panels draw no rule. */
+.pn.top > .ph { margin-top: 32px; padding-top: 0; border-top: 0; }
+.pn.top > .ph::before { display: none; }
+.pb { display: grid; gap: 16px; align-content: start; margin-top: 18px; }
+.pn > .pb:first-child { margin-top: 28px; }
+.pb > p { margin: 0; font-size: 14.5px; color: var(--text-2); }
+.pb .mut, .pb > p.mut { color: var(--muted); font-size: 14.5px; }
+/* Hidden only until the panel is brought in. */
+.pn.pre > .ph, .pn.pre > .pb > *:not(.vals, .table-scroll), .pn.pre :is(.vals, .table-scroll) tr { opacity: 0; }

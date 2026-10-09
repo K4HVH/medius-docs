@@ -7,6 +7,8 @@ export const prefersReducedMotion = (): boolean =>
   typeof window.matchMedia === 'function' &&
   window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+export const fontsReady = (): Promise<unknown> => document.fonts?.ready ?? Promise.resolve();
+
 export function armReveals(scope: ParentNode, selector: string): () => void {
   if (prefersReducedMotion() || typeof IntersectionObserver === 'undefined') return () => {};
   const timers: ReturnType<typeof setTimeout>[] = [];

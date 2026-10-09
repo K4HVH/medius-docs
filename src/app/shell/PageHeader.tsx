@@ -3,8 +3,9 @@ import { A, useLocation } from '@solidjs/router';
 import AiActions from '../AiActions';
 import { NOT_FOUND, breadcrumbTrail, routeFor } from '../routes';
 
-// The top of every page: crumbs to the parent, the page's one h1 (its registry title), and the lead.
-export function PageHeader(props: { id?: string; lead?: string; children?: JSX.Element }) {
+// The top of every page: crumbs to the parent, the page's one h1 (its registry title) with the page's
+// state or action at its right (`aside`), and the lead.
+export function PageHeader(props: { id?: string; lead?: string; aside?: JSX.Element; children?: JSX.Element }) {
   const location = useLocation();
   const route = createMemo(() => routeFor(location.pathname) ?? NOT_FOUND);
   const crumbs = createMemo(() => {
@@ -30,7 +31,12 @@ export function PageHeader(props: { id?: string; lead?: string; children?: JSX.E
         </nav>
         <AiActions />
       </div>
-      <h1>{route().title}</h1>
+      <div class="page-header__row">
+        <h1>{route().title}</h1>
+        <Show when={props.aside}>
+          <div class="page-header__aside">{props.aside}</div>
+        </Show>
+      </div>
       <Show when={props.lead}>
         <p class="lead">{props.lead}</p>
       </Show>
