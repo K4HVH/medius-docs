@@ -175,3 +175,93 @@
 @media (prefers-reduced-motion: reduce) {
   .lg > div.in { animation: none; }
 }
+
+/* The board: lines over the black field. Lit parts take the port's colour: green to a computer, blue to
+   a mouse or keyboard, amber for the button to hold. Drawn from the left, limited by height. */
+.board { margin: 20px 0 0; }
+.board figcaption { margin: 0 0 6px; color: var(--dim); }
+.boxd { display: block; width: 100%; height: auto; max-height: min(38svh, 440px); }
+.boxd text { font-family: var(--mono); }
+.boxd .pcb { fill: var(--g-background); stroke: color-mix(in srgb, var(--dim) 55%, var(--ground)); stroke-width: 1.2; }
+.boxd .acr { fill: none; stroke: color-mix(in srgb, var(--accent) 22%, var(--line-2)); stroke-width: 1; }
+.boxd .stand, .boxd .pin { fill: var(--g-background); stroke: color-mix(in srgb, var(--dim) 55%, var(--ground)); }
+.boxd .screw { fill: var(--g-background-elevated); stroke: color-mix(in srgb, var(--dim) 65%, var(--ground)); }
+.boxd .screw-x { stroke: color-mix(in srgb, var(--dim) 75%, var(--ground)); stroke-width: 1.4; }
+.boxd .hdr { fill: none; stroke: var(--line-2); }
+.boxd .part rect, .boxd .xtal, .boxd .smd { fill: var(--g-background-elevated); stroke: var(--line-2); }
+.boxd .part path { stroke: var(--line-2); fill: none; }
+.boxd .ic rect { fill: var(--g-background-elevated); stroke: color-mix(in srgb, var(--dim) 45%, var(--ground)); transition: stroke 0.4s, fill 0.4s; }
+.boxd .ic text { font-size: 11.5px; letter-spacing: 0.14em; text-transform: uppercase; fill: var(--muted); transition: fill 0.4s; }
+.boxd .ic.on rect { stroke: var(--accent); fill: color-mix(in srgb, var(--accent) 14%, var(--ground)); }
+.boxd .ic.on text { fill: color-mix(in srgb, var(--accent) 45%, var(--text)); }
+.boxd .sock rect { fill: var(--g-background); stroke: color-mix(in srgb, var(--dim) 65%, var(--ground)); }
+.boxd .sock path { fill: none; stroke: color-mix(in srgb, var(--dim) 55%, var(--ground)); }
+.boxd .sock:is(.idle, .out) rect { stroke: var(--line-2); }
+.boxd .sock:is(.idle, .out) path { stroke: var(--line); }
+.boxd .pl { font-size: 13px; letter-spacing: 0.12em; fill: var(--text); }
+.boxd .pl:is(.out, .idle) { fill: color-mix(in srgb, var(--dim) 65%, var(--ground)); }
+.boxd .to { font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; fill: var(--text); }
+.boxd .to:is(.out, .gone) { fill: var(--bad); }
+.boxd .x { stroke: var(--bad); stroke-width: 1.5; }
+.boxd .cab { stroke-width: 2; fill: none; }
+.boxd .plug { fill: var(--g-background-elevated); stroke: color-mix(in srgb, var(--dim) 75%, var(--ground)); }
+.boxd .cable.pc .cab { stroke: var(--ok); }
+.boxd .cable.dev .cab { stroke: var(--accent); }
+.boxd .cable.gone .cab { stroke: color-mix(in srgb, var(--dim) 65%, var(--ground)); }
+.boxd .btnb { fill: var(--g-background-elevated); stroke: color-mix(in srgb, var(--dim) 75%, var(--ground)); }
+.boxd .btnc { fill: var(--line-2); }
+.boxd .btnl { font-size: 12px; letter-spacing: 0.14em; fill: var(--muted); }
+.boxd .ring { fill: none; stroke: var(--warn); stroke-width: 1.5; opacity: 0; }
+.boxd .bt.hold .btnb { stroke: var(--warn); }
+.boxd .bt.hold .btnc { fill: var(--warn); }
+.boxd .bt.hold .btnl { fill: var(--warn); font-weight: 600; }
+.boxd .bt.hold .ring { opacity: 1; }
+/* A cable draws in once when the board comes into view. */
+.boxd [data-cable] { transition: opacity 0.25s ease; }
+.boxd [data-cable] .cab { stroke-dasharray: 48; stroke-dashoffset: 0; transition: stroke-dashoffset 0.8s var(--ease); }
+.boxd [data-cable] .plug { transition: transform 0.8s var(--ease), opacity 0.3s ease; }
+.boxd.pre [data-cable] .cab { stroke-dashoffset: 48; }
+.boxd.pre [data-cable] .plug { transform: translateY(40px); opacity: 0; }
+/* The install step: the button presses and holds, the cable goes in under it, the button lets go; the
+   picture then fades and starts again. */
+.boxd.loop .bt.hold :is(.btnc, .ring) { transform-box: fill-box; transform-origin: center; transition: transform 0.25s var(--ease), opacity 0.25s; }
+.boxd.loop .bt.hold .ring { opacity: 0; }
+.boxd.loop.pressing .bt.hold .btnc { transform: scale(0.7); }
+.boxd.loop.pressing .bt.hold .ring { opacity: 1; }
+.boxd.loop:not(.plugged) [data-cable] .cab { stroke-dashoffset: 48; }
+.boxd.loop:not(.plugged) [data-cable] .plug { transform: translateY(40px); opacity: 0; }
+.boxd.loop.fading [data-cable] { opacity: 0; }
+.boxd.loop.snap [data-cable], .boxd.loop.snap [data-cable] * { transition: none; }
+/* An unplug step: the cable slides out once and stays out. */
+.boxd.unplug [data-cable] .cab { stroke-dashoffset: 48; }
+.boxd.unplug [data-cable] .plug { transform: translateY(40px); opacity: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .boxd.pre [data-cable] .cab, .boxd.loop:not(.plugged) [data-cable] .cab { stroke-dashoffset: 0; }
+  .boxd.pre [data-cable] .plug, .boxd.loop:not(.plugged) [data-cable] .plug { transform: none; opacity: 1; }
+}
+/* Narrow screens: the board's text grows, and where each cable goes moves to a list under it. */
+.board .key { display: none; }
+@media (max-width: 740px) {
+  .boxd .pl, .boxd .btnl { font-size: 22px; }
+  .boxd .ic text { font-size: 17px; letter-spacing: 0.06em; }
+  .boxd .to { display: none; }
+  .board .key { display: grid; margin: 12px 0 0; padding: 0; list-style: none; border-top: 1px solid var(--line); }
+  .board .key li { display: grid; grid-template-columns: 72px minmax(0, 1fr); align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 14.5px; color: var(--text); }
+  .board .key b { display: inline-flex; align-items: center; gap: 8px; font: 500 12px/1 var(--mono); letter-spacing: 0.1em; }
+  .board .key b::before { content: ""; width: 6px; height: 6px; background: var(--ok); }
+  .board .key .dev b::before { background: var(--accent); }
+  .board .key :is(.out, .gone) b::before { background: var(--bad); }
+  .board .key :is(.out, .gone) span { color: var(--bad); }
+}
+@media (max-width: 600px) {
+  .boxd .pl, .boxd .btnl { font-size: 26px; }
+  .boxd .ic text { display: none; }
+}
+
+/* A step: the line to act on, big; a button to hold has an amber square before it. */
+.cue { margin: 0; font: 600 26px/1.3 var(--sans); letter-spacing: -0.015em; text-wrap: balance; color: var(--text); }
+.cue.hold { display: flex; align-items: baseline; gap: 14px; }
+.cue.hold::before { content: ""; flex: none; width: 10px; height: 10px; background: var(--warn); transform: translateY(-2px); }
+@media (max-width: 900px) {
+  .cue { font-size: 21px; }
+}

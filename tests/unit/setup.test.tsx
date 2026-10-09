@@ -159,7 +159,9 @@ describe('Setup', () => {
     r.getByRole('button', { name: /^done$/i }).click();
     await waitFor(() => expect(r.container.textContent).toMatch(/button next to USB3/i));
     expect(r.container.textContent).not.toMatch(/button next to USB1/i);
-    expect(r.container.textContent).not.toMatch(/left button|right button|main chip|mouse-side chip/i);
+    // The instruction names the socket; the drawing beside it labels the chips.
+    const cues = [...r.container.querySelectorAll('.cue')].map((c) => c.textContent).join(' ');
+    expect(cues).not.toMatch(/left button|right button|main chip|mouse-side chip/i);
   });
 
   it('an empty chooser lands on a retry that says what to fix, not on nothing', async () => {
