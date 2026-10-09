@@ -29,19 +29,18 @@ html, body { height: auto; overflow: visible; }
 #root { height: auto; min-height: 100%; }
 html { scroll-padding-top: calc(var(--nav-h) + 24px); }
 
-/* Docs: a ruled sidebar, the article centred in its column, the rail on wide screens. */
+/* Docs: a ruled sidebar, the page filling its column, the rail on wide screens. */
 .docs {
   --side: 264px; position: relative; z-index: 2; display: grid;
   grid-template-columns: var(--side) minmax(0, 1fr) 200px; align-content: start; padding-top: var(--nav-h); min-height: 100svh;
   background: linear-gradient(var(--line), var(--line)) calc(var(--side) - 1px) 0 / 1px 100% no-repeat;
 }
 .doc {
-  min-width: 0; width: 100%; max-width: 880px; justify-self: center;
+  min-width: 0; width: 100%;
   padding: 56px clamp(24px, 4vw, 56px) 24px;
 }
-/* The dashboard's tools take the width beside the sidebar; the docs keep the reading measure. */
-.docs.tool { grid-template-columns: var(--side) minmax(0, 1fr); }
-.docs.tool .doc { max-width: 1240px; }
+/* The dashboard, and a page with no sections to list, take the rail's width too. */
+.docs.tool, .docs:not(:has(section.doc-section[id])) { grid-template-columns: var(--side) minmax(0, 1fr); }
 @media (max-width: 1240px) {
   .docs { --side: 248px; grid-template-columns: var(--side) minmax(0, 1fr); }
 }
@@ -197,7 +196,7 @@ html { scroll-padding-top: calc(var(--nav-h) + 24px); }
 .page-header h1 {
   margin: 20px 0 0; font: 700 clamp(44px, 5vw, 72px)/1 var(--sans); letter-spacing: -0.035em; color: var(--text);
 }
-.page-header .lead { margin: 20px 0 0; font-size: 19px; line-height: 1.6; color: var(--text-2); max-width: 54ch; }
+.page-header .lead { margin: 20px 0 0; font-size: 19px; line-height: 1.6; color: var(--text-2); }
 
 /* Sections: a rule, a heading, the content. The gaps are set on what is drawn: 44px from the last ink
    above the rule, 44px from the rule to the heading's capitals, 24px from its baseline to the content. */

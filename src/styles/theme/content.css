@@ -4,8 +4,8 @@
    label (two classes) always win over them. */
 
 /* Running text. The measure stays near 66 characters; tables, code and strips take the full column. */
-:where(.page-header, .doc-section) p { margin: 16px 0 0; max-width: 66ch; line-height: 1.6; color: var(--text-2); text-wrap: pretty; overflow-wrap: break-word; }
-:where(.page-header, .doc-section) :is(ul, ol) { margin: 16px 0 0; padding-left: 22px; max-width: 66ch; color: var(--text-2); }
+:where(.page-header, .doc-section) p { margin: 16px 0 0; line-height: 1.6; color: var(--text-2); text-wrap: pretty; overflow-wrap: break-word; }
+:where(.page-header, .doc-section) :is(ul, ol) { margin: 16px 0 0; padding-left: 22px; color: var(--text-2); }
 :where(.page-header, .doc-section) li { margin: 6px 0 0; line-height: 1.6; }
 :where(.page-header, .doc-section) li::marker { color: var(--dim); }
 :where(.page-header, .doc-section) :where(p, li, td, .callout) a {

@@ -7,7 +7,7 @@ import { SiteNav } from '../shell/SiteNav';
 import { DocsSidebar } from '../shell/DocsSidebar';
 import { OnThisPage } from '../shell/OnThisPage';
 import { SiteFooter } from '../shell/SiteFooter';
-import { armReveals } from '../shell/motion';
+import { armReveals, fontsReady } from '../shell/motion';
 import { routeFor } from '../routes';
 import { useBoxes, useNativeFlash } from './dashboard/context';
 import { BoxList } from './dashboard/BoxList';
@@ -25,7 +25,6 @@ const BOX_ROUTES = new Set([
 // itself, so nothing moves twice.
 export const REVEAL_DOCS = '.doc-section > :not(div[id]), .doc-section > div[id] > *';
 
-const fontsReady = (): Promise<unknown> => document.fonts?.ready ?? Promise.resolve();
 
 const DocsLayout = (props: RouteSectionProps) => {
   const [searchOpen, setSearchOpen] = createSignal(false);

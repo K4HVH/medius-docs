@@ -27,7 +27,11 @@ export function OnThisPage(props: { pathname: string }) {
     const list = sections();
     if (!list.length) return;
     let cur = list[0].id;
-    for (const s of list) if (s.getBoundingClientRect().top < window.innerHeight * 0.4) cur = s.id;
+    // At the page's end the last section on screen is the one being read, though its top never reaches the line.
+    const h = document.documentElement.scrollHeight;
+    const end = h > window.innerHeight + 2 && window.scrollY >= h - window.innerHeight - 2;
+    const line = end ? window.innerHeight : window.innerHeight * 0.4;
+    for (const s of list) if (s.getBoundingClientRect().top < line) cur = s.id;
     if (cur !== active()) setActive(cur);
     for (const s of list) s.querySelector('h2')?.classList.toggle('act', s.id === cur);
     requestAnimationFrame(place);
