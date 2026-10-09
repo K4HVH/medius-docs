@@ -10,7 +10,7 @@ import {
 } from 'solid-js';
 import { isSecureContextOk, isWebSerialSupported } from '../../../dashboard/serial';
 import { createStatsSink } from '../../../dashboard/stats';
-import { type Boxes, type LocksLike, createBoxes } from './boxes';
+import { type Boxes, type BoxesDeps, type LocksLike, createBoxes } from './boxes';
 
 export { NEW_BOX } from './boxes';
 import { type NativeFlash, createNativeFlash } from './nativeFlash';
@@ -63,6 +63,8 @@ export const DashboardProvider: ParentComponent = (props) => {
     nativeFlashing: native.running,
     locks: typeof navigator !== 'undefined' && navigator.locks ? (navigator.locks as LocksLike) : undefined,
     stats,
+    // The dev server's fake box (`?fakebox`), set by index.tsx; a production build never sets it.
+    ...(import.meta.env.DEV ? (globalThis as { __mediusDevBox?: Partial<BoxesDeps> }).__mediusDevBox : undefined),
   });
   guardUnload(() => native.running() || boxes.anyUpdating());
 

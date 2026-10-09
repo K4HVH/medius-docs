@@ -20,5 +20,15 @@ if (import.meta.env.DEV && !(root instanceof HTMLElement)) {
 const elapsed = introElapsed();
 if (root) root.textContent = '';
 
-render(() => <App />, root!);
-resumeIntro(elapsed);
+const start = () => {
+  render(() => <App />, root!);
+  resumeIntro(elapsed);
+};
+
+// `?fakebox` on the dev server: Connect finds a box that answers without hardware.
+if (import.meta.env.DEV && new URLSearchParams(location.search).has('fakebox')) {
+  void import('./dev/fakeBox').then((m) => {
+    (globalThis as { __mediusDevBox?: unknown }).__mediusDevBox = m.fakeBoxDeps();
+    start();
+  });
+} else start();
