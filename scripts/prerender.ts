@@ -119,10 +119,16 @@ async function main(): Promise<void> {
     // Served for unknown URLs with status 404. Taken before Home's: sirv keeps the size index.html had
     // at startup, so a page loaded after Home rewrites it arrives cut short.
     await page.goto(`http://localhost:${PORT}/__not_found__`, { waitUntil: 'load', timeout: 30000 });
-    await page.waitForSelector(`${CONTENT} .page-header h1`, { timeout: 20000 });
+    await page.waitForSelector(`${CONTENT} h1`, { timeout: 20000 });
     await page.evaluate(
       () => new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r()))),
     );
+    // The request line names the address asked for; the snapshot's is this made-up one, and the page
+    // fills the real one in when it runs.
+    await page.evaluate(() => {
+      const asked = document.querySelector('.req span:nth-child(2)');
+      if (asked) asked.textContent = '';
+    });
     writeFile(join(DIST, '404.html'), await page.evaluate(() => '<!DOCTYPE html>\n' + document.documentElement.outerHTML));
     process.stdout.write('  404 -> 404.html\n');
 
