@@ -255,7 +255,7 @@ export const NOT_FOUND: RouteInfo = {
   icon: 'BsExclamationTriangle',
   title: 'Page not found',
   fullTitle: 'Page not found · Medius',
-  description: 'There is no Medius page at this address. The Native API, the Rust library and the dashboard are linked below.',
+  description: 'There is no Medius page at this address. Set up, the dashboard and the developer docs are linked below.',
   kind: 'article',
   index: false,
 };
