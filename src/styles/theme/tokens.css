@@ -31,6 +31,9 @@
   --ground: #000000;
   --line: #1a1a1a;
   --line-2: #2a2a2a;
+  --line-3: #333333;
+  /* A box over the page's grid: tables, code, callouts, fields. */
+  --well: rgba(10, 10, 10, 0.7);
   --text: #ffffff;
   --text-2: #cccccc;
   --muted: #8a8a8a;

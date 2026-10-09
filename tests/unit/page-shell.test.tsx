@@ -38,6 +38,14 @@ describe('PageHeader', () => {
     expect(r.container.querySelector('.crumbs')!.textContent).toBe('Medius / Native API');
   });
 
+  it('names the section on its root page too, so every page in it carries the same crumbs', () => {
+    const r = mount('/guide', () => <PageHeader />);
+    expect(r.container.querySelector('.crumbs')!.textContent).toBe('Medius / Guide');
+    cleanup();
+    const d = mount('/dashboard', () => <PageHeader />);
+    expect(d.container.querySelector('.crumbs')!.textContent).toBe('Medius / Dashboard');
+  });
+
   it('keeps the intro body under the heading', () => {
     const r = mount('/library/inject', () => (
       <PageHeader>

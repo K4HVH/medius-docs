@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { render, cleanup, fireEvent } from '@solidjs/testing-library';
+import { render, cleanup, fireEvent, waitFor } from '@solidjs/testing-library';
 import {
   type CatchFilter,
   type TrafficEvent,
@@ -90,7 +90,11 @@ const lines = (container: HTMLElement): string[][] =>
 // Every case starts a subscription, as a reader would before the box sends anything.
 const watching = async (preset = 'Raw endpoints') => {
   const view = render(() => <DeviceEventCatch />);
-  fireEvent.click(radio(view.container, preset));
+  // The preset is a dropdown: open it and pick by name.
+  const field = [...view.container.querySelectorAll('.labelled')].find((l) => l.querySelector('.field-l')?.textContent === 'Preset')!;
+  fireEvent.click(field.querySelector('.dd-b')!);
+  await settle();
+  fireEvent.click([...field.querySelectorAll('[role="option"]')].find((o) => o.textContent === preset)!);
   fireEvent.click(button(view.container, 'Watch'));
   await settle();
   return {
@@ -105,6 +109,20 @@ const show = async (...evs: TrafficEvent[]) => {
   mock.push(evs.map((traffic) => ({ seq: seq++, ev: { kind: 'traffic', traffic } })));
   await settle();
 };
+
+describe('DeviceEventCatch log', () => {
+  it('copies the log, one line a row', async () => {
+    const writeText = vi.fn(async () => {});
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+    const { container } = await watching();
+    await show(traffic({ bytes: new Uint8Array([...GET_REPORT, 0xaa]) }));
+    fireEvent.click(button(container, 'Copy'));
+    await settle();
+    expect(writeText).toHaveBeenCalledTimes(1);
+    expect((writeText.mock.calls[0] as unknown as [string])[0]).toContain('clip-transfer in 0x0 OK [a1 01 00 03 00 00 03 00] [aa]');
+    await waitFor(() => expect(button(container, 'Copied')).toBeTruthy());
+  });
+});
 
 describe('DeviceEventCatch clip transfers', () => {
   it('subscribes to a clip\'s transfers with the raw endpoints', async () => {

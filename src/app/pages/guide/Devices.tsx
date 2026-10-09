@@ -41,7 +41,7 @@ const Devices: Component = () => {
 
       <Filter value={query()} onInput={setQuery} placeholder="Search devices" count={rows().length} noun={['device', 'devices']} />
       <div class="table-scroll">
-        <table class="api-params compat">
+        <table class="api-params names compat">
           <colgroup>
             <col style={{ width: '27%' }} />
             <col style={{ width: '10%' }} />
@@ -89,7 +89,7 @@ const Devices: Component = () => {
 
       <DocSection id="limits" title="Limits">
         <div class="table-scroll">
-          <table class="api-params fixed">
+          <table class="api-params names fixed">
             <colgroup>
               <col style={{ width: '22%' }} />
               <col style={{ width: '26%' }} />
@@ -112,7 +112,7 @@ const Devices: Component = () => {
 
       <DocSection id="device-fixes" title="Device fixes">
         <div class="table-scroll">
-          <table class="api-params fixed">
+          <table class="api-params names fixed">
             <colgroup>
               <col style={{ width: '36%' }} />
               <col />

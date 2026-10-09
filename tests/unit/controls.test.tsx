@@ -3,6 +3,7 @@ import { render, cleanup, fireEvent } from '@solidjs/testing-library';
 import { createSignal } from 'solid-js';
 import { Segmented } from '../../src/app/shell/Segmented';
 import { Select } from '../../src/app/shell/Select';
+import { Range } from '../../src/app/shell/Range';
 import { LogBox, logText } from '../../src/app/shell/LogBox';
 
 afterEach(cleanup);
@@ -141,5 +142,24 @@ describe('LogBox', () => {
     setLog({ rows: [], added: 3 });
     await settle();
     expect(container.querySelectorAll('.lg > div')).toHaveLength(0);
+  });
+});
+
+describe('Range', () => {
+  it('reads its value beside it and fills from zero to the handle, on either side', async () => {
+    const [v, setV] = createSignal(50);
+    const { container } = render(() => (
+      <Range label="Keep" value={v()} min={-100} max={100} step={5} zero={0} format={(n) => `${n}%`} onChange={setV} />
+    ));
+    const input = container.querySelector<HTMLInputElement>('input[type="range"]')!;
+    expect(input.getAttribute('aria-label')).toBe('Keep');
+    expect(container.querySelector('output')!.textContent).toBe('50%');
+    const fill = () => container.querySelector<HTMLElement>('.sl-fill')!.style;
+    expect([fill().getPropertyValue('--a'), fill().getPropertyValue('--w')]).toEqual(['0.5', '0.25']);
+    fireEvent.input(input, { target: { value: '-50' } });
+    expect(v()).toBe(-50);
+    expect(container.querySelector('output')!.textContent).toBe('-50%');
+    expect([fill().getPropertyValue('--a'), fill().getPropertyValue('--w')]).toEqual(['0.25', '0.25']);
+    expect(container.querySelector('.sl-z')).not.toBeNull();
   });
 });

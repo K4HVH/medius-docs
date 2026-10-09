@@ -11,7 +11,8 @@ export function PageHeader(props: { id?: string; aside?: JSX.Element; children?:
   const crumbs = createMemo(() => {
     const trail = breadcrumbTrail(route());
     const last = trail[trail.length - 1];
-    return last && last.href === route().path && trail.length > 1 ? trail.slice(0, -1) : trail;
+    // The page's own crumb goes, except on a section's root page, which keeps the section's name.
+    return last && last.href === route().path && trail.length > 2 ? trail.slice(0, -1) : trail;
   });
 
   return (

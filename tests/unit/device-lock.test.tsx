@@ -154,10 +154,11 @@ describe('DeviceLock', () => {
   });
 
   it('the slider sends its percentage, between the two ends', async () => {
-    // The slider is a div with role=slider, driven by the arrow keys at its step.
+    // The slider is a native range input at its step.
     const { container } = render(() => <DeviceLock />);
-    const thumb = container.querySelector('[role="slider"]') as HTMLElement;
+    const thumb = container.querySelector('input[type="range"]') as HTMLInputElement;
     expect(thumb).toBeTruthy();
+    expect(thumb.step).toBe('5');
     // Defaults to a full pass, so Apply on an untouched slider changes nothing about the input.
     fireEvent.click(await findByTextIn(container, `Apply ${LOCK_SCALE_PASS}%`));
     await settle();
@@ -167,7 +168,7 @@ describe('DeviceLock', () => {
 
     // One step down, and the button both relabels and sends the new value.
     mock.sent = [];
-    fireEvent.keyDown(thumb, { key: 'ArrowLeft' });
+    fireEvent.input(thumb, { target: { value: String(LOCK_SCALE_PASS - 5) } });
     await settle();
     fireEvent.click(await findByTextIn(container, `Apply ${LOCK_SCALE_PASS - 5}%`));
     await settle();

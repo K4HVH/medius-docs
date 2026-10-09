@@ -253,6 +253,8 @@ html { scroll-padding-top: calc(var(--nav-h) + 24px); }
 
 @media (max-width: 900px) {
   .page-header .crumbs { display: none; }
+  /* The crumbs are in the page bar above; a header bar left empty takes no room. */
+  .page-header__bar:not(:has(> .ai-actions)) { display: none; }
   .page-header h1 { margin-top: 0; }
   .doc-caption { flex-basis: 100%; }
   .go { grid-template-columns: minmax(0, 1fr); row-gap: 12px; padding-block: 26px; }

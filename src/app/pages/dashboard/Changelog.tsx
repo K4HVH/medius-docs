@@ -110,7 +110,6 @@ const Release = (props: { release: FirmwareRelease; open: boolean }) => {
           <div class="more" classList={{ open: open() }}>
             <Button
               variant="secondary"
-              size="compact"
               icon={Chevron}
               aria-expanded={open()}
               aria-controls={body}

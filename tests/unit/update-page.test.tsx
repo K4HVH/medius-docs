@@ -157,6 +157,20 @@ const runUpdate = async (choice: RegExp) => {
 };
 
 describe('Update', () => {
+  it('keeps the running version on screen while the box restarts, and rolls it when the box is back', async () => {
+    const r = mount();
+    mock.s!.setStatus('connected');
+    const running = () => r.container.querySelector('.vit > div:first-child dd')!.textContent;
+    await waitFor(() => expect(running()).toBe('v3.4.2'));
+    mock.s!.setStatus('flashing');
+    mock.s!.setVersion(null);
+    await Promise.resolve();
+    expect(running()).toBe('v3.4.2');
+    mock.s!.setVersion({ ...ON_RELEASE, fwPatch: 5 });
+    mock.s!.setStatus('connected');
+    await waitFor(() => expect(running()).toBe('v3.4.5'));
+  });
+
   it('no longer installs a new box; that lives in Setup', async () => {
     const { container } = mount();
     await waitFor(() => expect(container.textContent).toMatch(/USB1/));

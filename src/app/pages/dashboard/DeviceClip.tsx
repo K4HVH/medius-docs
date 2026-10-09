@@ -788,30 +788,30 @@ const DeviceClip = () => {
                 </Show>
                 <div class="acts">
                   <Show when={kindNow() === 'move'}>
-                    <div style={{ 'max-width': '7rem' }}>
+                    <div class="fw-s">
                       <NumberInput label="dx" value={dx()} min={-32768} max={32767} precision={0} onChange={(v) => setDx(v ?? 0)} />
                     </div>
-                    <div style={{ 'max-width': '7rem' }}>
+                    <div class="fw-s">
                       <NumberInput label="dy" value={dy()} min={-32768} max={32767} precision={0} onChange={(v) => setDy(v ?? 0)} />
                     </div>
                   </Show>
                   <Show when={kindNow() === 'wheel'}>
-                    <div style={{ 'max-width': '7rem' }}>
+                    <div class="fw-s">
                       <NumberInput label="Detents" value={dz()} min={-32768} max={32767} precision={0} onChange={(v) => setDz(v ?? 0)} />
                     </div>
                   </Show>
                   <Show when={kindNow() === 'pan'}>
-                    <div style={{ 'max-width': '7rem' }}>
+                    <div class="fw-s">
                       <NumberInput label="Detents" value={dpan()} min={-32768} max={32767} precision={0} onChange={(v) => setDpan(v ?? 0)} />
                     </div>
                   </Show>
                   <Show when={kindNow() === 'gap'}>
-                    <div style={{ 'max-width': '9rem' }}>
+                    <div class="fw-s">
                       <NumberInput label="Ticks" value={gap()} min={1} max={65535} precision={0} onChange={(v) => setGap(v ?? 1)} />
                     </div>
                   </Show>
                   <Show when={kindNow() === 'raw'}>
-                    <div style={{ 'max-width': '9rem' }}>
+                    <div class="fw-s">
                       <NumberInput
                         name="clip-raw-ep"
                         label="Endpoint"
@@ -822,7 +822,7 @@ const DeviceClip = () => {
                         onChange={(v) => setRawEp(v ?? 0)}
                       />
                     </div>
-                    <div style={{ flex: '1 1 240px' }}>
+                    <div class="grow">
                       <TextField
                         name="clip-raw-bytes"
                         label="Bytes (hex)"
@@ -833,7 +833,7 @@ const DeviceClip = () => {
                     </div>
                   </Show>
                   <Show when={kindNow() === 'transfer'}>
-                    <div style={{ 'max-width': '9rem' }}>
+                    <div class="fw-s">
                       <NumberInput
                         name="clip-xfer-ep"
                         label="Endpoint"
@@ -846,7 +846,7 @@ const DeviceClip = () => {
                     </div>
                     <For each={SETUP_FIELDS}>
                       {(f) => (
-                        <div style={{ 'max-width': '9rem' }}>
+                        <div class="fw-s">
                           <TextField
                             name={`clip-xfer-${f.key}`}
                             label={f.label}
@@ -979,7 +979,7 @@ const DeviceClip = () => {
                             </Chip>
                             <Chip variant={t.hits > 0 ? 'info' : 'neutral'}>{hitsText(t.hits)}</Chip>
                           </div>
-                          <p class="mut" style={{ margin: '4px 0 0', 'overflow-wrap': 'anywhere' }}>{packetText(t)}</p>
+                          <p class="mut wrap">{packetText(t)}</p>
                         </div>
                       )}
                     </For>
@@ -1040,7 +1040,7 @@ const DeviceClip = () => {
                       ]}
                     />
                     <Show when={pktAnyId() === 'one'}>
-                      <div style={{ 'max-width': '11rem' }}>
+                      <div class="fw-m">
                         <NumberInput
                           name="clip-pkt-id"
                           label={trafficIdLabel(pktCls())}
@@ -1061,7 +1061,7 @@ const DeviceClip = () => {
                     <p class="mut">{DIR_WHY[pktCls()]}</p>
                   </Show>
                   <div class="acts">
-                    <div style={{ flex: '1 1 140px' }}>
+                    <div class="grow">
                       <TextField
                         name="clip-pkt-match"
                         label="Match (hex)"
@@ -1070,7 +1070,7 @@ const DeviceClip = () => {
                         placeholder="e.g. 07 20"
                       />
                     </div>
-                    <div style={{ flex: '1 1 140px' }}>
+                    <div class="grow">
                       <TextField
                         name="clip-pkt-mask"
                         label="Mask (hex)"
@@ -1115,7 +1115,7 @@ const DeviceClip = () => {
                     <Checkbox label="Once per run" checked={pktOnce()} onChange={setPktOnce} />
                   </div>
                   <Show when={pktOnce()}>
-                    <div style={{ 'max-width': '11rem' }}>
+                    <div class="fw-m">
                       <NumberInput
                         name="clip-pkt-selector"
                         label="Selector length"

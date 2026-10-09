@@ -1,7 +1,7 @@
 import { For, Match, Show, Switch, createEffect, createMemo, createResource, createSignal, on, onCleanup } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
 import { Button } from '../../../components/inputs/Button';
-import { versionString } from '../../../dashboard/protocol';
+import { type Version, versionString } from '../../../dashboard/protocol';
 import { downloadAsset, fetchReleases } from '../../../dashboard/firmware';
 import { parseVersion } from '../../../dashboard/flash';
 import { BoxScope, useDashboard } from './context';
@@ -229,6 +229,8 @@ export const Latest = () => {
   };
 
   const running = () => dash.status() === 'flashing';
+  // The box answers nothing while it restarts; the figure keeps the version it ran until the new one answers.
+  const shownVersion = createMemo<Version | null>((prev) => dash.version() ?? prev ?? null, null);
   const runStages = () => {
     const r = dash.update();
     return stagesFor(r?.device ?? which() !== 'mouse', r?.host ?? which() !== 'main');
@@ -240,7 +242,7 @@ export const Latest = () => {
         <dl class="vit two caps">
           <div>
             <dt>Running</dt>
-            <dd class="big">{dash.version() ? `v${versionString(dash.version()!)}` : '...'}</dd>
+            <dd class="big">{shownVersion() ? `v${versionString(shownVersion()!)}` : '...'}</dd>
           </div>
           <div>
             <dt>Latest</dt>

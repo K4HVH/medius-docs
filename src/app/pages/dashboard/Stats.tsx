@@ -260,7 +260,7 @@ const Summary = (props: { s: StatsSummary }) => {
             <Panel id="device-kinds" title="By kind" wide>
               <Show when={s().devices.byKind.length > 0} fallback={<Empty />}>
                 <div class="table-scroll">
-                  <table class="api-params">
+                  <table class="api-params names">
                     <thead>
                       <tr>
                         <th>Kind</th>
@@ -286,7 +286,7 @@ const Summary = (props: { s: StatsSummary }) => {
             <Panel id="top-devices" title="Most used" wide>
               <Show when={s().devices.top.length > 0} fallback={<Empty />}>
                 <div class="table-scroll">
-                  <table class="api-params">
+                  <table class="api-params names">
                     <thead>
                       <tr>
                         <th>Device</th>

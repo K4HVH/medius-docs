@@ -187,8 +187,12 @@ const DeviceInject = () => {
 
   const fail = (x: unknown) => setErr(x instanceof Error ? x.message : String(x));
 
-  const moveCursor = (dx: number, dy: number) =>
-    (bypass() ? link()?.moveRelNow(dx, dy) : link()?.moveRel(dx, dy))?.catch(fail);
+  // Everything the pad and the arrows have sent, read in the middle of the arrows.
+  const [sent, setSent] = createSignal({ x: 0, y: 0 });
+  const moveCursor = (dx: number, dy: number) => {
+    setSent((t) => ({ x: t.x + dx, y: t.y + dy }));
+    return (bypass() ? link()?.moveRelNow(dx, dy) : link()?.moveRel(dx, dy))?.catch(fail);
+  };
 
   const scroll = (dz: number) => (bypass() ? link()?.wheelNow(dz) : link()?.wheel(dz))?.catch(fail);
 
@@ -248,6 +252,9 @@ const DeviceInject = () => {
                   <Button variant="secondary" icon={Left} aria-label="Move left" onClick={() => void moveCursor(-step(), 0)} />
                   <Button variant="secondary" icon={Right} aria-label="Move right" onClick={() => void moveCursor(step(), 0)} />
                   <Button variant="secondary" icon={Down} aria-label="Move down" onClick={() => void moveCursor(0, step())} />
+                  <span class="dpad-c caps" aria-live="polite">
+                    {sent().x}, {sent().y}
+                  </span>
                 </div>
                 <div class="nudge-c">
                   <div class="fw-s">
@@ -335,7 +342,7 @@ const DeviceInject = () => {
             <Show
               when={holds().length > 0}
               fallback={
-                <p class="mut" style={{ 'line-height': '28px' }}>
+                <p class="mut held-none">
                   Nothing held.
                 </p>
               }

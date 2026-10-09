@@ -14,7 +14,7 @@ const Start: Component = () => (
 
     <DocSection id="requirements" title="Requirements">
       <div class="table-scroll">
-        <table class="api-params">
+        <table class="api-params names">
           <colgroup>
             <col style={{ width: '24%' }} />
             <col />

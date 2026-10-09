@@ -5,7 +5,7 @@ import { For, Show, createMemo, createSignal } from 'solid-js';
 import { A } from '@solidjs/router';
 import { Button } from '../../../components/inputs/Button';
 import { Chip } from '../../../components/display/Chip';
-import { Slider } from '../../../components/inputs/Slider';
+import { Range } from '../../shell/Range';
 import {
   type LockEntry,
   type NamedUsage,
@@ -171,21 +171,21 @@ const DeviceLock = () => {
 
           <Show when={isAxis()}>
             <div class="labelled">
-              <span class="field-l" id="lock-scale-label">
-                {scale() < 0
-                  ? `Reverse physical motion, keeping ${Math.abs(scale())}%`
-                  : `Keep ${scale()}% of physical motion`}
-              </span>
-              <Slider
-                aria-labelledby="lock-scale-label"
+              <span class="field-l">Keep</span>
+              <Range
+                label="Keep"
                 value={scale()}
                 min={LOCK_SCALE_MIN}
                 max={LOCK_SCALE_MAX}
                 step={5}
-                marks={[{ value: 0 }]}
-                onChange={(v) => setScale(Array.isArray(v) ? v[0] : v)}
+                zero={0}
+                format={(v) => `${v}%`}
+                onChange={setScale}
               />
             </div>
+            <p class="mut">
+              {scale() < 0 ? `Reverse physical motion, keeping ${Math.abs(scale())}%` : `Keep ${scale()}% of physical motion`}
+            </p>
           </Show>
 
           <Show when={isAxis() && isRelativeDirection(dir())}>

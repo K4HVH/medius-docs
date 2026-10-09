@@ -29,7 +29,7 @@ const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
       { label: 'Device', href: '/dashboard' },
       { label: 'Update', href: '/dashboard/update' },
       { label: 'Changelog', href: '/dashboard/changelog' },
-      { label: 'Usage stats', href: '/dashboard/stats' },
+      { label: 'Stats', href: '/dashboard/stats' },
     ],
   },
   {
