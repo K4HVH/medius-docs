@@ -21,7 +21,7 @@ const DeviceFactoryReset = () => {
   return (
     <Show when={dash.status() === 'connected'}>
       <Panel id="factory-reset" title="Factory reset">
-        <p>Clears the box name, every option above and everything learned about devices, then restarts.</p>
+        <p>Clears the box name, every option on this tab and everything learned about devices, then restarts.</p>
         <div class="acts">
           <Button variant="danger" disabled={cmd.busy()} onClick={factoryReset}>
             Erase and restart
