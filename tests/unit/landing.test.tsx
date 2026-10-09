@@ -14,7 +14,6 @@ const SAMPLE: DescriptorSample = {
   device: 'Test Mouse',
   vidpid: '1234:5678',
   firmware: '3.4.5',
-  captured: '2026-10-09',
   descriptors: {
     device: [f('bLength', '12'), f('bDescriptorType', '01'), f('bcdUSB', '00 02'), f('idVendor', '34 12')],
     configuration: [f('bLength', '09'), f('wTotalLength', '22 00')],
@@ -216,7 +215,7 @@ describe('DescriptorPanel', () => {
 
   it('names the captured device under the panel', () => {
     const r = panel();
-    expect(r.container.querySelector('.desc-src')!.textContent).toBe('Test Mouse · 1234:5678 · v3.4.5 · captured 2026-10-09');
+    expect(r.container.querySelector('.desc-src')!.textContent).toBe('Test Mouse · 1234:5678 · v3.4.5');
   });
 
   // jsdom has no IntersectionObserver: these hold each observer so a test can say when something is on screen.

@@ -10,7 +10,6 @@ export interface DescriptorSample {
   device: string;
   vidpid: string;
   firmware: string;
-  captured: string;
   descriptors: Record<'device' | 'configuration' | 'interface' | 'hid' | 'endpoint', DescriptorField[]>;
 }
 
@@ -26,6 +25,5 @@ export interface FeedSample {
   device: string;
   vidpid: string;
   firmware: string;
-  captured: string;
   frames: FeedFrame[];
 }
