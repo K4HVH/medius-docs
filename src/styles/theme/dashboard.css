@@ -79,6 +79,12 @@
 .acts { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; }
 .acts.mid { align-items: center; }
 .labelled { display: grid; gap: 8px; justify-items: start; min-width: 0; }
+.labelled > p { margin: 0; font-size: 14.5px; }
+/* Field widths in a row: a number, an id, a name; a free text field takes what the row leaves. */
+.fw-s { width: 9rem; max-width: 100%; }
+.fw-m { width: 11rem; max-width: 100%; }
+.fw-l { flex: 1 1 12rem; max-width: 16rem; }
+.grow { flex: 1 1 220px; min-width: 0; }
 
 .seg { position: relative; display: inline-flex; flex-wrap: wrap; max-width: 100%; justify-self: start; align-self: start; background: var(--g-background); border: 1px solid var(--line-2); }
 .seg button {
@@ -299,3 +305,111 @@
 .chips { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .doc .pb > p.sublabel { margin: 14px 0 0; }
 .pb > .sublabel + .vals tr:first-child td { border-top: 0; }
+
+/* Control: Clear everything at the title's right, with what it clears under it. */
+.page-header__aside p { margin: 0; }
+.safety { display: grid; justify-items: end; gap: 6px; }
+.safety .sub2 { max-width: 52ch; text-align: right; color: var(--muted); font-size: 14.5px; }
+@media (max-width: 900px) {
+  .safety { justify-items: start; }
+  .safety .sub2 { text-align: left; }
+}
+
+/* Figures: the landing's vitals strip. A rule over it, each label over its value, cells divided by
+   rules; a second row starts with another rule. */
+.vit { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 40px 0 0; }
+.vit.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.vit > div { padding: 18px 0 20px 24px; display: grid; grid-template-rows: 1fr auto; gap: 10px; min-width: 0; border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
+.vit > div:nth-child(4n + 1), .vit.two > div:nth-child(2n + 1) { padding-left: 0; border-left: 0; }
+.vit.two > div:nth-child(2n) { padding-left: 24px; border-left: 1px solid var(--line); }
+@container doc (min-width: 1000px) {
+  .vit.eight { grid-template-columns: repeat(8, minmax(0, 1fr)); }
+  .vit.eight > div:nth-child(4n + 1) { padding-left: 24px; border-left: 1px solid var(--line); }
+  .vit.eight > div:nth-child(8n + 1) { padding-left: 0; border-left: 0; }
+}
+.vit dt { color: var(--dim); }
+.vit dd { margin: 0; }
+.vit dd.big { font: 600 34px/1 var(--sans); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; text-transform: none; color: var(--text); }
+/* Under a tab strip, the strip's rule heads the figures. */
+.pane > .vit:first-child { margin-top: 32px; }
+.pane > .vit:first-child > div { border-top: 0; padding-top: 0; }
+.vit + .ptabs, .vit + .flow { margin-top: 28px; }
+@media (max-width: 900px) {
+  .vit { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .vit > div:nth-child(2n) { padding-left: 16px; border-left: 1px solid var(--line); }
+  .vit > div:nth-child(2n + 1) { padding-left: 0; border-left: 0; }
+  .vit dd.big { font-size: 28px; }
+}
+
+/* Update and Set up: one column under the title. The steps' strip, then the step: a line to act on, the
+   box, the buttons. */
+.flow { display: grid; gap: 28px; margin-top: 40px; }
+.flow > * { min-width: 0; }
+.flow .board { margin: 0; }
+.flow .boxd { max-height: min(34svh, 400px); }
+.step { display: grid; gap: 16px; }
+
+/* Steps: a strip, the one on screen lit and the ones behind it green. A narrow strip names only the step
+   on screen. */
+.stages { container-type: inline-size; display: flex; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.stages span {
+  flex: 1 1 0; min-width: 0; display: flex; align-items: center; gap: 10px; padding: 13px 12px;
+  font: 500 10.5px/1.3 var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); white-space: nowrap;
+  transition: color 0.3s, background 0.5s;
+}
+.stages span + span { border-left: 1px solid var(--line); }
+.stages span::before { content: ""; flex: none; width: 6px; height: 6px; background: var(--line-2); transition: background 0.3s; }
+.stages em { font-style: normal; }
+.stages em::after { content: " ·"; }
+.stages i { font-style: normal; overflow: hidden; text-overflow: ellipsis; }
+.stages span.now { color: var(--text); background: color-mix(in srgb, var(--accent) 10%, transparent); }
+.stages span.now::before { background: var(--accent); }
+.stages span.done { color: var(--text-2); }
+.stages span.done::before { background: var(--ok); }
+@container (max-width: 1000px) {
+  .stages:has(.now) span { flex: 0 0 auto; }
+  .stages:has(.now) span:not(.now) i, .stages:has(.now) span:not(.now) em::after { display: none; }
+  .stages:has(.now) span.now { flex: 1 1 auto; }
+}
+
+/* Long work: the percentage counts and the line fills with it. A wait with no count runs a segment
+   along the line; between steps the filled line leaves to the right and the figure fades. */
+.prog { display: grid; gap: 14px; margin-top: 8px; }
+.pct { font: 700 clamp(48px, 5vw, 72px)/0.9 var(--sans); letter-spacing: -0.04em; font-variant-numeric: tabular-nums; color: var(--text); transition: opacity 0.2s; }
+.pct small { font: 500 13px/1 var(--mono); color: var(--muted); margin-left: 6px; letter-spacing: 0.1em; }
+.pct.fade { opacity: 0; }
+.track { position: relative; height: 2px; background: var(--line-2); overflow: hidden; }
+.track i { position: absolute; inset: 0; background: var(--accent); transform-origin: left; transform: scaleX(var(--p, 0)); }
+.track.out i { transform-origin: right; transform: scaleX(0); transition: transform 0.4s var(--ease); }
+.track.wait i { right: auto; width: 24%; transform: none; animation: wait 1.3s var(--ease) infinite; }
+@keyframes wait { from { transform: translateX(-100%); } to { transform: translateX(420%); } }
+@media (prefers-reduced-motion: reduce) {
+  .track.wait i { animation: none; width: 100%; opacity: 0.5; }
+}
+.doc .sub2 { margin: 0; color: var(--muted); font-size: 14.5px; }
+.checks { display: flex; flex-wrap: wrap; gap: 10px 22px; }
+.checks.col { flex-direction: column; align-items: flex-start; }
+/* The slider's track starts at the edge the other controls share. */
+.pb .slider { padding-inline: 5px; }
+
+/* Injection: a drag pad on a 20 px grid, and a d-pad of four steps. */
+.pad {
+  height: 180px; display: grid; place-items: center; text-align: center; border: 1px solid var(--line-2);
+  background:
+    repeating-linear-gradient(0deg, transparent 0 19px, color-mix(in srgb, var(--text) 3%, transparent) 19px 20px),
+    repeating-linear-gradient(90deg, transparent 0 19px, color-mix(in srgb, var(--text) 3%, transparent) 19px 20px);
+  touch-action: none; cursor: crosshair; user-select: none;
+}
+.pad .caps { color: var(--dim); transition: color 0.2s; }
+.pad.on .caps { color: var(--text); }
+.nudge { display: flex; flex-wrap: wrap; gap: 20px 28px; align-items: flex-start; }
+.nudge-c { display: grid; gap: 14px; justify-items: start; }
+.dpad { display: grid; grid-template-areas: ". u ." "l . r" ". d ."; grid-template-columns: repeat(3, 36px); grid-template-rows: repeat(3, 36px); gap: 4px; }
+.dpad > :nth-child(1) { grid-area: u; }
+.dpad > :nth-child(2) { grid-area: l; }
+.dpad > :nth-child(3) { grid-area: r; }
+.dpad > :nth-child(4) { grid-area: d; }
+
+.callout-detail { margin-top: 6px; font-size: 0.85em; opacity: 0.75; }
+.step > p { margin: 0; }
+.pb pre.reply { max-height: 10rem; overflow: auto; margin: 0; }

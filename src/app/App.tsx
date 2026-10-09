@@ -87,9 +87,7 @@ import PyBuild from './pages/bindings/python/Build';
 import DashboardDevice from './pages/dashboard/Device';
 import DashboardSetup from './pages/dashboard/Setup';
 import DashboardControl from './pages/dashboard/Control';
-import DashboardDeveloper from './pages/dashboard/DeviceDeveloper';
 import DashboardUpdate from './pages/dashboard/Update';
-import DashboardAdvanced from './pages/dashboard/Advanced';
 import DashboardChangelog from './pages/dashboard/Changelog';
 import DashboardStats from './pages/dashboard/Stats';
 import { BoxScope, DashboardProvider } from './pages/dashboard/context';
@@ -190,11 +188,9 @@ const App: Component = () => {
           <Route path="/" component={BoxScope}>
             <Route path="/dashboard" component={DashboardDevice} />
             <Route path="/dashboard/control" component={DashboardControl} />
-            <Route path="/dashboard/advanced-control" component={DashboardDeveloper} />
-            <Route path="/dashboard/update" component={DashboardUpdate} />
           </Route>
           <Route path="/dashboard/setup" component={DashboardSetup} />
-          <Route path="/dashboard/advanced" component={DashboardAdvanced} />
+          <Route path="/dashboard/update" component={DashboardUpdate} />
           <Route path="/dashboard/changelog" component={DashboardChangelog} />
           <Route path="/dashboard/stats" component={DashboardStats} />
           <Route path="*" component={NotFound} />

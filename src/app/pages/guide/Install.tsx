@@ -4,7 +4,6 @@ import { PageHeader } from '../../shell/PageHeader';
 import { DocSection } from '../../shell/DocSection';
 import { IndexRow } from '../../shell/IndexRow';
 import { ClearPort, InstallPorts, WiringPorts } from '../dashboard/PortDiagram';
-import { HAZARD } from '../dashboard/Setup';
 
 const Install: Component = () => (
   <>
@@ -49,7 +48,6 @@ const Install: Component = () => (
 
     <DocSection id="power" title="Power" caption="USB1 and USB3">
       <div class="callout callout--danger">
-        <p>{HAZARD}</p>
         <p>
           USB3's 5 V is wired to the board's power rail. With USB1 in the same computer, the box feeds power
           back into that computer: it has shut a laptop down and drained its battery. USB3 goes into a computer

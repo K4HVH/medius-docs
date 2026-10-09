@@ -63,13 +63,18 @@ it('a ROM flash half set up keeps its choices when USB2 is unplugged, as its dia
     );
   });
   await waitFor(() => expect(boxes.selected()?.session.name()).toBe('Desk'), { timeout: 3000 });
-  // Not connected, so Via starts on ROM download: CHIP is the second dropdown.
-  const chip = () => r.container.querySelectorAll('[role="combobox"]')[1] as HTMLElement;
+  // Not connected, so Via starts on ROM download, with the CHIP dropdown under its label.
+  const field = () =>
+    [...r.container.querySelectorAll('.labelled')].find((el) => el.querySelector('.field-l')?.textContent === 'Chip');
+  const chip = () => field()?.querySelector('.dd-b') as HTMLButtonElement;
   await waitFor(() => expect(chip()).toBeTruthy());
   fireEvent.click(chip());
-  fireEvent.keyDown(chip(), { key: 'Enter' });
-  await new Promise((x) => setTimeout(x, 20));
-  fireEvent.click([...document.querySelectorAll('[role="option"]')].find((o) => /mouse-side/i.test(o.textContent ?? ''))!);
+  const mouseSide = await waitFor(() => {
+    const o = [...field()!.querySelectorAll('[role="option"]')].find((x) => /mouse-side/i.test(x.textContent ?? ''));
+    if (!o) throw new Error('no mouse-side option');
+    return o as HTMLElement;
+  });
+  fireEvent.click(mouseSide);
   await waitFor(() => expect(chip().textContent).toMatch(/Mouse-side chip/));
   serial.unplug(port);
   await waitFor(() => expect(boxes.selected()).toBeNull());

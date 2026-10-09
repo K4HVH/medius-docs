@@ -88,7 +88,7 @@ const mount = (path: string, w = world()) => {
         <Route path="/dashboard" component={() => <p>device page</p>} />
         <Route path="/dashboard/setup" component={() => <p>setup page</p>} />
         <Route path="/dashboard/changelog" component={() => <p>changelog page</p>} />
-        <Route path="/dashboard/advanced" component={() => <p>advanced page</p>} />
+        <Route path="/dashboard/update" component={() => <p>update page</p>} />
         <Route path="*" component={() => <p>other page</p>} />
       </Route>
     </MemoryRouter>
@@ -112,12 +112,12 @@ describe('DocsLayout and the boxes', () => {
     expect(bar(r)).not.toContain('Desk');
   });
 
-  it('names the box on Advanced, and a box picked there stays on Advanced', async () => {
-    const r = mount('/dashboard/advanced');
-    await waitFor(() => expect(bar(r)).toContain('Advanced - Desk'));
+  it('names the box on Update, and a box picked there stays on Update', async () => {
+    const r = mount('/dashboard/update');
+    await waitFor(() => expect(bar(r)).toContain('Update - Desk'));
     fireEvent.click(row(r));
     await new Promise((res) => setTimeout(res, 20));
-    expect(r.container.textContent).toContain('advanced page');
+    expect(r.container.textContent).toContain('update page');
   });
 
   it('starts looking for boxes only once the dashboard is open', async () => {
@@ -236,8 +236,8 @@ describe('DocsLayout and the boxes', () => {
   });
 
   it('gives the dashboard the full width beside the sidebar, and the docs their reading measure', async () => {
-    const r = mount('/dashboard/advanced');
-    await waitFor(() => expect(r.container.textContent).toContain('advanced page'));
+    const r = mount('/dashboard/update');
+    await waitFor(() => expect(r.container.textContent).toContain('update page'));
     expect(r.container.querySelector('.docs')!.classList.contains('tool')).toBe(true);
     r.history.set({ value: '/native' });
     await waitFor(() => expect(r.container.textContent).toContain('native'));

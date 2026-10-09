@@ -212,7 +212,7 @@ describe('DeviceOptions whole-number fields', () => {
   };
   // The button beside a field, in the same row of controls.
   const beside = (el: HTMLElement, name: string) =>
-    [...(el.closest('[style*="flex"]')?.parentElement?.querySelectorAll('button') ?? [])].find(
+    [...(el.closest('.acts')?.querySelectorAll('button') ?? [])].find(
       (b) => b.textContent?.trim() === name,
     ) as HTMLElement;
 

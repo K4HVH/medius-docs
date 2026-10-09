@@ -19,8 +19,16 @@
 .button--icon-only { padding: 0; min-width: 36px; }
 .button--icon-only.button--compact { min-width: 30px; }
 
-.button--primary,
-.button--danger { border-color: transparent; }
+.button--primary { border-color: transparent; }
+/* Danger rests dark with a red edge and text, and fills red under the pointer. */
+.button--danger {
+  background: color-mix(in srgb, var(--bad) 7%, var(--ground));
+  border-color: color-mix(in srgb, var(--bad) 40%, transparent);
+  color: color-mix(in srgb, var(--bad) 45%, var(--text));
+}
+@media (hover: hover) {
+  .button--danger:hover:not(:disabled) { border-color: transparent; color: var(--text); }
+}
 .button--primary::before,
 .button--danger::before {
   display: block;

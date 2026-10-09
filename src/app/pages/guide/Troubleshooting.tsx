@@ -2,7 +2,6 @@ import type { Component } from 'solid-js';
 import { A } from '@solidjs/router';
 import { PageHeader } from '../../shell/PageHeader';
 import { DocSection } from '../../shell/DocSection';
-import { HAZARD } from '../dashboard/Setup';
 
 const Troubleshooting: Component = () => (
   <>
@@ -33,7 +32,7 @@ const Troubleshooting: Component = () => (
           <tbody>
             <tr><td>Windows blue-screens</td><td>The WCH CH343 driver from Windows Update. Uninstall it and use Windows' built-in usbser.sys driver. <A href="/guide/faq#bsod">FAQ</A></td></tr>
             <tr><td>A mouse or keyboard doesn't clone, or misbehaves</td><td>Check <A href="/guide/device-fixes">Device fixes</A> for a setting it needs. If none helps, <A href="/guide/faq#report">report it</A>.</td></tr>
-            <tr><td>USB1 and USB3 in one computer</td><td>Unplug one now. {HAZARD}</td></tr>
+            <tr><td>USB1 and USB3 in one computer</td><td>Unplug one now.</td></tr>
           </tbody>
         </table>
       </div>

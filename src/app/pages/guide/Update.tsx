@@ -40,7 +40,7 @@ const Update: Component = () => (
           <thead><tr><th>Case</th><th>Fix</th></tr></thead>
           <tbody>
             <tr><td>The new firmware won't run</td><td>The chip boots the firmware it ran before, and the dashboard reads "The box came back, but not on the version sent". Update again.</td></tr>
-            <tr><td>MAKCU's stock firmware</td><td>The fetch_makcu_fw script in the <a href={LINKS.discord} target="_blank" rel="noreferrer">Discord</a> #tools channel downloads MAKCU v4 firmware. Flash it on <A href="/dashboard/advanced">Advanced</A>, via ROM download, with Upload a file.</td></tr>
+            <tr><td>MAKCU's stock firmware</td><td>The fetch_makcu_fw script in the <a href={LINKS.discord} target="_blank" rel="noreferrer">Discord</a> #tools channel downloads MAKCU v4 firmware. Flash it on Update's <A href="/dashboard/update#manual">Manual</A> tab, via ROM download, with Upload a file.</td></tr>
           </tbody>
         </table>
       </div>

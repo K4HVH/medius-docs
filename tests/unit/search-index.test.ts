@@ -35,39 +35,45 @@ describe('dashboard search index', () => {
     }
   });
 
-  it('indexes every card the two tabs render', () => {
-    // Read the titles off the source rather than restating them, so a card added without an index
-    // entry fails here instead of quietly becoming unsearchable.
-    const files = [
-      'Control.tsx', 'DeviceInject.tsx', 'DeviceLock.tsx', 'DeviceEventCatch.tsx',
-      'DeviceClip.tsx', 'DeviceLed.tsx', 'DeviceOptions.tsx', 'DeviceInfo.tsx', 'Device.tsx',
-      'DeviceTransform.tsx', 'DeviceDeveloper.tsx', 'DeviceRewrite.tsx', 'DevicePatch.tsx',
-      'DeviceRaw.tsx', 'DeviceTransfer.tsx', 'DeviceFactoryReset.tsx', 'UpdateOnlyCard.tsx',
-    ];
-    const titles = new Set<string>();
-    for (const f of files) {
-      const src = readFileSync(`src/app/pages/dashboard/${f}`, 'utf8');
-      for (const m of src.matchAll(/CardHeader\s+title="([^"]+)"/g)) titles.add(m[1]);
-      // Options nests its controls as <Section title="...">, not as their own CardHeader.
-      for (const m of src.matchAll(
-        /<div id="[^"]+" data-search-target>\s*<Section\s+title="([^"]+)"/g,
-      )) {
-        titles.add(m[1]);
-      }
-    }
-    // Cards that are pure connection or progress state, not a feature to search for.
-    const notFeatures = new Set([
-      'Controls', 'Your box', 'Status', 'Installing', 'Flashing',
-    ]);
-    const missing = [...titles].filter((t) => !notFeatures.has(t) && find(t).length === 0);
+  // Read off the source rather than restated, so a panel added without an index entry fails here instead
+  // of quietly becoming unsearchable, and an entry whose anchor went away fails too.
+  const PAGES: Record<string, string[]> = {
+    '/dashboard': ['Device.tsx', 'DeviceInfo.tsx', 'DeviceOptions.tsx', 'DeviceFactoryReset.tsx', 'UpdateOnlyCard.tsx', 'ConnectPanel.tsx'],
+    '/dashboard/control': [
+      'Control.tsx', 'DeviceInject.tsx', 'DeviceLock.tsx', 'DeviceTransform.tsx', 'DeviceEventCatch.tsx', 'DeviceClip.tsx',
+      'DeviceLed.tsx', 'DeviceRewrite.tsx', 'DevicePatch.tsx', 'DeviceRaw.tsx', 'DeviceTransfer.tsx', 'UpdateOnlyCard.tsx',
+    ],
+    '/dashboard/update': ['Update.tsx', 'Advanced.tsx', 'AdvancedUsb2.tsx'],
+    '/dashboard/setup': ['Setup.tsx'],
+  };
+  const source = (path: string) => PAGES[path].map((f) => readFileSync(`src/app/pages/dashboard/${f}`, 'utf8')).join('\n');
+  const panelTitles = (src: string) =>
+    [...src.matchAll(/<Panel\b[^>]*>/g)].map((m) => /\btitle="([^"]+)"/.exec(m[0])?.[1]).filter((t): t is string => !!t);
+  const anchors = (src: string) =>
+    new Set([...src.matchAll(/\bid="([a-z0-9-]+)"/g), ...src.matchAll(/\{ key: '([a-z0-9-]+)', label:/g)].map((m) => m[1]));
+
+  it('indexes every panel the dashboard renders', () => {
+    // Panels that are pure connection or progress state, not a feature to search for.
+    const notFeatures = new Set(['Your box', 'Status']);
+    const missing = Object.keys(PAGES)
+      .flatMap((p) => panelTitles(source(p)))
+      .filter((t) => !notFeatures.has(t) && find(t).length === 0);
     expect(missing).toEqual([]);
+  });
+
+  it('lands every dashboard anchor on a panel or a tab that is there', () => {
+    const dangling = dash
+      .filter((e) => e.path.includes('#') && PAGES[e.path.split('#')[0]])
+      .filter((e) => !anchors(source(e.path.split('#')[0])).has(e.path.split('#')[1]))
+      .map((e) => e.path);
+    expect(dangling).toEqual([]);
   });
 
   it('finds each card by the words on its own controls', () => {
     const cases: [string, string][] = [
       ['consume', 'Clip playback'],
-      ['test firmware', 'Advanced'],
-      ['flash over usb2', 'Advanced'],
+      ['test firmware', 'Manual flash'],
+      ['flash over usb2', 'Manual flash'],
       ['newer protocol', 'Newer firmware'],
       ['mark complete', 'Clip playback'],
       ['replayable', 'Clip playback'],
