@@ -1,11 +1,9 @@
 // Each control reads its value back from the box until touched. A hardcoded default here once made
 // Apply reconfigure a box that looked unchanged.
 import { Show, createSignal } from 'solid-js';
-import { Card, CardHeader } from '../../../components/surfaces/Card';
 import { Button } from '../../../components/inputs/Button';
 import { Chip } from '../../../components/display/Chip';
 import { NumberInput } from '../../../components/inputs/NumberInput';
-import { RadioGroup } from '../../../components/inputs/RadioGroup';
 import { TextField } from '../../../components/inputs/TextField';
 import {
   type EmitPace,
@@ -18,7 +16,8 @@ import {
 } from '../../../dashboard/protocol';
 import { useDashboard } from './context';
 import { createCommand } from './action';
-import { Section } from './Section';
+import { Panel } from '../../shell/Panel';
+import { Segmented } from '../../shell/Segmented';
 import { controls, muted, section, status } from './ui';
 
 const EMIT_MODES: Record<string, EmitMode> = {
@@ -231,386 +230,372 @@ const DeviceOptions = () => {
 
   return (
     <Show when={dash.status() === 'connected'}>
-      <div id="options" data-search-target>
-        <Card>
-          <CardHeader title="Options" subtitle="Saved on the box" />
-          <Show when={cmd.error()}>
-            <div class="callout callout--danger" role="alert">{cmd.error()}</div>
-          </Show>
+      <Show when={cmd.error()}>
+        <Panel wide>
+          <div class="callout callout--danger" role="alert">{cmd.error()}</div>
+        </Panel>
+      </Show>
 
-          <Section title="Box name" first>
-          <p>
-            Up to {NAME_MAX} letters, numbers and symbols.
+      <Panel id="box-name" title="Box name">
+        <p>
+          Up to {NAME_MAX} letters, numbers and symbols.
+        </p>
+        <div style={controls}>
+          <div style={{ 'max-width': '16rem', flex: '1 1 12rem' }}>
+            <TextField
+              label="Name"
+              value={name()}
+              maxLength={NAME_MAX}
+              placeholder="Medius-1A2B"
+              onChange={setNameEdit}
+            />
+          </div>
+          <Button variant="primary" disabled={cmd.busy()} onClick={applyName}>
+            Set
+          </Button>
+          <Button variant="secondary" disabled={cmd.busy()} onClick={clearName}>
+            Clear
+          </Button>
+        </div>
+        <Show when={version()} fallback={<p style={status}>Reading...</p>}>
+          <div style={status}>
+            <Chip variant="neutral">{version()!.name}</Chip>
+          </div>
+        </Show>
+      </Panel>
+
+      <Panel id="imperfect-clone" title="Imperfect clone">
+        <p>
+          Clones a device the box can't copy exactly, and unlocks the Advanced tab on Control.
+        </p>
+        <div style={controls}>
+          <Button variant="primary" disabled={cmd.busy()} onClick={() => allowImperfect(true)}>
+            Allow imperfect
+          </Button>
+          <Button variant="secondary" disabled={cmd.busy()} onClick={() => allowImperfect(false)}>
+            Faithful only
+          </Button>
+        </div>
+        <Show when={imperfect()} fallback={<p style={status}>Reading...</p>}>
+          {(s) => (
+            <div style={{ ...status, display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' }}>
+              <Chip variant={s().allowed ? 'success' : 'neutral'}>
+                {s().allowed ? 'Allowed' : 'Faithful only'}
+              </Chip>
+              <Show when={s().overCapacity}>
+                <Chip variant="warning">Device over box capacity, or high speed</Chip>
+              </Show>
+            </div>
+          )}
+        </Show>
+      </Panel>
+
+      <Panel id="movement-riding" title="Movement riding">
+        <p>
+          Injected motion waits up to the window to ride a physical report, and is dropped if none
+          arrives, so reports keep native timing.
+        </p>
+        <div style={controls}>
+          <div style={{ 'max-width': '8rem' }}>
+            <NumberInput
+              label="Window"
+              suffix="ms"
+              value={rideWindow()}
+              min={1}
+              max={65535}
+              precision={0}
+              onChange={(v) => setRideEdit(v ?? 1)}
+            />
+          </div>
+          <Button variant="primary" disabled={cmd.busy()} onClick={() => setRiding(rideWindow())}>
+            Turn on
+          </Button>
+          <Button variant="secondary" disabled={cmd.busy()} onClick={() => setRiding(0)}>
+            Turn off
+          </Button>
+          <Show when={rideDirty()}>
+            <Button variant="subtle" onClick={revertRide}>
+              Revert
+            </Button>
+          </Show>
+        </div>
+        <Show when={ride() !== null} fallback={<p style={status}>Reading...</p>}>
+          <div style={status}>
+            <Chip variant={ride()! > 0 ? 'success' : 'neutral'}>
+              {ride()! > 0 ? `On · ${ride()} ms` : 'Off'}
+            </Chip>
+            <Show when={rideDirty()}>
+              <span style={{ ...muted, 'margin-left': 'var(--g-spacing-sm)' }}>Not applied</span>
+            </Show>
+          </div>
+        </Show>
+      </Panel>
+
+      <Panel id="bearing" title="Bearing">
+        <p>
+          What With injection and Against injection mean for a lock: the injected direction on each
+          axis, held for the window.
+        </p>
+        <Segmented
+          name="bearing-mode"
+          value={String(bearGeometry())}
+          onChange={setBearMode}
+          options={[
+            { value: String(BearingMode.PerAxis), label: 'Per axis' },
+            { value: String(BearingMode.Vector), label: 'Vector' },
+          ]}
+        />
+        <p style={muted}>
+          {bearGeometry() === BearingMode.Vector
+            ? 'Only the part of the physical delta along the injected vector is weighed.'
+            : 'Each axis is weighed against its bearing.'}
+        </p>
+        <div style={controls}>
+          <div style={{ 'max-width': '8rem' }}>
+            <NumberInput
+              label="Window"
+              suffix="ms"
+              value={bearWindow()}
+              min={1}
+              max={65535}
+              precision={0}
+              onChange={(v) => setBearEdit(v ?? 1)}
+            />
+          </div>
+          <Button variant="primary" disabled={cmd.busy()} onClick={() => setBearing(bearWindow())}>
+            Apply
+          </Button>
+          <Button variant="secondary" disabled={cmd.busy()} onClick={() => setBearing(0)}>
+            Turn off
+          </Button>
+          <Show when={bearDirty()}>
+            <Button variant="subtle" onClick={revertBear}>
+              Revert
+            </Button>
+          </Show>
+        </div>
+        <Show when={bearing() !== null} fallback={<p style={status}>Reading...</p>}>
+          <div style={status}>
+            <Chip variant={bearing()!.windowMs > 0 ? 'success' : 'neutral'}>
+              {bearing()!.windowMs > 0
+                ? `${bearing()!.mode === BearingMode.Vector ? 'Vector' : 'Per axis'} · ${bearing()!.windowMs} ms`
+                : 'Off'}
+            </Chip>
+            <Show when={bearDirty()}>
+              <span style={{ ...muted, 'margin-left': 'var(--g-spacing-sm)' }}>Not applied</span>
+            </Show>
+          </div>
+        </Show>
+      </Panel>
+
+      <Panel id="render" title="Render">
+        <p>
+          Emits injected motion with native report texture, and picks which motion is rendered.
+        </p>
+        <Segmented
+          name="render-mode"
+          value={renderKey()}
+          onChange={setRenderEdit}
+          options={[
+            { value: 'off', label: 'Off' },
+            { value: 'stock', label: 'Stock' },
+            { value: 'despiked', label: 'De-spiked' },
+            { value: 'unsmoothed', label: 'Unsmoothed' },
+          ]}
+        />
+        <p style={muted}>{RENDER_BLURB[renderKey()]}</p>
+        <div id="render-full" data-search-target>
+          <div class="api-response-label" style={section}>Rendered motion</div>
+          <Segmented
+            name="render-full"
+            value={fullOn() ? 'both' : 'injected'}
+            onChange={(v) => setFullEdit(v === 'both')}
+            options={[
+              { value: 'injected', label: 'Injected only' },
+              { value: 'both', label: 'Injected and native' },
+            ]}
+          />
+          <p style={muted}>
+            {!fullOn()
+              ? "Native motion is relayed untouched."
+              : renderKey() === 'off'
+                ? 'Renders nothing while the mode is off.'
+                : 'Both go through the model as one stream.'}
           </p>
-          <div style={controls}>
-            <div style={{ 'max-width': '16rem', flex: '1 1 12rem' }}>
-              <TextField
-                label="Name"
-                value={name()}
-                maxLength={NAME_MAX}
-                placeholder="Medius-1A2B"
-                onChange={setNameEdit}
-              />
+        </div>
+        <div style={controls}>
+          <Button variant="primary" disabled={cmd.busy()} onClick={applyRender}>
+            Apply
+          </Button>
+          <Show when={renderDirty()}>
+            <Button variant="subtle" onClick={revertRender}>
+              Revert
+            </Button>
+          </Show>
+        </div>
+        <Show when={render()} fallback={<p style={status}>Reading...</p>}>
+          {(r) => (
+            <div style={{ ...status, display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' }}>
+              <Chip variant={r().mode === RenderMode.Off || r().mode === null ? 'neutral' : 'success'}>
+                {r().mode != null ? RENDER_LABEL[r().mode!] || 'Off' : 'Unknown'}
+              </Chip>
+              <Show when={r().full}>
+                {/* Until a profile arms, the box relays however this is set. */}
+                <Chip variant={r().mode === RenderMode.Off || !r().ready ? 'neutral' : 'success'}>
+                  {r().mode === RenderMode.Off || !r().ready
+                    ? 'Native motion relayed'
+                    : 'Native motion rendered'}
+                </Chip>
+              </Show>
+              <Show when={r().mode !== RenderMode.Off && !r().ready}>
+                <Chip variant="neutral">Move the mouse to start</Chip>
+              </Show>
+              <Show when={renderDirty()}>
+                <span style={{ ...muted, 'margin-left': 'var(--g-spacing-sm)' }}>
+                  Not applied
+                </span>
+              </Show>
             </div>
-            <Button variant="primary" disabled={cmd.busy()} onClick={applyName}>
-              Set
+          )}
+        </Show>
+      </Panel>
+
+      <Panel id="spread" title="Spread">
+        <p>
+          Releases injected motion across the interval between host commands, so injected reports
+          carry native per-report magnitude.
+        </p>
+        <Segmented
+          name="spread-percent"
+          value={spreadKey()}
+          onChange={setSpreadEdit}
+          options={[
+            { value: 'off', label: 'Off' },
+            { value: 'half', label: 'Half' },
+            { value: 'full', label: 'Full' },
+          ]}
+        />
+        <p style={muted}>{SPREAD_BLURB[spreadKey()] ?? 'Injected motion over its share of the command interval.'}</p>
+        <div style={controls}>
+          <Button variant="primary" disabled={cmd.busy()} onClick={applySpread}>
+            Apply
+          </Button>
+          <Show when={spreadDirty()}>
+            <Button variant="subtle" onClick={revertSpread}>
+              Revert
             </Button>
-            <Button variant="secondary" disabled={cmd.busy()} onClick={clearName}>
-              Clear
-            </Button>
-          </div>
-          <Show when={version()} fallback={<p style={status}>Reading...</p>}>
+          </Show>
+        </div>
+        <Show when={spread()} fallback={<p style={status}>Reading...</p>}>
+          {(sp) => (
             <div style={status}>
-              <Chip variant="neutral">{version()!.name}</Chip>
+              <Chip variant={sp().percent === 0 ? 'neutral' : 'success'}>{spreadLabel(sp())}</Chip>
+              {/* The box learns the interval from injection, so nothing spreads until some arrives. */}
+              <Show when={sp().percent > 0 && sp().spanUs === 0}>
+                <Chip variant="neutral">Waiting for injection</Chip>
+              </Show>
+              <Show when={spreadDirty()}>
+                <span style={{ ...muted, 'margin-left': 'var(--g-spacing-sm)' }}>Not applied</span>
+              </Show>
+            </div>
+          )}
+        </Show>
+      </Panel>
+
+      <Panel id="emit-rate" title="Emit rate">
+        <p>
+          Caps how often injected motion is sent, and sets the clone's wire rate.
+        </p>
+        <Segmented
+          name="emit-mode"
+          value={mode()}
+          onChange={setModeEdit}
+          options={[
+            { value: 'learned', label: 'Learned' },
+            { value: 'interval', label: 'Interval' },
+            { value: 'fixed', label: 'Fixed' },
+          ]}
+        />
+        <p style={muted}>{MODE_BLURB[mode()]}</p>
+        <div id="wire-rate" data-search-target>
+          <div class="api-response-label" style={section}>Wire rate</div>
+          <Segmented
+            name="wire-rate"
+            value={forceOn() ? 'forced' : 'device'}
+            onChange={(v) => setForceOnEdit(v === 'forced')}
+            options={[
+              { value: 'device', label: 'Native' },
+              { value: 'forced', label: 'Forced' },
+            ]}
+          />
+          <p style={muted}>
+            {forceOn()
+              ? 'Advertises the interval you pick.'
+              : 'Advertises the interval the device declares.'}
+          </p>
+        </div>
+        <div style={controls}>
+          <Show when={mode() === 'fixed'}>
+            <div style={{ 'max-width': '8rem' }}>
+              <NumberInput
+                label="Emit rate"
+                suffix="Hz"
+                value={hz()}
+                min={1}
+                max={1000}
+                precision={0}
+                onChange={(v) => setHzEdit(v ?? 1)}
+              />
             </div>
           </Show>
-
-          </Section>
-
-          <div id="imperfect-clone" data-search-target>
-            <Section title="Imperfect clone">
-            <p>
-              Clones a device the box can't copy exactly, and unlocks the advanced control tab.
-            </p>
-            <div style={controls}>
-              <Button variant="primary" disabled={cmd.busy()} onClick={() => allowImperfect(true)}>
-                Allow imperfect
-              </Button>
-              <Button variant="secondary" disabled={cmd.busy()} onClick={() => allowImperfect(false)}>
-                Faithful only
-              </Button>
-            </div>
-            <Show when={imperfect()} fallback={<p style={status}>Reading...</p>}>
-              {(s) => (
-                <div style={{ ...status, display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' }}>
-                  <Chip variant={s().allowed ? 'success' : 'neutral'}>
-                    {s().allowed ? 'Allowed' : 'Faithful only'}
-                  </Chip>
-                  <Show when={s().overCapacity}>
-                    <Chip variant="warning">Device over box capacity, or high speed</Chip>
-                  </Show>
-                </div>
-              )}
-            </Show>
-
-            </Section>
-          </div>
-
-          <div id="movement-riding" data-search-target>
-            <Section title="Movement riding">
-            <p>
-              Injected motion waits up to the window for physical motion and is dropped if none
-              arrives, keeping native report timing.
-            </p>
-            <div style={controls}>
-              <div style={{ 'max-width': '8rem' }}>
-                <NumberInput
-                  label="Window (ms)"
-                  value={rideWindow()}
-                  min={1}
-                  max={65535}
-                  precision={0}
-                  onChange={(v) => setRideEdit(v ?? 1)}
-                />
-              </div>
-              <Button variant="primary" disabled={cmd.busy()} onClick={() => setRiding(rideWindow())}>
-                Turn on
-              </Button>
-              <Button variant="secondary" disabled={cmd.busy()} onClick={() => setRiding(0)}>
-                Turn off
-              </Button>
-              <Show when={rideDirty()}>
-                <Button variant="subtle" onClick={revertRide}>
-                  Revert
-                </Button>
-              </Show>
-            </div>
-            <Show when={ride() !== null} fallback={<p style={status}>Reading...</p>}>
-              <div style={status}>
-                <Chip variant={ride()! > 0 ? 'success' : 'neutral'}>
-                  {ride()! > 0 ? `On · ${ride()} ms` : 'Off'}
-                </Chip>
-                <Show when={rideDirty()}>
-                  <span style={{ ...muted, 'margin-left': 'var(--g-spacing-sm)' }}>Not applied</span>
-                </Show>
-              </div>
-            </Show>
-
-            </Section>
-          </div>
-
-          <div id="bearing" data-search-target>
-            <Section title="Bearing">
-            <p>
-              The reference for the with and against lock directions: the injected direction on each
-              axis, held for the window.
-            </p>
-            <RadioGroup
-              name="bearing-mode"
-              value={String(bearGeometry())}
-              onChange={setBearMode}
-              options={[
-                { value: String(BearingMode.PerAxis), label: 'Per axis' },
-                { value: String(BearingMode.Vector), label: 'Vector' },
-              ]}
-            />
-            <p style={muted}>
-              {bearGeometry() === BearingMode.Vector
-                ? 'Only the part of the physical delta along the injected vector is weighed.'
-                : 'Each axis is weighed against its own bearing.'}
-            </p>
-            <div style={controls}>
-              <div style={{ 'max-width': '8rem' }}>
-                <NumberInput
-                  label="Window (ms)"
-                  value={bearWindow()}
-                  min={1}
-                  max={65535}
-                  precision={0}
-                  onChange={(v) => setBearEdit(v ?? 1)}
-                />
-              </div>
-              <Button variant="primary" disabled={cmd.busy()} onClick={() => setBearing(bearWindow())}>
-                Apply
-              </Button>
-              <Button variant="secondary" disabled={cmd.busy()} onClick={() => setBearing(0)}>
-                Turn off
-              </Button>
-              <Show when={bearDirty()}>
-                <Button variant="subtle" onClick={revertBear}>
-                  Revert
-                </Button>
-              </Show>
-            </div>
-            <Show when={bearing() !== null} fallback={<p style={status}>Reading...</p>}>
-              <div style={status}>
-                <Chip variant={bearing()!.windowMs > 0 ? 'success' : 'neutral'}>
-                  {bearing()!.windowMs > 0
-                    ? `${bearing()!.mode === BearingMode.Vector ? 'Vector' : 'Per axis'} · ${bearing()!.windowMs} ms`
-                    : 'Off'}
-                </Chip>
-                <Show when={bearDirty()}>
-                  <span style={{ ...muted, 'margin-left': 'var(--g-spacing-sm)' }}>Not applied</span>
-                </Show>
-              </div>
-            </Show>
-            </Section>
-          </div>
-
-          <div id="render" data-search-target>
-            <Section title="Render">
-            <p>
-              Emits injected motion with native report texture, and picks which motion is rendered.
-            </p>
-            <RadioGroup
-              name="render-mode"
-              value={renderKey()}
-              onChange={setRenderEdit}
-              options={[
-                { value: 'off', label: 'Off' },
-                { value: 'stock', label: 'Stock' },
-                { value: 'despiked', label: 'De-spiked' },
-                { value: 'unsmoothed', label: 'Unsmoothed' },
-              ]}
-            />
-            <p style={muted}>{RENDER_BLURB[renderKey()]}</p>
-            <div id="render-full" data-search-target>
-              <div class="api-response-label" style={section}>Rendered motion</div>
-              <RadioGroup
-                name="render-full"
-                value={fullOn() ? 'both' : 'injected'}
-                onChange={(v) => setFullEdit(v === 'both')}
-                options={[
-                  { value: 'injected', label: 'Injected only' },
-                  { value: 'both', label: 'Injected and native' },
-                ]}
+          <Show when={forceOn()}>
+            <div style={{ 'max-width': '8rem' }}>
+              <NumberInput
+                label="Wire rate"
+                suffix="Hz"
+                value={forceHz()}
+                min={4}
+                max={1000}
+                precision={0}
+                onChange={(v) => setForceEdit(v ?? 4)}
               />
-              <p style={muted}>
-                {!fullOn()
-                  ? "Native motion is relayed untouched."
-                  : renderKey() === 'off'
-                    ? 'Renders nothing while the mode is off.'
-                    : 'Both go through the model as one stream.'}
-              </p>
             </div>
-            <div style={controls}>
-              <Button variant="primary" disabled={cmd.busy()} onClick={applyRender}>
-                Apply
-              </Button>
-              <Show when={renderDirty()}>
-                <Button variant="subtle" onClick={revertRender}>
-                  Revert
-                </Button>
+          </Show>
+          <Button variant="primary" disabled={cmd.busy()} onClick={applyEmit}>
+            Apply
+          </Button>
+          <Show when={emitDirty()}>
+            <Button variant="subtle" onClick={revertEmit}>
+              Revert
+            </Button>
+          </Show>
+        </div>
+        <Show when={emit()} fallback={<p style={status}>Reading...</p>}>
+          {(s) => (
+            <div style={{ ...status, display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' }}>
+              <Chip variant={s().mode === EmitMode.Learned || s().mode === null ? 'neutral' : 'success'}>
+                {emitLabel(s())}
+              </Chip>
+              <Show when={s().advertisedHz > 0}>
+                <Chip variant={s().forceActive ? 'success' : 'neutral'}>
+                  {s().forceActive
+                    ? `Forced \u00b7 ${s().advertisedHz} Hz`
+                    : `Native \u00b7 ${s().advertisedHz} Hz`}
+                </Chip>
               </Show>
-            </div>
-            <Show when={render()} fallback={<p style={status}>Reading...</p>}>
-              {(r) => (
-                <div style={{ ...status, display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' }}>
-                  <Chip variant={r().mode === RenderMode.Off || r().mode === null ? 'neutral' : 'success'}>
-                    {r().mode != null ? RENDER_LABEL[r().mode!] || 'Off' : 'Unknown'}
-                  </Chip>
-                  <Show when={r().full}>
-                    {/* Until a profile arms, the box relays however this is set. */}
-                    <Chip variant={r().mode === RenderMode.Off || !r().ready ? 'neutral' : 'success'}>
-                      {r().mode === RenderMode.Off || !r().ready
-                        ? 'Native motion relayed'
-                        : 'Native motion rendered'}
-                    </Chip>
-                  </Show>
-                  <Show when={r().mode !== RenderMode.Off && !r().ready}>
-                    <Chip variant="neutral">Move the mouse to start</Chip>
-                  </Show>
-                  <Show when={renderDirty()}>
-                    <span style={{ ...muted, 'margin-left': 'var(--g-spacing-sm)' }}>
-                      Not applied
-                    </span>
-                  </Show>
-                </div>
-              )}
-            </Show>
-            </Section>
-          </div>
-
-          <div id="spread" data-search-target>
-            <Section title="Spread">
-            <p>
-              Releases injected motion across the interval between host commands, so injected reports
-              carry native per-report magnitude.
-            </p>
-            <RadioGroup
-              name="spread-percent"
-              value={spreadKey()}
-              onChange={setSpreadEdit}
-              options={[
-                { value: 'off', label: 'Off' },
-                { value: 'half', label: 'Half' },
-                { value: 'full', label: 'Full' },
-              ]}
-            />
-            <p style={muted}>{SPREAD_BLURB[spreadKey()] ?? 'Injected motion over its own share of the command interval.'}</p>
-            <div style={controls}>
-              <Button variant="primary" disabled={cmd.busy()} onClick={applySpread}>
-                Apply
-              </Button>
-              <Show when={spreadDirty()}>
-                <Button variant="subtle" onClick={revertSpread}>
-                  Revert
-                </Button>
+              <Show when={s().forceHz > 0 && !s().forceActive}>
+                <Chip variant="warning">Set, but needs Allow imperfect</Chip>
               </Show>
-            </div>
-            <Show when={spread()} fallback={<p style={status}>Reading...</p>}>
-              {(sp) => (
-                <div style={status}>
-                  <Chip variant={sp().percent === 0 ? 'neutral' : 'success'}>{spreadLabel(sp())}</Chip>
-                  {/* The box learns the interval from injection, so nothing spreads until some arrives. */}
-                  <Show when={sp().percent > 0 && sp().spanUs === 0}>
-                    <Chip variant="neutral">Waiting for injection</Chip>
-                  </Show>
-                  <Show when={spreadDirty()}>
-                    <span style={{ ...muted, 'margin-left': 'var(--g-spacing-sm)' }}>Not applied</span>
-                  </Show>
-                </div>
-              )}
-            </Show>
-            </Section>
-          </div>
-
-          <div id="emit-rate" data-search-target>
-            <Section title="Emit rate">
-            <p>
-              Paces injected motion as a ceiling, and sets the clone's wire rate.
-            </p>
-            <RadioGroup
-              name="emit-mode"
-              value={mode()}
-              onChange={setModeEdit}
-              options={[
-                { value: 'learned', label: 'Learned' },
-                { value: 'interval', label: 'Interval' },
-                { value: 'fixed', label: 'Fixed' },
-              ]}
-            />
-            <p style={muted}>{MODE_BLURB[mode()]}</p>
-            <div id="wire-rate" data-search-target>
-              <div class="api-response-label" style={section}>Wire rate</div>
-              <RadioGroup
-                name="wire-rate"
-                value={forceOn() ? 'forced' : 'device'}
-                onChange={(v) => setForceOnEdit(v === 'forced')}
-                options={[
-                  { value: 'device', label: 'Native' },
-                  { value: 'forced', label: 'Forced' },
-                ]}
-              />
-              <p style={muted}>
-                {forceOn()
-                  ? 'Advertises the interval you pick.'
-                  : 'Advertises the interval the device declares.'}
-              </p>
-            </div>
-            <div style={controls}>
-              <Show when={mode() === 'fixed'}>
-                <div style={{ 'max-width': '8rem' }}>
-                  <NumberInput
-                    label="Emit rate (Hz)"
-                    value={hz()}
-                    min={1}
-                    max={1000}
-                    precision={0}
-                    onChange={(v) => setHzEdit(v ?? 1)}
-                  />
-                </div>
-              </Show>
-              <Show when={forceOn()}>
-                <div style={{ 'max-width': '8rem' }}>
-                  <NumberInput
-                    label="Wire rate (Hz)"
-                    value={forceHz()}
-                    min={4}
-                    max={1000}
-                    precision={0}
-                    onChange={(v) => setForceEdit(v ?? 4)}
-                  />
-                </div>
-              </Show>
-              <Button variant="primary" disabled={cmd.busy()} onClick={applyEmit}>
-                Apply
-              </Button>
               <Show when={emitDirty()}>
-                <Button variant="subtle" onClick={revertEmit}>
-                  Revert
-                </Button>
+                <span style={{ ...muted, 'margin-left': 'var(--g-spacing-sm)' }}>
+                  Not applied
+                </span>
               </Show>
             </div>
-            <Show when={emit()} fallback={<p style={status}>Reading...</p>}>
-              {(s) => (
-                <div style={{ ...status, display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' }}>
-                  <Chip variant={s().mode === EmitMode.Learned || s().mode === null ? 'neutral' : 'success'}>
-                    {emitLabel(s())}
-                  </Chip>
-                  <Show when={s().advertisedHz > 0}>
-                    <Chip variant={s().forceActive ? 'success' : 'neutral'}>
-                      {s().forceActive
-                        ? `Forced \u00b7 ${s().advertisedHz} Hz`
-                        : `Native \u00b7 ${s().advertisedHz} Hz`}
-                    </Chip>
-                  </Show>
-                  <Show when={s().forceHz > 0 && !s().forceActive}>
-                    <Chip variant="warning">Set, but needs Allow imperfect</Chip>
-                  </Show>
-                  <Show when={emitDirty()}>
-                    <span style={{ ...muted, 'margin-left': 'var(--g-spacing-sm)' }}>
-                      Not applied
-                    </span>
-                  </Show>
-                </div>
-              )}
-            </Show>
-            </Section>
-          </div>
+          )}
+        </Show>
+      </Panel>
 
-        </Card>
-      </div>
     </Show>
   );
 };
