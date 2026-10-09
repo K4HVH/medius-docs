@@ -5,7 +5,7 @@ interface Item {
   title: string;
 }
 
-const sections = () => [...document.querySelectorAll<HTMLElement>('.docs-page section.doc-section[id]')];
+const sections = () => [...document.querySelectorAll<HTMLElement>('.docs-page section.doc-section[id]:not([hidden])')];
 
 // The right rail on wide screens: the page's sections, with a marker on the one being read. The same
 // section's rule lights in the article.
@@ -50,6 +50,16 @@ export function OnThisPage(props: { pathname: string }) {
   createEffect(on(() => props.pathname, () => requestAnimationFrame(() => requestAnimationFrame(scan))));
   onMount(() => window.addEventListener('scroll', spy, { passive: true }));
   onCleanup(() => window.removeEventListener('scroll', spy));
+  // A section a filter hides leaves the list, and comes back with it.
+  onMount(() => {
+    const page = document.querySelector('.docs-page');
+    if (!page || typeof MutationObserver === 'undefined') return;
+    const mo = new MutationObserver((records) => {
+      if (records.some((r) => (r.target as Element).matches?.('section.doc-section'))) scan();
+    });
+    mo.observe(page, { subtree: true, attributes: true, attributeFilter: ['hidden'] });
+    onCleanup(() => mo.disconnect());
+  });
 
   return (
     <Show when={items().length > 0}>

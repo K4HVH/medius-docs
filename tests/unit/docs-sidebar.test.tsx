@@ -72,16 +72,9 @@ describe('DocsSidebar', () => {
   });
 
   it('shows the guide without the code switcher', () => {
-    const r = mount('/guide/faq');
+    const r = mount('/guide/help');
     expect(r.side().querySelector('.sections')).toBeNull();
-    expect([...r.side().querySelectorAll('.group a')].map((a) => a.getAttribute('href'))).toEqual([
-      '/guide',
-      '/guide/update',
-      '/guide/compatibility',
-      '/guide/faq',
-      '/guide/troubleshooting',
-      '/guide/device-fixes',
-    ]);
+    expect([...r.side().querySelectorAll('.group a')].map((a) => a.getAttribute('href'))).toEqual(['/guide', '/guide/compatibility', '/guide/help']);
   });
 
   it('shows the box list on dashboard pages, built once', () => {

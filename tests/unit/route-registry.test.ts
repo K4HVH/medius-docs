@@ -134,29 +134,23 @@ describe('route registry', () => {
   it('lists the guide in reading order, as one group', () => {
     const groups = sidebarGroups('guide');
     expect(groups.map((g) => g.label)).toEqual(['Guide']);
-    expect(groups[0].routes.map((r) => r.path)).toEqual([
-      '/guide',
-      '/guide/update',
-      '/guide/compatibility',
-      '/guide/faq',
-      '/guide/troubleshooting',
-      '/guide/device-fixes',
-    ]);
+    expect(groups[0].routes.map((r) => r.path)).toEqual(['/guide', '/guide/compatibility', '/guide/help']);
+    expect(groups[0].routes.map((r) => r.title)).toEqual(['Start here', 'Devices', 'Help']);
   });
 
   it('gives the guide the titles written for a search, and the dashboard tools plain ones', () => {
-    expect(documentTitle(at('/guide'))).toBe('Install Medius on a MAKCU box');
-    expect(documentTitle(at('/guide/update'))).toBe('Update Medius on a MAKCU box');
+    expect(documentTitle(at('/guide'))).toBe('Install Medius on a MAKCU box: start here');
+    expect(documentTitle(at('/guide/help'))).toBe('Medius help: MAKCU troubleshooting and FAQ');
     expect(documentTitle(at('/guide/compatibility'))).toBe('MAKCU compatibility: mice and keyboards · Medius');
     expect(documentTitle(at('/dashboard/setup'))).toBe('Set up · Dashboard · Medius');
     expect(documentTitle(at('/dashboard/update'))).toBe('Update · Dashboard · Medius');
   });
 
   it('trails a guide page through the guide root', () => {
-    expect(breadcrumbTrail(at('/guide/faq'))).toEqual([
+    expect(breadcrumbTrail(at('/guide/help'))).toEqual([
       { label: 'Medius', href: '/' },
       { label: 'Guide', href: '/guide' },
-      { label: 'FAQ', href: '/guide/faq' },
+      { label: 'Help', href: '/guide/help' },
     ]);
   });
 });

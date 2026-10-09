@@ -348,6 +348,9 @@ const importsOf = (src: string, file: string) => {
   const map = new Map<string, string>();
   for (const m of src.matchAll(/import\s+(\w+)[^'";]*from\s+'(\.[^']+)'/g))
     map.set(m[1], resolve(dirname(file), m[2]) + '.tsx');
+  for (const m of src.matchAll(/import\s+(?:\w+\s*,\s*)?\{([^}]*)\}\s*from\s+'(\.[^']+)'/g))
+    for (const name of m[1].split(',').map((n) => n.trim().split(/\s+as\s+/).pop()!).filter(Boolean))
+      map.set(name, resolve(dirname(file), m[2]) + '.tsx');
   for (const m of src.matchAll(/const\s+(\w+)\s*=\s*lazy\(\(\)\s*=>\s*import\('(\.[^']+)'\)\)/g))
     map.set(m[1], resolve(dirname(file), m[2]) + '.tsx');
   return map;
@@ -363,6 +366,8 @@ function idsWithChildren(file: string, seen = new Set<string>()): Set<string> {
     return out;
   }
   for (const m of src.matchAll(/id="([A-Za-z0-9-]+)"/g)) out.add(m[1]);
+  // A page tab is an anchor too: its hash opens it.
+  for (const m of src.matchAll(/<Pane key="([A-Za-z0-9-]+)"/g)) out.add(m[1]);
   // A page that renders a section per data entry (the FAQ) takes its ids from that entry's `id`.
   for (const m of src.matchAll(/from\s+'(\.[^']*\/data\/[^']+)'/g)) {
     try {

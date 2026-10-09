@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { buildJsonLd } from '../../src/app/structuredData';
 import { routeFor, NOT_FOUND, breadcrumbTrail, documentTitle, type RouteInfo } from '../../src/app/routes';
 import { SITE, LINKS } from '../../src/app/site';
-import { FAQ } from '../../src/app/data/faq';
+import { HELP_ITEMS } from '../../src/app/data/help';
 
 type Node = Record<string, unknown> & { '@type': string | string[] };
 const graph = (r: RouteInfo, lastmod?: string) => (buildJsonLd(r, lastmod) as { '@graph': Node[] })['@graph'];
@@ -49,12 +49,12 @@ describe('buildJsonLd', () => {
     const r = at('/native');
     expect(JSON.parse(JSON.stringify(buildJsonLd(r)))).toEqual(buildJsonLd(r));
   });
-  it('marks up the FAQ as questions and answers, on the FAQ page alone', () => {
-    const faq = node(graph(at('/guide/faq')), 'FAQPage')!;
+  it('marks up Help as questions and answers, on the Help page alone', () => {
+    const faq = node(graph(at('/guide/help')), 'FAQPage')!;
     const qs = faq.mainEntity as { '@type': string; name: string; acceptedAnswer: { '@type': string; text: string } }[];
-    expect(qs.map((q) => q.name)).toEqual(FAQ.map((f) => f.q));
-    expect(qs.map((q) => q.acceptedAnswer.text)).toEqual(FAQ.map((f) => f.a));
+    expect(qs.map((q) => q.name)).toEqual(HELP_ITEMS.map((f) => f.q));
+    expect(qs.map((q) => q.acceptedAnswer.text)).toEqual(HELP_ITEMS.map((f) => f.a));
     for (const q of qs) expect([q['@type'], q.acceptedAnswer['@type']]).toEqual(['Question', 'Answer']);
-    for (const p of ['/guide', '/guide/troubleshooting', '/native', '/']) expect(node(graph(at(p)), 'FAQPage')).toBeUndefined();
+    for (const p of ['/guide', '/guide/compatibility', '/native', '/']) expect(node(graph(at(p)), 'FAQPage')).toBeUndefined();
   });
 });

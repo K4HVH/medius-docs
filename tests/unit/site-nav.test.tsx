@@ -47,7 +47,7 @@ describe('SiteNav', () => {
     expect(r.link('Changelog').getAttribute('aria-current')).toBe('page');
     expect(r.link('Dashboard').getAttribute('aria-current')).toBeNull();
     cleanup();
-    expect(mount('/guide/faq').link('Guide').getAttribute('aria-current')).toBe('page');
+    expect(mount('/guide/help').link('Guide').getAttribute('aria-current')).toBe('page');
   });
 
   it('is solid away from the landing hero, and clear over it until the page scrolls', () => {

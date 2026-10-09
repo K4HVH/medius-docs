@@ -30,6 +30,10 @@ describe('planRedirect', () => {
     // A page that moved goes to where its content is now, its anchor included.
     ['/dashboard/advanced-control', '', '/dashboard/control#advanced'],
     ['/dashboard/advanced', '?x=1', '/dashboard/update?x=1#manual'],
+    ['/guide/update', '', '/guide/help#q-update'],
+    ['/guide/faq', '', '/guide/help'],
+    ['/guide/troubleshooting', '', '/guide/help'],
+    ['/guide/device-fixes', '', '/guide/compatibility#device-fixes'],
     ['/Dashboard/Advanced/', '', '/dashboard/update#manual'],
   ])('%s%s -> %s', (pathname, search, expected) => {
     expect(planRedirect(pathname, search, ROUTES)).toBe(expected);

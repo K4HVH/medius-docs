@@ -40,5 +40,7 @@ export function mergeCompat(entries: readonly CompatEntry[], top: TopDevice[] | 
       boxes: d.boxes,
     });
   }
-  return rows.sort((a, b) => a.name.localeCompare(b.name, 'en', { sensitivity: 'base' }));
+  // A device known only by its ids sorts after the named ones.
+  const bare = (r: CompatRow) => (r.name === r.vidpid ? 1 : 0);
+  return rows.sort((a, b) => bare(a) - bare(b) || a.name.localeCompare(b.name, 'en', { sensitivity: 'base' }));
 }

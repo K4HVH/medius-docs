@@ -3,7 +3,7 @@
 import type { FirmwareRelease } from '../src/dashboard/firmware/client';
 import { groupCommits, inlineRuns, parseBlocks, splitRelease, type Block, type CommitGroup } from '../src/dashboard/firmware/notes';
 import { SITE } from '../src/app/site';
-import { COMPAT, KIND_LABEL, VERDICT_LABEL } from '../src/app/data/compatibility';
+import { COMPAT, KIND_LABEL, VERDICT_LABEL, VERDICT_TONE } from '../src/app/data/compatibility';
 import { mergeCompat } from '../src/app/data/compatMerge';
 import type { StatsSummary } from './stats/types';
 import { getStatsSummary } from './stats';
@@ -149,8 +149,8 @@ function compatHtml(html: string, stats: StatsSummary): string {
     .map(
       (r) =>
         `<tr><td>${esc(r.name)}${r.vidpid && r.vidpid !== r.name ? `<span class="vp">${esc(r.vidpid)}</span>` : ''}</td>` +
-        `<td>${KIND_LABEL[r.kind]}</td><td><span class="verdict verdict--${r.verdict}">${VERDICT_LABEL[r.verdict]}</span></td>` +
-        `<td>${esc(r.note ?? '')}</td><td>${r.boxes ?? ''}</td></tr>`,
+        `<td>${KIND_LABEL[r.kind]}</td><td><span class="status ${VERDICT_TONE[r.verdict]}">${VERDICT_LABEL[r.verdict]}</span></td>` +
+        `<td>${esc(r.note ?? '')}</td><td class="v">${esc(r.reported ?? '')}</td><td class="num">${r.boxes ?? ''}</td></tr>`,
     )
     .join('');
   return html.replace(/(<tbody[^>]*\sdata-fill="compat"[^>]*>)[\s\S]*?(<\/tbody>)/, (_m, open: string, close: string) => open + rows + close);

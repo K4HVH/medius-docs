@@ -6,10 +6,9 @@ const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
   {
     title: 'Guide',
     links: [
-      { label: 'Install', href: '/guide' },
-      { label: 'Update', href: '/guide/update' },
-      { label: 'Compatibility', href: '/guide/compatibility' },
-      { label: 'FAQ', href: '/guide/faq' },
+      { label: 'Start here', href: '/guide' },
+      { label: 'Devices', href: '/guide/compatibility' },
+      { label: 'Help', href: '/guide/help' },
       { label: 'Changelog', href: '/dashboard/changelog' },
     ],
   },

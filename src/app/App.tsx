@@ -4,12 +4,9 @@ import { NotificationProvider } from '../components/feedback/Notification';
 import RouteMeta from './RouteMeta';
 import Home from './pages/Home';
 import NotFound from './pages/NotFound';
-import GuideInstall from './pages/guide/Install';
-import GuideUpdate from './pages/guide/Update';
-import GuideCompatibility from './pages/guide/Compatibility';
-import GuideFaq from './pages/guide/Faq';
-import GuideTroubleshooting from './pages/guide/Troubleshooting';
-import GuideDeviceFixes from './pages/guide/DeviceFixes';
+import GuideStart from './pages/guide/Start';
+import GuideDevices from './pages/guide/Devices';
+import GuideHelp from './pages/guide/Help';
 import DocsLayout from './pages/DocsLayout';
 import NativeIntroduction from './pages/native/Introduction';
 import NativeQuickstart from './pages/native/Quickstart';
@@ -106,12 +103,9 @@ const App: Component = () => {
         <Router root={RootLayout}>
         <Route path="/" component={Home} />
         <Route path="/" component={DocsLayout}>
-          <Route path="/guide" component={GuideInstall} />
-          <Route path="/guide/update" component={GuideUpdate} />
-          <Route path="/guide/compatibility" component={GuideCompatibility} />
-          <Route path="/guide/faq" component={GuideFaq} />
-          <Route path="/guide/troubleshooting" component={GuideTroubleshooting} />
-          <Route path="/guide/device-fixes" component={GuideDeviceFixes} />
+          <Route path="/guide" component={GuideStart} />
+          <Route path="/guide/compatibility" component={GuideDevices} />
+          <Route path="/guide/help" component={GuideHelp} />
           <Route path="/native" component={NativeIntroduction} />
           <Route path="/native/quickstart" component={NativeQuickstart} />
           <Route path="/native/architecture" component={NativeArchitecture} />

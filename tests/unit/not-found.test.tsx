@@ -25,6 +25,24 @@ describe('NotFound', () => {
     expect(history.get()).toBe('/zzz');
   });
 
+  it('follows a page that moved, keeping the old anchor unless the new address names one', async () => {
+    for (const [from, to] of [
+      ['/guide/faq#bsod', '/guide/help#bsod'],
+      ['/guide/update#rollback', '/guide/help#q-update'],
+    ]) {
+      const history = createMemoryHistory();
+      history.set({ value: from });
+      render(() => (
+        <MemoryRouter history={history}>
+          <Route path="*" component={NotFound} />
+        </MemoryRouter>
+      ));
+      await new Promise((res) => setTimeout(res, 0));
+      expect(history.get()).toBe(to);
+      cleanup();
+    }
+  });
+
   it('is the catch-all inside the docs layout, not a redirect home', () => {
     const app = readFileSync(join(__dirname, '../../src/app/App.tsx'), 'utf8');
     expect(app).toContain('<Route path="*" component={NotFound} />');
