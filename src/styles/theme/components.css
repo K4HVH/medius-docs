@@ -45,22 +45,25 @@
   .button--subtle:hover:not(:disabled) { border-color: var(--primary); color: var(--text); }
 }
 
-/* Chips: square mono caps labels in their status colour. */
+/* Chips: a value with a square lamp in its status colour, as the mockup's. */
 .chip {
   max-width: 100%;
+  height: 28px;
+  gap: 8px;
   border-radius: 0;
-  padding: 2px 8px;
-  background: transparent;
-  font: 500 11px/1.5 var(--mono);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  padding: 0 10px;
+  border-color: var(--line-2);
+  background: var(--g-background);
+  font: 500 11.5px/1 var(--mono);
+  letter-spacing: 0.03em;
+  color: var(--text-2);
+  text-transform: none;
 }
-.chip--neutral { background: transparent; border-color: var(--line-2); color: var(--muted); }
-.chip--primary,
-.chip--info { background: transparent; border-color: color-mix(in srgb, var(--accent) 50%, transparent); color: var(--accent); }
-.chip--success { background: transparent; border-color: color-mix(in srgb, var(--ok) 50%, transparent); color: var(--ok); }
-.chip--warning { background: transparent; border-color: color-mix(in srgb, var(--warn) 50%, transparent); color: var(--warn); }
-.chip--error { background: transparent; border-color: color-mix(in srgb, var(--bad) 70%, transparent); color: var(--color-red-300); }
+.chip::before { content: ""; flex: none; width: 6px; height: 6px; background: var(--dim); transition: background 0.3s; }
+.chip--success::before { background: var(--ok); }
+.chip--warning::before { background: var(--warn); }
+.chip--error::before { background: var(--bad); }
+.chip--primary::before, .chip--info::before { background: var(--accent); }
 
 /* Dashboard panels: a hairline on the ground, no tint. */
 .card { background: #0a0a0a; border-color: var(--line); transition: border-color 0.25s ease; }
