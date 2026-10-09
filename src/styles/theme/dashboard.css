@@ -117,7 +117,7 @@
   position: absolute; z-index: 30; left: 0; right: 0; top: calc(100% + 4px); max-height: 264px; overflow-y: auto;
   background: var(--g-background); border: 1px solid var(--line-2); box-shadow: 0 16px 40px color-mix(in srgb, var(--ground) 70%, transparent); animation: ddin 0.18s var(--ease) both;
 }
-.dd-l:focus { outline: none; }
+.dd-l:focus, .dd-l [role="listbox"]:focus { outline: none; }
 @keyframes ddin { from { opacity: 0; transform: translateY(-4px); } }
 .dd-l button {
   display: block; width: 100%; padding: 10px 12px; background: none; border: 0; border-left: 2px solid transparent;

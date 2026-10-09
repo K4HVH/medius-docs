@@ -1,3 +1,4 @@
+import { createEffect } from 'solid-js';
 import { useLocation, useNavigate } from '@solidjs/router';
 import { MOVED } from '../site';
 import { IndexRow } from '../shell/IndexRow';
@@ -6,9 +7,13 @@ const NotFound = () => {
   // A link to a page that moved follows it, as the server does with a 301.
   const location = useLocation();
   const navigate = useNavigate();
-  const moved = MOVED[location.pathname.replace(/\/$/, '').toLowerCase()];
-  // An anchor on the old address carries over unless the new one names its own, as a 301 does.
-  if (moved) queueMicrotask(() => navigate(moved.includes('#') ? moved : moved + location.hash, { replace: true }));
+  // An anchor on the old address carries over unless the new address names one, as a 301 does. The
+  // router keeps this page between two unknown addresses, so each one is checked.
+  createEffect(() => {
+    const moved = MOVED[location.pathname.replace(/\/$/, '').toLowerCase()];
+    const hash = location.hash;
+    if (moved) queueMicrotask(() => navigate(moved.includes('#') ? moved : moved + hash, { replace: true }));
+  });
   return (
     <>
       <div class="lost" id="not-found" data-search-target>

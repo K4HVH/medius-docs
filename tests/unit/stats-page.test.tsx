@@ -117,6 +117,7 @@ describe('Stats page', () => {
       'Unconfirmed',
       'Update, USB2',
       'Set up, ROM download',
+      'Manual flash, ROM download',
       'Mouse-side chip',
       'Australia',
       'Unknown',

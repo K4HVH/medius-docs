@@ -1,5 +1,6 @@
 import { createContext, createEffect, createSignal, For, on, onCleanup, onMount, useContext, type JSX } from 'solid-js';
-import { useLocation } from '@solidjs/router';
+import { useLocation, useNavigate } from '@solidjs/router';
+import { routeFor } from '../routes';
 import { fontsReady } from './motion';
 import { openPanels } from './panelMotion';
 
@@ -27,6 +28,7 @@ const paneOf = (id: string): string | null =>
 // one that names a tab still disabled opens it once it is enabled.
 export function PageTabs(props: { id: string; tabs: Tab[]; children: JSX.Element }) {
   const location = useLocation();
+  const navigate = useNavigate();
   const enabled = (key: string) => props.tabs.some((t) => t.key === key && !t.disabled);
   const first = () => props.tabs.find((t) => !t.disabled)?.key ?? props.tabs[0].key;
   const [active, setActive] = createSignal(first());
@@ -34,7 +36,7 @@ export function PageTabs(props: { id: string; tabs: Tab[]; children: JSX.Element
   let strip: HTMLDivElement | undefined;
   let mark: HTMLSpanElement | undefined;
 
-  // An element the hash named, brought into view once its tab is open: the layout's own jump finds it
+  // An element the hash named, brought into view once its tab is open: the layout's jump finds it
   // hidden, or not there yet on a page that fetches its content.
   let target: string | null = null;
   // An id not on the page yet (a tab whose content waits for a box or a fetch) is looked for again as
@@ -46,8 +48,9 @@ export function PageTabs(props: { id: string; tabs: Tab[]; children: JSX.Element
     if (!enabled(key)) return false;
     setActive(key);
     setPending(null);
+    // Through the router, so a remount (a box change) and a later link to the same hash both see it.
     if (write) {
-      history.replaceState(history.state, '', `${location.pathname}#${key}`);
+      navigate(`${location.pathname}#${key}`, { replace: true, scroll: false });
       unfound = null;
     }
     const id = target;
@@ -57,7 +60,12 @@ export function PageTabs(props: { id: string; tabs: Tab[]; children: JSX.Element
   };
 
   const fromHash = (hash: string) => {
-    const id = decodeURIComponent(hash.replace(/^#/, ''));
+    let id: string;
+    try {
+      id = decodeURIComponent(hash.replace(/^#/, ''));
+    } catch {
+      return;
+    }
     if (!id) return;
     const named = props.tabs.some((t) => t.key === id);
     const key = named ? id : paneOf(id);
@@ -125,7 +133,7 @@ export function PageTabs(props: { id: string; tabs: Tab[]; children: JSX.Element
 
   return (
     <>
-      <div class="ptabs" role="tablist" ref={strip} onScroll={atEnd} onKeyDown={onKey}>
+      <div class="ptabs" role="tablist" aria-label={routeFor(location.pathname)?.title} ref={strip} onScroll={atEnd} onKeyDown={onKey}>
         <span class="ind" ref={mark} aria-hidden="true" />
         <For each={props.tabs}>
           {(t) => (

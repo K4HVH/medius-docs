@@ -7,7 +7,11 @@ const SKIP = ['/api', '/assets', '/mcp', '/.well-known'];
 
 export function planRedirect(pathname: string, search: string, routes: ReadonlySet<string>): string | null {
   if (SKIP.some((p) => pathname === p || pathname.startsWith(p + '/'))) return null;
-  if (pathname.endsWith('.md')) return null;
+  if (pathname.endsWith('.md')) {
+    // A moved page's Markdown twin follows it; the twin has no anchors.
+    const moved = Object.entries(MOVED).find(([from]) => `${from}.md` === pathname.toLowerCase())?.[1];
+    return moved ? `${moved.split('#')[0]}.md${search}` : null;
+  }
   let stem = pathname;
   if (stem.length > 1 && stem.endsWith('/')) stem = stem.slice(0, -1);
   if (stem.toLowerCase().endsWith('.html')) stem = stem.slice(0, -'.html'.length);

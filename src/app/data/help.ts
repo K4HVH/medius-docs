@@ -98,13 +98,13 @@ export const HELP: readonly HelpGroup[] = [
       {
         id: 'logitech',
         q: 'My Logitech mouse feels delayed, or runs at 125 Hz',
-        a: 'Press Allow imperfect, then set Wire rate to Forced, enter 1000 Hz and press Apply. The box restarts to apply a wire rate, so the option reads off for up to 10 seconds.',
+        a: 'Press Allow imperfect, then under Emit rate set Wire rate to Forced, enter 1000 Hz and press Apply. The box restarts to apply a wire rate, so the option reads off for up to 10 seconds.',
         links: [{ label: 'Options', href: '/dashboard#wire-rate' }],
       },
       {
         id: 'no-options',
         q: 'My box has no Options',
-        a: 'Options needs v3.4.2 or later, so update the box. On an older box, logitech_fix.bat (Windows) or logitech_fix.sh (Linux) from Discord #tools turns on imperfect clone, forces the wire rate to 1000 Hz and paces injection at a fixed 1000 Hz.',
+        a: 'Options needs v3.4.2 or later, so update the box. On an older box, logitech_fix.bat (Windows) or logitech_fix.sh (Linux) from Discord #tools turns on imperfect clone, forces the wire rate to 1000 Hz and paces injection at a fixed 1000 Hz. After an update, set them under Options instead.',
         links: [{ label: 'Update', href: '/dashboard/update' }],
       },
       {
@@ -149,13 +149,13 @@ export const HELP: readonly HelpGroup[] = [
       {
         id: 'too-old',
         q: 'Too old to update from here',
-        a: 'One-click update needs v3.2.0 or later. Set the box up once with the installer; then it updates in one click.',
+        a: 'One-click update needs v3.2.0 (protocol 5) or later. Set the box up once with the installer; then it updates in one click.',
         links: [SET_UP],
       },
       {
         id: 'how-update',
         q: 'How does an update work?',
-        a: "Each chip writes the new firmware beside the one it runs, then boots it. The mouse-side chip's copy goes through the main chip. A chip whose new firmware won't run boots the one it ran before.",
+        a: "With USB2 in this computer and USB1 and USB3 as they are, the Update page updates both chips, or either alone. Each chip writes the new firmware beside the one it runs, then boots it. The mouse-side chip's copy goes through the main chip. A chip whose new firmware won't run boots the one it ran before.",
       },
       {
         id: 'not-on-version',
@@ -165,8 +165,8 @@ export const HELP: readonly HelpGroup[] = [
       },
       {
         id: 'newer-protocol',
-        q: 'This box speaks a newer protocol',
-        a: "Reload the page. Update's Manual tab can still flash it.",
+        q: 'Newer firmware',
+        a: "This box speaks a newer protocol than this page. Reload the page; Update's Manual tab can still flash it.",
         links: [MANUAL],
       },
       {

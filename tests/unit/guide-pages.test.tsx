@@ -81,6 +81,16 @@ describe('Guide pages', () => {
     }
   });
 
+  it('finds an answer by its anchor word too, names one answer in the singular, and stays out of the Markdown twin', async () => {
+    const r = mount('/guide/help', Help);
+    fireEvent.input(r.container.querySelector('input[type="search"]')!, { target: { value: 'bsod' } });
+    await waitFor(() => expect(r.container.querySelector('.filter .n')!.textContent).toBe('1 answer'));
+    expect([...r.container.querySelectorAll<HTMLElement>('.qa')].filter((q) => !q.hidden).map((q) => q.id)).toEqual(['bsod']);
+    expect(r.container.querySelector('.filter')!.hasAttribute('data-agent-hide')).toBe(true);
+    fireEvent.input(r.container.querySelector('input[type="search"]')!, { target: { value: 'newer firmware' } });
+    await waitFor(() => expect(r.container.querySelector('.filter .n')!.textContent).toBe('1 answer'));
+  });
+
   it('narrows Help to the answers that match, marks the match, drops empty groups and says when none do', async () => {
     const r = mount('/guide/help', Help);
     const count = () => r.container.querySelector('.filter .n b')!.textContent;

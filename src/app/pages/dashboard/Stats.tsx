@@ -39,7 +39,8 @@ const RESULT: Record<keyof Omit<WeekFlashes, 'week'>, string> = {
   sent: 'Unconfirmed',
   failed: 'Failed',
 };
-const PAGE: Record<string, string> = { update: 'Update', advanced: 'Advanced', setup: 'Set up' };
+// Flashes from the Manual tab still record the page it replaced.
+const PAGE: Record<string, string> = { update: 'Update', advanced: 'Manual flash', setup: 'Set up' };
 const ROUTE: Record<string, string> = { usb2: 'USB2', rom: 'ROM download' };
 const CHIPS: Record<string, string> = { both: 'Both chips', device: 'Main chip', host: 'Mouse-side chip' };
 const SOURCE: Record<string, string> = { release: 'Release', file: 'File' };

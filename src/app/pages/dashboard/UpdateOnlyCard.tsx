@@ -27,7 +27,7 @@ const UpdateOnlyCard = (props: { use: string }) => {
       <Panel id="newer-firmware" title="Newer firmware" wide>
         <p>
           This box speaks protocol {proto()} and this page protocol {PROTO_VER}. Reload to check for a newer page. It
-          can still be flashed by hand, on the Manual tab of Update.
+          can still be flashed by hand, on Update's Manual tab.
         </p>
         <div class="acts">
           <Button variant="primary" onClick={() => window.location.reload()}>

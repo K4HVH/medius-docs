@@ -337,6 +337,7 @@ const DeviceOptions = () => {
         </p>
         <Segmented
           name="bearing-mode"
+          label="Bearing"
           value={String(bearGeometry())}
           onChange={setBearMode}
           options={[
@@ -393,6 +394,7 @@ const DeviceOptions = () => {
         </p>
         <Segmented
           name="render-mode"
+          label="Render mode"
           value={renderKey()}
           onChange={setRenderEdit}
           options={[
@@ -407,6 +409,7 @@ const DeviceOptions = () => {
           <span class="field-l">Rendered motion</span>
           <Segmented
             name="render-full"
+            label="Rendered motion"
             value={fullOn() ? 'both' : 'injected'}
             onChange={(v) => setFullEdit(v === 'both')}
             options={[
@@ -466,6 +469,7 @@ const DeviceOptions = () => {
         </p>
         <Segmented
           name="spread-percent"
+          label="Spread"
           value={spreadKey()}
           onChange={setSpreadEdit}
           options={[
@@ -507,6 +511,7 @@ const DeviceOptions = () => {
         </p>
         <Segmented
           name="emit-mode"
+          label="Emit mode"
           value={mode()}
           onChange={setModeEdit}
           options={[
@@ -520,6 +525,7 @@ const DeviceOptions = () => {
           <span class="field-l">Wire rate</span>
           <Segmented
             name="wire-rate"
+            label="Wire rate"
             value={forceOn() ? 'forced' : 'device'}
             onChange={(v) => setForceOnEdit(v === 'forced')}
             options={[

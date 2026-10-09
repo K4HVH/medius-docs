@@ -223,7 +223,7 @@ const DeviceInject = () => {
         </Show>
 
         <Stack>
-          <Panel id="injection" title="Cursor">
+          <Panel id="cursor" title="Cursor">
             <Show when={mouseReady()} fallback={<p class="mut">No mouse cloned.</p>}>
               <div
                 class="pad"

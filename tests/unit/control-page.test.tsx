@@ -225,7 +225,7 @@ describe('Control page', () => {
     (await findByRole('tab', { name: 'Input catch' })).click();
     (await findByRole('button', { name: 'Watch' })).click();
     await new Promise((r) => setTimeout(r, 20));
-    expect(container.textContent).toMatch(/Host clock leads the device clock/);
+    expect(container.textContent).toMatch(/The mouse-side chip's clock leads the main chip's/);
   });
 
   it('does not offer Start for a clip that is not loaded', async () => {

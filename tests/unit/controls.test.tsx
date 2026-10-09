@@ -59,6 +59,21 @@ describe('Select', () => {
     expect(container.querySelector('[role="listbox"]')).toBeNull();
   });
 
+  it('tells a screen reader which option the arrows are on, with only options in the listbox', async () => {
+    const [v, setV] = createSignal('4');
+    const { container } = render(() => <Select value={v()} options={keys} onChange={setV} filter="Filter by name or id" label="Key" />);
+    fireEvent.click(container.querySelector('.dd-b')!);
+    await settle();
+    const input = container.querySelector<HTMLInputElement>('.dd-f')!;
+    const list = container.querySelector('[role="listbox"]')!;
+    expect([...list.children].every((c) => c.getAttribute('role') === 'option')).toBe(true);
+    expect(input.getAttribute('aria-controls')).toBe(list.id);
+    const active = () => container.querySelector(`#${input.getAttribute('aria-activedescendant')}`)?.textContent;
+    expect(active()).toBe('a (0x04)');
+    fireEvent.keyDown(input, { key: 'ArrowDown' });
+    expect(active()).toBe('b (0x05)');
+  });
+
   it('Escape closes without a pick, and options are not tab stops', async () => {
     const [v, setV] = createSignal('4');
     const { container } = render(() => <Select value={v()} options={keys} onChange={setV} />);
@@ -73,6 +88,30 @@ describe('Select', () => {
 });
 
 describe('LogBox', () => {
+  it('redraws every line in place when its version moves, with no line added', async () => {
+    const [base, setBase] = createSignal(0);
+    const [version, setVersion] = createSignal(0);
+    const rows = () => [[`t${1 - base()}`], [`t${2 - base()}`]];
+    const { container } = render(() => (
+      <LogBox rows={rows} added={() => 2} version={version} empty="(no messages)" label="Recent events" />
+    ));
+    const text = () => [...container.querySelectorAll('.lg > div')].map((l) => l.textContent);
+    expect(text()).toEqual(['t1', 't2']);
+    setBase(1);
+    setVersion(1);
+    await Promise.resolve();
+    expect(text()).toEqual(['t0', 't1']);
+    expect(container.querySelector('.lg > div:last-child')!.classList.contains('now')).toBe(true);
+  });
+
+  it('lights the newest line of a log drawn whole, as when its tab opens on lines already there', () => {
+    const rows = () => [['a'], ['b'], ['c']];
+    const { container } = render(() => <LogBox rows={rows} added={() => 3} empty="(no messages)" label="Device log" />);
+    const lines = [...container.querySelectorAll('.lg > div')];
+    expect(lines).toHaveLength(3);
+    expect(lines.map((l) => l.classList.contains('now'))).toEqual([false, false, true]);
+  });
+
   it('reads from the top, lights only the newest line, and copies each cell once', async () => {
     const [log, setLog] = createSignal<{ rows: string[][]; added: number }>({ rows: [], added: 0 });
     const rows = () => log().rows;

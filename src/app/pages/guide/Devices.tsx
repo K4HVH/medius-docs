@@ -39,7 +39,7 @@ const Devices: Component = () => {
     <>
       <PageHeader />
 
-      <Filter value={query()} onInput={setQuery} placeholder="Search devices" count={rows().length} noun="devices" />
+      <Filter value={query()} onInput={setQuery} placeholder="Search devices" count={rows().length} noun={['device', 'devices']} />
       <div class="table-scroll">
         <table class="api-params compat">
           <colgroup>
@@ -67,7 +67,7 @@ const Devices: Component = () => {
                     <Show when={r.note && SETTING.test(r.note)} fallback={r.note ?? ''}>
                       <div class="ni">
                         <span>{r.note}</span>
-                        <FixLink href="/dashboard#imperfect-clone">Options</FixLink>
+                        <FixLink href={/wire rate/.test(r.note!) ? '/dashboard#options' : '/dashboard#imperfect-clone'}>Options</FixLink>
                       </div>
                     </Show>
                   </td>
@@ -97,11 +97,11 @@ const Devices: Component = () => {
             </colgroup>
             <thead><tr><th>Limit</th><th>Value</th><th>Note</th></tr></thead>
             <tbody>
-              <tr><td>Report rate</td><td class="v">1000 Hz</td><td>4k and 8k mice run at 1000 Hz through the box</td></tr>
+              <tr><td>Report rate</td><td class="v">1000 Hz</td><td>4K and 8K mice run at 1000 Hz through the box</td></tr>
               <tr>
                 <td>Box capacity</td>
                 <td class="v">4 IN endpoints in use at once, 6 HID interfaces</td>
-                <td>A device past it, or with a vendor bulk or isochronous endpoint, needs imperfect clone</td>
+                <td>A device over either limit, or with a vendor bulk or isochronous endpoint, needs imperfect clone</td>
               </tr>
               <tr><td>Devices</td><td class="v">1 per box</td><td>A receiver carrying a mouse and a keyboard counts as 1</td></tr>
               <tr><td>USB speed</td><td class="v">Full speed</td><td>High-speed devices run at full speed through the box</td></tr>

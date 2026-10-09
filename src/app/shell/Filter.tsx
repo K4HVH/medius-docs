@@ -2,10 +2,17 @@ import { For, Show } from 'solid-js';
 import { A } from '@solidjs/router';
 import { Arrow, ArrowOut } from './Arrow';
 
-// A live filter over a table or a list, with the count of what it leaves.
-export function Filter(props: { value: string; onInput: (v: string) => void; placeholder: string; count: number; noun: string }) {
+// A live filter over a table or a list, with the count of what it leaves. The page's Markdown twin
+// carries the list, not the filter.
+export function Filter(props: {
+  value: string;
+  onInput: (v: string) => void;
+  placeholder: string;
+  count: number;
+  noun: [one: string, many: string];
+}) {
   return (
-    <div class="filter">
+    <div class="filter" data-agent-hide>
       <label>
         <svg viewBox="0 0 16 16" aria-hidden="true">
           <circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" stroke-width="1.5" />
@@ -21,7 +28,7 @@ export function Filter(props: { value: string; onInput: (v: string) => void; pla
         />
       </label>
       <span class="n caps" aria-live="polite">
-        <b>{props.count}</b> {props.noun}
+        <b>{props.count}</b> {props.noun[props.count === 1 ? 0 : 1]}
       </span>
     </div>
   );

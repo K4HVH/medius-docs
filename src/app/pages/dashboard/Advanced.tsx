@@ -21,6 +21,9 @@ import { Panel, Panels } from '../../shell/Panel';
 import { Segmented } from '../../shell/Segmented';
 import { Select } from '../../shell/Select';
 
+// Over USB2 both chips may be written in turn; each count names its chip.
+const CHIP_CUE: Record<string, string> = { host: 'Flashing the mouse-side chip', device: 'Flashing the main chip' };
+
 const WAIT: Partial<Record<FlashPhase, string>> = {
   rebooting: 'Rebooting',
   connecting: 'Connecting',
@@ -187,7 +190,7 @@ const ManualFlash = () => {
     <Panels>
       <Show when={native.running() || updating()}>
         <Panel id="flashing" wide>
-          <p class="cue">Flashing</p>
+          <p class="cue">{CHIP_CUE[progress()?.phase === 'writing' ? (progress()?.chip ?? '') : ''] ?? 'Flashing'}</p>
           <p class="sub2">Don't unplug or close this tab</p>
           <div class="prog">
             <div class="pct">
