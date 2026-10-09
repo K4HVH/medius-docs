@@ -23,7 +23,7 @@ afterEach(cleanup);
 
 describe('PageHeader', () => {
   it('is the search target for an anchor it carries, header and all', () => {
-    const r = mount('/native/frame', () => <PageHeader id="layout" lead="Lead" />);
+    const r = mount('/native/frame', () => <PageHeader id="layout" />);
     const h = r.container.querySelector('header.page-header')!;
     expect(h.id).toBe('layout');
     expect(h.hasAttribute('data-search-target')).toBe(true);
@@ -31,12 +31,11 @@ describe('PageHeader', () => {
   });
 
   it('gives the page one h1, its registry title, under crumbs to the parent', () => {
-    const r = mount('/native/commands/inject', () => <PageHeader lead="Press and release any input." />);
+    const r = mount('/native/commands/inject', () => <PageHeader />);
     const h1s = r.container.querySelectorAll('h1');
     expect(h1s.length).toBe(1);
     expect(h1s[0].textContent).toBe('Inject');
     expect(r.container.querySelector('.crumbs')!.textContent).toBe('Medius / Native API');
-    expect(r.container.querySelector('.lead')!.textContent).toBe('Press and release any input.');
   });
 
   it('keeps the intro body under the heading', () => {
@@ -46,7 +45,6 @@ describe('PageHeader', () => {
       </PageHeader>
     ));
     expect(r.container.querySelector('header.page-header #body')).not.toBeNull();
-    expect(r.container.querySelector('.lead')).toBeNull();
   });
 });
 

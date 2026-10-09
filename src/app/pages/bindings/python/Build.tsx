@@ -6,7 +6,7 @@ import { DocSection } from '../../../shell/DocSection';
 const Build: Component = () => {
   return (
     <>
-      <PageHeader lead="Enabling mock, building from source">
+      <PageHeader>
         <p>
           The <A href="/library/features/mock">mock</A> feature is compiled into the library, not
           switched on from Python; enabling it means rebuilding the library.

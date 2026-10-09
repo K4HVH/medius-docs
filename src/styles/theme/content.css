@@ -13,7 +13,6 @@
   text-underline-offset: 4px; transition: text-decoration-color 0.25s;
 }
 :where(.page-header, .doc-section) :where(p, li, td, .callout) a:hover { color: var(--text); text-decoration-color: var(--accent); }
-.page-header .lead + * { margin-top: 28px; }
 :not(pre) > code {
   padding: 0; border: 0; background: none; font: 500 0.9em/1 var(--mono); color: var(--text);
   white-space: normal; overflow-wrap: break-word;

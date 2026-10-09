@@ -6,7 +6,7 @@ import { DocSection } from '../../../shell/DocSection';
 const Quickstart: Component = () => {
   return (
     <>
-      <PageHeader lead="Connect, command, one event, free">
+      <PageHeader>
         <p>
           One file: <A href="/library/connection">connect</A>, read the firmware version, move,
           click, wait for one physical motion event, free.

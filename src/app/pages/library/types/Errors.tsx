@@ -5,7 +5,7 @@ import { PageHeader } from '../../../shell/PageHeader';
 const Errors: Component = () => {
   return (
     <>
-      <PageHeader id="errors" lead="The Error enum and the Result alias">
+      <PageHeader id="errors">
         <p>
           Every fallible call returns <code>Result&lt;T&gt;</code>, the crate's alias for{' '}
           <code>core::result::Result&lt;T, Error&gt;</code>.

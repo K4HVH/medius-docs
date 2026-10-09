@@ -7,7 +7,7 @@ import { ByteStrip } from '../../../shell/ByteStrip';
 const Led: Component = () => {
   return (
     <>
-      <PageHeader lead="Drive a status LED">
+      <PageHeader>
         <p>
           <A href="/native/commands/led#led"><code>LED</code></A> overrides a status LED or returns
           it to the box's status display. Each chip has one green LED.{' '}

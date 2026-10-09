@@ -6,7 +6,7 @@ import { DocSection } from '../../../shell/DocSection';
 const Quickstart: Component = () => {
   return (
     <>
-      <PageHeader lead="Connect, move, click, read one event">
+      <PageHeader>
         <p>
           One file: find the <A href="/native/hardware">box</A>, move, click, read one physical
           event. Install with <a href="https://pip.pypa.io" target="_blank" rel="noreferrer">pip</a>{' '}

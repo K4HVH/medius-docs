@@ -122,12 +122,6 @@ export function createTurndown(): TurndownService {
     },
   });
 
-  // The page header's lead -> italic line under the h1 (the page header's crumbs are agent-hidden).
-  td.addRule('pageLead', {
-    filter: (node: any) => node.nodeName === 'P' && hasClass(node, 'lead'),
-    replacement: (_content, node: any) => '\n\n_' + (node.textContent || '').trim() + '_\n\n',
-  });
-
   // h2.doc-h2 -> h2 title + italic caption line.
   td.addRule('sectionHeading', {
     filter: (node: any) => node.nodeName === 'H2' && hasClass(node, 'doc-h2'),

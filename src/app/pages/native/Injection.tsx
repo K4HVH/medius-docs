@@ -6,7 +6,7 @@ import { DocSection } from '../../shell/DocSection';
 const Injection: Component = () => {
   return (
     <>
-      <PageHeader lead="Fields, two verbs, added to native input">
+      <PageHeader>
         <p>
           A device is a set of <em>fields</em>, each an <em>Axis</em> (relative motion: X, Y, wheel)
           or a <em>Usage</em> (a momentary button, key, or media control).

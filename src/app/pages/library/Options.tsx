@@ -6,7 +6,7 @@ import { DocSection } from '../../shell/DocSection';
 const Options: Component = () => {
   return (
     <>
-      <PageHeader lead="Persistent box settings">
+      <PageHeader>
         <p>
           Seven box settings, each set and read on its own, all persisted in NVS across a reboot. The
           wire contract is on the native <A href="/native/commands/option"><code>OPTION</code></A>{' '}

@@ -7,7 +7,7 @@ import { ByteStrip } from '../../../shell/ByteStrip';
 const Move: Component = () => {
   return (
     <>
-      <PageHeader lead="Cursor motion, scroll, and pan">
+      <PageHeader>
         <p>
           <A href="/native/commands/move#move"><code>MOVE</code></A> drives a relative Axis, picked
           by a <code>motion</code> byte: the cursor pair (X and Y together), the wheel, or AC Pan

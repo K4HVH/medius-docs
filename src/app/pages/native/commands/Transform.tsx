@@ -7,7 +7,7 @@ import { ByteStrip } from '../../../shell/ByteStrip';
 const Transform: Component = () => {
   return (
     <>
-      <PageHeader lead="Swap or remap a field on the wire">
+      <PageHeader>
         <p>
           <A href="/native/commands/transform#transform"><code>TRANSFORM</code></A> moves one
           declared field into another, clamped to the destination's declared range, so the clone

@@ -6,7 +6,7 @@ import { DocSection } from '../../../shell/DocSection';
 const Structs: Component = () => {
   return (
     <>
-      <PageHeader id="structs" lead="Values the box reports back">
+      <PageHeader id="structs">
         <p>
           Public fields, returned by queries and discovery.
         </p>

@@ -7,7 +7,7 @@ import { ByteStrip } from '../../../shell/ByteStrip';
 const Inject: Component = () => {
   return (
     <>
-      <PageHeader lead="Press and release any input">
+      <PageHeader>
         <p>
           <A href="/native/commands/inject#inject"><code>INJECT</code></A> sets a momentary input on
           top of physical input: a mouse <A href="/native/commands/inject#button">button</A>, a

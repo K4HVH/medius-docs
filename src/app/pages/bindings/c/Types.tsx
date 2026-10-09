@@ -6,7 +6,7 @@ import { DocSection } from '../../../shell/DocSection';
 const Types: Component = () => {
   return (
     <>
-      <PageHeader lead="Every C struct, enum, and status code">
+      <PageHeader>
         <p>
           The <code>Medius*</code> types and <code>MEDIUS_*</code> enumerators from{' '}
           <A href="/bindings/c"><code>medius.h</code></A>.

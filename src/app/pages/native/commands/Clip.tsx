@@ -7,7 +7,7 @@ import { ByteStrip } from '../../../shell/ByteStrip';
 const Clip: Component = () => {
   return (
     <>
-      <PageHeader lead="Preloaded input, played back by the box frame by frame">
+      <PageHeader>
         <p>
           A clip is a ring of per-frame entries on the box. The box drains one entry per native frame
           into the same <A href="/native/injection#state">injection state</A> that{' '}

@@ -6,10 +6,12 @@ import { DocSection } from '../../shell/DocSection';
 const Requests: Component = () => {
   return (
     <>
-      <PageHeader id="requests-overview" lead="One QUERY frame out, one RESP frame back">
+      <PageHeader id="requests-overview">
         <p>
           Queries block, unlike the{' '}
-          <A href="/native/injection#fire-and-forget">fire-and-forget</A> calls. They are{' '}
+          <A href="/native/injection#fire-and-forget">fire-and-forget</A> calls: each sends one{' '}
+          <A href="/native/commands/requests#requests"><code>QUERY</code></A> frame and waits for one{' '}
+          <A href="/native/commands/requests#resp"><code>RESP</code></A> frame back. They are{' '}
           <A href="/library/requests#version"><code>query_version</code></A>,{' '}
           <A href="/library/requests#health"><code>query_health</code></A>,{' '}
           <A href="/library/requests#device-info"><code>device_info</code></A>,{' '}

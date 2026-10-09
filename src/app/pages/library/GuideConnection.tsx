@@ -6,7 +6,7 @@ import { DocSection } from '../../shell/DocSection';
 const GuideConnection: Component = () => {
   return (
     <>
-      <PageHeader id="choosing-a-port" lead="When more than one box is plugged in">
+      <PageHeader id="choosing-a-port">
         <p>
           <A href="/library/connection#open"><code>find</code></A> opens the first match. With several
           boxes, <code>find_medius</code> lists every match as a{' '}

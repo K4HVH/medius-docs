@@ -6,7 +6,7 @@ import { DocSection } from '../../../shell/DocSection';
 const Raw: Component = () => {
   return (
     <>
-      <PageHeader lead="A report, byte-for-byte, on a cloned endpoint">
+      <PageHeader>
         <p>
           <code>raw</code> puts <code>bytes</code> verbatim on one cloned endpoint, named by number and
           direction: <code>IN</code> emits toward the game PC, <code>OUT</code> relays to the real

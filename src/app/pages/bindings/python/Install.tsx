@@ -6,7 +6,7 @@ import { DocSection } from '../../../shell/DocSection';
 const Install: Component = () => {
   return (
     <>
-      <PageHeader lead="pip install medius">
+      <PageHeader>
         <p>
           Install with{' '}
           <a href="https://pip.pypa.io" target="_blank" rel="noreferrer">pip</a>; no compile step:

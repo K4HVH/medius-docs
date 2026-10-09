@@ -6,7 +6,7 @@ import { DocSection } from '../../shell/DocSection';
 const Transform: Component = () => {
   return (
     <>
-      <PageHeader lead="Swap or remap a field on the wire">
+      <PageHeader>
         <p>
           A transform moves a field the clone's descriptor declares into another. It needs no{' '}
           <A href="/library/options#allow-imperfect-clones">imperfect-clone opt-in</A>, unlike the{' '}

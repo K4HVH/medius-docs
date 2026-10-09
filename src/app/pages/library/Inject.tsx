@@ -6,7 +6,7 @@ import { DocSection } from '../../shell/DocSection';
 const Inject: Component = () => {
   return (
     <>
-      <PageHeader lead="Press and release any input">
+      <PageHeader>
         <p>
           <A href="/library/inject#inject"><code>inject</code></A> drives every momentary input and
           takes any <A href="/library/types/structs#usage"><code>Usage</code></A> (button, key, or

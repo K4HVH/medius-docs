@@ -6,7 +6,7 @@ import { DocSection } from '../../shell/DocSection';
 const Troubleshooting: Component = () => {
   return (
     <>
-      <PageHeader lead="Common failures">
+      <PageHeader>
         <p>
           Every message is a <A href="/native/frame"><code>frame</code></A> (one packet on the
           wire). Most commands are{' '}

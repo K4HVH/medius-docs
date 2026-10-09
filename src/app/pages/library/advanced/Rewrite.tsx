@@ -6,7 +6,7 @@ import { DocSection } from '../../../shell/DocSection';
 const Rewrite: Component = () => {
   return (
     <>
-      <PageHeader lead="Rewrite a matched packet in flight">
+      <PageHeader>
         <p>
           A rule matches traffic and rewrites, answers, refuses, or drops it. It is addressed in the{' '}
           <code>(class, id, direction)</code> space{' '}

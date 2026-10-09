@@ -7,7 +7,7 @@ import { IndexRow } from '../../shell/IndexRow';
 const NativeIntroduction: Component = () => {
   return (
     <>
-      <PageHeader lead="The binary control protocol">
+      <PageHeader>
         <p>
           Medius is replacement firmware for MAKCU-class USB input-passthrough boxes plus an open
           binary control protocol.

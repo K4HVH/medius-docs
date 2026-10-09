@@ -6,7 +6,7 @@ import { DocSection } from '../../../shell/DocSection';
 const Api: Component = () => {
   return (
     <>
-      <PageHeader lead="Every Python call, linked to what it does">
+      <PageHeader>
         <p>
           Every <code>Device</code> call, grouped. What each does is in the{' '}
           <A href="/library">Rust Library</A> and <A href="/native">Native API</A>; types and enums

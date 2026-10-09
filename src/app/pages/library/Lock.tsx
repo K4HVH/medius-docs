@@ -6,7 +6,7 @@ import { DocSection } from '../../shell/DocSection';
 const Lock: Component = () => {
   return (
     <>
-      <PageHeader lead="Weigh one physical input; injection still drives it">
+      <PageHeader>
         <p>
           A scale sets how much of one <em>physical</em> input reaches the game PC;{' '}
           <A href="/native/injection">injection</A> still drives that input unweighed. Blocking and

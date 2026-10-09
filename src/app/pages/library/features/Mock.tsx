@@ -6,7 +6,7 @@ import { DocSection } from '../../../shell/DocSection';
 const Mock: Component = () => {
   return (
     <>
-      <PageHeader lead="Test without hardware">
+      <PageHeader>
         <p>
           A <code>MockBox</code> is an in-process fake Medius box behind the{' '}
           <code>mock</code> cargo feature.

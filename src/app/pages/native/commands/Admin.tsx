@@ -7,7 +7,7 @@ import { ByteStrip } from '../../../shell/ByteStrip';
 const Admin: Component = () => {
   return (
     <>
-      <PageHeader lead="Reset, reboot, and logs">
+      <PageHeader>
         <p>
           Three box-management <A href="/native/frame">frames</A>:{' '}
           <A href="/native/commands/admin#reset"><code>RESET</code></A>,{' '}

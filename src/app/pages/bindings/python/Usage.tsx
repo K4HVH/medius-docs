@@ -6,7 +6,7 @@ import { DocSection } from '../../../shell/DocSection';
 const Usage: Component = () => {
   return (
     <>
-      <PageHeader lead="Blocking, exceptions, lifecycle, builders">
+      <PageHeader>
         <p>
           The <A href="/bindings/python/api">API index</A> lists every call;{' '}
           <A href="/bindings/python/types">Types &amp; errors</A> the value types. What each command{' '}

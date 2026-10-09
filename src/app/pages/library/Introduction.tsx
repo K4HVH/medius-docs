@@ -7,10 +7,10 @@ import { IndexRow } from '../../shell/IndexRow';
 const Introduction: Component = () => {
   return (
     <>
-      <PageHeader lead="Official Rust client">
+      <PageHeader>
         <p>
-          The <a href="https://crates.io/crates/medius" target="_blank" rel="noreferrer"><code>medius</code></a> crate
-          injects input on top of a real mouse, keyboard, or combo over a USB-serial link.
+          The <a href="https://crates.io/crates/medius" target="_blank" rel="noreferrer"><code>medius</code></a> crate,
+          the official Rust client, injects input on top of a real mouse, keyboard, or combo over a USB-serial link.
         </p>
         <div class="table-scroll">
           <table class="api-params">

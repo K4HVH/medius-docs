@@ -6,7 +6,7 @@ import { DocSection } from '../../shell/DocSection';
 const GuideTesting: Component = () => {
   return (
     <>
-      <PageHeader id="testing" lead="Assert the frames with MockBox">
+      <PageHeader id="testing">
         <p>
           The <A href="/library/features/mock"><code>mock</code></A> feature backs a{' '}
           <A href="/library/connection"><code>Device</code></A> with a{' '}

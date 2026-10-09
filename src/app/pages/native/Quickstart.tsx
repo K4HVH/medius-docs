@@ -6,7 +6,7 @@ import { DocSection } from '../../shell/DocSection';
 const Quickstart: Component = () => {
   return (
     <>
-      <PageHeader lead="Wiring to first command">
+      <PageHeader>
         <p>
           The box sits between a USB device and a PC. The device passes through while a program
           injects over a USB-serial link: cursor and buttons for a mouse, keys and media for a

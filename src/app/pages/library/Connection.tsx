@@ -6,10 +6,11 @@ import { DocSection } from '../../shell/DocSection';
 const Connection: Component = () => {
   return (
     <>
-      <PageHeader lead="Open, find, and release the port">
+      <PageHeader>
         <p>
           <code>Device</code> is the handle. Opening one finds the box, runs the{' '}
           <A href="/native/connection">handshake</A>, and starts the background threads in one call.
+          Dropping the last handle <A href="/library/guides/connection#release">releases the port</A>.
         </p>
         <p>See also: <A href="/library/guides/connection#choosing-a-port">choosing a port</A>, <A href="/library/guides/connection#threading">threading</A>, <A href="/library/guides/connection#keepalive">keepalive &amp; teardown</A>, and the box <A href="/native/connection#handshake">handshake</A>.</p>
       </PageHeader>
