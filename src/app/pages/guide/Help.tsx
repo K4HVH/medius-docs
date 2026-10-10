@@ -5,6 +5,8 @@ import { Filter, FixLink, Marked } from '../../shell/Filter';
 import { HELP, HELP_ITEMS, type HelpItem } from '../../data/help';
 import { LINKS } from '../../site';
 import { matches } from '../../search/text';
+import { CopyLink } from '../../shell/CopyLink';
+import { itemPath } from '../../items';
 
 const Help: Component = () => {
   const [query, setQuery] = createSignal('');
@@ -25,7 +27,10 @@ const Help: Component = () => {
                 <For each={g.items}>
                   {(item) => (
                     <div class="qa" id={item.id} data-search-target hidden={!shows(item)} classList={{ first: shown()[0] === item }}>
-                      <h3><Marked text={item.q} query={query()} /></h3>
+                      <h3>
+                        <Marked text={item.q} query={query()} />
+                        <CopyLink id={item.id} label={item.q} to={itemPath('help', item.id)} />
+                      </h3>
                       <div>
                         <p><Marked text={item.a} query={query()} /></p>
                         <Show when={item.links}>

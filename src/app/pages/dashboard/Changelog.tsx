@@ -5,9 +5,10 @@ import { Chip } from '../../../components/display/Chip';
 import { type FirmwareRelease, latestReleases, releasesInHand } from '../../../dashboard/firmware';
 import { type Block, type CommitGroup, groupCommits, inlineRuns, parseBlocks, releaseDay, splitRelease } from '../../../dashboard/firmware/notes';
 import { PageHeader } from '../../shell/PageHeader';
-import { itemFor } from '../../items';
+import { itemFor, itemPath } from '../../items';
 import { arrive, armReveals, fontsReady, inOrder, turnIn } from '../../shell/motion';
 import { openingAt } from '../../shell/scrollPlace';
+import { CopyLink } from '../../shell/CopyLink';
 
 const Text = (props: { text: string }) => (
   <For each={inlineRuns(props.text)}>
@@ -85,7 +86,10 @@ const Release = (props: { release: FirmwareRelease; open: boolean }) => {
   return (
     <section id={props.release.tag} class="rel">
       <div class="rel-l">
-        <h2>{props.release.tag}</h2>
+        <h2>
+          {props.release.tag}
+          <CopyLink id={props.release.tag} label={props.release.tag} to={itemPath('release', props.release.tag)} />
+        </h2>
         <time class="caps" datetime={props.release.publishedAt}>
           {releaseDay(props.release.publishedAt)}
         </time>
