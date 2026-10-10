@@ -63,7 +63,7 @@ const Control = () => {
               {/* One line: what it clears, what it did, or why it didn't, so the header never changes height. */}
               <Switch
                 fallback={
-                  <p class="sub2">Clears injection, locks, transforms, rewrite rules, subscriptions, the clip and the status light</p>
+                  <p class="sub2">Resets every control here but patches</p>
                 }
               >
                 <Match when={cmd.error()}>
