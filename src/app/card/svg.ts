@@ -1,5 +1,5 @@
 import type { PathCommand } from 'opentype.js';
-import { BLUE, type CardContent } from './content';
+import type { CardContent } from './content';
 import { type Face, clampLines, drawable, fitTitle, measure } from './layout';
 
 export interface Faces {
@@ -43,7 +43,7 @@ export interface CardLayout {
   dropped: string[];
 }
 
-// The approved card at 1200 x 630, in the page header's measures (docs/superpowers/specs, medius-fw).
+// The card at 1200 x 630, in the page header's measures (medius-fw docs/superpowers/specs/2026-10-11-site-embeds-design.md).
 const W = 1200;
 const H = 630;
 const LEFT = 72;
@@ -65,6 +65,8 @@ const DESC = { size: 31, under: 27, leading: 1.36, width: 980, lines: 2 };
 const LIST = { size: 28, leading: 1.3, gap: 10, indent: 26, width: 1000 - 26, lines: 2 };
 
 const WHITE = '#fff';
+// The last line of a title that wraps, and the list's bars: the site's accent, whatever the card's colour.
+const ACCENT = '#0080ff';
 const TEXT = '#ccc';
 const MUTED = '#8a8a8a';
 const DIM = '#7a7a7a';
@@ -127,7 +129,7 @@ export function layoutCard(c: CardContent, faces: Faces): CardLayout {
   const n = fit.lines.length;
   const lineHeight = fit.size * TITLE.leading;
   fit.lines.forEach((line, i) =>
-    put('bold', line, fit.size, TITLE.tracking, LEFT, BODY + i * lineHeight, lineHeight, WIDE, n > 1 && i === n - 1 ? BLUE : WHITE),
+    put('bold', line, fit.size, TITLE.tracking, LEFT, BODY + i * lineHeight, lineHeight, WIDE, n > 1 && i === n - 1 ? ACCENT : WHITE),
   );
   rects.push({ x: 0, y: BODY, w: 4, h: 132, fill: c.colour });
 
@@ -136,7 +138,7 @@ export function layoutCard(c: CardContent, faces: Faces): CardLayout {
     top += GAP;
     const height = LIST.size * LIST.leading;
     for (const lines of items) {
-      rects.push({ x: LEFT, y: top + 13, w: 10, h: 2, fill: BLUE });
+      rects.push({ x: LEFT, y: top + 13, w: 10, h: 2, fill: ACCENT });
       lines.forEach((line, j) => put('regular', line, LIST.size, 0, LEFT + LIST.indent, top + j * height, height, LIST.width, TEXT));
       top += lines.length * height + LIST.gap;
     }

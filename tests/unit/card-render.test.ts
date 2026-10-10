@@ -36,13 +36,14 @@ describe('every card the site draws', () => {
   });
 });
 
-// A card's address carries its hash, and an address with a hash is kept for a year: drawn differently
+// A card's address carries its hash, and an address with a hash is kept for a year: drawn differently (the
+// layout, the SVG, the renderer's options or the fonts)
 // under the same hash, it would never reach anyone. Raise STYLE in src/app/card/content.ts when this
 // fails, then record the new digest here.
-const DRAWN = { style: 1, digest: '13c6bedbced9c580' };
+const DRAWN = { style: 1, digest: 'ff01df8875d422dd' };
 
 it('raises STYLE when the card is drawn differently', () => {
-  const files = ['src/app/card/layout.ts', 'src/app/card/svg.ts', ...['inter-400', 'inter-700', 'plex-mono-500'].map((f) => `server/og/fonts/${f}.ttf`)];
+  const files = ['src/app/card/layout.ts', 'src/app/card/svg.ts', 'server/og.ts', ...['inter-400', 'inter-700', 'plex-mono-500'].map((f) => `server/og/fonts/${f}.ttf`)];
   const h = createHash('sha256');
   for (const f of files) h.update(readFileSync(f));
   expect({ style: STYLE, digest: h.digest('hex').slice(0, 16) }).toEqual(DRAWN);

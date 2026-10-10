@@ -4,6 +4,7 @@ import { loadRuntime } from './pages/dashboard/context';
 import { loadHighlighter } from './highlight';
 import { latestReleases } from '../dashboard/firmware/client';
 import { itemFor } from './items';
+import { lostPath } from './served';
 
 // Each page's code, fetched when the page is first wanted: a reader of one page downloads that page and
 // the shell, not the whole site. The router fetches a page's code when a link to it is pointed at,
@@ -139,15 +140,12 @@ export const NotFoundPage = page(() => import('./pages/NotFound'));
 // The table's key for a path, matched as the router matches it: any case, no repeated or trailing slash.
 export const pageKey = (path: string): string => path.toLowerCase().replace(/\/{2,}/g, '/').replace(/(.)\/$/, '$1');
 
-// The address this tab loaded, where the server answered with its 404 page (the prerender marks it).
-const lost = typeof document !== 'undefined' && document.documentElement.hasAttribute('data-not-found') ? location.pathname : null;
-
 // The page at `path`. An item's address shows its parent page, or the 404 page where the server knew no
 // such item.
 export const pageAt = (path: string): LazyPage => {
   const key = pageKey(path);
   const item = itemFor(key);
-  if (item) return path === lost ? NotFoundPage : PAGES[item.parent];
+  if (item) return path === lostPath ? NotFoundPage : PAGES[item.parent];
   return PAGES[key] ?? NotFoundPage;
 };
 

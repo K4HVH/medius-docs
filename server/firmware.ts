@@ -112,16 +112,19 @@ export async function getReleases(): Promise<FirmwareRelease[] | null> {
   return body ? (JSON.parse(body) as { releases: FirmwareRelease[] }).releases : null;
 }
 
-// The list read again at once, so a release linked the moment it is out (the release post) is found. Tags
-// no release has can't make that happen more than once a RELEASES_RETRY_MS.
+// The list as GitHub has it now, so a release linked the moment it is out (the release post) is found: read
+// again unless it was read in the last RELEASES_FRESH_MS (by the same request, as a rule). Tags no release
+// has can't make that happen more than once a RELEASES_RETRY_MS; in between, the list in hand. Null when the
+// read fails.
+const RELEASES_FRESH_MS = 2_000;
 let refreshedAt = -Infinity;
 export async function refreshReleases(): Promise<FirmwareRelease[] | null> {
   const now = Date.now();
-  if (releasesCache && now - refreshedAt >= RELEASES_RETRY_MS) {
-    refreshedAt = now;
-    releasesCache = { ...releasesCache, at: -Infinity };
-  }
-  return getReleases();
+  if (!releasesCache || now - releasesCache.at < RELEASES_FRESH_MS || now - refreshedAt < RELEASES_RETRY_MS) return getReleases();
+  refreshedAt = now;
+  releasesCache = { ...releasesCache, at: -Infinity };
+  const list = await getReleases();
+  return (releasesCache?.at ?? -Infinity) >= now ? list : null;
 }
 
 function cacheGetAsset(id: number): Uint8Array<ArrayBuffer> | undefined {

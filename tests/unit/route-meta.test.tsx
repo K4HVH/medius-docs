@@ -127,6 +127,29 @@ describe('RouteMeta', () => {
     expect(meta('meta[property="og:url"]')).toBe(`${SITE}/guide/help/bsod`);
   });
 
+  it("keeps the 404 page's head for an item the server knew nothing of", async () => {
+    vi.resetModules();
+    document.documentElement.setAttribute('data-not-found', '');
+    window.history.replaceState(null, '', '/guide/help/nope');
+    try {
+      const { MemoryRouter: Router, Route: R, createMemoryHistory: memory } = await import('@solidjs/router');
+      const { default: Meta } = await import('../../src/app/RouteMeta');
+      const history = memory();
+      history.set({ value: '/guide/help/nope' });
+      render(() => (
+        <Router history={history} root={(p) => <><Meta />{p.children}</>}>
+          <R path="*" component={() => <p>page</p>} />
+        </Router>
+      ));
+      await waitFor(() => expect(document.title).toBe('Page not found · Medius'));
+      expect(meta('meta[name="robots"]')).toBe('noindex');
+      expect(document.head.querySelector('meta[property="og:url"]')).toBeNull();
+    } finally {
+      document.documentElement.removeAttribute('data-not-found');
+      window.history.replaceState(null, '', '/');
+    }
+  });
+
   it('leaves the head the server wrote for an item, and brings it back on return', async () => {
     document.title = 'My PC blue-screens · Help · Medius';
     for (const [k, v] of [['medius-item', '/guide/help/bsod'], ['description', 'Served description']] as const) {

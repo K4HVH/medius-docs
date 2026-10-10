@@ -89,12 +89,18 @@ export function releaseCard(r: FirmwareRelease): CardContent {
   };
 }
 
+// A device that is neither mouse nor keyboard is named by no kind: "Other." says nothing.
 function deviceLine(row: CompatRow): string {
-  const kind = KIND_LABEL[row.kind];
-  if (row.note) return row.reported ? `${stop(row.note)} ${kind}, reported on ${row.reported}.` : `${stop(row.note)} ${kind}.`;
+  const kind = row.kind === 'other' ? '' : KIND_LABEL[row.kind];
+  const lead = kind ? `${kind}. ` : '';
+  const seen = row.boxes ? `Seen on ${row.boxes} ${row.boxes === 1 ? 'box' : 'boxes'} in the usage stats.` : '';
+  if (row.note) {
+    const on = row.reported ? `${kind ? `${kind}, reported` : 'Reported'} on ${row.reported}.` : kind ? `${kind}.` : '';
+    return `${stop(row.note)} ${on}`.trim();
+  }
   if (row.reported)
-    return row.verdict === 'works' ? `${kind}. Reported working through the box on ${row.reported}.` : `${kind}. Reported on ${row.reported}.`;
-  return row.boxes ? `${kind}. Seen on ${row.boxes} ${row.boxes === 1 ? 'box' : 'boxes'} in the usage stats.` : `${kind}.`;
+    return `${lead}${row.verdict === 'works' ? 'Reported working through the box' : 'Reported'} on ${row.reported}.`;
+  return `${lead}${seen}`.trim() || stop(VERDICT_LABEL[row.verdict]);
 }
 
 export function deviceCard(row: CompatRow & { id: string }): CardContent {
@@ -108,9 +114,15 @@ export function deviceCard(row: CompatRow & { id: string }): CardContent {
   };
 }
 
-// FNV-1a over everything the card shows and the style it is drawn in.
+// Everything the card shows and the style it is drawn in, as one string.
+export function cardKey(c: CardContent): string {
+  return JSON.stringify([STYLE, c.crumb, c.title, c.titleLines ?? null, c.description ?? null, c.list ?? null, c.address, c.fact, c.colour]);
+}
+
+// FNV-1a over cardKey. 32 bits tell one card's versions apart in its address; they can be made to collide,
+// so nothing keeps a drawing by the hash alone.
 export function cardHash(c: CardContent): string {
-  const text = JSON.stringify([STYLE, c.crumb, c.title, c.titleLines ?? null, c.description ?? null, c.list ?? null, c.address, c.fact, c.colour]);
+  const text = cardKey(c);
   let h = 0x811c9dc5;
   for (let i = 0; i < text.length; i++) {
     h ^= text.charCodeAt(i);

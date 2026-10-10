@@ -134,6 +134,15 @@ describe('deviceCard', () => {
     expect(c.colour).toBe('#dc2626');
   });
 
+  it('names no kind for a device that is neither mouse nor keyboard', () => {
+    expect(deviceCard(row({ name: 'Logitech POWERPLAY', kind: 'other', reported: 'v2.2.0' })).description).toBe(
+      'Reported working through the box on v2.2.0.',
+    );
+    expect(deviceCard(row({ kind: 'other', verdict: 'partial', note: 'Charging only', reported: 'v3.0.1' })).description).toBe(
+      'Charging only. Reported on v3.0.1.',
+    );
+  });
+
   it('counts the boxes for a device known from the stats alone', () => {
     expect(deviceCard(row({ boxes: 4 })).description).toBe('Mouse. Seen on 4 boxes in the usage stats.');
   });
