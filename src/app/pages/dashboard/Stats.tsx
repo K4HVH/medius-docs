@@ -224,7 +224,7 @@ const Summary = (props: { s: StatsSummary }) => {
   ];
   return (
     <>
-      <dl class="vit eight caps" id="stats" data-search-target data-testid="figures">
+      <dl class="vit eight caps" id="stats" data-testid="figures">
         <For each={figures()}>
           {([label, n, format]) => (
             <div>

@@ -63,7 +63,7 @@ const reading = () => (document.querySelector('.docs-page')?.textContent ?? '').
 
 export interface Pass {
   entries: IndexEntry[];
-  rendered: Record<string, { id: string; fate: Fate; panel: boolean }[]>;
+  rendered: Record<string, { id: string; fate: Fate; panel: boolean; link: boolean }[]>;
 }
 
 export async function runSearchPass(): Promise<Pass> {
@@ -92,7 +92,11 @@ export async function runSearchPass(): Promise<Pass> {
         group: r.group,
         nav: r.nav,
         app: r.kind === 'app',
-      }, (id, fate, panel) => (rendered[r.path] ??= []).push({ id, fate, panel })),
+      }, (id, fate, panel) => {
+        const at = `[id="${CSS.escape(id)}"]`;
+        const link = !!root.querySelector(`${at} .cl[data-for="${CSS.escape(id)}"]`);
+        (rendered[r.path] ??= []).push({ id, fate, panel, link });
+      }),
     );
   }
   return { entries: out, rendered };
