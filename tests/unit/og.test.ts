@@ -53,6 +53,11 @@ describe('handleOg', () => {
     expect(await get('/og/native/commands/lock')).toBeNull();
   });
 
+  it('answers only GET and HEAD', async () => {
+    expect(await handleOg(new Request('https://medius.k4tech.net/og/index.png', { method: 'POST' }), lookup)).toBeNull();
+    expect((await handleOg(new Request('https://medius.k4tech.net/og/index.png', { method: 'HEAD' }), lookup))!.status).toBe(200);
+  });
+
   it('answers 404 for a page with no card', async () => {
     expect((await get('/og/nope.png'))!.status).toBe(404);
   });

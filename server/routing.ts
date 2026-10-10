@@ -1,4 +1,5 @@
 import { MOVED } from '../src/app/site';
+import { itemFor } from '../src/app/items';
 
 // Where a request for a page under a non-canonical spelling should go (a trailing slash, a .html
 // suffix, the wrong letter case), or for a page that moved. Returns the Location for a 301, or null to
@@ -23,6 +24,8 @@ export function planRedirect(pathname: string, search: string, routes: ReadonlyS
     const [path, hash] = moved.split('#');
     return path + search + (hash ? `#${hash}` : '');
   }
+  // An item's address, as items.ts writes it.
+  if (itemFor(lower)) return lower === pathname ? null : lower + search;
   for (const route of routes) {
     if (route.toLowerCase() === lower) return route === pathname ? null : route + search;
   }

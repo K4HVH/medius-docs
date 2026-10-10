@@ -62,8 +62,14 @@ interface GhRelease {
 // A failed list request is not retried for this long, so a GitHub outage costs one call a window.
 const RELEASES_RETRY_MS = 30_000;
 let releasesFailedAt = 0;
+// Requests that ask while the list is read share the read.
+let releasesLoading: Promise<string | null> | null = null;
 
-async function loadReleases(): Promise<string | null> {
+function loadReleases(): Promise<string | null> {
+  return (releasesLoading ??= readReleases().finally(() => (releasesLoading = null)));
+}
+
+async function readReleases(): Promise<string | null> {
   const now = Date.now();
   if (releasesCache && now - releasesCache.at < RELEASES_TTL_MS) return releasesCache.body;
   if (now - releasesFailedAt < RELEASES_RETRY_MS) return releasesCache?.body ?? null;
@@ -104,6 +110,18 @@ async function loadReleases(): Promise<string | null> {
 export async function getReleases(): Promise<FirmwareRelease[] | null> {
   const body = await loadReleases();
   return body ? (JSON.parse(body) as { releases: FirmwareRelease[] }).releases : null;
+}
+
+// The list read again at once, so a release linked the moment it is out (the release post) is found. Tags
+// no release has can't make that happen more than once a RELEASES_RETRY_MS.
+let refreshedAt = -Infinity;
+export async function refreshReleases(): Promise<FirmwareRelease[] | null> {
+  const now = Date.now();
+  if (releasesCache && now - refreshedAt >= RELEASES_RETRY_MS) {
+    refreshedAt = now;
+    releasesCache = { ...releasesCache, at: -Infinity };
+  }
+  return getReleases();
 }
 
 function cacheGetAsset(id: number): Uint8Array<ArrayBuffer> | undefined {

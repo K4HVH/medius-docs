@@ -6,6 +6,8 @@ import { MAX_BODY, handleStatsApi } from './server/stats';
 import { agentDocsDev } from './server/agentDevMiddleware';
 import { handleHomeApi } from './server/home';
 import { serveIndex } from './server/searchIndex';
+import { handleOg } from './server/og';
+import { cardFor } from './server/items';
 import type { SearchIndex } from './src/app/search/types';
 
 // Serve the firmware proxy under the dev server, mirroring serve.ts in prod.
@@ -37,6 +39,27 @@ function homeApi(): Plugin {
       server.middlewares.use((req, res, next) => {
         if (req.url !== '/api/home') return next();
         handleHomeApi(new Request(`http://localhost${req.url}`, { method: req.method }))
+          .then(async (response) => {
+            if (!response) return next();
+            res.statusCode = response.status;
+            response.headers.forEach((v, k) => res.setHeader(k, v));
+            res.end(Buffer.from(await response.arrayBuffer()));
+          })
+          .catch(() => next());
+      });
+    },
+  };
+}
+
+// Link cards under the dev server, drawn by the code serve.ts runs. An item's address needs no help here:
+// with no snapshot to answer it from, the app draws its parent at the item.
+function linkCards(): Plugin {
+  return {
+    name: 'link-cards',
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        if (!req.url?.startsWith('/og/')) return next();
+        handleOg(new Request(`http://localhost${req.url}`, { method: req.method }), cardFor)
           .then(async (response) => {
             if (!response) return next();
             res.statusCode = response.status;
@@ -168,7 +191,7 @@ export default defineConfig(({ mode }) => {
   process.env.GITHUB_REPO = process.env.GITHUB_REPO ?? env.GITHUB_REPO;
 
   return {
-    plugins: [firmwareApi(), statsApi(), homeApi(), searchIndex(), agentDocs(), devtools(), solidPlugin()],
+    plugins: [firmwareApi(), statsApi(), homeApi(), linkCards(), searchIndex(), agentDocs(), devtools(), solidPlugin()],
     root: 'src',
     publicDir: '../public',
     // The devtools plugin adds this import itself, past the dependency scan, and a dev server with a cold
