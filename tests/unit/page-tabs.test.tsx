@@ -64,6 +64,36 @@ describe('PageTabs', () => {
     expect(container.textContent).toContain('Emit rate');
   });
 
+  it('holds the tablist and a link icon in its bar, the list holding only its tabs and mark', () => {
+    const { container } = page();
+    const bar = container.querySelector('.ptabs')!;
+    const list = bar.querySelector(':scope > [role="tablist"]')!;
+    expect(list).not.toBeNull();
+    expect([...list.children].every((c) => c.matches('[role="tab"], .ind'))).toBe(true);
+    expect(bar.querySelector(':scope > button.cl')).not.toBeNull();
+  });
+
+  it("copies the open tab's address", async () => {
+    const written: string[] = [];
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText: async (s: string) => void written.push(s) }, configurable: true });
+    const { container } = page();
+    fireEvent.click(container.querySelector('[data-tab="log"]')!);
+    const icon = container.querySelector<HTMLButtonElement>('.ptabs > button.cl')!;
+    expect(icon.getAttribute('aria-label')).toBe('Copy link to Log');
+    fireEvent.click(icon);
+    await settle();
+    await settle();
+    expect(written).toEqual(['https://medius.k4tech.net/dashboard#log']);
+  });
+
+  it('moves along the tabs with the arrows, never onto the icon', () => {
+    const { container } = page();
+    const log = container.querySelector<HTMLButtonElement>('[data-tab="log"]')!;
+    log.focus();
+    fireEvent.keyDown(log, { key: 'ArrowRight' });
+    expect(selected(container)).toBe('Overview');
+  });
+
   it('opens a tab on click and on End and Home', async () => {
     const { container } = page();
     fireEvent.click(container.querySelector('[data-tab="log"]')!);
