@@ -1,5 +1,8 @@
 export const SITE = 'https://medius.k4tech.net';
 
+// The landing's claim, a line each; the home page's link card sets it the same way.
+export const CLAIM = ['Replacement firmware', 'for the MAKCU box.'] as const;
+
 export const LINKS = {
   discord: 'https://discord.gg/ArRqcA84pB',
   github: 'https://github.com/K4HVH/medius',

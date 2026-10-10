@@ -1,4 +1,5 @@
 import { A } from '@solidjs/router';
+import { CLAIM } from '../../site';
 import { Arrow } from '../../shell/Arrow';
 import type { HomeFigures } from '../../data/homeFigures';
 import type { FeedFrame } from '../../data/sampleTypes';
@@ -11,10 +12,10 @@ export function Hero(props: { frames: readonly FeedFrame[]; figures: HomeFigures
       <div class="hero-copy">
         <h1 id="hero-h">
           <span class="ln">
-            <span>Replacement firmware</span>
+            <span>{CLAIM[0]}</span>
           </span>{' '}
           <span class="ln l2">
-            <span>for the MAKCU box.</span>
+            <span>{CLAIM[1]}</span>
           </span>
         </h1>
         <div class="actions">
