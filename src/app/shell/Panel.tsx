@@ -19,6 +19,9 @@ export function Stack(props: { children: JSX.Element; wide?: boolean }) {
 export function Panel(props: {
   id?: string;
   title?: string;
+  // Shown only in one state of the box (an old firmware, events streaming), so never a search result: a
+  // link to it would land where it is not.
+  transient?: boolean;
   aside?: JSX.Element;
   wide?: boolean;
   class?: string;
@@ -29,7 +32,7 @@ export function Panel(props: {
       class={`pn${props.class ? ` ${props.class}` : ''}`}
       classList={{ wide: props.wide }}
       id={props.id}
-      data-search-target={props.id ? '' : undefined}
+      data-search-target={props.id && !props.transient ? '' : undefined}
     >
       <Show when={props.title}>
         <div class="ph">

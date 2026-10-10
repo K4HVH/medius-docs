@@ -2,6 +2,7 @@ import { createSignal, createEffect, createMemo, on, onCleanup, onMount } from '
 import { type RouteSectionProps, useBeforeLeave, useLocation, useNavigate } from '@solidjs/router';
 import { GridBackground } from '../../components/surfaces/GridBackground';
 import { Search } from '../shell/Search';
+import { prefetchIndex } from '../search/load';
 import { SiteNav } from '../shell/SiteNav';
 import { DocsSidebar } from '../shell/DocsSidebar';
 import { OnThisPage } from '../shell/OnThisPage';
@@ -37,8 +38,31 @@ const DocsLayout = (props: RouteSectionProps) => {
   // 'auto' glides by the page's CSS, which reduced motion turns off; a new page lands with 'instant'.
   // The outline marks a search result or a deep link, not a section the reader moved to themselves.
   let highlightNext: string | null = null;
-  const scrollToTarget = (id: string, behavior: ScrollBehavior, highlight: boolean) => {
+  // A target that comes with fetched content (a device the stats add, a release), or is drawn anew when
+  // more arrives, is landed on again, for up to 10 s and until the reader scrolls, types or presses
+  // anywhere (the scrollbar too).
+  let awaited = () => {};
+  onCleanup(() => awaited());
+  const scrollToTarget = (id: string, behavior: ScrollBehavior, highlight: boolean, until = Date.now() + 10000) => {
+    awaited();
     const el = document.getElementById(id);
+    if (main && Date.now() < until) {
+      const watch = new MutationObserver(() => {
+        const now = document.getElementById(id);
+        if (now && now !== el) scrollToTarget(id, behavior, highlight, until);
+      });
+      const stop = () => awaited();
+      const timer = setTimeout(stop, until - Date.now());
+      const intent = ['wheel', 'touchstart', 'keydown', 'pointerdown'] as const;
+      for (const k of intent) window.addEventListener(k, stop, { passive: true });
+      awaited = () => {
+        watch.disconnect();
+        clearTimeout(timer);
+        for (const k of intent) window.removeEventListener(k, stop);
+        awaited = () => {};
+      };
+      watch.observe(main, { childList: true, subtree: true });
+    }
     if (!el) return;
     el.scrollIntoView({ behavior, block: 'start' });
     if (!highlight) return;
@@ -74,6 +98,10 @@ const DocsLayout = (props: RouteSectionProps) => {
     };
     window.addEventListener('keydown', onKey);
     onCleanup(() => window.removeEventListener('keydown', onKey));
+    // The index is fetched once the page is idle, so the first search rarely waits for it.
+    const idle = window.requestIdleCallback?.(prefetchIndex, { timeout: 5000 });
+    const late = idle === undefined ? setTimeout(prefetchIndex, 3000) : undefined;
+    onCleanup(() => (idle === undefined ? clearTimeout(late) : window.cancelIdleCallback(idle)));
   });
 
   const section = () => routeFor(location.pathname)?.section;
@@ -95,6 +123,7 @@ const DocsLayout = (props: RouteSectionProps) => {
     on(
       () => [location.pathname, location.hash] as const,
       ([path, hash]) => {
+        awaited();
         if (path === shownPath) {
           if (hash) scrollToTarget(hashId(), 'auto', hashId() === highlightNext);
           highlightNext = null;

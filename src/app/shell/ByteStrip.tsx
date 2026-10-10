@@ -64,7 +64,7 @@ export function ByteStrip(props: { fields: ByteField[] }) {
   onCleanup(() => timers.forEach(clearTimeout));
 
   return (
-    <div class="bytes" ref={strip}>
+    <div class="bytes" ref={strip} data-search-skip>
       <For each={props.fields}>
         {(f) => (
           <div

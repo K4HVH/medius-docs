@@ -44,3 +44,20 @@ export function mergeCompat(entries: readonly CompatEntry[], top: TopDevice[] | 
   const bare = (r: CompatRow) => (r.name === r.vidpid ? 1 : 0);
   return rows.sort((a, b) => bare(a) - bare(b) || a.name.localeCompare(b.name, 'en', { sensitivity: 'base' }));
 }
+
+const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
+// Each row with the id its table row carries: `device-` and its name, and its ids after the name where
+// rows share one, so a row's id never turns on where another row sorts.
+export function withIds<T extends CompatEntry>(rows: readonly T[]): (T & { id: string })[] {
+  const named = new Map<string, number>();
+  for (const r of rows) named.set(slug(r.name), (named.get(slug(r.name)) ?? 0) + 1);
+  const taken = new Set<string>();
+  return rows.map((r) => {
+    const base = `device-${slug(r.name)}`;
+    let id = named.get(slug(r.name))! > 1 && r.vidpid ? `${base}-${slug(r.vidpid)}` : base;
+    for (let n = 2; taken.has(id); n++) id = `${base}-${n}`;
+    taken.add(id);
+    return { ...r, id };
+  });
+}

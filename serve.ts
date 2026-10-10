@@ -5,6 +5,7 @@ import { handleStatsApi } from "./server/stats";
 import { handleAgentDocs, livePage, DOC_CACHE, LIVE_CACHE, LLMS_LINK, NOINDEX_ARTIFACTS } from "./server/agent";
 import { handleHomeApi } from "./server/home";
 import { handleMcp } from "./server/mcp";
+import { handleSearchIndex } from "./server/searchIndex";
 import { planRedirect } from "./server/routing";
 
 const PORT = parseInt(process.env.PORT || "3000");
@@ -48,6 +49,9 @@ Bun.serve({
 
     const mcp = await handleMcp(req);
     if (mcp) return mcp;
+
+    const search = await handleSearchIndex(req, PUBLIC_DIR);
+    if (search) return search;
 
     const url = new URL(req.url);
     const location = planRedirect(url.pathname, url.search, ROUTES);

@@ -2,6 +2,7 @@ import { createEffect, createMemo, createSignal, For, on, onCleanup, onMount, Sh
 import { A } from '@solidjs/router';
 import { lockPage, modKey, panelKeys } from './panel';
 import { arrive, fontsReady, inOrder } from './motion';
+import { prefetchIndex } from '../search/load';
 import { LANG_LABEL, LANG_ROOT, SECTION_LABEL, routeFor, sectionLabel, sidebarGroups, type Lang, type Section } from '../routes';
 
 type CodeSection = 'native' | 'library' | 'bindings';
@@ -188,7 +189,7 @@ export function DocsSidebar(props: {
             </For>
           </nav>
         </Show>
-        <button class="search caps" type="button" onClick={() => props.onSearch()}>
+        <button class="search caps" type="button" onClick={() => props.onSearch()} onPointerEnter={prefetchIndex} onFocus={prefetchIndex}>
           <span>Search</span>
           <kbd>{modKey()} K</kbd>
         </button>

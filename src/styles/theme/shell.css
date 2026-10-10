@@ -334,12 +334,15 @@ html { scroll-padding-top: calc(var(--nav-h) + 24px); }
 .srch-o .t { min-width: 0; color: var(--text-2); font-size: 15px; transition: color 0.2s; }
 .srch-o[aria-selected="true"] .t { color: var(--text); }
 .srch-o .c { color: var(--dim); white-space: nowrap; font-size: 10.5px; }
+/* A snippet keeps two lines, enough for the words it was cut around. */
 .srch-o .d {
-  grid-column: 1 / -1; min-width: 0; color: var(--muted); font-size: 13.5px;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  grid-column: 1 / -1; min-width: 0; color: var(--muted); font-size: 13.5px; line-height: 1.45;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden;
 }
 .srch mark { background: none; color: var(--accent); }
 .srch-none { margin: 0; padding: 26px 20px; color: var(--muted); }
+.srch-fail { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; }
+.srch-fail p { margin: 0; }
 .srch-f { display: flex; flex-wrap: wrap; gap: 8px 22px; padding: 11px 20px; border-top: 1px solid var(--line-2); color: var(--dim); }
 .srch-f span { display: inline-flex; align-items: center; gap: 6px; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
@@ -348,7 +351,7 @@ html { scroll-padding-top: calc(var(--nav-h) + 24px); }
   .srch-p { width: 100%; max-height: none; height: 100%; border: 0; box-shadow: none; }
   .srch .srch-esc, .srch-f { display: none; }
   .srch-x { display: block; }
-  .srch-o .c { grid-column: 1 / -1; grid-row: 2; }
+  .srch-o .c { grid-column: 1 / -1; grid-row: 2; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 }
 @media (prefers-reduced-motion: reduce) {
   .srch.closing { opacity: 0; }

@@ -135,7 +135,7 @@ const ManualFlash = () => {
       <Select
         label="Via"
         options={[
-          { value: 'usb2', label: dash().name() ? `Control port, USB2 (${dash().name()})` : 'Control port, USB2' },
+          { value: 'usb2', label: 'Control port, USB2', note: dash().name() || undefined },
           { value: 'rom', label: 'ROM download, USB1 or USB3' },
         ]}
         value={via()}
@@ -277,7 +277,7 @@ const ManualFlash = () => {
                 <Show when={source() === 'release'}>
                   <Switch>
                     <Match when={releases.loading}>
-                      <p class="mut">Loading releases...</p>
+                      <p class="mut" data-search-skip>Loading releases...</p>
                     </Match>
                     <Match when={releases.error}>
                       <div class="callout callout--warning">Couldn't reach the firmware downloads. Choose Upload a file.</div>

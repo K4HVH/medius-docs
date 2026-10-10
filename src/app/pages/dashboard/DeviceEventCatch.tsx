@@ -626,8 +626,8 @@ const DeviceEventCatch = () => {
           </Panel>
 
           <Show when={streaming() && latestButtons()}>
-            <Panel id="catch-held" title="Held buttons">
-              <Show when={held().length > 0} fallback={<p>Nothing held.</p>}>
+            <Panel id="catch-held" title="Held buttons" transient>
+              <Show when={held().length > 0} fallback={<p data-search-skip>Nothing held.</p>}>
                 <div class="chips">
                   <For each={held()}>{(name) => <Chip variant="warning">{name}</Chip>}</For>
                 </div>

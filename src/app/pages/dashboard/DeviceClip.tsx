@@ -619,7 +619,7 @@ const DeviceClip = () => {
                 when={clip()}
                 fallback={
                   <Panel id="clip-playback" wide>
-                    <p>Reading...</p>
+                    <p data-search-skip>Reading...</p>
                   </Panel>
                 }
               >
@@ -900,9 +900,9 @@ const DeviceClip = () => {
                   </Show>
 
                   <p class="sublabel">
-                    Unsent ({plural(draft().length, 'tick')}, {draftBytes()} B)
+                    Unsent <span data-search-skip>({plural(draft().length, 'tick')}, {draftBytes()} B)</span>
                   </p>
-                  <Show when={draft().length > 0} fallback={<p class="mut">Nothing built.</p>}>
+                  <Show when={draft().length > 0} fallback={<p class="mut" data-search-skip>Nothing built.</p>}>
                     <div class="chips">
                       <For each={draft()}>
                         {(e, i) => (
@@ -950,7 +950,7 @@ const DeviceClip = () => {
                 <Panel id="clip-triggers" title="Triggers">
                   <Show
                     when={(clip()?.triggers.length ?? 0) + packets().length > 0}
-                    fallback={<p>No triggers bound.</p>}
+                    fallback={<p data-search-skip>No triggers bound.</p>}
                   >
                     <Show when={(clip()?.triggers.length ?? 0) > 0}>
                       <p class="sublabel">

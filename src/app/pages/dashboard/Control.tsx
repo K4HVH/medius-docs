@@ -56,7 +56,7 @@ const Control = () => {
       <PageHeader
         aside={
           <Show when={full()}>
-            <div class="safety" id="safety-clear" data-search-target>
+            <div class="safety" id="safety-clear" data-search-target data-search-title="Clear everything">
               <Button variant="danger" disabled={cmd.busy()} onClick={safetyClear}>
                 Clear everything
               </Button>
@@ -88,7 +88,7 @@ const Control = () => {
         fallback={
           <Panels>
             <Show when={!dash.updateOnly()} fallback={<UpdateOnlyCard use="these controls" />}>
-              <Panel id="controls" title="Your box" wide>
+              <Panel id="controls" title="Your box" wide transient>
                 <div aria-live="polite" class="boxstate">
                   <Switch>
                     <Match when={dash.status() === 'connecting'}>

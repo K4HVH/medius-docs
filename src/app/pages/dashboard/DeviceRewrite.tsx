@@ -275,7 +275,7 @@ const DeviceRewrite = () => {
           <p class="sublabel">
             Active ({entries().length} of {REWRITE_TAB_MAX})
           </p>
-          <Show when={entries().length > 0} fallback={<p>None.</p>}>
+          <Show when={entries().length > 0} fallback={<p data-search-skip>None.</p>}>
             <div class="chips">
               <For each={entries()}>
                 {(e, i) => (

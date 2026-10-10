@@ -4,12 +4,12 @@ import { DocSection } from '../../shell/DocSection';
 import { Filter, FixLink, Marked } from '../../shell/Filter';
 import { HELP, HELP_ITEMS, type HelpItem } from '../../data/help';
 import { LINKS } from '../../site';
+import { matches } from '../../search/text';
 
 const Help: Component = () => {
   const [query, setQuery] = createSignal('');
-  const q = () => query().trim().toLowerCase();
-  // An answer's anchor word counts too: "bsod" finds the blue screen.
-  const shows = (i: HelpItem) => !q() || `${i.q} ${i.a} ${i.id.replace(/-/g, ' ')}`.toLowerCase().includes(q());
+  // Matched as the site search matches; an answer's anchor word counts too: "bsod" finds the blue screen.
+  const shows = (i: HelpItem) => matches(`${i.q} ${i.a} ${i.id.replace(/-/g, ' ')}`, query());
   const count = createMemo(() => HELP_ITEMS.filter(shows).length);
 
   return (

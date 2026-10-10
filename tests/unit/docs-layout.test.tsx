@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, beforeAll, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeAll, beforeEach, afterEach, onTestFinished } from 'vitest';
 import { render, cleanup, fireEvent, waitFor } from '@solidjs/testing-library';
 import { PageHeader } from '../../src/app/shell/PageHeader';
-import { createSignal } from 'solid-js';
+import { createSignal, For } from 'solid-js';
 import { MemoryRouter, Route, createMemoryHistory } from '@solidjs/router';
 import DocsLayout from '../../src/app/pages/DocsLayout';
 import { BoxesContext, NativeFlashContext, type Boxes, type BoxSession, type NativeFlash } from '../../src/app/pages/dashboard/context';
@@ -61,6 +61,24 @@ const Sections = () => (
   </>
 );
 
+// A table whose rows arrive with a fetch, after the page is in.
+// Rows that arrive with a fetch, after the page is in, and are drawn again when a second one lands.
+const Late = () => {
+  const [rows, setRows] = createSignal(0);
+  setTimeout(() => setRows(1), 60);
+  setTimeout(() => setRows(2), 160);
+  return (
+    <section class="doc-section" id="devices">
+      <h2 class="doc-h2">Devices</h2>
+      <table>
+        <tbody>
+          <For each={rows() ? [rows()] : []}>{(n) => <tr id="device-g502" data-draw={n}><td>G502</td></tr>}</For>
+        </tbody>
+      </table>
+    </section>
+  );
+};
+
 const mount = (path: string, w = world()) => {
   const history = createMemoryHistory();
   history.set({ value: path });
@@ -85,6 +103,7 @@ const mount = (path: string, w = world()) => {
             </>
           )}
         />
+        <Route path="/guide/compatibility" component={Late} />
         <Route path="/dashboard" component={() => <p>device page</p>} />
         <Route path="/dashboard/setup" component={() => <p>setup page</p>} />
         <Route path="/dashboard/changelog" component={() => <p>changelog page</p>} />
@@ -211,12 +230,18 @@ describe('DocsLayout and the boxes', () => {
   });
 
   it('closes the phone page panel when a search result is chosen', async () => {
+    const index = { version: 1, built: 'now', entries: [{ path: '/native/commands/inject', title: 'INJECT', kind: 'page', section: 'Native API', crumb: 'Commands', text: '' }] };
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify(index), { status: 200 })));
+    onTestFinished(() => {
+      vi.unstubAllGlobals();
+    });
     const r = mount('/native');
     await waitFor(() => expect(r.container.textContent).toContain('native'));
     fireEvent.click(r.container.querySelector('button.docbar')!);
     fireEvent.click(r.container.querySelector('.side button.search')!);
     const input = await waitFor(() => document.querySelector<HTMLInputElement>('.srch input')!);
     fireEvent.input(input, { target: { value: 'Inject' } });
+    await waitFor(() => expect(document.querySelector('.srch [role="option"]')).not.toBeNull());
     fireEvent.keyDown(input, { key: 'Enter' });
     await waitFor(() => expect(document.querySelector('.srch')).toBeNull());
     expect(r.container.querySelector('aside.side')!.classList.contains('open')).toBe(false);
@@ -320,6 +345,27 @@ describe('DocsLayout scrolling', () => {
       expect(el.classList.contains('rb')).toBe(true);
       expect(el.classList.contains('rv-wait')).toBe(false);
     }
+  });
+
+  it('lands on a hash target that arrives after the page, with its ring, and again when it is drawn anew', async () => {
+    const r = mount('/guide/compatibility#device-g502');
+    await waitFor(() => expect(r.container.querySelector('#device-g502')).not.toBeNull());
+    await waitFor(() => expect(jumped).toBe(r.container.querySelector('#device-g502')));
+    expect(r.container.querySelector('#device-g502')!.classList.contains('search-highlight')).toBe(true);
+    await waitFor(() => expect(r.container.querySelector('#device-g502')!.getAttribute('data-draw')).toBe('2'));
+    await waitFor(() => expect(r.container.querySelector('#device-g502')!.classList.contains('search-highlight')).toBe(true));
+    expect(jumped).toBe(r.container.querySelector('#device-g502'));
+  });
+
+  it('leaves a reader who pressed anywhere, such as on the scrollbar, where they are', async () => {
+    const r = mount('/guide/compatibility#device-g502');
+    await waitFor(() => expect(r.container.querySelector('#device-g502')).not.toBeNull());
+    await waitFor(() => expect(jumped).toBe(r.container.querySelector('#device-g502')));
+    const first = jumped;
+    window.dispatchEvent(new Event('pointerdown'));
+    await waitFor(() => expect(r.container.querySelector('#device-g502')!.getAttribute('data-draw')).toBe('2'));
+    await new Promise((res) => setTimeout(res, 30));
+    expect(jumped).toBe(first);
   });
 
   it('scrolls the window to the top on a new page without a hash', async () => {
