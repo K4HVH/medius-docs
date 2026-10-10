@@ -22,7 +22,8 @@ describe('the places a link can name', () => {
     const h2 = r.container.querySelector('h2')!;
     const b = icon(h2, 'frames')!;
     expect(b.getAttribute('aria-label')).toBe('Copy link to Frames');
-    expect(b.nextElementSibling?.classList.contains('doc-caption')).toBe(true);
+    expect(b.parentElement!.matches('.doc-t')).toBe(true);
+    expect(b.parentElement!.nextElementSibling?.classList.contains('doc-caption')).toBe(true);
   });
 
   it('gives a section with no id none', () => {
@@ -57,6 +58,17 @@ describe('the places a link can name', () => {
     expect(label.textContent).toBe('SCALE');
     expect(icon(label, 'scale')).not.toBeNull();
     expect(block.querySelector('p')!.textContent).toBe('Body.');
+  });
+
+  it('keeps each heading named by its title, not by its icon', () => {
+    const r = render(() => (
+      <>
+        <DocSection id="frames" title="Frames" caption="What a frame holds">x</DocSection>
+        <Panel id="cursor" title="Cursor">y</Panel>
+      </>
+    ));
+    expect(r.container.querySelector('#frames h2')!.getAttribute('aria-label')).toBe('Frames');
+    expect(r.container.querySelector('#cursor h2')!.getAttribute('aria-label')).toBe('Cursor');
   });
 
   it('leaves search titles as they were', () => {

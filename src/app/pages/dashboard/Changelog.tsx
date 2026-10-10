@@ -86,7 +86,7 @@ const Release = (props: { release: FirmwareRelease; open: boolean }) => {
   return (
     <section id={props.release.tag} class="rel">
       <div class="rel-l">
-        <h2>
+        <h2 aria-label={props.release.tag}>
           {props.release.tag}
           <CopyLink id={props.release.tag} label={props.release.tag} to={itemPath('release', props.release.tag)} />
         </h2>

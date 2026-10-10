@@ -27,7 +27,7 @@ const Help: Component = () => {
                 <For each={g.items}>
                   {(item) => (
                     <div class="qa" id={item.id} data-search-target hidden={!shows(item)} classList={{ first: shown()[0] === item }}>
-                      <h3>
+                      <h3 aria-label={item.q}>
                         <Marked text={item.q} query={query()} />
                         <CopyLink id={item.id} label={item.q} to={itemPath('help', item.id)} />
                       </h3>

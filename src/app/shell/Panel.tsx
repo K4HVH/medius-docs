@@ -37,7 +37,7 @@ export function Panel(props: {
     >
       <Show when={props.title}>
         <div class="ph">
-          <h2>
+          <h2 aria-label={props.title}>
             {props.title}
             <Show when={!props.transient && props.id}>{(id) => <CopyLink id={id()} label={props.title!} />}</Show>
           </h2>

@@ -7,6 +7,7 @@ import { ROUTES, documentTitle, sectionLabel } from '../app/routes';
 import { extractPage, type Fate } from '../app/search/extract';
 import type { IndexEntry } from '../app/search/types';
 import Prism from '../app/prism';
+import { holdsLink } from '../app/shell/CopyLink';
 
 const frame = () => new Promise<void>((r) => requestAnimationFrame(() => r()));
 
@@ -93,9 +94,7 @@ export async function runSearchPass(): Promise<Pass> {
         nav: r.nav,
         app: r.kind === 'app',
       }, (id, fate, panel) => {
-        const at = `[id="${CSS.escape(id)}"]`;
-        const link = !!root.querySelector(`${at} .cl[data-for="${CSS.escape(id)}"]`);
-        (rendered[r.path] ??= []).push({ id, fate, panel, link });
+        (rendered[r.path] ??= []).push({ id, fate, panel, link: holdsLink(root, id) });
       }),
     );
   }

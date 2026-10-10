@@ -86,6 +86,35 @@ describe('PageTabs', () => {
     expect(written).toEqual(['https://medius.k4tech.net/dashboard#log']);
   });
 
+  it('opens a tab picked from further down at the top of its pane, under the stuck bar', () => {
+    const { container } = page();
+    const bar = container.querySelector<HTMLElement>('.ptabs')!;
+    bar.style.top = '72px';
+    Object.defineProperty(bar, 'offsetHeight', { value: 43, configurable: true });
+    Object.defineProperty(window, 'scrollY', { value: 900, configurable: true });
+    container.querySelector<HTMLElement>('#pane-device-log')!.getBoundingClientRect = () => ({ top: -208 }) as DOMRect;
+    const to = vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
+    try {
+      fireEvent.click(container.querySelector('[data-tab="log"]')!);
+      expect(to).toHaveBeenCalledWith({ top: 900 - 208 - 43 - 72, behavior: 'instant' });
+    } finally {
+      to.mockRestore();
+      Object.defineProperty(window, 'scrollY', { value: 0, configurable: true });
+    }
+  });
+
+  it('leaves the page where it is for a tab picked with its pane in view', () => {
+    const { container } = page();
+    container.querySelector<HTMLElement>('#pane-device-log')!.getBoundingClientRect = () => ({ top: 400 }) as DOMRect;
+    const to = vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
+    try {
+      fireEvent.click(container.querySelector('[data-tab="log"]')!);
+      expect(to).not.toHaveBeenCalled();
+    } finally {
+      to.mockRestore();
+    }
+  });
+
   it('moves along the tabs with the arrows, never onto the icon', () => {
     const { container } = page();
     const log = container.querySelector<HTMLButtonElement>('[data-tab="log"]')!;
