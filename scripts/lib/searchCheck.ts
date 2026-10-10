@@ -7,8 +7,9 @@ import { createSearcher } from '../../src/app/search/rank';
 import type { SearchIndex } from '../../src/app/search/types';
 import type { Fate } from '../../src/app/search/extract';
 
-// What the pass saw on each page: every element marked for search, and what became of it.
-export type Rendered = Record<string, { id: string; fate: Fate; panel: boolean }[]>;
+// What the pass saw on each page: every element marked for search, what became of it, and whether it
+// holds the link icon that copies its address.
+export type Rendered = Record<string, { id: string; fate: Fate; panel: boolean; link: boolean }[]>;
 
 // What a built search index is held to before it ships: every page, docs section, titled dashboard panel
 // and Help answer in it; each entry titled, at an address no other entry has; nothing a page shows only
@@ -85,6 +86,8 @@ export function checkIndex(index: SearchIndex, ctx: CheckContext): string[] {
       for (const t of list) {
         if (t.fate === 'entry' && !paths.has(`${path}#${t.id}`)) out.push(`${path}#${t.id} is in no entry`);
         if (t.fate === 'untitled' && !t.panel) out.push(`${path}#${t.id} is marked for search but has no title`);
+        // A place search can land on is a place a reader can link to.
+        if (t.fate === 'entry' && !t.link) out.push(`${path}#${t.id} has no link icon`);
       }
     for (const id of ctx.sectionIds) if (!seen.has(id)) out.push(`section #${id} was never rendered`);
   } else for (const id of ctx.sectionIds) if (!anchors.has(id) && !slugs.has(id)) out.push(`section #${id} is in no entry`);

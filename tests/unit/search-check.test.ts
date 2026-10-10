@@ -75,15 +75,26 @@ describe('checkIndex', () => {
   it('holds each page to the elements it rendered for search, where the pass says what it saw', () => {
     const rendered = {
       '/native/commands/lock': [
-        { id: 'lock', fate: 'folded' as const, panel: false },
-        { id: 'bearing', fate: 'entry' as const, panel: false },
-        { id: 'wire-rate', fate: 'untitled' as const, panel: false },
-        { id: 'stats', fate: 'untitled' as const, panel: true },
+        { id: 'lock', fate: 'folded' as const, panel: false, link: false },
+        { id: 'bearing', fate: 'entry' as const, panel: false, link: true },
+        { id: 'wire-rate', fate: 'untitled' as const, panel: false, link: false },
+        { id: 'stats', fate: 'untitled' as const, panel: true, link: false },
       ],
-      '/guide/help': [{ id: 'bsod', fate: 'entry' as const, panel: false }],
+      '/guide/help': [{ id: 'bsod', fate: 'entry' as const, panel: false, link: true }],
     };
     expect(checkIndex(index(good), { ...ctx, rendered })).toEqual(['/native/commands/lock#wire-rate is marked for search but has no title']);
     expect(checkIndex(index(good), { ...ctx, rendered, sectionIds: ['bearing', 'lost'] })).toContain('section #lost was never rendered');
+  });
+
+  it('names a place with an entry and no link icon to copy its address', () => {
+    const rendered = {
+      '/native/commands/lock': [
+        { id: 'lock', fate: 'folded' as const, panel: false, link: false },
+        { id: 'bearing', fate: 'entry' as const, panel: false, link: false },
+      ],
+      '/guide/help': [{ id: 'bsod', fate: 'entry' as const, panel: false, link: true }],
+    };
+    expect(checkIndex(index(good), { ...ctx, rendered })).toEqual(['/native/commands/lock#bearing has no link icon']);
   });
 
   it('holds an expected query to its place', () => {
