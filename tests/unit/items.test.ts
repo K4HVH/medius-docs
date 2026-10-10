@@ -102,6 +102,23 @@ describe('itemPage', () => {
     }
   });
 
+  it('asks again later, at once, while the list is slow to come', async () => {
+    const slow = sources({
+      releases: () => new Promise((r) => setTimeout(() => r([release('v3.4.4')]), 40)),
+      refresh: () => new Promise(() => {}),
+      budgetMs: 150,
+    });
+    const at = Date.now();
+    const page = (await itemPage('/dashboard/changelog/v3.4.5', read, slow, fill))!;
+    expect(page.status).toBe(503);
+    expect(Date.now() - at).toBeLessThan(1_000);
+  });
+
+  it('asks again later when reading the list again fails, though an older one is in hand', async () => {
+    const page = (await itemPage('/dashboard/changelog/v3.4.5', read, sources({ refresh: async () => null }), fill))!;
+    expect(page.status).toBe(503);
+  });
+
   it('asks again later while the list a release is in cannot be read', async () => {
     const page = (await itemPage('/dashboard/changelog/v3.4.5', read, sources({ releases: async () => null, refresh: async () => null }), fill))!;
     expect(page.status).toBe(503);

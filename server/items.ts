@@ -19,6 +19,8 @@ export interface ItemSources {
   // The list read again, for a release published since it was read.
   refresh: () => Promise<FirmwareRelease[] | null>;
   stats: () => Promise<StatsSummary | null>;
+  // The longest a release is looked for, short of the server's 10 s request limit.
+  budgetMs?: number;
 }
 
 const LIVE: ItemSources = { releases: getReleases, refresh: refreshReleases, stats: getStatsSummary };
@@ -36,6 +38,18 @@ async function read<T>(source: () => Promise<T | null>): Promise<T | null> {
 
 const stop = (s: string) => (/[.!?]$/.test(s) ? s : `${s}.`);
 
+const LATE = Symbol('late');
+
+// Each promise given to the result settles by the end of the budget, as itself or LATE.
+function timer(budgetMs: number) {
+  const end = Date.now() + budgetMs;
+  return <T>(p: Promise<T>): Promise<T | typeof LATE> => {
+    let id: ReturnType<typeof setTimeout> | undefined;
+    const late = new Promise<typeof LATE>((r) => (id = setTimeout(() => r(LATE), Math.max(0, end - Date.now()))));
+    return Promise.race([p, late]).finally(() => clearTimeout(id));
+  };
+}
+
 async function find(item: Item, sources: ItemSources): Promise<Found> {
   if (item.kind === 'help') {
     const help = HELP_ITEMS.find((i) => i.id === item.id);
@@ -43,11 +57,17 @@ async function find(item: Item, sources: ItemSources): Promise<Found> {
   }
   if (item.kind === 'release') {
     const named = (list: FirmwareRelease[] | null) => list?.find((r) => r.tag.toLowerCase() === item.id.toLowerCase());
-    const list = await read(sources.releases);
+    const within = timer(sources.budgetMs ?? 5_000);
+    const list = await within(read(sources.releases));
+    if (list === LATE) return 'down';
     let release = named(list);
-    const again = release ? null : await read(sources.refresh);
-    release ??= named(again);
-    if (!release) return list || again ? 'unknown' : 'down';
+    if (!release) {
+      // Only a list read again says a release isn't out.
+      const again = await within(read(sources.refresh));
+      if (again === LATE || !again) return 'down';
+      release = named(again);
+      if (!release) return 'unknown';
+    }
     const card = releaseCard(release);
     return { card, description: card.list?.length ? card.list.map(stop).join(' ') : routeFor(item.parent)!.description };
   }
@@ -58,12 +78,12 @@ async function find(item: Item, sources: ItemSources): Promise<Found> {
   return { card, description: card.description ?? '' };
 }
 
-// The card for /og: a page's, or an item's.
-export async function cardFor(path: string, sources: ItemSources = LIVE): Promise<CardContent | null> {
+// The card for /og: a page's, or an item's; 'down' while the item's source can't be read.
+export async function cardFor(path: string, sources: ItemSources = LIVE): Promise<CardContent | null | 'down'> {
   const item = itemFor(path);
   if (item) {
     const found = await find(item, sources);
-    return typeof found === 'string' ? null : found.card;
+    return found === 'unknown' ? null : found === 'down' ? 'down' : found.card;
   }
   const route = routeFor(path);
   return route ? pageCard(route) : null;

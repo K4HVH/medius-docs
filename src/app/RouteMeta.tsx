@@ -3,6 +3,7 @@ import { useLocation } from '@solidjs/router';
 import { NOT_FOUND, type RouteInfo, documentTitle, routeFor } from './routes';
 import { cardUrl, pageCard } from './card/content';
 import { itemFor } from './items';
+import { lostPath } from './served';
 import { SITE } from './site';
 import { buildJsonLd } from './structuredData';
 
@@ -133,7 +134,7 @@ export default function RouteMeta() {
   const served = new Map<string, Kept>();
   createEffect(() => {
     const path = location.pathname;
-    const item = itemFor(path);
+    const item = path === lostPath ? null : itemFor(path);
     const mark = document.head.querySelector('meta[name="medius-item"]');
     if (item && mark?.getAttribute('content') === path) served.set(path, keep());
     mark?.remove();

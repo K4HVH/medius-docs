@@ -49,6 +49,9 @@ src/
     routes.ts                         # Route registry: every page's title, description, sidebar entry
     site.ts                           # Site URL, outside links (Discord, GitHub, crates.io, PyPI)
     RouteMeta.tsx                     # Per-route <head> from the registry, with structuredData.ts
+    items.ts                          # Addresses for one Help answer, release or device (/guide/help/bsod)
+    card/                             # Link cards: content.ts (what each says, its address), layout.ts (text
+                                      # fitted by the fonts' measures), svg.ts (the card as an SVG)
     AiActions.tsx                     # The "use this page with an AI" menu beside the crumbs
     shell/                            # The site shell: SiteNav, SiteFooter, DocsSidebar, PageHeader, DocSection,
                                       # OnThisPage, IndexRow, ByteStrip, Arrow, Filter (a live filter, Marked,
@@ -183,6 +186,8 @@ src/
 
 The prerender (`scripts/prerender.ts`, run by `build:full` and the Docker build) snapshots every registry page, the 404 page and Home, and writes `dist/routes.json`. `serve.ts` answers a registry path with its snapshot, 301s a trailing slash, a `.html` suffix or the wrong case to the registry path, and anything else with `dist/404.html` and status 404. The changelog and stats snapshots hold a `data-fill` block the server fills per request (`server/fill.ts`), so crawlers without JavaScript read the releases and totals. The landing's vitals and the compatibility table are filled the same way, but those pages (`SOFT_FILL_PATHS`) answer 200 as prerendered while a source is down, never 503.
 
+A Help answer, release or device also has an address (`src/app/items.ts`: `/guide/help/{id}`, `/dashboard/changelog/{tag}`, `/guide/compatibility/{row id without device-}`), whose link card names it. `server/items.ts` answers it with the parent's snapshot, filled, under the item's head: title, description, card, `theme-color`, `noindex`, no canonical, and `medius-item` naming the address. An unknown item answers 404 with the 404 page (marked `data-not-found`, so the app keeps it), and an item whose source can't be read answers 503. The app routes the address to the parent page (`pagePath`), which lands on the item as on a `#hash`. Item addresses stay out of the sitemap and search.
+
 ### Loading
 
 Every page is a separate chunk. A link, Back or Forward waits for the page's code before the page changes (`shell/leave.ts`), so a page never shows empty; the router fetches a page's code when a link to it is pointed at, focused or touched, and `DocsLayout` fetches the sidebar neighbours' at idle. A page whose code fails loads whole. In `lazyPages.ts`, a page that shows highlighted code is a `codePage` (it brings the highlighter, so its code never shows plain) and a dashboard page a `dashboard` (it brings the box runtime); a test fails when a page's source and its wrapper disagree. Docs pages never load the dashboard's box runtime.
@@ -307,24 +312,20 @@ existing internal `<A>` alone; never wrap an external `<a>` around or inside it.
 - Every table sits in `.table-scroll`, so a wide one scrolls inside its box and never the page. Avoid 3+ column tables with long `code` content all the same.
 - Inline `code` wraps; `pre` blocks scroll inside their box.
 
-## Favicon and social embeds
+## Favicon and link previews
 
-The favicon lives in `public/favicon.svg` (served at `/favicon.svg`), and three PNGs are made from it:
+The favicon lives in `public/favicon.svg` (served at `/favicon.svg`), and two PNGs are made from it:
 
 | File | Size | Use |
 |---|---|---|
-| `public/og-image.png` | 1024 px, full colour | Open Graph and Twitter Card preview (Facebook's large card wants 600 px or more) |
 | `public/favicon.png` | 512 px, 256-colour palette | Tab icon where SVG isn't taken; every page view may fetch it, so it stays small |
 | `public/apple-touch-icon.png` | 180 px, opaque | iOS home screen and Safari |
 
-`src/index.html` carries Home's head; `RouteMeta.tsx` rewrites title, description, canonical, Open Graph, Twitter and JSON-LD per route from the registry.
-
 ```bash
-magick -background none -density 2048 public/favicon.svg -resize 1024x1024 -depth 8 -strip public/og-image.png
+magick -background none -density 2048 public/favicon.svg -resize 1024x1024 -depth 8 -strip /tmp/icon-1024.png
 python3 - <<'PY'
 from PIL import Image  # Pillow built with libimagequant
-src = Image.open('public/og-image.png').convert('RGBA')
-src.save('public/og-image.png', optimize=True)
+src = Image.open('/tmp/icon-1024.png').convert('RGBA')
 src.resize((512, 512), Image.LANCZOS).quantize(colors=256, method=Image.Quantize.LIBIMAGEQUANT,
     dither=Image.Dither.FLOYDSTEINBERG).save('public/favicon.png', optimize=True)
 touch = Image.new('RGBA', (180, 180), src.getpixel((512, 80))[:3] + (255,))
@@ -332,6 +333,21 @@ touch.alpha_composite(src.resize((180, 180), Image.LANCZOS))
 touch.convert('RGB').save('public/apple-touch-icon.png', optimize=True)
 PY
 ```
+
+`src/index.html` carries Home's head; `RouteMeta.tsx` rewrites title, description, canonical, Open Graph, Twitter, `theme-color` and JSON-LD per route from the registry.
+
+**Link cards.** Every page, Help answer, release and device has a 1200 x 630 card, the page header drawn as an image, made from the data the page renders:
+
+| Unit | Job |
+|---|---|
+| `src/app/card/content.ts` | What a card says (crumb, title, description or list, address, fact, colour), and `cardUrl`, its address with a hash of that |
+| `src/app/card/layout.ts`, `svg.ts` | The title fitted from 140 px down to 56 px in two lines, the rest clamped with an ellipsis, by the fonts' measures; the SVG, its text as glyph outlines |
+| `server/og.ts` | `/og/{path}.png` (Home is `/og/index.png`), drawn by resvg (wasm) on first request and kept by hash; an address with the current `?v=` is cached for a year, any other for five minutes |
+| `server/og/fonts/` | Inter 400 and 700 and IBM Plex Mono 500 as TrueType, made from `public/fonts` by `scripts/card-fonts.py` (fonttools and brotli); run it again when those fonts change |
+
+A change to how a card is drawn (`layout.ts`, `svg.ts`, the fonts) fails `tests/unit/card-render.test.ts` until `STYLE` in `content.ts` is raised and the new digest recorded there: without it the card's address stays the same, and caches keep the old image for a year. The same test fits every page's, Help answer's and listed device's card.
+
+**`theme-color`** is the stripe Discord draws down an embed's edge: blue, or a device's verdict colour. The served HTML carries it, and the script right after the tag sets it to black before the page paints, so a phone's address bar stays black. `RouteMeta` keeps the colour in `data-embed`, and the prerender copies it into `content` for the snapshot.
 
 ## Content rules
 

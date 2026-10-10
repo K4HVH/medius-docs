@@ -1,9 +1,8 @@
 """The fonts the link cards are drawn in (server/og/fonts), made from the woff2 files the site ships, so a
-card sets type exactly as the page does. resvg reads TrueType, not woff2, and takes one weight per file:
-Inter's variable font is cut at 400 and 700. Their glyph substitutions (GSUB: Inter's contextual
-alternates) are dropped, so a card's text is set glyph for glyph, the width measured is the width drawn,
-and opentype.js, which can't read Inter's GSUB, measures it. Kerning (GPOS) stays. Run again when
-public/fonts changes.
+card sets type as the page does. opentype.js, which measures and draws the cards' text, reads TrueType,
+not woff2, and one weight per file: Inter's variable font is cut at 400 and 700. Their glyph
+substitutions (GSUB: Inter's contextual alternates) are dropped, since opentype.js can't read Inter's;
+kerning (GPOS) stays. Run again when public/fonts changes.
 
     python3 -m pip install --user fonttools brotli
     python3 scripts/card-fonts.py

@@ -134,6 +134,17 @@ describe('drawable', () => {
     expect(drawable(bold, 'Hǎo')).toBe('Hao');
   });
 
+  it('drops control characters, though the font maps some', () => {
+    expect(bold.hasChar('\u0000')).toBe(true);
+    expect(drawable(bold, 'Mo\u0000use\u0007')).toBe('Mouse');
+  });
+
+  it('never sets an accent the font lacks as a mark beside its letter', () => {
+    const lacking = [...'źŚşřůĳ'].find((c) => !bold.hasChar(c) && /\p{M}/u.test(c.normalize('NFD')));
+    expect(lacking).toBeDefined();
+    expect(drawable(bold, `M${lacking}x`)).toBe(`M${lacking!.normalize('NFD')[0]}x`);
+  });
+
   it('keeps the characters it has', () => {
     expect(drawable(bold, 'Café: G502 · Über')).toBe('Café: G502 · Über');
   });

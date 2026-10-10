@@ -19,11 +19,12 @@ export function loadFace(bytes: ArrayBuffer | Uint8Array): Face {
   return parse(bytes instanceof Uint8Array ? bytes.slice().buffer : bytes);
 }
 
-// What the face can draw of the text: a letter whose accent it lacks keeps the letter, anything else it
-// lacks goes, so a card never shows a missing-glyph box.
+// What the face can draw of the text: a letter whose accent it lacks keeps the letter, and anything else it
+// lacks goes, so a card never shows a missing-glyph box (nor an accent set apart from its letter, since
+// marks are not positioned). Control characters go too, though the fonts map some.
 export function drawable(face: Face, text: string): string {
   const kept = [...collapse(text).normalize('NFC')].map((ch) =>
-    face.hasChar(ch) ? ch : [...ch.normalize('NFD')].filter((c) => face.hasChar(c)).join(''),
+    /\p{Cc}/u.test(ch) ? '' : face.hasChar(ch) ? ch : [...ch.normalize('NFD')].filter((c) => !/\p{M}/u.test(c) && face.hasChar(c)).join(''),
   );
   return collapse(kept.join(''));
 }

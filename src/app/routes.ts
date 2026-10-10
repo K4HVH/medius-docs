@@ -1,4 +1,5 @@
 import { itemFor } from './items';
+import { lostPath } from './served';
 
 // Every page's metadata, in sidebar order. Plain data, so the prerender and server can load it too.
 
@@ -268,9 +269,9 @@ export function routeFor(path: string): RouteInfo | undefined {
   return BY_PATH.get(path);
 }
 
-// The page a path shows: an item's address shows its parent.
+// The page a path shows: an item's address shows its parent, unless the server answered it with the 404 page.
 export function pagePath(pathname: string): string {
-  return itemFor(pathname)?.parent ?? pathname;
+  return pathname === lostPath ? pathname : (itemFor(pathname)?.parent ?? pathname);
 }
 
 export function sectionLabel(r: RouteInfo): string {

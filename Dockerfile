@@ -57,6 +57,7 @@ COPY --from=builder --chown=bunuser:nodejs /app/server /app/server
 COPY --from=builder --chown=bunuser:nodejs /app/src/app/site.ts /app/src/app/site.ts
 COPY --from=builder --chown=bunuser:nodejs /app/src/app/routes.ts /app/src/app/routes.ts
 COPY --from=builder --chown=bunuser:nodejs /app/src/app/items.ts /app/src/app/items.ts
+COPY --from=builder --chown=bunuser:nodejs /app/src/app/served.ts /app/src/app/served.ts
 COPY --from=builder --chown=bunuser:nodejs /app/src/app/card /app/src/app/card
 COPY --from=builder --chown=bunuser:nodejs /app/src/app/data/help.ts /app/src/app/data/help.ts
 COPY --from=builder --chown=bunuser:nodejs /app/src/dashboard/firmware/notes.ts /app/src/dashboard/firmware/notes.ts
