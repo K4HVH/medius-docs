@@ -3,6 +3,7 @@ import { A } from '@solidjs/router';
 import { PageHeader } from '../../../shell/PageHeader';
 import { DocSection } from '../../../shell/DocSection';
 import { ByteStrip } from '../../../shell/ByteStrip';
+import { Anchor } from '../../../shell/Anchor';
 
 const Option: Component = () => {
   return (
@@ -420,7 +421,7 @@ const Option: Component = () => {
             </tbody>
           </table>
         </div>
-        <div id="full" data-search-target class="api-response-label">FULL</div>
+        <Anchor id="full" label="FULL" />
         <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Value</th><th>Effect</th></tr></thead>

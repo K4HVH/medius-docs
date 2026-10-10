@@ -2,6 +2,7 @@ import type { Component } from 'solid-js';
 import { A } from '@solidjs/router';
 import { PageHeader } from '../../shell/PageHeader';
 import { DocSection } from '../../shell/DocSection';
+import { Anchor } from '../../shell/Anchor';
 
 const Clip: Component = () => {
   return (
@@ -369,8 +370,7 @@ handle.stop()?;`}</code></pre>
           </p>
         </div>
 
-        <div id="input-triggers" data-search-target>
-          <div class="api-response-label">INPUT TRIGGERS</div>
+        <Anchor id="input-triggers" label="INPUT TRIGGERS">
           <div class="table-scroll">
             <table class="api-params">
               <thead>
@@ -422,10 +422,9 @@ clip.bind(ClipTrigger::new(Key::F1, Edge::Release, ClipAction::Stop))?;
 
 // Or one side-button that toggles play/stop:
 clip.bind(ClipTrigger::new(Button::SIDE1, Edge::Press, ClipAction::Toggle))?;`}</code></pre>
-        </div>
+        </Anchor>
 
-        <div id="packet-triggers" data-search-target>
-          <div class="api-response-label">PACKET TRIGGERS</div>
+        <Anchor id="packet-triggers" label="PACKET TRIGGERS">
           <p>
             A packet trigger is clip config: it shares the clip's lifetime (held by the keepalive,
             cleared with the clip on a <A href="/native/commands/clip#ctrl">hard stop</A>) and its
@@ -574,7 +573,7 @@ for t in [&held, &let_go, &set_report] {
 
 clip.unbind_packet(&let_go)?;   // by key: action, consume, once_per_run and selector_len are ignored
 clip.clear_triggers()?;         // both kinds`}</code></pre>
-        </div>
+        </Anchor>
       </DocSection>
 
       <DocSection id="async" title="On AsyncDevice" caption="AsyncClipHandle: control fires, queries await">

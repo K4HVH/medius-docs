@@ -3,6 +3,7 @@ import { A } from '@solidjs/router';
 import { PageHeader } from '../../../shell/PageHeader';
 import { DocSection } from '../../../shell/DocSection';
 import { ByteStrip } from '../../../shell/ByteStrip';
+import { Anchor } from '../../../shell/Anchor';
 
 const Lock: Component = () => {
   return (
@@ -65,8 +66,7 @@ const Lock: Component = () => {
           </table>
         </div>
 
-        <div id="scale" data-search-target>
-          <div class="api-response-label">SCALE</div>
+        <Anchor id="scale" label="SCALE">
           <div class="table-scroll">
             <table class="api-params">
               <thead>
@@ -115,10 +115,9 @@ const Lock: Component = () => {
               <A href="/native/injection#state">accumulator</A>.
             </p>
           </div>
-        </div>
+        </Anchor>
 
-        <div id="direction" data-search-target>
-          <div class="api-response-label">DIRECTION</div>
+        <Anchor id="direction" label="DIRECTION">
           <div class="table-scroll">
             <table class="api-params">
               <thead>
@@ -144,10 +143,9 @@ const Lock: Component = () => {
             relative pair, so a <code>both</code> of 50 means 50% whether or not a bearing is live.
             An unlock clears all four.
           </p>
-        </div>
+        </Anchor>
 
-        <div id="blanket" data-search-target>
-          <div class="api-response-label">BLANKET</div>
+        <Anchor id="blanket" label="BLANKET">
           <p>An <code>id</code> of <code>0xFFFF</code> addresses the whole class in one command.</p>
           <div class="table-scroll">
             <table class="api-params">
@@ -173,11 +171,10 @@ const Lock: Component = () => {
               </tbody>
             </table>
           </div>
-        </div>
+        </Anchor>
 
 
-        <div id="clearing" data-search-target>
-          <div class="api-response-label">CLEARS ON</div>
+        <Anchor id="clearing" label="CLEARS ON">
           <pre class="diagram">{`unlock      the matching unlock (scale = 100); direction 0 clears
             all four slots of that target
 silence     ~1 s with no control-PC frame
@@ -190,7 +187,7 @@ re-clone    the box binds a device again`}</pre>
             see <A href="/native/injection#safety">Injection</A>.
           </p>
           <p>Every clear here but the unlock moves the <A href="/native/commands/requests#stats"><code>session</code></A> count.</p>
-        </div>
+        </Anchor>
 
         <div class="api-response-label">EFFECT</div>
         <p>

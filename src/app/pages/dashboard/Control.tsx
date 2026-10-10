@@ -18,6 +18,7 @@ import DeviceTransfer from './DeviceTransfer';
 import { PageHeader } from '../../shell/PageHeader';
 import { PageTabs, Pane } from '../../shell/PageTabs';
 import { Panel, Panels, Stack } from '../../shell/Panel';
+import { CopyLink } from '../../shell/CopyLink';
 
 const TABS = [
   { key: 'injection', label: 'Injection' },
@@ -57,9 +58,12 @@ const Control = () => {
         aside={
           <Show when={full()}>
             <div class="safety" id="safety-clear" data-search-target data-search-title="Clear everything">
-              <Button variant="danger" disabled={cmd.busy()} onClick={safetyClear}>
-                Clear everything
-              </Button>
+              <span class="safety-row">
+                <Button variant="danger" disabled={cmd.busy()} onClick={safetyClear}>
+                  Clear everything
+                </Button>
+                <CopyLink id="safety-clear" label="Clear everything" />
+              </span>
               {/* One line: what it clears, what it did, or why it didn't, so the header never changes height. */}
               <Switch
                 fallback={

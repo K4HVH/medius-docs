@@ -2,6 +2,7 @@ import type { Component } from 'solid-js';
 import { A } from '@solidjs/router';
 import { PageHeader } from '../../../shell/PageHeader';
 import { DocSection } from '../../../shell/DocSection';
+import { Anchor } from '../../../shell/Anchor';
 
 const Types: Component = () => {
   return (
@@ -30,8 +31,7 @@ const Types: Component = () => {
           means; button slots on <A href="/native/commands/usage#buttons">Usage IDs</A>.
         </p>
 
-        <div id="button" data-search-target>
-          <div class="api-response-label">Button</div>
+        <Anchor id="button" label="Button">
           <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th></tr></thead>
@@ -44,10 +44,9 @@ const Types: Component = () => {
               </tbody>
             </table>
           </div>
-        </div>
+        </Anchor>
 
-        <div id="action" data-search-target>
-          <div class="api-response-label">Action</div>
+        <Anchor id="action" label="Action">
           <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th><th>Meaning</th></tr></thead>
@@ -58,7 +57,7 @@ const Types: Component = () => {
               </tbody>
             </table>
           </div>
-        </div>
+        </Anchor>
       </DocSection>
 
       <DocSection id="lock-enums" title="Lock & blanket enums" caption="Direction · BearingMode · LockTargetKind · Blanket">
@@ -67,8 +66,7 @@ const Types: Component = () => {
           <A href="/library/catch">Catch</A> for a direction on a traffic subscription.
         </p>
 
-        <div id="direction" data-search-target>
-          <div class="api-response-label">Direction</div>
+        <Anchor id="direction" label="Direction">
           <p>
             Read by what it is attached to: an axis, a usage, or a{' '}
             <A href="/bindings/python/types#catchfilter"><code>CatchFilter</code></A> naming a
@@ -99,10 +97,9 @@ const Types: Component = () => {
             usage has no edges: an edge named on one goes out, and reads back in{' '}
             <A href="/bindings/python/types#locks"><code>Locks</code></A>, as <code>BOTH</code>.
           </p>
-        </div>
+        </Anchor>
 
-        <div id="bearing-mode" data-search-target>
-          <div class="api-response-label">BearingMode</div>
+        <Anchor id="bearing-mode" label="BearingMode">
           <p>
             How the box reads the direction it is injecting, which <code>WITH</code> and{' '}
             <code>AGAINST</code> resolve by. Set with <code>dev.set_bearing(window_ms, mode)</code>.
@@ -120,10 +117,9 @@ const Types: Component = () => {
             Under <code>VECTOR</code>, <A href="/bindings/python/types#locks"><code>Locks</code></A>{' '}
             reports that one scale.
           </p>
-        </div>
+        </Anchor>
 
-        <div id="locktargetkind" data-search-target>
-          <div class="api-response-label">LockTargetKind</div>
+        <Anchor id="locktargetkind" label="LockTargetKind">
           <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th></tr></thead>
@@ -136,10 +132,9 @@ const Types: Component = () => {
             </table>
           </div>
           <p>Built by <A href="/bindings/python/types#locktarget"><code>LockTarget.x/y/wheel/usage</code></A> (and the <code>button</code>/<code>key</code>/<code>media</code> shortcuts).</p>
-        </div>
+        </Anchor>
 
-        <div id="blanket" data-search-target>
-          <div class="api-response-label">Blanket</div>
+        <Anchor id="blanket" label="Blanket">
           <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th><th>Class</th><th>What direction picks</th></tr></thead>
@@ -153,7 +148,7 @@ const Types: Component = () => {
             </table>
           </div>
           <p>These are ABI-local ordinals (matching the crate's Blanket order), not the clip auto-lock scope bits.</p>
-        </div>
+        </Anchor>
       </DocSection>
 
       <DocSection id="keycodes" title="Keycode enums" caption="Key · MediaKey">
@@ -165,8 +160,7 @@ const Types: Component = () => {
           <code>Key</code> or <code>MediaKey</code> also accepts a raw <code>int</code> usage.
         </p>
 
-        <div id="key" data-search-target>
-          <div class="api-response-label">Key</div>
+        <Anchor id="key" label="Key">
           <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Members</th><th>Values</th></tr></thead>
@@ -183,10 +177,9 @@ const Types: Component = () => {
               </tbody>
             </table>
           </div>
-        </div>
+        </Anchor>
 
-        <div id="mediakey" data-search-target>
-          <div class="api-response-label">MediaKey</div>
+        <Anchor id="mediakey" label="MediaKey">
           <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th></tr></thead>
@@ -203,14 +196,13 @@ const Types: Component = () => {
               </tbody>
             </table>
           </div>
-        </div>
+        </Anchor>
       </DocSection>
 
       <DocSection id="led-admin-enums" title="LED & admin enums" caption="LedTarget · LedMode · RebootTarget">
         <p>See <A href="/native/commands/led">LED</A> and <A href="/native/commands/admin">Admin</A>.</p>
 
-        <div id="ledtarget" data-search-target>
-          <div class="api-response-label">LedTarget</div>
+        <Anchor id="ledtarget" label="LedTarget">
           <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th></tr></thead>
@@ -221,10 +213,9 @@ const Types: Component = () => {
               </tbody>
             </table>
           </div>
-        </div>
+        </Anchor>
 
-        <div id="ledmode" data-search-target>
-          <div class="api-response-label">LedMode</div>
+        <Anchor id="ledmode" label="LedMode">
           <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th></tr></thead>
@@ -236,10 +227,9 @@ const Types: Component = () => {
               </tbody>
             </table>
           </div>
-        </div>
+        </Anchor>
 
-        <div id="reboottarget" data-search-target>
-          <div class="api-response-label">RebootTarget</div>
+        <Anchor id="reboottarget" label="RebootTarget">
           <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th></tr></thead>
@@ -251,7 +241,7 @@ const Types: Component = () => {
               </tbody>
             </table>
           </div>
-        </div>
+        </Anchor>
       </DocSection>
 
       <DocSection id="emit-pace" title="Emit pace" caption="EmitMode · EmitPace">
@@ -259,8 +249,7 @@ const Types: Component = () => {
           Passed to <A href="/bindings/python/api#led-admin-options"><code>dev.set_emit_pace()</code></A>.
           See <A href="/library/options">Options</A>.
         </p>
-        <div id="emitmode" data-search-target>
-          <div class="api-response-label">EmitMode</div>
+        <Anchor id="emitmode" label="EmitMode">
           <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th></tr></thead>
@@ -271,15 +260,14 @@ const Types: Component = () => {
               </tbody>
             </table>
           </div>
-        </div>
-        <div id="emitpace" data-search-target>
-          <div class="api-response-label">EmitPace</div>
+        </Anchor>
+        <Anchor id="emitpace" label="EmitPace">
           <p>
             A frozen dataclass carrying <code>mode</code> and <code>hz</code>. Build it with{' '}
             <code>EmitPace.learned()</code>, <code>EmitPace.interval()</code>, or{' '}
             <code>EmitPace.fixed(hz)</code> (the rate snaps to <code>1000/n</code> and caps at 1 kHz).
           </p>
-        </div>
+        </Anchor>
       </DocSection>
 
       <DocSection id="render" title="Render" caption="RenderMode">
@@ -287,8 +275,7 @@ const Types: Component = () => {
           Passed to <A href="/bindings/python/api#led-admin-options"><code>dev.set_render()</code></A>.
           See <A href="/library/options">Options</A>.
         </p>
-        <div id="rendermode" data-search-target>
-          <div class="api-response-label">RenderMode</div>
+        <Anchor id="rendermode" label="RenderMode">
           <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th></tr></thead>
@@ -300,13 +287,12 @@ const Types: Component = () => {
               </tbody>
             </table>
           </div>
-        </div>
+        </Anchor>
       </DocSection>
 
       <DocSection id="clip-status" title="Clip" caption="ClipState · Edge · ClipAction · ClipTrigger · ClipPacketTrigger · ClipSettings · ClipStatus">
         <p>Buffered-clip types. See <A href="/library/clip">Clip</A>.</p>
-        <div id="clipstate" data-search-target>
-          <div class="api-response-label">ClipState</div>
+        <Anchor id="clipstate" label="ClipState">
           <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th><th>Meaning</th></tr></thead>
@@ -318,9 +304,8 @@ const Types: Component = () => {
               </tbody>
             </table>
           </div>
-        </div>
-        <div id="updatetarget" data-search-target>
-          <div class="api-response-label">UpdateTarget</div>
+        </Anchor>
+        <Anchor id="updatetarget" label="UpdateTarget">
           <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th><th>Meaning</th></tr></thead>
@@ -330,9 +315,8 @@ const Types: Component = () => {
               </tbody>
             </table>
           </div>
-        </div>
-        <div id="imagestate" data-search-target>
-          <div class="api-response-label">ImageState</div>
+        </Anchor>
+        <Anchor id="imagestate" label="ImageState">
           <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th><th>Meaning</th></tr></thead>
@@ -346,9 +330,8 @@ const Types: Component = () => {
               </tbody>
             </table>
           </div>
-        </div>
-        <div id="edge" data-search-target>
-          <div class="api-response-label">Edge</div>
+        </Anchor>
+        <Anchor id="edge" label="Edge">
           <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th><th>Fires on</th></tr></thead>
@@ -360,9 +343,8 @@ const Types: Component = () => {
             </table>
           </div>
           <p>Which edge of a <A href="/bindings/python/types#cliptrigger"><code>ClipTrigger</code></A> runs its action.</p>
-        </div>
-        <div id="clipaction" data-search-target>
-          <div class="api-response-label">ClipAction</div>
+        </Anchor>
+        <Anchor id="clipaction" label="ClipAction">
           <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th><th>Runs</th></tr></thead>
@@ -377,9 +359,8 @@ const Types: Component = () => {
             </table>
           </div>
           <p>The action a bound trigger of either kind runs on the box, matching the <A href="/bindings/python/api#clip"><code>clip.start/stop/pause/resume/restart/toggle</code></A> methods.</p>
-        </div>
-        <div id="cliptrigger" data-search-target>
-          <div class="api-response-label">ClipTrigger</div>
+        </Anchor>
+        <Anchor id="cliptrigger" label="ClipTrigger">
           <p>A dataclass binding a physical usage's edge to a clip action, passed to <A href="/bindings/python/api#clip"><code>clip.bind()</code></A>. The box runs the action with no host round-trip.</p>
           <div class="table-scroll">
             <table class="api-params">
@@ -393,9 +374,8 @@ const Types: Component = () => {
             </table>
           </div>
           <p>Construct it directly, e.g. <code>ClipTrigger(Usage.button(Button.SIDE1), Edge.PRESS, ClipAction.TOGGLE, consume=True)</code>.</p>
-        </div>
-        <div id="clippackettrigger" data-search-target>
-          <div class="api-response-label">ClipPacketTrigger</div>
+        </Anchor>
+        <Anchor id="clippackettrigger" label="ClipPacketTrigger">
           <p>A dataclass binding a matched packet to a clip action, passed to <A href="/bindings/python/api#clip"><code>clip.bind_packet()</code></A> and read back by <code>clip.query_config()</code>, keyed by <code>(traffic_class, id, direction, match_bytes, mask)</code>. See <A href="/library/clip#packet-triggers">Clip</A>.</p>
           <div class="table-scroll">
             <table class="api-params">
@@ -435,9 +415,8 @@ for t in clip.query_config().packet_triggers:
 
 clip.unbind_packet(held)          # by key
 clip.clear_triggers()             # both kinds`}</code></pre>
-        </div>
-        <div id="clipsettings" data-search-target>
-          <div class="api-response-label">ClipSettings (clip.query_config())</div>
+        </Anchor>
+        <Anchor id="clipsettings" label="ClipSettings (clip.query_config())">
           <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
@@ -452,9 +431,8 @@ clip.clear_triggers()             # both kinds`}</code></pre>
               </tbody>
             </table>
           </div>
-        </div>
-        <div id="clipstatus" data-search-target>
-          <div class="api-response-label">ClipStatus (clip.query_status())</div>
+        </Anchor>
+        <Anchor id="clipstatus" label="ClipStatus (clip.query_status())">
           <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Field / method</th><th>Type</th><th>Meaning</th></tr></thead>
@@ -472,9 +450,8 @@ clip.clear_triggers()             # both kinds`}</code></pre>
               </tbody>
             </table>
           </div>
-        </div>
-        <div id="clip-constants" data-search-target>
-          <div class="api-response-label">CLIP CONSTANTS</div>
+        </Anchor>
+        <Anchor id="clip-constants" label="CLIP CONSTANTS">
           <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Module constant</th><th>Value</th><th>Meaning</th></tr></thead>
@@ -488,14 +465,13 @@ clip.clear_triggers()             # both kinds`}</code></pre>
               </tbody>
             </table>
           </div>
-        </div>
+        </Anchor>
       </DocSection>
 
       <DocSection id="stream-enums" title="Stream enums" caption="CatchClass · TrafficClass · Axis · CatchFilter · Capture · CatchEventKind · ClockDomain · BusEventKind · LogLevel">
         <p>See <A href="/native/commands/catch">Catch</A> and <A href="/library/diagnostics">Logs &amp; counters</A>; consuming events is on <A href="/bindings/python/streams">Streams</A>.</p>
 
-        <div id="catchclass" data-search-target>
-          <div class="api-response-label">CatchClass</div>
+        <Anchor id="catchclass" label="CatchClass">
           <p>
             The address class a <A href="/bindings/python/types#catchfilter"><code>CatchFilter</code></A>{' '}
             names: members <code>0</code> to <code>3</code> are the{' '}
@@ -530,10 +506,9 @@ clip.clear_triggers()             # both kinds`}</code></pre>
             Where each class is tapped, and why a locked input still reports, is on{' '}
             <A href="/native/commands/catch#catch">Catch</A>.
           </p>
-        </div>
+        </Anchor>
 
-        <div id="trafficclass" data-search-target>
-          <div class="api-response-label">TrafficClass</div>
+        <Anchor id="trafficclass" label="TrafficClass">
           <p>
             The byte-oriented half of the address space, values <code>4</code> to <code>11</code>{' '}
             under the same names as <A href="/bindings/python/types#catchclass"><code>CatchClass</code></A>.
@@ -553,10 +528,9 @@ clip.clear_triggers()             # both kinds`}</code></pre>
             <code>CatchFilter.traffic</code> and <code>traffic_class</code> take it, so an input
             class cannot reach a traffic constructor.
           </p>
-        </div>
+        </Anchor>
 
-        <div id="axis" data-search-target>
-          <div class="api-response-label">Axis</div>
+        <Anchor id="axis" label="Axis">
           <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th></tr></thead>
@@ -568,10 +542,9 @@ clip.clear_triggers()             # both kinds`}</code></pre>
             </table>
           </div>
           <p>One relative axis, for <code>CatchFilter.watch_axis(axis)</code>. The values are the wire axis ids a catch or lock entry carries.</p>
-        </div>
+        </Anchor>
 
-        <div id="catchfilter" data-search-target>
-          <div class="api-response-label">CatchFilter</div>
+        <Anchor id="catchfilter" label="CatchFilter">
           <p>
             One subscription entry: a class, an id inside it, a direction, and how many bytes to keep
             per event. Pass one or an iterable to{' '}
@@ -631,10 +604,9 @@ CatchFilter.traffic(TrafficClass.VENDOR_INTERRUPT, 0x83).with_capture(16)`}</pre
               you sent.
             </p>
           </div>
-        </div>
+        </Anchor>
 
-        <div id="capture" data-search-target>
-          <div class="api-response-label">Capture</div>
+        <Anchor id="capture" label="Capture">
           <pre class="api-signature">{`Capture.WHOLE      # 0, keep the whole packet
 Capture.first(n)   # keep the first n bytes; first(0) is WHOLE`}</pre>
           <p>
@@ -646,10 +618,9 @@ Capture.first(n)   # keep the first n bytes; first(0) is WHOLE`}</pre>
             A ceiling, not a guarantee: the box holds one entry per address and cuts once, so
             another subscriber naming that address more widely raises yours too.
           </p>
-        </div>
+        </Anchor>
 
-        <div id="catcheventkind" data-search-target>
-          <div class="api-response-label">CatchEventKind</div>
+        <Anchor id="catcheventkind" label="CatchEventKind">
           <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th><th><A href="/bindings/python/types#catchevent"><code>CatchEvent.payload</code></A> type</th><th>Fed by</th></tr></thead>
@@ -660,10 +631,9 @@ Capture.first(n)   # keep the first n bytes; first(0) is WHOLE`}</pre>
               </tbody>
             </table>
           </div>
-        </div>
+        </Anchor>
 
-        <div id="clockdomain" data-search-target>
-          <div class="api-response-label">ClockDomain</div>
+        <Anchor id="clockdomain" label="ClockDomain">
           <p>
             Which of the box's two <A href="/native/architecture">chips</A> stamped an event's{' '}
             <code>ts_us</code>. The two{' '}
@@ -690,10 +660,9 @@ Capture.first(n)   # keep the first n bytes; first(0) is WHOLE`}</pre>
             <A href="/bindings/python/types#clockestimate"><code>ClockEstimate</code></A> offset
             within its error bound.
           </p>
-        </div>
+        </Anchor>
 
-        <div id="busevent" data-search-target>
-          <div class="api-response-label">BusEventKind</div>
+        <Anchor id="busevent" label="BusEventKind">
           <p>
             What a <code>CatchClass.BUS</code> event describes. These also drive{' '}
             <A href="/bindings/python/types#health"><code>Health</code></A> bits and{' '}
@@ -723,10 +692,9 @@ Capture.first(n)   # keep the first n bytes; first(0) is WHOLE`}</pre>
             returns: a <code>kind</code> plus <code>configuration</code>, <code>interface</code> and{' '}
             <code>alt</code>, each <code>0</code> for the kinds carrying none.
           </p>
-        </div>
+        </Anchor>
 
-        <div id="loglevel" data-search-target>
-          <div class="api-response-label">LogLevel</div>
+        <Anchor id="loglevel" label="LogLevel">
           <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th></tr></thead>
@@ -739,7 +707,7 @@ Capture.first(n)   # keep the first n bytes; first(0) is WHOLE`}</pre>
               </tbody>
             </table>
           </div>
-        </div>
+        </Anchor>
       </DocSection>
 
       <DocSection id="wire-enums" title="Wire enums" caption="MotionKind · MoveTiming · PendingMotion · Class · FrameType">
@@ -751,8 +719,7 @@ Capture.first(n)   # keep the first n bytes; first(0) is WHOLE`}</pre>
           <A href="/native/frame">Frames</A> and <A href="/library/types/frames">Library frames</A>.
         </p>
 
-        <div id="motionkind" data-search-target>
-          <div class="api-response-label">MotionKind</div>
+        <Anchor id="motionkind" label="MotionKind">
           <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th></tr></thead>
@@ -762,10 +729,9 @@ Capture.first(n)   # keep the first n bytes; first(0) is WHOLE`}</pre>
               </tbody>
             </table>
           </div>
-        </div>
+        </Anchor>
 
-        <div id="movetiming" data-search-target>
-          <div class="api-response-label">MoveTiming</div>
+        <Anchor id="movetiming" label="MoveTiming">
           <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th><th>Meaning</th></tr></thead>
@@ -775,10 +741,9 @@ Capture.first(n)   # keep the first n bytes; first(0) is WHOLE`}</pre>
               </tbody>
             </table>
           </div>
-        </div>
+        </Anchor>
 
-        <div id="pendingmotion" data-search-target>
-          <div class="api-response-label">PendingMotion</div>
+        <Anchor id="pendingmotion" label="PendingMotion">
           <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th><th>Meaning</th></tr></thead>
@@ -789,10 +754,9 @@ Capture.first(n)   # keep the first n bytes; first(0) is WHOLE`}</pre>
               </tbody>
             </table>
           </div>
-        </div>
+        </Anchor>
 
-        <div id="class" data-search-target>
-          <div class="api-response-label">Class</div>
+        <Anchor id="class" label="Class">
           <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th></tr></thead>
@@ -803,10 +767,9 @@ Capture.first(n)   # keep the first n bytes; first(0) is WHOLE`}</pre>
               </tbody>
             </table>
           </div>
-        </div>
+        </Anchor>
 
-        <div id="frametype" data-search-target>
-          <div class="api-response-label">FrameType</div>
+        <Anchor id="frametype" label="FrameType">
           <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th><th>Member</th><th>Value</th></tr></thead>
@@ -824,7 +787,7 @@ Capture.first(n)   # keep the first n bytes; first(0) is WHOLE`}</pre>
               </tbody>
             </table>
           </div>
-        </div>
+        </Anchor>
       </DocSection>
 
       <DocSection id="builders" title="Parameter builders" caption="Usage · Motion · LockTarget">
@@ -833,8 +796,7 @@ Capture.first(n)   # keep the first n bytes; first(0) is WHOLE`}</pre>
           and pass the result to the matching call.
         </p>
 
-        <div id="input" data-search-target>
-          <div class="api-response-label">Usage</div>
+        <Anchor id="input" label="Usage">
           <pre class="api-signature">{`Usage.button(button) -> Usage      # build
 Usage.key(key)       -> Usage
 Usage.media(media)   -> Usage
@@ -855,19 +817,17 @@ if ev.usage is not None and ev.usage.kind is Class.BUTTON:
 # Or compare whole usages.
 if ev.usage == Usage.button(Button.SIDE1):
     print("side button")`}</code></pre>
-        </div>
+        </Anchor>
 
-        <div id="motion" data-search-target>
-          <div class="api-response-label">Motion</div>
+        <Anchor id="motion" label="Motion">
           <pre class="api-signature">{`Motion.cursor(dx, dy) -> Motion
 Motion.wheel(delta)   -> Motion
 Motion.pan(delta)     -> Motion`}</pre>
           <p>A relative axis drive for <A href="/bindings/python/api#move"><code>dev.move_axis(motion, timing, pending)</code></A>; <code>pan</code> is AC Pan (horizontal scroll), a full peer of the wheel. See <A href="/library/move">Move</A>.</p>
-        </div>
+        </Anchor>
 
 
-        <div id="locktarget" data-search-target>
-          <div class="api-response-label">LockTarget</div>
+        <Anchor id="locktarget" label="LockTarget">
           <pre class="api-signature">{`LockTarget.x()            -> LockTarget
 LockTarget.y()            -> LockTarget
 LockTarget.wheel()        -> LockTarget
@@ -877,7 +837,7 @@ LockTarget.button(button) -> LockTarget
 LockTarget.key(key)       -> LockTarget
 LockTarget.media(media)   -> LockTarget`}</pre>
           <p>An axis or usage to lock for <A href="/bindings/python/api#lock"><code>dev.lock(target, direction)</code></A>; the <code>button</code>/<code>key</code>/<code>media</code> shortcuts wrap <code>usage()</code>. See <A href="/library/lock">Lock</A>.</p>
-        </div>
+        </Anchor>
       </DocSection>
 
       <DocSection id="device-enums" title="Device enums" caption="DeviceKind">
@@ -886,8 +846,7 @@ LockTarget.media(media)   -> LockTarget`}</pre>
           <A href="/bindings/python/api#discovery"><code>Device.find_mouse_box()</code></A> /{' '}
           <code>find_keyboard_box()</code> select on. See <A href="/library/types/enums#device-kind">DeviceKind</A>.
         </p>
-        <div id="devicekind" data-search-target>
-          <div class="api-response-label">DeviceKind</div>
+        <Anchor id="devicekind" label="DeviceKind">
           <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th></tr></thead>
@@ -898,14 +857,13 @@ LockTarget.media(media)   -> LockTarget`}</pre>
               </tbody>
             </table>
           </div>
-        </div>
+        </Anchor>
       </DocSection>
 
       <DocSection id="value-types" title="Identity & capability types" caption="Version · Health · DeviceInfo · Caps">
         <p><a href="https://docs.python.org/3/library/dataclasses.html" target="_blank" rel="noreferrer">Dataclasses</a> returned by the <A href="/bindings/python/api">queries</A>. Canonical field docs: <A href="/library/types/structs">Library structs</A>.</p>
 
-        <div id="version" data-search-target>
-          <div class="api-response-label">Version (query_version())</div>
+        <Anchor id="version" label="Version (query_version())">
           <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Field / property</th><th>Type</th><th>Meaning</th></tr></thead>
@@ -920,10 +878,9 @@ LockTarget.media(media)   -> LockTarget`}</pre>
               </tbody>
             </table>
           </div>
-        </div>
+        </Anchor>
 
-        <div id="health" data-search-target>
-          <div class="api-response-label">Health (query_health())</div>
+        <Anchor id="health" label="Health (query_health())">
           <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th></tr></thead>
@@ -942,10 +899,9 @@ LockTarget.media(media)   -> LockTarget`}</pre>
               </tbody>
             </table>
           </div>
-        </div>
+        </Anchor>
 
-        <div id="deviceinfo" data-search-target>
-          <div class="api-response-label">DeviceInfo (device_info())</div>
+        <Anchor id="deviceinfo" label="DeviceInfo (device_info())">
           <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
@@ -962,10 +918,9 @@ LockTarget.media(media)   -> LockTarget`}</pre>
               </tbody>
             </table>
           </div>
-        </div>
+        </Anchor>
 
-        <div id="caps" data-search-target>
-          <div class="api-response-label">Caps (caps())</div>
+        <Anchor id="caps" label="Caps (caps())">
           <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Field / method</th><th>Type</th><th>Meaning</th></tr></thead>
@@ -980,10 +935,9 @@ LockTarget.media(media)   -> LockTarget`}</pre>
               </tbody>
             </table>
           </div>
-        </div>
+        </Anchor>
 
-        <div id="mousecaps" data-search-target>
-          <div class="api-response-label">MouseCaps</div>
+        <Anchor id="mousecaps" label="MouseCaps">
           <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
@@ -998,10 +952,9 @@ LockTarget.media(media)   -> LockTarget`}</pre>
               </tbody>
             </table>
           </div>
-        </div>
+        </Anchor>
 
-        <div id="kbdcaps" data-search-target>
-          <div class="api-response-label">KbdCaps</div>
+        <Anchor id="kbdcaps" label="KbdCaps">
           <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
@@ -1014,14 +967,13 @@ LockTarget.media(media)   -> LockTarget`}</pre>
               </tbody>
             </table>
           </div>
-        </div>
+        </Anchor>
       </DocSection>
 
       <DocSection id="state-types" title="State & telemetry types" caption="Rate · Stats · Locks · CatchState · CatchEntry · ClockEstimate · ImperfectStatus · Counters · PortInfo">
         <p>More query results, plus <A href="/bindings/python/types#portinfo"><code>PortInfo</code></A> from <A href="/bindings/python/api#connect"><code>find_ports()</code></A>. Canonical field docs: <A href="/library/types/structs">Library structs</A>.</p>
 
-        <div id="chipfirmware" data-search-target>
-          <div class="api-response-label">ChipFirmware</div>
+        <Anchor id="chipfirmware" label="ChipFirmware">
           <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
@@ -1032,10 +984,9 @@ LockTarget.media(media)   -> LockTarget`}</pre>
               </tbody>
             </table>
           </div>
-        </div>
+        </Anchor>
 
-        <div id="firmwareinfo" data-search-target>
-          <div class="api-response-label">FirmwareInfo (firmware_info())</div>
+        <Anchor id="firmwareinfo" label="FirmwareInfo (firmware_info())">
           <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
@@ -1048,10 +999,9 @@ LockTarget.media(media)   -> LockTarget`}</pre>
               </tbody>
             </table>
           </div>
-        </div>
+        </Anchor>
 
-        <div id="rate" data-search-target>
-          <div class="api-response-label">Rate (query_rate())</div>
+        <Anchor id="rate" label="Rate (query_rate())">
           <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Field / method</th><th>Type</th><th>Meaning</th></tr></thead>
@@ -1064,10 +1014,9 @@ LockTarget.media(media)   -> LockTarget`}</pre>
               </tbody>
             </table>
           </div>
-        </div>
+        </Anchor>
 
-        <div id="stats" data-search-target>
-          <div class="api-response-label">Stats (query_stats())</div>
+        <Anchor id="stats" label="Stats (query_stats())">
           <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
@@ -1087,10 +1036,9 @@ LockTarget.media(media)   -> LockTarget`}</pre>
               </tbody>
             </table>
           </div>
-        </div>
+        </Anchor>
 
-        <div id="locks" data-search-target>
-          <div class="api-response-label">Locks (query_locks())</div>
+        <Anchor id="locks" label="Locks (query_locks())">
           <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Field / method</th><th>Type</th><th>Meaning</th></tr></thead>
@@ -1112,10 +1060,9 @@ LockTarget.media(media)   -> LockTarget`}</pre>
               </tbody>
             </table>
           </div>
-        </div>
+        </Anchor>
 
-        <div id="scale-constants" data-search-target>
-          <div class="api-response-label">SCALE CONSTANTS</div>
+        <Anchor id="scale-constants" label="SCALE CONSTANTS">
           <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Module constant</th><th>Value</th><th>Meaning</th></tr></thead>
@@ -1127,10 +1074,9 @@ LockTarget.media(media)   -> LockTarget`}</pre>
               </tbody>
             </table>
           </div>
-        </div>
+        </Anchor>
 
-        <div id="lockentry" data-search-target>
-          <div class="api-response-label">LockEntry</div>
+        <Anchor id="lockentry" label="LockEntry">
           <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
@@ -1143,10 +1089,9 @@ LockTarget.media(media)   -> LockTarget`}</pre>
               </tbody>
             </table>
           </div>
-        </div>
+        </Anchor>
 
-        <div id="bearing" data-search-target>
-          <div class="api-response-label">Bearing (query_bearing())</div>
+        <Anchor id="bearing" label="Bearing (query_bearing())">
           <p>
             What <code>Direction.WITH</code> and <code>Direction.AGAINST</code> are measured against;
             see the native <A href="/native/commands/lock#bearing">bearing</A>.
@@ -1165,10 +1110,9 @@ LockTarget.media(media)   -> LockTarget`}</pre>
             Module constant <code>BEARING_WINDOW_DEFAULT_MS</code> (20) is the factory window; a box
             that has been set boots at its stored value.
           </p>
-        </div>
+        </Anchor>
 
-        <div id="catchstate" data-search-target>
-          <div class="api-response-label">CatchState (query_catch())</div>
+        <Anchor id="catchstate" label="CatchState (query_catch())">
           <p>
             The live subscription table: the only view of which filters the box holds, since{' '}
             <A href="/bindings/python/api#streams"><code>catch_events()</code></A> gets no reply.
@@ -1184,10 +1128,9 @@ LockTarget.media(media)   -> LockTarget`}</pre>
               </tbody>
             </table>
           </div>
-        </div>
+        </Anchor>
 
-        <div id="catchentry" data-search-target>
-          <div class="api-response-label">CatchEntry</div>
+        <Anchor id="catchentry" label="CatchEntry">
           <p>
             One row of the box's table: the <A href="/bindings/python/types#catchfilter"><code>CatchFilter</code></A>{' '}
             you sent, with its drop count.
@@ -1201,10 +1144,9 @@ LockTarget.media(media)   -> LockTarget`}</pre>
               </tbody>
             </table>
           </div>
-        </div>
+        </Anchor>
 
-        <div id="clockestimate" data-search-target>
-          <div class="api-response-label">ClockEstimate (CatchState.clock)</div>
+        <Anchor id="clockestimate" label="ClockEstimate (CatchState.clock)">
           <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Field / member</th><th>Type</th><th>Meaning</th></tr></thead>
@@ -1229,10 +1171,9 @@ LockTarget.media(media)   -> LockTarget`}</pre>
               authoritative.
             </p>
           </div>
-        </div>
+        </Anchor>
 
-        <div id="imperfectstatus" data-search-target>
-          <div class="api-response-label">ImperfectStatus (query_imperfect())</div>
+        <Anchor id="imperfectstatus" label="ImperfectStatus (query_imperfect())">
           <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
@@ -1244,10 +1185,9 @@ LockTarget.media(media)   -> LockTarget`}</pre>
             </table>
           </div>
           <p>See <A href="/library/options">Options</A>.</p>
-        </div>
+        </Anchor>
 
-        <div id="emitpacestatus" data-search-target>
-          <div class="api-response-label">EmitPaceStatus (query_emit_pace())</div>
+        <Anchor id="emitpacestatus" label="EmitPaceStatus (query_emit_pace())">
           <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
@@ -1261,10 +1201,9 @@ LockTarget.media(media)   -> LockTarget`}</pre>
             </table>
           </div>
           <p>See <A href="/library/options">Options</A>.</p>
-        </div>
+        </Anchor>
 
-        <div id="renderstatus" data-search-target>
-          <div class="api-response-label">RenderStatus (query_render())</div>
+        <Anchor id="renderstatus" label="RenderStatus (query_render())">
           <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
@@ -1276,10 +1215,9 @@ LockTarget.media(media)   -> LockTarget`}</pre>
             </table>
           </div>
           <p>See <A href="/library/options">Options</A>.</p>
-        </div>
+        </Anchor>
 
-        <div id="spreadstatus" data-search-target>
-          <div class="api-response-label">SpreadStatus (query_spread())</div>
+        <Anchor id="spreadstatus" label="SpreadStatus (query_spread())">
           <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
@@ -1290,10 +1228,9 @@ LockTarget.media(media)   -> LockTarget`}</pre>
             </table>
           </div>
           <p>See <A href="/library/options">Options</A>.</p>
-        </div>
+        </Anchor>
 
-        <div id="counters" data-search-target>
-          <div class="api-response-label">Counters (counters())</div>
+        <Anchor id="counters" label="Counters (counters())">
           <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
@@ -1306,10 +1243,9 @@ LockTarget.media(media)   -> LockTarget`}</pre>
               </tbody>
             </table>
           </div>
-        </div>
+        </Anchor>
 
-        <div id="portinfo" data-search-target>
-          <div class="api-response-label">PortInfo (find_ports())</div>
+        <Anchor id="portinfo" label="PortInfo (find_ports())">
           <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
@@ -1322,10 +1258,9 @@ LockTarget.media(media)   -> LockTarget`}</pre>
             </table>
           </div>
           <p>Pass <code>path</code> to <A href="/bindings/python/api#connect"><code>Device.open(path)</code></A>. Canonical: <A href="/library/types/structs#port-info">PortInfo</A>.</p>
-        </div>
+        </Anchor>
 
-        <div id="boxinfo" data-search-target>
-          <div class="api-response-label">BoxInfo (list_boxes())</div>
+        <Anchor id="boxinfo" label="BoxInfo (list_boxes())">
           <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Field / property</th><th>Type</th><th>Meaning</th></tr></thead>
@@ -1346,7 +1281,7 @@ for b in medius.list_boxes():
         print(f"{b.id} speaks protocol {b.version.proto_ver}: update its firmware")
     else:
         print(b.id, b.device.kind.name, b.device.product)`}</code></pre>
-        </div>
+        </Anchor>
       </DocSection>
 
       <DocSection id="events" title="Event & log types" caption="Yielded by the streams">
@@ -1358,8 +1293,7 @@ for b in medius.list_boxes():
           reports is on <A href="/library/catch">Catch</A>.
         </p>
 
-        <div id="catchevent" data-search-target>
-          <div class="api-response-label">CatchEvent</div>
+        <Anchor id="catchevent" label="CatchEvent">
           <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Field / member</th><th>Type</th><th>Meaning</th></tr></thead>
@@ -1374,10 +1308,9 @@ for b in medius.list_boxes():
               </tbody>
             </table>
           </div>
-        </div>
+        </Anchor>
 
-        <div id="motionevent" data-search-target>
-          <div class="api-response-label">MotionEvent</div>
+        <Anchor id="motionevent" label="MotionEvent">
           <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
@@ -1389,10 +1322,9 @@ for b in medius.list_boxes():
             </table>
           </div>
           <p>The enclosing <A href="/bindings/python/types#catchevent"><code>CatchEvent</code></A> carries the stamp and domain.</p>
-        </div>
+        </Anchor>
 
-        <div id="usagesnapshot" data-search-target>
-          <div class="api-response-label">UsageSnapshot</div>
+        <Anchor id="usagesnapshot" label="UsageSnapshot">
           <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Field / method</th><th>Type</th><th>Meaning</th></tr></thead>
@@ -1412,10 +1344,9 @@ for b in medius.list_boxes():
             An empty snapshot still names its class: <code>cls</code> and <code>direction</code>{' '}
             come from the frame header, not the entries.
           </p>
-        </div>
+        </Anchor>
 
-        <div id="trafficevent" data-search-target>
-          <div class="api-response-label">TrafficEvent</div>
+        <Anchor id="trafficevent" label="TrafficEvent">
           <p>
             The payload for every byte-oriented <A href="/bindings/python/types#catchclass"><code>CatchClass</code></A>{' '}
             from <code>HID_IN</code> to <code>CLIP_TRANSFER</code>: one packet, one control
@@ -1477,10 +1408,9 @@ for b in medius.list_boxes():
             A <code>CONTROL</code> event is the transaction the game PC received, on every control
             endpoint. Requests the box serves from its value cache still produce one.
           </p>
-        </div>
+        </Anchor>
 
-        <div id="controlstatus" data-search-target>
-          <div class="api-response-label">ControlStatus</div>
+        <Anchor id="controlstatus" label="ControlStatus">
           <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th><th>Meaning</th></tr></thead>
@@ -1492,10 +1422,9 @@ for b in medius.list_boxes():
               </tbody>
             </table>
           </div>
-        </div>
+        </Anchor>
 
-        <div id="inputevent" data-search-target>
-          <div class="api-response-label">InputEvent</div>
+        <Anchor id="inputevent" label="InputEvent">
           <p>
             One decoded input: a press edge, a release edge, or a motion report. Yielded by{' '}
             <A href="/bindings/python/streams#input"><code>dev.input_events()</code></A>, diffed from
@@ -1514,10 +1443,9 @@ for b in medius.list_boxes():
               </tbody>
             </table>
           </div>
-        </div>
+        </Anchor>
 
-        <div id="inputkind" data-search-target>
-          <div class="api-response-label">InputKind</div>
+        <Anchor id="inputkind" label="InputKind">
           <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th><th>Populates</th></tr></thead>
@@ -1528,10 +1456,9 @@ for b in medius.list_boxes():
               </tbody>
             </table>
           </div>
-        </div>
+        </Anchor>
 
-        <div id="stamped" data-search-target>
-          <div class="api-response-label">Stamped</div>
+        <Anchor id="stamped" label="Stamped">
           <p>
             One event placed on this machine's clock by a{' '}
             <A href="/bindings/python/streams#timeline"><code>Timeline</code></A>.
@@ -1546,10 +1473,9 @@ for b in medius.list_boxes():
               </tbody>
             </table>
           </div>
-        </div>
+        </Anchor>
 
-        <div id="logline" data-search-target>
-          <div class="api-response-label">LogLine</div>
+        <Anchor id="logline" label="LogLine">
           <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
@@ -1559,10 +1485,9 @@ for b in medius.list_boxes():
               </tbody>
             </table>
           </div>
-        </div>
+        </Anchor>
 
-        <div id="recordedframe" data-search-target>
-          <div class="api-response-label">RecordedFrame (MockBox.recorded_frame(idx))</div>
+        <Anchor id="recordedframe" label="RecordedFrame (MockBox.recorded_frame(idx))">
           <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
@@ -1574,7 +1499,7 @@ for b in medius.list_boxes():
             </table>
           </div>
           <p>Only meaningful with the <A href="/library/features/mock">mock</A> feature.</p>
-        </div>
+        </Anchor>
       </DocSection>
 
       <DocSection id="advanced-types" title="Advanced control layer types" caption="Setup · TransferOutcome · RewriteRule · Patch">
@@ -1673,8 +1598,7 @@ Transform(op, source, dest)`}</pre>
           all of them. Canonical mapping: <A href="/library/types/errors">Library errors</A>.
         </p>
 
-        <div id="mediuserror" data-search-target>
-          <div class="api-response-label">MediusError (Exception)</div>
+        <Anchor id="mediuserror" label="MediusError (Exception)">
           <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Attribute</th><th>Type</th><th>Meaning</th></tr></thead>
@@ -1693,10 +1617,9 @@ except NotFoundError:
     ...                      # no box plugged in
 except MediusError as e:     # any other failure
     print(e.status, e.message)`}</code></pre>
-        </div>
+        </Anchor>
 
-        <div id="subclasses" data-search-target>
-          <div class="api-response-label">Subclass per Status</div>
+        <Anchor id="subclasses" label="Subclass per Status">
           <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Exception</th><th>Raised on</th></tr></thead>
@@ -1780,10 +1703,9 @@ except MediusError as e:     # any other failure
               the base <code>MediusError</code>.
             </p>
           </div>
-        </div>
+        </Anchor>
 
-        <div id="status" data-search-target>
-          <div class="api-response-label">Status</div>
+        <Anchor id="status" label="Status">
           <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th><th>Member</th><th>Value</th></tr></thead>
@@ -1809,7 +1731,7 @@ except MediusError as e:     # any other failure
               </tbody>
             </table>
           </div>
-        </div>
+        </Anchor>
       </DocSection>
     </>
   );

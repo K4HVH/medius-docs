@@ -1,4 +1,5 @@
 import { Show, type JSX } from 'solid-js';
+import { CopyLink } from './CopyLink';
 
 // Dashboard panels in two columns; one column in a narrow page.
 export function Panels(props: { children: JSX.Element }) {
@@ -36,7 +37,10 @@ export function Panel(props: {
     >
       <Show when={props.title}>
         <div class="ph">
-          <h2>{props.title}</h2>
+          <h2>
+            {props.title}
+            <Show when={!props.transient && props.id}>{(id) => <CopyLink id={id()} label={props.title!} />}</Show>
+          </h2>
           {props.aside}
         </div>
       </Show>
