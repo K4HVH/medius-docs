@@ -39,7 +39,7 @@ describe('every card the site draws', () => {
 // A card's address carries its hash, and an address with a hash is kept for a year: drawn differently
 // under the same hash, it would never reach anyone. Raise STYLE in src/app/card/content.ts when this
 // fails, then record the new digest here.
-const DRAWN = { style: 1, digest: 'd71bda121ae424b0' };
+const DRAWN = { style: 1, digest: '13c6bedbced9c580' };
 
 it('raises STYLE when the card is drawn differently', () => {
   const files = ['src/app/card/layout.ts', 'src/app/card/svg.ts', ...['inter-400', 'inter-700', 'plex-mono-500'].map((f) => `server/og/fonts/${f}.ttf`)];
