@@ -70,6 +70,7 @@ export const COMPAT: readonly CompatEntry[] = [
   { name: 'Nyfter Nyf25', kind: 'mouse', verdict: 'works', reported: 'v3.4.5' },
   { name: 'Pulsar X2 CrazyLight', kind: 'mouse', verdict: 'works', reported: 'v3.1.0' },
   { name: 'Pulsar X2H CrazyLight', kind: 'mouse', verdict: 'works', reported: 'v3.2.1' },
+  { name: 'Pulsar ZywOo The Chosen Mouse Medium', kind: 'mouse', verdict: 'works', reported: 'v3.4.5' },
   { name: 'Razer BlackWidow Chroma V2', kind: 'keyboard', verdict: 'works', reported: 'v2.2.0' },
   { name: 'Razer Cobra', kind: 'mouse', verdict: 'works', reported: 'v3.4.1' },
   { name: 'Razer DeathAdder Essential', kind: 'mouse', verdict: 'works', reported: 'v3.1.0' },
