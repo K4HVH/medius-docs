@@ -1,6 +1,7 @@
-import { createEffect, createMemo, createSignal, For, on, onCleanup, Show, type JSX } from 'solid-js';
+import { createEffect, createMemo, createSignal, For, on, onCleanup, onMount, Show, type JSX } from 'solid-js';
 import { A } from '@solidjs/router';
 import { lockPage, panelKeys } from './panel';
+import { arrive, inOrder } from './motion';
 import { LANG_LABEL, LANG_ROOT, SECTION_LABEL, routeFor, sectionLabel, sidebarGroups, type Lang, type Section } from '../routes';
 
 type CodeSection = 'native' | 'library' | 'bindings';
@@ -46,10 +47,13 @@ export function DocsSidebar(props: {
 
   const [open, setOpen] = createSignal(false);
   let side: HTMLElement | undefined;
+  let mark: HTMLSpanElement | undefined;
   let bar: HTMLButtonElement | undefined;
+  // On a phone the pages open over the page, their links cascading in as on a wide screen's first load.
   const setPanel = (next: boolean) => {
     setOpen(next);
     lockPage('side', next);
+    if (next && side) arrive(side, inOrder(side.querySelectorAll<HTMLElement>('.sections, .search, .group > *'), 40, 18, 24));
   };
   onCleanup(() => lockPage('side', false));
   panelKeys({ open, panel: () => side, toggle: () => bar, close: () => setPanel(false) });
@@ -65,6 +69,46 @@ export function DocsSidebar(props: {
     props.onNavigate?.();
   };
   const off = () => (props.disabled ? 'true' : undefined);
+
+  // The page's edge travels to the page picked, and the section's fill to the section; a list that
+  // changed whole takes the edge without travel. The links cascade in when the sidebar first shows and
+  // when a section brings a new list.
+  const place = (ind: HTMLElement | null | undefined, at: HTMLElement | null | undefined, instant: boolean) => {
+    if (!ind) return;
+    if (!at) {
+      ind.style.opacity = '0';
+      return;
+    }
+    if (instant) ind.style.transition = 'none';
+    ind.style.opacity = '1';
+    ind.style.top = `${at.offsetTop}px`;
+    ind.style.left = `${at.offsetLeft}px`;
+    ind.style.width = `${at.offsetWidth}px`;
+    ind.style.height = `${at.offsetHeight}px`;
+    if (instant) {
+      void ind.offsetWidth;
+      ind.style.transition = '';
+    }
+  };
+  let shownList = '';
+  const placeAll = (first: boolean) => {
+    if (!side) return;
+    const list = groups().map((g) => g.label).join('|');
+    place(mark, side.querySelector<HTMLElement>('.group a[aria-current="page"]'), first || list !== shownList);
+    side.querySelectorAll<HTMLElement>('.sections').forEach((n) =>
+      place(n.querySelector<HTMLElement>(':scope > .ind'), n.querySelector<HTMLElement>('a[aria-current]'), first),
+    );
+    if (!first && list !== shownList) arrive(side, inOrder(side.querySelectorAll<HTMLElement>('.group > *'), 0, 22, 24));
+    shownList = list;
+  };
+  onMount(() => {
+    if (side) arrive(side, inOrder(side.querySelectorAll<HTMLElement>('.sections, .search, .group > *'), 80, 22, 24));
+    placeAll(true);
+    const again = () => placeAll(true);
+    window.addEventListener('resize', again);
+    onCleanup(() => window.removeEventListener('resize', again));
+  });
+  createEffect(on([() => props.pathname, section, lang], () => placeAll(false), { defer: true }));
 
   const groups = createMemo(() => {
     const s = section();
@@ -109,8 +153,10 @@ export function DocsSidebar(props: {
         <span>{open() ? 'Close' : 'Pages'}</span>
       </button>
       <aside ref={side} class="side" id="side" classList={{ open: open() }} aria-label={SECTION_LABEL[section()]}>
+        <span class="mark" ref={mark} aria-hidden="true" />
         <Show when={isCode(section())}>
           <nav class="sections" aria-label="Sections">
+            <span class="ind" aria-hidden="true" />
             <For each={SECTIONS}>
               {(s) => <Link href={s.href} label={s.label} current={section() === s.section ? 'true' : undefined} />}
             </For>
@@ -118,6 +164,7 @@ export function DocsSidebar(props: {
         </Show>
         <Show when={section() === 'bindings'}>
           <nav class="sections langs" aria-label="Languages">
+            <span class="ind" aria-hidden="true" />
             <For each={LANGS}>
               {(l) => <Link href={l.href} label={l.label} current={lang() === l.lang ? 'true' : undefined} />}
             </For>

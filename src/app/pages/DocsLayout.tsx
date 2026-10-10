@@ -1,4 +1,4 @@
-import { createSignal, createEffect, createMemo, on, onCleanup } from 'solid-js';
+import { createSignal, createEffect, createMemo, on, onCleanup, onMount } from 'solid-js';
 import { type RouteSectionProps, useBeforeLeave, useLocation, useNavigate } from '@solidjs/router';
 import { GridBackground } from '../../components/surfaces/GridBackground';
 import { CommandPalette } from '../../components/navigation/CommandPalette';
@@ -7,7 +7,7 @@ import { SiteNav } from '../shell/SiteNav';
 import { DocsSidebar } from '../shell/DocsSidebar';
 import { OnThisPage } from '../shell/OnThisPage';
 import { SiteFooter } from '../shell/SiteFooter';
-import { armReveals, fontsReady } from '../shell/motion';
+import { arrive, armReveals, blocksOf, fontsReady, inOrder, watchChanges } from '../shell/motion';
 import { routeFor } from '../routes';
 import { useBoxes, useNativeFlash } from './dashboard/context';
 import { BoxList } from './dashboard/BoxList';
@@ -18,10 +18,6 @@ const BOX_ROUTES = new Set([
   '/dashboard/control',
   '/dashboard/update',
 ]);
-
-// Each block of a section eases in on its own; an anchor group inside a section reveals its blocks, not
-// itself, so nothing moves twice.
-export const REVEAL_DOCS = '.doc-section > :not(div[id]), .doc-section > div[id] > *';
 
 
 const DocsLayout = (props: RouteSectionProps) => {
@@ -37,6 +33,7 @@ const DocsLayout = (props: RouteSectionProps) => {
     if (flashing()) e.preventDefault();
   });
   let main: HTMLElement | undefined;
+  let footer: HTMLElement | undefined;
 
   // 'auto' glides by the page's CSS, which reduced motion turns off; a new page lands with 'instant'.
   // The outline marks a search result or a deep link, not a section the reader moved to themselves.
@@ -46,6 +43,8 @@ const DocsLayout = (props: RouteSectionProps) => {
     if (!el) return;
     el.scrollIntoView({ behavior, block: 'start' });
     if (!highlight) return;
+    // The block the reader asked for shows at once, with its ring rather than an arrival.
+    el.classList.remove('moving');
     el.classList.add('search-highlight');
     setTimeout(() => el.classList.remove('search-highlight'), 2000);
   };
@@ -71,9 +70,10 @@ const DocsLayout = (props: RouteSectionProps) => {
     return box ? `${label} - ${box}` : label;
   });
 
-  // A new page starts at the top, or at its hash once the fonts have set the layout; the reveals are
-  // armed after that jump, so the section it lands on is never hidden. A hash change on the same page
-  // scrolls there.
+  // A new page arrives block by block, and starts at the top, or at its hash once the fonts have set the
+  // layout; the reveals are armed after that jump, so the section it lands on is never held back. A hash
+  // change on the same page scrolls there. The arrival is stamped at once, so a prerendered snapshot's
+  // arrival carries on into the app's (takeover.ts).
   let shownPath = '';
   let settled = 0;
   let disposeReveals = () => {};
@@ -90,6 +90,7 @@ const DocsLayout = (props: RouteSectionProps) => {
         const run = ++settled;
         disposeReveals();
         disposeReveals = () => {};
+        if (main) arrive(main, inOrder(blocksOf(main), 200, 55));
         if (!hash) window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
         requestAnimationFrame(() => {
           if (run !== settled || !main) return;
@@ -98,13 +99,21 @@ const DocsLayout = (props: RouteSectionProps) => {
             if (run !== settled || !main) return;
             if (hash) scrollToTarget(hashId(), 'instant', true);
             highlightNext = null;
-            disposeReveals = armReveals(main, REVEAL_DOCS);
+            const page = armReveals(main, () => blocksOf(main!));
+            const foot = footer ? armReveals(footer, () => [...footer!.children] as HTMLElement[]) : () => {};
+            disposeReveals = () => {
+              page();
+              foot();
+            };
           });
         });
       },
     ),
   );
   onCleanup(() => disposeReveals());
+  onMount(() => {
+    if (main) onCleanup(watchChanges(main));
+  });
 
   const handleBoxPick = () => {
     setCloseKey((k) => k + 1);
@@ -136,7 +145,7 @@ const DocsLayout = (props: RouteSectionProps) => {
         </main>
         <OnThisPage pathname={location.pathname} />
       </div>
-      <SiteFooter />
+      <SiteFooter ref={(el) => (footer = el)} />
 
       <CommandPalette
         open={searchOpen()}

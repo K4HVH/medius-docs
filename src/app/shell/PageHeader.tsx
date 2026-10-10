@@ -33,7 +33,11 @@ export function PageHeader(props: { id?: string; aside?: JSX.Element; children?:
         <AiActions />
       </div>
       <div class="page-header__row">
-        <h1>{route().title}</h1>
+        <h1>
+          <span class="mask">
+            <span>{route().title}</span>
+          </span>
+        </h1>
         <Show when={props.aside}>
           <div class="page-header__aside">{props.aside}</div>
         </Show>

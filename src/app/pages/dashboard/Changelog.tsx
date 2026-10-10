@@ -4,7 +4,7 @@ import { Chip } from '../../../components/display/Chip';
 import { type FirmwareRelease, fetchReleases } from '../../../dashboard/firmware';
 import { type Block, type CommitGroup, groupCommits, inlineRuns, parseBlocks, splitRelease } from '../../../dashboard/firmware/notes';
 import { PageHeader } from '../../shell/PageHeader';
-import { armReveals, fontsReady } from '../../shell/motion';
+import { arrive, armReveals, fontsReady, inOrder } from '../../shell/motion';
 
 const fmtDate = (iso: string) => {
   const d = new Date(iso);
@@ -159,11 +159,13 @@ const Changelog = () => {
   let armed = false;
   let dispose = () => {};
   onCleanup(() => dispose());
-  // The sections below the screen rise as they come into view, armed after any jump to a release so
-  // the one landed on is never hidden.
+  // Releases the fetch brought after the page arrived arrive themselves. The sections below the screen
+  // rise as they come into view, armed after any jump to a release so the one landed on is never held back.
   createEffect(() => {
     if (armed || !list()?.length) return;
     armed = true;
+    if (rels && !rels.querySelector(':scope > .rb'))
+      arrive(rels, inOrder([...rels.children] as HTMLElement[], rels.closest('.arriving') ? 200 : 60, 55));
     const land = (frames: number) =>
       requestAnimationFrame(() => {
         const section = hashed ? document.getElementById(hashed) : null;

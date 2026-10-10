@@ -2,7 +2,7 @@ import { createContext, createEffect, createSignal, For, on, onCleanup, onMount,
 import { useLocation, useNavigate } from '@solidjs/router';
 import { routeFor } from '../routes';
 import { fontsReady } from './motion';
-import { openPanels } from './panelMotion';
+import { closePanels, openPanels } from './panelMotion';
 
 export interface Tab {
   key: string;
@@ -170,7 +170,8 @@ export function Pane(props: { key: string; children: JSX.Element }) {
   if (!ctx) throw new Error('Pane must be inside PageTabs');
   let el: HTMLElement | undefined;
   const shown = () => ctx.active() === props.key;
-  createEffect(on(shown, (s) => s && requestAnimationFrame(() => el && openPanels(el))));
+  createEffect(on(shown, (s) => s && el && openPanels(el)));
+  onCleanup(() => el && closePanels(el));
   onMount(() => {
     if (typeof MutationObserver === 'undefined' || !el) return;
     const mo = new MutationObserver((records) => {
@@ -178,7 +179,7 @@ export function Pane(props: { key: string; children: JSX.Element }) {
       if (added.length) ctx.arrived();
       if (!shown() || !el) return;
       const panels = added.flatMap((n) => (n.matches('.pn') ? [n] : [...n.querySelectorAll<HTMLElement>('.pn')]));
-      if (panels.length) requestAnimationFrame(() => el && openPanels(el, panels));
+      if (panels.length) openPanels(el, panels);
     });
     mo.observe(el, { childList: true, subtree: true });
     onCleanup(() => mo.disconnect());

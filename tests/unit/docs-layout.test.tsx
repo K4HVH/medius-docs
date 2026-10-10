@@ -291,6 +291,8 @@ describe('DocsLayout scrolling', () => {
         disconnect() {}
       },
     );
+    // jsdom lays nothing out; every block here is on the page.
+    vi.spyOn(Element.prototype, 'getClientRects').mockImplementation(() => [{}] as unknown as DOMRectList);
     vi.spyOn(Element.prototype, 'scrollIntoView').mockImplementation(function (this: Element, arg?: boolean | ScrollIntoViewOptions) {
       jumped = this;
       how = arg;
@@ -311,12 +313,12 @@ describe('DocsLayout scrolling', () => {
 
   it('lands on the hash section and never hides it behind a reveal', async () => {
     const r = mount('/native/transport#frames');
-    await waitFor(() => expect(r.container.querySelector('#later p')?.classList.contains('pre')).toBe(true));
+    await waitFor(() => expect(r.container.querySelector('#later p')?.classList.contains('rv-wait')).toBe(true));
     expect(jumped).toBe(r.container.querySelector('#frames'));
     expect(how).toEqual({ behavior: 'instant', block: 'start' });
     for (const el of r.container.querySelectorAll('#frames h2, #frames p')) {
-      expect(el.classList.contains('rv')).toBe(true);
-      expect(el.classList.contains('pre')).toBe(false);
+      expect(el.classList.contains('rb')).toBe(true);
+      expect(el.classList.contains('rv-wait')).toBe(false);
     }
   });
 
