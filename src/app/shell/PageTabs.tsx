@@ -152,8 +152,11 @@ export function PageTabs(props: { id: string; tabs: Tab[]; children: JSX.Element
                 data-tab={t.key}
                 onClick={() => {
                   if (!open(t.key, true)) return;
-                  // From further down the page, the open tab starts at the strip.
-                  const top = bar!.getBoundingClientRect().top + window.scrollY - parseFloat(getComputedStyle(bar!).top || '0');
+                  // From further down the page, the open tab starts at the top of its pane, under the stuck bar. The
+                  // bar's own position can't say where that is: while stuck, it is always at its top.
+                  const pane = document.getElementById(`pane-${props.id}-${t.key}`);
+                  if (!pane || !bar) return;
+                  const top = pane.getBoundingClientRect().top + window.scrollY - bar.offsetHeight - parseFloat(getComputedStyle(bar).top || '0');
                   if (window.scrollY > top) window.scrollTo({ top, behavior: 'instant' });
                 }}
               >

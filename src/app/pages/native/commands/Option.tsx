@@ -421,16 +421,17 @@ const Option: Component = () => {
             </tbody>
           </table>
         </div>
-        <Anchor id="full" label="FULL" />
-        <div class="table-scroll">
-          <table class="api-params">
-            <thead><tr><th>Value</th><th>Effect</th></tr></thead>
-            <tbody>
-              <tr><td><code>0</code> <em>(default)</em></td><td>Renders injected motion only. Native cursor delta is relayed byte for byte.</td></tr>
-              <tr><td><code>1</code></td><td>Renders both: native cursor delta leaves the relayed report and joins injection as one stream through the model.</td></tr>
-            </tbody>
-          </table>
-        </div>
+        <Anchor id="full" label="FULL">
+          <div class="table-scroll">
+            <table class="api-params">
+              <thead><tr><th>Value</th><th>Effect</th></tr></thead>
+              <tbody>
+                <tr><td><code>0</code> <em>(default)</em></td><td>Renders injected motion only. Native cursor delta is relayed byte for byte.</td></tr>
+                <tr><td><code>1</code></td><td>Renders both: native cursor delta leaves the relayed report and joins injection as one stream through the model.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </Anchor>
         <div class="callout callout--warning">
           <p>
             Rendering adds a little latency, which reaches native motion when{' '}

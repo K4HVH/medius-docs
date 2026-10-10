@@ -59,10 +59,10 @@ const Control = () => {
           <Show when={full()}>
             <div class="safety" id="safety-clear" data-search-target data-search-title="Clear everything">
               <span class="safety-row">
+                <CopyLink id="safety-clear" label="Clear everything" />
                 <Button variant="danger" disabled={cmd.busy()} onClick={safetyClear}>
                   Clear everything
                 </Button>
-                <CopyLink id="safety-clear" label="Clear everything" />
               </span>
               {/* One line: what it clears, what it did, or why it didn't, so the header never changes height. */}
               <Switch

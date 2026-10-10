@@ -120,8 +120,11 @@ const CONTROL: PageInfo = {
 
 const app = dom(`
   <header class="page-header"><h1>Control</h1></header>
-  <div class="ptabs" role="tablist">
-    <button role="tab" data-tab="injection">Injection</button><button role="tab" data-tab="input-locks">Input locks</button><button role="tab" data-tab="log">Log</button>
+  <div class="ptabs">
+    <div class="ptabs-list" role="tablist">
+      <button role="tab" data-tab="injection">Injection</button><button role="tab" data-tab="input-locks">Input locks</button><button role="tab" data-tab="log">Log</button>
+    </div>
+    <button class="cl" aria-label="Copy link to Injection" data-for="injection" data-search-skip data-agent-hide><svg></svg></button>
   </div>
   <section data-pane="injection" role="tabpanel">
     <div class="pn" id="move" data-search-target><div class="ph"><h2>Move</h2></div><div class="pb">

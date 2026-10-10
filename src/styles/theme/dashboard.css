@@ -25,7 +25,7 @@
   background: color-mix(in srgb, var(--ground) 88%, transparent);
   -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
 }
-.ptabs-list { position: relative; display: flex; flex: 1; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+.ptabs-list { position: relative; display: flex; flex: 1; min-width: 0; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
 .ptabs-list::-webkit-scrollbar { display: none; }
 .ptabs-list::after {
   content: ""; position: sticky; right: 0; flex: none; width: 48px; margin-left: -48px;
@@ -40,10 +40,7 @@
 .ptabs [role="tab"]:hover:not(:disabled), .ptabs [role="tab"][aria-selected="true"] { color: var(--text); }
 .ptabs [role="tab"]:disabled { color: var(--line-2); cursor: not-allowed; }
 .ptabs [role="tab"]:focus-visible { outline: 1px solid var(--primary); outline-offset: -4px; }
-.ptabs > .cl { flex: none; top: 0; margin-left: 8px; opacity: 1; transform: none; }
-/* At the right edge, Copied opens to the icon's left, over the tabs. */
-.ptabs > .cl::after { left: auto; right: calc(100% + 2px); padding-left: 10px; background: var(--ground); transform: translate(4px, -50%); }
-.ptabs > .cl[data-state]::after { transform: translate(0, -50%); }
+.ptabs > .cl { flex: none; top: 0; margin: 0 0 0 8px; opacity: 1; transform: none; }
 .ptabs .ind {
   position: absolute; bottom: -1px; left: 0; height: 2px; width: 0; background: var(--accent);
   transition: left 0.45s var(--ease), width 0.45s var(--ease);
@@ -349,6 +346,14 @@
 .page-header__aside p { margin: 0; }
 .safety { display: grid; justify-items: end; gap: 6px; }
 .safety-row { display: inline-flex; align-items: center; }
+/* The icon sits before the button, its margin giving back its width where it shows on hover alone, so the
+   button keeps to the edge the line under it ends at. Copied opens to its left. */
+.safety-row > .cl { margin: 0 6px 0 0; }
+.safety-row > .cl::after { left: auto; right: calc(100% + 2px); transform: translate(4px, -50%); }
+.safety-row > .cl[data-state]::after { transform: translate(0, -50%); }
+@media (hover: hover) {
+  .safety-row > .cl { margin-left: -30px; }
+}
 .safety .sub2 { text-align: right; color: var(--muted); font-size: 14.5px; }
 .safety .sub2.bad { color: color-mix(in srgb, var(--bad) 45%, var(--text)); }
 @media (max-width: 900px) {

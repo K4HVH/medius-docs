@@ -1,30 +1,45 @@
-import { createSignal, onCleanup } from 'solid-js';
+import { createSignal, onCleanup, onMount } from 'solid-js';
 import { pagePath } from '../routes';
 import { SITE } from '../site';
 
-// One place for every copy to be read out from: a status read inside a heading would join its text.
+// Copies are announced from one live region outside every heading: one inside would join its text. It is
+// in the page before the first copy, and each message lands a moment after it is cleared, so a screen
+// reader hears every one.
 let said: HTMLElement | undefined;
-function say(text: string): void {
-  if (!said || !said.isConnected) {
+function liveRegion(): HTMLElement {
+  if (!said || !said.isConnected) said = document.querySelector<HTMLElement>('.cl-said') ?? undefined;
+  if (!said) {
     said = document.createElement('div');
     said.className = 'cl-said';
     said.setAttribute('role', 'status');
     said.setAttribute('aria-live', 'polite');
     document.body.appendChild(said);
   }
-  said.textContent = '';
-  said.textContent = text;
+  return said;
+}
+function say(text: string): void {
+  const region = liveRegion();
+  region.textContent = '';
+  setTimeout(() => (region.textContent = text), 50);
+}
+
+// Whether a marked place holds its link icon (the build's search pass asks of every place).
+export function holdsLink(root: ParentNode, id: string): boolean {
+  const v = id.replace(/["\\]/g, '\\$&');
+  return !!root.querySelector(`[id="${v}"] .cl[data-for="${v}"]`);
 }
 
 // The browser's copy command, for a page the Clipboard API refuses (an insecure origin, a denied
 // permission).
 function copyCommand(text: string): boolean {
+  const back = document.activeElement instanceof HTMLElement ? document.activeElement : null;
   const area = document.createElement('textarea');
   area.value = text;
   area.setAttribute('readonly', '');
   area.style.position = 'fixed';
   area.style.opacity = '0';
   document.body.appendChild(area);
+  area.focus();
   area.select();
   try {
     return document.execCommand('copy');
@@ -32,6 +47,7 @@ function copyCommand(text: string): boolean {
     return false;
   } finally {
     area.remove();
+    back?.focus({ preventScroll: true });
   }
 }
 
@@ -46,21 +62,34 @@ async function copy(text: string): Promise<boolean> {
 
 // The link icon beside a place the site links to. It copies the full address: `to`, or the page (the
 // parent, on an item's address) and the place's id. Copied or Not copied shows for 1.5 s (data-state),
-// drawn by the CSS from data-said, which stays so the word can fade out: the button holds no text for
-// search, the rail or a Markdown twin to read.
+// drawn by the CSS from data-said, which stays while the word fades out: the button holds no text for
+// search, the rail or a Markdown twin to read. Near the right edge of the screen the word opens to the
+// icon's left (data-side), so it never widens the page.
 export function CopyLink(props: { id: string; label: string; to?: string }) {
   const [state, setState] = createSignal<'copied' | 'failed' | null>(null);
   const [said, setSaid] = createSignal('');
+  const [side, setSide] = createSignal<'left' | undefined>();
   let timer: ReturnType<typeof setTimeout> | undefined;
-  onCleanup(() => clearTimeout(timer));
-  const click = async () => {
+  let fade: ReturnType<typeof setTimeout> | undefined;
+  onMount(liveRegion);
+  onCleanup(() => {
+    clearTimeout(timer);
+    clearTimeout(fade);
+  });
+  const click = async (e: MouseEvent) => {
+    const at = (e.currentTarget as HTMLElement).getBoundingClientRect();
     const path = props.to ?? `${pagePath(window.location.pathname)}#${props.id}`;
     const ok = await copy(SITE + path);
+    clearTimeout(timer);
+    clearTimeout(fade);
+    setSide(document.documentElement.clientWidth - at.right < 110 ? 'left' : undefined);
     setState(ok ? 'copied' : 'failed');
     setSaid(ok ? 'Copied' : 'Not copied');
     say(ok ? 'Link copied' : 'Link not copied');
-    clearTimeout(timer);
-    timer = setTimeout(() => setState(null), 1500);
+    timer = setTimeout(() => {
+      setState(null);
+      fade = setTimeout(() => setSaid(''), 400);
+    }, 1500);
   };
   return (
     <button
@@ -70,6 +99,7 @@ export function CopyLink(props: { id: string; label: string; to?: string }) {
       data-for={props.id}
       data-state={state() ?? undefined}
       data-said={said() || undefined}
+      data-side={side()}
       data-search-skip
       data-agent-hide
       onClick={click}
