@@ -17,6 +17,7 @@ import {
   usageName,
 } from '../../../dashboard/protocol';
 import { useDashboard } from './context';
+import { createRefused } from './refused';
 import { UsageChips, UsagePicker, type PickerClass } from './UsagePicker';
 import { Panel, Panels, Stack } from '../../shell/Panel';
 
@@ -65,7 +66,10 @@ const DeviceInject = () => {
   const [holds, setHolds] = createSignal<Hold[]>([]);
   const [dragging, setDragging] = createSignal(false);
   const [moved, setMoved] = createSignal({ dx: 0, dy: 0 });
-  const [err, setErr] = createSignal<string | null>(null);
+  const { actedIn, report, clear, Refused } = createRefused(
+    ['cursor', 'any-input', 'inject-buttons', 'inject-held', 'inject-wheel', 'inject-pan'],
+    'cursor',
+  );
   const [dropped, setDropped] = createSignal(false);
 
   const link = () => dash.link();
@@ -73,10 +77,10 @@ const DeviceInject = () => {
   const send = async (cls: number, id: number, action: Action): Promise<boolean> => {
     try {
       await link()?.inject(cls, id, action);
-      setErr(null);
+      clear();
       return true;
     } catch (e) {
-      setErr(e instanceof Error ? e.message : String(e));
+      report(e);
       return false;
     }
   };
@@ -185,19 +189,21 @@ const DeviceInject = () => {
     setDragging(false);
   };
 
-  const fail = (x: unknown) => setErr(x instanceof Error ? x.message : String(x));
+  // Every other send clears a refusal when it lands and shows its own when refused.
+  const settle = (p: Promise<unknown> | undefined) => p?.then(clear, report);
 
   // Everything the pad and the arrows have sent, read in the middle of the arrows.
   const [sent, setSent] = createSignal({ x: 0, y: 0 });
-  const moveCursor = (dx: number, dy: number) => {
-    setSent((t) => ({ x: t.x + dx, y: t.y + dy }));
-    return (bypass() ? link()?.moveRelNow(dx, dy) : link()?.moveRel(dx, dy))?.catch(fail);
-  };
+  const moveCursor = (dx: number, dy: number) =>
+    settle(
+      (bypass() ? link()?.moveRelNow(dx, dy) : link()?.moveRel(dx, dy))?.then(() =>
+        setSent((t) => ({ x: t.x + dx, y: t.y + dy })),
+      ),
+    );
 
-  const scroll = (dz: number) => (bypass() ? link()?.wheelNow(dz) : link()?.wheel(dz))?.catch(fail);
+  const scroll = (dz: number) => settle(bypass() ? link()?.wheelNow(dz) : link()?.wheel(dz));
 
-  const panScroll = (dpan: number) =>
-    (bypass() ? link()?.panNow(dpan) : link()?.pan(dpan))?.catch(fail);
+  const panScroll = (dpan: number) => settle(bypass() ? link()?.panNow(dpan) : link()?.pan(dpan));
 
   const onPadUp = (e: PointerEvent & { currentTarget: HTMLDivElement }) => {
     if (e.currentTarget.hasPointerCapture(e.pointerId)) {
@@ -217,192 +223,192 @@ const DeviceInject = () => {
 
   return (
     <Show when={dash.status() === 'connected'}>
-      <Panels>
-        <Show when={err()}>
-          <Panel wide>
-            <div class="callout callout--danger" role="alert">
-              {err()}
-            </div>
-          </Panel>
-        </Show>
-
-        <Stack>
-          <Panel id="cursor" title="Cursor">
-            <Show when={mouseReady()} fallback={<p class="mut">No mouse cloned.</p>}>
-              <div
-                class="pad"
-                classList={{ on: dragging() }}
-                onPointerDown={onPadDown}
-                onPointerMove={onPadMove}
-                onPointerUp={onPadUp}
-                onPointerCancel={onPadUp}
-                onLostPointerCapture={endDrag}
-                role="application"
-                aria-label="Cursor drag pad. The buttons below move by a fixed step."
-              >
-                <span class="caps">
-                  <Show when={dragging()} fallback="Drag to move the cursor">
-                    {moved().dx}, {moved().dy}
-                  </Show>
-                </span>
-              </div>
-              <div class="nudge">
-                <div class="dpad">
-                  <Button variant="secondary" icon={Up} aria-label="Move up" onClick={() => void moveCursor(0, -step())} />
-                  <Button variant="secondary" icon={Left} aria-label="Move left" onClick={() => void moveCursor(-step(), 0)} />
-                  <Button variant="secondary" icon={Right} aria-label="Move right" onClick={() => void moveCursor(step(), 0)} />
-                  <Button variant="secondary" icon={Down} aria-label="Move down" onClick={() => void moveCursor(0, step())} />
-                  <span class="dpad-c caps" aria-live="polite">
-                    {sent().x}, {sent().y}
+      <div onPointerDown={actedIn} onKeyDown={actedIn} onClick={actedIn}>
+        <Panels>
+          <Stack>
+            <Panel id="cursor" title="Cursor">
+              <Show when={mouseReady()} fallback={<p class="mut">No mouse cloned.</p>}>
+                <div
+                  class="pad"
+                  classList={{ on: dragging() }}
+                  onPointerDown={onPadDown}
+                  onPointerMove={onPadMove}
+                  onPointerUp={onPadUp}
+                  onPointerCancel={onPadUp}
+                  onLostPointerCapture={endDrag}
+                  role="application"
+                  aria-label="Cursor drag pad. The buttons below move by a fixed step."
+                >
+                  <span class="caps">
+                    <Show when={dragging()} fallback="Drag to move the cursor">
+                      {moved().dx}, {moved().dy}
+                    </Show>
                   </span>
                 </div>
-                <div class="nudge-c">
+                <div class="nudge">
+                  <div class="dpad">
+                    <Button variant="secondary" icon={Up} aria-label="Move up" onClick={() => void moveCursor(0, -step())} />
+                    <Button variant="secondary" icon={Left} aria-label="Move left" onClick={() => void moveCursor(-step(), 0)} />
+                    <Button variant="secondary" icon={Right} aria-label="Move right" onClick={() => void moveCursor(step(), 0)} />
+                    <Button variant="secondary" icon={Down} aria-label="Move down" onClick={() => void moveCursor(0, step())} />
+                    <span class="dpad-c caps" aria-live="polite">
+                      {sent().x}, {sent().y}
+                    </span>
+                  </div>
+                  <div class="nudge-c">
+                    <div class="fw-s">
+                      <NumberInput
+                        label="Step"
+                        value={step()}
+                        min={1}
+                        max={32767}
+                        precision={0}
+                        onChange={(v) => setStep(v ?? 1)}
+                      />
+                    </div>
+                    <Checkbox label="Bypass movement riding" checked={bypass()} onChange={setBypass} />
+                    <div class="acts">
+                      <Button variant="secondary" onClick={() => void settle(link()?.flushMotion())}>
+                        Send held motion
+                      </Button>
+                      <Button variant="secondary" onClick={() => void settle(link()?.discardMotion())}>
+                        Drop held motion
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </Show>
+              <Refused panel="cursor" />
+            </Panel>
+
+            <Panel id="any-input" title="Any input">
+              <Show when={kbdReady() || mouseReady()} fallback={<p class="mut">Nothing cloned to inject into.</p>}>
+                <Show when={!kbdReady()}>
+                  <p class="mut">No keyboard attached: the box discards key and media holds.</p>
+                </Show>
+                <UsagePicker name="inject-usage" classes={classes()} value={pick()} onChange={setPick} />
+                <div class="acts">
+                  <Button variant="secondary" {...holdPicked}>
+                    Hold {pickName()}
+                  </Button>
+                  <Button variant="primary" onClick={() => hold(pick(), Action.Press)}>
+                    Press
+                  </Button>
+                  <Button variant="secondary" onClick={() => hold(pick(), Action.ForceRelease)}>
+                    Mask
+                  </Button>
+                  <Button variant="secondary" onClick={() => release(pick())}>
+                    Release
+                  </Button>
+                </div>
+              </Show>
+              <Refused panel="any-input" />
+            </Panel>
+          </Stack>
+
+          <Stack>
+            <Show when={mouseReady()}>
+              <Panel id="inject-buttons" title="Buttons">
+                <div class="acts">
+                  <For each={buttons()}>
+                    {(b) => (
+                      <Button variant="secondary" {...holdWhilePressed({ cls: INJ_BTN, id: b.id })}>
+                        {b.name}
+                      </Button>
+                    )}
+                  </For>
+                </div>
+                <Refused panel="inject-buttons" />
+              </Panel>
+            </Show>
+
+            <Panel
+              id="inject-held"
+              title="Held"
+              aside={
+                <Button
+                  variant="subtle"
+                  style={{ visibility: holds().length > 0 ? 'visible' : 'hidden' }}
+                  onClick={releaseAll}
+                >
+                  Release all
+                </Button>
+              }
+            >
+              <Show when={dropped()}>
+                <div class="callout callout--warning">
+                  The box cleared every injected hold after 1 s with no control frame, which a backgrounded
+                  tab can cause.
+                </div>
+              </Show>
+              <Show
+                when={holds().length > 0}
+                fallback={
+                  <p class="mut held-none">
+                    Nothing held.
+                  </p>
+                }
+              >
+                <UsageChips
+                  items={heldItems()}
+                  variant="warning"
+                  onRemove={(k) => {
+                    const h = holds().find((x) => key(x) === k);
+                    if (h) release(h);
+                  }}
+                />
+              </Show>
+              <Refused panel="inject-held" />
+            </Panel>
+
+            <Show when={mouseReady()}>
+              <Panel id="inject-wheel" title="Wheel">
+                <div class="acts">
                   <div class="fw-s">
                     <NumberInput
-                      label="Step"
-                      value={step()}
+                      label="Detents"
+                      value={detents()}
                       min={1}
                       max={32767}
                       precision={0}
-                      onChange={(v) => setStep(v ?? 1)}
+                      onChange={(v) => setDetents(v ?? 1)}
                     />
                   </div>
-                  <Checkbox label="Bypass movement riding" checked={bypass()} onChange={setBypass} />
-                  <div class="acts">
-                    <Button variant="secondary" onClick={() => void link()?.flushMotion()?.catch(fail)}>
-                      Send held motion
-                    </Button>
-                    <Button variant="secondary" onClick={() => void link()?.discardMotion()?.catch(fail)}>
-                      Drop held motion
-                    </Button>
+                  <Button variant="secondary" onClick={() => void scroll(detents())}>
+                    Scroll up
+                  </Button>
+                  <Button variant="secondary" onClick={() => void scroll(-detents())}>
+                    Scroll down
+                  </Button>
+                </div>
+                <Refused panel="inject-wheel" />
+              </Panel>
+
+              <Panel id="inject-pan" title="Pan">
+                <div class="acts">
+                  <div class="fw-s">
+                    <NumberInput
+                      label="Detents"
+                      value={pans()}
+                      min={1}
+                      max={32767}
+                      precision={0}
+                      onChange={(v) => setPans(v ?? 1)}
+                    />
                   </div>
+                  <Button variant="secondary" onClick={() => void panScroll(-pans())}>
+                    Pan left
+                  </Button>
+                  <Button variant="secondary" onClick={() => void panScroll(pans())}>
+                    Pan right
+                  </Button>
                 </div>
-              </div>
+                <Refused panel="inject-pan" />
+              </Panel>
             </Show>
-          </Panel>
-
-          <Panel id="any-input" title="Any input">
-            <Show when={kbdReady() || mouseReady()} fallback={<p class="mut">Nothing cloned to inject into.</p>}>
-              <Show when={!kbdReady()}>
-                <p class="mut">No keyboard attached: the box discards key and media holds.</p>
-              </Show>
-              <UsagePicker name="inject-usage" classes={classes()} value={pick()} onChange={setPick} />
-              <div class="acts">
-                <Button variant="secondary" {...holdPicked}>
-                  Hold {pickName()}
-                </Button>
-                <Button variant="primary" onClick={() => hold(pick(), Action.Press)}>
-                  Press
-                </Button>
-                <Button variant="secondary" onClick={() => hold(pick(), Action.ForceRelease)}>
-                  Mask
-                </Button>
-                <Button variant="secondary" onClick={() => release(pick())}>
-                  Release
-                </Button>
-              </div>
-            </Show>
-          </Panel>
-        </Stack>
-
-        <Stack>
-          <Show when={mouseReady()}>
-            <Panel id="inject-buttons" title="Buttons">
-              <div class="acts">
-                <For each={buttons()}>
-                  {(b) => (
-                    <Button variant="secondary" {...holdWhilePressed({ cls: INJ_BTN, id: b.id })}>
-                      {b.name}
-                    </Button>
-                  )}
-                </For>
-              </div>
-            </Panel>
-          </Show>
-
-          <Panel
-            id="inject-held"
-            title="Held"
-            aside={
-              <Button
-                variant="subtle"
-                style={{ visibility: holds().length > 0 ? 'visible' : 'hidden' }}
-                onClick={releaseAll}
-              >
-                Release all
-              </Button>
-            }
-          >
-            <Show when={dropped()}>
-              <div class="callout callout--warning">
-                The box cleared every injected hold after 1 s with no control frame, which a backgrounded
-                tab can cause.
-              </div>
-            </Show>
-            <Show
-              when={holds().length > 0}
-              fallback={
-                <p class="mut held-none">
-                  Nothing held.
-                </p>
-              }
-            >
-              <UsageChips
-                items={heldItems()}
-                variant="warning"
-                onRemove={(k) => {
-                  const h = holds().find((x) => key(x) === k);
-                  if (h) release(h);
-                }}
-              />
-            </Show>
-          </Panel>
-
-          <Show when={mouseReady()}>
-            <Panel id="inject-wheel" title="Wheel">
-              <div class="acts">
-                <div class="fw-s">
-                  <NumberInput
-                    label="Detents"
-                    value={detents()}
-                    min={1}
-                    max={32767}
-                    precision={0}
-                    onChange={(v) => setDetents(v ?? 1)}
-                  />
-                </div>
-                <Button variant="secondary" onClick={() => void scroll(detents())}>
-                  Scroll up
-                </Button>
-                <Button variant="secondary" onClick={() => void scroll(-detents())}>
-                  Scroll down
-                </Button>
-              </div>
-            </Panel>
-
-            <Panel id="inject-pan" title="Pan">
-              <div class="acts">
-                <div class="fw-s">
-                  <NumberInput
-                    label="Detents"
-                    value={pans()}
-                    min={1}
-                    max={32767}
-                    precision={0}
-                    onChange={(v) => setPans(v ?? 1)}
-                  />
-                </div>
-                <Button variant="secondary" onClick={() => void panScroll(-pans())}>
-                  Pan left
-                </Button>
-                <Button variant="secondary" onClick={() => void panScroll(pans())}>
-                  Pan right
-                </Button>
-              </div>
-            </Panel>
-          </Show>
-        </Stack>
-      </Panels>
+          </Stack>
+        </Panels>
+      </div>
     </Show>
   );
 };

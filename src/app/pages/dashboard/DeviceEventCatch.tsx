@@ -42,6 +42,7 @@ import {
 } from '../../../dashboard/protocol';
 import type { InputEventEntry } from './context';
 import { useDashboard } from './context';
+import { createCommand } from './action';
 import { LogBox, logText } from '../../shell/LogBox';
 import { Panel, Panels, Stack } from '../../shell/Panel';
 import { Segmented } from '../../shell/Segmented';
@@ -250,7 +251,8 @@ const DeviceEventCatch = () => {
       await dash.link()?.catch(f);
     }
     if (gen !== generation) return;
-    const confirmed = await dash.link()?.queryCatch();
+    // The box took every entry; a lost confirmation leaves the stream running unconfirmed.
+    const confirmed = await dash.link()?.queryCatch().catch(() => null);
     if (gen !== generation || !confirmed) return;
     setAccepted(confirmed.entries);
     dash.refreshPoll('catch');
@@ -264,6 +266,23 @@ const DeviceEventCatch = () => {
     await dash.link()?.uncatch();
     dash.refreshPoll('catch');
   };
+
+  // A refused subscription goes back to Watch, so the log isn't left waiting on nothing, and drops
+  // any entries the box took before it refused one.
+  const cmd = createCommand();
+  const watch = () =>
+    cmd.run(() => {
+      // start() takes the next generation; a Stop or Watch since then owns the state.
+      const mine = generation + 1;
+      return start().catch((e: unknown) => {
+        if (generation !== mine) return;
+        generation++;
+        setStreaming(false);
+        setActive([]);
+        void dash.link()?.uncatch()?.catch(() => {});
+        throw e;
+      });
+    });
 
   onCleanup(() => {
     generation++;
@@ -562,20 +581,28 @@ const DeviceEventCatch = () => {
               <Show
                 when={!streaming()}
                 fallback={
-                  <Button variant="secondary" onClick={() => void stop().catch(() => {})}>
+                  <Button variant="secondary" onClick={() => cmd.run(stop)}>
                     Stop
                   </Button>
                 }
               >
                 <Button
                   variant="primary"
-                  disabled={chosen().length === 0}
-                  onClick={() => void start().catch(() => {})}
+                  disabled={chosen().length === 0 || cmd.busy()}
+                  onClick={watch}
                 >
                   Watch
                 </Button>
               </Show>
             </div>
+
+            <Show when={cmd.error()}>
+              {(msg) => (
+                <div class="callout callout--danger" role="alert">
+                  {msg()}
+                </div>
+              )}
+            </Show>
 
             <Show when={droppedByBox()}>
               <div class="callout callout--warning">
@@ -586,11 +613,11 @@ const DeviceEventCatch = () => {
 
             <Show when={streaming() && refused().length > 0}>
               <div class="callout callout--warning">
-                The box refused {refused().length} of {active().length} entries:{' '}
+                The box refused {refused().length} of {active().length} {active().length === 1 ? 'entry' : 'entries'}:{' '}
                 {refused().map(describe).join(', ')}.{' '}
                 <Show
                   when={catchState()?.tableFull}
-                  fallback={<>This firmware doesn't know that address.</>}
+                  fallback={<>This firmware doesn't know {refused().length === 1 ? 'that address' : 'those addresses'}.</>}
                 >
                   The {CATCH_TABLE_MAX}-entry table is full.
                 </Show>
@@ -632,7 +659,7 @@ const DeviceEventCatch = () => {
               version={moved}
               empty={streaming() ? 'Move, click, or type...' : ''}
               label="Recent events"
-              cols="40px 120px minmax(0,1fr)"
+              cols="5ch 13ch minmax(0,1fr)"
             />
             <Show when={streaming()}>
               <p class="mut">

@@ -167,7 +167,7 @@ const DevicePatch = () => {
         </div>
         <Show when={!allowed()}>
           <div class="callout callout--info">
-            A patch is stored now and applied once <A href="/dashboard#imperfect-clone">imperfect clones</A> are on, on Device's Options tab.
+            A patch is stored now and applied once you allow <A href="/dashboard#imperfect-clone">imperfect clones</A> on Device's Options tab.
           </div>
         </Show>
         <Show when={patches()?.tableFull}>

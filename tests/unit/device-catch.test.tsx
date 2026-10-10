@@ -15,6 +15,12 @@ const mock = vi.hoisted(() => ({
   push: (_v: unknown[]) => {},
   clear: () => {},
   caught: [] as unknown[],
+  refuse: false,
+  // The box takes the subscription but leaves it out of its table.
+  unknown: false,
+  // Refuses every entry after this many.
+  refuseAfter: -1,
+  uncatches: 0,
 }));
 
 vi.mock('../../src/app/pages/dashboard/context', async () => {
@@ -29,9 +35,13 @@ vi.mock('../../src/app/pages/dashboard/context', async () => {
     entries: mock.caught.map((f) => ({ ...(f as object), dropped: 0 })),
   });
   const link = {
-    uncatch: async () => {},
+    uncatch: async () => {
+      mock.uncatches += 1;
+      mock.caught = [];
+    },
     catch: async (f: unknown) => {
-      mock.caught.push(f);
+      if (mock.refuse || (mock.refuseAfter >= 0 && mock.caught.length >= mock.refuseAfter)) throw new Error('The box refused that.');
+      if (!mock.unknown) mock.caught.push(f);
     },
     queryCatch: async () => state(),
   };
@@ -53,6 +63,10 @@ import DeviceEventCatch from '../../src/app/pages/dashboard/DeviceEventCatch';
 
 afterEach(() => {
   cleanup();
+  mock.refuse = false;
+  mock.unknown = false;
+  mock.refuseAfter = -1;
+  mock.uncatches = 0;
   mock.caught = [];
   mock.clear();
 });
@@ -286,5 +300,36 @@ describe('DeviceEventCatch whole-number fields', () => {
     await settle();
     const chips = [...container.querySelectorAll('.chip__label')].map((c) => c.textContent ?? '');
     expect(chips.some((c) => c.includes(shown))).toBe(true);
+  });
+});
+
+describe('DeviceEventCatch refused', () => {
+  it('a refused subscription says so and goes back to Watch, not to a log waiting on nothing', async () => {
+    mock.refuse = true;
+    const { container, getByRole } = await watching();
+    await waitFor(() => expect(getByRole('alert').textContent).toBe('The box refused that.'));
+    expect(button(container, 'Watch')).toBeTruthy();
+  });
+});
+
+describe('DeviceEventCatch refused part-way', () => {
+  it('drops the entries the box took before it refused one', async () => {
+    mock.refuseAfter = 2;
+    const { getByRole } = await watching('All input');
+    await waitFor(() => expect(getByRole('alert').textContent).toBe('The box refused that.'));
+    // One clear before subscribing, one after the refusal.
+    expect(mock.uncatches).toBe(2);
+    expect(mock.caught).toEqual([]);
+  });
+});
+
+describe('DeviceEventCatch entries left out', () => {
+  it('names one unknown address in the singular and several in the plural', async () => {
+    mock.unknown = true;
+    const one = await watching('Buttons');
+    await waitFor(() => expect(one.container.textContent).toMatch(/refused 1 of 1 entry: .*doesn't know that address\./));
+    cleanup();
+    const many = await watching('All input');
+    await waitFor(() => expect(many.container.textContent).toMatch(/refused 4 of 4 entries: .*doesn't know those addresses\./));
   });
 });

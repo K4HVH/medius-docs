@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest';
-import { render, cleanup } from '@solidjs/testing-library';
+import { render, cleanup, fireEvent, waitFor } from '@solidjs/testing-library';
 import { MemoryRouter, Route } from '@solidjs/router';
 import { DashboardContext, type DashboardContextValue } from '../../src/app/pages/dashboard/context';
 import Control from '../../src/app/pages/dashboard/Control';
@@ -85,6 +85,7 @@ const stub = (over: Partial<Record<string, unknown>> = {}): DashboardContextValu
       led: async () => {},
       catch: async () => {},
       uncatch: async () => {},
+      queryCatch: async () => VALUES.catch,
       clipCtrl: async () => {},
       clipSet: async () => {},
       clipAppend: async () => {},
@@ -208,10 +209,34 @@ describe('Control page', () => {
     expect(body).toMatch(/clip/i);
   });
 
+  it('says what Clear everything did on the line under it, so the header never grows', async () => {
+    const base = stub();
+    let refuse = true;
+    const link = (base.link as unknown as () => Record<string, unknown>)();
+    const value = stub({
+      link: () => ({
+        ...link,
+        reset: async () => {
+          if (refuse) throw new Error('The box refused that.');
+        },
+      }),
+    });
+    const { findByText, container } = mount(value);
+    const aside = () => container.querySelector('.page-header__aside')!;
+    fireEvent.click(await findByText('Clear everything'));
+    await waitFor(() => expect(aside().querySelector('[role="alert"]')?.textContent).toBe('The box refused that.'));
+    expect(aside().querySelectorAll('p')).toHaveLength(1);
+    expect(aside().querySelector('.callout')).toBeNull();
+    refuse = false;
+    fireEvent.click(await findByText('Clear everything'));
+    await waitFor(() => expect(aside().querySelector('p')!.textContent).toBe('Sent.'));
+    expect(aside().querySelectorAll('p')).toHaveLength(1);
+  });
+
   it('renders a blanket lock the picker cannot build but another client can set', async () => {
     // The active list has always been able to show these; only the picker was limited.
     const { findByText } = mount();
-    await findByText('All keys press');
+    await findByText('All keys press blocked');
   });
 
   it('renders a weighed direction as its percentage, not as a lock', async () => {

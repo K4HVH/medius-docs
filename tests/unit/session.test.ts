@@ -262,6 +262,15 @@ describe('box session', () => {
     expect(api.identifying()).toBe(false);
   });
 
+  it('identify on a box that refuses the light says why, and stops identifying', async () => {
+    const box = new FakeBox();
+    const { api } = open(box);
+    await api.connect();
+    box.ledRefused = true;
+    await expect(api.identify()).rejects.toThrow('The box refused that.');
+    expect(api.identifying()).toBe(false);
+  });
+
   it('identify does nothing on a box that is not connected', async () => {
     const box = new FakeBox();
     const { api } = open(box, { probe: probed(box) });

@@ -111,6 +111,21 @@ const DeviceOptions = () => {
   const spread = dash.poll('spread');
   const version = dash.poll('version');
   const cmd = createCommand();
+  // A refused write shows in the panel whose button sent it.
+  const [at, setAt] = createSignal('');
+  const act = (panel: string, fn: () => Promise<unknown>) => {
+    setAt(panel);
+    cmd.run(fn);
+  };
+  const Refused = (props: { panel: string }) => (
+    <Show when={at() === props.panel && cmd.error()}>
+      {(msg) => (
+        <div class="callout callout--danger" role="alert">
+          {msg()}
+        </div>
+      )}
+    </Show>
+  );
 
   // Each control reads back from the box until edited, then holds the edit until applied, so a poll
   // can't overwrite typing.
@@ -151,7 +166,7 @@ const DeviceOptions = () => {
       : (bearing()?.mode ?? BearingMode.PerAxis);
 
   const setBearing = (windowMs: number) =>
-    cmd.run(async () => {
+    act('bearing', async () => {
       await dash.link()!.setBearing(windowMs, bearGeometry());
       setBearEdit(null);
       setBearMode(null);
@@ -171,7 +186,7 @@ const DeviceOptions = () => {
   const applyName = () => {
     const v = name().trim();
     if (v.length === 0) return;
-    cmd.run(async () => {
+    act('box-name', async () => {
       await dash.link()!.setName(v);
       setNameEdit(null);
       dash.refreshPoll('version');
@@ -179,27 +194,27 @@ const DeviceOptions = () => {
   };
 
   const clearName = () =>
-    cmd.run(async () => {
+    act('box-name', async () => {
       await dash.link()!.clearName();
       setNameEdit(null);
       dash.refreshPoll('version');
     });
 
   const allowImperfect = (allow: boolean) =>
-    cmd.run(async () => {
+    act('imperfect-clone', async () => {
       await dash.link()!.allowImperfectClones(allow);
       dash.refreshPoll('imperfect');
     });
 
   const setRiding = (ms: number) =>
-    cmd.run(async () => {
+    act('movement-riding', async () => {
       await dash.link()!.setMovementRiding(ms);
       setRideEdit(null);
       dash.refreshPoll('moveRide');
     });
 
   const applyEmit = () =>
-    cmd.run(async () => {
+    act('emit-rate', async () => {
       const m = EMIT_MODES[mode()];
       await dash.link()!.setEmitPace(m, m === EmitMode.Fixed ? hz() : 0, forceOn() ? forceHz() : 0);
       setModeEdit(null);
@@ -212,14 +227,14 @@ const DeviceOptions = () => {
   const spreadKey = () => spreadEdit() ?? spreadKeyFor(spread()?.percent ?? 100);
 
   const applySpread = () =>
-    cmd.run(async () => {
+    act('spread', async () => {
       await dash.link()!.setSpread(SPREAD_PERCENTS[spreadKey()] ?? spread()?.percent ?? 100);
       setSpreadEdit(null);
       dash.refreshPoll('spread');
     });
 
   const applyRender = () =>
-    cmd.run(async () => {
+    act('render', async () => {
       await dash.link()!.setRender(RENDER_MODES[renderKey()], fullOn());
       setRenderEdit(null);
       setFullEdit(null);
@@ -229,12 +244,6 @@ const DeviceOptions = () => {
 
   return (
     <Show when={dash.status() === 'connected'}>
-      <Show when={cmd.error()}>
-        <Panel wide>
-          <div class="callout callout--danger" role="alert">{cmd.error()}</div>
-        </Panel>
-      </Show>
-
       <Panel id="box-name" title="Box name">
         <p>
           Up to {NAME_MAX} letters, numbers and symbols.
@@ -261,6 +270,7 @@ const DeviceOptions = () => {
             <Chip variant="neutral">{version()!.name}</Chip>
           </div>
         </Show>
+        <Refused panel="box-name" />
       </Panel>
 
       <Panel id="imperfect-clone" title="Imperfect clone">
@@ -287,6 +297,7 @@ const DeviceOptions = () => {
             </div>
           )}
         </Show>
+        <Refused panel="imperfect-clone" />
       </Panel>
 
       <Panel id="movement-riding" title="Movement riding">
@@ -328,6 +339,7 @@ const DeviceOptions = () => {
             </Show>
           </div>
         </Show>
+        <Refused panel="movement-riding" />
       </Panel>
 
       <Panel id="bearing" title="Bearing">
@@ -386,6 +398,7 @@ const DeviceOptions = () => {
             </Show>
           </div>
         </Show>
+        <Refused panel="bearing" />
       </Panel>
 
       <Panel id="render" title="Render">
@@ -460,6 +473,7 @@ const DeviceOptions = () => {
             </div>
           )}
         </Show>
+        <Refused panel="render" />
       </Panel>
 
       <Panel id="spread" title="Spread">
@@ -503,6 +517,7 @@ const DeviceOptions = () => {
             </div>
           )}
         </Show>
+        <Refused panel="spread" />
       </Panel>
 
       <Panel id="emit-rate" title="Emit rate">
@@ -599,6 +614,7 @@ const DeviceOptions = () => {
             </div>
           )}
         </Show>
+        <Refused panel="emit-rate" />
       </Panel>
 
     </Show>

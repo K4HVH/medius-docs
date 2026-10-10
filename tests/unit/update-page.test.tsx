@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { render, cleanup, waitFor } from '@solidjs/testing-library';
+import { render, cleanup, fireEvent, waitFor } from '@solidjs/testing-library';
 import { createSignal } from 'solid-js';
 import { PROTO_VER } from '../../src/dashboard/protocol';
 
@@ -43,6 +43,8 @@ const st = vi.hoisted(() => ({
 const mock = vi.hoisted(() => ({
   s: null as ReturnType<(typeof st)['make']> | null,
   releasesThrow: false,
+  // The server answers with no releases at all.
+  releasesNone: false,
   holdReleases: false,
   updates: 0,
   assets: [] as { name: string; size: number; url: string }[],
@@ -98,6 +100,7 @@ vi.mock('../../src/dashboard/firmware', () => ({
   fetchReleases: async () => {
     if (mock.holdReleases) await new Promise(() => {});
     if (mock.releasesThrow) throw new Error('Firmware fetch is not set up on this server.');
+    if (mock.releasesNone) return [];
     return [{ tag: 'v3.4.2', assets: mock.assets }];
   },
   downloadAsset: async () => new Uint8Array([1]),
@@ -126,6 +129,7 @@ const mount = () => {
 afterEach(() => {
   cleanup();
   mock.releasesThrow = false;
+  mock.releasesNone = false;
   mock.holdReleases = false;
   mock.updates = 0;
   mock.assets = [];
@@ -182,11 +186,25 @@ describe('Update', () => {
     await waitFor(() => expect(r.getByRole('button', { name: /^connect$/i })).toBeTruthy());
   });
 
-  it('a release fetch that failed leaves a message, not an Update button that does nothing', async () => {
+  it('a release fetch that failed says so up front, with Retry rather than Update buttons that cannot work', async () => {
     mock.releasesThrow = true;
-    const r = await runUpdate(/update both chips/i);
-    await waitFor(() => expect(r.container.textContent).toMatch(/no update available right now/i));
+    const r = mount();
+    mock.s!.setStatus('connected');
+    await waitFor(() => expect(r.container.textContent).toMatch(/release list didn't load/i));
+    expect(r.queryByRole('button', { name: /update both chips/i })).toBeNull();
+    mock.releasesThrow = false;
+    fireEvent.click(r.getByRole('button', { name: /^retry$/i }));
+    await waitFor(() => expect(r.getByRole('button', { name: /update both chips/i })).toBeTruthy());
     expect(mock.updates).toBe(0);
+  });
+
+  it('an empty release list says none is published, not that the list failed', async () => {
+    mock.releasesNone = true;
+    const r = mount();
+    mock.s!.setStatus('connected');
+    await waitFor(() => expect(r.container.textContent).toMatch(/no release is published yet/i));
+    expect(r.container.textContent).not.toMatch(/didn't load/i);
+    expect(r.queryByRole('button', { name: /update both chips/i })).toBeNull();
   });
 
   it('a release missing the main image points at the choice that works', async () => {

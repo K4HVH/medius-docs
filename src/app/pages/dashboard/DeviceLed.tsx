@@ -64,7 +64,7 @@ const DeviceLed = () => {
             <Button variant="secondary" disabled={cmd.busy()} onClick={() => send(LedMode.Solid)}>On</Button>
             <Button variant="secondary" disabled={cmd.busy()} onClick={() => send(LedMode.Blink)}>Blink</Button>
           </div>
-          <div aria-live="polite">
+          <div aria-live="polite" class="step">
             <Show when={sent() !== null}>
               <div class="chips">
                 <Chip variant="neutral">Sent {MODE_LABEL[sent()!]}</Chip>

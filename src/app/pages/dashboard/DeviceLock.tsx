@@ -44,13 +44,12 @@ const BLANKET_NAMES: Record<number, string> = {
   [LockClass.Axis]: 'axes',
 };
 
-// An axis locks by sign, a button or key by edge. Media has no edges: the box suppresses it whole
-// and reports Both, so it gets no direction word.
+// An axis locks by sign, a button or key by edge. Both, and media (which the box suppresses whole and
+// reports at Both), get no direction word.
 const dirName = (cls: number, d: Direction): string => {
-  if (cls === LockClass.Media) return '';
+  if (cls === LockClass.Media || d === Direction.Both) return '';
   if (d === Direction.With) return 'with injection';
   if (d === Direction.Against) return 'against injection';
-  if (d === Direction.Both) return 'both';
   if (cls === LockClass.Axis) return d === Direction.Positive ? 'positive' : 'negative';
   return d === Direction.Positive ? 'press' : 'release';
 };
@@ -108,9 +107,9 @@ const DeviceLock = () => {
         key: `${e.cls}:${e.id}:${e.direction}`,
         text:
           e.scale === LOCK_SCALE_BLOCK
-            ? head
+            ? `${head} blocked`
             : e.scale < 0
-              ? `${head} reversed at ${e.scale}%`
+              ? `${head} reversed at ${-e.scale}%`
               : `${head} at ${e.scale}%`,
         blocked: e.scale === LOCK_SCALE_BLOCK,
       };

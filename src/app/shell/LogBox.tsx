@@ -27,7 +27,16 @@ export function LogBox(props: {
     const r = document.createElement('div');
     cells.forEach((c, i) => {
       const s = document.createElement('span');
-      s.textContent = c;
+      // A bracketed group (a packet's bytes) wraps as one piece when it fits a line.
+      for (const part of c.split(/(\[[^\]]*\])/)) {
+        if (!part) continue;
+        if (part.startsWith('[')) {
+          const g = document.createElement('span');
+          g.className = 'grp';
+          g.textContent = part;
+          s.append(g);
+        } else s.append(part);
+      }
       const cls = props.cellClass?.(c, i);
       if (cls) s.className = cls;
       r.append(s);

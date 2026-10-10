@@ -169,10 +169,14 @@ export const Usb2Flash = (props: { via: () => JSX.Element; onBusy?: (busy: boole
         )}
       </For>
       <Show when={landed().length}>
-        <div class="callout callout--info">
-          {reverted().length ? '' : p.lead}
-          {runs(landed())}
-        </div>
+        {/* A result that went through reads as every other good result does: a lit line, then the facts. */}
+        <Show when={!reverted().length}>
+          <p class="state">
+            <span class="dot ok" />
+            {p.lead}
+          </p>
+        </Show>
+        <p class="mut">{runs(landed())}</p>
       </Show>
       <Show when={otherWire()}>
         {(proto) => (
@@ -196,7 +200,7 @@ export const Usb2Flash = (props: { via: () => JSX.Element; onBusy?: (busy: boole
   return (
     <Switch>
       <Match when={run()?.outcome === 'verified'}>
-        <Outcome lead="Flashed and verified. " />
+        <Outcome lead="Flashed and verified." />
       </Match>
 
       <Match when={run()?.outcome === 'sent'}>
@@ -211,7 +215,7 @@ export const Usb2Flash = (props: { via: () => JSX.Element; onBusy?: (busy: boole
             </>
           }
         >
-          <Outcome lead="The box is back. " />
+          <Outcome lead="The box is back." />
         </Show>
       </Match>
 
