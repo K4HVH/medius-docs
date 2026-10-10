@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { render } from '@solidjs/testing-library';
 import type { RouteSectionProps } from '@solidjs/router';
 import type { Component } from 'solid-js';
-import { lazyPage, pageKey } from '../../src/app/lazyPages';
+import { NotFoundPage, PAGES, lazyPage, pageAt, pageKey } from '../../src/app/lazyPages';
 
 const Page: Component<RouteSectionProps> = () => <p>the page</p>;
 
@@ -30,6 +30,29 @@ describe('lazyPage', () => {
     });
     void P.preload();
     await new Promise((r) => setTimeout(r, 20));
+  });
+});
+
+describe('pageAt', () => {
+  it("gives an item's address its parent page", () => {
+    expect(pageAt('/guide/help/bsod')).toBe(PAGES['/guide/help']);
+    expect(pageAt('/dashboard/changelog/v3.4.5')).toBe(PAGES['/dashboard/changelog']);
+    expect(pageAt('/guide/compatibility/glorious-model-o3')).toBe(PAGES['/guide/compatibility']);
+    expect(pageAt('/nope')).toBe(NotFoundPage);
+  });
+
+  it('keeps the 404 page the server sent for an item it knew nothing of', async () => {
+    vi.resetModules();
+    document.documentElement.setAttribute('data-not-found', '');
+    window.history.replaceState(null, '', '/guide/help/nope');
+    try {
+      const fresh = await import('../../src/app/lazyPages');
+      expect(fresh.pageAt('/guide/help/nope')).toBe(fresh.NotFoundPage);
+      expect(fresh.pageAt('/guide/help/bsod')).toBe(fresh.PAGES['/guide/help']);
+    } finally {
+      document.documentElement.removeAttribute('data-not-found');
+      window.history.replaceState(null, '', '/');
+    }
   });
 });
 

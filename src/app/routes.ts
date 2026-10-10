@@ -1,3 +1,5 @@
+import { itemFor } from './items';
+
 // Every page's metadata, in sidebar order. Plain data, so the prerender and server can load it too.
 
 export type Section = 'home' | 'guide' | 'native' | 'library' | 'bindings' | 'dashboard' | 'ai' | 'notfound';
@@ -264,6 +266,11 @@ const BY_PATH = new Map(ROUTES.map((r) => [r.path, r]));
 
 export function routeFor(path: string): RouteInfo | undefined {
   return BY_PATH.get(path);
+}
+
+// The page a path shows: an item's address shows its parent.
+export function pagePath(pathname: string): string {
+  return itemFor(pathname)?.parent ?? pathname;
 }
 
 export function sectionLabel(r: RouteInfo): string {

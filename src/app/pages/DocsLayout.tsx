@@ -7,7 +7,8 @@ import { DocsSidebar } from '../shell/DocsSidebar';
 import { OnThisPage } from '../shell/OnThisPage';
 import { SiteFooter } from '../shell/SiteFooter';
 import { arrive, armReveals, blocksOf, fontsReady, pageArrival, retime, watchChanges } from '../shell/motion';
-import { routeFor } from '../routes';
+import { pagePath, routeFor } from '../routes';
+import { itemFor } from '../items';
 import { useBoxes, useNativeFlash } from './dashboard/context';
 import { BoxList } from './dashboard/BoxList';
 
@@ -98,11 +99,13 @@ const DocsLayout = (props: RouteSectionProps) => {
     onCleanup(() => window.removeEventListener('keydown', onKey));
   });
 
-  const section = () => routeFor(location.pathname)?.section;
+  // An item's address shows its parent page.
+  const page = () => pagePath(location.pathname);
+  const section = () => routeFor(page())?.section;
 
   const barTitle = createMemo(() => {
-    const label = routeFor(location.pathname)?.nav ?? '';
-    const box = BOX_ROUTES.has(location.pathname) ? boxes.selected()?.session.name() : null;
+    const label = routeFor(page())?.nav ?? '';
+    const box = BOX_ROUTES.has(page()) ? boxes.selected()?.session.name() : null;
     return box ? `${label} - ${box}` : label;
   });
 
@@ -142,8 +145,9 @@ const DocsLayout = (props: RouteSectionProps) => {
           nextPages(run);
           void fontsReady().then(() => {
             if (run !== settled || !main) return;
-            if (at === null && hash) {
-              scrollToTarget(hashId(), 'instant', true);
+            const aim = itemFor(path)?.target ?? (hash ? hashId() : '');
+            if (at === null && aim) {
+              scrollToTarget(aim, 'instant', true);
               retime(main);
             }
             highlightNext = null;
@@ -202,7 +206,7 @@ const DocsLayout = (props: RouteSectionProps) => {
       const links = [...document.querySelectorAll<HTMLAnchorElement>('.side nav.group a[href^="/"]')]
         .map((a) => a.getAttribute('href')!)
         .filter((href) => routeFor(href)?.section === section());
-      const at = links.indexOf(location.pathname);
+      const at = links.indexOf(page());
       for (const href of [links[at - 1], links[at + 1]]) if (at >= 0 && href) preloadRoute(href, { preloadData: false });
     });
   };
@@ -210,7 +214,7 @@ const DocsLayout = (props: RouteSectionProps) => {
 
   const handleBoxPick = () => {
     setCloseKey((k) => k + 1);
-    const p = location.pathname;
+    const p = page();
     if (!BOX_ROUTES.has(p) && p !== '/dashboard/setup' && !flashing()) navigate('/dashboard');
   };
 
@@ -222,7 +226,7 @@ const DocsLayout = (props: RouteSectionProps) => {
     <>
       <div class="docs" classList={{ tool: section() === 'dashboard' }}>
         <DocsSidebar
-          pathname={location.pathname}
+          pathname={page()}
           closeKey={closeKey()}
           title={barTitle()}
           disabled={flashing()}
@@ -234,7 +238,7 @@ const DocsLayout = (props: RouteSectionProps) => {
         <main ref={main} class="docs-page doc">
           {props.children}
         </main>
-        <OnThisPage pathname={location.pathname} />
+        <OnThisPage pathname={page()} />
       </div>
       <SiteFooter ref={(el) => (footer = el)} />
 

@@ -1,13 +1,13 @@
 import { createMemo, For, Show, type JSX } from 'solid-js';
 import { A, useLocation } from '@solidjs/router';
 import AiActions from '../AiActions';
-import { NOT_FOUND, breadcrumbTrail, routeFor } from '../routes';
+import { NOT_FOUND, breadcrumbTrail, pagePath, routeFor } from '../routes';
 
 // The top of every page: crumbs to the parent, then the page's one h1 (its registry title) with the
 // page's state or action at its right (`aside`).
 export function PageHeader(props: { id?: string; aside?: JSX.Element; children?: JSX.Element }) {
   const location = useLocation();
-  const route = createMemo(() => routeFor(location.pathname) ?? NOT_FOUND);
+  const route = createMemo(() => routeFor(pagePath(location.pathname)) ?? NOT_FOUND);
   const crumbs = createMemo(() => {
     const trail = breadcrumbTrail(route());
     const last = trail[trail.length - 1];

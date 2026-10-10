@@ -116,6 +116,8 @@ const mount = (path: string, w = world()) => {
         />
         <Route path="/native/code" component={() => <pre><code class="language-rust">{'fn main() { let x = 1; }'}</code></pre>} />
         <Route path="/guide/compatibility" component={Late} />
+        <Route path="/guide/compatibility/:item" component={Late} />
+        <Route path="/guide/help/:item" component={Sections} />
         <Route path="/dashboard" component={() => <p>device page</p>} />
         <Route path="/dashboard/setup" component={() => <p>setup page</p>} />
         <Route path="/dashboard/changelog" component={() => <p>changelog page</p>} />
@@ -524,6 +526,26 @@ describe('DocsLayout scrolling', () => {
     await waitFor(() => expect(r.container.querySelector('#device-g502')!.getAttribute('data-draw')).toBe('2'));
     await new Promise((res) => setTimeout(res, 30));
     expect(jumped).toBe(first);
+  });
+
+  it("lands on an item's address as on its hash, ringed", async () => {
+    const r = mount('/guide/help/frames');
+    await waitFor(() => expect(jumped).toBe(r.container.querySelector('#frames')));
+    expect(how).toEqual({ behavior: 'instant', block: 'start' });
+    expect(r.container.querySelector('#frames')!.classList.contains('search-highlight')).toBe(true);
+  });
+
+  it("lands on an item that arrives after the page, by its row's id", async () => {
+    const r = mount('/guide/compatibility/g502');
+    await waitFor(() => expect(r.container.querySelector('#device-g502')).not.toBeNull());
+    await waitFor(() => expect(jumped).toBe(r.container.querySelector('#device-g502')));
+    expect(r.container.querySelector('#device-g502')!.classList.contains('search-highlight')).toBe(true);
+  });
+
+  it("names an item's parent in the page bar and marks it in the sidebar", async () => {
+    const r = mount('/guide/help/frames');
+    await waitFor(() => expect(bar(r)).toContain('Help'));
+    expect(r.container.querySelector('.side a[aria-current="page"]')?.getAttribute('href')).toBe('/guide/help');
   });
 
   it('scrolls the window to the top on a new page without a hash', async () => {

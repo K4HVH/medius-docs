@@ -1,5 +1,6 @@
 import type { Component, JSX } from 'solid-js';
-import { Router, Route } from '@solidjs/router';
+import { Dynamic } from 'solid-js/web';
+import { Router, Route, type RouteSectionProps } from '@solidjs/router';
 import { NotificationProvider } from '../components/feedback/Notification';
 import RouteMeta from './RouteMeta';
 import { useLeaveFade } from './shell/leave';
@@ -8,7 +9,7 @@ import { GridBackground } from '../components/surfaces/GridBackground';
 import { useScrollPlace } from './shell/scrollPlace';
 import { useNativeFlash } from './pages/dashboard/context';
 import DocsLayout from './pages/DocsLayout';
-import { NotFoundPage, PAGES, pageLoaded, preloadPage } from './lazyPages';
+import { NotFoundPage, PAGES, pageAt, pageLoaded, preloadPage } from './lazyPages';
 import { BoxScope, DashboardProvider } from './pages/dashboard/context';
 
 const RootLayout: Component<{ children?: JSX.Element }> = (props) => {
@@ -25,6 +26,9 @@ const RootLayout: Component<{ children?: JSX.Element }> = (props) => {
   );
 };
 
+// An item's address (src/app/items.ts) shows its parent page, which lands on the item.
+const ItemPage: Component<RouteSectionProps> = (props) => <Dynamic component={pageAt(props.location.pathname)} {...props} />;
+
 const App: Component = () => {
   return (
       <NotificationProvider>
@@ -34,7 +38,9 @@ const App: Component = () => {
         <Route path="/" component={DocsLayout}>
           <Route path="/guide" component={PAGES['/guide']} />
           <Route path="/guide/compatibility" component={PAGES['/guide/compatibility']} />
+          <Route path="/guide/compatibility/:item" component={ItemPage} />
           <Route path="/guide/help" component={PAGES['/guide/help']} />
+          <Route path="/guide/help/:item" component={ItemPage} />
           <Route path="/native" component={PAGES['/native']} />
           <Route path="/native/quickstart" component={PAGES['/native/quickstart']} />
           <Route path="/native/architecture" component={PAGES['/native/architecture']} />
@@ -115,6 +121,7 @@ const App: Component = () => {
           <Route path="/dashboard/setup" component={PAGES['/dashboard/setup']} />
           <Route path="/dashboard/update" component={PAGES['/dashboard/update']} />
           <Route path="/dashboard/changelog" component={PAGES['/dashboard/changelog']} />
+          <Route path="/dashboard/changelog/:item" component={ItemPage} />
           <Route path="/dashboard/stats" component={PAGES['/dashboard/stats']} />
           <Route path="*" component={NotFoundPage} />
         </Route>

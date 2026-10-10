@@ -1,6 +1,6 @@
 import { createComputed, createEffect, createMemo, createSignal, For, on, onCleanup, onMount } from 'solid-js';
 import { A, useLocation } from '@solidjs/router';
-import { routeFor, type Section } from '../routes';
+import { pagePath, routeFor, type Section } from '../routes';
 import { Arrow } from './Arrow';
 import { lockPage, panelKeys } from './panel';
 import { leavingFor } from './leave';
@@ -31,9 +31,10 @@ export function SiteNav(props: { disabled?: boolean }) {
   let menuButton: HTMLButtonElement | undefined;
   let closeTimer: ReturnType<typeof setTimeout> | undefined;
 
-  const section = createMemo(() => routeFor(location.pathname)?.section);
+  const page = () => pagePath(location.pathname);
+  const section = createMemo(() => routeFor(page())?.section);
   const current = (l: (typeof NAV_LINKS)[number]) =>
-    l.href === CHANGELOG ? location.pathname === CHANGELOG : location.pathname !== CHANGELOG && l.sections.includes(section()!);
+    l.href === CHANGELOG ? page() === CHANGELOG : page() !== CHANGELOG && l.sections.includes(section()!);
 
   const setMenu = (next: boolean) => {
     if (!next && open()) {

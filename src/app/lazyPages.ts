@@ -3,6 +3,7 @@ import type { RouteSectionProps } from '@solidjs/router';
 import { loadRuntime } from './pages/dashboard/context';
 import { loadHighlighter } from './highlight';
 import { latestReleases } from '../dashboard/firmware/client';
+import { itemFor } from './items';
 
 // Each page's code, fetched when the page is first wanted: a reader of one page downloads that page and
 // the shell, not the whole site. The router fetches a page's code when a link to it is pointed at,
@@ -138,8 +139,20 @@ export const NotFoundPage = page(() => import('./pages/NotFound'));
 // The table's key for a path, matched as the router matches it: any case, no repeated or trailing slash.
 export const pageKey = (path: string): string => path.toLowerCase().replace(/\/{2,}/g, '/').replace(/(.)\/$/, '$1');
 
+// The address this tab loaded, where the server answered with its 404 page (the prerender marks it).
+const lost = typeof document !== 'undefined' && document.documentElement.hasAttribute('data-not-found') ? location.pathname : null;
+
+// The page at `path`. An item's address shows its parent page, or the 404 page where the server knew no
+// such item.
+export const pageAt = (path: string): LazyPage => {
+  const key = pageKey(path);
+  const item = itemFor(key);
+  if (item) return path === lost ? NotFoundPage : PAGES[item.parent];
+  return PAGES[key] ?? NotFoundPage;
+};
+
 // The page at `path`, its code fetched. The app's first render waits on it, so the app takes over the
 // prerendered snapshot in one step, never through an empty page.
-export const preloadPage = (path: string): Promise<unknown> => (PAGES[pageKey(path)] ?? NotFoundPage).preload();
+export const preloadPage = (path: string): Promise<unknown> => pageAt(path).preload();
 
-export const pageLoaded = (path: string): boolean => loaded.has(PAGES[pageKey(path)] ?? NotFoundPage);
+export const pageLoaded = (path: string): boolean => loaded.has(pageAt(path));

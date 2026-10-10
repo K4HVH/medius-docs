@@ -1,6 +1,6 @@
 import { createContext, createEffect, createSignal, For, on, onCleanup, onMount, useContext, type JSX } from 'solid-js';
 import { useLocation, useNavigate } from '@solidjs/router';
-import { routeFor } from '../routes';
+import { pagePath, routeFor } from '../routes';
 import { fontsReady } from './motion';
 import { closePanels, openPanels } from './panelMotion';
 
@@ -133,7 +133,7 @@ export function PageTabs(props: { id: string; tabs: Tab[]; children: JSX.Element
 
   return (
     <>
-      <div class="ptabs" role="tablist" aria-label={routeFor(location.pathname)?.title} ref={strip} onScroll={atEnd} onKeyDown={onKey}>
+      <div class="ptabs" role="tablist" aria-label={routeFor(pagePath(location.pathname))?.title} ref={strip} onScroll={atEnd} onKeyDown={onKey}>
         <span class="ind" ref={mark} aria-hidden="true" />
         <For each={props.tabs}>
           {(t) => (
