@@ -1,9 +1,10 @@
 import { For, onCleanup, onMount, Show } from 'solid-js';
 import { prefersReducedMotion } from './motion';
 
-// The MAKCU box from above, chips up, drawn from measured photos of the board: the two chips with the
-// CH343 between, flash chips, headers, crystals, the corner standoffs, the clear plates' edges, the BOOT
-// buttons on the short ends and the three sockets on one long edge.
+// The MAKCU box from above, chips up, drawn from a measured top-view photo of the board: the two chips with
+// the CH343 between, flash chips, headers, crystals, the BOOT buttons on the short ends and the three
+// sockets on one long edge. Over them the clear top plate, cut in an arc at each BOOT button and along the
+// sockets, and the four corner standoffs whose screws hold it.
 
 export type Port = 'USB1' | 'USB2' | 'USB3';
 export type PortState = 'in' | 'out' | 'unp' | 'idle';
@@ -18,8 +19,10 @@ export type Chip = 'main' | 'mouse';
 const BX = 70, BY = 24, BW = 560, BH = 310;
 const X = (f: number) => BX + f * BW;
 const Y = (f: number) => BY + f * BH;
-const SOCK: Record<Port, number> = { USB1: X(0.218), USB2: X(0.5), USB3: X(0.773) };
-const SW = 0.204 * BW, STOP = Y(0.69), MOUTH = BY + BH + 4;
+const SOCK: Record<Port, number> = { USB1: X(0.215), USB2: X(0.5), USB3: X(0.785) };
+const SW = 0.212 * BW, STOP = Y(0.735), MOUTH = BY + BH + 7;
+// The plate's cut along the sockets, just above them.
+const CUT = Y(0.704);
 const r1 = (n: number) => n.toFixed(1);
 
 const soic = (cx: number, cy: number, w: number, h: number, n: number, cls = 'part') => {
@@ -34,14 +37,14 @@ const soic = (cx: number, cy: number, w: number, h: number, n: number, cls = 'pa
 
 // The parts that never change, worked out once.
 const ACR = (() => {
-  const s = 0.093 * BW, top = Y(0.22), bot = Y(0.7), half = (bot - top) / 2, r = (half * half + s * s) / (2 * s);
+  const s = 0.082 * BW, top = Y(0.206), bot = Y(0.721), half = (bot - top) / 2, r = (half * half + s * s) / (2 * s);
   return [
     `M${BX} ${r1(top)} A${r1(r)} ${r1(r)} 0 0 1 ${BX} ${r1(bot)}M${BX + BW} ${r1(top)} A${r1(r)} ${r1(r)} 0 0 0 ${BX + BW} ${r1(bot)}`,
-    `M${r1(X(0.09))} ${BY + BH} V${r1(Y(0.715))} H${r1(X(0.91))} V${BY + BH}`,
+    `M${r1(X(0.093))} ${BY + BH} V${r1(CUT)} H${r1(X(0.907))} V${BY + BH}`,
   ];
 })();
-const STANDS = [[0.042, 0.108], [0.944, 0.108], [0.042, 0.8], [0.944, 0.8]].map(([fx, fy]) => ({ cx: X(fx), cy: Y(fy) }));
-const HEADERS = [[0.244, 0.356, 0.069, 0.138], [0.277, 0.39, 0.242, 0.311], [0.757, 0.867, 0.083, 0.152], [0.836, 0.945, 0.26, 0.33]].map(
+const STANDS = [[0.043, 0.088], [0.957, 0.088], [0.043, 0.835], [0.957, 0.835]].map(([fx, fy]) => ({ cx: X(fx), cy: Y(fy) }));
+const HEADERS = [[0.237, 0.351, 0.068, 0.138], [0.275, 0.389, 0.242, 0.317], [0.759, 0.873, 0.085, 0.155], [0.838, 0.952, 0.26, 0.329]].map(
   ([x0, x1, y0, y1]) => ({
     box: { x: X(x0) - 12, y: Y(y0) - 12, w: X(x1) - X(x0) + 24, h: Y(y1) - Y(y0) + 24 },
     pins: [0, 1, 2, 3].flatMap((c) =>
@@ -49,18 +52,19 @@ const HEADERS = [[0.244, 0.356, 0.069, 0.138], [0.277, 0.39, 0.242, 0.311], [0.7
     ),
   }),
 );
-const FLASH = [soic(X(0.34), Y(0.53), 0.062 * BW, 0.15 * BH, 4), soic(X(0.895), Y(0.53), 0.062 * BW, 0.15 * BH, 4)];
-const BRIDGE = soic(X(0.507), Y(0.4), 84, 26, 8, 'ic part');
-const XTALS = [[0.167, 0.164], [0.674, 0.148]].map(([fx, fy]) => ({ x: X(fx) - 11, y: Y(fy) - 7 }));
+const FLASH = [soic(X(0.341), Y(0.538), 0.062 * BW, 0.15 * BH, 4), soic(X(0.894), Y(0.538), 0.062 * BW, 0.15 * BH, 4)];
+const BRIDGE = soic(X(0.506), Y(0.397), 84, 26, 8, 'ic part');
+const XTALS = [[0.155, 0.164], [0.681, 0.138]].map(([fx, fy]) => ({ x: X(fx) - 11, y: Y(fy) - 7 }));
 const SMDS = [[0.07, 0.96], [0.93, 0.96], [0.04, 0.61]].map(([fx, fy]) => ({ x: X(fx) - 6, y: Y(fy) - 3 }));
-const CS = 0.106 * BW;
+const CS = 0.114 * BW, CY = Y(0.386);
 const CHIPS: { key: Chip; x: number; name: string }[] = [
-  { key: 'main', x: X(0.184), name: 'Main chip' },
-  { key: 'mouse', x: X(0.709), name: 'Mouse-side chip' },
+  { key: 'main', x: X(0.178), name: 'Main chip' },
+  { key: 'mouse', x: X(0.71), name: 'Mouse-side chip' },
 ];
+const BOOT_Y = Y(0.455);
 const BUTTONS: { port: Port; x: number; anchor: 'end' | 'start'; tx: number }[] = [
-  { port: 'USB1', x: X(0.024), anchor: 'end', tx: BX - 14 },
-  { port: 'USB3', x: X(0.978), anchor: 'start', tx: BX + BW + 14 },
+  { port: 'USB1', x: X(0.028), anchor: 'end', tx: BX - 14 },
+  { port: 'USB3', x: X(0.972), anchor: 'start', tx: BX + BW + 14 },
 ];
 const PORTS: Port[] = ['USB1', 'USB2', 'USB3'];
 
@@ -147,23 +151,12 @@ export function Board(props: {
       ref={svg}
       class="boxd"
       classList={{ loop: props.motion === 'loop' }}
-      viewBox="-46 12 792 414"
+      viewBox="-46 12 792 418"
       preserveAspectRatio="xMinYMid meet"
       role="img"
       aria-label={props.label ?? 'The MAKCU box, top view'}
     >
       <rect class="pcb" x={BX} y={BY} width={BW} height={BH} rx="6" />
-      <path class="acr" d={ACR[0]} />
-      <path class="acr" d={ACR[1]} />
-      <For each={STANDS}>
-        {(s) => (
-          <>
-            <circle class="stand" cx={r1(s.cx)} cy={r1(s.cy)} r="24" />
-            <circle class="screw" cx={r1(s.cx)} cy={r1(s.cy)} r="10" />
-            <path class="screw-x" d={`M${r1(s.cx - 4)} ${r1(s.cy)}h8M${r1(s.cx)} ${r1(s.cy - 4)}v8`} />
-          </>
-        )}
-      </For>
       <For each={HEADERS}>
         {(h) => (
           <>
@@ -186,8 +179,8 @@ export function Board(props: {
       <For each={CHIPS}>
         {(c) => (
           <g class="ic" classList={{ on: !!props.chips?.includes(c.key) }} data-chip={c.key}>
-            <rect x={r1(c.x - CS / 2)} y={r1(Y(0.385) - CS / 2)} width={r1(CS)} height={r1(CS)} />
-            <text x={r1(c.x)} y={r1(Y(0.385) + CS / 2 + 17)} text-anchor="middle">
+            <rect x={r1(c.x - CS / 2)} y={r1(CY - CS / 2)} width={r1(CS)} height={r1(CS)} />
+            <text x={r1(c.x)} y={r1(CY + CS / 2 + 17)} text-anchor="middle">
               {c.name}
             </text>
           </g>
@@ -197,13 +190,25 @@ export function Board(props: {
       <For each={BUTTONS}>
         {(b) => (
           <g class="bt" classList={{ hold: props.hold === b.port }}>
-            <rect class="btnb" x={r1(b.x - 8)} y={r1(Y(0.463) - 11)} width="16" height="22" rx="2" />
-            <circle class="btnc" cx={r1(b.x)} cy={r1(Y(0.463))} r="5" />
-            <text class="btnl" x={b.tx} y={r1(Y(0.463) + 4)} text-anchor={b.anchor}>
+            <rect class="btnb" x={r1(b.x - 8)} y={r1(BOOT_Y - 11)} width="16" height="22" rx="2" />
+            <circle class="btnc" cx={r1(b.x)} cy={r1(BOOT_Y)} r="5" />
+            <text class="btnl" x={b.tx} y={r1(BOOT_Y + 4)} text-anchor={b.anchor}>
               BOOT
             </text>
-            <rect class="ring" x={r1(b.x - 14)} y={r1(Y(0.463) - 17)} width="28" height="34" rx="3" />
+            <rect class="ring" x={r1(b.x - 14)} y={r1(BOOT_Y - 17)} width="28" height="34" rx="3" />
           </g>
+        )}
+      </For>
+      {/* The plate lies over every part, and the standoffs' screws over the plate. */}
+      <path class="acr" d={ACR[0]} />
+      <path class="acr" d={ACR[1]} />
+      <For each={STANDS}>
+        {(s) => (
+          <>
+            <circle class="stand" cx={r1(s.cx)} cy={r1(s.cy)} r="24" />
+            <circle class="screw" cx={r1(s.cx)} cy={r1(s.cy)} r="13" />
+            <path class="screw-x" d={`M${r1(s.cx - 6)} ${r1(s.cy)}h12M${r1(s.cx)} ${r1(s.cy - 6)}v12`} />
+          </>
         )}
       </For>
       <For each={PORTS}>
@@ -216,7 +221,7 @@ export function Board(props: {
                 <rect x={r1(cx - SW / 2)} y={r1(STOP)} width={r1(SW)} height={r1(MOUTH - STOP)} />
                 <path d={`M${r1(cx - 30)} ${r1(STOP + 26)}v34h14v-34M${r1(cx + 16)} ${r1(STOP + 26)}v34h14v-34`} />
               </g>
-              <text class={`pl ${s().state}`} x={r1(cx)} y={r1(STOP - 10)} text-anchor="middle">
+              <text class={`pl ${s().state}`} x={r1(cx)} y={r1(CUT - 7)} text-anchor="middle">
                 {port}
               </text>
               <Show when={s().state === 'in' || s().state === 'unp'}>
