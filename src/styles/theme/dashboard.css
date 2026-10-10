@@ -16,28 +16,31 @@
   .page-header__aside { justify-items: start; }
 }
 
-/* Tabs: sticky under the nav, a blue mark sliding to the open one; a strip wider than the screen fades
-   its last tabs under a gradient until it is scrolled to the end. */
+/* Tabs: a bar sticky under the nav, holding the strip and the link icon that copies the open tab. In the
+   strip a blue mark slides to the open tab; a strip wider than the screen fades its last tabs under a
+   gradient until it is scrolled to the end. The icon sits outside the scroll, so it stays in view. */
 .ptabs {
-  position: sticky; top: var(--nav-h); z-index: 6; display: flex; margin-top: 36px;
-  overflow-x: auto; scrollbar-width: none; border-bottom: 1px solid var(--line);
+  position: sticky; top: var(--nav-h); z-index: 6; display: flex; align-items: center; margin-top: 36px;
+  border-bottom: 1px solid var(--line);
   background: color-mix(in srgb, var(--ground) 88%, transparent);
   -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
 }
-.ptabs::-webkit-scrollbar { display: none; }
-.ptabs::after {
+.ptabs-list { position: relative; display: flex; flex: 1; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+.ptabs-list::-webkit-scrollbar { display: none; }
+.ptabs-list::after {
   content: ""; position: sticky; right: 0; flex: none; width: 48px; margin-left: -48px;
   background: linear-gradient(90deg, transparent, var(--ground)); pointer-events: none;
 }
-.ptabs.end::after { display: none; }
-.ptabs button {
+.ptabs-list.end::after { display: none; }
+.ptabs [role="tab"] {
   flex: none; padding: 16px 20px 15px; font: 500 11px/1 var(--mono); letter-spacing: 0.12em; text-transform: uppercase;
   color: var(--dim); background: none; border: 0; cursor: pointer; white-space: nowrap; transition: color 0.25s;
 }
-.ptabs button:first-of-type { padding-left: 0; }
-.ptabs button:hover:not(:disabled), .ptabs button[aria-selected="true"] { color: var(--text); }
-.ptabs button:disabled { color: var(--line-2); cursor: not-allowed; }
-.ptabs button:focus-visible { outline: 1px solid var(--primary); outline-offset: -4px; }
+.ptabs [role="tab"]:first-of-type { padding-left: 0; }
+.ptabs [role="tab"]:hover:not(:disabled), .ptabs [role="tab"][aria-selected="true"] { color: var(--text); }
+.ptabs [role="tab"]:disabled { color: var(--line-2); cursor: not-allowed; }
+.ptabs [role="tab"]:focus-visible { outline: 1px solid var(--primary); outline-offset: -4px; }
+.ptabs > .cl { flex: none; top: 0; margin-left: 8px; opacity: 1; transform: none; }
 .ptabs .ind {
   position: absolute; bottom: -1px; left: 0; height: 2px; width: 0; background: var(--accent);
   transition: left 0.45s var(--ease), width 0.45s var(--ease);

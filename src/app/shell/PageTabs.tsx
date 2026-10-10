@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from '@solidjs/router';
 import { pagePath, routeFor } from '../routes';
 import { fontsReady } from './motion';
 import { closePanels, openPanels } from './panelMotion';
+import { CopyLink } from './CopyLink';
 
 export interface Tab {
   key: string;
@@ -23,9 +24,10 @@ const Ctx = createContext<TabsContext>();
 const paneOf = (id: string): string | null =>
   document.getElementById(id)?.closest<HTMLElement>('[data-pane]')?.dataset.pane ?? null;
 
-// A page's tabs: a sticky strip with a sliding mark and one tab stop (arrows, Home and End move along
-// it). The hash names the open tab (#options); an id inside a closed tab opens that tab (#o-emit), and
-// one that names a tab still disabled opens it once it is enabled.
+// A page's tabs: a sticky bar holding the strip, with a sliding mark and one tab stop (arrows, Home and End
+// move along it), and a link icon at its right end that copies the open tab's address. The hash names the
+// open tab (#options); an id inside a closed tab opens that tab (#o-emit), and one that names a tab still
+// disabled opens it once it is enabled.
 export function PageTabs(props: { id: string; tabs: Tab[]; children: JSX.Element }) {
   const location = useLocation();
   const navigate = useNavigate();
@@ -33,6 +35,7 @@ export function PageTabs(props: { id: string; tabs: Tab[]; children: JSX.Element
   const first = () => props.tabs.find((t) => !t.disabled)?.key ?? props.tabs[0].key;
   const [active, setActive] = createSignal(first());
   const [pending, setPending] = createSignal<string | null>(null);
+  let bar: HTMLDivElement | undefined;
   let strip: HTMLDivElement | undefined;
   let mark: HTMLSpanElement | undefined;
 
@@ -133,30 +136,37 @@ export function PageTabs(props: { id: string; tabs: Tab[]; children: JSX.Element
 
   return (
     <>
-      <div class="ptabs" role="tablist" aria-label={routeFor(pagePath(location.pathname))?.title} ref={strip} onScroll={atEnd} onKeyDown={onKey}>
-        <span class="ind" ref={mark} aria-hidden="true" />
-        <For each={props.tabs}>
-          {(t) => (
-            <button
-              type="button"
-              role="tab"
-              id={`tab-${props.id}-${t.key}`}
-              aria-controls={`pane-${props.id}-${t.key}`}
-              aria-selected={active() === t.key}
-              tabIndex={active() === t.key ? 0 : -1}
-              disabled={t.disabled}
-              data-tab={t.key}
-              onClick={() => {
-                if (!open(t.key, true)) return;
-                // From further down the page, the open tab starts at the strip.
-                const top = strip!.getBoundingClientRect().top + window.scrollY - parseFloat(getComputedStyle(strip!).top || '0');
-                if (window.scrollY > top) window.scrollTo({ top, behavior: 'instant' });
-              }}
-            >
-              {t.label}
-            </button>
-          )}
-        </For>
+      <div class="ptabs" ref={bar}>
+        <div class="ptabs-list" role="tablist" aria-label={routeFor(pagePath(location.pathname))?.title} ref={strip} onScroll={atEnd} onKeyDown={onKey}>
+          <span class="ind" ref={mark} aria-hidden="true" />
+          <For each={props.tabs}>
+            {(t) => (
+              <button
+                type="button"
+                role="tab"
+                id={`tab-${props.id}-${t.key}`}
+                aria-controls={`pane-${props.id}-${t.key}`}
+                aria-selected={active() === t.key}
+                tabIndex={active() === t.key ? 0 : -1}
+                disabled={t.disabled}
+                data-tab={t.key}
+                onClick={() => {
+                  if (!open(t.key, true)) return;
+                  // From further down the page, the open tab starts at the strip.
+                  const top = bar!.getBoundingClientRect().top + window.scrollY - parseFloat(getComputedStyle(bar!).top || '0');
+                  if (window.scrollY > top) window.scrollTo({ top, behavior: 'instant' });
+                }}
+              >
+                {t.label}
+              </button>
+            )}
+          </For>
+        </div>
+        <CopyLink
+          id={active()}
+          label={props.tabs.find((t) => t.key === active())?.label ?? active()}
+          to={`${pagePath(location.pathname)}#${active()}`}
+        />
       </div>
       <Ctx.Provider value={{ active, id: props.id, arrived }}>{props.children}</Ctx.Provider>
     </>
