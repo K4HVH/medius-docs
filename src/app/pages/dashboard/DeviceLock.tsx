@@ -197,7 +197,7 @@ const DeviceLock = () => {
           <div class="acts">
             <Show when={isAxis()}>
               <Button variant="primary" disabled={cmd.busy()} onClick={() => applyScale(scale())}>
-                Apply {scale()}%
+                Apply <span data-search-skip>{scale()}%</span>
               </Button>
             </Show>
             <Button
@@ -219,7 +219,7 @@ const DeviceLock = () => {
         </Panel>
 
         <Panel id="active-locks" title="Active">
-          <Show when={active().length > 0} fallback={<p class="mut">None.</p>}>
+          <Show when={active().length > 0} fallback={<p class="mut" data-search-skip>None.</p>}>
             <div class="chips">
               <For each={active()}>
                 {(item) => <Chip variant={item.blocked ? 'warning' : 'info'}>{item.text}</Chip>}

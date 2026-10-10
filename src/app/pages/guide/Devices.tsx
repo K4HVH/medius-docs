@@ -4,9 +4,10 @@ import { DocSection } from '../../shell/DocSection';
 import { Filter, FixLink } from '../../shell/Filter';
 import { prefersReducedMotion } from '../../shell/motion';
 import { COMPAT, KIND_LABEL, VERDICT_LABEL, VERDICT_TONE } from '../../data/compatibility';
-import { mergeCompat } from '../../data/compatMerge';
+import { mergeCompat, withIds } from '../../data/compatMerge';
 import { LINKS } from '../../site';
 import { fetchStats } from '../../../dashboard/stats';
+import { matches } from '../../search/text';
 
 // A note naming a setting links to where it is set.
 const SETTING = /imperfect clone|forced to 1000 Hz/;
@@ -15,11 +16,9 @@ const Devices: Component = () => {
   // A failed load shows the reports alone.
   const [stats] = createResource(() => fetchStats().catch(() => null));
   const [query, setQuery] = createSignal('');
-  const all = createMemo(() => mergeCompat(COMPAT, stats()?.devices.top ?? null));
-  const rows = createMemo(() => {
-    const q = query().trim().toLowerCase();
-    return q ? all().filter((r) => r.name.toLowerCase().includes(q) || r.vidpid?.includes(q)) : all();
-  });
+  const all = createMemo(() => withIds(mergeCompat(COMPAT, stats()?.devices.top ?? null)));
+  // Matched as the site search matches, by name or ids.
+  const rows = createMemo(() => all().filter((r) => matches(`${r.name} ${r.vidpid ?? ''}`, query())));
 
   // The steps' numbers light in order as the list comes into view.
   let steps: HTMLOListElement | undefined;
@@ -53,10 +52,10 @@ const Devices: Component = () => {
           <thead>
             <tr><th>Device</th><th>Kind</th><th>Status</th><th>Note</th><th>Reported</th><th class="num">Boxes</th></tr>
           </thead>
-          <tbody data-fill="compat">
+          <tbody data-fill="compat" data-search-skip>
             <For each={rows()}>
               {(r) => (
-                <tr>
+                <tr id={r.id}>
                   <td>
                     {r.name}
                     <Show when={r.vidpid !== r.name && r.vidpid}>{(vp) => <span class="vp">{vp()}</span>}</Show>

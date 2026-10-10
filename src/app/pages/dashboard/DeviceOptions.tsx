@@ -265,7 +265,7 @@ const DeviceOptions = () => {
             Clear
           </Button>
         </div>
-        <Show when={version()} fallback={<p class="mut">Reading...</p>}>
+        <Show when={version()} fallback={<p class="mut" data-search-skip>Reading...</p>}>
           <div class="chips">
             <Chip variant="neutral">{version()!.name}</Chip>
           </div>
@@ -285,7 +285,7 @@ const DeviceOptions = () => {
             Faithful only
           </Button>
         </div>
-        <Show when={imperfect()} fallback={<p class="mut">Reading...</p>}>
+        <Show when={imperfect()} fallback={<p class="mut" data-search-skip>Reading...</p>}>
           {(s) => (
             <div class="chips">
               <Chip variant={s().allowed ? 'success' : 'neutral'}>
@@ -329,7 +329,7 @@ const DeviceOptions = () => {
             </Button>
           </Show>
         </div>
-        <Show when={ride() !== null} fallback={<p class="mut">Reading...</p>}>
+        <Show when={ride() !== null} fallback={<p class="mut" data-search-skip>Reading...</p>}>
           <div class="chips">
             <Chip variant={ride()! > 0 ? 'success' : 'neutral'}>
               {ride()! > 0 ? `On · ${ride()} ms` : 'Off'}
@@ -386,7 +386,7 @@ const DeviceOptions = () => {
             </Button>
           </Show>
         </div>
-        <Show when={bearing() !== null} fallback={<p class="mut">Reading...</p>}>
+        <Show when={bearing() !== null} fallback={<p class="mut" data-search-skip>Reading...</p>}>
           <div class="chips">
             <Chip variant={bearing()!.windowMs > 0 ? 'success' : 'neutral'}>
               {bearing()!.windowMs > 0
@@ -448,7 +448,7 @@ const DeviceOptions = () => {
             </Button>
           </Show>
         </div>
-        <Show when={render()} fallback={<p class="mut">Reading...</p>}>
+        <Show when={render()} fallback={<p class="mut" data-search-skip>Reading...</p>}>
           {(r) => (
             <div class="chips">
               <Chip variant={r().mode === RenderMode.Off || r().mode === null ? 'neutral' : 'success'}>
@@ -503,7 +503,7 @@ const DeviceOptions = () => {
             </Button>
           </Show>
         </div>
-        <Show when={spread()} fallback={<p class="mut">Reading...</p>}>
+        <Show when={spread()} fallback={<p class="mut" data-search-skip>Reading...</p>}>
           {(sp) => (
             <div class="chips">
               <Chip variant={sp().percent === 0 ? 'neutral' : 'success'}>{spreadLabel(sp())}</Chip>
@@ -590,7 +590,7 @@ const DeviceOptions = () => {
             </Button>
           </Show>
         </div>
-        <Show when={emit()} fallback={<p class="mut">Reading...</p>}>
+        <Show when={emit()} fallback={<p class="mut" data-search-skip>Reading...</p>}>
           {(s) => (
             <div class="chips">
               <Chip variant={s().mode === EmitMode.Learned || s().mode === null ? 'neutral' : 'success'}>

@@ -14,7 +14,7 @@ const UpdateOnlyCard = (props: { use: string }) => {
     <Show
       when={proto() > PROTO_VER}
       fallback={
-        <Panel id="update-needed" title="Update needed" wide>
+        <Panel id="update-needed" title="Update needed" wide transient>
           <p>This box speaks an older protocol. Update it to use {props.use}.</p>
           <div class="acts">
             <Button variant="primary" onClick={() => navigate('/dashboard/update')}>
@@ -24,7 +24,7 @@ const UpdateOnlyCard = (props: { use: string }) => {
         </Panel>
       }
     >
-      <Panel id="newer-firmware" title="Newer firmware" wide>
+      <Panel id="newer-firmware" title="Newer firmware" wide transient>
         <p>
           This box speaks protocol {proto()} and this page protocol {PROTO_VER}. Reload to check for a newer page. It
           can still be flashed by hand, on Update's Manual tab.

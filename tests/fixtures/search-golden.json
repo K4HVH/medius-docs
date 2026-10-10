@@ -1,0 +1,388 @@
+[
+ {
+  "q": "lock",
+  "first": "/native/commands/lock"
+ },
+ {
+  "q": "clip",
+  "first": "/native/commands/clip"
+ },
+ {
+  "q": "superstrike",
+  "first": "/guide/compatibility#device-fixes"
+ },
+ {
+  "q": "bsod",
+  "first": "/guide/help#bsod"
+ },
+ {
+  "q": "flash usb2",
+  "first": "/dashboard/update#manual"
+ },
+ {
+  "q": "usb2 flash",
+  "first": "/dashboard/update#manual"
+ },
+ {
+  "q": "lock zzzz",
+  "first": "/native/commands/lock"
+ },
+ {
+  "q": "how do i move the mouse",
+  "first": "/guide/help#mouse-still"
+ },
+ {
+  "q": "what is medius",
+  "first": "/native"
+ },
+ {
+  "q": "medius lock",
+  "first": "/native/commands/lock"
+ },
+ {
+  "q": "pip",
+  "first": "/bindings/python"
+ },
+ {
+  "q": "mouse not moving",
+  "first": "/guide/help#mouse-still"
+ },
+ {
+  "q": "how do i update",
+  "first": "/dashboard/update"
+ },
+ {
+  "q": "why is my logitech mouse slow",
+  "first": "/guide/help#logitech"
+ },
+ {
+  "q": "lcok",
+  "first": "/native/commands/lock"
+ },
+ {
+  "q": "flsh",
+  "first": "/dashboard/update#manual",
+  "why": "One slip from both flash and flush; the results hold each."
+ },
+ {
+  "q": "blanket lock",
+  "first": "/native/commands/lock#blanket"
+ },
+ {
+  "q": "move",
+  "first": "/native/commands/move"
+ },
+ {
+  "q": "inject",
+  "first": "/native/commands/inject"
+ },
+ {
+  "q": "catch",
+  "first": "/native/commands/catch"
+ },
+ {
+  "q": "transform",
+  "first": "/native/commands/transform"
+ },
+ {
+  "q": "rewrite",
+  "first": "/native/commands/rewrite"
+ },
+ {
+  "q": "patch",
+  "first": "/native/commands/patch"
+ },
+ {
+  "q": "raw",
+  "first": "/native/commands/raw"
+ },
+ {
+  "q": "led",
+  "first": "/native/commands/led"
+ },
+ {
+  "q": "reset",
+  "first": "/native/commands/admin#reset"
+ },
+ {
+  "q": "health",
+  "first": "/native/commands/requests#health"
+ },
+ {
+  "q": "version",
+  "first": "/native/commands/requests#version"
+ },
+ {
+  "q": "frame",
+  "first": "/native/frame"
+ },
+ {
+  "q": "crc",
+  "first": "/native/frame#crc"
+ },
+ {
+  "q": "baud",
+  "first": "/guide/help#baud"
+ },
+ {
+  "q": "python install",
+  "first": "/bindings/python"
+ },
+ {
+  "q": "c build",
+  "first": "/bindings/c/build"
+ },
+ {
+  "q": "rust quickstart",
+  "first": "/native/quickstart"
+ },
+ {
+  "q": "mcp",
+  "first": "/ai"
+ },
+ {
+  "q": "llms",
+  "first": "/ai"
+ },
+ {
+  "q": "install",
+  "first": "/dashboard/setup"
+ },
+ {
+  "q": "rollback",
+  "first": "/native/commands/update#rollback"
+ },
+ {
+  "q": "wooting",
+  "first": "/guide/compatibility#device-fixes"
+ },
+ {
+  "q": "keyboard",
+  "first": "/library/discovery#find-keyboard-box"
+ },
+ {
+  "q": "report rate",
+  "first": "/native/commands/requests#rate"
+ },
+ {
+  "q": "stats",
+  "first": "/native/commands/requests#stats"
+ },
+ {
+  "q": "changelog",
+  "first": "/dashboard/changelog"
+ },
+ {
+  "q": "setup",
+  "first": "/library/types/structs#setup"
+ },
+ {
+  "q": "update firmware",
+  "first": "/dashboard/update"
+ },
+ {
+  "q": "factory reset",
+  "first": "/dashboard#factory-reset"
+ },
+ {
+  "q": "render",
+  "first": "/dashboard#render"
+ },
+ {
+  "q": "spread",
+  "first": "/dashboard#spread"
+ },
+ {
+  "q": "ride",
+  "first": "/native/commands/option#move-ride"
+ },
+ {
+  "q": "devices",
+  "first": "/guide/compatibility"
+ },
+ {
+  "q": "this computer can't read from the box",
+  "first": "/guide/help#unreadable"
+ },
+ {
+  "q": "how do i go back to an older version?",
+  "first": "/guide/help#older-version"
+ },
+ {
+  "q": "input catch",
+  "first": "/dashboard/control#catch"
+ },
+ {
+  "q": "bearing",
+  "first": "/dashboard#bearing"
+ },
+ {
+  "q": "ports",
+  "first": "/guide#ports"
+ },
+ {
+  "q": "example frame",
+  "first": "/native/frame#example"
+ },
+ {
+  "q": "move (pan)",
+  "first": "/native/commands/move#pan"
+ },
+ {
+  "q": "lock command",
+  "first": "/native/commands/lock#lock"
+ },
+ {
+  "q": "traffic_event frame",
+  "first": "/native/commands/catch#traffic-event"
+ },
+ {
+  "q": "raw command",
+  "first": "/native/commands/raw#raw"
+ },
+ {
+  "q": "rewrite lifecycle",
+  "first": "/native/commands/rewrite#lifecycle"
+ },
+ {
+  "q": "option",
+  "first": "/native/commands/option"
+ },
+ {
+  "q": "update",
+  "first": "/dashboard/update"
+ },
+ {
+  "q": "clip raw and transfer items",
+  "first": "/native/commands/clip#items"
+ },
+ {
+  "q": "troubleshooting",
+  "first": "/native/troubleshooting"
+ },
+ {
+  "q": "discovery",
+  "first": "/library/discovery"
+ },
+ {
+  "q": "move_axis",
+  "first": "/library/move#move"
+ },
+ {
+  "q": "async queries",
+  "first": "/library/requests#async"
+ },
+ {
+  "q": "factory_reset",
+  "first": "/library/admin#factory-reset"
+ },
+ {
+  "q": "catch_events",
+  "first": "/library/catch#catch-events"
+ },
+ {
+  "q": "transformop",
+  "first": "/library/types/enums#transform-op"
+ },
+ {
+  "q": "query_bearing",
+  "first": "/library/options#query-bearing"
+ },
+ {
+  "q": "clip triggers",
+  "first": "/library/clip#triggers"
+ },
+ {
+  "q": "reading the stream",
+  "first": "/library/diagnostics#reading-logs"
+ },
+ {
+  "q": "tracing",
+  "first": "/library/features/tracing"
+ },
+ {
+  "q": "clip refusals",
+  "first": "/library/types/errors#errors",
+  "why": "The clip status counters and the clip handle both describe clip refusals; the Errors page lists every variant on one page."
+ },
+ {
+  "q": "futures without a runtime",
+  "first": "/library/guides/calls#block-on"
+ },
+ {
+  "q": "enums",
+  "first": "/library/types/enums"
+ },
+ {
+  "q": "updatetarget",
+  "first": "/library/types/enums#update-target"
+ },
+ {
+  "q": "loglevel",
+  "first": "/library/types/enums#log-level"
+ },
+ {
+  "q": "lockentry",
+  "first": "/library/types/structs#lock-entry"
+ },
+ {
+  "q": "clockdomain",
+  "first": "/library/types/enums#clock-domain"
+ },
+ {
+  "q": "counterssnapshot",
+  "first": "/library/types/structs#counters-snapshot"
+ },
+ {
+  "q": "c/c++ \u00b7 the program",
+  "first": "/bindings/c/quickstart"
+ },
+ {
+  "q": "c/c++ \u00b7 no async",
+  "first": "/bindings/c/streams#async"
+ },
+ {
+  "q": "c/c++ \u00b7 library functions",
+  "first": "/bindings/c/api#module"
+ },
+ {
+  "q": "c/c++ \u00b7 mediusreboottarget",
+  "first": "/bindings/c/types#reboot-target"
+ },
+ {
+  "q": "c/c++ \u00b7 query values",
+  "first": "/bindings/c/types#values"
+ },
+ {
+  "q": "python \u00b7 firmwareinfo",
+  "first": "/bindings/python/types#firmwareinfo"
+ },
+ {
+  "q": "c/c++ \u00b7 mediusclipstatus & mediusclipstate",
+  "first": "/bindings/c/types#clip-status"
+ },
+ {
+  "q": "c/c++ \u00b7 mediuslogline",
+  "first": "/bindings/c/types#log-line"
+ },
+ {
+  "q": "c/c++ \u00b7 mediusstamped",
+  "first": "/bindings/c/types#stamped"
+ },
+ {
+  "q": "python \u00b7 streams",
+  "first": "/bindings/python/streams"
+ },
+ {
+  "q": "python \u00b7 inject media",
+  "first": "/bindings/python/api#inject"
+ },
+ {
+  "q": "python \u00b7 controlstatus",
+  "first": "/bindings/python/types#controlstatus"
+ },
+ {
+  "q": "python \u00b7 catchentry & clockestimate",
+  "first": "/bindings/python/types#catchentry"
+ }
+]

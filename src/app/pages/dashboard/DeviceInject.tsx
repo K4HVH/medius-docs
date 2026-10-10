@@ -344,7 +344,7 @@ const DeviceInject = () => {
               <Show
                 when={holds().length > 0}
                 fallback={
-                  <p class="mut held-none">
+                  <p class="mut held-none" data-search-skip>
                     Nothing held.
                   </p>
                 }

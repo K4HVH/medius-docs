@@ -1,5 +1,6 @@
 // Remote MCP server (Streamable HTTP, stateless, read-only) co-hosted on /mcp.
-// Backed by dist/agent-index.json (built by the prerender pipeline).
+// Pages come from dist/agent-index.json (built by the prerender pipeline); search is the site search, over
+// dist/search-index.json with the live releases and device reports.
 import { McpServer, StreamableHttpTransport } from 'mcp-lite';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -7,11 +8,12 @@ import {
   getPage,
   isOriginAllowed,
   listPages,
-  searchDocs,
+  searchHits,
   toFetchDoc,
   toSearchResults,
   type IndexPage,
 } from './mcpSearch';
+import { liveSearcher } from './searchIndex';
 import { fillMarkdown } from './fill';
 import { LIVE_PATHS } from '../src/app/site';
 
@@ -41,6 +43,8 @@ async function liveText(page: IndexPage): Promise<string> {
   if (!LIVE_PATHS.has(page.path)) return page.text;
   return (await fillMarkdown(page.path)) ?? page.text;
 }
+
+const NO_INDEX = 'Search is not available: the site was built without its search index.';
 
 function textResult(value: unknown, isError = false) {
   const text = typeof value === 'string' ? value : JSON.stringify(value, null, 2);
@@ -79,7 +83,7 @@ function buildServer(): McpServer {
 
   server.tool('search_docs', {
     description:
-      'Full-text search the Medius docs. Returns ranked pages with a snippet; follow up with get_page for the full Markdown.',
+      'Search the Medius site: every page and section of the docs and the Guide, the dashboard, each firmware release and device report. Returns ranked results with the sentence that matched; follow up with get_page on a result\'s path for the full Markdown.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -89,10 +93,12 @@ function buildServer(): McpServer {
       required: ['query'],
       additionalProperties: false,
     },
-    handler: (args: any) => {
+    handler: async (args: any) => {
       const query = (typeof args?.query === 'string' ? args.query : '').slice(0, 200);
       const limit = typeof args?.limit === 'number' && args.limit > 0 ? Math.min(args.limit, 50) : 10;
-      return textResult(searchDocs(pages, query, limit));
+      const searcher = await liveSearcher(DIST);
+      if (!searcher) return textResult(NO_INDEX, true);
+      return textResult(searchHits(searcher, query, limit));
     },
   });
 
@@ -100,7 +106,7 @@ function buildServer(): McpServer {
   // requires two tools named exactly `search` and `fetch` with these shapes.
   server.tool('search', {
     description:
-      'Search the Medius documentation and return matching pages. Use the returned id with the fetch tool to read a page.',
+      'Search the Medius documentation and return matching pages and sections. Use the returned id with the fetch tool to read its page.',
     inputSchema: {
       type: 'object',
       properties: { query: { type: 'string', description: 'Search terms.' } },
@@ -126,18 +132,20 @@ function buildServer(): McpServer {
       },
       required: ['results'],
     },
-    handler: (args: any) => {
+    handler: async (args: any) => {
       const query = (typeof args?.query === 'string' ? args.query : '').slice(0, 200);
-      const results = toSearchResults(pages, query, SITE, 10);
+      const searcher = await liveSearcher(DIST);
+      if (!searcher) return textResult(NO_INDEX, true);
+      const results = toSearchResults(searchHits(searcher, query, 10), SITE);
       return { content: [{ type: 'text' as const, text: JSON.stringify({ results }) }], structuredContent: { results } };
     },
   });
 
   server.tool('fetch', {
-    description: 'Fetch the full Markdown of one documentation page by its id (the id returned by search).',
+    description: "Fetch the full Markdown of one documentation page by its id (the id returned by search; a section's id gives its page).",
     inputSchema: {
       type: 'object',
-      properties: { id: { type: 'string', description: 'The page id returned by search (its path).' } },
+      properties: { id: { type: 'string', description: 'An id returned by search (an address on the site).' } },
       required: ['id'],
       additionalProperties: false,
     },

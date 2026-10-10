@@ -20,13 +20,22 @@ if (import.meta.env.DEV && !(root instanceof HTMLElement)) {
 const elapsed = introElapsed();
 if (root) root.textContent = '';
 
+const dev = import.meta.env.DEV ? new URLSearchParams(location.search) : null;
+// `?searchindex` on the dev server: the site read into search entries, which a headless browser collects.
+const pass = !!dev?.has('searchindex');
+if (pass) (globalThis as { __mediusSearchPass?: boolean }).__mediusSearchPass = true;
+
 const start = () => {
   render(() => <App />, root!);
   resumeIntro(elapsed);
+  if (pass)
+    void import('./dev/searchPass').then((m) => {
+      (globalThis as { __searchEntries?: unknown }).__searchEntries = m.runSearchPass();
+    });
 };
 
 // `?fakebox` on the dev server: Connect finds a box that answers without hardware.
-if (import.meta.env.DEV && new URLSearchParams(location.search).has('fakebox')) {
+if (dev?.has('fakebox')) {
   void import('./dev/fakeBox').then((m) => {
     (globalThis as { __mediusDevBox?: unknown }).__mediusDevBox = m.fakeBoxDeps();
     start();

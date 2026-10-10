@@ -3,8 +3,12 @@ import { createEffect, createMemo, createSignal, For, onCleanup, Show } from 'so
 export interface SelectOption {
   value: string;
   label: string;
+  // Shown after the label in brackets, such as a box's name; never searched.
+  note?: string;
   disabled?: boolean;
 }
+
+const shownLabel = (o: SelectOption) => (o.note ? <>{o.label}<span data-search-skip> ({o.note})</span></> : o.label);
 
 let uid = 0;
 
@@ -40,7 +44,9 @@ export function Select(props: {
   const shown = createMemo(() => {
     if (props.onQuery) return props.options;
     const f = query().trim().toLowerCase();
-    return props.options.filter((o) => !f || o.label.toLowerCase().includes(f) || o.value.toLowerCase().includes(f));
+    return props.options.filter(
+      (o) => !f || o.label.toLowerCase().includes(f) || o.value.toLowerCase().includes(f) || !!o.note?.toLowerCase().includes(f),
+    );
   });
 
   const close = (refocus = false) => {
@@ -103,6 +109,7 @@ export function Select(props: {
         aria-expanded={open()}
         aria-controls={`${id}-list`}
         aria-label={props.label}
+        data-search-text={props.options.map((o) => o.label).join('\n')}
         disabled={props.disabled}
         onClick={() => (open() ? close() : show())}
         onKeyDown={(e) => {
@@ -112,7 +119,7 @@ export function Select(props: {
           }
         }}
       >
-        <span>{current()?.label ?? props.placeholder ?? 'Select...'}</span>
+        <span data-search-skip>{current() ? shownLabel(current()!) : (props.placeholder ?? 'Select...')}</span>
         <svg viewBox="0 0 10 6" aria-hidden="true">
           <path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.4" />
         </svg>
@@ -161,7 +168,7 @@ export function Select(props: {
                   onPointerMove={() => setKb(i())}
                   onClick={() => pick(o)}
                 >
-                  {o.label}
+                  {shownLabel(o)}
                 </button>
               )}
             </For>

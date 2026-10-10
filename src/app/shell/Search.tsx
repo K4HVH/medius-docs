@@ -1,58 +1,89 @@
 import { createEffect, createMemo, createSignal, For, on, onCleanup, onMount, Show } from 'solid-js';
 import { Portal } from 'solid-js/web';
-import { type SearchEntry, entries } from '../searchIndex';
-import { groupHits, marks, rank } from '../searchRank';
-import { routeFor, sectionLabel } from '../routes';
+import { Button } from '../../components/inputs/Button';
+import { loadIndex, type Loaded } from '../search/load';
+import { marks, snippet } from '../search/text';
+import type { IndexEntry } from '../search/types';
+import { routeFor, sectionLabel, type RouteInfo } from '../routes';
 import { lockPage, modKey } from './panel';
 import { prefersReducedMotion } from './motion';
 
-// The site search: the docs, the Guide and the dashboard, best match first, by section. Empty, it offers
-// what was opened last and the main pages. The arrows move a blue edge through the list, as the sidebar's
+// The site search: every page, section and panel of the site, each release and device report, best match
+// first, by section. Empty, it offers what was opened last and the main pages, which need no index; the
+// index comes when the search first opens. The arrows move a blue edge through the list, as the sidebar's
 // moves through the pages; Enter opens the result, Ctrl or Cmd with Enter opens it in a new tab.
 
 const RECENT = 'medius.search.recent';
 const PAGES = ['/guide', '/guide/compatibility', '/guide/help', '/dashboard', '/dashboard/control', '/dashboard/update', '/native', '/library', '/bindings', '/dashboard/changelog'];
 const CLOSE_MS = 150;
+// Results the list shows: more than a screen, and few enough to redraw on every keystroke.
+const SHOWN = 24;
 
-// An entry is known by its address and title together: several share a page.
-const keyOf = (e: SearchEntry) => `${e.path} ${e.label}`;
-const byKey = new Map(entries.map((e) => [keyOf(e), e]));
-const byPath = new Map(entries.map((e) => [e.path, e]));
+// What the list shows: its sections in order, each one's entries, the words each was found by, and for a
+// page offered when the box is empty, what it is. Entries are the objects the index holds, so a row that stays
+// from one keystroke to the next keeps its place on the page.
+interface List {
+  sections: string[];
+  rows: Map<string, IndexEntry[]>;
+  terms: Map<IndexEntry, string[]>;
+  about: Map<IndexEntry, string>;
+}
 
-const readRecent = (): SearchEntry[] => {
+// One entry per page offered, made once, so the list keeps its rows while the index arrives.
+const offered = new Map<string, IndexEntry>();
+const pageOf = (r: RouteInfo): IndexEntry => {
+  let e = offered.get(r.path);
+  if (!e)
+    offered.set(
+      r.path,
+      (e = { path: r.path, title: r.title, kind: 'page', section: sectionLabel(r), crumb: r.group && r.group !== sectionLabel(r) ? r.group : '', text: '' }),
+    );
+  return e;
+};
+
+// A pick is kept whole, so it is offered before the index comes, and dropped once the index lacks it. A
+// pick kept by the search before this one is its address and title in one string: it is offered once the
+// index can name it, and kept anew then.
+const save = (picks: IndexEntry[]) =>
+  localStorage.setItem(RECENT, JSON.stringify(picks.slice(0, 5).map(({ path, title, kind, section, crumb, caption }) => ({ path, title, kind, section, crumb, caption }))));
+const readRecent = (index: Loaded | null): IndexEntry[] => {
   try {
-    const v = JSON.parse(localStorage.getItem(RECENT) ?? '[]');
-    return Array.isArray(v) ? v.map((k) => byKey.get(k)).filter((e): e is SearchEntry => !!e) : [];
+    const v: unknown = JSON.parse(localStorage.getItem(RECENT) ?? '[]');
+    if (!Array.isArray(v)) return [];
+    const older = v.some((e) => typeof e === 'string');
+    const kept = v.flatMap((e): IndexEntry[] => {
+      if (typeof e === 'string') {
+        const found = index?.byPath.get(e.slice(0, e.indexOf(' ')));
+        return found ? [found] : [];
+      }
+      if (!e || typeof e !== 'object' || typeof e.path !== 'string' || typeof e.title !== 'string') return [];
+      if (!index) return [e as IndexEntry];
+      const found = index.byPath.get(e.path);
+      return found ? [found] : [];
+    });
+    if (index && older) save(kept);
+    return kept;
   } catch {
     return [];
   }
 };
-const keepRecent = (e: SearchEntry) => {
+const keepRecent = (e: IndexEntry) => {
   try {
-    const keys = [e, ...readRecent().filter((r) => r !== e)].slice(0, 5).map(keyOf);
-    localStorage.setItem(RECENT, JSON.stringify(keys));
+    save([e, ...readRecent(null).filter((r) => r.path !== e.path)]);
   } catch {
     // A browser that keeps nothing simply offers no recent results.
   }
 };
 
-// Results sit under the site's sections, as in the sidebar; each says where in its section it lives: the
-// sidebar's group, and for a part of a page the page too.
-const section = (e: SearchEntry): string => {
-  if (e.external) return 'Elsewhere';
-  const r = routeFor(e.path.split('#')[0]);
-  return r ? sectionLabel(r) : e.group;
-};
-const crumb = (e: SearchEntry, withSection: boolean): string => {
-  if (e.external) return new URL(e.path).host;
-  const [path, hash] = e.path.split('#');
-  const r = routeFor(path);
-  if (!r) return '';
-  return [withSection ? sectionLabel(r) : r.group, hash ? r.nav : null].filter((x) => x && x !== e.label).join(' / ');
+// Where a result lives; a release or device report adds its date or verdict, and an empty box's list the
+// section too.
+const place = (e: IndexEntry, withSection: boolean): string => {
+  const where = [withSection ? e.section : '', e.crumb].filter(Boolean).join(' / ');
+  return e.kind === 'release' || e.kind === 'device' ? [where, e.caption].filter(Boolean).join(' · ') : where;
 };
 
-const Marked = (p: { text: string; query: string }) => (
-  <For each={marks(p.text, p.query)}>{(m) => (m.hit ? <mark>{m.text}</mark> : m.text)}</For>
+const Marked = (p: { text: string; terms: string[] }) => (
+  <For each={marks(p.text, p.terms)}>{(m) => (m.hit ? <mark>{m.text}</mark> : m.text)}</For>
 );
 
 export function Search(props: { open: boolean; onClose: () => void; onPick: (path: string) => void }) {
@@ -61,31 +92,74 @@ export function Search(props: { open: boolean; onClose: () => void; onPick: (pat
   const [shown, setShown] = createSignal(props.open);
   const [closing, setClosing] = createSignal(false);
   const [opening, setOpening] = createSignal(false);
+  const [index, setIndex] = createSignal<Loaded | null>(null);
+  const [failed, setFailed] = createSignal(false);
   // Counts the openings, so the empty list is read afresh each time.
   const [round, setRound] = createSignal(0);
   let input: HTMLInputElement | undefined;
+  let panel: HTMLDivElement | undefined;
   let list: HTMLDivElement | undefined;
   let mark: HTMLSpanElement | undefined;
   let back: Element | null = null;
   let timer: ReturnType<typeof setTimeout> | undefined;
+  let alive = true;
+  onCleanup(() => (alive = false));
 
-  const groups = createMemo(() => {
+  const load = () => {
+    setFailed(false);
+    loadIndex().then(
+      (i) => alive && setIndex(i),
+      () => alive && setFailed(true),
+    );
+  };
+
+  const view = createMemo((): List => {
+    const out: List = { sections: [], rows: new Map(), terms: new Map(), about: new Map() };
+    const add = (section: string, e: IndexEntry) => {
+      const rows = out.rows.get(section);
+      if (rows) rows.push(e);
+      else {
+        out.sections.push(section);
+        out.rows.set(section, [e]);
+      }
+    };
     const q = query().trim();
-    if (q) return groupHits(rank(entries, q), section).map((g) => ({ group: g.group, items: g.hits.map((h) => h.entry) }));
+    const ix = index();
+    if (q) {
+      if (!ix) return out;
+      // The query as typed: a space after the last word says the word is finished.
+      for (const h of ix.searcher.search(query(), SHOWN)) {
+        add(h.entry.section, h.entry);
+        out.terms.set(h.entry, h.terms);
+      }
+      return out;
+    }
     round();
-    const recent = readRecent();
-    const pages = PAGES.map((p) => byPath.get(p)).filter((e): e is SearchEntry => !!e && !recent.includes(e));
-    return [
-      ...(recent.length ? [{ group: 'Recent', items: recent }] : []),
-      { group: 'Pages', items: pages },
-    ];
+    const recent = readRecent(ix);
+    for (const e of recent) add('Recent', e);
+    for (const p of PAGES) {
+      const r = routeFor(p);
+      if (!r || recent.some((e) => e.path === p)) continue;
+      const e = pageOf(r);
+      add('Pages', e);
+      out.about.set(e, r.description);
+    }
+    return out;
   });
-  const flat = createMemo(() => groups().flatMap((g) => g.items));
+  const flat = createMemo(() => view().sections.flatMap((g) => view().rows.get(g)!));
   // Where each section's results start in the list the arrows walk.
-  const starts = createMemo(() => groups().reduce<number[]>((a, g, k) => [...a, k ? a[k - 1] + groups()[k - 1].items.length : 0], []));
+  const starts = createMemo(() => {
+    const at: number[] = [];
+    let n = 0;
+    for (const g of view().sections) {
+      at.push(n);
+      n += view().rows.get(g)!.length;
+    }
+    return at;
+  });
 
   // The edge goes to the result in focus: straight there when the list itself changed.
-  const place = (instant: boolean) => {
+  const placeEdge = (instant: boolean) => {
     const o = list?.querySelector<HTMLElement>(`#srch-o-${at()}`);
     if (!mark || !o) {
       if (mark) mark.style.opacity = '0';
@@ -101,11 +175,19 @@ export function Search(props: { open: boolean; onClose: () => void; onPick: (pat
     }
     o.scrollIntoView({ block: 'nearest' });
   };
-  createEffect(on(flat, () => {
-    setAt(0);
-    queueMicrotask(() => place(true));
-  }));
-  createEffect(on(at, () => place(false), { defer: true }));
+  // A new query starts at its best result; the same query's list redrawn (the index arriving under the
+  // pages offered) keeps the result in focus.
+  let listed: string | null = null;
+  createEffect(
+    on(flat, (rows, before) => {
+      const kept = query() === listed ? before?.[at()]?.path : undefined;
+      listed = query();
+      const i = kept ? rows.findIndex((e) => e.path === kept) : -1;
+      setAt(i >= 0 ? i : 0);
+      queueMicrotask(() => placeEdge(true));
+    }),
+  );
+  createEffect(on(at, () => placeEdge(false), { defer: true }));
 
   createEffect(
     on(
@@ -120,12 +202,14 @@ export function Search(props: { open: boolean; onClose: () => void; onPick: (pat
           setOpening(true);
           timer = setTimeout(() => setOpening(false), 700);
           setShown(true);
+          listed = null;
           setQuery('');
           setRound((r) => r + 1);
           lockPage('search', true);
+          if (!index()) load();
           if (again) {
             input?.focus();
-            queueMicrotask(() => place(true));
+            queueMicrotask(() => placeEdge(true));
           }
         } else if (shown()) {
           lockPage('search', false);
@@ -141,11 +225,11 @@ export function Search(props: { open: boolean; onClose: () => void; onPick: (pat
     lockPage('search', false);
   });
 
-  const pick = (e: SearchEntry | undefined, tab = false) => {
+  const pick = (e: IndexEntry | undefined, tab = false) => {
     if (!e) return;
-    if (e.external || tab) {
+    if (e.kind === 'external' || tab) {
       window.open(e.path, '_blank', 'noopener,noreferrer');
-      if (e.external) props.onClose();
+      if (e.kind === 'external') props.onClose();
       return;
     }
     keepRecent(e);
@@ -160,8 +244,14 @@ export function Search(props: { open: boolean; onClose: () => void; onPick: (pat
       if (n) setAt((i) => (i + (e.key === 'ArrowDown' ? 1 : -1) + n) % n);
     } else if (e.key === 'Enter' && e.target === input) pick(flat()[at()], e.ctrlKey || e.metaKey);
     else if (e.key === 'Escape') props.onClose();
-    else if (e.key === 'Tab') input?.focus();
-    else return;
+    else if (e.key === 'Tab') {
+      // Tab keeps to the panel: the box, and whichever buttons show (Close on a phone, Retry).
+      const stops = [...(panel?.querySelectorAll<HTMLElement>('input, button') ?? [])].filter(
+        (b) => !(b as HTMLButtonElement).disabled && getComputedStyle(b).display !== 'none',
+      );
+      const i = stops.indexOf(document.activeElement as HTMLElement);
+      stops[(i + (e.shiftKey ? -1 : 1) + stops.length) % stops.length]?.focus();
+    } else return;
     e.preventDefault();
     e.stopPropagation();
   };
@@ -170,9 +260,17 @@ export function Search(props: { open: boolean; onClose: () => void; onPick: (pat
   const Focus = () => {
     onMount(() => {
       input?.focus();
-      place(true);
+      placeEdge(true);
     });
     return null;
+  };
+
+  const status = () => {
+    const q = query().trim();
+    if (!q) return '';
+    if (failed()) return "Search couldn't load.";
+    if (!index()) return 'Loading';
+    return `${flat().length} ${flat().length === 1 ? 'result' : 'results'}`;
   };
 
   return (
@@ -187,6 +285,7 @@ export function Search(props: { open: boolean; onClose: () => void; onPick: (pat
         >
           <div
             class="srch-p"
+            ref={panel}
             role="dialog"
             aria-modal="true"
             aria-label="Search"
@@ -226,37 +325,61 @@ export function Search(props: { open: boolean; onClose: () => void; onPick: (pat
               <span class="mark" ref={mark} aria-hidden="true" />
               <Show
                 when={flat().length}
-                fallback={<p class="srch-none">Nothing matches "{query().trim()}". Try fewer or shorter words.</p>}
+                fallback={
+                  <Show
+                    when={!failed()}
+                    fallback={
+                      <div class="srch-none srch-fail">
+                        <p>Search couldn't load.</p>
+                        <Button
+                          variant="secondary"
+                          onClick={() => {
+                            load();
+                            input?.focus();
+                          }}
+                        >
+                          Retry
+                        </Button>
+                      </div>
+                    }
+                  >
+                    <p class="srch-none">
+                      {index() ? `Nothing matches "${query().trim()}". Try fewer or shorter words.` : 'Loading...'}
+                    </p>
+                  </Show>
+                }
               >
-                <For each={groups()}>
-                      {(g, k) => (
-                        <div role="group" aria-label={g.group}>
-                          <p class="caps srch-g" aria-hidden="true">{g.group}</p>
-                          <For each={g.items}>
-                            {(e, j) => {
-                              const i = () => starts()[k()] + j();
-                              return (
-                                <div
-                                  id={`srch-o-${i()}`}
-                                  role="option"
-                                  class="srch-o"
-                                  aria-selected={at() === i() ? 'true' : 'false'}
-                                  style={{ '--i': Math.min(i(), 12) }}
-                                  onMouseMove={() => at() !== i() && setAt(i())}
-                                  onClick={(ev) => pick(e, ev.ctrlKey || ev.metaKey)}
-                                >
-                                  <span class="t"><Marked text={e.label} query={query()} /></span>
-                                  <span class="c caps">{crumb(e, !query().trim())}</span>
-                                  <Show when={e.description}>
-                                    <span class="d"><Marked text={e.description!} query={query()} /></span>
-                                  </Show>
-                                </div>
-                              );
-                            }}
-                          </For>
-                        </div>
-                      )}
-                    </For>
+                <For each={view().sections}>
+                  {(section, k) => (
+                    <div role="group" aria-label={section}>
+                      <p class="caps srch-g" aria-hidden="true">{section}</p>
+                      <For each={view().rows.get(section) ?? []}>
+                        {(entry, j) => {
+                          const i = () => starts()[k()] + j();
+                          const terms = () => view().terms.get(entry) ?? [];
+                          const said = () => view().about.get(entry) ?? (query().trim() ? snippet(entry, terms()) : '');
+                          return (
+                            <div
+                              id={`srch-o-${i()}`}
+                              role="option"
+                              class="srch-o"
+                              aria-selected={at() === i() ? 'true' : 'false'}
+                              style={{ '--i': Math.min(i(), 12) }}
+                              onMouseMove={() => at() !== i() && setAt(i())}
+                              onClick={(ev) => pick(entry, ev.ctrlKey || ev.metaKey)}
+                            >
+                              <span class="t"><Marked text={entry.title} terms={terms()} /></span>
+                              <span class="c caps">{place(entry, !query().trim())}</span>
+                              <Show when={said()}>
+                                <span class="d"><Marked text={said()} terms={terms()} /></span>
+                              </Show>
+                            </div>
+                          );
+                        }}
+                      </For>
+                    </div>
+                  )}
+                </For>
               </Show>
             </div>
             <div class="srch-f caps" aria-hidden="true">
@@ -265,9 +388,7 @@ export function Search(props: { open: boolean; onClose: () => void; onPick: (pat
               <span><kbd>{modKey()} ↵</kbd> New tab</span>
               <span><kbd>Esc</kbd> Close</span>
             </div>
-            <p class="sr" role="status">
-              {query().trim() ? `${flat().length} ${flat().length === 1 ? 'result' : 'results'}` : ''}
-            </p>
+            <p class="sr" role="status">{status()}</p>
           </div>
         </div>
       </Portal>

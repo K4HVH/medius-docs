@@ -5,7 +5,6 @@ import type { Component } from 'solid-js';
 import { routeFor } from '../../src/app/routes';
 import { HELP, HELP_ITEMS } from '../../src/app/data/help';
 import { COMPAT } from '../../src/app/data/compatibility';
-import { entries } from '../../src/app/searchIndex';
 
 const stats = vi.hoisted(() => ({ value: null as unknown }));
 vi.mock('../../src/dashboard/stats', async (orig) => ({
@@ -107,6 +106,34 @@ describe('Guide pages', () => {
     await waitFor(() => expect(r.container.textContent).toContain('No answers match.'));
   });
 
+  it('matches Help as the site search does: words in any order, other endings, one slip', async () => {
+    const r = mount('/guide/help', Help);
+    const shown = () => [...r.container.querySelectorAll<HTMLElement>('.qa')].filter((q) => !q.hidden).map((q) => q.id);
+    const input = r.container.querySelector('input[type="search"]')!;
+    fireEvent.input(input, { target: { value: 'screens blue' } });
+    await waitFor(() => expect(shown()).toEqual(['bsod']));
+    fireEvent.input(input, { target: { value: 'logitch' } });
+    await waitFor(() => expect(shown()).toContain('logitech'));
+  });
+
+  it('finds a model number inside a name, and 8K as the site writes it', async () => {
+    const r = mount('/guide/compatibility', Devices);
+    const names = () => [...r.container.querySelectorAll('.compat tbody tr')].map((t) => t.querySelector('td')!.firstChild!.textContent);
+    fireEvent.input(r.container.querySelector('input[type="search"]')!, { target: { value: '502' } });
+    await waitFor(() => expect(names().length).toBeGreaterThan(0));
+    expect(names().every((n) => /502/.test(n!))).toBe(true);
+    const help = mount('/guide/help', Help);
+    fireEvent.input(help.container.querySelectorAll('input[type="search"]')[0]!, { target: { value: '8k' } });
+    await waitFor(() => expect([...help.container.querySelectorAll<HTMLElement>('.qa')].filter((q) => !q.hidden).map((q) => q.id)).toContain('razer-8k'));
+  });
+
+  it('narrows the devices by the words of a name in any order', async () => {
+    const r = mount('/guide/compatibility', Devices);
+    const rows = () => [...r.container.querySelectorAll('.compat tbody tr')];
+    fireEvent.input(r.container.querySelector('input[type="search"]')!, { target: { value: 'viper pro' } });
+    await waitFor(() => expect(rows().map((t) => t.querySelector('td')!.firstChild!.textContent)).toContain('Razer Viper V3 Pro'));
+  });
+
   it('lists every reported device, and narrows the table by name', async () => {
     const r = mount('/guide/compatibility', Devices);
     const rows = () => [...r.container.querySelectorAll('.compat tbody tr')];
@@ -145,9 +172,4 @@ describe('Guide pages', () => {
     expect(r.container.querySelector('.filter .n b')!.textContent).toBe('0');
   });
 
-  it('puts every Guide page and every Help answer in search', () => {
-    const paths = entries.map((e) => e.path);
-    expect(paths).toEqual(expect.arrayContaining(PAGES.map(([p]) => p)));
-    expect(paths).toEqual(expect.arrayContaining(HELP_ITEMS.map((f) => `/guide/help#${f.id}`)));
-  });
 });

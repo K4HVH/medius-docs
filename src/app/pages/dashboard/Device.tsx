@@ -79,7 +79,7 @@ const Device = () => {
     <>
       <PageHeader
         aside={
-          <p class="conn" classList={{ on: connected() || dash.status() === 'flashing' }}>
+          <p class="conn" classList={{ on: connected() || dash.status() === 'flashing' }} data-search-skip>
             <span class="dot" classList={{ ok: connected(), warn: dash.status() === 'flashing' || dash.status() === 'lost' }} />
             <span>{connLine()}</span>
           </p>
@@ -102,7 +102,7 @@ const Device = () => {
                     <Match when={connected()}>
                       <Show when={dash.version()}>
                         {(v) => (
-                          <p class="state">
+                          <p class="state" data-search-skip>
                             Firmware <Chip variant="success">v{versionString(v())}</Chip>
                           </p>
                         )}
@@ -166,7 +166,7 @@ const Device = () => {
 
               <Show when={full()}>
                 <Panel id="status" title="Status">
-                  <Show when={dash.health()} fallback={<p class="mut">Reading...</p>}>
+                  <Show when={dash.health()} fallback={<p class="mut" data-search-skip>Reading...</p>}>
                     {(h) => (
                       <div class="flags">
                         <For each={healthItems(h())}>

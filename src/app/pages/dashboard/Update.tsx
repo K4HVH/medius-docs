@@ -251,7 +251,7 @@ export const Latest = () => {
         </dl>
       </Show>
 
-      <div class="flow" id="update" data-search-target>
+      <div class="flow" id="update">
         <Show when={err()}>{(msg) => <div class="callout callout--danger" role="alert">{msg()}</div>}</Show>
         <Switch>
           <Match when={running()}>

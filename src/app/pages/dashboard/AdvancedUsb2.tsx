@@ -264,7 +264,7 @@ export const Usb2Flash = (props: { via: () => JSX.Element; onBusy?: (busy: boole
           <Show when={source() === 'release'}>
             <Switch>
               <Match when={releases.loading}>
-                <p>Loading releases...</p>
+                <p data-search-skip>Loading releases...</p>
               </Match>
               <Match when={releases.error}>
                 <div class="callout callout--warning">

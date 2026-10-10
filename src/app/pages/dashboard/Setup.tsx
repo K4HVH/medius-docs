@@ -138,7 +138,7 @@ const Setup = () => {
   return (
     <>
       <PageHeader />
-      <div class="flow" id="install" data-search-target>
+      <div class="flow" id="install">
         <div class="stages">
           <For each={STEPS}>
             {(s, i) => (
@@ -161,7 +161,7 @@ const Setup = () => {
         <Show
           when={!native.running()}
           fallback={
-            <div class="step" id="installing" data-search-target>
+            <div class="step" id="installing">
               <p class="cue">Installing</p>
               <p class="sub2">Don't unplug or close this tab</p>
               <div class="prog">

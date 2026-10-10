@@ -30,7 +30,7 @@ COPY --from=builder /app /app
 
 ENV SITE_ORIGIN=https://medius.k4tech.net
 
-RUN node_modules/.bin/tsx scripts/prerender.ts
+RUN node_modules/.bin/tsx scripts/prerender.ts && node_modules/.bin/tsx scripts/searchindex.ts
 
 # Stage 3: production runtime, the Bun server serving the enriched dist/.
 FROM oven/bun:1-alpine AS runner
@@ -58,6 +58,7 @@ COPY --from=builder --chown=bunuser:nodejs /app/src/dashboard/firmware/notes.ts 
 COPY --from=builder --chown=bunuser:nodejs /app/src/app/data/compatibility.ts /app/src/app/data/compatibility.ts
 COPY --from=builder --chown=bunuser:nodejs /app/src/app/data/compatMerge.ts /app/src/app/data/compatMerge.ts
 COPY --from=builder --chown=bunuser:nodejs /app/src/app/data/homeFigures.ts /app/src/app/data/homeFigures.ts
+COPY --from=builder --chown=bunuser:nodejs /app/src/app/search /app/src/app/search
 COPY --from=builder --chown=bunuser:nodejs /app/node_modules/mcp-lite /app/node_modules/mcp-lite
 
 USER bunuser

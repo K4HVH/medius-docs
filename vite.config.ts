@@ -5,6 +5,8 @@ import { handleFirmwareApi } from './server/firmware';
 import { MAX_BODY, handleStatsApi } from './server/stats';
 import { agentDocsDev } from './server/agentDevMiddleware';
 import { handleHomeApi } from './server/home';
+import { serveIndex } from './server/searchIndex';
+import type { SearchIndex } from './src/app/search/types';
 
 // Serve the firmware proxy under the dev server, mirroring serve.ts in prod.
 function firmwareApi(): Plugin {
@@ -84,6 +86,66 @@ function statsApi(): Plugin {
   };
 }
 
+// The search index under the dev server, built from the dev server itself (as the site build builds it)
+// on the first request, and again 2 s after a change under src/, the last good one served meanwhile.
+function searchIndex(): Plugin {
+  return {
+    name: 'search-index',
+    configureServer(server) {
+      let current: SearchIndex | null = null;
+      let building: Promise<void> | null = null;
+      // A change while a build runs: the build after it reads the change.
+      let again = false;
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      const build = (): Promise<void> => {
+        if (building) return building;
+        const started = Date.now();
+        building = (async () => {
+          const base = server.resolvedUrls?.local[0]?.replace(/\/$/, '');
+          if (!base) return;
+          const { buildSearchIndex } = await import('./scripts/lib/searchBuild');
+          current = (await buildSearchIndex(base)).index;
+          server.config.logger.info(`[search] index of ${current.entries.length} entries in ${Date.now() - started} ms`);
+        })()
+          .catch((e) => server.config.logger.warn(`[search] ${(e as Error).message}`))
+          .finally(() => {
+            building = null;
+            if (again) {
+              again = false;
+              void build();
+            }
+          });
+        return building;
+      };
+      server.watcher.on('change', (file) => {
+        if (!current || !file.replace(/\\/g, '/').includes('/src/')) return;
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+          if (building) again = true;
+          else void build();
+        }, 2000);
+      });
+      server.middlewares.use((req, res, next) => {
+        if (req.url?.split('?')[0] !== '/search-index.json') return next();
+        void (async () => {
+          if (!current) await build();
+          if (!current) {
+            res.statusCode = 503;
+            res.end(JSON.stringify({ error: 'The search index did not build; the dev server log says why.' }));
+            return;
+          }
+          const headers = new Headers();
+          if (typeof req.headers['if-none-match'] === 'string') headers.set('if-none-match', req.headers['if-none-match']);
+          const response = await serveIndex(new Request(`http://localhost${req.url}`, { headers }), current, undefined, { cache: 'no-store' });
+          res.statusCode = response.status;
+          response.headers.forEach((v, k) => res.setHeader(k, v));
+          res.end(Buffer.from(await response.arrayBuffer()));
+        })();
+      });
+    },
+  };
+}
+
 // Serve the agent surface (.md twins, content negotiation, llms.txt/sitemap/
 // robots/agent-index, /mcp) under the dev and preview servers, from dist/.
 function agentDocs(): Plugin {
@@ -106,7 +168,7 @@ export default defineConfig(({ mode }) => {
   process.env.GITHUB_REPO = process.env.GITHUB_REPO ?? env.GITHUB_REPO;
 
   return {
-    plugins: [firmwareApi(), statsApi(), homeApi(), agentDocs(), devtools(), solidPlugin()],
+    plugins: [firmwareApi(), statsApi(), homeApi(), searchIndex(), agentDocs(), devtools(), solidPlugin()],
     root: 'src',
     publicDir: '../public',
     server: {

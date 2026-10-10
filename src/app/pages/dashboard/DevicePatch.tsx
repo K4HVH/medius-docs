@@ -203,7 +203,7 @@ const DevicePatch = () => {
         </Show>
 
         <p class="sublabel">
-          Stored ({entries().length} of {PATCHES_MAX})
+          Stored <span data-search-skip>({entries().length} of {PATCHES_MAX})</span>
         </p>
         <Show
           when={entries().length > 0}

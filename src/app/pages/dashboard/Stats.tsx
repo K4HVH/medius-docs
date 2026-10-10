@@ -82,7 +82,7 @@ const rows = (counts: Counted[], label: (key: string) => string): Row[] => {
   ];
 };
 
-const Empty = () => <p class="mut">None.</p>;
+const Empty = () => <p class="mut" data-search-skip>None.</p>;
 
 // The figure over a chart: what the chart stands at, or the entry under the pointer.
 const Readout = (props: { n: number; label: string }) => (
@@ -385,7 +385,7 @@ const Stats = () => {
             <Panel id="stats" wide>
               {/* The server fills this for crawlers. */}
               <div data-fill="stats">
-                <p class="mut">Loading...</p>
+                <p class="mut" data-search-skip>Loading...</p>
               </div>
             </Panel>
           </Panels>

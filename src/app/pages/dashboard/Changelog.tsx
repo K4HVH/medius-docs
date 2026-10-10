@@ -178,7 +178,7 @@ const Changelog = () => {
   return (
     <>
       <PageHeader />
-      <div id="changelog" data-search-target>
+      <div id="changelog">
         <Switch fallback={<p class="mut">No releases yet.</p>}>
           <Match when={list()?.length}>
             <div class="rels" ref={rels}>
@@ -189,7 +189,7 @@ const Changelog = () => {
             <div class="callout callout--warning">Could not load the changelog.</div>
           </Match>
           <Match when={releases.loading}>
-            <div data-fill="changelog"><p class="mut">Loading...</p></div>
+            <div data-fill="changelog" data-search-skip><p class="mut">Loading...</p></div>
           </Match>
         </Switch>
       </div>

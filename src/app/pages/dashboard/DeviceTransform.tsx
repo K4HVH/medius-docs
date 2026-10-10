@@ -206,7 +206,7 @@ const DeviceTransform = () => {
             </div>
           }
         >
-          <Show when={active().length > 0} fallback={<p class="mut">None.</p>}>
+          <Show when={active().length > 0} fallback={<p class="mut" data-search-skip>None.</p>}>
             <div class="chips">
               <For each={active()}>
                 {(t) => (

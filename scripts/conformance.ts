@@ -400,10 +400,6 @@ const checkAnchor = (from: string, line: number, href: string) => {
 for (const f of files)
   for (const m of srcOf.get(f)!.matchAll(/href="(\/[^"]*#[A-Za-z0-9-]+)"/g))
     checkAnchor(f, lineOf(srcOf.get(f)!, m.index!), m[1]);
-const idxFile = join(ROOT, 'src/app/searchIndex.ts');
-const idx = readFileSync(idxFile, 'utf8');
-for (const m of idx.matchAll(/path: '(\/[^']+)'/g))
-  checkAnchor(idxFile, lineOf(idx, m.index!), m[1]);
 
 // ---- a paragraph that runs past every other paragraph on its page ----
 // Measured per PARAGRAPH, not per card: a card grouping eight enums is long because it covers eight

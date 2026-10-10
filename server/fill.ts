@@ -4,7 +4,7 @@ import type { FirmwareRelease } from '../src/dashboard/firmware/client';
 import { groupCommits, inlineRuns, parseBlocks, splitRelease, type Block, type CommitGroup } from '../src/dashboard/firmware/notes';
 import { SITE } from '../src/app/site';
 import { COMPAT, KIND_LABEL, VERDICT_LABEL, VERDICT_TONE } from '../src/app/data/compatibility';
-import { mergeCompat } from '../src/app/data/compatMerge';
+import { mergeCompat, withIds } from '../src/app/data/compatMerge';
 import type { StatsSummary } from './stats/types';
 import { getStatsSummary } from './stats';
 import { figureText, type HomeFigures } from '../src/app/data/homeFigures';
@@ -145,10 +145,10 @@ function homeHtml(html: string, figures: HomeFigures): string {
 }
 
 function compatHtml(html: string, stats: StatsSummary): string {
-  const rows = mergeCompat(COMPAT, stats.devices.top)
+  const rows = withIds(mergeCompat(COMPAT, stats.devices.top))
     .map(
       (r) =>
-        `<tr><td>${esc(r.name)}${r.vidpid && r.vidpid !== r.name ? `<span class="vp">${esc(r.vidpid)}</span>` : ''}</td>` +
+        `<tr id="${r.id}"><td>${esc(r.name)}${r.vidpid && r.vidpid !== r.name ? `<span class="vp">${esc(r.vidpid)}</span>` : ''}</td>` +
         `<td>${KIND_LABEL[r.kind]}</td><td><span class="status ${VERDICT_TONE[r.verdict]}">${VERDICT_LABEL[r.verdict]}</span></td>` +
         `<td>${esc(r.note ?? '')}</td><td class="v">${esc(r.reported ?? '')}</td><td class="num">${r.boxes ?? ''}</td></tr>`,
     )

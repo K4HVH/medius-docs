@@ -1,6 +1,7 @@
 import { For, Show } from 'solid-js';
 import { A } from '@solidjs/router';
 import { Arrow, ArrowOut } from './Arrow';
+import { marks } from '../search/text';
 
 // A live filter over a table or a list, with the count of what it leaves. The page's Markdown twin
 // carries the list, not the filter.
@@ -27,30 +28,16 @@ export function Filter(props: {
           onInput={(e) => props.onInput(e.currentTarget.value)}
         />
       </label>
-      <span class="n caps" aria-live="polite">
+      <span class="n caps" aria-live="polite" data-search-skip>
         <b>{props.count}</b> {props.noun[props.count === 1 ? 0 : 1]}
       </span>
     </div>
   );
 }
 
-// Text with each case-insensitive match of a filter marked.
+// Text with the words a filter matched marked, as the site search marks them.
 export function Marked(props: { text: string; query: string }) {
-  const parts = () => {
-    const q = props.query.trim().toLowerCase();
-    if (!q) return [{ text: props.text, hit: false }];
-    const out: { text: string; hit: boolean }[] = [];
-    const lower = props.text.toLowerCase();
-    let at = 0;
-    for (let i = lower.indexOf(q); i >= 0; i = lower.indexOf(q, i + q.length)) {
-      if (i > at) out.push({ text: props.text.slice(at, i), hit: false });
-      out.push({ text: props.text.slice(i, i + q.length), hit: true });
-      at = i + q.length;
-    }
-    if (at < props.text.length) out.push({ text: props.text.slice(at), hit: false });
-    return out;
-  };
-  return <For each={parts()}>{(p) => (p.hit ? <mark>{p.text}</mark> : p.text)}</For>;
+  return <For each={marks(props.text, props.query)}>{(p) => (p.hit ? <mark>{p.text}</mark> : p.text)}</For>;
 }
 
 // A small link to the setting or page a row or an answer points at.
