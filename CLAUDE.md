@@ -187,6 +187,10 @@ The prerender (`scripts/prerender.ts`, run by `build:full` and the Docker build)
 
 Every page is a separate chunk. A link, Back or Forward waits for the page's code before the page changes (`shell/leave.ts`), so a page never shows empty; the router fetches a page's code when a link to it is pointed at, focused or touched, and `DocsLayout` fetches the sidebar neighbours' at idle. A page whose code fails loads whole. In `lazyPages.ts`, a page that shows highlighted code is a `codePage` (it brings the highlighter, so its code never shows plain) and a dashboard page a `dashboard` (it brings the box runtime); a test fails when a page's source and its wrapper disagree. Docs pages never load the dashboard's box runtime.
 
+### Chrome and scrolling
+
+The top bar (`SiteNav`) and the grid are drawn once, in `App.tsx`'s root, never by a page or a layout, so a page change never redraws or fades them; the bar takes the look of the page a link is going to as the page fades out (`leavingFor` in `shell/leave.ts`). `shell/scrollPlace.ts` decides where each page opens before it draws: where Back, Forward or a reload left it, else its top or its hash. Pages scroll there with `behavior: 'instant'`; the router's scroll to the top would glide under `scroll-behavior: smooth`.
+
 ### Search
 
 Ctrl+K search reads an index the build makes from the rendered site (`scripts/searchindex.ts`), so a new page, section or panel is found with no list to keep. Mark a place with `data-search-target` (DocSection, Panel and PageHeader do it), keep live values out with `data-search-skip`, and give a panel shown in one box state the `transient` prop. `src/app/search/extra.ts` holds the few synonyms and keywords no page says. The build fails when a page marks a place search cannot reach or a known query stops finding its answer.

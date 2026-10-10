@@ -1,4 +1,4 @@
-import { type Accessor, createEffect, on } from 'solid-js';
+import { type Accessor, createEffect, createSignal, on, onCleanup } from 'solid-js';
 import { useBeforeLeave, useLocation } from '@solidjs/router';
 import { prefersReducedMotion } from './motion';
 
@@ -27,11 +27,17 @@ let blocked: Accessor<boolean> = () => false;
 // Offline, a navigation whose code did not come leaves the reader on the page shown: a whole load would
 // put the browser's error page in place of a page that reads.
 const offline = () => navigator.onLine === false;
-const showAgain = () => document.documentElement.classList.remove('leaving', 'waiting');
+// Where the page fading out is going, so the chrome over every page (the site bar) changes with it.
+const [heading, setHeading] = createSignal<string | null>(null);
+export const leavingFor: Accessor<string | null> = heading;
+const showAgain = () => {
+  document.documentElement.classList.remove('leaving', 'waiting', 'away');
+  setHeading(null);
+};
 const lost = (path: string, e: unknown) => console.warn(`medius: the code of ${path} did not come (${String(e)})`);
 
 // A link to another page fades the page out first; the new page then arrives. A navigation to a page
-// whose code is not in yet waits for it too, the page dimmed meanwhile, so the page arrives whole; code
+// whose code is not in yet waits for it too, the page faded meanwhile, so the page arrives whole; code
 // that fails (the site was deployed since) has the page loaded whole instead, once it shows again, so a
 // leave the reader refuses leaves it readable. Back and forward go at once here (holdHistory waits for
 // their code), as does a redirect. A navigation asked for during a flash is left to the flash's block.
@@ -58,15 +64,22 @@ export function useLeaveFade(isBlocked: Accessor<boolean>, pages?: PageCode & { 
     const to = typeof e.to === 'string' ? new URL(e.to, window.location.href) : null;
     if (blocked() || !to) {
       root.classList.remove('leaving');
+      setHeading(null);
       return;
     }
     const fades = !e.options?.replace && !prefersReducedMotion() && to.pathname !== location.pathname;
     const code = pages && !pages.loaded(to.pathname) ? within(pages.load(to.pathname), CODE_MS) : null;
     if (!fades) root.classList.remove('leaving');
-    if (!fades && !code) return;
+    if (!fades && !code) {
+      setHeading(null);
+      return;
+    }
     e.preventDefault();
     clearTimeout(fallback);
+    setHeading(to.pathname);
     if (fades) root.classList.add('leaving');
+    // Between the landing and the rest, the layout around the page goes too.
+    root.classList.toggle('away', fades && (to.pathname === '/') !== (location.pathname === '/'));
     if (code) root.classList.add('waiting');
     else settle();
     void Promise.all([fades ? new Promise((r) => setTimeout(r, FADE_MS)) : null, code]).then(
@@ -88,6 +101,10 @@ export function useLeaveFade(isBlocked: Accessor<boolean>, pages?: PageCode & { 
   });
 
   createEffect(on(() => location.pathname, showAgain, { defer: true }));
+  onCleanup(() => {
+    clearTimeout(fallback);
+    showAgain();
+  });
 }
 
 // Back and forward: the router shows the page at once, so a page whose code is not in waits for it here,

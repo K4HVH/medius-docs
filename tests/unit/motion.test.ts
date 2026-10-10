@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { ARRIVAL_MS, arrive, armReveals, inOrder, watchChanges } from '../../src/app/shell/motion';
+import { ARRIVAL_MS, arrive, armReveals, inOrder, pageArrival, watchChanges } from '../../src/app/shell/motion';
 
 let observed: Element[] = [];
 let callback: IntersectionObserverCallback;
@@ -108,6 +108,40 @@ describe('arrive', () => {
     const { scope, a } = page();
     arrive(scope, inOrder([a], 0, 0));
     expect(a.classList.contains('rb')).toBe(true);
+  });
+});
+
+describe('pageArrival', () => {
+  it('starts a page opened deep at the first block in view, not at the top', () => {
+    document.body.innerHTML =
+      '<main id="m"><header class="page-header" id="hd"><p id="a"></p></header><p id="b"></p><p id="c"></p><p id="d"></p></main>';
+    const tops: Record<string, number> = { hd: -1000, a: -900, b: -300, c: 120, d: 400 };
+    for (const id of Object.keys(tops)) {
+      const el = document.getElementById(id)!;
+      el.getClientRects = (() => [{}]) as unknown as typeof el.getClientRects;
+      rect(el, tops[id]);
+    }
+    const items = pageArrival(document.getElementById('m')!);
+    expect(items.map(([el, d]) => [el.id, d])).toEqual([
+      ['c', 0],
+      ['d', 55],
+    ]);
+  });
+
+  it('waits for the header first when the header is in view', () => {
+    document.body.innerHTML = '<main id="m"><header class="page-header"><p id="h"></p></header><p id="a"></p></main>';
+    const header = document.querySelector<HTMLElement>('.page-header')!;
+    header.getClientRects = (() => [{}]) as unknown as typeof header.getClientRects;
+    rect(header, 80);
+    for (const id of ['h', 'a']) {
+      const el = document.getElementById(id)!;
+      el.getClientRects = (() => [{}]) as unknown as typeof el.getClientRects;
+      rect(el, id === 'h' ? 80 : 300);
+    }
+    expect(pageArrival(document.getElementById('m')!).map(([el, d]) => [el.id, d])).toEqual([
+      ['h', 200],
+      ['a', 255],
+    ]);
   });
 });
 
@@ -242,6 +276,65 @@ describe('watchChanges', () => {
     m.querySelector('.pb')!.append(block);
     await tick();
     expect(block.classList.contains('st-in')).toBe(false);
+    stop();
+  });
+
+  it('brings content swapped into a panel during its arrival in with that panel, never ahead of its heading', async () => {
+    document.body.innerHTML =
+      '<main id="m"><section class="pane arriving"><div class="pn"><div class="ph rb moving" style="--d: 290ms"></div><div class="pb"></div></div></section></main>';
+    const m = document.getElementById('m')!;
+    const stop = watchChanges(m);
+    const pad = document.createElement('div');
+    m.querySelector('.pb')!.append(pad);
+    await tick();
+    expect(pad.classList.contains('moving')).toBe(true);
+    expect(pad.style.getPropertyValue('--d')).toBe('335ms');
+    expect(pad.classList.contains('st-in')).toBe(false);
+    stop();
+  });
+
+  it('leaves the start of content joining a heading that has not started yet to the frame they start on together', async () => {
+    document.body.innerHTML =
+      '<main id="m"><section class="pane arriving"><div class="pn"><div class="ph rb moving" style="--d: 290ms"></div><div class="pb"></div></div></section></main>';
+    const m = document.getElementById('m')!;
+    const lead = m.querySelector<HTMLElement>('.ph')!;
+    lead.getAnimations = (() => [{ playState: 'running', startTime: null }]) as unknown as typeof lead.getAnimations;
+    const stop = watchChanges(m);
+    const pad = document.createElement('div');
+    const seen = { startTime: 'untouched' as unknown };
+    pad.getAnimations = (() => [seen]) as unknown as typeof pad.getAnimations;
+    m.querySelector('.pb')!.append(pad);
+    await tick();
+    await tick();
+    expect(pad.classList.contains('moving')).toBe(true);
+    expect(seen.startTime).toBe('untouched');
+    stop();
+  });
+
+  it('brings in content changed inside a panel that kept its frame, as news, once the panel holds still', async () => {
+    document.body.innerHTML =
+      '<main id="m"><section class="pane arriving"><div class="pn"><div class="ph"></div><div class="pb"></div></div></section></main>';
+    const m = document.getElementById('m')!;
+    const stop = watchChanges(m);
+    const state = document.createElement('div');
+    m.querySelector('.pb')!.append(state);
+    await tick();
+    expect(state.classList.contains('st-in')).toBe(true);
+    stop();
+  });
+
+  it('brings a page block that comes late in at once, its turn in the arrival being past', async () => {
+    document.body.innerHTML = '<main id="m"><header class="page-header"></header></main>';
+    const m = document.getElementById('m')!;
+    const now = vi.spyOn(performance, 'now').mockReturnValue(1000);
+    arrive(m, []);
+    const stop = watchChanges(m);
+    now.mockReturnValue(1900);
+    const late = document.createElement('dl');
+    m.append(late);
+    await tick();
+    expect(late.style.getPropertyValue('--d')).toBe('0ms');
+    now.mockRestore();
     stop();
   });
 

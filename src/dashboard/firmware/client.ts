@@ -37,6 +37,25 @@ export async function fetchReleases(): Promise<FirmwareRelease[]> {
   return data.releases;
 }
 
+// The release list for the pages that show it, one fetch kept a minute: the changelog arriving by a link
+// finds it fetched beside its code, and the page's fetch gets the same list.
+let kept: { at: number; list: Promise<FirmwareRelease[]> } | null = null;
+let inHand: FirmwareRelease[] | undefined;
+export function latestReleases(): Promise<FirmwareRelease[]> {
+  if (!kept || Date.now() - kept.at > 60_000) {
+    const list = fetchReleases().then(
+      (l) => (inHand = l),
+      (e: unknown) => {
+        kept = null;
+        throw e;
+      },
+    );
+    kept = { at: Date.now(), list };
+  }
+  return kept.list;
+}
+export const releasesInHand = (): FirmwareRelease[] | undefined => inHand;
+
 export async function downloadAsset(asset: FirmwareAsset): Promise<Uint8Array> {
   const res = await fetch(`/api/firmware/asset/${asset.id}`);
   if (!res.ok) {

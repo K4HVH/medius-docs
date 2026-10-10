@@ -1,8 +1,7 @@
 import { createResource, onCleanup, onMount, type Component } from 'solid-js';
-import { GridBackground } from '../../components/surfaces/GridBackground';
-import { SiteNav } from '../shell/SiteNav';
 import { SiteFooter } from '../shell/SiteFooter';
 import { armReveals } from '../shell/motion';
+import { openingAt, settleAt } from '../shell/scrollPlace';
 import { DESCRIPTOR_SAMPLE, FEED_SAMPLE } from '../data/samples';
 import type { HomeFigures } from '../data/homeFigures';
 import { Hero } from './home/Hero';
@@ -31,6 +30,10 @@ const Home: Component = () => {
   let root: HTMLDivElement | undefined;
 
   onMount(() => {
+    // At its top for a link (the router's scroll would glide there from the old place), where it was
+    // left for Back or Forward.
+    const at = openingAt();
+    if (at !== null) settleAt(at);
     let dispose = () => {};
     let live = true;
     void (document.fonts?.ready ?? Promise.resolve()).then(() => {
@@ -44,8 +47,6 @@ const Home: Component = () => {
 
   return (
     <div class="landing" ref={root}>
-      <GridBackground gridSize={10} />
-      <SiteNav overHero />
       <main id="home">
         <Hero frames={FEED_SAMPLE.frames} figures={figures() ?? null} />
         <DescriptorPanel sample={DESCRIPTOR_SAMPLE} />

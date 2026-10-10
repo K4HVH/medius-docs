@@ -1,8 +1,10 @@
-import { createEffect, createMemo, createSignal, For, on, onCleanup, onMount } from 'solid-js';
+import { createComputed, createEffect, createMemo, createSignal, For, on, onCleanup, onMount } from 'solid-js';
 import { A, useLocation } from '@solidjs/router';
 import { routeFor, type Section } from '../routes';
 import { Arrow } from './Arrow';
 import { lockPage, panelKeys } from './panel';
+import { leavingFor } from './leave';
+import { pageY } from './scrollPlace';
 
 export const NAV_LINKS: { label: string; href: string; sections: Section[] }[] = [
   { label: 'Guide', href: '/guide', sections: ['guide'] },
@@ -13,12 +15,17 @@ export const NAV_LINKS: { label: string; href: string; sections: Section[] }[] =
 
 const CHANGELOG = '/dashboard/changelog';
 
-// The bar across the top of every page. Over the landing hero it stays clear until the page moves.
-export function SiteNav(props: { overHero?: boolean; disabled?: boolean }) {
+// The bar across the top of every page, one for the whole site so a page change never redraws it. Over the
+// landing hero it stays clear until the page moves. It takes the look of the page a link is going to as
+// the page fades out, at the pace of that fade; a scroll on the landing changes it at a slower one.
+export function SiteNav(props: { disabled?: boolean }) {
   const location = useLocation();
   const [open, setOpen] = createSignal(false);
   const [closing, setClosing] = createSignal(false);
-  const [solid, setSolid] = createSignal(!props.overHero);
+  const hero = createMemo(() => (leavingFor() ?? location.pathname) === '/');
+  // The page a link is going to opens at its top, so the scroll of the one leaving has no say; the page
+  // shown is scrolled where scrollPlace knows it to be, even before it has scrolled there.
+  const solid = () => open() || !hero() || (pageY() > 8 && leavingFor() === null);
   let bar: HTMLElement | undefined;
   let links: HTMLElement | undefined;
   let menuButton: HTMLButtonElement | undefined;
@@ -50,11 +57,25 @@ export function SiteNav(props: { overHero?: boolean; disabled?: boolean }) {
   };
 
   const onScroll = () => {
-    setSolid(!props.overHero || window.scrollY > 8);
     const max = document.documentElement.scrollHeight - window.innerHeight;
     bar?.style.setProperty('--prog', max > 0 ? Math.min(1, window.scrollY / max).toFixed(4) : '0');
     bar?.style.setProperty('--prog-o', window.scrollY > 8 ? '1' : '0');
   };
+
+  // Set in the same update as the look it paces, so the transition starts with the right duration.
+  const [routed, setRouted] = createSignal(false);
+  let routedTimer: ReturnType<typeof setTimeout> | undefined;
+  createComputed(
+    on(
+      hero,
+      () => {
+        setRouted(true);
+        clearTimeout(routedTimer);
+        routedTimer = setTimeout(() => setRouted(false), 300);
+      },
+      { defer: true },
+    ),
+  );
 
   onMount(() => {
     onScroll();
@@ -63,6 +84,7 @@ export function SiteNav(props: { overHero?: boolean; disabled?: boolean }) {
   onCleanup(() => {
     window.removeEventListener('scroll', onScroll);
     clearTimeout(closeTimer);
+    clearTimeout(routedTimer);
     lockPage('nav', false);
   });
 
@@ -72,7 +94,7 @@ export function SiteNav(props: { overHero?: boolean; disabled?: boolean }) {
     <header
       ref={bar}
       class="nav"
-      classList={{ solid: solid() || open(), open: open(), closing: closing() }}
+      classList={{ solid: solid(), routed: routed(), open: open(), closing: closing() }}
     >
       <A href="/" class="brand" end activeClass="" inactiveClass="" aria-disabled={off()} on:click={guard}>
         Medius
