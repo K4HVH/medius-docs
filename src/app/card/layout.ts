@@ -1,4 +1,5 @@
-import { parse, type Font } from 'opentype.js';
+import type { Font } from 'opentype.js';
+import { parse } from 'opentype.js/dist/opentype.mjs';
 
 export type Face = Font;
 
