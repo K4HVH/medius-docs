@@ -23,9 +23,9 @@ import Changelog from '../../src/app/pages/dashboard/Changelog';
 import { useScrollPlace } from '../../src/app/shell/scrollPlace';
 
 // As in the app: where the page opens is decided in the root, from the address and its hash.
-const InRoute = () => {
+const InRoute = (props: { path?: string }) => {
   const history = createMemoryHistory();
-  history.set({ value: `/dashboard/changelog${window.location.hash}` });
+  history.set({ value: props.path ?? `/dashboard/changelog${window.location.hash}` });
   return (
     <MemoryRouter
       history={history}
@@ -150,6 +150,13 @@ describe('Changelog', () => {
   it('opens the release a link names and scrolls to it', async () => {
     window.location.hash = '#v3.4.5';
     const r = render(() => <InRoute />);
+    await waitFor(() => expect(Element.prototype.scrollIntoView).toHaveBeenCalled());
+    const latest = r.container.querySelector('section#v3\\.4\\.5')!;
+    expect(latest.querySelector('.more > button')!.getAttribute('aria-expanded')).toBe('true');
+  });
+
+  it("opens the release an item's address names and scrolls to it", async () => {
+    const r = render(() => <InRoute path="/dashboard/changelog/v3.4.5" />);
     await waitFor(() => expect(Element.prototype.scrollIntoView).toHaveBeenCalled());
     const latest = r.container.querySelector('section#v3\\.4\\.5')!;
     expect(latest.querySelector('.more > button')!.getAttribute('aria-expanded')).toBe('true');

@@ -1,9 +1,11 @@
 import { For, Match, Show, Switch, createEffect, createMemo, createResource, createSignal, onCleanup } from 'solid-js';
+import { useLocation } from '@solidjs/router';
 import { Button } from '../../../components/inputs/Button';
 import { Chip } from '../../../components/display/Chip';
 import { type FirmwareRelease, latestReleases, releasesInHand } from '../../../dashboard/firmware';
 import { type Block, type CommitGroup, groupCommits, inlineRuns, parseBlocks, splitRelease } from '../../../dashboard/firmware/notes';
 import { PageHeader } from '../../shell/PageHeader';
+import { itemFor } from '../../items';
 import { arrive, armReveals, fontsReady, inOrder, turnIn } from '../../shell/motion';
 import { openingAt } from '../../shell/scrollPlace';
 
@@ -160,8 +162,9 @@ const Changelog = () => {
   // Each release drawn once, by its tag: a fetch that brings the list again redraws none of them.
   const byTag = createMemo(() => new Map((list() ?? []).map((r) => [r.tag, r])));
   const tags = createMemo(() => [...byTag().keys()], [], { equals: (a, b) => a.length === b.length && a.every((t, i) => t === b[i]) });
-  // A link to one release (the Discord post's Commits link) lands on it with its commits open.
-  const hashed = decodeURIComponent(window.location.hash.slice(1));
+  // A link to one release (its address, or the changelog's #tag) lands on it with its commits open.
+  const location = useLocation();
+  const hashed = itemFor(location.pathname)?.target ?? decodeURIComponent(location.hash.slice(1));
   let rels: HTMLDivElement | undefined;
   let armed = false;
   let dispose = () => {};

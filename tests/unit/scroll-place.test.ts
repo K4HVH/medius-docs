@@ -77,6 +77,29 @@ describe('scrollPlace', () => {
     off();
   });
 
+  it("opens a tab loaded at an item's address at its item", async () => {
+    history.replaceState({ _depth: 0 }, '', '/guide/help/bsod');
+    const m = await load();
+    const off = m.keepPlaces();
+    expect(m.openingAt()).toBeNull();
+    off();
+  });
+
+  it("keeps the place at an item's address across a reload", async () => {
+    history.replaceState({ _depth: 0 }, '', '/guide/help/bsod');
+    let m = await load();
+    let off = m.keepPlaces();
+    scrollTo(900);
+    vi.advanceTimersByTime(500);
+    off();
+    vi.resetModules();
+    vi.spyOn(performance, 'getEntriesByType').mockReturnValue([{ type: 'reload' }] as unknown as PerformanceEntryList);
+    m = await load();
+    off = m.keepPlaces();
+    expect(m.openingAt()).toBe(900);
+    off();
+  });
+
   it('keeps the places across a reload of the tab', async () => {
     let m = await load();
     let off = m.keepPlaces();

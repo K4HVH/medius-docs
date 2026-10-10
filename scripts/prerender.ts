@@ -17,6 +17,14 @@ const SITE = (process.env.SITE_ORIGIN || 'https://medius.k4tech.net').replace(/\
 const PORT = Number(process.env.PRERENDER_PORT || 4271);
 const CONTENT = '.docs-page';
 
+// The snapshot carries the page's stripe colour in theme-color, where an unfurler reads it; the page sets
+// it back to black as it loads (src/index.html).
+const embedColour = () => {
+  const meta = document.querySelector('meta[name="theme-color"]');
+  const colour = meta?.getAttribute('data-embed');
+  if (meta && colour) meta.setAttribute('content', colour);
+};
+
 function writeFile(path: string, content: string): void {
   mkdirSync(dirname(path), { recursive: true });
   writeFileSync(path, content);
@@ -92,6 +100,7 @@ async function main(): Promise<void> {
         () => new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r()))),
       );
 
+      await page.evaluate(embedColour);
       const cap = (await page.evaluate(
         ({ sel, mdPath }: { sel: string; mdPath: string }) => {
           // Advertise the Markdown twin to agents that scrape HTML without content negotiation.
@@ -151,7 +160,10 @@ async function main(): Promise<void> {
     await page.evaluate(() => {
       const asked = document.querySelector('.req span:nth-child(2)');
       if (asked) asked.textContent = '';
+      // An item's address the server knows nothing of gets this page, and the app keeps it (lazyPages.ts).
+      document.documentElement.setAttribute('data-not-found', '');
     });
+    await page.evaluate(embedColour);
     writeFile(join(DIST, '404.html'), await page.evaluate(() => '<!DOCTYPE html>\n' + document.documentElement.outerHTML));
     process.stdout.write('  404 -> 404.html\n');
 
@@ -162,6 +174,7 @@ async function main(): Promise<void> {
     await page.evaluate(
       () => new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r()))),
     );
+    await page.evaluate(embedColour);
     const homeHtml = await page.evaluate(() => '<!DOCTYPE html>\n' + document.documentElement.outerHTML);
     if (!homeHtml.includes('class="hero')) throw new Error('Home page did not render (no hero)');
     writeFile(join(DIST, 'index.html'), homeHtml);
