@@ -2,6 +2,15 @@
 // commit list. Releases from before written notes have the commit list alone and no marker.
 export const COMMITS_MARKER = '<!-- commits -->';
 
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+// The day a release came out, '5 Oct 2026', in UTC: the changelog, the server's copy of it and the link
+// card show the same day to every reader.
+export function releaseDay(iso: string): string {
+  const d = new Date(iso ?? '');
+  return iso && !Number.isNaN(d.getTime()) ? `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}` : '';
+}
+
 export function splitRelease(body: string): { notes: string; commits: string } {
   const at = body.indexOf(COMMITS_MARKER);
   if (at < 0) return { notes: body.trim(), commits: '' };

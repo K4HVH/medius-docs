@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { COMMITS_MARKER, splitRelease, parseBlocks, linkify, inlineRuns, groupCommits } from '../../src/dashboard/firmware/notes';
+import { COMMITS_MARKER, splitRelease, parseBlocks, linkify, inlineRuns, groupCommits, releaseDay } from '../../src/dashboard/firmware/notes';
 
 const BODY = [
   '## Changes',
@@ -108,5 +108,18 @@ describe('groupCommits', () => {
   it('reads nothing as a commit list that carries prose, so such notes render as written', () => {
     expect(groupCommits('**Firmware**\nThis release fixes updates.\n- fw: a fix (a1b2c3d)')).toBeNull();
     expect(groupCommits('')).toBeNull();
+  });
+});
+
+describe('releaseDay', () => {
+  it('names the day a release came out in UTC, the same for every reader', () => {
+    expect(releaseDay('2026-10-05T15:29:06Z')).toBe('5 Oct 2026');
+    expect(releaseDay('2026-01-31T23:30:00Z')).toBe('31 Jan 2026');
+  });
+
+  it('names no day for a date it cannot read', () => {
+    expect(releaseDay('')).toBe('');
+    expect(releaseDay('not a date')).toBe('');
+    expect(releaseDay(null as unknown as string)).toBe('');
   });
 });

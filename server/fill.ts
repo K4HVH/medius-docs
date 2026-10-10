@@ -1,7 +1,7 @@
 // The changelog and stats pages read the server at run time, so their prerendered snapshots hold only
 // "Loading...". These fill that block per request, for crawlers that run no JavaScript.
 import type { FirmwareRelease } from '../src/dashboard/firmware/client';
-import { groupCommits, inlineRuns, parseBlocks, splitRelease, type Block, type CommitGroup } from '../src/dashboard/firmware/notes';
+import { groupCommits, inlineRuns, parseBlocks, releaseDay, splitRelease, type Block, type CommitGroup } from '../src/dashboard/firmware/notes';
 import { SITE } from '../src/app/site';
 import { COMPAT, KIND_LABEL, VERDICT_LABEL, VERDICT_TONE } from '../src/app/data/compatibility';
 import { mergeCompat, withIds } from '../src/app/data/compatMerge';
@@ -47,13 +47,6 @@ const blocks = (list: Block[]) =>
     )
     .join('');
 
-const date = (iso: string) => {
-  const d = new Date(iso);
-  return Number.isNaN(d.getTime())
-    ? ''
-    : d.toLocaleDateString('en', { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' });
-};
-
 const groups = (list: CommitGroup[]) =>
   '<div class="cmts">' +
   list
@@ -76,7 +69,7 @@ function releaseHtml(r: FirmwareRelease): string {
   const pre = r.prerelease ? '<span class="chip chip--warning"><span class="chip__label">Pre-release</span></span>' : '';
   return (
     `<section id="${esc(r.tag)}" class="rel"><div class="rel-l"><h2>${esc(r.tag)}</h2>` +
-    `<time class="caps" datetime="${esc(r.publishedAt)}">${esc(date(r.publishedAt))}</time>${pre}</div>` +
+    `<time class="caps" datetime="${esc(r.publishedAt)}">${esc(releaseDay(r.publishedAt))}</time>${pre}</div>` +
     `<div class="rel-r">${old ? groups(old) : blocks(parseBlocks(notes))}${folded}</div></section>`
   );
 }
@@ -185,7 +178,7 @@ function freshMarkdown(path: string, releases: FirmwareRelease[] | null, s: Stat
     const parts = releases.map((r) => {
       const { notes, commits } = splitRelease(r.notes);
       const body = [notes.replace(/^## /gm, '### '), commits ? `### Commits\n\n${commits}` : ''].filter(Boolean);
-      return [`## ${r.tag}`, date(r.publishedAt), ...body].join('\n\n');
+      return [`## ${r.tag}`, releaseDay(r.publishedAt), ...body].join('\n\n');
     });
     return [`${source}\n# Medius firmware changelog`, ...parts].join('\n\n') + '\n';
   }

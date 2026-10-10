@@ -53,6 +53,18 @@ afterEach(() => {
 });
 
 describe('Changelog', () => {
+  it('dates each release by its day in UTC, as its link card and the server do', async () => {
+    // 12:00 UTC on 5 Oct is 6 Oct at UTC+14.
+    const tz = process.env.TZ;
+    process.env.TZ = 'Pacific/Kiritimati';
+    try {
+      const r = render(() => <InRoute />);
+      await waitFor(() => expect(r.container.querySelector('section#v3\\.4\\.5 time')?.textContent).toBe('5 Oct 2026'));
+    } finally {
+      process.env.TZ = tz;
+    }
+  });
+
   it('anchors each release by tag, its version and date beside notes, and no lead', async () => {
     const r = render(() => <InRoute />);
     await waitFor(() => expect(r.container.querySelector('section#v3\\.4\\.5')).not.toBeNull());

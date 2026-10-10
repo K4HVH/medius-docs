@@ -19,7 +19,7 @@ describe('liveEntries', () => {
       releases: [release('v3.4.4', '## Changes\n- Fixed the **Logitech** delay with `wire rate`\n<!-- commits -->\n## Commits\n- abc fix')],
       devices: [],
     });
-    expect(r).toMatchObject({ path: '/dashboard/changelog#v3.4.4', title: 'v3.4.4', kind: 'release', section: 'Dashboard', crumb: 'Changelog', caption: '2 October 2026' });
+    expect(r).toMatchObject({ path: '/dashboard/changelog#v3.4.4', title: 'v3.4.4', kind: 'release', section: 'Dashboard', crumb: 'Changelog', caption: '2 Oct 2026' });
     expect(r.text).toBe('Fixed the Logitech delay with wire rate');
   });
 

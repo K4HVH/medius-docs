@@ -3,18 +3,11 @@ import { useLocation } from '@solidjs/router';
 import { Button } from '../../../components/inputs/Button';
 import { Chip } from '../../../components/display/Chip';
 import { type FirmwareRelease, latestReleases, releasesInHand } from '../../../dashboard/firmware';
-import { type Block, type CommitGroup, groupCommits, inlineRuns, parseBlocks, splitRelease } from '../../../dashboard/firmware/notes';
+import { type Block, type CommitGroup, groupCommits, inlineRuns, parseBlocks, releaseDay, splitRelease } from '../../../dashboard/firmware/notes';
 import { PageHeader } from '../../shell/PageHeader';
 import { itemFor } from '../../items';
 import { arrive, armReveals, fontsReady, inOrder, turnIn } from '../../shell/motion';
 import { openingAt } from '../../shell/scrollPlace';
-
-const fmtDate = (iso: string) => {
-  const d = new Date(iso);
-  return Number.isNaN(d.getTime())
-    ? ''
-    : d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
-};
 
 const Text = (props: { text: string }) => (
   <For each={inlineRuns(props.text)}>
@@ -94,7 +87,7 @@ const Release = (props: { release: FirmwareRelease; open: boolean }) => {
       <div class="rel-l">
         <h2>{props.release.tag}</h2>
         <time class="caps" datetime={props.release.publishedAt}>
-          {fmtDate(props.release.publishedAt)}
+          {releaseDay(props.release.publishedAt)}
         </time>
         <Show when={props.release.prerelease}>
           <Chip variant="warning">Pre-release</Chip>

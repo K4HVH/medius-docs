@@ -5,7 +5,7 @@ import type { HelpItem } from '../data/help';
 import type { CompatRow } from '../data/compatMerge';
 import { KIND_LABEL, VERDICT_LABEL, VERDICT_TONE } from '../data/compatibility';
 import type { FirmwareRelease } from '../../dashboard/firmware';
-import { inlineRuns, parseBlocks, splitRelease } from '../../dashboard/firmware/notes';
+import { inlineRuns, parseBlocks, releaseDay, splitRelease } from '../../dashboard/firmware/notes';
 
 // What a link card says. Each part is read from the data the page renders.
 export interface CardContent {
@@ -30,7 +30,6 @@ export const STYLE = 1;
 
 const HOST = SITE.replace(/^https?:\/\//, '');
 const FIRMWARE = ['MAKCU', 'firmware'] as const;
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 const parentCrumb = (path: string) => {
   const r = routeFor(path)!;
@@ -40,11 +39,6 @@ const parentCrumb = (path: string) => {
 const plain = (md: string) => inlineRuns(md).map((run) => run.text).join('');
 const stop = (s: string) => (/[.!?]$/.test(s) ? s : `${s}.`);
 const firstSentence = (s: string) => s.match(/^.*?[.!?](?=\s+\S)/s)?.[0] ?? s;
-
-const day = (iso: string) => {
-  const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? null : `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
-};
 
 export function pageCard(r: RouteInfo): CardContent {
   if (r.section === 'home' || r.section === 'notfound') {
@@ -78,7 +72,7 @@ export function releaseCard(r: FirmwareRelease): CardContent {
   const blocks = parseBlocks(splitRelease(r.notes).notes);
   const at = blocks.findIndex((b) => b.kind === 'heading' && /^changes$/i.test(b.text.trim()));
   const changes = at >= 0 ? blocks[at + 1] : undefined;
-  const date = day(r.publishedAt);
+  const date = releaseDay(r.publishedAt);
   return {
     crumb: parentCrumb('/dashboard/changelog'),
     title: r.tag,
