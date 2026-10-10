@@ -1,13 +1,12 @@
 import type { Component } from 'solid-js';
 import { A } from '@solidjs/router';
-import { Card, CardHeader } from '../../../../components/surfaces/Card';
-import '../../../../styles/docs.css';
+import { PageHeader } from '../../../shell/PageHeader';
+import { DocSection } from '../../../shell/DocSection';
 
 const Quickstart: Component = () => {
   return (
     <>
-      <Card>
-        <CardHeader title="First program" subtitle="Connect, move, click, read one event" />
+      <PageHeader>
         <p>
           One file: find the <A href="/native/hardware">box</A>, move, click, read one physical
           event. Install with <a href="https://pip.pypa.io" target="_blank" rel="noreferrer">pip</a>{' '}
@@ -24,12 +23,10 @@ const Quickstart: Component = () => {
             <A href="/bindings/python/types#errors"><code>MediusError</code></A> on failure.
           </p>
         </div>
-      </Card>
+      </PageHeader>
 
-      <div id="program" data-search-target>
-        <Card>
-          <CardHeader title="The program" subtitle="The full listing" />
-          <pre><code class="language-python">{`import time
+      <DocSection id="program" title="The program" caption="The full listing">
+        <pre><code class="language-python">{`import time
 from medius import Device, Usage, Button, CatchFilter, NotFoundError
 
 try:
@@ -60,19 +57,17 @@ try:
         # stream and link close on block exit
 except NotFoundError:
     raise SystemExit("no medius box found: check the control-port cable")`}</code></pre>
-          <div class="callout callout--info">
-            <p>
-              Injection reaches only the <em>game</em> PC, through the clone port, so the cursor and
-              click don't show on the control PC running this script. Port map:{' '}
-              <A href="/native/hardware">Hardware</A>.
-            </p>
-          </div>
-        </Card>
-      </div>
+        <div class="callout callout--info">
+          <p>
+            Injection reaches only the <em>game</em> PC, through the clone port, so the cursor and
+            click don't show on the control PC running this script. Port map:{' '}
+            <A href="/native/hardware">Hardware</A>.
+          </p>
+        </div>
+      </DocSection>
 
-      <div id="walkthrough" data-search-target>
-        <Card>
-          <CardHeader title="Walkthrough" subtitle="Each call, its kind, and its concept page" />
+      <DocSection id="walkthrough" title="Walkthrough" caption="Each call, its kind, and its concept page">
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Call</th><th>Kind</th><th>Does</th></tr>
@@ -115,35 +110,31 @@ except NotFoundError:
               </tr>
             </tbody>
           </table>
-          <p>
-            <A href="/bindings/python/types#button">Button</A> ids are on{' '}
-            <A href="/native/commands/usage#buttons">Usage IDs</A>; every call is on the{' '}
-            <A href="/bindings/python/api">API index</A>.
-          </p>
-        </Card>
-      </div>
+        </div>
+        <p>
+          <A href="/bindings/python/types#button">Button</A> ids are on{' '}
+          <A href="/native/commands/usage#buttons">Usage IDs</A>; every call is on the{' '}
+          <A href="/bindings/python/api">API index</A>.
+        </p>
+      </DocSection>
 
-      <div id="run" data-search-target>
-        <Card>
-          <CardHeader title="Run it" subtitle="One command, expected output" />
-          <pre><code class="language-bash">{`python first.py
+      <DocSection id="run" title="Run it" caption="One command, expected output">
+        <pre><code class="language-bash">{`python first.py
 # firmware 3.4.5, proto 9
 # motion  dx=8 dy=-3 wheel=0`}</code></pre>
-          <p>
-            The <code>motion</code> line needs a physical mouse move or click within 5 s.{' '}
-            <code>CatchFilter.everything()</code> covers every class, so a device with busy vendor
-            endpoints can print a <code>traffic</code> line first; narrow it with{' '}
-            <code>CatchFilter.watch_axes()</code>.
-          </p>
-        </Card>
-      </div>
+        <p>
+          The <code>motion</code> line needs a physical mouse move or click within 5 s.{' '}
+          <code>CatchFilter.everything()</code> covers every class, so a device with busy vendor
+          endpoints can print a <code>traffic</code> line first; narrow it with{' '}
+          <code>CatchFilter.watch_axes()</code>.
+        </p>
+      </DocSection>
 
-      <div id="reading" data-search-target>
-        <Card>
-          <CardHeader title="Reading events" subtitle="Four ways to pull from a stream" />
-          <p>
-            The program uses <code>recv_timeout</code> so it can't hang.
-          </p>
+      <DocSection id="reading" title="Reading events" caption="Four ways to pull from a stream">
+        <p>
+          The program uses <code>recv_timeout</code> so it can't hang.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Reader</th><th>Empty queue</th><th>Link dropped</th></tr>
@@ -155,32 +146,31 @@ except NotFoundError:
               <tr><td><code>for ev in stream:</code></td><td>blocks for each</td><td>loop ends cleanly</td></tr>
             </tbody>
           </table>
-          <p>
-            A <A href="/bindings/python/types#catchevent"><code>CatchEvent</code></A> carries one of{' '}
-            <code>.motion</code> / <code>.usages</code> / <code>.traffic</code> (the other two are{' '}
-            <code>None</code>), plus <code>.ts_us</code> and the{' '}
-            <A href="/bindings/python/types#clockdomain"><code>.clock</code></A> domain that stamped it. A{' '}
-            <A href="/bindings/python/types#usagesnapshot"><code>UsageSnapshot</code></A> has{' '}
-            <code>is_held(usage)</code> for any built <A href="/bindings/python/types#input"><code>Usage</code></A>;
-            a <A href="/bindings/python/types#trafficevent"><code>TrafficEvent</code></A> has{' '}
-            <code>truncated()</code>. Payload shapes are on{' '}
-            <A href="/bindings/python/streams">Streams</A>.
-          </p>
-          <p>
-            <A href="/bindings/python/streams#input"><code>dev.input_events()</code></A> yields press
-            and release edges directly, with no snapshot diffing.
-          </p>
-        </Card>
-      </div>
+        </div>
+        <p>
+          A <A href="/bindings/python/types#catchevent"><code>CatchEvent</code></A> carries one of{' '}
+          <code>.motion</code> / <code>.usages</code> / <code>.traffic</code> (the other two are{' '}
+          <code>None</code>), plus <code>.ts_us</code> and the{' '}
+          <A href="/bindings/python/types#clockdomain"><code>.clock</code></A> domain that stamped it. A{' '}
+          <A href="/bindings/python/types#usagesnapshot"><code>UsageSnapshot</code></A> has{' '}
+          <code>is_held(usage)</code> for any built <A href="/bindings/python/types#input"><code>Usage</code></A>;
+          a <A href="/bindings/python/types#trafficevent"><code>TrafficEvent</code></A> has{' '}
+          <code>truncated()</code>. Payload shapes are on{' '}
+          <A href="/bindings/python/streams">Streams</A>.
+        </p>
+        <p>
+          <A href="/bindings/python/streams#input"><code>dev.input_events()</code></A> yields press
+          and release edges directly, with no snapshot diffing.
+        </p>
+      </DocSection>
 
-      <div id="errors" data-search-target>
-        <Card>
-          <CardHeader title="Errors" subtitle="Raised exceptions, not return codes" />
-          <p>
-            Every <code>Device</code> and stream call raises on failure. Each exception is a{' '}
-            <A href="/bindings/python/types#errors"><code>MediusError</code></A> subclass carrying{' '}
-            <code>.status</code>, <code>.message</code>, and <code>.proto_ver</code>.
-          </p>
+      <DocSection id="errors" title="Errors" caption="Raised exceptions, not return codes">
+        <p>
+          Every <code>Device</code> and stream call raises on failure. Each exception is a{' '}
+          <A href="/bindings/python/types#errors"><code>MediusError</code></A> subclass carrying{' '}
+          <code>.status</code>, <code>.message</code>, and <code>.proto_ver</code>.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>When</th><th>Raises</th></tr>
@@ -193,22 +183,21 @@ except NotFoundError:
               <tr><td>any other failure</td><td>a <A href="/bindings/python/types#errors"><code>MediusError</code></A> subclass</td></tr>
             </tbody>
           </table>
-          <p>
-            Catch <code>MediusError</code> to handle them all. Full list and the{' '}
-            <A href="/bindings/python/types#status"><code>Status</code></A> codes on{' '}
-            <A href="/bindings/python/types">Types &amp; errors</A>;
-            patterns on <A href="/bindings/python/usage">Calls &amp; errors</A>.
-          </p>
-        </Card>
-      </div>
+        </div>
+        <p>
+          Catch <code>MediusError</code> to handle them all. Full list and the{' '}
+          <A href="/bindings/python/types#status"><code>Status</code></A> codes on{' '}
+          <A href="/bindings/python/types">Types &amp; errors</A>;
+          patterns on <A href="/bindings/python/usage">Calls &amp; errors</A>.
+        </p>
+      </DocSection>
 
-      <div id="cleanup" data-search-target>
-        <Card>
-          <CardHeader title="Closing" subtitle="A with-block, close(), or garbage collection" />
-          <p>
-            A <code>Device</code> and each stream hold a live connection. Three ways close it, safe
-            to combine:
-          </p>
+      <DocSection id="cleanup" title="Closing" caption="A with-block, close(), or garbage collection">
+        <p>
+          A <code>Device</code> and each stream hold a live connection. Three ways close it, safe
+          to combine:
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Mechanism</th><th>Frees when</th></tr>
@@ -219,13 +208,13 @@ except NotFoundError:
               <tr><td><a href="https://docs.python.org/3/glossary.html#term-garbage-collection" target="_blank" rel="noreferrer">garbage collection</a></td><td>the object is collected, via <a href="https://docs.python.org/3/reference/datamodel.html#object.__del__" target="_blank" rel="noreferrer"><code>__del__</code></a></td></tr>
             </tbody>
           </table>
-          <p>
-            <A href="/bindings/python/api#connect"><code>dev.clone()</code></A> returns another handle to the same link; the connection lives
-            until the last handle is freed. See <A href="/library/lifecycle">Lifecycle</A> and the{' '}
-            <A href="/library/guides/connection#keepalive">keepalive</A> thread.
-          </p>
-        </Card>
-      </div>
+        </div>
+        <p>
+          <A href="/bindings/python/api#connect"><code>dev.clone()</code></A> returns another handle to the same link; the connection lives
+          until the last handle is freed. See <A href="/library/lifecycle">Lifecycle</A> and the{' '}
+          <A href="/library/guides/connection#keepalive">keepalive</A> thread.
+        </p>
+      </DocSection>
     </>
   );
 };

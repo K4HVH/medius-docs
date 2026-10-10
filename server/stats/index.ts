@@ -3,9 +3,11 @@
 import { openDb } from './db';
 import { type Store, createStore } from './store';
 import { parseEvent } from './validate';
+import type { StatsSummary } from './types';
 
 export const MAX_BODY = 2048;
 const RATE_WINDOW_MS = 60_000;
+
 const SUMMARY_TTL_MS = 60_000;
 const RETRY_OPEN_MS = 60_000;
 // Per client address, for every address together, and how many addresses are remembered at once: the
@@ -171,12 +173,24 @@ async function postEvent(req: Request, clientIp: string | undefined): Promise<Re
   return new Response(null, { status: 204 });
 }
 
+async function summaryBody(): Promise<string | null> {
+  const s = await open();
+  if (!s) return null;
+  if (!summary || now() - summary.at >= SUMMARY_TTL_MS) summary = { at: now(), body: JSON.stringify(s.summary()) };
+  return summary.body;
+}
+
+// The cached totals, for the stats page the server fills in.
+export async function getStatsSummary(): Promise<StatsSummary | null> {
+  const body = await summaryBody();
+  return body ? (JSON.parse(body) as StatsSummary) : null;
+}
+
 async function getSummary(req: Request): Promise<Response> {
   if (req.method !== 'GET') return json({ error: 'Use GET.' }, 405);
-  const s = await open();
-  if (!s) return json({ error: 'Stats are unavailable.' }, 503);
-  if (!summary || now() - summary.at >= SUMMARY_TTL_MS) summary = { at: now(), body: JSON.stringify(s.summary()) };
-  return new Response(summary.body, {
+  const body = await summaryBody();
+  if (!body) return json({ error: 'Stats are unavailable.' }, 503);
+  return new Response(body, {
     status: 200,
     headers: { 'content-type': 'application/json', 'cache-control': 'public, max-age=60' },
   });

@@ -1,0 +1,55 @@
+/* Motion shared by every page. Component motion sits with the component's rules.
+
+   A page arrives in reading order: the crumbs fade, the title rises out of its line, the header's right
+   side follows, then each block motion.ts stamps rises after the one before it, a table row by row and a
+   chart growing from its axis. A block below the first screen waits and plays the same rise when it
+   comes into view. `moving` is on a block only while it moves. */
+
+@keyframes draw { from { transform: scaleX(0); } }
+@keyframes rise { from { opacity: 0; transform: translateY(12px); } }
+@keyframes fade { from { opacity: 0; } }
+@keyframes rowin { from { opacity: 0; transform: translateY(6px); } }
+@keyframes up { from { transform: translateY(105%); } }
+@keyframes grow-y { from { transform: scaleY(0); } }
+@keyframes grow-x { from { transform: scaleX(0); } }
+
+.arriving .page-header .crumbs, .arriving .page-header__bar > :not(.crumbs) { animation: fade 0.5s ease both; }
+.arriving .page-header h1 .mask > span { animation: up 0.9s var(--ease) both; }
+.arriving .page-header__aside { animation: rise 0.7s var(--ease) 0.12s both; }
+.arriving .ptabs { animation: fade 0.6s ease 0.18s both; }
+
+.rb.moving { animation: rise 0.7s var(--ease) var(--d, 0ms) both; }
+/* A table's frame and rules come with it; its rows follow one by one. */
+.rt.moving { animation: fade 0.4s ease var(--d, 0ms) both; }
+.rt.moving tr { animation: rowin 0.45s var(--ease) calc(var(--d, 0ms) + var(--r, 0) * 35ms) both; }
+.rb.moving .cols i, .rb.moving.cols i { animation: grow-y 0.7s var(--ease) calc(var(--d, 0ms) + 0.15s) both; }
+.rb.moving .bars .t i, .rb.moving.bars .t i { animation: grow-x 0.8s var(--ease) calc(var(--d, 0ms) + 0.15s) both; }
+
+/* A block a state change brings (a refusal, a step, a connected box's panel contents) rises in. */
+.st-in { animation: rise 0.45s var(--ease) both; }
+
+/* Leaving for another page, the page fades out before the next arrives; between the landing and the rest,
+   whatever the next page lays out differently (the docs' sidebar, rail and footer) goes with it. The grid
+   and the bar over every page stay, and the grid fades in once, as the site first draws it. */
+.leaving :is(.docs-page, .toc, .landing), .leaving.away :is(.docs, .site-footer) { opacity: 0; transition: opacity 0.12s ease; }
+#root > canvas { animation: fade 1.6s ease both; }
+/* A page whose code is still coming stays faded, under a progress pointer, until it can arrive whole. */
+.waiting, .waiting * { cursor: progress; }
+
+.rv-wait { opacity: 0; }
+.rv-wait, .rv-wait * { animation: none !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .rv-wait { opacity: 1; }
+}
+
+@media print {
+  .rv-wait { opacity: 1; }
+}

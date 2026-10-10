@@ -1,13 +1,13 @@
 import type { Component } from 'solid-js';
 import { A } from '@solidjs/router';
-import { Card, CardHeader } from '../../../../components/surfaces/Card';
-import '../../../../styles/docs.css';
+import { PageHeader } from '../../../shell/PageHeader';
+import { DocSection } from '../../../shell/DocSection';
+import { ByteStrip } from '../../../shell/ByteStrip';
 
 const Raw: Component = () => {
   return (
     <>
-      <Card>
-        <CardHeader title="Raw" subtitle="Verbatim bytes on a cloned endpoint" />
+      <PageHeader>
         <p>
           <A href="/native/commands/raw#raw"><code>RAW</code></A> places one packet or bulk transfer,
           byte for byte, on an endpoint named by number and direction: IN to the game PC, OUT to the
@@ -39,18 +39,17 @@ const Raw: Component = () => {
             <A href="/native/commands/requests#clip"><code>gated</code></A>.
           </p>
         </div>
-      </Card>
+      </PageHeader>
 
-      <div id="raw" data-search-target>
-        <Card>
-          <CardHeader title="RAW" subtitle="One packet or bulk transfer on one endpoint" />
-          <p>
-            <code>RAW</code> carries an endpoint address and the bytes to put there.{' '}
-            <A href="/native/frame#opcodes">Opcode</A> <code>0x19</code>.
-          </p>
-          <pre class="api-signature">RAW  0x19  ·  payload 2 + n bytes</pre>
-          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
-          <div class="api-response-label">PAYLOAD</div>
+      <DocSection id="raw" title="RAW" caption="One packet or bulk transfer on one endpoint">
+        <p>
+          <code>RAW</code> carries an endpoint address and the bytes to put there.{' '}
+          <A href="/native/frame#opcodes">Opcode</A> <code>0x19</code>.
+        </p>
+        <pre class="api-signature">RAW  0x19  ·  payload 2 + n bytes</pre>
+        <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
+        <div class="api-response-label">PAYLOAD</div>
+        <div class="table-scroll">
           <table class="byte-table">
             <thead>
               <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
@@ -61,7 +60,9 @@ const Raw: Component = () => {
               <tr><td>2</td><td><code>bytes</code></td><td><code>u8[]</code></td><td>packet, verbatim; delimited by the frame <A href="/native/frame#layout"><code>LEN</code></A>, so at most 510 bytes</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">DIRECTION</div>
+        </div>
+        <div class="api-response-label">DIRECTION</div>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Value</th><th>Name</th><th>Effect</th></tr>
@@ -71,7 +72,9 @@ const Raw: Component = () => {
               <tr><td><code>2</code></td><td>OUT</td><td>relayed through the host chip to OUT endpoint <code>ep_num</code> (HID interrupt, vendor interrupt or bulk) on the real device</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">REFUSALS</div>
+        </div>
+        <div class="api-response-label">REFUSALS</div>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Refused when</th><th>Why</th></tr>
@@ -85,52 +88,72 @@ const Raw: Component = () => {
               <tr><td>an interrupt packet past its <A href="/native/commands/raw#packets">limit</A></td><td>an interrupt transfer is one packet, so a split would reach the PC as two reports</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">EFFECT</div>
-          <p>
-            The bytes reach the endpoint as given. <code>RAW</code> has no reply; an{' '}
-            <A href="/native/commands/raw#catch"><code>EMIT</code></A> subscription shows an IN packet
-            as the game PC reads it.
-          </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <p>
-            Left button down on HID interrupt IN endpoint 1: <code>ep_num = 1</code>,{' '}
-            <code>dir = 1</code>, a 4-byte report:
-          </p>
-          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+-------------+--------+
-| A5     | 19     | 00     | 06 00  | 01     | 01     | 01 00 00 00 | lo hi  |
-+--------+--------+--------+--------+--------+--------+-------------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | ep_num | dir    | bytes       | CRC16  |
-+--------+--------+--------+--------+--------+--------+-------------+--------+`}</pre>
-          <p>The release, button bit clear:</p>
-          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+-------------+--------+
-| A5     | 19     | 01     | 06 00  | 01     | 01     | 00 00 00 00 | lo hi  |
-+--------+--------+--------+--------+--------+--------+-------------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | ep_num | dir    | bytes       | CRC16  |
-+--------+--------+--------+--------+--------+--------+-------------+--------+`}</pre>
-          <p>
-            A keyboard LED report, Caps Lock on, to interrupt OUT endpoint 2: <code>ep_num = 2</code>,{' '}
-            <code>dir = 2</code>, one byte:
-          </p>
-          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 19     | 02     | 03 00  | 02     | 02     | 02     | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | ep_num | dir    | bytes  | CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
-          <p>
-            Library bindings:{' '}
-            <A href="/library/advanced/raw#raw"><code>raw</code></A>, and{' '}
-            <A href="/library/advanced/raw#async"><code>raw</code></A> on <code>AsyncDevice</code>.
-          </p>
-        </Card>
-      </div>
+        </div>
+        <div class="api-response-label">EFFECT</div>
+        <p>
+          The bytes reach the endpoint as given. <code>RAW</code> has no reply; an{' '}
+          <A href="/native/commands/raw#catch"><code>EMIT</code></A> subscription shows an IN packet
+          as the game PC reads it.
+        </p>
+        <div class="api-response-label">EXAMPLE</div>
+        <p>
+          Left button down on HID interrupt IN endpoint 1: <code>ep_num = 1</code>,{' '}
+          <code>dir = 1</code>, a 4-byte report:
+        </p>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '19', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '06 00', name: 'LEN' },
+            { value: '01', name: 'ep_num' },
+            { value: '01', name: 'dir' },
+            { value: '01 00 00 00', name: 'bytes' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
+        <p>The release, button bit clear:</p>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '19', name: 'TYPE' },
+            { value: '01', name: 'SEQ' },
+            { value: '06 00', name: 'LEN' },
+            { value: '01', name: 'ep_num' },
+            { value: '01', name: 'dir' },
+            { value: '00 00 00 00', name: 'bytes' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
+        <p>
+          A keyboard LED report, Caps Lock on, to interrupt OUT endpoint 2: <code>ep_num = 2</code>,{' '}
+          <code>dir = 2</code>, one byte:
+        </p>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '19', name: 'TYPE' },
+            { value: '02', name: 'SEQ' },
+            { value: '03 00', name: 'LEN' },
+            { value: '02', name: 'ep_num' },
+            { value: '02', name: 'dir' },
+            { value: '02', name: 'bytes' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
+        <p>
+          Library bindings:{' '}
+          <A href="/library/advanced/raw#raw"><code>raw</code></A>, and{' '}
+          <A href="/library/advanced/raw#async"><code>raw</code></A> on <code>AsyncDevice</code>.
+        </p>
+      </DocSection>
 
-      <div id="packets" data-search-target>
-        <Card>
-          <CardHeader title="Packet size" subtitle="Per transfer type" />
-          <p>
-            An OUT packet is the endpoint's <code>wMaxPacketSize</code> on the wire, as IN; the
-            inter-chip relay carries a bulk payload in pieces of at most 64 bytes.
-          </p>
+      <DocSection id="packets" title="Packet size" caption="Per transfer type">
+        <p>
+          An OUT packet is the endpoint's <code>wMaxPacketSize</code> on the wire, as IN; the
+          inter-chip relay carries a bulk payload in pieces of at most 64 bytes.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Aspect</th><th><code>dir = 1</code>, IN</th><th><code>dir = 2</code>, OUT</th></tr>
@@ -141,8 +164,9 @@ const Raw: Component = () => {
               <tr><td>Bulk end</td><td colspan="2">a short packet, or a zero-length packet (ZLP) when the payload is an exact multiple of <code>wMaxPacketSize</code>; an empty <code>bytes</code> sends one ZLP</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">SPLIT</div>
-          <pre class="diagram">{`  bulk, wMaxPacketSize = 64
+        </div>
+        <div class="api-response-label">SPLIT</div>
+        <pre class="diagram">{`  bulk, wMaxPacketSize = 64
 
   bytes = 130   -->   [ 64 ] [ 64 ] [ 2 ]      the 2-byte packet ends the transfer
   bytes = 128   -->   [ 64 ] [ 64 ] [ ZLP ]    an exact multiple ends on a ZLP
@@ -152,7 +176,8 @@ const Raw: Component = () => {
 
   bytes = 7     -->   [ 7 ]                    a short packet ends the transfer
   bytes = 8     -->   [ 8 ] [ ZLP ]            a whole packet short of 20: the PC's read ends at the ZLP`}</pre>
-          <div class="api-response-label">QUEUES</div>
+        <div class="api-response-label">QUEUES</div>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Name</th><th>Behaviour</th></tr>
@@ -164,46 +189,45 @@ const Raw: Component = () => {
               <tr><td>OUT relay, 16 packets across all endpoints</td><td>each waits its turn behind the device's two-packet hold, as the PC's writes do, and the PC's writes to that endpoint wait behind it (one the clone had already taken a read for goes first); one past 16 is dropped, counted in <code>relay_drops</code></td></tr>
             </tbody>
           </table>
+        </div>
+        <p>
+          The device's own reports take at most one place in an interrupt IN queue: the box polls the device
+          only as the PC takes what the last poll brought, so the rest of the queue is room for{' '}
+          <code>RAW</code> reports. They take two where the next report is fetched before the PC has the last
+          one whole, and for a few seconds after one reaches the clone too late for its poll.
+        </p>
+        <div class="callout callout--warning">
           <p>
-            The device's own reports take at most one place in an interrupt IN queue: the box polls the device
-            only as the PC takes what the last poll brought, so the rest of the queue is room for{' '}
-            <code>RAW</code> reports. They take two where the next report is fetched before the PC has the last
-            one whole, and for a few seconds after one reaches the clone too late for its poll.
+            A bulk IN transfer longer than the queue's free slots reaches the game PC truncated. At{' '}
+            <code>wMaxPacketSize = 64</code>, 510 bytes is 8 packets, the whole queue.
           </p>
-          <div class="callout callout--warning">
-            <p>
-              A bulk IN transfer longer than the queue's free slots reaches the game PC truncated. At{' '}
-              <code>wMaxPacketSize = 64</code>, 510 bytes is 8 packets, the whole queue.
-            </p>
-          </div>
-        </Card>
-      </div>
+        </div>
+      </DocSection>
 
-      <div id="state" data-search-target>
-        <Card>
-          <CardHeader title="Lifetime" subtitle="Held until the next native report" />
-          <p>
-            A <code>RAW</code> IN report is the last state the game PC read on that endpoint until
-            the next native report replaces it.
-          </p>
-          <p>
-            A <code>RAW</code> report takes a poll of its own; no native report carries it. On an
-            endpoint the device reports on every poll, it goes after at most two native reports.
-          </p>
-          <pre class="diagram">{`  native report   [ btn 0 ]                            [ btn 0 ]
+      <DocSection id="state" title="Lifetime" caption="Held until the next native report">
+        <p>
+          A <code>RAW</code> IN report is the last state the game PC read on that endpoint until
+          the next native report replaces it.
+        </p>
+        <p>
+          A <code>RAW</code> report takes a poll of its own; no native report carries it. On an
+          endpoint the device reports on every poll, it goes after at most two native reports.
+        </p>
+        <pre class="diagram">{`  native report   [ btn 0 ]                            [ btn 0 ]
   RAW, dir = 1                  [ btn 1 ]
   on the wire     [ btn 0 ]     [ btn 1 ]              [ btn 0 ]
                                 |<- last report read ->|`}</pre>
-          <div class="api-response-label">PIPELINE</div>
-          <p>
-            A <code>RAW</code> packet goes straight to the endpoint, past every{' '}
-            <A href="/native/commands/rewrite">rewrite rule</A>,{' '}
-            <A href="/native/commands/clip#packet-triggers">clip packet trigger</A>,{' '}
-            <A href="/native/commands/lock"><code>LOCK</code></A>,{' '}
-            <A href="/native/commands/transform"><code>TRANSFORM</code></A>,{' '}
-            <A href="/native/commands/option#render">rendering</A> and{' '}
-            <A href="/native/injection">injection</A>.
-          </p>
+        <div class="api-response-label">PIPELINE</div>
+        <p>
+          A <code>RAW</code> packet goes straight to the endpoint, past every{' '}
+          <A href="/native/commands/rewrite">rewrite rule</A>,{' '}
+          <A href="/native/commands/clip#packet-triggers">clip packet trigger</A>,{' '}
+          <A href="/native/commands/lock"><code>LOCK</code></A>,{' '}
+          <A href="/native/commands/transform"><code>TRANSFORM</code></A>,{' '}
+          <A href="/native/commands/option#render">rendering</A> and{' '}
+          <A href="/native/injection">injection</A>.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Mechanism</th><th>Effect</th></tr>
@@ -213,22 +237,21 @@ const Raw: Component = () => {
               <tr><td>change suppression</td><td>records a <code>RAW</code> report shaped like the mouse, keyboard or media report the box injects into as the last report emitted, the baseline for injected frames</td></tr>
             </tbody>
           </table>
-          <p>
-            A <A href="/native/commands/clip#items">clip raw item</A> is the same packet on a
-            clip tick, with its own release rule.
-          </p>
-        </Card>
-      </div>
+        </div>
+        <p>
+          A <A href="/native/commands/clip#items">clip raw item</A> is the same packet on a
+          clip tick, with its own release rule.
+        </p>
+      </DocSection>
 
-      <div id="catch" data-search-target>
-        <Card>
-          <CardHeader title="Catch taps" subtitle="Traffic classes a RAW packet raises" />
-          <p>
-            A <code>RAW</code> IN packet raises{' '}
-            <A href="/native/commands/catch#traffic-event"><code>TRAFFIC_EVENT</code></A>s on the taps it
-            passes. The <A href="/native/commands/catch#catch"><code>HID_IN</code></A> and OUT taps sit
-            upstream of <code>RAW</code>'s entry point.
-          </p>
+      <DocSection id="catch" title="Catch taps" caption="Traffic classes a RAW packet raises">
+        <p>
+          A <code>RAW</code> IN packet raises{' '}
+          <A href="/native/commands/catch#traffic-event"><code>TRAFFIC_EVENT</code></A>s on the taps it
+          passes. The <A href="/native/commands/catch#catch"><code>HID_IN</code></A> and OUT taps sit
+          upstream of <code>RAW</code>'s entry point.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>When</th><th>Raises</th></tr>
@@ -239,8 +262,8 @@ const Raw: Component = () => {
               <tr><td>the game PC reads a <code>RAW</code> packet off a vendor IN endpoint, an empty one with the ZLP flag</td><td><code>EMIT</code> (<code>9</code>), <code>dir = 1</code></td></tr>
             </tbody>
           </table>
-        </Card>
-      </div>
+        </div>
+      </DocSection>
     </>
   );
 };

@@ -1,13 +1,12 @@
 import { Show, createSignal } from 'solid-js';
-import { Card, CardHeader } from '../../../components/surfaces/Card';
 import { Button } from '../../../components/inputs/Button';
-import { RadioGroup } from '../../../components/inputs/RadioGroup';
-import { Slider } from '../../../components/inputs/Slider';
+import { Range } from '../../shell/Range';
 import { Chip } from '../../../components/display/Chip';
 import { LedMode, LedTarget } from '../../../dashboard/protocol';
 import { useDashboard } from './context';
 import { createCommand } from './action';
-import { chips, label, row } from './ui';
+import { Panel, Panels } from '../../shell/Panel';
+import { Segmented } from '../../shell/Segmented';
 
 const TARGETS: Record<string, LedTarget> = {
   both: LedTarget.Both,
@@ -39,40 +38,35 @@ const DeviceLed = () => {
 
   return (
     <Show when={dash.status() === 'connected'}>
-      <div id="status-light" data-search-target>
-        <Card>
-          <CardHeader title="Status light" subtitle="Green LEDs" />
-          <div style={label}>Light</div>
-          <RadioGroup
-            name="led-target"
-            value={target()}
-            onChange={setTarget}
-            options={[
-              { value: 'both', label: 'Both' },
-              { value: 'device', label: 'PC side' },
-              { value: 'host', label: 'Mouse side' },
-            ]}
-          />
-          <div style={{ margin: 'var(--g-spacing) 0' }}>
-            <div style={label}>Brightness</div>
-            <Slider
-              value={level()}
-              onChange={(v) => {
-                setLevel(Array.isArray(v) ? v[0] : v);
-              }}
-              min={0}
-              max={255}
+      <Panels>
+        <Panel id="status-light" wide>
+          <div class="labelled">
+            <span class="field-l">Light</span>
+            <Segmented
+              name="led-target"
+              label="Light"
+              value={target()}
+              onChange={setTarget}
+              options={[
+                { value: 'both', label: 'Both' },
+                { value: 'device', label: 'Main chip' },
+                { value: 'host', label: 'Mouse-side chip' },
+              ]}
             />
           </div>
-          <div style={row}>
+          <div class="labelled">
+            <span class="field-l">Brightness</span>
+            <Range label="Brightness" value={level()} onChange={setLevel} min={0} max={255} />
+          </div>
+          <div class="acts mid">
             <Button variant="secondary" disabled={cmd.busy()} onClick={() => send(LedMode.Auto)}>Status</Button>
             <Button variant="secondary" disabled={cmd.busy()} onClick={() => send(LedMode.Off)}>Off</Button>
-            <Button variant="primary" disabled={cmd.busy()} onClick={() => send(LedMode.Solid)}>On</Button>
+            <Button variant="secondary" disabled={cmd.busy()} onClick={() => send(LedMode.Solid)}>On</Button>
             <Button variant="secondary" disabled={cmd.busy()} onClick={() => send(LedMode.Blink)}>Blink</Button>
           </div>
-          <div aria-live="polite">
+          <div aria-live="polite" class="step">
             <Show when={sent() !== null}>
-              <div style={chips}>
+              <div class="chips">
                 <Chip variant="neutral">Sent {MODE_LABEL[sent()!]}</Chip>
               </div>
             </Show>
@@ -80,8 +74,8 @@ const DeviceLed = () => {
               <div class="callout callout--danger" role="alert">{cmd.error()}</div>
             </Show>
           </div>
-        </Card>
-      </div>
+        </Panel>
+      </Panels>
     </Show>
   );
 };

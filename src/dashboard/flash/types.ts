@@ -6,10 +6,13 @@ export const APP_FLASH_ADDR = 0x10000;
 export const FACTORY_FLASH_ADDR = 0x0;
 
 export type FlashKind = 'app' | 'factory';
-export type FlashPhase = 'rebooting' | 'connecting' | 'writing' | 'done';
+// An update over the control port also restarts the box and verifies what it runs.
+export type FlashPhase = 'rebooting' | 'connecting' | 'writing' | 'restarting' | 'verifying' | 'done';
 
 export interface FlashProgress {
   phase: FlashPhase;
+  // Which chip an update over the control port is writing: the mouse-side chip first.
+  chip?: 'host' | 'device';
   written?: number;
   total?: number;
 }
@@ -62,6 +65,8 @@ export function hasPartitionTable(image: Uint8Array): boolean {
 
 // Warning heuristic: a factory image embeds a partition table at 0x8000, an app image does not.
 export function looksLikeWrongKind(image: Uint8Array, kind: FlashKind): boolean {
+  // A file that is no image at all looks like neither kind.
+  if (image.length < 1024 || image[0] !== ESP_IMAGE_MAGIC) return false;
   const factoryShaped = hasPartitionTable(image);
   if (kind === 'app' && factoryShaped) return true;
   if (kind === 'factory' && !factoryShaped) return true;

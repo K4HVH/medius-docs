@@ -1,13 +1,13 @@
 import type { Component } from 'solid-js';
 import { A } from '@solidjs/router';
-import { Card, CardHeader } from '../../../../components/surfaces/Card';
-import '../../../../styles/docs.css';
+import { PageHeader } from '../../../shell/PageHeader';
+import { DocSection } from '../../../shell/DocSection';
+import { ByteStrip } from '../../../shell/ByteStrip';
 
 const Requests: Component = () => {
   return (
     <>
-      <Card>
-        <CardHeader title="Requests" subtitle="Query the box for state" />
+      <PageHeader>
         <p>
           <A href="/native/commands/requests#requests"><code>QUERY</code></A> gets one{' '}
           <A href="/native/commands/requests#resp"><code>RESP</code></A>. The{' '}
@@ -28,18 +28,17 @@ const Requests: Component = () => {
           and as one entry in full), or the{' '}
           <A href="/native/commands/requests#transforms">field-transform table</A>.
         </p>
-      </Card>
+      </PageHeader>
 
-      <div id="requests" data-search-target>
-        <Card>
-          <CardHeader title="QUERY" subtitle="Ask the box for state" />
-          <p>
-            <code>QUERY</code> asks for one piece of state, named by its <code>what</code> byte.{' '}
-            <A href="/native/frame#opcodes">Opcode</A> <code>0x05</code>.
-          </p>
-          <pre class="api-signature">QUERY  0x05  ·  payload 1 byte (2 for OPTIONS, REWRITE_ENTRY and PATCH_ENTRY)</pre>
-          <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
-          <div class="api-response-label">PAYLOAD</div>
+      <DocSection id="requests" title="QUERY" caption="Ask the box for state">
+        <p>
+          <code>QUERY</code> asks for one piece of state, named by its <code>what</code> byte.{' '}
+          <A href="/native/frame#opcodes">Opcode</A> <code>0x05</code>.
+        </p>
+        <pre class="api-signature">QUERY  0x05  ·  payload 1 byte (2 for OPTIONS, REWRITE_ENTRY and PATCH_ENTRY)</pre>
+        <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
+        <div class="api-response-label">PAYLOAD</div>
+        <div class="table-scroll">
           <table class="byte-table">
             <thead>
               <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
@@ -49,7 +48,9 @@ const Requests: Component = () => {
               <tr><td>1</td><td><code>id</code></td><td><code>u8</code></td><td>option (<code>what = 9</code>), rule (<code>13</code>) or patch (<code>15</code>); omitted otherwise</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">SELECTORS</div>
+        </div>
+        <div class="api-response-label">SELECTORS</div>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th><code>what</code></th><th>Reads</th><th>Reply</th></tr>
@@ -74,57 +75,61 @@ const Requests: Component = () => {
               <tr><td><code>16</code></td><td>Active field-transform table.</td><td><A href="/native/commands/requests#transforms"><code>TRANSFORMS</code></A></td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">EFFECT</div>
-          <p>
-            The box replies with a <A href="/native/commands/requests#resp"><code>RESP</code></A>{' '}
-            carrying the same <code>what</code> and the requested data. Besides <code>QUERY</code>, only{' '}
-            <A href="/native/commands/update#update"><code>UPDATE</code></A> and{' '}
-            <A href="/native/commands/transfer#transfer"><code>TRANSFER</code></A> reply; every other
-            command is <A href="/native/injection#fire-and-forget">fire-and-forget</A>.
-          </p>
-          <p>
-            Library bindings:{' '}
-            <A href="/library/requests#version"><code>query_version</code></A>,{' '}
-            <A href="/library/requests#health"><code>query_health</code></A>,{' '}
-            <A href="/library/requests#device-info"><code>device_info</code></A>,{' '}
-            <A href="/library/requests#caps"><code>caps</code></A>,{' '}
-            <A href="/library/requests#query-rate"><code>query_rate</code></A>,{' '}
-            <A href="/library/requests#query-stats"><code>query_stats</code></A>,{' '}
-            <A href="/library/requests#query-locks"><code>query_locks</code></A>,{' '}
-            <A href="/library/requests#query-catch"><code>query_catch</code></A>,{' '}
-            <A href="/library/options#query-imperfect"><code>query_imperfect</code></A>,{' '}
-            <A href="/library/options#query-movement-riding"><code>query_movement_riding</code></A>,{' '}
-            <A href="/library/options#query-bearing"><code>query_bearing</code></A>,{' '}
-            <A href="/library/options#query-emit-pace"><code>query_emit_pace</code></A>, the clip{' '}
-            <A href="/library/requests#clip-status"><code>status</code></A> query,{' '}
-            <A href="/library/requests#firmware-info"><code>firmware_info</code></A>,{' '}
-            <A href="/library/advanced/rewrite#query-rewrite"><code>query_rewrite</code></A>,{' '}
-            <A href="/library/advanced/rewrite#query-rewrite-entry"><code>query_rewrite_entry</code></A>,{' '}
-            <A href="/library/advanced/patch#query-patches"><code>query_patches</code></A>,{' '}
-            <A href="/library/advanced/patch#query-patch-entry"><code>query_patch_entry</code></A>, and{' '}
-            <A href="/library/transform#query-transforms"><code>query_transforms</code></A>.
-          </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <p><code>what = 0</code> (read the version):</p>
-          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+
-| A5     | 05     | 00     | 01 00  | 00     | lo hi  |
-+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | what   | CRC16  |
-+--------+--------+--------+--------+--------+--------+`}</pre>
-        </Card>
-      </div>
+        </div>
+        <div class="api-response-label">EFFECT</div>
+        <p>
+          The box replies with a <A href="/native/commands/requests#resp"><code>RESP</code></A>{' '}
+          carrying the same <code>what</code> and the requested data. Besides <code>QUERY</code>, only{' '}
+          <A href="/native/commands/update#update"><code>UPDATE</code></A> and{' '}
+          <A href="/native/commands/transfer#transfer"><code>TRANSFER</code></A> reply; every other
+          command is <A href="/native/injection#fire-and-forget">fire-and-forget</A>.
+        </p>
+        <p>
+          Library bindings:{' '}
+          <A href="/library/requests#version"><code>query_version</code></A>,{' '}
+          <A href="/library/requests#health"><code>query_health</code></A>,{' '}
+          <A href="/library/requests#device-info"><code>device_info</code></A>,{' '}
+          <A href="/library/requests#caps"><code>caps</code></A>,{' '}
+          <A href="/library/requests#query-rate"><code>query_rate</code></A>,{' '}
+          <A href="/library/requests#query-stats"><code>query_stats</code></A>,{' '}
+          <A href="/library/requests#query-locks"><code>query_locks</code></A>,{' '}
+          <A href="/library/requests#query-catch"><code>query_catch</code></A>,{' '}
+          <A href="/library/options#query-imperfect"><code>query_imperfect</code></A>,{' '}
+          <A href="/library/options#query-movement-riding"><code>query_movement_riding</code></A>,{' '}
+          <A href="/library/options#query-bearing"><code>query_bearing</code></A>,{' '}
+          <A href="/library/options#query-emit-pace"><code>query_emit_pace</code></A>, the clip{' '}
+          <A href="/library/requests#clip-status"><code>status</code></A> query,{' '}
+          <A href="/library/requests#firmware-info"><code>firmware_info</code></A>,{' '}
+          <A href="/library/advanced/rewrite#query-rewrite"><code>query_rewrite</code></A>,{' '}
+          <A href="/library/advanced/rewrite#query-rewrite-entry"><code>query_rewrite_entry</code></A>,{' '}
+          <A href="/library/advanced/patch#query-patches"><code>query_patches</code></A>,{' '}
+          <A href="/library/advanced/patch#query-patch-entry"><code>query_patch_entry</code></A>, and{' '}
+          <A href="/library/transform#query-transforms"><code>query_transforms</code></A>.
+        </p>
+        <div class="api-response-label">EXAMPLE</div>
+        <p><code>what = 0</code> (read the version):</p>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '05', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '01 00', name: 'LEN' },
+            { value: '00', name: 'what' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
+      </DocSection>
 
-      <div id="resp" data-search-target>
-        <Card>
-          <CardHeader title="RESP" subtitle="The box's reply" />
-          <p>
-            <code>RESP</code> is the box's reply to a{' '}
-            <A href="/native/commands/requests#requests"><code>QUERY</code></A>.{' '}
-            <A href="/native/frame#opcodes">Opcode</A> <code>0x06</code>.
-          </p>
-          <pre class="api-signature">RESP  0x06  ·  box → PC</pre>
-          <p><span class="api-badge api-badge--responded">Reply</span></p>
-          <div class="api-response-label">PAYLOAD</div>
+      <DocSection id="resp" title="RESP" caption="The box's reply">
+        <p>
+          <code>RESP</code> is the box's reply to a{' '}
+          <A href="/native/commands/requests#requests"><code>QUERY</code></A>.{' '}
+          <A href="/native/frame#opcodes">Opcode</A> <code>0x06</code>.
+        </p>
+        <pre class="api-signature">RESP  0x06  ·  box → PC</pre>
+        <p><span class="api-badge api-badge--responded">Reply</span></p>
+        <div class="api-response-label">PAYLOAD</div>
+        <div class="table-scroll">
           <table class="byte-table">
             <thead>
               <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
@@ -134,26 +139,25 @@ const Requests: Component = () => {
               <tr><td>1..</td><td><code>data</code></td><td><code>varies</code></td><td>layout for the requested <code>what</code> (see <A href="/native/commands/requests#requests">selectors</A>)</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">EFFECT</div>
-          <p>
-            Exactly one <code>RESP</code> per <code>QUERY</code>, its{' '}
-            <A href="/native/frame#seq"><code>SEQ</code></A> matching the request's.
-          </p>
-        </Card>
-      </div>
+        </div>
+        <div class="api-response-label">EFFECT</div>
+        <p>
+          Exactly one <code>RESP</code> per <code>QUERY</code>, its{' '}
+          <A href="/native/frame#seq"><code>SEQ</code></A> matching the request's.
+        </p>
+      </DocSection>
 
-      <div id="version" data-search-target>
-        <Card>
-          <CardHeader title="VERSION" subtitle="RESP payload, what = 0" />
-          <p>
-            The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
-            <code>what = 0</code>: protocol version, firmware version, base <code>mac</code>, then a
-            length-delimited ASCII <A href="/native/commands/option#name"><code>name</code></A> tail.
-            The tail is additive; an older box sends it empty.
-          </p>
-          <pre class="api-signature">QUERY  what = 0  ·  RESP 11-byte header + name</pre>
-          <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
-          <div class="api-response-label">PAYLOAD</div>
+      <DocSection id="version" title="VERSION" caption="RESP payload, what = 0">
+        <p>
+          The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
+          <code>what = 0</code>: protocol version, firmware version, base <code>mac</code>, then a
+          length-delimited ASCII <A href="/native/commands/option#name"><code>name</code></A> tail.
+          The tail is additive; an older box sends it empty.
+        </p>
+        <pre class="api-signature">QUERY  what = 0  ·  RESP 11-byte header + name</pre>
+        <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
+        <div class="api-response-label">PAYLOAD</div>
+        <div class="table-scroll">
           <table class="byte-table">
             <thead>
               <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
@@ -168,38 +172,45 @@ const Requests: Component = () => {
               <tr><td>11..</td><td><code>name</code></td><td><code>ascii</code></td><td>human-readable box name, filling the rest of the payload (delimited by the frame <code>LEN</code>); a synthesised <code>Medius-XXXX</code> default when unset, set via <A href="/native/commands/option#name"><code>OPTION(NAME)</code></A></td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">EFFECT</div>
-          <p>
-            The box also sends this unprompted at boot and on the first frame it receives, as a{' '}
-            <A href="/native/connection#hello">ready signal</A>. The <code>mac</code> identifies the
-            same box across replugs and port renumbering. Library binding:{' '}
-            <A href="/library/requests#version"><code>query_version</code></A>.
-          </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <p>Firmware <code>3.4.5</code>, protocol <code>9</code>, MAC <code>123456789abc</code>, name "Loki":</p>
-          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 06     | 00     | 0F 00  | 00     | 09     | 03     | 04     | 05     | ...    |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | what   | proto  | major  | minor  | patch  | ...    |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
+        </div>
+        <div class="api-response-label">EFFECT</div>
+        <p>
+          The box also sends this unprompted at boot and on the first frame it receives, as a{' '}
+          <A href="/native/connection#hello">ready signal</A>. The <code>mac</code> identifies the
+          same box across replugs and port renumbering. Library binding:{' '}
+          <A href="/library/requests#version"><code>query_version</code></A>.
+        </p>
+        <div class="api-response-label">EXAMPLE</div>
+        <p>Firmware <code>3.4.5</code>, protocol <code>9</code>, MAC <code>123456789abc</code>, name "Loki":</p>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '06', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '0F 00', name: 'LEN' },
+            { value: '00', name: 'what' },
+            { value: '09', name: 'proto' },
+            { value: '03', name: 'major' },
+            { value: '04', name: 'minor' },
+            { value: '05', name: 'patch' },
+            { value: '...', name: '...' },
+            { value: '...', name: '...' },
+            { value: '12 34 56 78 9A BC', name: 'mac (6 bytes)' },
+            { value: '4C 6F 6B 69', name: '"Loki"' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
+      </DocSection>
 
-| ...    | 12 34 56 78 9A BC  | 4C 6F 6B 69  | lo hi  |
-+--------+--------------------+--------------+--------+
-| ...    | mac (6 bytes)      | "Loki"       | CRC16  |
-+--------+--------------------+--------------+--------+`}</pre>
-        </Card>
-      </div>
-
-      <div id="health" data-search-target>
-        <Card>
-          <CardHeader title="HEALTH" subtitle="RESP payload, what = 1" />
-          <p>
-            The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
-            <code>what = 1</code>: a two-byte <code>flags</code> word (<code>u16</code>, little-endian), each bit an independent status.
-          </p>
-          <pre class="api-signature">QUERY  what = 1  ·  RESP 3 bytes</pre>
-          <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
-          <div class="api-response-label">PAYLOAD</div>
+      <DocSection id="health" title="HEALTH" caption="RESP payload, what = 1">
+        <p>
+          The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
+          <code>what = 1</code>: a two-byte <code>flags</code> word (<code>u16</code>, little-endian), each bit an independent status.
+        </p>
+        <pre class="api-signature">QUERY  what = 1  ·  RESP 3 bytes</pre>
+        <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
+        <div class="api-response-label">PAYLOAD</div>
+        <div class="table-scroll">
           <table class="byte-table">
             <thead>
               <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
@@ -209,7 +220,9 @@ const Requests: Component = () => {
               <tr><td>1</td><td><code>flags</code></td><td><code>u16</code></td><td>status bits below, little-endian</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">FLAGS</div>
+        </div>
+        <div class="api-response-label">FLAGS</div>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Bit</th><th>Mask</th><th>Set when</th></tr>
@@ -228,32 +241,37 @@ const Requests: Component = () => {
               <tr><td>b10</td><td><code>0x0400</code></td><td><code>TRANSFORM_ON</code>: a <A href="/native/commands/transform">field transform</A> is active (the table is non-empty)</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">EFFECT</div>
-          <p>
-            With the first three bits set, input reaches the PC.
-            Library binding: <A href="/library/requests#health"><code>query_health</code></A>.
-          </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <p>Ready, with link, mouse, and clone all up (<code>flags = 0x0007</code>):</p>
-          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 06     | 00     | 03 00  | 01     | 07 00  | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | what   | flags  | CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+`}</pre>
-        </Card>
-      </div>
+        </div>
+        <div class="api-response-label">EFFECT</div>
+        <p>
+          With the first three bits set, input reaches the PC.
+          Library binding: <A href="/library/requests#health"><code>query_health</code></A>.
+        </p>
+        <div class="api-response-label">EXAMPLE</div>
+        <p>Ready, with link, mouse, and clone all up (<code>flags = 0x0007</code>):</p>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '06', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '03 00', name: 'LEN' },
+            { value: '01', name: 'what' },
+            { value: '07 00', name: 'flags' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
+      </DocSection>
 
-      <div id="device-info" data-search-target>
-        <Card>
-          <CardHeader title="DEVICE_INFO" subtitle="RESP payload, what = 2" />
-          <p>
-            The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
-            <code>what = 2</code>: the USB identity, kind, and product string read from the real
-            device, otherwise invisible to the control PC. Every field is zero with nothing attached.
-          </p>
-          <pre class="api-signature">QUERY  what = 2  ·  RESP 11-byte header + product</pre>
-          <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
-          <div class="api-response-label">PAYLOAD</div>
+      <DocSection id="device-info" title="DEVICE_INFO" caption="RESP payload, what = 2">
+        <p>
+          The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
+          <code>what = 2</code>: the USB identity, kind, and product string read from the real
+          device, otherwise invisible to the control PC. Every field is zero with nothing attached.
+        </p>
+        <pre class="api-signature">QUERY  what = 2  ·  RESP 11-byte header + product</pre>
+        <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
+        <div class="api-response-label">PAYLOAD</div>
+        <div class="table-scroll">
           <table class="byte-table">
             <thead>
               <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
@@ -269,7 +287,9 @@ const Requests: Component = () => {
               <tr><td>11..</td><td><code>product</code></td><td><code>ASCII</code></td><td>product string, filling the rest of the payload, with <code>?</code> for each character outside ASCII; in English when the device lists it, else in its first language; may be empty</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">FLAGS</div>
+        </div>
+        <div class="api-response-label">FLAGS</div>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Bit</th><th>Mask</th><th>Set when</th></tr>
@@ -279,7 +299,9 @@ const Requests: Component = () => {
               <tr><td>b1</td><td><code>0x02</code></td><td><code>HAS_BOS</code>: the clone serves a BOS descriptor</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">PRIMARY_KIND</div>
+        </div>
+        <div class="api-response-label">PRIMARY_KIND</div>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Value</th><th>Kind</th></tr>
@@ -290,42 +312,50 @@ const Requests: Component = () => {
               <tr><td><code>2</code></td><td>mouse</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">EFFECT</div>
-          <p>
-            A <code>vid</code> and <code>pid</code> of <code>0</code> mean nothing is cloned yet; a clone with
-            no HID interface reads <code>primary_kind</code> 0 with its identity filled in. Library binding:{' '}
-            <A href="/library/requests#device-info"><code>device_info</code></A>.
-          </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <p>A Logitech G502 (<code>046D:C08B</code>), USB 2.01, serial and BOS served, kind mouse, product "G502":</p>
-          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 06     | 00     | 0F 00  | 02     | 6D 04  | 8B C0  | ...    |
-+--------+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | what   | vid    | pid    | ...    |
-+--------+--------+--------+--------+--------+--------+--------+--------+
+        </div>
+        <div class="api-response-label">EFFECT</div>
+        <p>
+          A <code>vid</code> and <code>pid</code> of <code>0</code> mean nothing is cloned yet; a clone with
+          no HID interface reads <code>primary_kind</code> 0 with its identity filled in. Library binding:{' '}
+          <A href="/library/requests#device-info"><code>device_info</code></A>.
+        </p>
+        <div class="api-response-label">EXAMPLE</div>
+        <p>A Logitech G502 (<code>046D:C08B</code>), USB 2.01, serial and BOS served, kind mouse, product "G502":</p>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '06', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '0F 00', name: 'LEN' },
+            { value: '02', name: 'what' },
+            { value: '6D 04', name: 'vid' },
+            { value: '8B C0', name: 'pid' },
+            { value: '...', name: '...' },
+            { value: '...', name: '...' },
+            { value: '10 01', name: 'bcdDev' },
+            { value: '01 02', name: 'bcdUSB' },
+            { value: '03', name: 'flags' },
+            { value: '02', name: 'kind' },
+            { value: '47 35 30 32', name: '"G502"' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
+      </DocSection>
 
-| ...    | 10 01  | 01 02  | 03     | 02     | 47 35 30 32  | lo hi  |
-+--------+--------+--------+--------+--------+--------------+--------+
-| ...    | bcdDev | bcdUSB | flags  | kind   | "G502"       | CRC16  |
-+--------+--------+--------+--------+--------+--------------+--------+`}</pre>
-        </Card>
-      </div>
-
-      <div id="caps" data-search-target>
-        <Card>
-          <CardHeader title="CAPS" subtitle="RESP payload, what = 3" />
-          <p>
-            The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
-            <code>what = 3</code>: one summary of the whole cloned device, mouse and keyboard, read from
-            its HID report descriptors. Counts and yes/no flags only, never raw HID field offsets.
-          </p>
-          <p>
-            An <A href="/native/commands/inject#inject"><code>INJECT</code></A> for a usage the device
-            lacks reaches no report field. An absent class reads all-zero.
-          </p>
-          <pre class="api-signature">QUERY  what = 3  ·  RESP 7 bytes</pre>
-          <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
-          <div class="api-response-label">PAYLOAD</div>
+      <DocSection id="caps" title="CAPS" caption="RESP payload, what = 3">
+        <p>
+          The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
+          <code>what = 3</code>: one summary of the whole cloned device, mouse and keyboard, read from
+          its HID report descriptors. Counts and yes/no flags only, never raw HID field offsets.
+        </p>
+        <p>
+          An <A href="/native/commands/inject#inject"><code>INJECT</code></A> for a usage the device
+          lacks reaches no report field. An absent class reads all-zero.
+        </p>
+        <pre class="api-signature">QUERY  what = 3  ·  RESP 7 bytes</pre>
+        <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
+        <div class="api-response-label">PAYLOAD</div>
+        <div class="table-scroll">
           <table class="byte-table">
             <thead>
               <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
@@ -340,7 +370,9 @@ const Requests: Component = () => {
               <tr><td>6</td><td><code>change_driven</code></td><td><code>u8</code></td><td>per class: b0 mouse (continuous, 0), b1 keyboard/media (change-driven, 1 when bound)</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">AXIS_FLAGS</div>
+        </div>
+        <div class="api-response-label">AXIS_FLAGS</div>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Bit</th><th>Mask</th><th>Set when</th></tr>
@@ -353,7 +385,9 @@ const Requests: Component = () => {
               <tr><td>b4</td><td><code>0x10</code></td><td><code>PAN</code>: the report carries an AC Pan (horizontal scroll) axis</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">KBD_FLAGS</div>
+        </div>
+        <div class="api-response-label">KBD_FLAGS</div>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Bit</th><th>Mask</th><th>Set when</th></tr>
@@ -365,28 +399,38 @@ const Requests: Component = () => {
               <tr><td>b3</td><td><code>0x08</code></td><td><code>REPORT_ID</code>: the keyboard report sits behind a HID report ID</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">EFFECT</div>
-          <p>
-            Library binding: <A href="/library/requests#caps"><code>caps</code></A>.
-          </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <p>A 5-button mouse (X/Y/wheel, one interface) plus a 6-key Consumer keyboard (<code>axis_flags = 0x07</code>, <code>kbd_flags = 0x02</code>, keyboard change-driven):</p>
-          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 06     | 00     | 07 00  | 03     | 05     | 07     | 01     | 06     | 02     | 02     | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | what   | n_btn  | axis   | n_hid  | n_keys | kbdfl  | chgdrv | CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
-        </Card>
-      </div>
+        </div>
+        <div class="api-response-label">EFFECT</div>
+        <p>
+          Library binding: <A href="/library/requests#caps"><code>caps</code></A>.
+        </p>
+        <div class="api-response-label">EXAMPLE</div>
+        <p>A 5-button mouse (X/Y/wheel, one interface) plus a 6-key Consumer keyboard (<code>axis_flags = 0x07</code>, <code>kbd_flags = 0x02</code>, keyboard change-driven):</p>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '06', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '07 00', name: 'LEN' },
+            { value: '03', name: 'what' },
+            { value: '05', name: 'n_btn' },
+            { value: '07', name: 'axis' },
+            { value: '01', name: 'n_hid' },
+            { value: '06', name: 'n_keys' },
+            { value: '02', name: 'kbdfl' },
+            { value: '02', name: 'chgdrv' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
+      </DocSection>
 
-      <div id="rate" data-search-target>
-        <Card>
-          <CardHeader title="RATE" subtitle="RESP payload, what = 4" />
-          <p>
-            The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
-            <code>what = 4</code>: how fast the active input reports, plus the poll period the clone
-            advertises. Which field to read depends on the input kind.
-          </p>
+      <DocSection id="rate" title="RATE" caption="RESP payload, what = 4">
+        <p>
+          The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
+          <code>what = 4</code>: how fast the active input reports, plus the poll period the clone
+          advertises. Which field to read depends on the input kind.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Input kind</th><th><code>CHANGE_DRIVEN</code></th><th>Read</th><th>Gives</th></tr></thead>
             <tbody>
@@ -394,9 +438,11 @@ const Requests: Component = () => {
               <tr><td>change-driven (keyboard, media)</td><td><code>1</code></td><td><code>poll_period_us</code></td><td>no steady cadence, so <code>native_period_us</code> is 0</td></tr>
             </tbody>
           </table>
-          <pre class="api-signature">QUERY  what = 4  ·  RESP 6 bytes</pre>
-          <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
-          <div class="api-response-label">PAYLOAD</div>
+        </div>
+        <pre class="api-signature">QUERY  what = 4  ·  RESP 6 bytes</pre>
+        <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
+        <div class="api-response-label">PAYLOAD</div>
+        <div class="table-scroll">
           <table class="byte-table">
             <thead>
               <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
@@ -408,7 +454,9 @@ const Requests: Component = () => {
               <tr><td>5</td><td><code>flags</code></td><td><code>u8</code></td><td>the bits below</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">FLAGS</div>
+        </div>
+        <div class="api-response-label">FLAGS</div>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Bit</th><th>Mask</th><th>Set when</th></tr>
@@ -418,55 +466,62 @@ const Requests: Component = () => {
               <tr><td>b1</td><td><code>0x02</code></td><td><code>CHANGE_DRIVEN</code>: the active input is event-driven (keyboard / media), so there is no continuous cadence and <code>native_period_us</code> is 0</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">EFFECT</div>
-          <p>
-            A 1 kHz mouse reads ~1000 µs once learned. Library binding:{' '}
-            <A href="/library/requests#query-rate"><code>query_rate</code></A>.
-          </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <p>A 1 kHz mouse, 1000 µs poll, estimator confident (<code>flags = 0x01</code>):</p>
-          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 06     | 00     | 06 00  | 04     | E8 03  | E8 03  | 01     | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | what   | native | poll   | flags  | CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
-        </Card>
-      </div>
+        </div>
+        <div class="api-response-label">EFFECT</div>
+        <p>
+          A 1 kHz mouse reads ~1000 µs once learned. Library binding:{' '}
+          <A href="/library/requests#query-rate"><code>query_rate</code></A>.
+        </p>
+        <div class="api-response-label">EXAMPLE</div>
+        <p>A 1 kHz mouse, 1000 µs poll, estimator confident (<code>flags = 0x01</code>):</p>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '06', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '06 00', name: 'LEN' },
+            { value: '04', name: 'what' },
+            { value: 'E8 03', name: 'native' },
+            { value: 'E8 03', name: 'poll' },
+            { value: '01', name: 'flags' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
+      </DocSection>
 
-      <div id="stats" data-search-target>
-        <Card>
-          <CardHeader title="STATS" subtitle="RESP payload, what = 5" />
-          <p>
-            The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
-            <code>what = 5</code>: delivery counters, the only delivery feedback for{' '}
-            <A href="/native/injection#fire-and-forget">fire-and-forget</A> commands.
-          </p>
-          <p>
-            A nonzero <code>tx_drops</code> or <code>tx_wedges</code> means native input was dropped
-            or stalled on the way to the PC; a nonzero <code>link_rx_drops</code> or{' '}
-            <code>host_rx_drops</code> means a native report or injected delta was lost between the
-            two chips.
-          </p>
-          <p>
-            <code>relay_drops</code> is relayed traffic and commands that went no further, counted apart
-            so traffic that never carried the player's input doesn't read as lost native input. The eight narrowed
-            counters clamp at their max instead of wrapping; the three drop counts are full width.
-          </p>
-          <p>
-            <code>session</code> counts releases of host-set state. A change since the last read
-            means some or all of it is gone and needs setting again.
-          </p>
-          <p>
-            Most releases drop all of it, and two drop part. Turning{' '}
-            <A href="/native/commands/option#imperfect"><code>OPTION(IMPERFECT)</code></A> off drops
-            only rewrite rules, consuming packet triggers and queued clip transfers, unless the toggle
-            also presents the clone again. A configuration switch by the game PC that unbinds a role
-            (the mouse, the keyboard, the consumer control) drops only the locks, injected usages and
-            owed motion held on that role.
-          </p>
-          <pre class="api-signature">QUERY  what = 5  ·  RESP 31 bytes</pre>
-          <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
-          <div class="api-response-label">PAYLOAD</div>
+      <DocSection id="stats" title="STATS" caption="RESP payload, what = 5">
+        <p>
+          The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
+          <code>what = 5</code>: delivery counters, the only delivery feedback for{' '}
+          <A href="/native/injection#fire-and-forget">fire-and-forget</A> commands.
+        </p>
+        <p>
+          A nonzero <code>tx_drops</code> or <code>tx_wedges</code> means native input was dropped
+          or stalled on the way to the PC; a nonzero <code>link_rx_drops</code> or{' '}
+          <code>host_rx_drops</code> means a native report or injected delta was lost between the
+          two chips.
+        </p>
+        <p>
+          <code>relay_drops</code> is relayed traffic and commands that went no further, counted apart
+          so traffic that never carried the player's input doesn't read as lost native input. The eight narrowed
+          counters clamp at their max instead of wrapping; the three drop counts are full width.
+        </p>
+        <p>
+          <code>session</code> counts releases of host-set state. A change since the last read
+          means some or all of it is gone and needs setting again.
+        </p>
+        <p>
+          Most releases drop all of it, and two drop part. Turning{' '}
+          <A href="/native/commands/option#imperfect"><code>OPTION(IMPERFECT)</code></A> off drops
+          only rewrite rules, consuming packet triggers and queued clip transfers, unless the toggle
+          also presents the clone again. A configuration switch by the game PC that unbinds a role
+          (the mouse, the keyboard, the consumer control) drops only the locks, injected usages and
+          owed motion held on that role.
+        </p>
+        <pre class="api-signature">QUERY  what = 5  ·  RESP 31 bytes</pre>
+        <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
+        <div class="api-response-label">PAYLOAD</div>
+        <div class="table-scroll">
           <table class="byte-table">
             <thead>
               <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
@@ -487,24 +542,26 @@ const Requests: Component = () => {
               <tr><td>29</td><td><code>session</code></td><td><code>u16</code></td><td>releases of host-set state; wraps at 0xFFFF, so compare for inequality</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">EFFECT</div>
-          <p>
-            <code>inject_emits</code> counts reports the box emitted from injection alone. Library binding:{' '}
-            <A href="/library/requests#query-stats"><code>query_stats</code></A>.
-          </p>
-          <div class="api-response-label">SESSION</div>
-          <p>
-            The state: <A href="/native/injection#safety">injection</A>,{' '}
-            <A href="/native/commands/lock">locks</A>,{' '}
-            <A href="/native/commands/catch"><code>CATCH</code></A> subscriptions,{' '}
-            <A href="/native/commands/rewrite#lifecycle">rewrite rules</A>,{' '}
-            <A href="/native/commands/transform#clearing">transforms</A>, the{' '}
-            <A href="/native/commands/clip">clip</A> with its settings and triggers, and an{' '}
-            <A href="/native/commands/led"><code>LED</code></A> override. The count is 0 at boot,
-            announced by the <A href="/native/connection#hello">ready hello</A>. One release counts
-            once, however many of these it clears; a release of everything counts only if a command
-            other than <code>QUERY</code> or <code>RESET</code> arrived since the last count.
-          </p>
+        </div>
+        <div class="api-response-label">EFFECT</div>
+        <p>
+          <code>inject_emits</code> counts reports the box emitted from injection alone. Library binding:{' '}
+          <A href="/library/requests#query-stats"><code>query_stats</code></A>.
+        </p>
+        <div class="api-response-label">SESSION</div>
+        <p>
+          The state: <A href="/native/injection#safety">injection</A>,{' '}
+          <A href="/native/commands/lock">locks</A>,{' '}
+          <A href="/native/commands/catch"><code>CATCH</code></A> subscriptions,{' '}
+          <A href="/native/commands/rewrite#lifecycle">rewrite rules</A>,{' '}
+          <A href="/native/commands/transform#clearing">transforms</A>, the{' '}
+          <A href="/native/commands/clip">clip</A> with its settings and triggers, and an{' '}
+          <A href="/native/commands/led"><code>LED</code></A> override. The count is 0 at boot,
+          announced by the <A href="/native/connection#hello">ready hello</A>. One release counts
+          once, however many of these it clears; a release of everything counts only if a command
+          other than <code>QUERY</code> or <code>RESET</code> arrived since the last count.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Event</th><th>Counts</th></tr></thead>
             <tbody>
@@ -521,38 +578,44 @@ const Requests: Component = () => {
               <tr><td>the host's own clear: a whole-table <code>REWRITE</code> clear, a <code>CATCH</code> unsubscribe, <code>CLIP_CTRL</code> <code>CLEAR</code></td><td>not counted</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">EXAMPLE</div>
-          <p>4096 emits, nothing dropped on any of the three wires, <code>session</code> at 2:</p>
-          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------------+
-| A5     | 06     | 00     | 1F 00  | 05     | 00 10 00 00  |
-+--------+--------+--------+--------+--------+--------------+
-| SOF    | TYPE   | SEQ    | LEN    | what   | inject_emits |
-+--------+--------+--------+--------+--------+--------------+
+        </div>
+        <div class="api-response-label">EXAMPLE</div>
+        <p>4096 emits, nothing dropped on any of the three wires, <code>session</code> at 2:</p>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '06', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '1F 00', name: 'LEN' },
+            { value: '05', name: 'what' },
+            { value: '00 10 00 00', name: 'inject_emits' },
+            { value: '00 00', name: 'drops' },
+            { value: '00 00', name: 'merges' },
+            { value: '00', name: 'maxdep' },
+            { value: '00', name: 'wedges' },
+            { value: '00 00', name: 'wakeup' },
+            { value: '00 00', name: 'resets' },
+            { value: '00 00', name: 'config' },
+            { value: '00 00 00 00', name: 'link_rx_drops' },
+            { value: '00 00 00 00', name: 'host_rx_drops' },
+            { value: '00 00 00 00', name: 'relay_drops' },
+            { value: '02 00', name: 'session' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
+      </DocSection>
 
-| 00 00  | 00 00  | 00     | 00     | 00 00  | 00 00  | 00 00  |
-+--------+--------+--------+--------+--------+--------+--------+
-| drops  | merges | maxdep | wedges | wakeup | resets | config |
-+--------+--------+--------+--------+--------+--------+--------+
-
-| 00 00 00 00   | 00 00 00 00   | 00 00 00 00   | 02 00   | lo hi  |
-+---------------+---------------+---------------+---------+--------+
-| link_rx_drops | host_rx_drops | relay_drops   | session | CRC16  |
-+---------------+---------------+---------------+---------+--------+`}</pre>
-        </Card>
-      </div>
-
-      <div id="locks" data-search-target>
-        <Card>
-          <CardHeader title="LOCKS" subtitle="RESP payload, what = 6" />
-          <p>
-            The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
-            <code>what = 6</code>: physical inputs currently weighed by{' '}
-            <A href="/native/commands/lock"><code>LOCK</code></A>, one entry per non-passing
-            direction. An empty list (<code>n = 0</code>) means everything passes.
-          </p>
-          <pre class="api-signature">QUERY  what = 6  ·  RESP 2 + 6n bytes</pre>
-          <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
-          <div class="api-response-label">PAYLOAD</div>
+      <DocSection id="locks" title="LOCKS" caption="RESP payload, what = 6">
+        <p>
+          The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
+          <code>what = 6</code>: physical inputs currently weighed by{' '}
+          <A href="/native/commands/lock"><code>LOCK</code></A>, one entry per non-passing
+          direction. An empty list (<code>n = 0</code>) means everything passes.
+        </p>
+        <pre class="api-signature">QUERY  what = 6  ·  RESP 2 + 6n bytes</pre>
+        <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
+        <div class="api-response-label">PAYLOAD</div>
+        <div class="table-scroll">
           <table class="byte-table">
             <thead>
               <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
@@ -566,11 +629,13 @@ const Requests: Component = () => {
               <tr><td>+</td><td><code>scale</code></td><td><code>i16</code></td><td>percent of the physical value kept, little-endian, <code>-255 to 255</code> (as <A href="/native/commands/lock#scale"><code>LOCK</code></A>); <code>0</code> = blocked, above <code>100</code> amplifies, negative reverses</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">READBACK</div>
-          <p>
-            Entries mirror the <A href="/native/commands/lock"><code>LOCK</code></A> frame field for
-            field, so a readback replays as commands.
-          </p>
+        </div>
+        <div class="api-response-label">READBACK</div>
+        <p>
+          Entries mirror the <A href="/native/commands/lock"><code>LOCK</code></A> frame field for
+          field, so a readback replays as commands.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>State</th><th>Reports as</th></tr>
@@ -587,7 +652,9 @@ const Requests: Component = () => {
               <tr><td>A relative direction with no <A href="/native/commands/lock#bearing">bearing</A> live</td><td>Its stored scale, unchanged. A lapsed window, or an <A href="/native/commands/option#bearing"><code>OPTION(BEARING)</code></A> window of <code>0</code>, stops <code>with</code> and <code>against</code> weighing without clearing them, so an entry can report <code>40</code> while that axis passes untouched.</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">BUDGET</div>
+        </div>
+        <div class="api-response-label">BUDGET</div>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Order</th><th>Source</th><th>Max entries</th></tr>
@@ -600,46 +667,55 @@ const Requests: Component = () => {
               <tr><td>5</td><td>Specific keys</td><td>the rest of the 85, so at least 26, one per blocked edge</td></tr>
             </tbody>
           </table>
+        </div>
+        <p>
+          The frame is the cap: <code>2 + 85 x 6</code> is exactly the 512-byte payload. Rows 1 to 4
+          are capped by the box's tables at 59 combined, so they always fit. Keyboard usages are the
+          one unbounded class: 252 of them, two edges each.
+        </p>
+        <div class="callout callout--warning">
           <p>
-            The frame is the cap: <code>2 + 85 x 6</code> is exactly the 512-byte payload. Rows 1 to 4
-            are capped by the box's tables at 59 combined, so they always fit. Keyboard usages are the
-            one unbounded class: 252 of them, two edges each.
+            Truncation only hits row 5: <code>n</code> stops short with nothing marking the cut.
+            Compare the key edges requested with those returned.
           </p>
-          <div class="callout callout--warning">
-            <p>
-              Truncation only hits row 5: <code>n</code> stops short with nothing marking the cut.
-              Compare the key edges requested with those returned.
-            </p>
-          </div>
-          <div class="api-response-label">EFFECT</div>
-          <p>
-            Library binding:{' '}
-            <A href="/library/requests#query-locks"><code>query_locks</code></A>.
-          </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <p>One entry: the wheel's negative (scroll-down) sign blocked (<code>class = 3</code> axis, <code>id = 2</code> wheel, <code>direction = 2</code>, <code>scale = 0</code>):</p>
-          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 06     | 00     | 08 00  | 06     | 01     | 03     | 02 00  | 02     | 00 00  | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | what   | n      | class  | id     | dir    | scale  | CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
-        </Card>
-      </div>
+        </div>
+        <div class="api-response-label">EFFECT</div>
+        <p>
+          Library binding:{' '}
+          <A href="/library/requests#query-locks"><code>query_locks</code></A>.
+        </p>
+        <div class="api-response-label">EXAMPLE</div>
+        <p>One entry: the wheel's negative (scroll-down) sign blocked (<code>class = 3</code> axis, <code>id = 2</code> wheel, <code>direction = 2</code>, <code>scale = 0</code>):</p>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '06', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '08 00', name: 'LEN' },
+            { value: '06', name: 'what' },
+            { value: '01', name: 'n' },
+            { value: '03', name: 'class' },
+            { value: '02 00', name: 'id' },
+            { value: '02', name: 'dir' },
+            { value: '00 00', name: 'scale' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
+      </DocSection>
 
-      <div id="catch" data-search-target>
-        <Card>
-          <CardHeader title="CATCH" subtitle="RESP payload, what = 7" />
-          <p>
-            The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
-            <code>what = 7</code>: the active <A href="/native/commands/catch"><code>CATCH</code></A>{' '}
-            subscription, a fixed scalar header then the table, shaped like{' '}
-            <A href="/native/commands/requests#locks"><code>RESP(LOCKS)</code></A>. An empty table
-            means nothing is subscribed, matching the{' '}
-            <A href="/native/commands/requests#health"><code>CATCH_ON</code></A> health bit.
-          </p>
-          <pre class="api-signature">QUERY  what = 7  ·  RESP 19 + 7n bytes</pre>
-          <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
-          <div class="api-response-label">PAYLOAD</div>
+      <DocSection id="catch" title="CATCH" caption="RESP payload, what = 7">
+        <p>
+          The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
+          <code>what = 7</code>: the active <A href="/native/commands/catch"><code>CATCH</code></A>{' '}
+          subscription, a fixed scalar header then the table, shaped like{' '}
+          <A href="/native/commands/requests#locks"><code>RESP(LOCKS)</code></A>. An empty table
+          means nothing is subscribed, matching the{' '}
+          <A href="/native/commands/requests#health"><code>CATCH_ON</code></A> health bit.
+        </p>
+        <pre class="api-signature">QUERY  what = 7  ·  RESP 19 + 7n bytes</pre>
+        <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
+        <div class="api-response-label">PAYLOAD</div>
+        <div class="table-scroll">
           <table class="byte-table">
             <thead>
               <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
@@ -660,34 +736,36 @@ const Requests: Component = () => {
               <tr><td>+</td><td><code>dropped</code></td><td><code>u16</code></td><td>events <em>this entry</em> could not queue, little-endian</td></tr>
             </tbody>
           </table>
-          <p>
-            The box-wide <code>dropped</code> counts every lost event; the per-entry one attributes them to a
-            subscription.
-          </p>
-          <div class="api-response-label">CONFIRMATION</div>
-          <p>
-            <A href="/native/commands/catch#catch"><code>CATCH</code></A> is fire-and-forget, so this
-            reply is the only confirmation an entry landed. A refused entry is absent from the list;{' '}
-            <code>flags</code> b0 marks a full 32-entry table as the reason. Library
-            binding: <A href="/library/requests#query-catch"><code>query_catch</code></A>.
-          </p>
-          <div class="api-response-label">CLOCK FIELDS</div>
-          <p>
-            The two ESP32-S3s boot independently with unrelated timers, and events carry stamps from
-            both (see{' '}
-            <A href="/native/commands/catch#clocks">the <code>clk</code> byte</A>).
-          </p>
-          <p>
-            The box measures the difference with a four-timestamp exchange across the inter-chip link,
-            stamped as each frame reaches the wire rather than when it is queued.
-          </p>
-          <pre class="diagram">{`  device chip                              host chip
+        </div>
+        <p>
+          The box-wide <code>dropped</code> counts every lost event; the per-entry one attributes them to a
+          subscription.
+        </p>
+        <div class="api-response-label">CONFIRMATION</div>
+        <p>
+          <A href="/native/commands/catch#catch"><code>CATCH</code></A> is fire-and-forget, so this
+          reply is the only confirmation an entry landed. A refused entry is absent from the list;{' '}
+          <code>flags</code> b0 marks a full 32-entry table as the reason. Library
+          binding: <A href="/library/requests#query-catch"><code>query_catch</code></A>.
+        </p>
+        <div class="api-response-label">CLOCK FIELDS</div>
+        <p>
+          The two ESP32-S3s boot independently with unrelated timers, and events carry stamps from
+          both (see{' '}
+          <A href="/native/commands/catch#clocks">the <code>clk</code> byte</A>).
+        </p>
+        <p>
+          The box measures the difference with a four-timestamp exchange across the inter-chip link,
+          stamped as each frame reaches the wire rather than when it is queued.
+        </p>
+        <pre class="diagram">{`  device chip                              host chip
       t1  ------- request -------------------> t2
                                                |
       t4  <---------------- reply ------------ t3
 
       offset = ((t2 - t1) + (t3 - t4)) / 2
       delay  =  (t4 - t1) - (t3 - t2)     ->  the error bound is delay / 2`}</pre>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Field</th><th>Use</th></tr>
@@ -698,49 +776,53 @@ const Requests: Component = () => {
               <tr><td><code>clk_age_ms</code></td><td>Age of the exchange the offset <em>rests on</em>: the least-delayed one in the window, often older than the newest. <code>0xFFFF</code> marks "no estimate yet", which an offset of 0 alone can't tell from a true zero.</td></tr>
             </tbody>
           </table>
-          <p>
-            Applying the offset is optional; the <code>clk</code> byte on each event stays
-            authoritative.
-          </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <p>
-            One entry, every mouse button, both edges, whole packet (<code>class = 0</code>,{' '}
-            <code>id = 0xFFFF</code>, <code>dir = 0</code>, <code>snaplen = 0</code>), with no drops
-            and no clock estimate taken yet:
-          </p>
-          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------------+
-| A5     | 06     | 00     | 1A 00  | 07     | 00     | 00 00 00 00  |
-+--------+--------+--------+--------+--------+--------+--------------+
-| SOF    | TYPE   | SEQ    | LEN    | what   | flags  | dropped      |
-+--------+--------+--------+--------+--------+--------+--------------+
+        </div>
+        <p>
+          Applying the offset is optional; the <code>clk</code> byte on each event stays
+          authoritative.
+        </p>
+        <div class="api-response-label">EXAMPLE</div>
+        <p>
+          One entry, every mouse button, both edges, whole packet (<code>class = 0</code>,{' '}
+          <code>id = 0xFFFF</code>, <code>dir = 0</code>, <code>snaplen = 0</code>), with no drops
+          and no clock estimate taken yet:
+        </p>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '06', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '1A 00', name: 'LEN' },
+            { value: '07', name: 'what' },
+            { value: '00', name: 'flags' },
+            { value: '00 00 00 00', name: 'dropped' },
+            { value: '00 00 00 00', name: 'clk_offset' },
+            { value: '00 00 00 00', name: 'clk_rate' },
+            { value: '00 00', name: 'clk_dly' },
+            { value: 'FF FF', name: 'clk_age' },
+            { value: '01', name: 'n' },
+            { value: '00', name: 'class' },
+            { value: 'FF FF', name: 'id' },
+            { value: '00', name: 'dir' },
+            { value: '00', name: 'snaplen' },
+            { value: '00 00', name: 'dropped' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
+      </DocSection>
 
-+-------------+-------------+--------+--------+--------+
-| 00 00 00 00 | 00 00 00 00 | 00 00  | FF FF  | 01     |
-+-------------+-------------+--------+--------+--------+
-| clk_offset  | clk_rate    |clk_dly | clk_age| n      |
-+-------------+-------------+--------+--------+--------+
-
-+--------+--------+--------+--------+--------+--------+
-| 00     | FF FF  | 00     | 00     | 00 00  | lo hi  |
-+--------+--------+--------+--------+--------+--------+
-| class  | id     | dir    |snaplen | dropped| CRC16  |
-+--------+--------+--------+--------+--------+--------+`}</pre>
-        </Card>
-      </div>
-
-      <div id="options" data-search-target>
-        <Card>
-          <CardHeader title="OPTIONS" subtitle="RESP payload, what = 9" />
-          <p>
-            The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
-            <code>what = 9</code>: one persistent box{' '}
-            <A href="/native/commands/option"><code>OPTION</code></A> value, echoing the queried{' '}
-            <code>id</code>. Values are id-specific, so each option is read separately. An unknown id
-            gets no reply.
-          </p>
-          <pre class="api-signature">QUERY  what = 9, id  ·  RESP varies</pre>
-          <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
-          <div class="api-response-label">PAYLOAD</div>
+      <DocSection id="options" title="OPTIONS" caption="RESP payload, what = 9">
+        <p>
+          The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
+          <code>what = 9</code>: one persistent box{' '}
+          <A href="/native/commands/option"><code>OPTION</code></A> value, echoing the queried{' '}
+          <code>id</code>. Values are id-specific, so each option is read separately. An unknown id
+          gets no reply.
+        </p>
+        <pre class="api-signature">QUERY  what = 9, id  ·  RESP varies</pre>
+        <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
+        <div class="api-response-label">PAYLOAD</div>
+        <div class="table-scroll">
           <table class="byte-table">
             <thead>
               <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
@@ -751,12 +833,14 @@ const Requests: Component = () => {
               <tr><td>2..</td><td><code>value</code></td><td><code>varies</code></td><td>id-specific, mirroring the matching <A href="/native/commands/option"><code>OPTION</code></A> value</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">IMPERFECT VALUE</div>
-          <p>
-            The <A href="/native/commands/option#imperfect"><code>IMPERFECT</code></A> opt-in (id 0) plus
-            two derived clone-status bytes. Each is <code>0</code> or <code>1</code>; a faithful clone
-            reads all-zero.
-          </p>
+        </div>
+        <div class="api-response-label">IMPERFECT VALUE</div>
+        <p>
+          The <A href="/native/commands/option#imperfect"><code>IMPERFECT</code></A> opt-in (id 0) plus
+          two derived clone-status bytes. Each is <code>0</code> or <code>1</code>; a faithful clone
+          reads all-zero.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Offset</th><th>Field</th><th>Notes</th></tr>
@@ -767,16 +851,18 @@ const Requests: Component = () => {
               <tr><td>4</td><td><code>clone_imperfect</code></td><td>the live clone is not an exact copy: an opted-in device the box can't clone exactly, a forced rate, or a descriptor-patch set it serves</td></tr>
             </tbody>
           </table>
-          <p>
-            It shows why a clone is missing (<code>over_capacity = 1</code>,{' '}
-            <code>allowed = 0</code>) or confirms an imperfect clone is live
-            (<code>clone_imperfect = 1</code>). Library binding:{' '}
-            <A href="/library/options#query-imperfect"><code>query_imperfect</code></A>.
-          </p>
-          <div class="api-response-label">MOVE_RIDE VALUE</div>
-          <p>
-            The current <A href="/native/commands/option#move-ride"><code>MOVE_RIDE</code></A> window (id 1).
-          </p>
+        </div>
+        <p>
+          It shows why a clone is missing (<code>over_capacity = 1</code>,{' '}
+          <code>allowed = 0</code>) or confirms an imperfect clone is live
+          (<code>clone_imperfect = 1</code>). Library binding:{' '}
+          <A href="/library/options#query-imperfect"><code>query_imperfect</code></A>.
+        </p>
+        <div class="api-response-label">MOVE_RIDE VALUE</div>
+        <p>
+          The current <A href="/native/commands/option#move-ride"><code>MOVE_RIDE</code></A> window (id 1).
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Offset</th><th>Field</th><th>Notes</th></tr>
@@ -785,15 +871,17 @@ const Requests: Component = () => {
               <tr><td>2</td><td><code>timeout</code></td><td><code>u16</code>, little-endian; the ride window in ms, <code>0</code> = off</td></tr>
             </tbody>
           </table>
-          <p>
-            Library binding:{' '}
-            <A href="/library/options#query-movement-riding"><code>query_movement_riding</code></A>.
-          </p>
-          <div class="api-response-label">EMIT VALUE</div>
-          <p>
-            The current <A href="/native/commands/option#emit"><code>EMIT</code></A> pace and wire rate
-            (id 2).
-          </p>
+        </div>
+        <p>
+          Library binding:{' '}
+          <A href="/library/options#query-movement-riding"><code>query_movement_riding</code></A>.
+        </p>
+        <div class="api-response-label">EMIT VALUE</div>
+        <p>
+          The current <A href="/native/commands/option#emit"><code>EMIT</code></A> pace and wire rate
+          (id 2).
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Offset</th><th>Field</th><th>Notes</th></tr>
@@ -807,20 +895,22 @@ const Requests: Component = () => {
               <tr><td>11</td><td><code>force_active</code></td><td><code>1</code> when a forced interval is in the served descriptor</td></tr>
             </tbody>
           </table>
-          <p>
-            A <code>force_hz</code> set while{' '}
-            <A href="/native/commands/option#imperfect"><code>IMPERFECT</code></A> is off reads back with{' '}
-            <code>force_active</code> <code>0</code> and <code>advertised_hz</code> still the native interval.
-          </p>
-          <p>
-            Library binding:{' '}
-            <A href="/library/options#query-emit-pace"><code>query_emit_pace</code></A>.
-          </p>
-          <div class="api-response-label">BEARING VALUE</div>
-          <p>
-            The current <A href="/native/commands/option#bearing"><code>BEARING</code></A> setting
-            (id 4): window and geometry mode.
-          </p>
+        </div>
+        <p>
+          A <code>force_hz</code> set while{' '}
+          <A href="/native/commands/option#imperfect"><code>IMPERFECT</code></A> is off reads back with{' '}
+          <code>force_active</code> <code>0</code> and <code>advertised_hz</code> still the native interval.
+        </p>
+        <p>
+          Library binding:{' '}
+          <A href="/library/options#query-emit-pace"><code>query_emit_pace</code></A>.
+        </p>
+        <div class="api-response-label">BEARING VALUE</div>
+        <p>
+          The current <A href="/native/commands/option#bearing"><code>BEARING</code></A> setting
+          (id 4): window and geometry mode.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Offset</th><th>Field</th><th>Notes</th></tr>
@@ -830,15 +920,17 @@ const Requests: Component = () => {
               <tr><td>4</td><td><code>mode</code></td><td><code>0</code> per axis, <code>1</code> vector</td></tr>
             </tbody>
           </table>
-          <p>
-            Library binding:{' '}
-            <A href="/library/options#query-bearing"><code>query_bearing</code></A>.
-          </p>
-          <div class="api-response-label">RENDER VALUE</div>
-          <p>
-            The current <A href="/native/commands/option#render"><code>RENDER</code></A> setting (id 5),
-            and whether a render profile has been learned.
-          </p>
+        </div>
+        <p>
+          Library binding:{' '}
+          <A href="/library/options#query-bearing"><code>query_bearing</code></A>.
+        </p>
+        <div class="api-response-label">RENDER VALUE</div>
+        <p>
+          The current <A href="/native/commands/option#render"><code>RENDER</code></A> setting (id 5),
+          and whether a render profile has been learned.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Offset</th><th>Field</th><th>Notes</th></tr>
@@ -849,20 +941,22 @@ const Requests: Component = () => {
               <tr><td>4</td><td><code>ready</code></td><td><code>1</code> once a profile has armed for the attached device</td></tr>
             </tbody>
           </table>
-          <p>
-            Nothing is rendered while <code>ready</code> reads <code>0</code>, which also covers a box
-            whose two chips have not yet agreed which holds the motion: motion is relayed and
-            injection takes the paced fill regardless of <code>mode</code>.
-          </p>
-          <p>
-            Library binding:{' '}
-            <A href="/library/options#query-render"><code>query_render</code></A>.
-          </p>
-          <div class="api-response-label">SPREAD VALUE</div>
-          <p>
-            The current <A href="/native/commands/option#spread"><code>SPREAD</code></A> setting (id 6),
-            and the interval injected deltas are released across.
-          </p>
+        </div>
+        <p>
+          Nothing is rendered while <code>ready</code> reads <code>0</code>, which also covers a box
+          whose two chips have not yet agreed which holds the motion: motion is relayed and
+          injection takes the paced fill regardless of <code>mode</code>.
+        </p>
+        <p>
+          Library binding:{' '}
+          <A href="/library/options#query-render"><code>query_render</code></A>.
+        </p>
+        <div class="api-response-label">SPREAD VALUE</div>
+        <p>
+          The current <A href="/native/commands/option#spread"><code>SPREAD</code></A> setting (id 6),
+          and the interval injected deltas are released across.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Offset</th><th>Field</th><th>Notes</th></tr>
@@ -872,39 +966,47 @@ const Requests: Component = () => {
               <tr><td>4</td><td><code>span_us</code></td><td><code>u32</code>, little-endian; the interval in effect in microseconds, <code>0</code> = nothing is being spread</td></tr>
             </tbody>
           </table>
-          <p>
-            <code>span_us</code> reads <code>0</code> while <code>percent</code> is <code>0</code>,
-            while no command period has been learned, and while the box's two chips have not yet
-            agreed which holds the motion. In each case the whole delta goes out on the next report
-            the box emits.
-          </p>
-          <p>
-            Library binding:{' '}
-            <A href="/library/options#query-spread"><code>query_spread</code></A>.
-          </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <p>Reading <code>id = 0</code>: opted in, an over-capacity device attached and cloned imperfectly:</p>
-          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 06     | 00     | 05 00  | 09     | 00     | 01     | 01     | 01     | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | what   | id     | allow  | overcap| imperf | CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
-        </Card>
-      </div>
+        </div>
+        <p>
+          <code>span_us</code> reads <code>0</code> while <code>percent</code> is <code>0</code>,
+          while no command period has been learned, and while the box's two chips have not yet
+          agreed which holds the motion. In each case the whole delta goes out on the next report
+          the box emits.
+        </p>
+        <p>
+          Library binding:{' '}
+          <A href="/library/options#query-spread"><code>query_spread</code></A>.
+        </p>
+        <div class="api-response-label">EXAMPLE</div>
+        <p>Reading <code>id = 0</code>: opted in, an over-capacity device attached and cloned imperfectly:</p>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '06', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '05 00', name: 'LEN' },
+            { value: '09', name: 'what' },
+            { value: '00', name: 'id' },
+            { value: '01', name: 'allow' },
+            { value: '01', name: 'overcap' },
+            { value: '01', name: 'imperf' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
+      </DocSection>
 
-      <div id="clip" data-search-target>
-        <Card>
-          <CardHeader title="CLIP" subtitle="RESP payload, what = 10" />
-          <p>
-            The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
-            <code>what = 10</code>: the buffered-clip ring depth, playback state, and full config. A
-            fixed prefix, then the clip's held-usage snapshot (the same class-tagged list a{' '}
-            <A href="/native/commands/catch#usage-event"><code>USAGE_EVENT</code></A> carries), then the
-            config tail.
-          </p>
-          <pre class="api-signature">QUERY  what = 10  ·  RESP 31-byte prefix + held usages + config</pre>
-          <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
-          <div class="api-response-label">PAYLOAD</div>
+      <DocSection id="clip" title="CLIP" caption="RESP payload, what = 10">
+        <p>
+          The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
+          <code>what = 10</code>: the buffered-clip ring depth, playback state, and full config. A
+          fixed prefix, then the clip's held-usage snapshot (the same class-tagged list a{' '}
+          <A href="/native/commands/catch#usage-event"><code>USAGE_EVENT</code></A> carries), then the
+          config tail.
+        </p>
+        <pre class="api-signature">QUERY  what = 10  ·  RESP 31-byte prefix + held usages + config</pre>
+        <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
+        <div class="api-response-label">PAYLOAD</div>
+        <div class="table-scroll">
           <table class="byte-table">
             <thead>
               <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
@@ -945,7 +1047,9 @@ const Requests: Component = () => {
               <tr><td>+</td><td><code>match</code>, <code>mask</code></td><td><code>u8[mlen]</code> each</td><td>per packet trigger: as set</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">FLAGS</div>
+        </div>
+        <div class="api-response-label">FLAGS</div>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Bit</th><th>Mask</th><th>Set when</th></tr>
@@ -957,73 +1061,83 @@ const Requests: Component = () => {
               <tr><td>b3</td><td><code>0x08</code></td><td><code>RIDE</code>: the clip's motion waits to ride a native report instead of emitting on the box's own clock</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">EFFECT</div>
-          <p>
-            The held snapshot lists the usages the clip is currently forcing down, one class-tagged
-            entry each (3 bytes). <code>ticks</code> and the six counters count since boot and wrap.
-          </p>
-          <p>
-            A packet trigger reads back as the{' '}
-            <A href="/native/commands/clip#packet-triggers">command that set it</A> with{' '}
-            <code>hits</code> spliced in after <code>mlen</code> and bit0 (present) clear, so a host
-            replays one by setting bit0. The whole reply is at most 507 bytes, inside one frame.
-          </p>
-          <p>
-            Library bindings:{' '}
-            <A href="/library/requests#clip-status"><code>query_status</code></A>{' '}
-            (<A href="/library/types/structs#clip-status"><code>ClipStatus</code></A>) and{' '}
-            <A href="/library/requests#clip-config"><code>query_config</code></A>{' '}
-            (<A href="/library/types/structs#clip-settings"><code>ClipSettings</code></A>).
-          </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <p>Idle, empty 64 KB ring, no held usages, no autolock, no triggers of either kind (<code>state = 0</code>, <code>free = 65536</code>):</p>
-          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------------+
-| A5     | 06     | 00     | 23 00  | 0A     | 00     | 00 00 01 00  |
-+--------+--------+--------+--------+--------+--------+--------------+
-| SOF    | TYPE   | SEQ    | LEN    | what   | state  | free         |
-+--------+--------+--------+--------+--------+--------+--------------+
-
-| 00 00 00 00  | 00 00 00 00  | 00 00 00 00  | 00 00  | 00 00  | 00 00  |
-+--------------+--------------+--------------+--------+--------+--------+
-| total        | played       | ticks        | undrun | ovrrun | seqgap |
-+--------------+--------------+--------------+--------+--------+--------+
-
-| 00 00  | 00 00  | 00 00  | 00     | 00     | 00     | 00     | 00     | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| xfers  |xfer_err| gated  | held_n | autolk | flags  | n_trig | n_pkt  | CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
-          <p>
-            One packet trigger entry: <code>HID_IN</code> id <code>0x0102</code>, IN,{' '}
-            <code>TOGGLE</code>, consume and <code>RUN</code>, selector 1, <code>hits</code>{' '}
-            saturated.
-          </p>
-          <pre class="diagram">{`04 02 01 01 05 06 01 02 FF FF 07 20 FF 20
+        </div>
+        <div class="api-response-label">EFFECT</div>
+        <p>
+          The held snapshot lists the usages the clip is currently forcing down, one class-tagged
+          entry each (3 bytes). <code>ticks</code> and the six counters count since boot and wrap.
+        </p>
+        <p>
+          A packet trigger reads back as the{' '}
+          <A href="/native/commands/clip#packet-triggers">command that set it</A> with{' '}
+          <code>hits</code> spliced in after <code>mlen</code> and bit0 (present) clear, so a host
+          replays one by setting bit0. The whole reply is at most 507 bytes, inside one frame.
+        </p>
+        <p>
+          Library bindings:{' '}
+          <A href="/library/requests#clip-status"><code>query_status</code></A>{' '}
+          (<A href="/library/types/structs#clip-status"><code>ClipStatus</code></A>) and{' '}
+          <A href="/library/requests#clip-config"><code>query_config</code></A>{' '}
+          (<A href="/library/types/structs#clip-settings"><code>ClipSettings</code></A>).
+        </p>
+        <div class="api-response-label">EXAMPLE</div>
+        <p>Idle, empty 64 KB ring, no held usages, no autolock, no triggers of either kind (<code>state = 0</code>, <code>free = 65536</code>):</p>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '06', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '23 00', name: 'LEN' },
+            { value: '0A', name: 'what' },
+            { value: '00', name: 'state' },
+            { value: '00 00 01 00', name: 'free' },
+            { value: '00 00 00 00', name: 'total' },
+            { value: '00 00 00 00', name: 'played' },
+            { value: '00 00 00 00', name: 'ticks' },
+            { value: '00 00', name: 'undrun' },
+            { value: '00 00', name: 'ovrrun' },
+            { value: '00 00', name: 'seqgap' },
+            { value: '00 00', name: 'xfers' },
+            { value: '00 00', name: 'xfer_err' },
+            { value: '00 00', name: 'gated' },
+            { value: '00', name: 'held_n' },
+            { value: '00', name: 'autolk' },
+            { value: '00', name: 'flags' },
+            { value: '00', name: 'n_trig' },
+            { value: '00', name: 'n_pkt' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
+        <p>
+          One packet trigger entry: <code>HID_IN</code> id <code>0x0102</code>, IN,{' '}
+          <code>TOGGLE</code>, consume and <code>RUN</code>, selector 1, <code>hits</code>{' '}
+          saturated.
+        </p>
+        <pre class="diagram">{`04 02 01 01 05 06 01 02 FF FF 07 20 FF 20
    class=4 HID_IN   id=0x0102   dir=1 IN   action=5 TOGGLE   flags=0x06   slen=1   mlen=2
    hits=65535   match=07 20   mask=FF 20`}</pre>
-        </Card>
-      </div>
+      </DocSection>
 
-      <div id="firmware" data-search-target>
-        <Card>
-          <CardHeader title="FIRMWARE" subtitle="RESP payload, what = 11" />
-          <p>
-            The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
-            <code>what = 11</code>: both chips' versions, the slot each is running, and what is
-            staged.
-          </p>
-          <p>
-            The only source of the host chip's version;{' '}
-            <A href="/native/commands/requests#version"><code>VERSION</code></A> reports the device
-            chip alone.
-          </p>
-          <p>
-            Read it before an <A href="/native/commands/update"><code>UPDATE</code></A>:{' '}
-            <code>slot_size</code> is the largest image a chip will take, and a chip whose{' '}
-            <code>state</code> is <code>pending-verify</code> refuses to open one.
-          </p>
-          <pre class="api-signature">QUERY  what = 11  ·  RESP 17 bytes</pre>
-          <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
-          <div class="api-response-label">PAYLOAD</div>
+      <DocSection id="firmware" title="FIRMWARE" caption="RESP payload, what = 11">
+        <p>
+          The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
+          <code>what = 11</code>: both chips' versions, the slot each is running, and what is
+          staged.
+        </p>
+        <p>
+          The only source of the host chip's version;{' '}
+          <A href="/native/commands/requests#version"><code>VERSION</code></A> reports the device
+          chip alone.
+        </p>
+        <p>
+          Read it before an <A href="/native/commands/update"><code>UPDATE</code></A>:{' '}
+          <code>slot_size</code> is the largest image a chip will take, and a chip whose{' '}
+          <code>state</code> is <code>pending-verify</code> refuses to open one.
+        </p>
+        <pre class="api-signature">QUERY  what = 11  ·  RESP 17 bytes</pre>
+        <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
+        <div class="api-response-label">PAYLOAD</div>
+        <div class="table-scroll">
           <table class="byte-table">
             <thead>
               <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
@@ -1045,7 +1159,9 @@ const Requests: Component = () => {
               <tr><td>16</td><td><code>staged</code></td><td><code>u8</code></td><td>bit 0 device staged, bit 1 host staged</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">STATE</div>
+        </div>
+        <div class="api-response-label">STATE</div>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Value</th><th>State</th><th>Means</th></tr>
@@ -1059,47 +1175,52 @@ const Requests: Component = () => {
               <tr><td><code>0xFF</code></td><td>unknown</td><td>no entry for this slot</td></tr>
             </tbody>
           </table>
-          <p>
-            Library binding:{' '}
-            <A href="/library/requests#firmware-info"><code>firmware_info</code></A>.
-          </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <p>
-            Both chips on <code>3.4.5</code>, device on <code>ota_1</code>, host on{' '}
-            <code>ota_0</code>, both images <code>valid</code>, nothing staged:
-          </p>
-          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 06     | 01     | 11 00  | 0B     | 03     | 04     | 05     |
-+--------+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | what   | devmaj | devmin | devpat |
-+--------+--------+--------+--------+--------+--------+--------+--------+
+        </div>
+        <p>
+          Library binding:{' '}
+          <A href="/library/requests#firmware-info"><code>firmware_info</code></A>.
+        </p>
+        <div class="api-response-label">EXAMPLE</div>
+        <p>
+          Both chips on <code>3.4.5</code>, device on <code>ota_1</code>, host on{' '}
+          <code>ota_0</code>, both images <code>valid</code>, nothing staged:
+        </p>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '06', name: 'TYPE' },
+            { value: '01', name: 'SEQ' },
+            { value: '11 00', name: 'LEN' },
+            { value: '0B', name: 'what' },
+            { value: '03', name: 'devmaj' },
+            { value: '04', name: 'devmin' },
+            { value: '05', name: 'devpat' },
+            { value: '01', name: 'devslt' },
+            { value: '02', name: 'devsta' },
+            { value: '01', name: 'hostpr' },
+            { value: '03', name: 'hstmaj' },
+            { value: '04', name: 'hstmin' },
+            { value: '05', name: 'hstpat' },
+            { value: '00', name: 'hstslt' },
+            { value: '02', name: 'hststa' },
+            { value: '00 00 0F 00', name: 'slot_size' },
+            { value: '00', name: 'staged' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
+      </DocSection>
 
-+--------+--------+--------+--------+--------+--------+--------+--------+
-| 01     | 02     | 01     | 03     | 04     | 05     | 00     | 02     |
-+--------+--------+--------+--------+--------+--------+--------+--------+
-| devslt | devsta | hostpr | hstmaj | hstmin | hstpat | hstslt | hststa |
-+--------+--------+--------+--------+--------+--------+--------+--------+
-
-+-------------+--------+--------+
-| 00 00 0F 00 | 00     | lo hi  |
-+-------------+--------+--------+
-| slot_size   | staged | CRC16  |
-+-------------+--------+--------+`}</pre>
-        </Card>
-      </div>
-
-      <div id="rewrite" data-search-target>
-        <Card>
-          <CardHeader title="REWRITE" subtitle="RESP payload, what = 12" />
-          <p>
-            The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
-            <code>what = 12</code>: a{' '}
-            <A href="/native/commands/rewrite"><code>REWRITE</code></A> table summary, a four-byte
-            header then twelve bytes per rule in table order.
-          </p>
-          <pre class="api-signature">QUERY  what = 12  ·  RESP 4 + 12n bytes</pre>
-          <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
-          <div class="api-response-label">PAYLOAD</div>
+      <DocSection id="rewrite" title="REWRITE" caption="RESP payload, what = 12">
+        <p>
+          The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
+          <code>what = 12</code>: a{' '}
+          <A href="/native/commands/rewrite"><code>REWRITE</code></A> table summary, a four-byte
+          header then twelve bytes per rule in table order.
+        </p>
+        <pre class="api-signature">QUERY  what = 12  ·  RESP 4 + 12n bytes</pre>
+        <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
+        <div class="api-response-label">PAYLOAD</div>
+        <div class="table-scroll">
           <table class="byte-table">
             <thead>
               <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
@@ -1119,7 +1240,9 @@ const Requests: Component = () => {
               <tr><td>+</td><td><code>hits</code></td><td><code>u16</code></td><td>packets this rule matched as the top-ranked rule, a <code>PASS</code> included; saturating at 65535</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">FLAGS</div>
+        </div>
+        <div class="api-response-label">FLAGS</div>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Bit</th><th>Mask</th><th>Set when</th></tr>
@@ -1128,57 +1251,60 @@ const Requests: Component = () => {
               <tr><td>b0</td><td><code>0x01</code></td><td><code>FULL</code>: the last add was refused for capacity, a 33rd rule or a payload the 2048-byte pool cannot hold, an overwrite included. The next change to the table clears it: an add, an overwrite, a removal or a clear. An identical re-send is no change, so a keepalive leaves it set</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">EFFECT</div>
-          <p>
-            A line carries no match, mask or payload bytes; read those with{' '}
-            <A href="/native/commands/requests#rewrite-entry"><code>QUERY(REWRITE_ENTRY)</code></A>.{' '}
-            <A href="/native/commands/requests#health"><code>HEALTH</code></A> sets{' '}
-            <code>REWRITE_ON</code> (<code>0x0100</code>) while the list is non-empty.
-          </p>
-          <p>
-            The table is PC-owned session state on the{' '}
-            <A href="/native/commands/rewrite#lifecycle">same lifecycle</A> as locks, so an empty
-            list can mean the box released it, which{' '}
-            <A href="/native/commands/requests#stats"><code>session</code></A> counts. Library binding:{' '}
-            <A href="/library/advanced/rewrite#query-rewrite"><code>query_rewrite</code></A>.
-          </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <p>
-            One rule, <code>DROP</code> on <code>EMIT</code> endpoint 1, after 42 hits, with the
-            table not full:
-          </p>
-          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 06     | 00     | 10 00  | 0C     | 00     | 01     |
-+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | what   | flags  | gen    |
-+--------+--------+--------+--------+--------+--------+--------+
+        </div>
+        <div class="api-response-label">EFFECT</div>
+        <p>
+          A line carries no match, mask or payload bytes; read those with{' '}
+          <A href="/native/commands/requests#rewrite-entry"><code>QUERY(REWRITE_ENTRY)</code></A>.{' '}
+          <A href="/native/commands/requests#health"><code>HEALTH</code></A> sets{' '}
+          <code>REWRITE_ON</code> (<code>0x0100</code>) while the list is non-empty.
+        </p>
+        <p>
+          The table is PC-owned session state on the{' '}
+          <A href="/native/commands/rewrite#lifecycle">same lifecycle</A> as locks, so an empty
+          list can mean the box released it, which{' '}
+          <A href="/native/commands/requests#stats"><code>session</code></A> counts. Library binding:{' '}
+          <A href="/library/advanced/rewrite#query-rewrite"><code>query_rewrite</code></A>.
+        </p>
+        <div class="api-response-label">EXAMPLE</div>
+        <p>
+          One rule, <code>DROP</code> on <code>EMIT</code> endpoint 1, after 42 hits, with the
+          table not full:
+        </p>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '06', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '10 00', name: 'LEN' },
+            { value: '0C', name: 'what' },
+            { value: '00', name: 'flags' },
+            { value: '01', name: 'gen' },
+            { value: '01', name: 'n' },
+            { value: '09', name: 'cls' },
+            { value: '01 00', name: 'id' },
+            { value: '01', name: 'dir' },
+            { value: '01', name: 'action' },
+            { value: '00', name: 'mlen' },
+            { value: '00 00', name: 'off' },
+            { value: '00 00', name: 'plen' },
+            { value: '2A 00', name: 'hits' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
+      </DocSection>
 
-+--------+--------+--------+--------+--------+--------+
-| 01     | 09     | 01 00  | 01     | 01     | 00     |
-+--------+--------+--------+--------+--------+--------+
-| n      | cls    | id     | dir    | action | mlen   |
-+--------+--------+--------+--------+--------+--------+
-
-+--------+--------+--------+--------+
-| 00 00  | 00 00  | 2A 00  | lo hi  |
-+--------+--------+--------+--------+
-| off    | plen   | hits   | CRC16  |
-+--------+--------+--------+--------+`}</pre>
-        </Card>
-      </div>
-
-      <div id="rewrite-entry" data-search-target>
-        <Card>
-          <CardHeader title="REWRITE_ENTRY" subtitle="RESP payload, what = 13" />
-          <p>
-            The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
-            <code>what = 13</code>: one rule in full. The <code>QUERY</code> carries{' '}
-            <code>[13][index]</code>, where <code>index</code> is the rule's line in{' '}
-            <A href="/native/commands/requests#rewrite"><code>RESP(REWRITE)</code></A>.
-          </p>
-          <pre class="api-signature">QUERY  what = 13  ·  RESP 11 + 2 x mlen + plen bytes</pre>
-          <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
-          <div class="api-response-label">PAYLOAD</div>
+      <DocSection id="rewrite-entry" title="REWRITE_ENTRY" caption="RESP payload, what = 13">
+        <p>
+          The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
+          <code>what = 13</code>: one rule in full. The <code>QUERY</code> carries{' '}
+          <code>[13][index]</code>, where <code>index</code> is the rule's line in{' '}
+          <A href="/native/commands/requests#rewrite"><code>RESP(REWRITE)</code></A>.
+        </p>
+        <pre class="api-signature">QUERY  what = 13  ·  RESP 11 + 2 x mlen + plen bytes</pre>
+        <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
+        <div class="api-response-label">PAYLOAD</div>
+        <div class="table-scroll">
           <table class="byte-table">
             <thead>
               <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
@@ -1198,41 +1324,47 @@ const Requests: Component = () => {
               <tr><td>11+2 x mlen</td><td><code>payload</code></td><td><code>u8[]</code></td><td>the rest, <code>plen</code> bytes</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">EFFECT</div>
-          <p>
-            Past the first two bytes it is a{' '}
-            <A href="/native/commands/rewrite#rewrite"><code>REWRITE</code></A> payload that
-            reinstalls the rule. An index at or past <code>n</code> gets no reply. Library binding:{' '}
-            <A href="/library/advanced/rewrite#query-rewrite-entry"><code>query_rewrite_entry</code></A>.
-          </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <p>Rule 0, the <code>DROP</code> on <code>EMIT</code> endpoint 1:</p>
-          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 06     | 01     | 0B 00  | 0D     | 00     | 09     |
-+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | what   | index  | cls    |
-+--------+--------+--------+--------+--------+--------+--------+
+        </div>
+        <div class="api-response-label">EFFECT</div>
+        <p>
+          Past the first two bytes it is a{' '}
+          <A href="/native/commands/rewrite#rewrite"><code>REWRITE</code></A> payload that
+          reinstalls the rule. An index at or past <code>n</code> gets no reply. Library binding:{' '}
+          <A href="/library/advanced/rewrite#query-rewrite-entry"><code>query_rewrite_entry</code></A>.
+        </p>
+        <div class="api-response-label">EXAMPLE</div>
+        <p>Rule 0, the <code>DROP</code> on <code>EMIT</code> endpoint 1:</p>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '06', name: 'TYPE' },
+            { value: '01', name: 'SEQ' },
+            { value: '0B 00', name: 'LEN' },
+            { value: '0D', name: 'what' },
+            { value: '00', name: 'index' },
+            { value: '09', name: 'cls' },
+            { value: '01 00', name: 'id' },
+            { value: '01', name: 'dir' },
+            { value: '01', name: 'state' },
+            { value: '01', name: 'action' },
+            { value: '00 00', name: 'off' },
+            { value: '00', name: 'mlen' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
+      </DocSection>
 
-+--------+--------+--------+--------+--------+--------+--------+
-| 01 00  | 01     | 01     | 01     | 00 00  | 00     | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+
-| id     | dir    | state  | action | off    | mlen   | CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+`}</pre>
-        </Card>
-      </div>
-
-      <div id="patches" data-search-target>
-        <Card>
-          <CardHeader title="PATCHES" subtitle="RESP payload, what = 14" />
-          <p>
-            The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
-            <code>what = 14</code>: a stored{' '}
-            <A href="/native/commands/patch"><code>PATCH</code></A> set summary, a three-byte header
-            then seven bytes per patch in set order; an overwrite moves a patch to the end.
-          </p>
-          <pre class="api-signature">QUERY  what = 14  ·  RESP 3 + 7n bytes</pre>
-          <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
-          <div class="api-response-label">PAYLOAD</div>
+      <DocSection id="patches" title="PATCHES" caption="RESP payload, what = 14">
+        <p>
+          The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
+          <code>what = 14</code>: a stored{' '}
+          <A href="/native/commands/patch"><code>PATCH</code></A> set summary, a three-byte header
+          then seven bytes per patch in set order; an overwrite moves a patch to the end.
+        </p>
+        <pre class="api-signature">QUERY  what = 14  ·  RESP 3 + 7n bytes</pre>
+        <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
+        <div class="api-response-label">PAYLOAD</div>
+        <div class="table-scroll">
           <table class="byte-table">
             <thead>
               <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
@@ -1248,7 +1380,9 @@ const Requests: Component = () => {
               <tr><td>+</td><td><code>len</code></td><td><code>u16</code></td><td>length, little-endian</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">FLAGS</div>
+        </div>
+        <div class="api-response-label">FLAGS</div>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Bit</th><th>Mask</th><th>Set when</th></tr>
@@ -1260,50 +1394,55 @@ const Requests: Component = () => {
               <tr><td>b3</td><td><code>0x08</code></td><td><code>FULL</code>: the last add was refused for capacity, a 17th patch or bytes the 1024-byte pool cannot hold, an overwrite included; the next change to the set, or <code>CLEAR</code>, clears it</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">EFFECT</div>
-          <p>
-            A line carries no patch bytes; read those with{' '}
-            <A href="/native/commands/requests#patch-entry"><code>QUERY(PATCH_ENTRY)</code></A>.{' '}
-            <A href="/native/commands/requests#health"><code>HEALTH</code></A> sets{' '}
-            <code>PATCH_ON</code> (<code>0x0200</code>) while b0 is set.
-          </p>
-          <p>
-            The list is the stored set; the clone <A href="/native/commands/patch#presentation">serves</A>{' '}
-            the same one while b1 is clear, and none while b0 is clear. With the device unplugged it
-            is the last attached device's set. Library binding:{' '}
-            <A href="/library/advanced/patch#query-patches"><code>query_patches</code></A>.
-          </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <p>
-            One applied patch, <code>bcdDevice</code> in the device descriptor (<code>offset = 12</code>,{' '}
-            <code>len = 2</code>):
-          </p>
-          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 06     | 00     | 0A 00  | 0E     | 01     | 01     |
-+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | what   | flags  | n      |
-+--------+--------+--------+--------+--------+--------+--------+
+        </div>
+        <div class="api-response-label">EFFECT</div>
+        <p>
+          A line carries no patch bytes; read those with{' '}
+          <A href="/native/commands/requests#patch-entry"><code>QUERY(PATCH_ENTRY)</code></A>.{' '}
+          <A href="/native/commands/requests#health"><code>HEALTH</code></A> sets{' '}
+          <code>PATCH_ON</code> (<code>0x0200</code>) while b0 is set.
+        </p>
+        <p>
+          The list is the stored set; the clone <A href="/native/commands/patch#presentation">serves</A>{' '}
+          the same one while b1 is clear, and none while b0 is clear. With the device unplugged it
+          is the last attached device's set. Library binding:{' '}
+          <A href="/library/advanced/patch#query-patches"><code>query_patches</code></A>.
+        </p>
+        <div class="api-response-label">EXAMPLE</div>
+        <p>
+          One applied patch, <code>bcdDevice</code> in the device descriptor (<code>offset = 12</code>,{' '}
+          <code>len = 2</code>):
+        </p>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '06', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '0A 00', name: 'LEN' },
+            { value: '0E', name: 'what' },
+            { value: '01', name: 'flags' },
+            { value: '01', name: 'n' },
+            { value: '00', name: 'section' },
+            { value: '00', name: 'cfg' },
+            { value: '00', name: 'index' },
+            { value: '0C 00', name: 'offset' },
+            { value: '02 00', name: 'len' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
+      </DocSection>
 
-+--------+--------+--------+--------+--------+--------+
-| 00     | 00     | 00     | 0C 00  | 02 00  | lo hi  |
-+--------+--------+--------+--------+--------+--------+
-| section| cfg    | index  | offset | len    | CRC16  |
-+--------+--------+--------+--------+--------+--------+`}</pre>
-        </Card>
-      </div>
-
-      <div id="patch-entry" data-search-target>
-        <Card>
-          <CardHeader title="PATCH_ENTRY" subtitle="RESP payload, what = 15" />
-          <p>
-            The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
-            <code>what = 15</code>: one patch in full. The <code>QUERY</code> carries{' '}
-            <code>[15][entry]</code>, where <code>entry</code> is the patch's line in{' '}
-            <A href="/native/commands/requests#patches"><code>RESP(PATCHES)</code></A>.
-          </p>
-          <pre class="api-signature">QUERY  what = 15  ·  RESP 7 + len bytes</pre>
-          <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
-          <div class="api-response-label">PAYLOAD</div>
+      <DocSection id="patch-entry" title="PATCH_ENTRY" caption="RESP payload, what = 15">
+        <p>
+          The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
+          <code>what = 15</code>: one patch in full. The <code>QUERY</code> carries{' '}
+          <code>[15][entry]</code>, where <code>entry</code> is the patch's line in{' '}
+          <A href="/native/commands/requests#patches"><code>RESP(PATCHES)</code></A>.
+        </p>
+        <pre class="api-signature">QUERY  what = 15  ·  RESP 7 + len bytes</pre>
+        <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
+        <div class="api-response-label">PAYLOAD</div>
+        <div class="table-scroll">
           <table class="byte-table">
             <thead>
               <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
@@ -1318,41 +1457,45 @@ const Requests: Component = () => {
               <tr><td>7</td><td><code>bytes</code></td><td><code>u8[]</code></td><td>the rest, <code>len</code> bytes</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">EFFECT</div>
-          <p>
-            Past the first two bytes it is a{' '}
-            <A href="/native/commands/patch#patch"><code>PATCH</code></A> payload that restores the
-            patch. An entry at or past <code>n</code> gets no reply. Library binding:{' '}
-            <A href="/library/advanced/patch#query-patch-entry"><code>query_patch_entry</code></A>.
-          </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <p>Entry 0, the <code>bcdDevice</code> patch setting <code>0x0200</code>:</p>
-          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 06     | 01     | 09 00  | 0F     | 00     | 00     |
-+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | what   | entry  | section|
-+--------+--------+--------+--------+--------+--------+--------+
+        </div>
+        <div class="api-response-label">EFFECT</div>
+        <p>
+          Past the first two bytes it is a{' '}
+          <A href="/native/commands/patch#patch"><code>PATCH</code></A> payload that restores the
+          patch. An entry at or past <code>n</code> gets no reply. Library binding:{' '}
+          <A href="/library/advanced/patch#query-patch-entry"><code>query_patch_entry</code></A>.
+        </p>
+        <div class="api-response-label">EXAMPLE</div>
+        <p>Entry 0, the <code>bcdDevice</code> patch setting <code>0x0200</code>:</p>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '06', name: 'TYPE' },
+            { value: '01', name: 'SEQ' },
+            { value: '09 00', name: 'LEN' },
+            { value: '0F', name: 'what' },
+            { value: '00', name: 'entry' },
+            { value: '00', name: 'section' },
+            { value: '00', name: 'cfg' },
+            { value: '00', name: 'index' },
+            { value: '0C 00', name: 'offset' },
+            { value: '00 02', name: 'bytes' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
+      </DocSection>
 
-+--------+--------+--------+--------+--------+
-| 00     | 00     | 0C 00  | 00 02  | lo hi  |
-+--------+--------+--------+--------+--------+
-| cfg    | index  | offset | bytes  | CRC16  |
-+--------+--------+--------+--------+--------+`}</pre>
-        </Card>
-      </div>
-
-      <div id="transforms" data-search-target>
-        <Card>
-          <CardHeader title="TRANSFORMS" subtitle="RESP payload, what = 16" />
-          <p>
-            The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
-            <code>what = 16</code>: the installed{' '}
-            <A href="/native/commands/transform"><code>TRANSFORM</code></A> table, a three-byte
-            header then seven bytes per entry in install order.
-          </p>
-          <pre class="api-signature">QUERY  what = 16  ·  RESP 3 + 7n bytes</pre>
-          <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
-          <div class="api-response-label">PAYLOAD</div>
+      <DocSection id="transforms" title="TRANSFORMS" caption="RESP payload, what = 16">
+        <p>
+          The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
+          <code>what = 16</code>: the installed{' '}
+          <A href="/native/commands/transform"><code>TRANSFORM</code></A> table, a three-byte
+          header then seven bytes per entry in install order.
+        </p>
+        <pre class="api-signature">QUERY  what = 16  ·  RESP 3 + 7n bytes</pre>
+        <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
+        <div class="api-response-label">PAYLOAD</div>
+        <div class="table-scroll">
           <table class="byte-table">
             <thead>
               <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
@@ -1368,12 +1511,14 @@ const Requests: Component = () => {
               <tr><td>+</td><td><code>did</code></td><td><code>u16</code></td><td>destination id, little-endian</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">READBACK</div>
-          <p>
-            An entry mirrors the <A href="/native/commands/transform#transform"><code>TRANSFORM</code></A>{' '}
-            frame field for field except the <code>state</code> byte, so a readback replays as
-            commands.
-          </p>
+        </div>
+        <div class="api-response-label">READBACK</div>
+        <p>
+          An entry mirrors the <A href="/native/commands/transform#transform"><code>TRANSFORM</code></A>{' '}
+          frame field for field except the <code>state</code> byte, so a readback replays as
+          commands.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>State</th><th>Reports as</th></tr>
@@ -1385,7 +1530,9 @@ const Requests: Component = () => {
               <tr><td>An entry whose destination this configuration doesn't declare</td><td>Present and unchanged. It is <A href="/native/commands/transform#cross">inert</A>, not removed, and works again once the destination binds.</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">FLAGS</div>
+        </div>
+        <div class="api-response-label">FLAGS</div>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Bit</th><th>Mask</th><th>Set when</th></tr>
@@ -1394,36 +1541,42 @@ const Requests: Component = () => {
               <tr><td>b0</td><td><code>0x01</code></td><td><code>FULL</code>: an entry was refused because the table already held 32. Nothing is evicted, and removing any entry clears the bit</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">EFFECT</div>
-          <p>
-            <A href="/native/commands/requests#health"><code>HEALTH</code></A> sets its{' '}
-            <code>TRANSFORM_ON</code> bit (<code>0x0400</code>) while the table is non-empty.
-          </p>
-          <p>
-            The table is PC-owned session state on the{' '}
-            <A href="/native/commands/transform#clearing">same lifecycle</A> as locks and the catch
-            subscription, so an empty list can mean the box released it, which{' '}
-            <A href="/native/commands/requests#stats"><code>session</code></A> counts. Library binding:{' '}
-            <A href="/library/transform#query-transforms"><code>query_transforms</code></A>.
-          </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <p>
-            One entry, X and Y swapped (<code>op = 1</code>, source <code>(axis 3, id 0)</code>, dest{' '}
-            <code>(axis 3, id 1)</code>), with the table not full:
-          </p>
-          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 06     | 00     | 0A 00  | 10     | 00     | 01     |
-+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | what   | flags  | n      |
-+--------+--------+--------+--------+--------+--------+--------+
-
-+--------+--------+--------+--------+--------+--------+
-| 01     | 03     | 00 00  | 03     | 01 00  | lo hi  |
-+--------+--------+--------+--------+--------+--------+
-| op     | sclass | sid    | dclass | did    | CRC16  |
-+--------+--------+--------+--------+--------+--------+`}</pre>
-        </Card>
-      </div>
+        </div>
+        <div class="api-response-label">EFFECT</div>
+        <p>
+          <A href="/native/commands/requests#health"><code>HEALTH</code></A> sets its{' '}
+          <code>TRANSFORM_ON</code> bit (<code>0x0400</code>) while the table is non-empty.
+        </p>
+        <p>
+          The table is PC-owned session state on the{' '}
+          <A href="/native/commands/transform#clearing">same lifecycle</A> as locks and the catch
+          subscription, so an empty list can mean the box released it, which{' '}
+          <A href="/native/commands/requests#stats"><code>session</code></A> counts. Library binding:{' '}
+          <A href="/library/transform#query-transforms"><code>query_transforms</code></A>.
+        </p>
+        <div class="api-response-label">EXAMPLE</div>
+        <p>
+          One entry, X and Y swapped (<code>op = 1</code>, source <code>(axis 3, id 0)</code>, dest{' '}
+          <code>(axis 3, id 1)</code>), with the table not full:
+        </p>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '06', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '0A 00', name: 'LEN' },
+            { value: '10', name: 'what' },
+            { value: '00', name: 'flags' },
+            { value: '01', name: 'n' },
+            { value: '01', name: 'op' },
+            { value: '03', name: 'sclass' },
+            { value: '00 00', name: 'sid' },
+            { value: '03', name: 'dclass' },
+            { value: '01 00', name: 'did' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
+      </DocSection>
 
     </>
   );

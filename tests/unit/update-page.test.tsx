@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { render, cleanup, waitFor } from '@solidjs/testing-library';
+import { render, cleanup, fireEvent, waitFor } from '@solidjs/testing-library';
 import { createSignal } from 'solid-js';
 import { PROTO_VER } from '../../src/dashboard/protocol';
 
@@ -43,6 +43,8 @@ const st = vi.hoisted(() => ({
 const mock = vi.hoisted(() => ({
   s: null as ReturnType<(typeof st)['make']> | null,
   releasesThrow: false,
+  // The server answers with no releases at all.
+  releasesNone: false,
   holdReleases: false,
   updates: 0,
   assets: [] as { name: string; size: number; url: string }[],
@@ -98,15 +100,20 @@ vi.mock('../../src/dashboard/firmware', () => ({
   fetchReleases: async () => {
     if (mock.holdReleases) await new Promise(() => {});
     if (mock.releasesThrow) throw new Error('Firmware fetch is not set up on this server.');
+    if (mock.releasesNone) return [];
     return [{ tag: 'v3.4.2', assets: mock.assets }];
   },
   downloadAsset: async () => new Uint8Array([1]),
 }));
 
 const navigate = vi.hoisted(() => vi.fn());
-vi.mock('@solidjs/router', () => ({ useNavigate: () => navigate }));
+vi.mock('@solidjs/router', () => ({
+  useNavigate: () => navigate,
+  useLocation: () => ({ pathname: '/dashboard/update', hash: '' }),
+  A: (p: { children: unknown }) => p.children,
+}));
 
-import Update from '../../src/app/pages/dashboard/Update';
+import { Latest as Update } from '../../src/app/pages/dashboard/Update';
 
 // The box runs the release it is offered: 3.4.2 on the current wire. One that reverts lands on 3.4.1,
 // protocol 8.
@@ -122,6 +129,7 @@ const mount = () => {
 afterEach(() => {
   cleanup();
   mock.releasesThrow = false;
+  mock.releasesNone = false;
   mock.holdReleases = false;
   mock.updates = 0;
   mock.assets = [];
@@ -147,12 +155,26 @@ const runUpdate = async (choice: RegExp) => {
   mock.s!.setStatus('connected');
   await waitFor(() => r.getByRole('button', { name: choice }));
   r.getByRole('button', { name: choice }).click();
-  await waitFor(() => r.getByRole('button', { name: /^update$/i }));
-  r.getByRole('button', { name: /^update$/i }).click();
+  await waitFor(() => r.getByRole('button', { name: /^update (both chips|main chip|mouse-side chip)$/i }));
+  r.getByRole('button', { name: /^update (both chips|main chip|mouse-side chip)$/i }).click();
   return r;
 };
 
 describe('Update', () => {
+  it('keeps the running version on screen while the box restarts, and rolls it when the box is back', async () => {
+    const r = mount();
+    mock.s!.setStatus('connected');
+    const running = () => r.container.querySelector('.vit > div:first-child dd')!.textContent;
+    await waitFor(() => expect(running()).toBe('v3.4.2'));
+    mock.s!.setStatus('flashing');
+    mock.s!.setVersion(null);
+    await Promise.resolve();
+    expect(running()).toBe('v3.4.2');
+    mock.s!.setVersion({ ...ON_RELEASE, fwPatch: 5 });
+    mock.s!.setStatus('connected');
+    await waitFor(() => expect(running()).toBe('v3.4.5'));
+  });
+
   it('no longer installs a new box; that lives in Setup', async () => {
     const { container } = mount();
     await waitFor(() => expect(container.textContent).toMatch(/USB1/));
@@ -164,11 +186,25 @@ describe('Update', () => {
     await waitFor(() => expect(r.getByRole('button', { name: /^connect$/i })).toBeTruthy());
   });
 
-  it('a release fetch that failed leaves a message, not an Update button that does nothing', async () => {
+  it('a release fetch that failed says so up front, with Retry rather than Update buttons that cannot work', async () => {
     mock.releasesThrow = true;
-    const r = await runUpdate(/update both chips/i);
-    await waitFor(() => expect(r.container.textContent).toMatch(/no update available right now/i));
+    const r = mount();
+    mock.s!.setStatus('connected');
+    await waitFor(() => expect(r.container.textContent).toMatch(/release list didn't load/i));
+    expect(r.queryByRole('button', { name: /update both chips/i })).toBeNull();
+    mock.releasesThrow = false;
+    fireEvent.click(r.getByRole('button', { name: /^retry$/i }));
+    await waitFor(() => expect(r.getByRole('button', { name: /update both chips/i })).toBeTruthy());
     expect(mock.updates).toBe(0);
+  });
+
+  it('an empty release list says none is published, not that the list failed', async () => {
+    mock.releasesNone = true;
+    const r = mount();
+    mock.s!.setStatus('connected');
+    await waitFor(() => expect(r.container.textContent).toMatch(/no release is published yet/i));
+    expect(r.container.textContent).not.toMatch(/didn't load/i);
+    expect(r.queryByRole('button', { name: /update both chips/i })).toBeNull();
   });
 
   it('a release missing the main image points at the choice that works', async () => {
@@ -325,7 +361,7 @@ describe('Update', () => {
     expect(back.className).toContain('button--secondary');
     expect(back.className).not.toContain('compact');
     // Same row as Update, so it reads as the pair it is.
-    const update = r.getByRole('button', { name: /^update$/i });
+    const update = r.getByRole('button', { name: /^update (both chips|main chip|mouse-side chip)$/i });
     expect(back.parentElement).toBe(update.parentElement);
   });
 
@@ -354,8 +390,8 @@ describe('Update', () => {
     mock.s!.setStatus('connected');
     await waitFor(() => r.getByRole('button', { name: /update both chips/i }));
     r.getByRole('button', { name: /update both chips/i }).click();
-    await waitFor(() => r.getByRole('button', { name: /^update$/i }));
-    expect(r.getByRole('button', { name: /^update$/i })).toBeDisabled();
+    await waitFor(() => r.getByRole('button', { name: /^update (both chips|main chip|mouse-side chip)$/i }));
+    expect(r.getByRole('button', { name: /^update (both chips|main chip|mouse-side chip)$/i })).toBeDisabled();
   });
 
   it("choosing an update leaves a result Advanced is still showing alone", async () => {

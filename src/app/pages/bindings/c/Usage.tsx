@@ -1,27 +1,25 @@
 import type { Component } from 'solid-js';
 import { A } from '@solidjs/router';
-import { Card, CardHeader } from '../../../../components/surfaces/Card';
-import '../../../../styles/docs.css';
+import { PageHeader } from '../../../shell/PageHeader';
+import { DocSection } from '../../../shell/DocSection';
 
 const Usage: Component = () => {
   return (
     <>
-      <Card>
-        <CardHeader title="Calls & errors" subtitle="Status codes, handle lifecycle, builders" />
+      <PageHeader>
         <p>
           What each call <em>does</em> is in the <A href="/library">Rust Library</A> and{' '}
           <A href="/native">Native API</A> sections. The <A href="/bindings/c/api">API index</A>{' '}
           lists every call; <A href="/bindings/c/types">Types &amp; errors</A> every struct and enum.
         </p>
-      </Card>
+      </PageHeader>
 
-      <div id="calls" data-search-target>
-        <Card>
-          <CardHeader title="Fire-and-forget vs blocking" subtitle="The two call-kind badges" />
-          <p>
-            Both return a <A href="/bindings/c/types#errors"><code>MediusStatus</code></A>; the{' '}
-            <A href="/bindings/c/api">API index</A> badges each call.
-          </p>
+      <DocSection id="calls" title="Fire-and-forget vs blocking" caption="The two call-kind badges">
+        <p>
+          Both return a <A href="/bindings/c/types#errors"><code>MediusStatus</code></A>; the{' '}
+          <A href="/bindings/c/api">API index</A> badges each call.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Badge</th><th>Behaviour</th><th>Fails with</th></tr>
@@ -39,84 +37,80 @@ const Usage: Component = () => {
               </tr>
             </tbody>
           </table>
-          <div class="callout callout--info">
-            <p>
-              <code>MEDIUS_STATUS_OK</code> from a{' '}
-              <span class="api-badge api-badge--executed">Fire-and-forget</span> call means the writer
-              took the frame, not that the box acted on it. Default reply wait:{' '}
-              <A href="/bindings/c/api#module"><code>medius_default_query_timeout_ms()</code></A>; held-override keepalive cadence:{' '}
-              <A href="/bindings/c/api#module"><code>medius_default_keepalive_cadence_ms()</code></A> (see{' '}
-              <A href="/library/guides/connection#keepalive">keepalive</A>).
-            </p>
-          </div>
-        </Card>
-      </div>
-
-      <div id="errors" data-search-target>
-        <Card>
-          <CardHeader title="Errors" subtitle="MediusStatus + a thread-local last error" />
+        </div>
+        <div class="callout callout--info">
           <p>
-            Every fallible call returns a <code>MediusStatus</code> and writes its result through an
-            out-param. <code>MEDIUS_STATUS_OK</code> is <code>0</code>; on anything else the out-param
-            is untouched. <A href="/bindings/c/types#errors">Types &amp; errors</A> lists every
-            enumerator; <A href="/library/types/errors">Errors</A> is the canonical mapping.
+            <code>MEDIUS_STATUS_OK</code> from a{' '}
+            <span class="api-badge api-badge--executed">Fire-and-forget</span> call means the writer
+            took the frame, not that the box acted on it. Default reply wait:{' '}
+            <A href="/bindings/c/api#module"><code>medius_default_query_timeout_ms()</code></A>; held-override keepalive cadence:{' '}
+            <A href="/bindings/c/api#module"><code>medius_default_keepalive_cadence_ms()</code></A> (see{' '}
+            <A href="/library/guides/connection#keepalive">keepalive</A>).
           </p>
-          <pre class="diagram">{`  call ──▶ MediusStatus
+        </div>
+      </DocSection>
+
+      <DocSection id="errors" title="Errors" caption="MediusStatus + a thread-local last error">
+        <p>
+          Every fallible call returns a <code>MediusStatus</code> and writes its result through an
+          out-param. <code>MEDIUS_STATUS_OK</code> is <code>0</code>; on anything else the out-param
+          is untouched. <A href="/bindings/c/types#errors">Types &amp; errors</A> lists every
+          enumerator; <A href="/library/types/errors">Errors</A> is the canonical mapping.
+        </p>
+        <pre class="diagram">{`  call ──▶ MediusStatus
              │
              ├─ == OK ──▶ the out-param is valid, carry on
              └─ != OK ──▶ medius_last_error_message(buf, cap)   text (this thread)
                           medius_last_error_proto_ver()         byte (BadProtoVer only)`}</pre>
-          <div class="api-response-label">READING THE DETAIL</div>
-          <pre class="api-signature">{`uintptr_t medius_last_error_message(char *buf, uintptr_t cap);
+        <div class="api-response-label">READING THE DETAIL</div>
+        <pre class="api-signature">{`uintptr_t medius_last_error_message(char *buf, uintptr_t cap);
 uint8_t   medius_last_error_proto_ver(void);`}</pre>
-          <pre><code class="language-c">{`MediusDevice *dev = NULL;
+        <pre><code class="language-c">{`MediusDevice *dev = NULL;
 if (medius_device_find(&dev) != MEDIUS_STATUS_OK) {
     char buf[256];
     medius_last_error_message(buf, sizeof buf);   /* NUL-terminated, truncated to cap */
     fprintf(stderr, "open failed: %s\\n", buf);
     return 1;
 }`}</code></pre>
+        <p>
+          <A href="/bindings/c/api#module"><code>medius_last_error_message</code></A> returns the full message length in bytes (excluding
+          the NUL); retry with a larger buffer on truncation.{' '}
+          <A href="/bindings/c/api#module"><code>medius_last_error_proto_ver</code></A> returns the offending version byte after a{' '}
+          <code>BadProtoVer</code>, else <code>0</code>.
+        </p>
+        <div class="callout callout--warning">
           <p>
-            <A href="/bindings/c/api#module"><code>medius_last_error_message</code></A> returns the full message length in bytes (excluding
-            the NUL); retry with a larger buffer on truncation.{' '}
-            <A href="/bindings/c/api#module"><code>medius_last_error_proto_ver</code></A> returns the offending version byte after a{' '}
-            <code>BadProtoVer</code>, else <code>0</code>.
+            The last error is <strong>thread-local and overwritten by the next <code>medius_*</code>{' '}
+            call on that thread</strong>; read it right after the failing call.
           </p>
-          <div class="callout callout--warning">
-            <p>
-              The last error is <strong>thread-local and overwritten by the next <code>medius_*</code>{' '}
-              call on that thread</strong>; read it right after the failing call.
-            </p>
-          </div>
-          <div class="callout callout--info">
-            <p>
-              A device call returns{' '}
-              <code>MEDIUS_STATUS_ERR_DISCONNECTED</code> once the link drops, and a stream's blocking{' '}
-              <code>recv</code> returns it when the stream closes (after a reset or link loss). Recover
-              with <A href="/bindings/c/api#led-admin-options"><code>medius_device_reconnect</code></A> or by re-opening (see{' '}
-              <A href="/library/lifecycle">Lifecycle</A>).
-            </p>
-          </div>
-        </Card>
-      </div>
+        </div>
+        <div class="callout callout--info">
+          <p>
+            A device call returns{' '}
+            <code>MEDIUS_STATUS_ERR_DISCONNECTED</code> once the link drops, and a stream's blocking{' '}
+            <code>recv</code> returns it when the stream closes (after a reset or link loss). Recover
+            with <A href="/bindings/c/api#led-admin-options"><code>medius_device_reconnect</code></A> or by re-opening (see{' '}
+            <A href="/library/lifecycle">Lifecycle</A>).
+          </p>
+        </div>
+      </DocSection>
 
-      <div id="lifecycle" data-search-target>
-        <Card>
-          <CardHeader title="Lifecycle" subtitle="Opaque pointers, manual free, no RAII or GC" />
-          <p>
-            Handles are opaque, reference-counted pointers with no destructor or{' '}
-            <a href="https://en.cppreference.com/w/cpp/language/raii" target="_blank" rel="noreferrer">RAII</a>.{' '}
-            <code>medius_*_clone</code> adds an owner of the <em>same</em> object; call the matching{' '}
-            <code>medius_*_free</code> on every handle. See{' '}
-            <A href="/library/connection">Connection</A> and <A href="/library/lifecycle">Lifecycle</A>.
-          </p>
-          <pre class="diagram">{`  medius_device_open / _find  ──▶  MediusDevice *    (you own it)
+      <DocSection id="lifecycle" title="Lifecycle" caption="Opaque pointers, manual free, no RAII or GC">
+        <p>
+          Handles are opaque, reference-counted pointers with no destructor or{' '}
+          <a href="https://en.cppreference.com/w/cpp/language/raii" target="_blank" rel="noreferrer">RAII</a>.{' '}
+          <code>medius_*_clone</code> adds an owner of the <em>same</em> object; call the matching{' '}
+          <code>medius_*_free</code> on every handle. See{' '}
+          <A href="/library/connection">Connection</A> and <A href="/library/lifecycle">Lifecycle</A>.
+        </p>
+        <pre class="diagram">{`  medius_device_open / _find  ──▶  MediusDevice *    (you own it)
                                         │  medius_device_clone
                                         ▼
                                    MediusDevice *    (2nd owner, same link)
 
   medius_device_free(handle)  ──▶  drop one owner    (NULL = no-op)
   free the last owner         ──▶  joins the reader + keepalive threads`}</pre>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Handle</th><th>Create</th><th>Clone</th><th>Free</th></tr>
@@ -178,7 +172,8 @@ if (medius_device_find(&dev) != MEDIUS_STATUS_OK) {
               </tr>
             </tbody>
           </table>
-          <pre><code class="language-c">{`MediusDevice *dev = NULL;
+        </div>
+        <pre><code class="language-c">{`MediusDevice *dev = NULL;
 if (medius_device_find(&dev) != MEDIUS_STATUS_OK) { return 1; }
 
 MediusDevice *worker = medius_device_clone(dev);  /* same link, ref-counted */
@@ -186,41 +181,39 @@ MediusDevice *worker = medius_device_clone(dev);  /* same link, ref-counted */
 
 medius_device_free(worker);   /* drop one owner */
 medius_device_free(dev);      /* last owner -> joins the background threads */`}</code></pre>
-          <div class="callout callout--info">
-            <p>
-              <code>clone(NULL)</code> returns <code>NULL</code> and every <code>*_free(NULL)</code> is
-              a no-op, so cleanup needs no null checks. A stream unsubscribes when its last handle is
-              freed.
-            </p>
-            <p>
-              Catch events and log lines are fixed-size structs written into your buffer, with nothing
-              to free. A <A href="/bindings/c/types#traffic-event"><code>MediusTrafficEvent</code></A>{' '}
-              holds captured bytes inline (<code>bytes[MEDIUS_MAX_TRAFFIC_BYTES]</code> plus{' '}
-              <code>len</code>), so a copy owns nothing and outlives its stream.
-            </p>
-          </div>
-        </Card>
-      </div>
+        <div class="callout callout--info">
+          <p>
+            <code>clone(NULL)</code> returns <code>NULL</code> and every <code>*_free(NULL)</code> is
+            a no-op, so cleanup needs no null checks. A stream unsubscribes when its last handle is
+            freed.
+          </p>
+          <p>
+            Catch events and log lines are fixed-size structs written into your buffer, with nothing
+            to free. A <A href="/bindings/c/types#traffic-event"><code>MediusTrafficEvent</code></A>{' '}
+            holds captured bytes inline (<code>bytes[MEDIUS_MAX_TRAFFIC_BYTES]</code> plus{' '}
+            <code>len</code>), so a copy owns nothing and outlives its stream.
+          </p>
+        </div>
+      </DocSection>
 
-      <div id="builders" data-search-target>
-        <Card>
-          <CardHeader title="Building targets" subtitle="Usage, Motion, LockTarget, CatchFilter for the generic verbs" />
-          <p>
-            Rust's generic <A href="/library/inject"><code>inject</code></A> /{' '}
-            <A href="/library/move"><code>move_axis</code></A> / <A href="/library/lock"><code>lock</code></A>{' '}
-            targets are structs in C (<A href="/bindings/c/types#input"><code>MediusUsage</code></A>,{' '}
-            <A href="/bindings/c/types#motion"><code>MediusMotion</code></A>,{' '}
-            <A href="/bindings/c/types#lock-target"><code>MediusLockTarget</code></A>, plus{' '}
-            <A href="/bindings/c/types#catch-filter"><code>MediusCatchFilter</code></A>), each with
-            helper constructors.
-          </p>
-          <p>
-            A <code>MediusUsage</code> holds a{' '}
-            <A href="/native/commands/usage#buttons">button id</A>,{' '}
-            <A href="/native/commands/usage#keycodes">keycode</A>, or{' '}
-            <A href="/native/commands/usage#consumer">Consumer usage</A>; one value serves inject, lock
-            and catch.
-          </p>
+      <DocSection id="builders" title="Building targets" caption="Usage, Motion, LockTarget, CatchFilter for the generic verbs">
+        <p>
+          Rust's generic <A href="/library/inject"><code>inject</code></A> /{' '}
+          <A href="/library/move"><code>move_axis</code></A> / <A href="/library/lock"><code>lock</code></A>{' '}
+          targets are structs in C (<A href="/bindings/c/types#input"><code>MediusUsage</code></A>,{' '}
+          <A href="/bindings/c/types#motion"><code>MediusMotion</code></A>,{' '}
+          <A href="/bindings/c/types#lock-target"><code>MediusLockTarget</code></A>, plus{' '}
+          <A href="/bindings/c/types#catch-filter"><code>MediusCatchFilter</code></A>), each with
+          helper constructors.
+        </p>
+        <p>
+          A <code>MediusUsage</code> holds a{' '}
+          <A href="/native/commands/usage#buttons">button id</A>,{' '}
+          <A href="/native/commands/usage#keycodes">keycode</A>, or{' '}
+          <A href="/native/commands/usage#consumer">Consumer usage</A>; one value serves inject, lock
+          and catch.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Builder</th><th>Returns</th><th>For</th></tr>
@@ -238,7 +231,8 @@ medius_device_free(dev);      /* last owner -> joins the background threads */`}
               <tr><td><code>medius_catch_filter_traffic(MediusCatchClass, uint16_t)</code></td><td><code>MediusCatchFilter</code></td></tr>
             </tbody>
           </table>
-          <pre><code class="language-c">{`/* inject: build a usage, then apply an Action */
+        </div>
+        <pre><code class="language-c">{`/* inject: build a usage, then apply an Action */
 MediusUsage lmb = medius_usage_button(MEDIUS_BUTTON_LEFT);
 medius_device_inject(dev, lmb, MEDIUS_ACTION_PRESS);
 medius_device_press(dev, medius_usage_key(MEDIUS_KEY_W));   /* keys and media inject the same way */
@@ -253,21 +247,21 @@ medius_device_lock(dev, x, MEDIUS_DIRECTION_BOTH);
 
 MediusLockTarget side = medius_lock_target_usage(medius_usage_button(MEDIUS_BUTTON_SIDE1));
 medius_device_lock(dev, side, MEDIUS_DIRECTION_BOTH);`}</code></pre>
-          <div class="callout callout--info">
-            <p>
-              Buttons, keys and media lock the same way:{' '}
-              <code>medius_lock_target_usage(medius_usage_key(...))</code> locks a key,{' '}
-              <code>medius_lock_target_axis(...)</code> an axis or the wheel. Fields:{' '}
-              <A href="/bindings/c/types#lock-target">Types &amp; errors</A>.
-            </p>
-          </div>
+        <div class="callout callout--info">
           <p>
-            A catch filter starts from a base that names what to observe; each modifier returns a
-            narrowed copy, so one blanket can seed several entries. Fields:{' '}
-            <A href="/bindings/c/types#catch-filter">Types &amp; errors</A>.
+            Buttons, keys and media lock the same way:{' '}
+            <code>medius_lock_target_usage(medius_usage_key(...))</code> locks a key,{' '}
+            <code>medius_lock_target_axis(...)</code> an axis or the wheel. Fields:{' '}
+            <A href="/bindings/c/types#lock-target">Types &amp; errors</A>.
           </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-c">{`/* every key edge, whole report */
+        </div>
+        <p>
+          A catch filter starts from a base that names what to observe; each modifier returns a
+          narrowed copy, so one blanket can seed several entries. Fields:{' '}
+          <A href="/bindings/c/types#catch-filter">Types &amp; errors</A>.
+        </p>
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-c">{`/* every key edge, whole report */
 MediusCatchFilter keys = medius_catch_filter_watch_class(MEDIUS_CLASS_KEY);
 
 /* one vendor endpoint's IN packets, first 16 bytes each */
@@ -279,15 +273,14 @@ MediusCatchFilter ep = medius_catch_filter_with_capture(
 MediusCatchFilter filters[2] = { keys, ep };
 MediusEventStream *events = NULL;
 medius_device_catch_events(dev, filters, 2, &events);   /* the array is not retained */`}</code></pre>
-          <div class="callout callout--warning">
-            <p>
-              One usage can address both a lock and a catch entry.{' '}
-              <A href="/native/commands/catch#catch">Catch</A> covers where each class is tapped and
-              which ones a lock reaches; <A href="/bindings/c/streams">Streams</A> covers what comes back.
-            </p>
-          </div>
-        </Card>
-      </div>
+        <div class="callout callout--warning">
+          <p>
+            One usage can address both a lock and a catch entry.{' '}
+            <A href="/native/commands/catch#catch">Catch</A> covers where each class is tapped and
+            which ones a lock reaches; <A href="/bindings/c/streams">Streams</A> covers what comes back.
+          </p>
+        </div>
+      </DocSection>
     </>
   );
 };

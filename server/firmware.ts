@@ -1,6 +1,8 @@
 // Server-side firmware proxy. Holds the GitHub token and fetches releases and release assets from
 // the private firmware repo; the browser only ever sees the proxied results, never the token.
 
+import type { FirmwareRelease } from '../src/dashboard/firmware/client';
+
 const GITHUB_API = 'https://api.github.com';
 const REPO_RE = /^[\w.-]+\/[\w.-]+$/;
 const RELEASES_TTL_MS = 60_000;
@@ -40,6 +42,7 @@ function json(body: unknown, status = 200): Response {
   });
 }
 
+
 interface GhAsset {
   id: number;
   name: string;
@@ -56,15 +59,35 @@ interface GhRelease {
 
 // Fetch (or serve cached) the releases list, recording the .bin asset ids it
 // references. Returns the projected JSON body, or null on an upstream failure.
-async function loadReleases(): Promise<string | null> {
+// A failed list request is not retried for this long, so a GitHub outage costs one call a window.
+const RELEASES_RETRY_MS = 30_000;
+let releasesFailedAt = 0;
+// Requests that ask while the list is read share the read.
+let releasesLoading: Promise<string | null> | null = null;
+
+function loadReleases(): Promise<string | null> {
+  return (releasesLoading ??= readReleases().finally(() => (releasesLoading = null)));
+}
+
+async function readReleases(): Promise<string | null> {
   const now = Date.now();
   if (releasesCache && now - releasesCache.at < RELEASES_TTL_MS) return releasesCache.body;
-  const res = await fetch(`${GITHUB_API}/repos/${repo()}/releases?per_page=20`, {
-    headers: ghHeaders('application/vnd.github+json'),
-  });
+  if (now - releasesFailedAt < RELEASES_RETRY_MS) return releasesCache?.body ?? null;
+  let res: Response;
+  try {
+    res = await fetch(`${GITHUB_API}/repos/${repo()}/releases?per_page=100`, {
+      headers: ghHeaders('application/vnd.github+json'),
+      signal: AbortSignal.timeout(10_000),
+    });
+  } catch (e) {
+    console.warn(`[firmware] releases request failed: ${(e as Error).message}`);
+    releasesFailedAt = now;
+    return releasesCache?.body ?? null;
+  }
   if (!res.ok) {
     console.warn(`[firmware] releases request failed: ${res.status}`);
-    return null;
+    releasesFailedAt = now;
+    return releasesCache?.body ?? null;
   }
   const data = (await res.json()) as GhRelease[];
   const releases = data.map((r) => ({
@@ -81,6 +104,27 @@ async function loadReleases(): Promise<string | null> {
   const body = JSON.stringify({ repo: repo(), releases });
   releasesCache = { at: now, body };
   return body;
+}
+
+// The releases list for pages the server fills in, or null when GitHub can't be reached.
+export async function getReleases(): Promise<FirmwareRelease[] | null> {
+  const body = await loadReleases();
+  return body ? (JSON.parse(body) as { releases: FirmwareRelease[] }).releases : null;
+}
+
+// The list as GitHub has it now, so a release linked the moment it is out (the release post) is found: read
+// again unless it was read in the last RELEASES_FRESH_MS (by the same request, as a rule). Tags no release
+// has can't make that happen more than once a RELEASES_RETRY_MS; in between, the list in hand. Null when the
+// read fails.
+const RELEASES_FRESH_MS = 2_000;
+let refreshedAt = -Infinity;
+export async function refreshReleases(): Promise<FirmwareRelease[] | null> {
+  const now = Date.now();
+  if (!releasesCache || now - releasesCache.at < RELEASES_FRESH_MS || now - refreshedAt < RELEASES_RETRY_MS) return getReleases();
+  refreshedAt = now;
+  releasesCache = { ...releasesCache, at: -Infinity };
+  const list = await getReleases();
+  return (releasesCache?.at ?? -Infinity) >= now ? list : null;
 }
 
 function cacheGetAsset(id: number): Uint8Array<ArrayBuffer> | undefined {

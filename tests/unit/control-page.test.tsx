@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest';
-import { render, cleanup } from '@solidjs/testing-library';
+import { render, cleanup, fireEvent, waitFor } from '@solidjs/testing-library';
 import { MemoryRouter, Route } from '@solidjs/router';
 import { DashboardContext, type DashboardContextValue } from '../../src/app/pages/dashboard/context';
 import Control from '../../src/app/pages/dashboard/Control';
@@ -85,6 +85,7 @@ const stub = (over: Partial<Record<string, unknown>> = {}): DashboardContextValu
       led: async () => {},
       catch: async () => {},
       uncatch: async () => {},
+      queryCatch: async () => VALUES.catch,
       clipCtrl: async () => {},
       clipSet: async () => {},
       clipAppend: async () => {},
@@ -96,8 +97,10 @@ const stub = (over: Partial<Record<string, unknown>> = {}): DashboardContextValu
     held: () => true,
     present: () => true,
     deviceLog: () => [],
+    deviceLogAdded: () => 0,
     clearDeviceLog: () => {},
     inputEvents: () => [],
+    inputEventsAdded: () => 0,
     clearInputEvents: () => {},
     poll: (key: string) => () => ({ ...VALUES, ...over })[key] ?? null,
     pollUnreadable: () => () => false,
@@ -165,14 +168,19 @@ describe('Control page', () => {
     await findByText('Status light');
     await findByText('Input catch');
     await findByText('Clip playback');
-    await findByText('Safety clear');
+    await findByText('Clear everything');
+    // The Advanced tab: what was the Advanced control page.
+    await findByText('Rewrite rules');
+    await findByText('Descriptor patches');
+    await findByText('Raw report');
+    await findByText('Control transfer');
   });
 
   it('shows only the connect prompt when disconnected', async () => {
     const { findByText, queryByText } = mount(
       stub({ status: () => 'disconnected', health: () => null }),
     );
-    await findByText('Controls');
+    await findByText('Your box');
     expect(queryByText('Injection')).toBeNull();
     expect(queryByText('Clip playback')).toBeNull();
   });
@@ -190,21 +198,42 @@ describe('Control page', () => {
     expect(go.disabled).toBe(false);
   });
 
-  it('names the safety clear by everything it drops, not just injection', async () => {
-    // It is the box-wide clear: locks, the catch table and the loaded clip go with it. A button
-    // labelled "release the keys" would be a trap next to a live event stream.
+  it('says in one short line what the safety clear resets, and the one thing it keeps', async () => {
+    // It is the box-wide clear: locks, the catch table and the loaded clip go with it, so a button
+    // labelled "release the keys" would be a trap next to a live event stream. RESET keeps the stored
+    // descriptor patches, which sit on this page too.
     const { findByText } = mount();
-    // The card subtitle carries this now; the paragraph under it only restated the subtitle.
-    const body = (await findByText(/Clears injection/)).textContent ?? '';
-    expect(body).toMatch(/lock/i);
-    expect(body).toMatch(/subscription/i);
-    expect(body).toMatch(/clip/i);
+    expect(await findByText('Resets every control here but patches')).toBeTruthy();
+  });
+
+  it('says what Clear everything did on the line under it, so the header never grows', async () => {
+    const base = stub();
+    let refuse = true;
+    const link = (base.link as unknown as () => Record<string, unknown>)();
+    const value = stub({
+      link: () => ({
+        ...link,
+        reset: async () => {
+          if (refuse) throw new Error('The box refused that.');
+        },
+      }),
+    });
+    const { findByText, container } = mount(value);
+    const aside = () => container.querySelector('.page-header__aside')!;
+    fireEvent.click(await findByText('Clear everything'));
+    await waitFor(() => expect(aside().querySelector('[role="alert"]')?.textContent).toBe('The box refused that.'));
+    expect(aside().querySelectorAll('p')).toHaveLength(1);
+    expect(aside().querySelector('.callout')).toBeNull();
+    refuse = false;
+    fireEvent.click(await findByText('Clear everything'));
+    await waitFor(() => expect(aside().querySelector('p')!.textContent).toBe('Sent.'));
+    expect(aside().querySelectorAll('p')).toHaveLength(1);
   });
 
   it('renders a blanket lock the picker cannot build but another client can set', async () => {
     // The active list has always been able to show these; only the picker was limited.
     const { findByText } = mount();
-    await findByText('All keys press');
+    await findByText('All keys press blocked');
   });
 
   it('renders a weighed direction as its percentage, not as a lock', async () => {
@@ -213,11 +242,12 @@ describe('Control page', () => {
   });
 
   it('surfaces the cross-chip clock estimate rather than dropping it', async () => {
-    const { findByText, container } = mount();
-    // The catch card only shows the clock while streaming, so start the stream first.
-    (await findByText('Watch')).click();
+    const { findByRole, container } = mount();
+    // The catch tab only reads the clock while streaming, so open it and start the stream first.
+    (await findByRole('tab', { name: 'Input catch' })).click();
+    (await findByRole('button', { name: 'Watch' })).click();
     await new Promise((r) => setTimeout(r, 20));
-    expect(container.textContent).toMatch(/Host clock leads the device clock/);
+    expect(container.textContent).toMatch(/The mouse-side chip's clock leads the main chip's/);
   });
 
   it('does not offer Start for a clip that is not loaded', async () => {

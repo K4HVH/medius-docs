@@ -1,13 +1,12 @@
 import type { Component } from 'solid-js';
 import { A } from '@solidjs/router';
-import { Card, CardHeader } from '../../../components/surfaces/Card';
-import '../../../styles/docs.css';
+import { PageHeader } from '../../shell/PageHeader';
+import { DocSection } from '../../shell/DocSection';
 
 const Overview: Component = () => {
   return (
     <>
-      <Card>
-        <CardHeader title="Bindings" subtitle="C, C++ and Python clients" />
+      <PageHeader>
         <p>
           A <A href="/native/hardware">medius box</A> sits between a mouse and a PC: the mouse passes
           through untouched, and your program <A href="/native/injection">injects input</A> over a{' '}
@@ -41,11 +40,10 @@ const Overview: Component = () => {
             command.
           </p>
         </div>
-      </Card>
+      </PageHeader>
 
-      <div id="pick" data-search-target>
-        <Card>
-          <CardHeader title="Languages" subtitle="Same capabilities, different ergonomics" />
+      <DocSection id="pick" title="Languages" caption="Same capabilities, different ergonomics">
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Language</th><th>Install</th><th>Errors</th><th>Cleanup</th><th>Use for</th></tr>
@@ -67,12 +65,11 @@ const Overview: Component = () => {
               </tr>
             </tbody>
           </table>
-        </Card>
-      </div>
+        </div>
+      </DocSection>
 
-      <div id="coverage" data-search-target>
-        <Card>
-          <CardHeader title="Coverage" subtitle="Every feature in every language" />
+      <DocSection id="coverage" title="Coverage" caption="Every feature in every language">
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Capability</th><th>C / C++</th><th>Python</th></tr>
@@ -91,12 +88,12 @@ const Overview: Component = () => {
               <tr><td><A href="/library/features/async">Async</A></td><td colspan="2">sync only; build it on the stream timeouts (see each Streams page)</td></tr>
             </tbody>
           </table>
-          <p>
-            Mock is off by default; each binding's <strong>Build &amp; features</strong>{' '}
-            page shows how to turn it on.
-          </p>
-        </Card>
-      </div>
+        </div>
+        <p>
+          Mock is off by default; each binding's <strong>Build &amp; features</strong>{' '}
+          page shows how to turn it on.
+        </p>
+      </DocSection>
     </>
   );
 };

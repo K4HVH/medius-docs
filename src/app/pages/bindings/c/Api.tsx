@@ -1,13 +1,12 @@
 import type { Component } from 'solid-js';
 import { A } from '@solidjs/router';
-import { Card, CardHeader } from '../../../../components/surfaces/Card';
-import '../../../../styles/docs.css';
+import { PageHeader } from '../../../shell/PageHeader';
+import { DocSection } from '../../../shell/DocSection';
 
 const Api: Component = () => {
   return (
     <>
-      <Card>
-        <CardHeader title="API index" subtitle="Every C function, linked to what it does" />
+      <PageHeader>
         <p>
           Every <code>medius_*</code> call in <A href="/bindings/c"><code>medius.h</code></A>, grouped.
           Semantics are in the <A href="/library">Rust library</A> (the{' '}
@@ -48,12 +47,11 @@ medius_device_free(dev);`}</code></pre>
             <A href="/bindings/c/usage#lifecycle">Lifecycle</A>.
           </p>
         </div>
-      </Card>
+      </PageHeader>
 
-      <div id="connect" data-search-target>
-        <Card>
-          <CardHeader title="Connecting & lifecycle" subtitle="Open, share, and release the link" />
-          <p>See <A href="/library/connection">Connection</A> and <A href="/library/lifecycle">Lifecycle</A>.</p>
+      <DocSection id="connect" title="Connecting & lifecycle" caption="Open, share, and release the link">
+        <p>See <A href="/library/connection">Connection</A> and <A href="/library/lifecycle">Lifecycle</A>.</p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Function</th><th>Does</th></tr></thead>
             <tbody>
@@ -64,13 +62,12 @@ medius_device_free(dev);`}</code></pre>
               <tr><td><code>medius_find_ports(MediusPortInfo *out, uintptr_t cap, uintptr_t *out_total)</code></td><td>List present ports into <code>out</code> (up to <code>cap</code>); writes total to <code>*out_total</code>, returns the number written. See <A href="/bindings/c/types#portinfo"><code>MediusPortInfo</code></A>.</td></tr>
             </tbody>
           </table>
-        </Card>
-      </div>
+        </div>
+      </DocSection>
 
-      <div id="discovery" data-search-target>
-        <Card>
-          <CardHeader title="Discovery" subtitle="Enumerate boxes and open one by identity" />
-          <p>See <A href="/library/discovery">Discovery</A>.</p>
+      <DocSection id="discovery" title="Discovery" caption="Enumerate boxes and open one by identity">
+        <p>See <A href="/library/discovery">Discovery</A>.</p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Function</th><th>Does</th></tr></thead>
             <tbody>
@@ -80,13 +77,12 @@ medius_device_free(dev);`}</code></pre>
               <tr><td><code>medius_device_find_keyboard_box(MediusDevice **out)</code></td><td>Open the first box whose clone is a keyboard, with the same errors.</td></tr>
             </tbody>
           </table>
-        </Card>
-      </div>
+        </div>
+      </DocSection>
 
-      <div id="move" data-search-target>
-        <Card>
-          <CardHeader title="Movement" subtitle="Relative cursor and wheel" />
-          <p>See <A href="/library/move">Move</A>. <code>+x</code> right, <code>+y</code> down. Build the axis struct with the <A href="/bindings/c/api#builders">motion helpers</A>.</p>
+      <DocSection id="move" title="Movement" caption="Relative cursor and wheel">
+        <p>See <A href="/library/move">Move</A>. <code>+x</code> right, <code>+y</code> down. Build the axis struct with the <A href="/bindings/c/api#builders">motion helpers</A>.</p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Function</th><th>Does</th></tr></thead>
             <tbody>
@@ -101,18 +97,17 @@ medius_device_free(dev);`}</code></pre>
               <tr><td><code>medius_device_move_axis(MediusDevice *dev, MediusMotion motion, MediusMoveTiming timing, MediusPendingMotion pending)</code></td><td>Drive one axis from a <code>medius_motion_cursor(...)</code>, <code>medius_motion_wheel(...)</code>, or <code>medius_motion_pan(...)</code>.</td></tr>
             </tbody>
           </table>
-        </Card>
-      </div>
+        </div>
+      </DocSection>
 
-      <div id="inject" data-search-target>
-        <Card>
-          <CardHeader title="Inject" subtitle="Drive any usage: button, key, or media" />
-          <p>
-            One verb set over a <A href="/bindings/c/types#input"><code>MediusUsage</code></A> (button, key,
-            or media). Build it with the <A href="/bindings/c/api#builders">input helpers</A>; see{' '}
-            <A href="/library/inject">Inject</A>, the <A href="/native/injection">injection model</A>, and
-            the id spaces on <A href="/native/commands/usage">Usage IDs</A>.
-          </p>
+      <DocSection id="inject" title="Inject" caption="Drive any usage: button, key, or media">
+        <p>
+          One verb set over a <A href="/bindings/c/types#input"><code>MediusUsage</code></A> (button, key,
+          or media). Build it with the <A href="/bindings/c/api#builders">input helpers</A>; see{' '}
+          <A href="/library/inject">Inject</A>, the <A href="/native/injection">injection model</A>, and
+          the id spaces on <A href="/native/commands/usage">Usage IDs</A>.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Function</th><th>Does</th></tr></thead>
             <tbody>
@@ -122,19 +117,18 @@ medius_device_free(dev);`}</code></pre>
               <tr><td><code>medius_device_force_release(MediusDevice *dev, MediusUsage input)</code></td><td>Sends <code>MEDIUS_ACTION_FORCE_RELEASE</code>.</td></tr>
             </tbody>
           </table>
-          <div class="callout callout--info">
-            <p>
-              A <A href="/bindings/c/types#key"><code>MediusKey</code></A>{' '}
-              or <A href="/bindings/c/types#media-key"><code>MediusMediaKey</code></A> is a raw HID usage.
-            </p>
-          </div>
-        </Card>
-      </div>
+        </div>
+        <div class="callout callout--info">
+          <p>
+            A <A href="/bindings/c/types#key"><code>MediusKey</code></A>{' '}
+            or <A href="/bindings/c/types#media-key"><code>MediusMediaKey</code></A> is a raw HID usage.
+          </p>
+        </div>
+      </DocSection>
 
-      <div id="lock" data-search-target>
-        <Card>
-          <CardHeader title="Locks" subtitle="Weigh physical input" />
-          <p>See <A href="/library/lock">Lock</A>. A <A href="/bindings/c/types#lock-target"><code>MediusLockTarget</code></A> picks an axis or usage, <code>dir</code> takes a <A href="/bindings/c/types#direction"><code>MediusDirection</code></A> constant and <code>what</code> a <A href="/bindings/c/types#blanket"><code>MediusBlanket</code></A> one; anything else is <code>MEDIUS_STATUS_ERR_INVALID_ARG</code> and no frame goes out. Read the entries back with <A href="/bindings/c/api#inspectors"><code>medius_locks_scale_of</code></A> and <code>medius_locks_is_locked</code>.</p>
+      <DocSection id="lock" title="Locks" caption="Weigh physical input">
+        <p>See <A href="/library/lock">Lock</A>. A <A href="/bindings/c/types#lock-target"><code>MediusLockTarget</code></A> picks an axis or usage, <code>dir</code> takes a <A href="/bindings/c/types#direction"><code>MediusDirection</code></A> constant and <code>what</code> a <A href="/bindings/c/types#blanket"><code>MediusBlanket</code></A> one; anything else is <code>MEDIUS_STATUS_ERR_INVALID_ARG</code> and no frame goes out. Read the entries back with <A href="/bindings/c/api#inspectors"><code>medius_locks_scale_of</code></A> and <code>medius_locks_is_locked</code>.</p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Function</th><th>Does</th></tr></thead>
             <tbody>
@@ -146,16 +140,15 @@ medius_device_free(dev);`}</code></pre>
               <tr><td><code>medius_device_unlock_all(MediusDevice *dev, uint8_t what, uint8_t dir)</code></td><td>Release a blanket block.</td></tr>
             </tbody>
           </table>
-          <div class="callout callout--warning">
-            <p>A negative percent inverts: <code>-100</code> on an axis flips it exactly. The slot comes from the delta's sign before the weigh, so a directional negative leaves the other direction alone. A negative on a button, key or media usage is <code>MEDIUS_STATUS_ERR_LOCK_SCALE_USAGE</code> (one bit has nothing to reverse); a magnitude outside the range is <code>..._ERR_LOCK_SCALE_RANGE</code>.</p>
-            <p>A scale auto-clears; the <A href="/library/guides/connection#keepalive">keepalive</A> holds it. <code>MEDIUS_DIRECTION_WITH</code> and <code>_AGAINST</code> need a live bearing (<code>medius_device_set_bearing</code>); their refusal rules are on <A href="/bindings/c/types#direction"><code>MediusDirection</code></A>.</p>
-          </div>
-        </Card>
-      </div>
+        </div>
+        <div class="callout callout--warning">
+          <p>A negative percent inverts: <code>-100</code> on an axis flips it exactly. The slot comes from the delta's sign before the weigh, so a directional negative leaves the other direction alone. A negative on a button, key or media usage is <code>MEDIUS_STATUS_ERR_LOCK_SCALE_USAGE</code> (one bit has nothing to reverse); a magnitude outside the range is <code>..._ERR_LOCK_SCALE_RANGE</code>.</p>
+          <p>A scale auto-clears; the <A href="/library/guides/connection#keepalive">keepalive</A> holds it. <code>MEDIUS_DIRECTION_WITH</code> and <code>_AGAINST</code> need a live bearing (<code>medius_device_set_bearing</code>); their refusal rules are on <A href="/bindings/c/types#direction"><code>MediusDirection</code></A>.</p>
+        </div>
+      </DocSection>
 
-      <div id="led-admin-options" data-search-target>
-        <Card>
-          <CardHeader title="LED, admin & options" subtitle="Status light, resets, persistent settings" />
+      <DocSection id="led-admin-options" title="LED, admin & options" caption="Status light, resets, persistent settings">
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Function</th><th>Does</th></tr></thead>
             <tbody>
@@ -175,17 +168,16 @@ medius_device_free(dev);`}</code></pre>
               <tr><td><code>medius_device_set_render(MediusDevice *dev, uint8_t mode, bool full)</code></td><td>Pick the texture (<A href="/bindings/c/types#render-mode"><code>MediusRenderMode</code></A>) and whether native motion is rendered by the model rather than relayed. Both share one frame. <code>full</code> is off on a box that has not been set. See <A href="/library/options">Options</A>.</td></tr>
             </tbody>
           </table>
-        </Card>
-      </div>
+        </div>
+      </DocSection>
 
-      <div id="queries" data-search-target>
-        <Card>
-          <CardHeader title="Queries" subtitle="Read box state; each blocks for one reply" />
-          <p>
-            See <A href="/library/requests">Requests</A>. Each writes a struct from{' '}
-            <A href="/bindings/c/types">Types &amp; errors</A>, or returns{' '}
-            <code>MEDIUS_STATUS_ERR_QUERY_TIMEOUT</code> when no reply arrives.
-          </p>
+      <DocSection id="queries" title="Queries" caption="Read box state; each blocks for one reply">
+        <p>
+          See <A href="/library/requests">Requests</A>. Each writes a struct from{' '}
+          <A href="/bindings/c/types">Types &amp; errors</A>, or returns{' '}
+          <code>MEDIUS_STATUS_ERR_QUERY_TIMEOUT</code> when no reply arrives.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Function</th><th>Writes to <code>*out</code></th></tr></thead>
             <tbody>
@@ -206,16 +198,15 @@ medius_device_free(dev);`}</code></pre>
               <tr><td><code>medius_device_counters(dev, MediusCountersSnapshot *out)</code></td><td><A href="/bindings/c/types#counters"><code>MediusCountersSnapshot</code></A>: host-side wire counters.</td></tr>
             </tbody>
           </table>
-        </Card>
-      </div>
+        </div>
+      </DocSection>
 
-      <div id="update" data-search-target>
-        <Card>
-          <CardHeader title="Firmware update" subtitle="Write either chip over the open connection" />
-          <p>
-            See <A href="/library/update">Firmware update</A>. Staging blocks for the whole transfer;
-            a refusal returns <code>MEDIUS_STATUS_ERR_UPDATE</code>.
-          </p>
+      <DocSection id="update" title="Firmware update" caption="Write either chip over the open connection">
+        <p>
+          See <A href="/library/update">Firmware update</A>. Staging blocks for the whole transfer;
+          a refusal returns <code>MEDIUS_STATUS_ERR_UPDATE</code>.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Function</th><th>Does</th></tr></thead>
             <tbody>
@@ -225,25 +216,23 @@ medius_device_free(dev);`}</code></pre>
               <tr><td><code>medius_device_abort_update(dev, target)</code></td><td>Throw a staged or in-flight transfer away.</td></tr>
             </tbody>
           </table>
-          <pre class="api-signature">typedef void (*MediusUpdateProgress)(void *user, size_t sent, size_t total);</pre>
-        </Card>
-      </div>
+        </div>
+        <pre class="api-signature">typedef void (*MediusUpdateProgress)(void *user, size_t sent, size_t total);</pre>
+      </DocSection>
 
-      <div id="streams" data-search-target>
-        <Card>
-          <CardHeader title="Streams" subtitle="Subscribe to live input and logs" />
-          <p>
-            Consuming events is on <A href="/bindings/c/streams">Streams</A>, the catch feature
-            on <A href="/library/catch">Catch</A>, and logs on{' '}
-            <A href="/library/diagnostics">Logs &amp; counters</A>.
-          </p>
-          <p>
-            <code>medius_device_catch_events</code> takes an array of{' '}
-            <A href="/bindings/c/types#catch-filter"><code>MediusCatchFilter</code></A> entries from
-            the <A href="/bindings/c/api#catch-filters">filter helpers</A>. The box's table holds 32;
-            more, or an entry it cannot honour, fails the call.
-          </p>
-          <pre class="api-signature">{`MediusStatus medius_device_catch_events(MediusDevice *dev,
+      <DocSection id="streams" title="Streams" caption="Subscribe to live input and logs">
+        <p>
+          Consuming events is on <A href="/bindings/c/streams">Streams</A>, the catch feature
+          on <A href="/library/catch">Catch</A>, and logs on{' '}
+          <A href="/library/diagnostics">Logs &amp; counters</A>.
+        </p>
+        <p>
+          <code>medius_device_catch_events</code> takes an array of{' '}
+          <A href="/bindings/c/types#catch-filter"><code>MediusCatchFilter</code></A> entries from
+          the <A href="/bindings/c/api#catch-filters">filter helpers</A>. The box's table holds 32;
+          more, or an entry it cannot honour, fails the call.
+        </p>
+        <pre class="api-signature">{`MediusStatus medius_device_catch_events(MediusDevice *dev,
                                         const MediusCatchFilter *filters,
                                         uintptr_t n_filters,
                                         MediusEventStream **out);
@@ -252,6 +241,7 @@ MediusStatus medius_device_input_events(MediusDevice *dev,
                                         const MediusCatchFilter *filters,
                                         uintptr_t n_filters,
                                         MediusInputStream **out);`}</pre>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Function</th><th>Does</th></tr></thead>
             <tbody>
@@ -274,18 +264,17 @@ MediusStatus medius_device_input_events(MediusDevice *dev,
               <tr><td><code>medius_log_stream_recv</code> / <code>try_recv</code> / <code>recv_timeout(stream, …, MediusLogLine *out)</code></td><td>Pull the next <A href="/bindings/c/types#log-line"><code>MediusLogLine</code></A> (block / non-block / timed).</td></tr>
             </tbody>
           </table>
-        </Card>
-      </div>
+        </div>
+      </DocSection>
 
-      <div id="catch-filters" data-search-target>
-        <Card>
-          <CardHeader title="Catch filters" subtitle="Name one subscription entry, then narrow it" />
-          <p>
-            Pure constructors for a{' '}
-            <A href="/bindings/c/types#catch-filter"><code>MediusCatchFilter</code></A>: a base names
-            what to observe, a modifier returns a narrowed copy. No device, no wire traffic. See{' '}
-            <A href="/library/catch">Catch</A>.
-          </p>
+      <DocSection id="catch-filters" title="Catch filters" caption="Name one subscription entry, then narrow it">
+        <p>
+          Pure constructors for a{' '}
+          <A href="/bindings/c/types#catch-filter"><code>MediusCatchFilter</code></A>: a base names
+          what to observe, a modifier returns a narrowed copy. No device, no wire traffic. See{' '}
+          <A href="/library/catch">Catch</A>.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Function</th><th>Addresses</th></tr></thead>
             <tbody>
@@ -299,7 +288,9 @@ MediusStatus medius_device_input_events(MediusDevice *dev,
               <tr><td><code>medius_catch_filter_everything()</code></td><td>Every class, every id, both directions, whole packets. One table entry, not an expansion.</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">MODIFIERS</div>
+        </div>
+        <div class="api-response-label">MODIFIERS</div>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Function</th><th>Returns a copy of <code>f</code></th></tr></thead>
             <tbody>
@@ -309,35 +300,34 @@ MediusStatus medius_device_input_events(MediusDevice *dev,
               <tr><td><code>medius_catch_filter_inbound(f)</code> / <code>_outbound(f)</code></td><td>Restricted to traffic from the device to the PC / from the PC to the device.</td></tr>
             </tbody>
           </table>
-          <div class="callout callout--info">
-            <p>
-              <code>medius_catch_filter_everything</code> includes{' '}
-              <code>MEDIUS_CATCH_CLASS_VENDOR_BULK</code>, which can saturate the control link on its
-              own. Pair it with <code>medius_catch_filter_with_capture</code> unless tracing bulk in
-              full. Queue ranking: <A href="/native/commands/catch#delivery">Delivery</A>.
-            </p>
-          </div>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-c">{`/* the wheel, scrolled up only */
+        </div>
+        <div class="callout callout--info">
+          <p>
+            <code>medius_catch_filter_everything</code> includes{' '}
+            <code>MEDIUS_CATCH_CLASS_VENDOR_BULK</code>, which can saturate the control link on its
+            own. Pair it with <code>medius_catch_filter_with_capture</code> unless tracing bulk in
+            full. Queue ranking: <A href="/native/commands/catch#delivery">Delivery</A>.
+          </p>
+        </div>
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-c">{`/* the wheel, scrolled up only */
 MediusCatchFilter up = medius_catch_filter_with_direction(
     medius_catch_filter_watch_axis(MEDIUS_AXIS_WHEEL), MEDIUS_DIRECTION_POSITIVE);
 
 /* EP0, first 8 bytes: the setup packet and nothing after it */
 MediusCatchFilter ep0 = medius_catch_filter_with_capture(
     medius_catch_filter_traffic(MEDIUS_CATCH_CLASS_CONTROL, 0), 8);`}</code></pre>
-        </Card>
-      </div>
+      </DocSection>
 
-      <div id="clip" data-search-target>
-        <Card>
-          <CardHeader title="Buffered clip playback" subtitle="Preload a per-frame stream, box-clocked" />
-          <p>
-            Build an entry stream with a <code>MediusClipBuilder</code>, fill a multi-field frame
-            with a <code>MediusClipFrame</code>, then drive playback through the{' '}
-            <code>MediusClip</code> from <code>medius_device_clip</code>. All three are opaque, each
-            with its own <code>*_free</code>. See <A href="/library/clip">Clip</A>.
-          </p>
-          <div class="api-response-label">BUILDER</div>
+      <DocSection id="clip" title="Buffered clip playback" caption="Preload a per-frame stream, box-clocked">
+        <p>
+          Build an entry stream with a <code>MediusClipBuilder</code>, fill a multi-field frame
+          with a <code>MediusClipFrame</code>, then drive playback through the{' '}
+          <code>MediusClip</code> from <code>medius_device_clip</code>. All three are opaque, each
+          with its own <code>*_free</code>. See <A href="/library/clip">Clip</A>.
+        </p>
+        <div class="api-response-label">BUILDER</div>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Function</th><th>Does</th></tr></thead>
             <tbody>
@@ -352,7 +342,9 @@ MediusCatchFilter ep0 = medius_catch_filter_with_capture(
               <tr><td><code>medius_clip_builder_frame(b, const MediusClipFrame *frame)</code></td><td>One frame carrying whatever <code>frame</code> holds. The builder takes a copy, so <code>frame</code> stays usable.</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">FRAME</div>
+        </div>
+        <div class="api-response-label">FRAME</div>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Function</th><th>Does</th></tr></thead>
             <tbody>
@@ -365,8 +357,9 @@ MediusCatchFilter ep0 = medius_catch_filter_with_capture(
               <tr><td><code>medius_clip_frame_transfer(f, uint8_t ep, MediusSetup setup,</code> <code>const uint8_t *out_data, uintptr_t out_len)</code></td><td>Add a control transfer, as <code>medius_device_transfer</code> runs one: <code>out_data</code> is <code>setup.length</code> bytes for an OUT request, none for an IN one. The answer arrives as a <A href="/bindings/c/types#catch-class"><code>MEDIUS_CATCH_CLASS_CLIP_TRANSFER</code></A> event. The box runs it only while the opt-in is on.</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-c">{`MediusClipBuilder *b = medius_clip_builder_new();
+        </div>
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-c">{`MediusClipBuilder *b = medius_clip_builder_new();
 MediusClipFrame   *f = medius_clip_frame_new();
 
 /* move (+10, -4) AND press Left on the same frame */
@@ -383,7 +376,8 @@ medius_clip_frame_transfer(f, 0, setup, out, sizeof out);
 medius_clip_builder_frame(b, f);
 
 medius_clip_frame_free(f);`}</code></pre>
-          <div class="api-response-label">HANDLE</div>
+        <div class="api-response-label">HANDLE</div>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Function</th><th>Effect</th></tr></thead>
             <tbody>
@@ -407,13 +401,12 @@ medius_clip_frame_free(f);`}</code></pre>
               <tr><td><code>medius_clip_query_config(clip, out)</code></td><td>Fill a <A href="/bindings/c/types#clip-settings"><code>MediusClipSettings</code></A>: auto-lock scope, loop/retain, finalized, and both kinds of trigger, each packet trigger with its <code>hits</code>.</td></tr>
             </tbody>
           </table>
-        </Card>
-      </div>
+        </div>
+      </DocSection>
 
-      <div id="advanced" data-search-target>
-        <Card>
-          <CardHeader title="Advanced control layer" subtitle="Raw injection, control transfers, rewrite rules, descriptor patches" />
-          <p>Gated on the imperfect-clone opt-in, <code>medius_device_allow_imperfect_clones(dev, true)</code>. See <A href="/library/advanced/raw">Raw injection</A>, <A href="/library/advanced/transfer">Control transfers</A>, <A href="/library/advanced/rewrite">Rewrite rules</A>, and <A href="/library/advanced/patch">Descriptor patches</A>. With it off, <code>set_rewrite</code> and <code>apply_patch</code> return <code>MEDIUS_STATUS_ERR_IMPERFECT_REQUIRED</code>, the box drops <code>medius_device_raw</code> (sent unchecked), and a transfer returns OK with <code>MEDIUS_TRANSFER_STATUS_REFUSED</code>; queries, removes, clears and <code>set_patch</code> need no opt-in.</p>
+      <DocSection id="advanced" title="Advanced control layer" caption="Raw injection, control transfers, rewrite rules, descriptor patches">
+        <p>Gated on the imperfect-clone opt-in, <code>medius_device_allow_imperfect_clones(dev, true)</code>. See <A href="/library/advanced/raw">Raw injection</A>, <A href="/library/advanced/transfer">Control transfers</A>, <A href="/library/advanced/rewrite">Rewrite rules</A>, and <A href="/library/advanced/patch">Descriptor patches</A>. With it off, <code>set_rewrite</code> and <code>apply_patch</code> return <code>MEDIUS_STATUS_ERR_IMPERFECT_REQUIRED</code>, the box drops <code>medius_device_raw</code> (sent unchecked), and a transfer returns OK with <code>MEDIUS_TRANSFER_STATUS_REFUSED</code>; queries, removes, clears and <code>set_patch</code> need no opt-in.</p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Function</th><th>Does</th></tr></thead>
             <tbody>
@@ -432,13 +425,12 @@ medius_clip_frame_free(f);`}</code></pre>
               <tr><td><code>medius_device_query_patch_entry(MediusDevice *dev, uint8_t index, MediusPatch *out)</code></td><td>Read one patch in full.</td></tr>
             </tbody>
           </table>
-        </Card>
-      </div>
+        </div>
+      </DocSection>
 
-      <div id="transforms" data-search-target>
-        <Card>
-          <CardHeader title="Transforms" subtitle="Swap or remap a field on the wire" />
-          <p>Faithful field transforms, no opt-in. See <A href="/library/transform">Transform</A>. An axis argument is a <A href="/bindings/c/types#axis"><code>MediusAxis</code></A> value (0 X, 1 Y, 2 wheel, 3 pan); <code>remap</code> takes two <A href="/bindings/c/types#lock-target"><code>MediusLockTarget</code></A>s, so it can move a button onto a key or media usage. To weigh or reverse a field, use <code>medius_device_scale</code> (signed percent).</p>
+      <DocSection id="transforms" title="Transforms" caption="Swap or remap a field on the wire">
+        <p>Faithful field transforms, no opt-in. See <A href="/library/transform">Transform</A>. An axis argument is a <A href="/bindings/c/types#axis"><code>MediusAxis</code></A> value (0 X, 1 Y, 2 wheel, 3 pan); <code>remap</code> takes two <A href="/bindings/c/types#lock-target"><code>MediusLockTarget</code></A>s, so it can move a button onto a key or media usage. To weigh or reverse a field, use <code>medius_device_scale</code> (signed percent).</p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Function</th><th>Does</th></tr></thead>
             <tbody>
@@ -450,13 +442,12 @@ medius_clip_frame_free(f);`}</code></pre>
               <tr><td><code>medius_device_query_transforms(MediusDevice *dev, MediusTransforms *out)</code></td><td>Read the active table, in the order the box applies it.</td></tr>
             </tbody>
           </table>
-        </Card>
-      </div>
+        </div>
+      </DocSection>
 
-      <div id="builders" data-search-target>
-        <Card>
-          <CardHeader title="Usage, motion & lock-target builders" subtitle="Make the value structs the calls take" />
-          <p>Pure constructors: no device, no wire traffic. See <A href="/library/inject">Inject</A>, <A href="/library/move">Move</A>, and <A href="/library/lock">Lock</A>.</p>
+      <DocSection id="builders" title="Usage, motion & lock-target builders" caption="Make the value structs the calls take">
+        <p>Pure constructors: no device, no wire traffic. See <A href="/library/inject">Inject</A>, <A href="/library/move">Move</A>, and <A href="/library/lock">Lock</A>.</p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Function</th><th>Returns</th></tr></thead>
             <tbody>
@@ -470,13 +461,12 @@ medius_clip_frame_free(f);`}</code></pre>
               <tr><td><code>medius_lock_target_usage(MediusUsage usage)</code></td><td><code>MediusLockTarget</code> for a usage (button, key, or media).</td></tr>
             </tbody>
           </table>
-        </Card>
-      </div>
+        </div>
+      </DocSection>
 
-      <div id="inspectors" data-search-target>
-        <Card>
-          <CardHeader title="Struct inspectors" subtitle="Read query / event results without the wire" />
-          <p>Interpret a struct you already hold, by value or pointer, with no I/O. Each mirrors the matching method on the <A href="/library/types">Rust type</A>.</p>
+      <DocSection id="inspectors" title="Struct inspectors" caption="Read query / event results without the wire">
+        <p>Interpret a struct you already hold, by value or pointer, with no I/O. Each mirrors the matching method on the <A href="/library/types">Rust type</A>.</p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Function</th><th>Returns</th></tr></thead>
             <tbody>
@@ -502,12 +492,11 @@ medius_clip_frame_free(f);`}</code></pre>
               <tr><td><code>medius_device_info_is_cloned(MediusDeviceInfo info)</code></td><td><code>bool</code>: a device is cloned, one with no HID interface (<code>n_hid</code> 0) included.</td></tr>
             </tbody>
           </table>
-        </Card>
-      </div>
+        </div>
+      </DocSection>
 
-      <div id="module" data-search-target>
-        <Card>
-          <CardHeader title="Library functions" subtitle="Library-level helpers and errors" />
+      <DocSection id="module" title="Library functions" caption="Library-level helpers and errors">
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Function</th><th>Does</th></tr></thead>
             <tbody>
@@ -520,17 +509,16 @@ medius_clip_frame_free(f);`}</code></pre>
               <tr><td><code>medius_version_string()</code></td><td>The crate version as a static NUL-terminated string.</td></tr>
             </tbody>
           </table>
-        </Card>
-      </div>
+        </div>
+      </DocSection>
 
-      <div id="mock" data-search-target>
-        <Card>
-          <CardHeader title="Mock box" subtitle="Scriptable fake for tests, feature-gated" />
-          <p>
-            All behind <code>#ifdef MEDIUS_FEATURE_MOCK</code> (the <code>mock</code>{' '}
-            <a href="https://doc.rust-lang.org/cargo/reference/features.html" target="_blank" rel="noreferrer">cargo feature</a>). Concept: <A href="/library/features/mock">Mock</A>; enabling it:{' '}
-            <A href="/bindings/c/build">Build &amp; features</A>.
-          </p>
+      <DocSection id="mock" title="Mock box" caption="Scriptable fake for tests, feature-gated">
+        <p>
+          All behind <code>#ifdef MEDIUS_FEATURE_MOCK</code> (the <code>mock</code>{' '}
+          <a href="https://doc.rust-lang.org/cargo/reference/features.html" target="_blank" rel="noreferrer">cargo feature</a>). Concept: <A href="/library/features/mock">Mock</A>; enabling it:{' '}
+          <A href="/bindings/c/build">Build &amp; features</A>.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Function</th><th>Does</th></tr></thead>
             <tbody>
@@ -561,8 +549,8 @@ medius_clip_frame_free(f);`}</code></pre>
               <tr><td><code>medius_mock_recorded_frame(mock, uintptr_t idx, MediusFrameType *out_ty,</code> <code>uint8_t *out_seq, uint8_t *payload_buf, uintptr_t cap)</code></td><td>Read recorded frame <code>idx</code>: type, SEQ, and payload bytes.</td></tr>
             </tbody>
           </table>
-        </Card>
-      </div>
+        </div>
+      </DocSection>
     </>
   );
 };

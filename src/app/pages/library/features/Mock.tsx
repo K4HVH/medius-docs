@@ -1,13 +1,12 @@
 import type { Component } from 'solid-js';
 import { A } from '@solidjs/router';
-import { Card, CardHeader } from '../../../../components/surfaces/Card';
-import '../../../../styles/docs.css';
+import { PageHeader } from '../../../shell/PageHeader';
+import { DocSection } from '../../../shell/DocSection';
 
 const Mock: Component = () => {
   return (
     <>
-      <Card>
-        <CardHeader title="Mock" subtitle="Test without hardware" />
+      <PageHeader>
         <p>
           A <code>MockBox</code> is an in-process fake Medius box behind the{' '}
           <code>mock</code> cargo feature.
@@ -18,37 +17,33 @@ const Mock: Component = () => {
           <A href="/library/connection"><code>Device</code></A>, keep one to script and inspect.
         </p>
         <p>See also: <A href="/library/guides/testing#testing">testing with MockBox</A>.</p>
-      </Card>
+      </PageHeader>
 
-      <div id="create" data-search-target>
-        <Card>
-          <CardHeader title="Building a MockBox" subtitle="new, and cloning" />
-          <pre class="api-signature">fn new() -&gt; MockBox</pre>
-          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+      <DocSection id="create" title="Building a MockBox" caption="new, and cloning">
+        <pre class="api-signature">fn new() -&gt; MockBox</pre>
+        <p><span class="api-badge api-badge--executed">No round-trip</span></p>
 
-          <p>
-            <code>new()</code> records every command and auto-replies to{' '}
-            <code>QUERY(VERSION)</code> and <code>QUERY(HEALTH)</code> with defaults.
-          </p>
+        <p>
+          <code>new()</code> records every command and auto-replies to{' '}
+          <code>QUERY(VERSION)</code> and <code>QUERY(HEALTH)</code> with defaults.
+        </p>
 
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::{Device, MockBox};
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`use medius::{Device, MockBox};
 
 let mock = MockBox::new();
 let device = Device::with_mock(mock.clone());
 // \`device\` drives the fake; \`mock\` still scripts and observes it.`}</code></pre>
-        </Card>
-      </div>
+      </DocSection>
 
-      <div id="wrap" data-search-target>
-        <Card>
-          <CardHeader title="Wrapping it in a Device" subtitle="with_mock and open_mock" />
-          <pre class="api-signature">fn with_mock(mock: MockBox) -&gt; Device</pre>
-          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
-          <pre class="api-signature">fn open_mock(mock: MockBox) -&gt; Result&lt;Device&gt;</pre>
-          <p><span class="api-badge api-badge--responded">Blocks</span></p>
+      <DocSection id="wrap" title="Wrapping it in a Device" caption="with_mock and open_mock">
+        <pre class="api-signature">fn with_mock(mock: MockBox) -&gt; Device</pre>
+        <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+        <pre class="api-signature">fn open_mock(mock: MockBox) -&gt; Result&lt;Device&gt;</pre>
+        <p><span class="api-badge api-badge--responded">Blocks</span></p>
 
-          <div class="api-response-label">CONSTRUCTORS</div>
+        <div class="api-response-label">CONSTRUCTORS</div>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr>
@@ -73,63 +68,61 @@ let device = Device::with_mock(mock.clone());
               </tr>
             </tbody>
           </table>
+        </div>
 
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::{Device, MockBox};
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`use medius::{Device, MockBox};
 
 let device = Device::open_mock(MockBox::new())?;
 device.move_rel(5, 5)?;`}</code></pre>
 
-          <p>
-            The <A href="/library/features/mock#silent">silent-box card</A> lists the two ways{' '}
-            <code>open_mock</code> can fail.
-          </p>
-        </Card>
-      </div>
+        <p>
+          The <A href="/library/features/mock#silent">silent-box card</A> lists the two ways{' '}
+          <code>open_mock</code> can fail.
+        </p>
+      </DocSection>
 
-      <div id="responses" data-search-target>
-        <Card>
-          <CardHeader title="Scripting query replies" subtitle="Version, health and device-info replies" />
-          <pre class="api-signature">fn with_version(self, version: Version) -&gt; MockBox</pre>
-          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
-          <pre class="api-signature">fn with_health(self, health: Health) -&gt; MockBox</pre>
-          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
-          <pre class="api-signature">fn with_device_info(self, device_info: DeviceInfo) -&gt; MockBox</pre>
-          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
-          <pre class="api-signature">fn with_caps(self, caps: Caps) -&gt; MockBox</pre>
-          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
-          <pre class="api-signature">fn with_mouse_caps(self, mouse: MouseCaps) -&gt; MockBox</pre>
-          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
-          <pre class="api-signature">fn with_kbd_caps(self, keyboard: KbdCaps) -&gt; MockBox</pre>
-          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
-          <pre class="api-signature">fn with_rate(self, rate: Rate) -&gt; MockBox</pre>
-          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
-          <pre class="api-signature">fn with_stats(self, stats: Stats) -&gt; MockBox</pre>
-          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
-          <pre class="api-signature">fn with_render(self, mode: RenderMode, full: bool) -&gt; MockBox</pre>
-          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
-          <pre class="api-signature">fn with_render_ready(self, ready: bool) -&gt; MockBox</pre>
-          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
-          <pre class="api-signature">fn with_spread_learned(self, period_us: u32) -&gt; MockBox</pre>
-          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
-          <pre class="api-signature">fn set_version(&self, version: Version)</pre>
-          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
-          <pre class="api-signature">fn set_health(&self, health: Health)</pre>
-          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+      <DocSection id="responses" title="Scripting query replies" caption="Version, health and device-info replies">
+        <pre class="api-signature">fn with_version(self, version: Version) -&gt; MockBox</pre>
+        <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+        <pre class="api-signature">fn with_health(self, health: Health) -&gt; MockBox</pre>
+        <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+        <pre class="api-signature">fn with_device_info(self, device_info: DeviceInfo) -&gt; MockBox</pre>
+        <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+        <pre class="api-signature">fn with_caps(self, caps: Caps) -&gt; MockBox</pre>
+        <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+        <pre class="api-signature">fn with_mouse_caps(self, mouse: MouseCaps) -&gt; MockBox</pre>
+        <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+        <pre class="api-signature">fn with_kbd_caps(self, keyboard: KbdCaps) -&gt; MockBox</pre>
+        <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+        <pre class="api-signature">fn with_rate(self, rate: Rate) -&gt; MockBox</pre>
+        <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+        <pre class="api-signature">fn with_stats(self, stats: Stats) -&gt; MockBox</pre>
+        <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+        <pre class="api-signature">fn with_render(self, mode: RenderMode, full: bool) -&gt; MockBox</pre>
+        <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+        <pre class="api-signature">fn with_render_ready(self, ready: bool) -&gt; MockBox</pre>
+        <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+        <pre class="api-signature">fn with_spread_learned(self, period_us: u32) -&gt; MockBox</pre>
+        <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+        <pre class="api-signature">fn set_version(&self, version: Version)</pre>
+        <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+        <pre class="api-signature">fn set_health(&self, health: Health)</pre>
+        <p><span class="api-badge api-badge--executed">No round-trip</span></p>
 
-          <p>
-            The <code>with_*</code> builders set what each{' '}
-            <A href="/library/requests">query</A> returns; <code>set_*</code> changes a live fake's
-            version or health mid-test.
-          </p>
-          <p>
-            The <A href="/library/types/structs">structs</A> they take are on the types page;{' '}
-            <A href="/library/types/structs#health"><code>Health::from_flags</code></A> builds one
-            from the raw <code>u16</code> flags word.
-          </p>
+        <p>
+          The <code>with_*</code> builders set what each{' '}
+          <A href="/library/requests">query</A> returns; <code>set_*</code> changes a live fake's
+          version or health mid-test.
+        </p>
+        <p>
+          The <A href="/library/types/structs">structs</A> they take are on the types page;{' '}
+          <A href="/library/types/structs#health"><code>Health::from_flags</code></A> builds one
+          from the raw <code>u16</code> flags word.
+        </p>
 
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::{Device, Health, MockBox, Version};
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`use medius::{Device, Health, MockBox, Version};
 
 let mock = MockBox::new()
     .with_version(Version { proto_ver: 9, fw_major: 5, fw_minor: 6, fw_patch: 7, mac: [0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc], name: "Loki".into() })
@@ -143,29 +136,27 @@ assert!(device.query_health()?.mouse_attached);
 // Change it mid-test: flip a later query_health.
 mock.set_health(Health::from_flags(0x00));
 assert!(!device.query_health()?.mouse_attached);`}</code></pre>
-        </Card>
-      </div>
+      </DocSection>
 
-      <div id="inject" data-search-target>
-        <Card>
-          <CardHeader title="Injecting inbound traffic" subtitle="push_log, push_raw, and the three event pushes" />
-          <pre class="api-signature">fn push_log(&self, level: LogLevel, text: &str)</pre>
-          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
-          <pre class="api-signature">fn push_raw(&self, bytes: &[u8])</pre>
-          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
-          <pre class="api-signature">fn push_motion(&self, seq: u8, ts_us: u32, dx: i16, dy: i16, dz: i16)</pre>
-          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
-          <pre class="api-signature">fn push_usages(&self, seq: u8, ts_us: u32, class: Class, direction: Direction, usages: &[Usage])</pre>
-          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
-          <pre class="api-signature">fn push_traffic(&self, seq: u8, ts_us: u32, clock: ClockDomain, class: CatchClass, id: u16, direction: Direction, flags: u8, true_len: u16, bytes: &[u8])</pre>
-          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+      <DocSection id="inject" title="Injecting inbound traffic" caption="push_log, push_raw, and the three event pushes">
+        <pre class="api-signature">fn push_log(&self, level: LogLevel, text: &str)</pre>
+        <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+        <pre class="api-signature">fn push_raw(&self, bytes: &[u8])</pre>
+        <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+        <pre class="api-signature">fn push_motion(&self, seq: u8, ts_us: u32, dx: i16, dy: i16, dz: i16)</pre>
+        <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+        <pre class="api-signature">fn push_usages(&self, seq: u8, ts_us: u32, class: Class, direction: Direction, usages: &[Usage])</pre>
+        <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+        <pre class="api-signature">fn push_traffic(&self, seq: u8, ts_us: u32, clock: ClockDomain, class: CatchClass, id: u16, direction: Direction, flags: u8, true_len: u16, bytes: &[u8])</pre>
+        <p><span class="api-badge api-badge--executed">No round-trip</span></p>
 
-          <p>
-            Each puts bytes on the inbound stream as if the box emitted them; the three event calls
-            share one <code>seq</code> counter, as on the wire.
-          </p>
+        <p>
+          Each puts bytes on the inbound stream as if the box emitted them; the three event calls
+          share one <code>seq</code> counter, as on the wire.
+        </p>
 
-          <div class="api-response-label">METHODS</div>
+        <div class="api-response-label">METHODS</div>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Name</th><th>Raises</th><th>Notes</th></tr>
@@ -198,15 +189,16 @@ assert!(!device.query_health()?.mouse_attached);`}</code></pre>
               </tr>
             </tbody>
           </table>
+        </div>
 
-          <p>
-            The three event rows each name one{' '}
-            <A href="/library/types/enums#catch-event"><code>CatchEvent</code></A> variant. Losses
-            don't show here; exercise loss handling through <code>CatchState::dropped</code>.
-          </p>
+        <p>
+          The three event rows each name one{' '}
+          <A href="/library/types/enums#catch-event"><code>CatchEvent</code></A> variant. Losses
+          don't show here; exercise loss handling through <code>CatchState::dropped</code>.
+        </p>
 
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use std::time::Duration;
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`use std::time::Duration;
 use medius::{CatchClass, CatchEvent, CatchFilter, Class, ClockDomain, Device, Direction, Key,
              LogLevel, MockBox, Usage};
 
@@ -229,22 +221,20 @@ mock.push_traffic(
     0, 64, &[0x11, 0x22, 0x33, 0x44],
 );
 assert!(matches!(stream.recv()?, CatchEvent::Traffic(t) if t.truncated()));`}</code></pre>
-        </Card>
-      </div>
+      </DocSection>
 
-      <div id="inspect" data-search-target>
-        <Card>
-          <CardHeader title="Asserting what was sent" subtitle="recorded_frames, saw, recorded, clear_recorded" />
-          <pre class="api-signature">fn recorded_frames(&self) -&gt; Vec&lt;DecodedFrame&gt;</pre>
-          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
-          <pre class="api-signature">fn recorded(&self) -&gt; usize</pre>
-          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
-          <pre class="api-signature">fn saw(&self, ty: FrameType) -&gt; bool</pre>
-          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
-          <pre class="api-signature">fn clear_recorded(&self)</pre>
-          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+      <DocSection id="inspect" title="Asserting what was sent" caption="recorded_frames, saw, recorded, clear_recorded">
+        <pre class="api-signature">fn recorded_frames(&self) -&gt; Vec&lt;DecodedFrame&gt;</pre>
+        <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+        <pre class="api-signature">fn recorded(&self) -&gt; usize</pre>
+        <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+        <pre class="api-signature">fn saw(&self, ty: FrameType) -&gt; bool</pre>
+        <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+        <pre class="api-signature">fn clear_recorded(&self)</pre>
+        <p><span class="api-badge api-badge--executed">No round-trip</span></p>
 
-          <div class="api-response-label">METHODS</div>
+        <div class="api-response-label">METHODS</div>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr>
@@ -276,17 +266,18 @@ assert!(matches!(stream.recv()?, CatchEvent::Traffic(t) if t.truncated()));`}</c
               </tr>
             </tbody>
           </table>
+        </div>
 
-          <p>
-            A <A href="/library/types/frames"><code>DecodedFrame</code></A> from a{' '}
-            <A href="/library/inject"><code>press(Button::LEFT)</code></A> is a{' '}
-            <A href="/library/types/frames"><code>FrameType::Inject</code></A> frame with payload{' '}
-            <code>[0, 0, 0, 1]</code> (class <code>0</code> = button, id <code>0</code>, action{' '}
-            <code>1</code>).
-          </p>
+        <p>
+          A <A href="/library/types/frames"><code>DecodedFrame</code></A> from a{' '}
+          <A href="/library/inject"><code>press(Button::LEFT)</code></A> is a{' '}
+          <A href="/library/types/frames"><code>FrameType::Inject</code></A> frame with payload{' '}
+          <code>[0, 0, 0, 1]</code> (class <code>0</code> = button, id <code>0</code>, action{' '}
+          <code>1</code>).
+        </p>
 
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::{Button, Device, FrameType, MockBox};
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`use medius::{Button, Device, FrameType, MockBox};
 
 let mock = MockBox::new();
 let device = Device::with_mock(mock.clone());
@@ -302,21 +293,19 @@ assert_eq!(inject.payload, vec![0, 0, 0, 1]);
 assert!(mock.saw(FrameType::Inject));
 
 mock.clear_recorded(); // next assertions start from an empty record`}</code></pre>
-        </Card>
-      </div>
+      </DocSection>
 
-      <div id="clip-packet" data-search-target>
-        <Card>
-          <CardHeader title="Clips and packet triggers" subtitle="Mock clip replies, and clip_packet" />
-          <pre class="api-signature">fn with_clip_settings(self, settings: ClipSettings) -&gt; MockBox</pre>
-          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
-          <pre class="api-signature">fn set_clip_settings(&self, settings: ClipSettings)</pre>
-          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
-          <pre class="api-signature">{`fn clip_packet(&self, class: TrafficClass, id: u16, direction: Direction, head: &[u8])
+      <DocSection id="clip-packet" title="Clips and packet triggers" caption="Mock clip replies, and clip_packet">
+        <pre class="api-signature">fn with_clip_settings(self, settings: ClipSettings) -&gt; MockBox</pre>
+        <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+        <pre class="api-signature">fn set_clip_settings(&self, settings: ClipSettings)</pre>
+        <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+        <pre class="api-signature">{`fn clip_packet(&self, class: TrafficClass, id: u16, direction: Direction, head: &[u8])
     -> (Option<ClipAction>, bool)`}</pre>
-          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+        <p><span class="api-badge api-badge--executed">No round-trip</span></p>
 
-          <div class="api-response-label">METHODS</div>
+        <div class="api-response-label">METHODS</div>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr>
@@ -338,7 +327,9 @@ mock.clear_recorded(); // next assertions start from an empty record`}</code></p
               </tr>
             </tbody>
           </table>
-          <div class="api-response-label">EFFECT</div>
+        </div>
+        <div class="api-response-label">EFFECT</div>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Call</th><th>Effect</th></tr>
@@ -352,9 +343,10 @@ mock.clear_recorded(); // next assertions start from an empty record`}</code></p
               <tr><td><code>set_retain</code>, <code>finalize</code>, <code>bind</code>, <code>append</code>, the engine verbs</td><td>Recorded frames. The <code>query_config</code> and <code>query_status</code> replies stay as scripted.</td></tr>
             </tbody>
           </table>
+        </div>
 
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::{ClipAction, ClipPacketTrigger, Device, Direction, MockBox, TrafficClass};
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`use medius::{ClipAction, ClipPacketTrigger, Device, Direction, MockBox, TrafficClass};
 
 let mock = MockBox::new();
 let device = Device::with_mock(mock.clone());
@@ -371,24 +363,21 @@ assert_eq!(mock.clip_packet(TrafficClass::HidIn, 2, Direction::IN, &down), (None
 
 // The trigger was the top-ranked match for both packets, so both count.
 assert_eq!(device.clip().query_config()?.packet_triggers[0].hits, 2);`}</code></pre>
-        </Card>
-      </div>
+      </DocSection>
 
-      <div id="silent" data-search-target>
-        <Card>
-          <CardHeader title="Silent box" subtitle="silent, and the handshake failures" />
-          <pre class="api-signature">fn silent(self) -&gt; MockBox</pre>
-          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+      <DocSection id="silent" title="Silent box" caption="silent, and the handshake failures">
+        <pre class="api-signature">fn silent(self) -&gt; MockBox</pre>
+        <p><span class="api-badge api-badge--executed">No round-trip</span></p>
 
-          <p>
-            <code>silent()</code> records commands and never replies to a query. The two{' '}
-            <A href="/library/features/mock#wrap"><code>open_mock</code></A> failures are a silent box
-            (<A href="/library/types/errors"><code>Error::NoReply</code></A>) and an unknown protocol
-            version (<A href="/library/types/errors"><code>Error::BadProtoVer</code></A>).
-          </p>
+        <p>
+          <code>silent()</code> records commands and never replies to a query. The two{' '}
+          <A href="/library/features/mock#wrap"><code>open_mock</code></A> failures are a silent box
+          (<A href="/library/types/errors"><code>Error::NoReply</code></A>) and an unknown protocol
+          version (<A href="/library/types/errors"><code>Error::BadProtoVer</code></A>).
+        </p>
 
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::{Device, Error, MockBox, Version};
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`use medius::{Device, Error, MockBox, Version};
 
 // A silent box sends no reply.
 let err = Device::open_mock(MockBox::new().silent()).unwrap_err();
@@ -405,28 +394,26 @@ let mock = MockBox::new().with_version(Version {
 });
 let err = Device::open_mock(mock).unwrap_err();
 assert!(matches!(err, Error::BadProtoVer { got: 10 }));`}</code></pre>
-        </Card>
-      </div>
+      </DocSection>
 
-      <div id="restart" data-search-target>
-        <Card>
-          <CardHeader title="Restart and release" subtitle="restart, link_lost, detach, attach" />
-          <pre class="api-signature">fn restart(&self)</pre>
-          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
-          <pre class="api-signature">fn link_lost(&self)</pre>
-          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
-          <pre class="api-signature">fn detach(&self, back_within_grace: bool)</pre>
-          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
-          <pre class="api-signature">fn attach(&self)</pre>
-          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+      <DocSection id="restart" title="Restart and release" caption="restart, link_lost, detach, attach">
+        <pre class="api-signature">fn restart(&self)</pre>
+        <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+        <pre class="api-signature">fn link_lost(&self)</pre>
+        <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+        <pre class="api-signature">fn detach(&self, back_within_grace: bool)</pre>
+        <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+        <pre class="api-signature">fn attach(&self)</pre>
+        <p><span class="api-badge api-badge--executed">No round-trip</span></p>
 
-          <p>
-            Each drops the mock's session state as the box does (locks, held input, rewrite rules,
-            transforms, the clip and its config), keeps what it stores, and triggers the same{' '}
-            <A href="/library/lifecycle#restart">session recovery</A>.
-          </p>
+        <p>
+          Each drops the mock's session state as the box does (locks, held input, rewrite rules,
+          transforms, the clip and its config), keeps what it stores, and triggers the same{' '}
+          <A href="/library/lifecycle#restart">session recovery</A>.
+        </p>
 
-          <div class="api-response-label">METHODS</div>
+        <div class="api-response-label">METHODS</div>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Name</th><th>Simulates</th><th>Detected by</th></tr>
@@ -454,13 +441,14 @@ assert!(matches!(err, Error::BadProtoVer { got: 10 }));`}</code></pre>
               </tr>
             </tbody>
           </table>
-          <p>
-            As on the box, <code>session</code> counts a release only when a command other than a{' '}
-            <code>QUERY</code> arrived since the last one.
-          </p>
+        </div>
+        <p>
+          As on the box, <code>session</code> counts a release only when a command other than a{' '}
+          <code>QUERY</code> arrived since the last one.
+        </p>
 
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::{Axis, Device, Direction, MockBox};
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`use medius::{Axis, Device, Direction, MockBox};
 use std::time::Duration;
 
 let mock = MockBox::new();
@@ -481,8 +469,7 @@ while device.counters().restarts == 0 {
     std::thread::sleep(Duration::from_millis(5));
 }
 assert_eq!(scale_x()?, 40);`}</code></pre>
-        </Card>
-      </div>
+      </DocSection>
     </>
   );
 };

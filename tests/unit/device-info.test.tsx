@@ -70,7 +70,7 @@ describe('DeviceInfo: one Capabilities card', () => {
     expect([...container.querySelectorAll('.chip__label')].map((e) => e.textContent)).toContain('Keyboard');
     await findByText(/31E3:1232/);                     // the cloned device's USB id
     await findByText('Full clone');                    // over-capacity as a terse row...
-    await findByText(/over box capacity, or high speed/); // ...not a prose card
+    await findByText(/over box capacity, or high speed/i); // ...not a prose card
     // the junk I'm killing must be gone:
     expect(queryByText('Not a full copy')).toBeNull();
     expect(queryByText('Your mouse')).toBeNull();
@@ -152,7 +152,7 @@ describe('DeviceInfo: a clone with nothing to inject into', () => {
 
     const { findByText, queryByText } = render(() => <DeviceInfo />);
     await findByText(/attached but not cloned/);
-    await findByText(/over box capacity, or high speed/);
+    await findByText(/over box capacity, or high speed/i);
     expect(queryByText('No device cloned yet.')).toBeNull();
     expect(queryByText('Serial number')).toBeNull();
   });
@@ -173,7 +173,7 @@ describe('DeviceInfo: an imperfect clone of a normal device', () => {
 
     const { findByText, queryByText } = render(() => <DeviceInfo />);
     await findByText('Full clone');
-    await findByText(/not an exact copy/);
+    await findByText(/not an exact copy/i);
     expect(queryByText('Yes')).toBeNull();
   });
 });
@@ -192,7 +192,7 @@ describe('DeviceInfo: the Performance card', () => {
   };
 
   const chip = (container: HTMLElement, row: string) =>
-    [...container.querySelectorAll('div')].find((d) => d.firstElementChild?.textContent === row)?.querySelector('.chip');
+    [...container.querySelectorAll('tr')].find((tr) => tr.firstElementChild?.textContent === row)?.querySelector('.chip');
 
   it('a box losing nothing shows every counter at zero', async () => {
     mouse();

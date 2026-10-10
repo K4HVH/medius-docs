@@ -1,198 +1,27 @@
-import { createSignal, createEffect, onCleanup, onMount, Show, For, createMemo } from 'solid-js';
-import { type RouteSectionProps, useBeforeLeave, useLocation, useNavigate } from '@solidjs/router';
-import { GridBackground } from '../../components/surfaces/GridBackground';
-import { Pane, type PaneState } from '../../components/navigation/Pane';
-import { Tabs } from '../../components/navigation/Tabs';
-import { Divider } from '../../components/display/Divider';
-import { Titlebar } from '../../components/navigation/Titlebar';
-import { Button } from '../../components/inputs/Button';
-import { CommandPalette } from '../../components/navigation/CommandPalette';
-import {
-  BsList, BsInfoCircle, BsLightning, BsStack, BsCpu, BsPlug, BsLink45deg,
-  BsFileCode, BsBroadcast, BsArrowsMove, BsCursor, BsArrowLeftRight, BsGear, BsDownload,
-  BsJournalText, BsBoxArrowInDown, BsExclamationTriangle, BsArrowRepeat, BsBarChart,
-  BsStars, BsWrench, BsActivity, BsTerminal, BsBook, BsHouseDoor, BsSearch,
-  BsLightbulb, BsSliders, BsLock, BsHash, BsPuzzle, BsDiscord,
-  BsBoxes, BsFiletypePy, BsUsbPlug, BsCodeSlash,
-} from 'solid-icons/bs';
-import type { TabOption } from '../../components/navigation/Tabs';
-import { buildSearchItems } from '../searchIndex';
-import AiActions from '../AiActions';
+import { createSignal, createEffect, createMemo, on, onCleanup, onMount } from 'solid-js';
+import { type RouteSectionProps, useBeforeLeave, useLocation, useNavigate, usePreloadRoute } from '@solidjs/router';
+import { Search } from '../shell/Search';
+import { highlighter, loadHighlighter } from '../highlight';
+import { openedByHistory, openingAt, settleAt } from '../shell/scrollPlace';
+import { DocsSidebar } from '../shell/DocsSidebar';
+import { OnThisPage } from '../shell/OnThisPage';
+import { SiteFooter } from '../shell/SiteFooter';
+import { arrive, armReveals, blocksOf, fontsReady, pageArrival, retime, watchChanges } from '../shell/motion';
+import { pagePath, routeFor } from '../routes';
+import { itemFor } from '../items';
 import { useBoxes, useNativeFlash } from './dashboard/context';
 import { BoxList } from './dashboard/BoxList';
-import Prism from '../prism';
-import '../../styles/docs.css';
-
-const sectionTabs: TabOption[] = [
-  { value: 'native', label: 'Native API', icon: BsTerminal },
-  { value: 'library', label: 'Rust Library', icon: BsBook },
-  { value: 'bindings', label: 'Bindings', icon: BsBoxes },
-  { value: 'dashboard', label: 'Dashboard', icon: BsBroadcast },
-];
-
-const nativeOverviewTabs: TabOption[] = [
-  { value: '/native', label: 'Introduction', icon: BsInfoCircle },
-  { value: '/native/quickstart', label: 'Quickstart', icon: BsLightning },
-  { value: '/native/architecture', label: 'Architecture', icon: BsStack },
-  { value: '/native/hardware', label: 'Hardware', icon: BsCpu },
-];
-
-const nativeProtocolTabs: TabOption[] = [
-  { value: '/native/transport', label: 'Transport', icon: BsPlug },
-  { value: '/native/connection', label: 'Connection', icon: BsLink45deg },
-  { value: '/native/frame', label: 'Frame Format', icon: BsFileCode },
-  { value: '/native/injection', label: 'Injection Model', icon: BsBroadcast },
-];
-
-const nativeCommandTabs: TabOption[] = [
-  { value: '/native/commands/inject', label: 'Inject', icon: BsCursor },
-  { value: '/native/commands/move', label: 'Move', icon: BsArrowsMove },
-  { value: '/native/commands/lock', label: 'Lock', icon: BsLock },
-  { value: '/native/commands/catch', label: 'Catch', icon: BsActivity },
-  { value: '/native/commands/transform', label: 'Transform', icon: BsSliders },
-  { value: '/native/commands/option', label: 'Option', icon: BsPuzzle },
-  { value: '/native/commands/clip', label: 'Clip', icon: BsStack },
-  { value: '/native/commands/requests', label: 'Requests', icon: BsArrowLeftRight },
-  { value: '/native/commands/led', label: 'LED', icon: BsLightbulb },
-  { value: '/native/commands/admin', label: 'Admin', icon: BsGear },
-  { value: '/native/commands/update', label: 'Update', icon: BsDownload },
-  { value: '/native/commands/usage', label: 'Usage IDs', icon: BsHash },
-];
-
-const nativeAdvancedTabs: TabOption[] = [
-  { value: '/native/commands/raw', label: 'Raw', icon: BsBroadcast },
-  { value: '/native/commands/transfer', label: 'Transfer', icon: BsArrowLeftRight },
-  { value: '/native/commands/rewrite', label: 'Rewrite', icon: BsCodeSlash },
-  { value: '/native/commands/patch', label: 'Patch', icon: BsFileCode },
-];
-
-const nativeReferenceTabs: TabOption[] = [
-  { value: '/native/flashing', label: 'Flashing', icon: BsBoxArrowInDown },
-  { value: '/native/troubleshooting', label: 'Troubleshooting', icon: BsExclamationTriangle },
-];
-
-// AI access group, at the foot of every code section.
-const aiAccessTabs: TabOption[] = [{ value: '/ai', label: 'AI & LLMs', icon: BsStars }];
-
-const allNativeTabs = [
-  ...nativeOverviewTabs, ...nativeProtocolTabs, ...nativeCommandTabs, ...nativeAdvancedTabs, ...nativeReferenceTabs,
-];
-
-const libraryGettingStartedTabs: TabOption[] = [
-  { value: '/library', label: 'Introduction', icon: BsInfoCircle },
-  { value: '/library/connection', label: 'Connection', icon: BsLink45deg },
-  { value: '/library/discovery', label: 'Discovery', icon: BsBoxes },
-];
-
-const libraryApiTabs: TabOption[] = [
-  { value: '/library/inject', label: 'Inject', icon: BsCursor },
-  { value: '/library/move', label: 'Move', icon: BsArrowsMove },
-  { value: '/library/lock', label: 'Lock', icon: BsLock },
-  { value: '/library/catch', label: 'Catch', icon: BsActivity },
-  { value: '/library/transform', label: 'Transform', icon: BsSliders },
-  { value: '/library/options', label: 'Options', icon: BsPuzzle },
-  { value: '/library/clip', label: 'Clip', icon: BsStack },
-  { value: '/library/requests', label: 'Requests', icon: BsArrowLeftRight },
-  { value: '/library/led', label: 'LED', icon: BsLightbulb },
-  { value: '/library/admin', label: 'Admin', icon: BsGear },
-  { value: '/library/update', label: 'Update', icon: BsDownload },
-  { value: '/library/lifecycle', label: 'Lifecycle', icon: BsArrowRepeat },
-  { value: '/library/diagnostics', label: 'Logs & Counters', icon: BsJournalText },
-];
-
-const libraryAdvancedTabs: TabOption[] = [
-  { value: '/library/advanced/raw', label: 'Raw injection', icon: BsBroadcast },
-  { value: '/library/advanced/transfer', label: 'Control transfers', icon: BsArrowLeftRight },
-  { value: '/library/advanced/rewrite', label: 'Rewrite rules', icon: BsCodeSlash },
-  { value: '/library/advanced/patch', label: 'Descriptor patches', icon: BsFileCode },
-];
-
-const libraryFeatureTabs: TabOption[] = [
-  { value: '/library/features/async', label: 'Async', icon: BsStars },
-  { value: '/library/features/mock', label: 'Mock', icon: BsWrench },
-  { value: '/library/features/tracing', label: 'Tracing', icon: BsActivity },
-];
-
-const libraryGuidesTabs: TabOption[] = [
-  { value: '/library/guides/calls', label: 'Calls & input', icon: BsLightning },
-  { value: '/library/guides/connection', label: 'Connection', icon: BsArrowRepeat },
-  { value: '/library/guides/testing', label: 'Testing', icon: BsWrench },
-];
-
-const libraryReferenceTabs: TabOption[] = [
-  { value: '/library/types', label: 'Types overview', icon: BsFileCode },
-  { value: '/library/types/enums', label: 'Enums', icon: BsFileCode },
-  { value: '/library/types/structs', label: 'Structs', icon: BsFileCode },
-  { value: '/library/types/frames', label: 'Frames', icon: BsFileCode },
-  { value: '/library/types/errors', label: 'Errors', icon: BsExclamationTriangle },
-];
-
-const allLibraryTabs = [
-  ...libraryGettingStartedTabs, ...libraryApiTabs, ...libraryAdvancedTabs, ...libraryFeatureTabs,
-  ...libraryGuidesTabs, ...libraryReferenceTabs,
-];
-
-const bindingsSwitcherTabs: TabOption[] = [
-  { value: '/bindings', label: 'Overview', icon: BsBoxes },
-  { value: '/bindings/c', label: 'C / C++', icon: BsFileCode },
-  { value: '/bindings/python', label: 'Python', icon: BsFiletypePy },
-];
-
-const makeBindingGroups = (root: string): { label: string; tabs: TabOption[] }[] => [
-  { label: 'Getting Started', tabs: [
-    { value: root, label: 'Install', icon: BsBoxArrowInDown },
-    { value: `${root}/quickstart`, label: 'First program', icon: BsLightning },
-  ] },
-  { label: 'Usage', tabs: [
-    { value: `${root}/usage`, label: 'Calls & errors', icon: BsTerminal },
-    { value: `${root}/streams`, label: 'Streams', icon: BsActivity },
-  ] },
-  { label: 'Reference', tabs: [
-    { value: `${root}/api`, label: 'API index', icon: BsList },
-    { value: `${root}/types`, label: 'Types & errors', icon: BsFileCode },
-  ] },
-  { label: 'Build', tabs: [
-    { value: `${root}/build`, label: 'Build & features', icon: BsWrench },
-  ] },
-];
-
-const bindingRoots = ['/bindings/c', '/bindings/python'];
-const bindingGroupsByRoot: Record<string, { label: string; tabs: TabOption[] }[]> = {
-  '/bindings/c': makeBindingGroups('/bindings/c'),
-  '/bindings/python': makeBindingGroups('/bindings/python'),
-};
-
-const allBindingsTabs: TabOption[] = [
-  { value: '/bindings', label: 'Overview', icon: BsBoxes },
-  ...bindingRoots.flatMap((root) => makeBindingGroups(root).flatMap((g) => g.tabs)),
-];
-
-const dashboardTabs: TabOption[] = [
-  { value: '/dashboard/setup', label: 'Set up', icon: BsUsbPlug },
-  { value: '/dashboard', label: 'Device', icon: BsCpu },
-  { value: '/dashboard/control', label: 'Control', icon: BsSliders },
-  { value: '/dashboard/advanced-control', label: 'Advanced control', icon: BsCodeSlash },
-  { value: '/dashboard/update', label: 'Update', icon: BsArrowRepeat },
-  { value: '/dashboard/advanced', label: 'Advanced', icon: BsBoxArrowInDown },
-  { value: '/dashboard/changelog', label: 'Changelog', icon: BsJournalText },
-  { value: '/dashboard/stats', label: 'Stats', icon: BsBarChart },
-];
 
 const BOX_ROUTES = new Set([
   '/dashboard',
   '/dashboard/control',
-  '/dashboard/advanced-control',
   '/dashboard/update',
-  '/dashboard/advanced',
 ]);
 
-const isMobileQuery = () =>
-  typeof window !== 'undefined' && window.matchMedia('(max-width: 768px)').matches;
 
 const DocsLayout = (props: RouteSectionProps) => {
-  const [paneState, setPaneState] = createSignal<PaneState>(isMobileQuery() ? 'closed' : 'open');
-  const [isMobile, setIsMobile] = createSignal(isMobileQuery());
   const [searchOpen, setSearchOpen] = createSignal(false);
+  const [closeKey, setCloseKey] = createSignal(0);
   const navigate = useNavigate();
   const location = useLocation();
   const native = useNativeFlash();
@@ -202,384 +31,218 @@ const DocsLayout = (props: RouteSectionProps) => {
   useBeforeLeave((e) => {
     if (flashing()) e.preventDefault();
   });
-  let pendingHash: string | null = null;
+  let main: HTMLElement | undefined;
+  let footer: HTMLElement | undefined;
 
-  const scrollToTarget = (id: string) => {
+  // 'auto' glides by the page's CSS, which reduced motion turns off; a new page lands with 'instant'.
+  // The outline marks a search result or a deep link, not a section the reader moved to themselves.
+  let highlightNext: string | null = null;
+  // A target that comes with fetched content (a device the stats add, a release), or is drawn anew when
+  // more arrives, is landed on again, for up to 10 s and until the reader scrolls, types or presses
+  // anywhere (the scrollbar too).
+  let awaited = () => {};
+  onCleanup(() => awaited());
+  const scrollToTarget = (id: string, behavior: ScrollBehavior, highlight: boolean, until = Date.now() + 10000) => {
+    awaited();
     const el = document.getElementById(id);
+    if (main && Date.now() < until) {
+      const watch = new MutationObserver(() => {
+        const now = document.getElementById(id);
+        if (now && now !== el) scrollToTarget(id, behavior, highlight, until);
+      });
+      const stop = () => awaited();
+      const timer = setTimeout(stop, until - Date.now());
+      const intent = ['wheel', 'touchstart', 'keydown', 'pointerdown'] as const;
+      for (const k of intent) window.addEventListener(k, stop, { passive: true });
+      awaited = () => {
+        watch.disconnect();
+        clearTimeout(timer);
+        for (const k of intent) window.removeEventListener(k, stop);
+        awaited = () => {};
+      };
+      watch.observe(main, { childList: true, subtree: true });
+    }
     if (!el) return;
-    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    el.scrollIntoView({ behavior, block: 'start' });
+    if (!highlight) return;
+    // The block the reader asked for shows at once, with its ring rather than an arrival.
+    el.classList.remove('moving');
     el.classList.add('search-highlight');
     setTimeout(() => el.classList.remove('search-highlight'), 2000);
   };
+  const hashId = () => decodeURIComponent(location.hash.replace('#', ''));
 
   const handleSearchNavigate = (fullPath: string) => {
     if (flashing()) return;
     setSearchOpen(false);
-    const hashIdx = fullPath.indexOf('#');
-    const path = hashIdx >= 0 ? fullPath.slice(0, hashIdx) : fullPath;
-    const hash = hashIdx >= 0 ? fullPath.slice(hashIdx + 1) : null;
-    const samePage = location.pathname === path;
-
-    if (hash) pendingHash = hash;
-
-    if (!samePage) navigate(path);
-
-    if (hash) {
-      setTimeout(() => {
-        scrollToTarget(hash);
-        pendingHash = null;
-      }, samePage ? 50 : 200);
-    }
-
-    if (isMobile()) setPaneState('closed');
+    setCloseKey((k) => k + 1);
+    const [path, hash] = fullPath.split('#');
+    highlightNext = hash ?? null;
+    if (path === location.pathname && hash && hash === hashId()) scrollToTarget(hash, 'auto', true);
+    else navigate(fullPath, { scroll: path !== location.pathname });
   };
 
-  const searchItems = buildSearchItems(handleSearchNavigate);
-
+  // Ctrl or Cmd with K opens and closes the search; / opens it from anywhere but a field.
   onMount(() => {
-    const mql = window.matchMedia('(max-width: 768px)');
-    const handler = (e: MediaQueryListEvent) => {
-      setIsMobile(e.matches);
-      if (e.matches) setPaneState('closed');
-      else setPaneState('open');
+    // During a flash the keys open nothing, and the browser's Ctrl K stays blocked as ever.
+    const onKey = (e: KeyboardEvent) => {
+      const typing = e.target instanceof Element && !!e.target.closest('input, textarea, select, [contenteditable="true"]');
+      if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        if (!flashing()) setSearchOpen((v) => !v);
+      } else if (e.key === '/' && !typing && !e.ctrlKey && !e.metaKey && !e.altKey && !flashing()) {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
     };
-    mql.addEventListener('change', handler);
-    onCleanup(() => mql.removeEventListener('change', handler));
+    window.addEventListener('keydown', onKey);
+    onCleanup(() => window.removeEventListener('keydown', onKey));
   });
 
-  const rawSection = () =>
-    location.pathname.startsWith('/dashboard')
-      ? 'dashboard'
-      : location.pathname.startsWith('/bindings')
-        ? 'bindings'
-        : location.pathname.startsWith('/library')
-          ? 'library'
-          : location.pathname === '/ai' || location.pathname.startsWith('/ai/')
-            ? 'ai'
-            : 'native';
+  // An item's address shows its parent page.
+  const page = () => pagePath(location.pathname);
+  const section = () => routeFor(page())?.section;
 
-  const [lastCodeSection, setLastCodeSection] = createSignal<'native' | 'library' | 'bindings'>('native');
-  createEffect(() => {
-    const s = rawSection();
-    if (s === 'native' || s === 'library' || s === 'bindings') setLastCodeSection(s);
-  });
-  // The AI page keeps the sidebar of the section it was opened from.
-  const activeSection = () => {
-    const s = rawSection();
-    return s === 'ai' ? lastCodeSection() : s;
-  };
-
-  const bindingRoot = () => {
-    const p = location.pathname;
-    if (p.startsWith('/bindings/python')) return '/bindings/python';
-    if (p.startsWith('/bindings/c')) return '/bindings/c';
-    return '/bindings';
-  };
-
-  const pageTitle = createMemo(() => {
-    const all = [...allNativeTabs, ...allLibraryTabs, ...allBindingsTabs, ...dashboardTabs, ...aiAccessTabs];
-    const label = all.find(t => t.value === location.pathname)?.label ?? '';
-    const box = BOX_ROUTES.has(location.pathname) ? boxes.selected()?.session.name() : null;
+  const barTitle = createMemo(() => {
+    const label = routeFor(page())?.nav ?? '';
+    const box = BOX_ROUTES.has(page()) ? boxes.selected()?.session.name() : null;
     return box ? `${label} - ${box}` : label;
   });
 
-  let contentRef: HTMLDivElement | undefined;
-
-  createEffect(() => {
-    location.pathname;
-    if (pendingHash) return;
-    contentRef?.scrollTo(0, 0);
+  // A new page arrives block by block, and starts at the top, or at its hash once the fonts have set the
+  // layout; the reveals are armed after that jump, so the section it lands on is never held back. A hash
+  // change on the same page scrolls there. The arrival is stamped at once, so a prerendered snapshot's
+  // arrival carries on into the app's (takeover.ts).
+  let shownPath = '';
+  let settled = 0;
+  let disposeReveals = () => {};
+  createEffect(
+    on(
+      () => [location.pathname, location.hash] as const,
+      ([path, hash]) => {
+        awaited();
+        const at = openingAt();
+        if (path === shownPath) {
+          // Back across hashes returns to the place; a link on the page glides, to its hash or its top.
+          if (at !== null && openedByHistory()) settleAt(at);
+          else if (at !== null) window.scrollTo({ top: at, left: 0, behavior: 'auto' });
+          else if (hash) scrollToTarget(hashId(), 'auto', hashId() === highlightNext);
+          highlightNext = null;
+          return;
+        }
+        shownPath = path;
+        const run = ++settled;
+        disposeReveals();
+        disposeReveals = () => {};
+        // The page goes where it opens before it arrives, so its arrival starts at what is in view.
+        if (at !== null) settleAt(at);
+        if (main) {
+          arrive(main, pageArrival(main));
+          highlight(main, path, run);
+        }
+        requestAnimationFrame(() => {
+          if (run !== settled || !main) return;
+          nextPages(run);
+          void fontsReady().then(() => {
+            if (run !== settled || !main) return;
+            const aim = itemFor(path)?.target ?? (hash ? hashId() : '');
+            if (at === null && aim) {
+              scrollToTarget(aim, 'instant', true);
+              retime(main);
+            }
+            highlightNext = null;
+            const page = armReveals(main, () => blocksOf(main!));
+            const foot = footer ? armReveals(footer, () => [...footer!.children] as HTMLElement[]) : () => {};
+            disposeReveals = () => {
+              page();
+              foot();
+            };
+          });
+        });
+      },
+    ),
+  );
+  onCleanup(() => disposeReveals());
+  onMount(() => {
+    if (main) onCleanup(watchChanges(main));
   });
 
-  createEffect(() => {
-    const hash = location.hash?.replace('#', '');
-    if (!hash || pendingHash) return;
-    setTimeout(() => scrollToTarget(hash), 50);
-  });
-
-  // Highlight code blocks after each route renders.
-  createEffect(() => {
-    location.pathname;
-    requestAnimationFrame(() => {
-      if (contentRef) Prism.highlightAllUnder(contentRef);
-    });
-  });
-
-  const handlePageNav = (value: string) => {
-    if (flashing()) return;
-    navigate(value);
-    if (isMobile()) setPaneState('closed');
+  // `data-highlighted` names the page whose code is highlighted, which the prerender and the search pass
+  // wait for. Every navigation brings the page's code before the page shows (shell/leave.ts), and a page
+  // that shows code brings the highlighter (lazyPages.ts), so its code is highlighted as it first shows.
+  const highlight = (el: HTMLElement, path: string, run: number) => {
+    const done = (Prism?: ReturnType<typeof highlighter>) => {
+      Prism?.highlightAllUnder(el);
+      el.dataset.highlighted = path;
+    };
+    if (!el.querySelector('code[class*="language-"]')) return done();
+    const now = highlighter();
+    if (now) return done(now);
+    loadHighlighter().then(
+      (Prism) => run === settled && done(Prism),
+      () => {},
+    );
   };
+
+  // Once the page is in and the browser idle, the code of the pages before and after it in its section of
+  // the sidebar, where a reader most often goes next (a browser without idle callbacks waits a second);
+  // never when the browser asks to save data, and none for a page the sidebar does not list. Any other
+  // link's page comes when the link is pointed at, focused or touched.
+  const preloadRoute = usePreloadRoute();
+  let stopIdle = () => {};
+  const whenIdle = (f: () => void) => {
+    if (typeof window.requestIdleCallback === 'function') {
+      const id = window.requestIdleCallback(f, { timeout: 4000 });
+      return () => window.cancelIdleCallback?.(id);
+    }
+    const id = setTimeout(f, 1000);
+    return () => clearTimeout(id);
+  };
+  const nextPages = (run: number) => {
+    stopIdle();
+    if ((navigator as { connection?: { saveData?: boolean } }).connection?.saveData) return;
+    stopIdle = whenIdle(() => {
+      if (run !== settled) return;
+      const links = [...document.querySelectorAll<HTMLAnchorElement>('.side nav.group a[href^="/"]')]
+        .map((a) => a.getAttribute('href')!)
+        .filter((href) => routeFor(href)?.section === section());
+      const at = links.indexOf(page());
+      for (const href of [links[at - 1], links[at + 1]]) if (at >= 0 && href) preloadRoute(href, { preloadData: false });
+    });
+  };
+  onCleanup(() => stopIdle());
 
   const handleBoxPick = () => {
-    const p = location.pathname;
+    setCloseKey((k) => k + 1);
+    const p = page();
     if (!BOX_ROUTES.has(p) && p !== '/dashboard/setup' && !flashing()) navigate('/dashboard');
-    if (isMobile()) setPaneState('closed');
   };
 
   createEffect(() => {
-    if (activeSection() === 'dashboard') boxes.start();
+    if (section() === 'dashboard') boxes.start();
   });
 
   return (
     <>
-      <GridBackground gridSize={10} />
-
-      <div class="content" style={{ display: 'flex', height: '100%', width: '100%' }}>
-        <Pane
-          position="left"
-          mode={isMobile() ? 'temporary' : 'permanent'}
-          fixed={isMobile()}
-          openSize="200px"
-          state={paneState()}
-          onStateChange={setPaneState}
-        >
-          <Divider spacing="compact" label="Section" labelAlign="start" />
-          <Tabs
-            orientation="vertical"
-            variant="subtle"
-            value={activeSection()}
-            disabled={flashing()}
-            onChange={(value: string) => {
-              const prefix =
-                value === 'dashboard' ? '/dashboard'
-                  : value === 'bindings' ? '/bindings'
-                  : value === 'library' ? '/library' : '/native';
-              if (!location.pathname.startsWith(prefix)) navigate(prefix);
-            }}
-            options={sectionTabs}
-          />
-          <Show when={activeSection() === 'native'}>
-            <Divider spacing="compact" label="Overview" labelAlign="start" />
-            <Tabs
-              orientation="vertical"
-              variant="subtle"
-              value={location.pathname}
-              onChange={handlePageNav}
-              options={nativeOverviewTabs}
-            />
-            <Divider spacing="compact" label="Protocol" labelAlign="start" />
-            <Tabs
-              orientation="vertical"
-              variant="subtle"
-              value={location.pathname}
-              onChange={handlePageNav}
-              options={nativeProtocolTabs}
-            />
-            <Divider spacing="compact" label="Commands" labelAlign="start" />
-            <Tabs
-              orientation="vertical"
-              variant="subtle"
-              value={location.pathname}
-              onChange={handlePageNav}
-              options={nativeCommandTabs}
-            />
-            <Divider spacing="compact" label="Advanced control" labelAlign="start" />
-            <Tabs
-              orientation="vertical"
-              variant="subtle"
-              value={location.pathname}
-              onChange={handlePageNav}
-              options={nativeAdvancedTabs}
-            />
-            <Divider spacing="compact" label="Reference" labelAlign="start" />
-            <Tabs
-              orientation="vertical"
-              variant="subtle"
-              value={location.pathname}
-              onChange={handlePageNav}
-              options={nativeReferenceTabs}
-            />
-            <Divider spacing="compact" label="AI Access" labelAlign="start" />
-            <Tabs
-              orientation="vertical"
-              variant="subtle"
-              value={location.pathname}
-              onChange={handlePageNav}
-              options={aiAccessTabs}
-            />
-          </Show>
-          <Show when={activeSection() === 'library'}>
-            <Divider spacing="compact" label="Getting Started" labelAlign="start" />
-            <Tabs
-              orientation="vertical"
-              variant="subtle"
-              value={location.pathname}
-              onChange={handlePageNav}
-              options={libraryGettingStartedTabs}
-            />
-            <Divider spacing="compact" label="API" labelAlign="start" />
-            <Tabs
-              orientation="vertical"
-              variant="subtle"
-              value={location.pathname}
-              onChange={handlePageNav}
-              options={libraryApiTabs}
-            />
-            <Divider spacing="compact" label="Advanced control" labelAlign="start" />
-            <Tabs
-              orientation="vertical"
-              variant="subtle"
-              value={location.pathname}
-              onChange={handlePageNav}
-              options={libraryAdvancedTabs}
-            />
-            <Divider spacing="compact" label="Features" labelAlign="start" />
-            <Tabs
-              orientation="vertical"
-              variant="subtle"
-              value={location.pathname}
-              onChange={handlePageNav}
-              options={libraryFeatureTabs}
-            />
-            <Divider spacing="compact" label="Guides" labelAlign="start" />
-            <Tabs
-              orientation="vertical"
-              variant="subtle"
-              value={location.pathname}
-              onChange={handlePageNav}
-              options={libraryGuidesTabs}
-            />
-            <Divider spacing="compact" label="Reference" labelAlign="start" />
-            <Tabs
-              orientation="vertical"
-              variant="subtle"
-              value={location.pathname}
-              onChange={handlePageNav}
-              options={libraryReferenceTabs}
-            />
-            <Divider spacing="compact" label="AI Access" labelAlign="start" />
-            <Tabs
-              orientation="vertical"
-              variant="subtle"
-              value={location.pathname}
-              onChange={handlePageNav}
-              options={aiAccessTabs}
-            />
-          </Show>
-          <Show when={activeSection() === 'bindings'}>
-            <Divider spacing="compact" label="Bindings" labelAlign="start" />
-            <Tabs
-              orientation="vertical"
-              variant="subtle"
-              value={bindingRoot()}
-              onChange={handlePageNav}
-              options={bindingsSwitcherTabs}
-            />
-            <For each={bindingGroupsByRoot[bindingRoot()] ?? []}>
-              {(group) => (
-                <>
-                  <Divider spacing="compact" label={group.label} labelAlign="start" />
-                  <Tabs
-                    orientation="vertical"
-                    variant="subtle"
-                    value={location.pathname}
-                    onChange={handlePageNav}
-                    options={group.tabs}
-                  />
-                </>
-              )}
-            </For>
-            <Divider spacing="compact" label="AI Access" labelAlign="start" />
-            <Tabs
-              orientation="vertical"
-              variant="subtle"
-              value={location.pathname}
-              onChange={handlePageNav}
-              options={aiAccessTabs}
-            />
-          </Show>
-          <Show when={activeSection() === 'dashboard'}>
-            <Show when={boxes.supported && boxes.secure}>
-              <Divider spacing="compact" label="Boxes" labelAlign="start" />
-              <BoxList onPick={handleBoxPick} disabled={flashing()} />
-            </Show>
-            <Divider spacing="compact" label="Dashboard" labelAlign="start" />
-            <Tabs
-              orientation="vertical"
-              variant="subtle"
-              value={location.pathname}
-              onChange={handlePageNav}
-              options={dashboardTabs}
-              disabled={flashing()}
-            />
-          </Show>
-        </Pane>
-
-        <div ref={contentRef} style={{ flex: 1, overflow: 'auto' }}>
-          <Titlebar
-            title={
-              activeSection() === 'dashboard'
-                ? 'Medius - Dashboard'
-                : activeSection() === 'bindings'
-                  ? 'Medius - Bindings'
-                  : activeSection() === 'library'
-                    ? 'Medius - Rust Library'
-                    : 'Medius - Native API'
-            }
-            subtitle={pageTitle()}
-            sticky
-            style={{ margin: 'var(--g-spacing-sm)', top: 'var(--g-spacing-sm)' }}
-            left={
-              <>
-                <Show when={isMobile()}>
-                  <Button
-                    variant="subtle"
-                    size="compact"
-                    icon={BsList}
-                    onClick={() => setPaneState(s => s === 'open' ? 'closed' : 'open')}
-                    aria-label="Toggle navigation"
-                  />
-                </Show>
-                <Button
-                  variant="subtle"
-                  size="compact"
-                  icon={BsHouseDoor}
-                  disabled={flashing()}
-                  onClick={() => navigate('/')}
-                  aria-label="Home"
-                />
-              </>
-            }
-            right={
-              <>
-                <AiActions />
-                <Button
-                  variant="subtle"
-                  size="compact"
-                  icon={BsDiscord}
-                  onClick={() =>
-                    window.open('https://discord.gg/ArRqcA84pB', '_blank', 'noopener,noreferrer')
-                  }
-                  aria-label="Discord (opens in a new tab)"
-                />
-                <Button
-                  variant="subtle"
-                  size="compact"
-                  icon={BsSearch}
-                  onClick={() => setSearchOpen(true)}
-                  aria-label="Search"
-                />
-              </>
-            }
-          />
-          <div class="docs-page">
-            {props.children}
-          </div>
-        </div>
+      <div class="docs" classList={{ tool: section() === 'dashboard' }}>
+        <DocsSidebar
+          pathname={page()}
+          closeKey={closeKey()}
+          title={barTitle()}
+          disabled={flashing()}
+          onSearch={() => {
+            if (!flashing()) setSearchOpen(true);
+          }}
+          boxes={boxes.supported && boxes.secure ? <BoxList onPick={handleBoxPick} disabled={flashing()} /> : undefined}
+        />
+        <main ref={main} class="docs-page doc">
+          {props.children}
+        </main>
+        <OnThisPage pathname={page()} />
       </div>
+      <SiteFooter ref={(el) => (footer = el)} />
 
-      <CommandPalette
-        open={searchOpen()}
-        onClose={() => setSearchOpen(false)}
-        items={searchItems}
-        keybinding
-        onKeybinding={() => {
-          if (!flashing()) setSearchOpen((prev) => !prev);
-        }}
-        placeholder="Search docs..."
-        emptyMessage="No results"
-      />
+      <Search open={searchOpen()} onClose={() => setSearchOpen(false)} onPick={handleSearchNavigate} />
     </>
   );
 };

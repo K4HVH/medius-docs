@@ -1,5 +1,4 @@
-import { Show } from 'solid-js';
-import { Card, CardHeader } from '../../../components/surfaces/Card';
+import { Show, type JSX } from 'solid-js';
 import { Chip } from '../../../components/display/Chip';
 import {
   DeviceKind,
@@ -12,61 +11,44 @@ import {
   nativeHz,
   vidPid,
 } from '../../../dashboard/protocol';
+import { Panel } from '../../shell/Panel';
 import { useDashboard } from './context';
-import { Section } from './Section';
 
 // bcdUSB is binary-coded decimal: 0x0200 -> "2.00", 0x0201 -> "2.01".
 const bcd = (n: number) => `${n >> 8}.${(n >> 4) & 0xf}${n & 0xf}`;
 
-const muted = { color: 'var(--g-text-muted, #8a8a8a)' } as const;
-// 2px, not 6px: at 6px one section's rows read as separate items.
-const field = {
-  display: 'flex',
-  'justify-content': 'space-between',
-  gap: 'var(--g-spacing)',
-  padding: '2px 0',
-} as const;
-const chipRow = {
-  display: 'flex',
-  'flex-wrap': 'wrap',
-  gap: 'var(--g-spacing-sm)',
-  'padding-top': '4px',
-} as const;
-
-const Row = (props: { label: string; children: unknown }) => (
-  <div style={field}>
-    <span style={muted}>{props.label}</span>
-    <span>{props.children as never}</span>
-  </div>
+// A label and its value, one row of a panel's table.
+const Row = (props: { label: string; children: JSX.Element }) => (
+  <tr>
+    <td>{props.label}</td>
+    <td>{props.children}</td>
+  </tr>
 );
 
-const CapChip = (props: { on: boolean; children: unknown }) => (
-  <Chip variant={props.on ? 'success' : 'neutral'}>{props.children as never}</Chip>
+const CapChip = (props: { on: boolean; children: JSX.Element }) => (
+  <Chip variant={props.on ? 'success' : 'neutral'}>{props.children}</Chip>
 );
 
-const DeviceInfo = () => {
+export const CapabilitiesPanel = () => {
   const dash = useDashboard();
   const mouseAttached = () => dash.health()?.mouseAttached === true;
-  // The shared poller: five round trips per tick, and the Options card polls `imperfect` too.
+  // The shared poller: the Options panels poll `imperfect` too.
   const device = dash.poll('deviceInfo');
   const caps = dash.poll('caps');
-  const rate = dash.poll('rate');
-  const stats = dash.poll('stats');
   const imperfect = dash.poll('imperfect');
 
   return (
-    <>
-      <div id="capabilities" data-search-target>
-        <Card>
-          <CardHeader title="Capabilities" subtitle="Detected and cloned device" />
-          <Show when={caps()} fallback={<p style={muted}>No device cloned yet.</p>}>
-            {(c) => (
-              <>
-                <Show when={device() && !isCloned(device()!)}>
-                  <p style={muted}>
-                    {mouseAttached() ? 'A device is attached but not cloned; the box log says why.' : 'No device cloned yet.'}
-                  </p>
-                </Show>
+    <Panel id="capabilities" title="Capabilities">
+      <Show when={caps()} fallback={<p class="mut">No device cloned yet.</p>}>
+        {(c) => (
+          <>
+            <Show when={device() && !isCloned(device()!)}>
+              <p class="mut">
+                {mouseAttached() ? 'A device is attached but not cloned; the box log says why.' : 'No device cloned yet.'}
+              </p>
+            </Show>
+            <table class="vals">
+              <tbody>
                 <Show when={device()?.product}>
                   <Row label="Product">{device()!.product}</Row>
                 </Show>
@@ -78,7 +60,7 @@ const DeviceInfo = () => {
                 <Show when={device() && isCloned(device()!)}>
                   <Row label="USB ID">
                     <code>{vidPid(device()!)}</code>
-                    <span style={muted}> · USB {bcd(device()!.bcdUsb)}</span>
+                    <span class="mut"> · USB {bcd(device()!.bcdUsb)}</span>
                   </Row>
                 </Show>
                 <Show when={dash.version?.()?.mac?.length}>
@@ -91,57 +73,71 @@ const DeviceInfo = () => {
                     <code>{dash.version()!.name}</code>
                   </Row>
                 </Show>
-
                 <Show when={device() && isCloned(device()!) && !hasMouse(c()) && !hasKeyboard(c())}>
                   <Row label="Input">
-                    <span style={muted}>Cloned, with no input features to inject into</span>
+                    <span class="mut">Cloned, with no input features to inject into</span>
                   </Row>
                 </Show>
+              </tbody>
+            </table>
 
-                <Show when={hasMouse(c())}>
-                  <Section title="Mouse">
+            <Show when={hasMouse(c())}>
+              <p class="sublabel">Mouse</p>
+              <table class="vals">
+                <tbody>
                   <Row label="Buttons">{c().mouse.nButtons}</Row>
                   <Row label="Interfaces">
                     {c().mouse.nHid}
                     {isComposite(c().mouse) ? ' · composite' : ''}
                   </Row>
-                  <div style={chipRow}>
-                    <CapChip on={c().mouse.hasX}>X axis</CapChip>
-                    <CapChip on={c().mouse.hasY}>Y axis</CapChip>
-                    <CapChip on={c().mouse.hasWheel}>Wheel</CapChip>
-                    <CapChip on={c().mouse.hasPan}>Pan</CapChip>
-                    <CapChip on={c().mouse.hasReportId}>Report ID</CapChip>
-                  </div>
-                  </Section>
-                </Show>
-
-                <Show when={hasKeyboard(c())}>
-                  <Section title="Keyboard">
-                  <Row label="Rollover">
-                    {c().keyboard.nkro ? 'NKRO' : `${c().keyboard.nKeys}-key`}
+                  <Row label="Fields">
+                    <div class="chips">
+                      <CapChip on={c().mouse.hasX}>X axis</CapChip>
+                      <CapChip on={c().mouse.hasY}>Y axis</CapChip>
+                      <CapChip on={c().mouse.hasWheel}>Wheel</CapChip>
+                      <CapChip on={c().mouse.hasPan}>Pan</CapChip>
+                      <CapChip on={c().mouse.hasReportId}>Report ID</CapChip>
+                    </div>
                   </Row>
-                  <div style={chipRow}>
-                    <CapChip on={c().keyboard.hasConsumer}>Media keys</CapChip>
-                    <CapChip on={c().keyboard.hasSystem}>System keys</CapChip>
-                    <CapChip on={c().keyboard.hasReportId}>Report ID</CapChip>
-                  </div>
-                  </Section>
-                </Show>
+                </tbody>
+              </table>
+            </Show>
 
-                <Show when={imperfect()}>
-                  {(imp) => (
-                    <Show when={(device() && isCloned(device()!)) || imp().overCapacity}>
-                      <Section title="Clone">
+            <Show when={hasKeyboard(c())}>
+              <p class="sublabel">Keyboard</p>
+              <table class="vals">
+                <tbody>
+                  <Row label="Rollover">{c().keyboard.nkro ? 'NKRO' : `${c().keyboard.nKeys}-key`}</Row>
+                  <Row label="Fields">
+                    <div class="chips">
+                      <CapChip on={c().keyboard.hasConsumer}>Media keys</CapChip>
+                      <CapChip on={c().keyboard.hasSystem}>System keys</CapChip>
+                      <CapChip on={c().keyboard.hasReportId}>Report ID</CapChip>
+                    </div>
+                  </Row>
+                </tbody>
+              </table>
+            </Show>
+
+            <Show when={imperfect()}>
+              {(imp) => (
+                <Show when={(device() && isCloned(device()!)) || imp().overCapacity}>
+                  <p class="sublabel">Clone</p>
+                  <table class="vals">
+                    <tbody>
                       <Row label="Full clone">
                         <Show
                           when={imp().overCapacity || imp().cloneImperfect}
                           fallback={<Chip variant="success">Yes</Chip>}
                         >
-                          <Chip variant="warning">
-                            {imp().overCapacity ? 'No · over box capacity, or high speed' : 'No · not an exact copy'}
-                          </Chip>
+                          <Chip variant="warning">No</Chip>
                         </Show>
                       </Row>
+                      <Show when={imp().overCapacity || imp().cloneImperfect}>
+                        <Row label="Reason">
+                          {imp().overCapacity ? 'Over box capacity, or high speed' : 'Not an exact copy'}
+                        </Row>
+                      </Show>
                       <Show when={device() && isCloned(device()!)}>
                         <Row label="Serial number">
                           <Chip variant={device()?.hasSerial ? 'success' : 'neutral'}>
@@ -149,32 +145,37 @@ const DeviceInfo = () => {
                           </Chip>
                         </Row>
                       </Show>
-                      </Section>
-                    </Show>
-                  )}
+                    </tbody>
+                  </table>
                 </Show>
-              </>
-            )}
-          </Show>
-        </Card>
-      </div>
+              )}
+            </Show>
+          </>
+        )}
+      </Show>
+    </Panel>
+  );
+};
 
-      <div id="performance" data-search-target>
-        <Card>
-          <CardHeader title="Performance" subtitle="Report rate and delivery" />
+export const PerformancePanel = () => {
+  const dash = useDashboard();
+  const mouseAttached = () => dash.health()?.mouseAttached === true;
+  const rate = dash.poll('rate');
+  const stats = dash.poll('stats');
+
+  return (
+    <Panel id="performance" title="Performance">
+      <table class="vals">
+        <tbody>
           <Show when={rate()} fallback={<Row label="Report rate">Not measured</Row>}>
             {(r) => (
               <Row label="Report rate">
                 <Show
                   when={!r().changeDriven}
-                  fallback={
-                    <span style={muted}>
-                      On key change (~{Math.round(1_000_000 / r().pollPeriodUs)} Hz polled)
-                    </span>
-                  }
+                  fallback={<span class="mut">On key change (~{Math.round(1_000_000 / r().pollPeriodUs)} Hz polled)</span>}
                 >
-                  <Show when={mouseAttached()} fallback={<span style={muted}>No mouse</span>}>
-                    <Show when={nativeHz(r()) !== null} fallback={<span style={muted}>Waiting...</span>}>
+                  <Show when={mouseAttached()} fallback={<span class="mut">No mouse</span>}>
+                    <Show when={nativeHz(r()) !== null} fallback={<span class="mut">Waiting...</span>}>
                       {nativeHz(r())} Hz
                     </Show>
                   </Show>
@@ -191,28 +192,29 @@ const DeviceInfo = () => {
                   </Chip>
                 </Row>
                 <Row label="Device link">
-                  <Chip variant={s().linkRxDrops > 0 ? 'warning' : 'success'}>
-                    {s().linkRxDrops} dropped
-                  </Chip>
+                  <Chip variant={s().linkRxDrops > 0 ? 'warning' : 'success'}>{s().linkRxDrops} dropped</Chip>
                 </Row>
                 <Row label="Host link">
-                  <Chip variant={s().hostRxDrops > 0 ? 'warning' : 'success'}>
-                    {s().hostRxDrops} dropped
-                  </Chip>
+                  <Chip variant={s().hostRxDrops > 0 ? 'warning' : 'success'}>{s().hostRxDrops} dropped</Chip>
                 </Row>
                 {/* Relay drops are stream load, so info rather than warning. */}
                 <Row label="Relay">
-                  <Chip variant={s().relayDrops > 0 ? 'info' : 'success'}>
-                    {s().relayDrops} dropped
-                  </Chip>
+                  <Chip variant={s().relayDrops > 0 ? 'info' : 'success'}>{s().relayDrops} dropped</Chip>
                 </Row>
               </>
             )}
           </Show>
-        </Card>
-      </div>
-    </>
+        </tbody>
+      </table>
+    </Panel>
   );
 };
+
+const DeviceInfo = () => (
+  <>
+    <CapabilitiesPanel />
+    <PerformancePanel />
+  </>
+);
 
 export default DeviceInfo;

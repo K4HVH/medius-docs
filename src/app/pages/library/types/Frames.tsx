@@ -1,20 +1,18 @@
 import type { Component } from 'solid-js';
 import { A } from '@solidjs/router';
-import { Card, CardHeader } from '../../../../components/surfaces/Card';
-import '../../../../styles/docs.css';
+import { PageHeader } from '../../../shell/PageHeader';
 
 const Frames: Component = () => {
   return (
     <>
-      <div id="frames" data-search-target>
-        <Card>
-          <CardHeader title="Frame types" subtitle="FrameType, DecodedFrame" />
-          <p>
-            Low-level types for inspecting raw <A href="/native/frame">frame</A> traffic:{' '}
-            <code>FrameType</code> is the <code>TYPE</code> byte and <code>DecodedFrame</code> is one
-            parsed frame.
-          </p>
+      <PageHeader id="frames">
+        <p>
+          Low-level types for inspecting raw <A href="/native/frame">frame</A> traffic:{' '}
+          <code>FrameType</code> is the <code>TYPE</code> byte and <code>DecodedFrame</code> is one
+          parsed frame.
+        </p>
 
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr>
@@ -126,7 +124,9 @@ const Frames: Component = () => {
               </tr>
             </tbody>
           </table>
+        </div>
 
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr>
@@ -153,9 +153,10 @@ const Frames: Component = () => {
               </tr>
             </tbody>
           </table>
+        </div>
 
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::{FrameType, DecodedFrame};
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`use medius::{FrameType, DecodedFrame};
 
 // Byte -> variant is fallible; an unknown opcode is an Err.
 assert_eq!(FrameType::try_from(0x06), Ok(FrameType::Resp));
@@ -168,15 +169,14 @@ assert_eq!(u8::from(FrameType::Log), 0x08);
 let frame = DecodedFrame { ty: FrameType::MotionEvent, seq: 7, payload: vec![0xE8, 3, 0, 0, 5, 0, 0xFB, 0xFF, 1, 0] };
 println!("{:?} seq={} {} bytes", frame.ty, frame.seq, frame.payload.len());`}</code></pre>
 
-          <div class="callout callout--info">
-            <p>
-              The wire layout is on the <A href="/native/frame">frame</A> page;{' '}
-              <A href="/library/requests">Requests</A> and{' '}
-              <A href="/library/diagnostics">Diagnostics</A> cover everyday work.
-            </p>
-          </div>
-        </Card>
-      </div>
+        <div class="callout callout--info">
+          <p>
+            The wire layout is on the <A href="/native/frame">frame</A> page;{' '}
+            <A href="/library/requests">Requests</A> and{' '}
+            <A href="/library/diagnostics">Diagnostics</A> cover everyday work.
+          </p>
+        </div>
+      </PageHeader>
     </>
   );
 };

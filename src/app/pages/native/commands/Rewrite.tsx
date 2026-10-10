@@ -1,13 +1,13 @@
 import type { Component } from 'solid-js';
 import { A } from '@solidjs/router';
-import { Card, CardHeader } from '../../../../components/surfaces/Card';
-import '../../../../styles/docs.css';
+import { PageHeader } from '../../../shell/PageHeader';
+import { DocSection } from '../../../shell/DocSection';
+import { ByteStrip } from '../../../shell/ByteStrip';
 
 const Rewrite: Component = () => {
   return (
     <>
-      <Card>
-        <CardHeader title="Rewrite" subtitle="Match traffic in flight and change it" />
+      <PageHeader>
         <p>
           <A href="/native/commands/rewrite#rewrite"><code>REWRITE</code></A> manages up to 32 rules
           on the device chip. A rule matches packets at one surface and passes, drops,
@@ -53,43 +53,42 @@ const Rewrite: Component = () => {
             it off empties the table.
           </p>
         </div>
-      </Card>
+      </PageHeader>
 
-      <div id="rewrite" data-search-target>
-        <Card>
-          <CardHeader title="REWRITE" subtitle="Install, overwrite, or remove one rule" />
-          <p>
-            A rule is keyed by <code>(cls, id, dir, mlen, match, mask)</code>; setting one whose key
-            exists overwrites it. <A href="/native/frame#opcodes">Opcode</A> <code>0x1C</code>.
-          </p>
-          <pre class="api-signature">REWRITE  0x1C  ·  payload 9 + 2 x mlen + plen bytes</pre>
-          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
-          <div class="api-response-label">PAYLOAD</div>
-          <div class="table-scroll">
-          <table class="byte-table">
-            <thead>
-              <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
-            </thead>
-            <tbody>
-              <tr><td>0</td><td><code>cls</code></td><td><code>u8</code></td><td>surface, <code>4</code>-<code>9</code> or <code>0xFF</code>, as the <A href="/native/commands/rewrite">table above</A></td></tr>
-              <tr><td>1</td><td><code>id</code></td><td><code>u16</code></td><td>class address, little-endian; <code>0xFFFF</code> = every id in the class</td></tr>
-              <tr><td>3</td><td><code>dir</code></td><td><code>u8</code></td><td><code>0</code> both, <code>1</code> IN, <code>2</code> OUT; on <code>CONTROL</code>, the request's direction</td></tr>
-              <tr><td>4</td><td><code>state</code></td><td><code>u8</code></td><td><code>1</code> set (add or overwrite), <code>0</code> remove the keyed rule</td></tr>
-              <tr><td>5</td><td><code>action</code></td><td><code>u8</code></td><td>rule action, <A href="/native/commands/rewrite#actions"><code>0</code>-<code>8</code></A></td></tr>
-              <tr><td>6</td><td><code>off</code></td><td><code>u16</code></td><td>byte offset a <code>PATCH</code> or <code>REPLY_PATCH</code> writes at, little-endian</td></tr>
-              <tr><td>8</td><td><code>mlen</code></td><td><code>u8</code></td><td>match length, <code>0</code>-<code>16</code>; <code>0</code> takes every packet on the address</td></tr>
-              <tr><td>9</td><td><code>match</code></td><td><code>u8[]</code></td><td><code>mlen</code> bytes compared against the <A href="/native/commands/rewrite">packet head</A></td></tr>
-              <tr><td>9+mlen</td><td><code>mask</code></td><td><code>u8[]</code></td><td><code>mlen</code> bytes: a head byte ANDed with its mask byte must equal the match byte</td></tr>
-              <tr><td>9+2 x mlen</td><td><code>payload</code></td><td><code>u8[]</code></td><td>rest of the frame, <code>plen</code> bytes: what the action writes or replies with</td></tr>
-            </tbody>
-          </table>
-          </div>
-          <p>
-            <code>state = 0</code> removes the rule under that key and ignores{' '}
-            <code>action</code>, <code>off</code> and the payload. <code>cls = 0xFF</code>,{' '}
-            <code>id = 0xFFFF</code>, <code>state = 0</code> clears the whole table.
-          </p>
-          <div class="api-response-label">REFUSALS</div>
+      <DocSection id="rewrite" title="REWRITE" caption="Install, overwrite, or remove one rule">
+        <p>
+          A rule is keyed by <code>(cls, id, dir, mlen, match, mask)</code>; setting one whose key
+          exists overwrites it. <A href="/native/frame#opcodes">Opcode</A> <code>0x1C</code>.
+        </p>
+        <pre class="api-signature">REWRITE  0x1C  ·  payload 9 + 2 x mlen + plen bytes</pre>
+        <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
+        <div class="api-response-label">PAYLOAD</div>
+        <div class="table-scroll">
+        <table class="byte-table">
+          <thead>
+            <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>0</td><td><code>cls</code></td><td><code>u8</code></td><td>surface, <code>4</code>-<code>9</code> or <code>0xFF</code>, as the <A href="/native/commands/rewrite">table above</A></td></tr>
+            <tr><td>1</td><td><code>id</code></td><td><code>u16</code></td><td>class address, little-endian; <code>0xFFFF</code> = every id in the class</td></tr>
+            <tr><td>3</td><td><code>dir</code></td><td><code>u8</code></td><td><code>0</code> both, <code>1</code> IN, <code>2</code> OUT; on <code>CONTROL</code>, the request's direction</td></tr>
+            <tr><td>4</td><td><code>state</code></td><td><code>u8</code></td><td><code>1</code> set (add or overwrite), <code>0</code> remove the keyed rule</td></tr>
+            <tr><td>5</td><td><code>action</code></td><td><code>u8</code></td><td>rule action, <A href="/native/commands/rewrite#actions"><code>0</code>-<code>8</code></A></td></tr>
+            <tr><td>6</td><td><code>off</code></td><td><code>u16</code></td><td>byte offset a <code>PATCH</code> or <code>REPLY_PATCH</code> writes at, little-endian</td></tr>
+            <tr><td>8</td><td><code>mlen</code></td><td><code>u8</code></td><td>match length, <code>0</code>-<code>16</code>; <code>0</code> takes every packet on the address</td></tr>
+            <tr><td>9</td><td><code>match</code></td><td><code>u8[]</code></td><td><code>mlen</code> bytes compared against the <A href="/native/commands/rewrite">packet head</A></td></tr>
+            <tr><td>9+mlen</td><td><code>mask</code></td><td><code>u8[]</code></td><td><code>mlen</code> bytes: a head byte ANDed with its mask byte must equal the match byte</td></tr>
+            <tr><td>9+2 x mlen</td><td><code>payload</code></td><td><code>u8[]</code></td><td>rest of the frame, <code>plen</code> bytes: what the action writes or replies with</td></tr>
+          </tbody>
+        </table>
+        </div>
+        <p>
+          <code>state = 0</code> removes the rule under that key and ignores{' '}
+          <code>action</code>, <code>off</code> and the payload. <code>cls = 0xFF</code>,{' '}
+          <code>id = 0xFFFF</code>, <code>state = 0</code> clears the whole table.
+        </p>
+        <div class="api-response-label">REFUSALS</div>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Refused when</th><th>Why</th></tr>
@@ -109,67 +108,73 @@ const Rewrite: Component = () => {
               <tr><td><code>state = 0</code> with no rule under that key</td><td>nothing to remove</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">EFFECT</div>
-          <p>
-            A rule applies from the next packet at its surface. A refused frame changes nothing, so
-            compare <A href="/native/commands/requests#rewrite"><code>QUERY(REWRITE)</code></A> with
-            what was sent.
-          </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <p>
-            Drop every report the clone emits on endpoint 1, the device's zero-length packets too:{' '}
-            <code>cls = 9</code>, <code>id = 1</code>, <code>dir = 1</code>, <code>action = 1</code>{' '}
-            (<code>DROP</code>), <code>mlen = 0</code>, which matches every packet:
-          </p>
-          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+
-| A5     | 1C     | 00     | 09 00  | 09     | 01 00  |
-+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | cls    | id     |
-+--------+--------+--------+--------+--------+--------+
+        </div>
+        <div class="api-response-label">EFFECT</div>
+        <p>
+          A rule applies from the next packet at its surface. A refused frame changes nothing, so
+          compare <A href="/native/commands/requests#rewrite"><code>QUERY(REWRITE)</code></A> with
+          what was sent.
+        </p>
+        <div class="api-response-label">EXAMPLE</div>
+        <p>
+          Drop every report the clone emits on endpoint 1, the device's zero-length packets too:{' '}
+          <code>cls = 9</code>, <code>id = 1</code>, <code>dir = 1</code>, <code>action = 1</code>{' '}
+          (<code>DROP</code>), <code>mlen = 0</code>, which matches every packet:
+        </p>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '1C', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '09 00', name: 'LEN' },
+            { value: '09', name: 'cls' },
+            { value: '01 00', name: 'id' },
+            { value: '01', name: 'dir' },
+            { value: '01', name: 'state' },
+            { value: '01', name: 'action' },
+            { value: '00 00', name: 'off' },
+            { value: '00', name: 'mlen' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
+        <p>
+          Answer every HID <code>GET_REPORT</code> on EP0 with report ID 7's four bytes:{' '}
+          <code>cls = 8</code>, <code>dir = 1</code>, <code>action = 4</code>, and a two-byte
+          match on <code>bmRequestType</code> and <code>bRequest</code> under mask{' '}
+          <code>FF FF</code>:
+        </p>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '1C', name: 'TYPE' },
+            { value: '01', name: 'SEQ' },
+            { value: '11 00', name: 'LEN' },
+            { value: '08', name: 'cls' },
+            { value: '00 00', name: 'id' },
+            { value: '01', name: 'dir' },
+            { value: '01', name: 'state' },
+            { value: '04', name: 'action' },
+            { value: '00 00', name: 'off' },
+            { value: '02', name: 'mlen' },
+            { value: 'A1 01', name: 'match' },
+            { value: 'FF FF', name: 'mask' },
+            { value: '07 01 00 00', name: 'payload' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
+        <p>
+          Library bindings:{' '}
+          <A href="/library/advanced/rewrite#set-rewrite"><code>set_rewrite</code></A>,{' '}
+          <A href="/library/advanced/rewrite#remove-rewrite"><code>remove_rewrite</code></A>, and{' '}
+          <A href="/library/advanced/rewrite#clear-rewrite"><code>clear_rewrite</code></A>.
+        </p>
+      </DocSection>
 
-+--------+--------+--------+--------+--------+--------+
-| 01     | 01     | 01     | 00 00  | 00     | lo hi  |
-+--------+--------+--------+--------+--------+--------+
-| dir    | state  | action | off    | mlen   | CRC16  |
-+--------+--------+--------+--------+--------+--------+`}</pre>
-          <p>
-            Answer every HID <code>GET_REPORT</code> on EP0 with report ID 7's four bytes:{' '}
-            <code>cls = 8</code>, <code>dir = 1</code>, <code>action = 4</code>, and a two-byte
-            match on <code>bmRequestType</code> and <code>bRequest</code> under mask{' '}
-            <code>FF FF</code>:
-          </p>
-          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+
-| A5     | 1C     | 01     | 11 00  | 08     | 00 00  |
-+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | cls    | id     |
-+--------+--------+--------+--------+--------+--------+
-
-+--------+--------+--------+--------+--------+--------+
-| 01     | 01     | 04     | 00 00  | 02     | A1 01  |
-+--------+--------+--------+--------+--------+--------+
-| dir    | state  | action | off    | mlen   | match  |
-+--------+--------+--------+--------+--------+--------+
-
-+--------+--------------+--------+
-| FF FF  | 07 01 00 00  | lo hi  |
-+--------+--------------+--------+
-| mask   | payload      | CRC16  |
-+--------+--------------+--------+`}</pre>
-          <p>
-            Library bindings:{' '}
-            <A href="/library/advanced/rewrite#set-rewrite"><code>set_rewrite</code></A>,{' '}
-            <A href="/library/advanced/rewrite#remove-rewrite"><code>remove_rewrite</code></A>, and{' '}
-            <A href="/library/advanced/rewrite#clear-rewrite"><code>clear_rewrite</code></A>.
-          </p>
-        </Card>
-      </div>
-
-      <div id="actions" data-search-target>
-        <Card>
-          <CardHeader title="Actions" subtitle="Top-ranked rule's effect" />
-          <p>
-            Report classes are <code>4</code>-<code>7</code> and <code>9</code>.
-          </p>
+      <DocSection id="actions" title="Actions" caption="Top-ranked rule's effect">
+        <p>
+          Report classes are <code>4</code>-<code>7</code> and <code>9</code>.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Name</th><th>Value</th><th>Effect</th></tr>
@@ -186,11 +191,13 @@ const Rewrite: Component = () => {
               <tr><td><code>REPLY_REPLACE</code></td><td><code>8</code></td><td><code>CONTROL</code>. The IN reply becomes the payload, cut to <code>wLength</code>.</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">CONTROL</div>
-          <p>
-            On <code>CONTROL</code> an action depends on the request's direction. The reply actions
-            apply only when the device completed the request.
-          </p>
+        </div>
+        <div class="api-response-label">CONTROL</div>
+        <p>
+          On <code>CONTROL</code> an action depends on the request's direction. The reply actions
+          apply only when the device completed the request.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Action</th><th>IN request</th><th>OUT request</th></tr>
@@ -204,32 +211,30 @@ const Rewrite: Component = () => {
               <tr><td><code>REPLY_PATCH</code>, <code>REPLY_REPLACE</code></td><td>the device's reply is rewritten</td><td>proxied unchanged</td></tr>
             </tbody>
           </table>
-          <div class="callout callout--info">
-            <p>
-              On EP0 the table matches class and vendor requests, and the standard requests the clone passes
-              to the device: an interface's <code>GET_DESCRIPTOR</code> for a class descriptor other than the HID
-              and report descriptors, and, while the clone is configured, a device qualifier or other-speed
-              configuration the box did not keep.
-            </p>
-            <p>
-              The clone serves every other standard request itself; change a descriptor with{' '}
-              <A href="/native/commands/patch"><code>PATCH</code></A>. A control endpoint above 0
-              passes every request to the table.
-            </p>
-          </div>
-        </Card>
-      </div>
-
-      <div id="matching" data-search-target>
-        <Card>
-          <CardHeader title="Matching" subtitle="Which rule a packet reaches" />
+        </div>
+        <div class="callout callout--info">
           <p>
-            A packet shorter than <code>mlen</code> does not match. A match bit outside its mask, or
-            a <code>dir</code> the class never carries, is stored and matches nothing.
+            On EP0 the table matches class and vendor requests, and the standard requests the clone passes
+            to the device: an interface's <code>GET_DESCRIPTOR</code> for a class descriptor other than the HID
+            and report descriptors, and, while the clone is configured, a device qualifier or other-speed
+            configuration the box did not keep.
           </p>
-          <div class="api-response-label">RANK</div>
-          <p>Only the highest-ranked match applies to a packet.</p>
-          <pre class="diagram">{`  rank   1  exact (cls, id)       over  id = 0xFFFF   over  cls = 0xFF
+          <p>
+            The clone serves every other standard request itself; change a descriptor with{' '}
+            <A href="/native/commands/patch"><code>PATCH</code></A>. A control endpoint above 0
+            passes every request to the table.
+          </p>
+        </div>
+      </DocSection>
+
+      <DocSection id="matching" title="Matching" caption="Which rule a packet reaches">
+        <p>
+          A packet shorter than <code>mlen</code> does not match. A match bit outside its mask, or
+          a <code>dir</code> the class never carries, is stored and matches nothing.
+        </p>
+        <div class="api-response-label">RANK</div>
+        <p>Only the highest-ranked match applies to a packet.</p>
+        <pre class="diagram">{`  rank   1  exact (cls, id)       over  id = 0xFFFF   over  cls = 0xFF
          2  more mask bits set    over  fewer
          3  dir 1 or 2            over  dir 0
          4  lower table index
@@ -251,29 +256,26 @@ const Rewrite: Component = () => {
 
   report on endpoint 2
     +- #0  id 0xFFFF                  top-ranked  --> passed`}</pre>
-          <div class="callout callout--info">
-            <p>
-              An overwrite moves the rule to the end of the table with its hits at 0, so an
-              equal-ranked rule installed earlier now outranks it. A remove or an overwrite shifts
-              every later rule down one index; re-read the list before a{' '}
-              <A href="/native/commands/requests#rewrite-entry"><code>QUERY(REWRITE_ENTRY)</code></A>.
-            </p>
-          </div>
-          <div class="api-response-label">HITS</div>
+        <div class="callout callout--info">
           <p>
-            A rule counts one hit per packet it matches as top-ranked, <code>PASS</code> included. A{' '}
-            <code>cls = 0xFF</code> rule counts, and its <code>PATCH</code> applies, at each surface
-            it matches. <A href="/native/commands/requests#rewrite"><code>RESP(REWRITE)</code></A>{' '}
-            reports hits saturated at 65535.
+            An overwrite moves the rule to the end of the table with its hits at 0, so an
+            equal-ranked rule installed earlier now outranks it. A remove or an overwrite shifts
+            every later rule down one index; re-read the list before a{' '}
+            <A href="/native/commands/requests#rewrite-entry"><code>QUERY(REWRITE_ENTRY)</code></A>.
           </p>
-        </Card>
-      </div>
+        </div>
+        <div class="api-response-label">HITS</div>
+        <p>
+          A rule counts one hit per packet it matches as top-ranked, <code>PASS</code> included. A{' '}
+          <code>cls = 0xFF</code> rule counts, and its <code>PATCH</code> applies, at each surface
+          it matches. <A href="/native/commands/requests#rewrite"><code>RESP(REWRITE)</code></A>{' '}
+          reports hits saturated at 65535.
+        </p>
+      </DocSection>
 
-      <div id="order" data-search-target>
-        <Card>
-          <CardHeader title="Order" subtitle="Clip triggers, pipeline, RAW" />
-          <p>Each surface runs its packets through two tables before delivery.</p>
-          <pre class="diagram">{`  packet at a surface
+      <DocSection id="order" title="Order" caption="Clip triggers, pipeline, RAW">
+        <p>Each surface runs its packets through two tables before delivery.</p>
+        <pre class="diagram">{`  packet at a surface
         |
         v
   [ clip packet triggers ]   a consuming trigger stops the packet here
@@ -283,6 +285,7 @@ const Rewrite: Component = () => {
         |
         v
   delivered                  to the game PC (IN) or the real device (OUT)`}</pre>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Name</th><th>Behaviour</th></tr>
@@ -295,33 +298,31 @@ const Rewrite: Component = () => {
               <tr><td><A href="/native/commands/transfer"><code>TRANSFER</code></A></td><td>Runs on its own messages to the device, past every rule.</td></tr>
             </tbody>
           </table>
-          <div class="callout callout--warning">
-            <p>
-              The host chip weighs the bound mouse's relative axes from the report as it arrived.
-              Whenever a scale, injection or rendering changes them, the host chip's values replace a{' '}
-              <code>HID_IN</code> rewrite of those bytes. Rewrite motion at <code>EMIT</code>.
-            </p>
-          </div>
-          <div class="api-response-label">CATCH</div>
+        </div>
+        <div class="callout callout--warning">
           <p>
-            Each <A href="/native/commands/catch#traffic-event"><code>CATCH</code></A> tap sits at a
-            fixed side of the table, and flags bit 7 marks a packet a rule acted on: changed, dropped,
-            answered or refused. A <code>PASS</code> leaves it clear. A{' '}
-            <code>CONTROL</code> event is the transaction the game PC received, on every control
-            endpoint; each class is in <A href="/native/commands/catch#rules">rules and taps</A>.
+            The host chip weighs the bound mouse's relative axes from the report as it arrived.
+            Whenever a scale, injection or rendering changes them, the host chip's values replace a{' '}
+            <code>HID_IN</code> rewrite of those bytes. Rewrite motion at <code>EMIT</code>.
           </p>
-        </Card>
-      </div>
+        </div>
+        <div class="api-response-label">CATCH</div>
+        <p>
+          Each <A href="/native/commands/catch#traffic-event"><code>CATCH</code></A> tap sits at a
+          fixed side of the table, and flags bit 7 marks a packet a rule acted on: changed, dropped,
+          answered or refused. A <code>PASS</code> leaves it clear. A{' '}
+          <code>CONTROL</code> event is the transaction the game PC received, on every control
+          endpoint; each class is in <A href="/native/commands/catch#rules">rules and taps</A>.
+        </p>
+      </DocSection>
 
-      <div id="lifecycle" data-search-target>
-        <Card>
-          <CardHeader title="Lifecycle" subtitle="Rules are PC-owned session state" />
-          <p>
-            The table holds until one of these empties it, on the same terms as{' '}
-            <A href="/native/injection#safety">injection and locks</A>.
-          </p>
-          <div class="api-response-label">CLEARS ON</div>
-          <pre class="diagram">{`remove      a REWRITE with state = 0 and the rule's key
+      <DocSection id="lifecycle" title="Lifecycle" caption="Rules are PC-owned session state">
+        <p>
+          The table holds until one of these empties it, on the same terms as{' '}
+          <A href="/native/injection#safety">injection and locks</A>.
+        </p>
+        <div class="api-response-label">CLEARS ON</div>
+        <pre class="diagram">{`remove      a REWRITE with state = 0 and the rule's key
 clear       state 0 with cls = 0xFF and id = 0xFFFF
 silence     ~1 s with no control-PC frame
 RESET       a RESET command
@@ -329,13 +330,14 @@ link loss   the inter-chip link drops
 detach      the real device goes away
 re-clone    the box clones the device again: a replug, or a patch presentation
 opt-in off  OPTION(IMPERFECT) turned off`}</pre>
-          <p>
-            Any valid frame resets the silence timer, so a keepalive holds the table. The library
-            re-asserts its held rules on keepalive and across a control-link reconnect, as for{' '}
-            <A href="/native/commands/lock"><code>LOCK</code></A>.
-          </p>
-          <p>Every clear here but remove and clear moves the <A href="/native/commands/requests#stats"><code>session</code></A> count.</p>
-          <div class="api-response-label">GEN</div>
+        <p>
+          Any valid frame resets the silence timer, so a keepalive holds the table. The library
+          re-asserts its held rules on keepalive and across a control-link reconnect, as for{' '}
+          <A href="/native/commands/lock"><code>LOCK</code></A>.
+        </p>
+        <p>Every clear here but remove and clear moves the <A href="/native/commands/requests#stats"><code>session</code></A> count.</p>
+        <div class="api-response-label">GEN</div>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Event</th><th>Effect</th></tr>
@@ -347,35 +349,40 @@ opt-in off  OPTION(IMPERFECT) turned off`}</pre>
               <tr><td><A href="/native/commands/admin#reset"><code>RESET</code></A>, link loss, detach, re-clone, opt-in off</td><td>The table and <code>gen</code> both return to <code>0</code>.</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">READBACK</div>
-          <p>
-            <A href="/native/commands/requests#rewrite"><code>QUERY(REWRITE)</code></A> returns{' '}
-            <code>gen</code>, the full flag and a line per rule;{' '}
-            <A href="/native/commands/requests#rewrite-entry"><code>QUERY(REWRITE_ENTRY)</code></A>{' '}
-            returns one rule in this frame's shape.{' '}
-            <A href="/native/commands/requests#health"><code>HEALTH</code></A> sets{' '}
-            <code>REWRITE_ON</code> (<code>0x0100</code>) while the table is non-empty.
-          </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <p>Clear the whole table:</p>
-          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+
-| A5     | 1C     | 02     | 09 00  | FF     | FF FF  |
-+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | cls    | id     |
-+--------+--------+--------+--------+--------+--------+
-
-+--------+--------+--------+--------+--------+--------+
-| 00     | 00     | 00     | 00 00  | 00     | lo hi  |
-+--------+--------+--------+--------+--------+--------+
-| dir    | state  | action | off    | mlen   | CRC16  |
-+--------+--------+--------+--------+--------+--------+`}</pre>
-          <p>
-            Library bindings:{' '}
-            <A href="/library/advanced/rewrite#query-rewrite"><code>query_rewrite</code></A> and{' '}
-            <A href="/library/advanced/rewrite#query-rewrite-entry"><code>query_rewrite_entry</code></A>.
-          </p>
-        </Card>
-      </div>
+        </div>
+        <div class="api-response-label">READBACK</div>
+        <p>
+          <A href="/native/commands/requests#rewrite"><code>QUERY(REWRITE)</code></A> returns{' '}
+          <code>gen</code>, the full flag and a line per rule;{' '}
+          <A href="/native/commands/requests#rewrite-entry"><code>QUERY(REWRITE_ENTRY)</code></A>{' '}
+          returns one rule in this frame's shape.{' '}
+          <A href="/native/commands/requests#health"><code>HEALTH</code></A> sets{' '}
+          <code>REWRITE_ON</code> (<code>0x0100</code>) while the table is non-empty.
+        </p>
+        <div class="api-response-label">EXAMPLE</div>
+        <p>Clear the whole table:</p>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '1C', name: 'TYPE' },
+            { value: '02', name: 'SEQ' },
+            { value: '09 00', name: 'LEN' },
+            { value: 'FF', name: 'cls' },
+            { value: 'FF FF', name: 'id' },
+            { value: '00', name: 'dir' },
+            { value: '00', name: 'state' },
+            { value: '00', name: 'action' },
+            { value: '00 00', name: 'off' },
+            { value: '00', name: 'mlen' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
+        <p>
+          Library bindings:{' '}
+          <A href="/library/advanced/rewrite#query-rewrite"><code>query_rewrite</code></A> and{' '}
+          <A href="/library/advanced/rewrite#query-rewrite-entry"><code>query_rewrite_entry</code></A>.
+        </p>
+      </DocSection>
     </>
   );
 };

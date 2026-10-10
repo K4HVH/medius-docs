@@ -1,0 +1,181 @@
+/* MidnightUI components in the site theme. Their files stay untouched; these rules restyle them through
+   their own classes. Values follow the approved mockup. */
+
+/* Buttons: square caps. The primary's fill grows from the left and shrinks back to it; the secondary
+   (a dark fill and an edge), the subtle and the danger light their edge. */
+.button {
+  isolation: isolate;
+  min-height: 36px;
+  padding: 0 14px;
+  gap: 10px;
+  font: 600 12px/1.2 var(--sans);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition: border-color 0.35s ease, color 0.25s ease, opacity 0.2s ease;
+}
+.button::before { display: none; }
+.button--compact { min-height: 30px; padding: 0 10px; gap: 8px; font-size: 11px; }
+.button--spacious { min-height: 48px; padding: 0 22px; gap: 14px; font-size: 13px; }
+.button--icon-only { padding: 0; min-width: 36px; }
+.button--icon-only.button--compact { min-width: 30px; }
+
+.button--primary { border-color: transparent; }
+/* Danger rests dark with a red edge and text; under the pointer the edge goes red and the text white. */
+.button--danger {
+  background: color-mix(in srgb, var(--bad) 7%, var(--ground));
+  border-color: color-mix(in srgb, var(--bad) 40%, transparent);
+  color: color-mix(in srgb, var(--bad) 45%, var(--text));
+}
+@media (hover: hover) {
+  .button--danger:hover:not(:disabled) { border-color: var(--bad); color: var(--text); }
+}
+.button--danger::before { display: none; }
+.button--primary::before {
+  display: block;
+  z-index: -1;
+  background: var(--accent);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.45s var(--ease);
+}
+@media (hover: hover) {
+  .button--primary:hover:not(:disabled)::before { background: var(--accent); transform: scaleX(1); }
+}
+.button--primary:active:not(:disabled)::before { background: var(--accent); transform: scaleX(1); }
+
+.button--secondary { background: var(--g-background); border-color: var(--line-3); color: var(--text); }
+.button--subtle { border-color: transparent; color: var(--text-2); }
+@media (hover: hover) {
+  .button--secondary:hover:not(:disabled),
+  .button--subtle:hover:not(:disabled) { border-color: var(--primary); color: var(--text); }
+}
+
+/* Chips: a value with a square lamp in its status colour, as the mockup's. */
+.chip {
+  max-width: 100%;
+  height: 28px;
+  gap: 8px;
+  border-radius: 0;
+  padding: 0 10px;
+  border-color: var(--line-2);
+  background: var(--g-background);
+  font: 500 11.5px/1 var(--mono);
+  letter-spacing: 0.03em;
+  color: var(--text-2);
+  text-transform: none;
+}
+.chip::before { content: ""; flex: none; width: 6px; height: 6px; background: var(--dim); transition: background 0.3s; }
+.chip--success::before { background: var(--ok); }
+.chip--warning::before { background: var(--warn); }
+.chip--error::before { background: var(--bad); }
+.chip--primary::before, .chip--info::before { background: var(--accent); }
+
+/* Dashboard panels: a hairline on the ground, no tint. */
+.card { background: #0a0a0a; border-color: var(--line); transition: border-color 0.25s ease; }
+.card::before { display: none; }
+.card__header { margin-bottom: 16px; padding-bottom: 12px; border-bottom-color: var(--line); }
+.card__header h3 { margin: 0; font: 600 18px/1.3 var(--sans); letter-spacing: -0.01em; color: var(--text); }
+.card__header small { margin-top: 4px; font-size: 13px; color: var(--muted); }
+
+/* Inputs: square hairlines that light on hover and turn blue in focus. */
+.textfield__wrapper,
+.number-input__wrapper,
+.combobox__trigger { background: var(--ground); transition: border-color 0.25s ease; }
+.textfield__wrapper::before,
+.number-input__wrapper::before,
+.combobox__trigger::before,
+.file-upload__dropzone::before,
+.slider__track::before { display: none; }
+.textfield:not(.textfield--disabled) .textfield__wrapper:has(.textfield__input:focus),
+.number-input:not(.number-input--disabled) .number-input__wrapper:has(.number-input__input:focus),
+.combobox:focus-visible .combobox__trigger { border-color: var(--accent); }
+.checkbox__input:checked + .checkbox__box,
+.checkbox__input:indeterminate + .checkbox__box { background: var(--primary); border-color: var(--primary); }
+.radio__input:checked + .radio__circle { border-color: var(--accent); }
+.file-upload__dropzone { border: 1px dashed var(--line-2); background: transparent; }
+@media (hover: hover) {
+  .file-upload:not(.file-upload--disabled) .file-upload__dropzone:hover { border-color: var(--primary); }
+}
+.slider__track { height: 4px; border-radius: 0; background: var(--line-2); }
+.slider__range { border-radius: 0; background: var(--accent); }
+.slider__thumb { border-radius: 0; box-shadow: none; }
+
+/* Progress: a flat blue fill on a hairline track. */
+.progress__track { height: 4px; border-radius: 0; background: var(--line-2); }
+.progress__fill { border-radius: 0; background: var(--accent); }
+
+/* Menus and the search palette: square panels without shadows. */
+.menu { background: #0a0a0a; border-color: var(--line-2); box-shadow: none; }
+.command-palette__backdrop { background: rgba(0, 0, 0, 0.7); backdrop-filter: none; -webkit-backdrop-filter: none; }
+.command-palette { border-radius: 0; background: #0a0a0a; border-color: var(--line-2); box-shadow: none; }
+
+/* The box list in the sidebar reads like the page links beside it: a blue edge on the selected box. */
+.side .box-tabs { gap: 0; }
+.side .box-tabs .tabs__tab {
+  padding: 6px 24px 6px 22px;
+  border: 0;
+  border-left: 2px solid transparent;
+  font-size: 14px;
+  color: var(--muted);
+  transition: color 0.25s ease;
+}
+.side .box-tabs .tabs__tab::before { display: none; }
+@media (hover: hover) {
+  .side .box-tabs .tabs__tab:hover:not(:disabled) { color: var(--text); }
+}
+.side .box-tabs .tabs__tab--active {
+  color: var(--text);
+  border-left-color: var(--accent);
+  background: linear-gradient(90deg, rgba(0, 128, 255, 0.08), transparent 70%);
+}
+
+/* Box names run to 32 characters; the sidebar tabs were sized for short labels. */
+.box-tabs .tabs__tab {
+  min-width: 0;
+}
+
+.box-tabs .tabs__tab-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* A box's icon opens its icon menu, so it takes clicks beyond the glyph. */
+.box-icon .menu__trigger {
+  display: flex;
+}
+
+.box-tabs .tabs__tab:disabled .menu__trigger {
+  cursor: inherit;
+}
+
+.box-icon__hit {
+  display: flex;
+  /* Clicks land on all 32 px; the hover square is the inner 24, clear of the name. */
+  padding: var(--g-spacing-xs);
+  border: var(--g-spacing-xs) solid transparent;
+  margin: calc(-1 * var(--g-spacing-sm));
+  background-clip: padding-box;
+  border-radius: 0;
+  transition: background-color var(--g-transition);
+}
+
+@media (hover: hover) {
+  .box-tabs .tabs__tab:not(:disabled) .box-icon__hit:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+}
+
+.menu.box-icon-menu {
+  display: flex;
+  gap: var(--g-spacing-xs);
+  min-width: 0;
+}
+
+.box-icon-menu .menu__item {
+  width: auto;
+  padding: var(--g-spacing-sm);
+}
+
+.box-icon-menu .menu__item.box-icon-menu__current::before {
+  background: rgba(255, 255, 255, 0.1);
+}

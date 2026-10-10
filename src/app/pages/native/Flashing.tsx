@@ -1,17 +1,16 @@
 import type { Component } from 'solid-js';
 import { A } from '@solidjs/router';
-import { Card, CardHeader } from '../../../components/surfaces/Card';
-import '../../../styles/docs.css';
+import { PageHeader } from '../../shell/PageHeader';
+import { DocSection } from '../../shell/DocSection';
 
 const Flashing: Component = () => {
   return (
     <>
-      <Card>
-        <CardHeader title="Flashing" subtitle="First install and recovery" />
+      <PageHeader>
         <p>
           A box already running Medius updates over the control port with{' '}
-          <A href="/native/commands/update"><code>UPDATE</code></A>. This page is for a chip that
-          can't: one never given the two-slot layout, or one whose app won't boot.
+          <A href="/native/commands/update"><code>UPDATE</code></A>. This page is for a first install
+          and for a chip that can't: one never given the two-slot layout, or one whose app won't boot.
         </p>
         <p>
           While firmware runs, no button is needed:{' '}
@@ -29,15 +28,14 @@ const Flashing: Component = () => {
             slots are a partition-table change: one flash from here per chip, once per box.
           </p>
         </div>
-      </Card>
+      </PageHeader>
 
-      <div id="two-chips" data-search-target>
-        <Card>
-          <CardHeader title="Two chips" subtitle="Flash each separately" />
-          <p>
-            The <A href="/native/commands/admin#reboot"><code>REBOOT</code></A> <code>target</code>{' '}
-            byte picks the chip.
-          </p>
+      <DocSection id="two-chips" title="Two chips" caption="Flash each separately">
+        <p>
+          The <A href="/native/commands/admin#reboot"><code>REBOOT</code></A> <code>target</code>{' '}
+          byte picks the chip.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Chip</th><th>Reboot</th><th>Flashed over</th></tr>
@@ -55,51 +53,45 @@ const Flashing: Component = () => {
               </tr>
             </tbody>
           </table>
-        </Card>
-      </div>
+        </div>
+      </DocSection>
 
-      <div id="version" data-search-target>
-        <Card>
-          <CardHeader title="Version scheme" subtitle="major.minor.patch" />
-          <p>
-            Both chips carry the same firmware version, stamped into their app descriptors from one
-            source; binary and tag can't drift.
-          </p>
-          <p>
-            The <A href="/native/connection#handshake">protocol version</A> is a separate byte, the one
-            a host checks for compatibility; the firmware version identifies the build.{' '}
-            <A href="/native/commands/requests#version"><code>QUERY(VERSION)</code></A> returns both.
-          </p>
-        </Card>
-      </div>
+      <DocSection id="version" title="Version scheme" caption="major.minor.patch">
+        <p>
+          Both chips carry the same firmware version, stamped into their app descriptors from one
+          source; binary and tag can't drift.
+        </p>
+        <p>
+          The <A href="/native/connection#handshake">protocol version</A> is a separate byte, the one
+          a host checks for compatibility; the firmware version identifies the build.{' '}
+          <A href="/native/commands/requests#version"><code>QUERY(VERSION)</code></A> returns both.
+        </p>
+      </DocSection>
 
-      <div id="notes" data-search-target>
-        <Card>
-          <CardHeader title="Notes" />
+      <DocSection id="notes" title="Notes">
+        <p>
+          A run reboot (<code>target = 2</code> or <code>3</code>) is the only software cold-reboot;{' '}
+          <code>DTR</code>/<code>RTS</code> aren't wired to reset on this board.
+        </p>
+        <p>
+          After a download reboot the port stays in the ROM bootloader (plain ASCII the{' '}
+          <A href="/native/frame">frame decoder</A> ignores) until flashing finishes or a
+          power-cycle. Persisted per-box data survives an app reflash.
+        </p>
+        <div class="callout callout--warning">
           <p>
-            A run reboot (<code>target = 2</code> or <code>3</code>) is the only software cold-reboot;{' '}
-            <code>DTR</code>/<code>RTS</code> aren't wired to reset on this board.
+            <A href="/native/commands/admin#reboot"><code>REBOOT</code></A> needs working firmware
+            to receive the frame. For a chip with no firmware or a bad image, hold its BOOT button
+            while resetting or powering on the box.
           </p>
+        </div>
+        <div class="callout callout--info">
           <p>
-            After a download reboot the port stays in the ROM bootloader (plain ASCII the{' '}
-            <A href="/native/frame">frame decoder</A> ignores) until flashing finishes or a
-            power-cycle. Persisted per-box data survives an app reflash.
+            From Rust, the crate's <A href="/library/update">firmware update</A> calls write both
+            chips over the open connection.
           </p>
-          <div class="callout callout--warning">
-            <p>
-              <A href="/native/commands/admin#reboot"><code>REBOOT</code></A> needs working firmware
-              to receive the frame. For a chip with no firmware or a bad image, hold its BOOT button
-              while resetting or powering on the box.
-            </p>
-          </div>
-          <div class="callout callout--info">
-            <p>
-              From Rust, the crate's <A href="/library/update">firmware update</A> calls write both
-              chips over the open connection.
-            </p>
-          </div>
-        </Card>
-      </div>
+        </div>
+      </DocSection>
     </>
   );
 };

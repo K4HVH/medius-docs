@@ -1,18 +1,18 @@
 import type { Component } from 'solid-js';
 import { A } from '@solidjs/router';
-import { Card, CardHeader } from '../../../components/surfaces/Card';
-import '../../../styles/docs.css';
+import { PageHeader } from '../../shell/PageHeader';
+import { DocSection } from '../../shell/DocSection';
+import { ByteStrip } from '../../shell/ByteStrip';
 
 const Frame: Component = () => {
   return (
     <>
-      <div id="layout" data-search-target>
-        <Card>
-          <CardHeader title="Frame format" subtitle="One packet shape" />
-          <p>
-            Every message, both directions, has this shape.
-          </p>
-          <pre class="api-signature">[SOF 0xA5][TYPE u8][SEQ u8][LEN u16 LE][PAYLOAD 0..512][CRC16 u16 LE]</pre>
+      <PageHeader id="layout">
+        <p>
+          Every message, both directions, has this shape.
+        </p>
+        <pre class="api-signature">[SOF 0xA5][TYPE u8][SEQ u8][LEN u16 LE][PAYLOAD 0..512][CRC16 u16 LE]</pre>
+        <div class="table-scroll">
           <table class="byte-table">
             <thead>
               <tr><th>Field</th><th>Bytes</th><th>Notes</th></tr>
@@ -26,20 +26,19 @@ const Frame: Component = () => {
               <tr><td><code>CRC16</code></td><td>2</td><td>checksum over the frame body</td></tr>
             </tbody>
           </table>
-          <p>
-            Max payload 512 bytes, max frame 519. Multi-byte numbers are little-endian: 16-bit{' '}
-            <code>100</code> is <code>64 00</code>.
-          </p>
-        </Card>
-      </div>
+        </div>
+        <p>
+          Max payload 512 bytes, max frame 519. Multi-byte numbers are little-endian: 16-bit{' '}
+          <code>100</code> is <code>64 00</code>.
+        </p>
+      </PageHeader>
 
-      <div id="seq" data-search-target>
-        <Card>
-          <CardHeader title="Sequence numbers" subtitle="Reply matching" />
-          <p>
-            <code>SEQ</code> is a one-byte, caller-set counter per frame, typically incrementing and
-            wrapping at 255.
-          </p>
+      <DocSection id="seq" title="Sequence numbers" caption="Reply matching">
+        <p>
+          <code>SEQ</code> is a one-byte, caller-set counter per frame, typically incrementing and
+          wrapping at 255.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Command</th><th>Role</th></tr>
@@ -51,15 +50,14 @@ const Frame: Component = () => {
               <tr><td><A href="/native/commands/update#update"><code>UPDATE</code></A></td><td>An <A href="/native/commands/update#resp"><code>UPDATE_RESP</code></A> matches its request by the echoed op. <code>DATA</code> acknowledgements carry a rolling <code>SEQ</code>, since one covers a whole window of chunks.</td></tr>
             </tbody>
           </table>
-        </Card>
-      </div>
+        </div>
+      </DocSection>
 
-      <div id="opcodes" data-search-target>
-        <Card>
-          <CardHeader title="Opcodes" subtitle="The TYPE byte" />
-          <p>
-            Opcodes run <code>0x01</code> to <code>0x1E</code>. An unrecognised opcode is ignored.
-          </p>
+      <DocSection id="opcodes" title="Opcodes" caption="The TYPE byte">
+        <p>
+          Opcodes run <code>0x01</code> to <code>0x1E</code>. An unrecognised opcode is ignored.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Opcode</th><th>Name</th><th>Direction</th><th>Payload</th><th>Reply</th></tr>
@@ -97,26 +95,25 @@ const Frame: Component = () => {
               <tr><td><code>0x1E</code></td><td><A href="/native/commands/transform#transform"><code>TRANSFORM</code></A></td><td>PC→box</td><td>8 bytes</td><td>none</td></tr>
             </tbody>
           </table>
-          <p>
-            <code>0x02</code>, <code>0x0D</code>, and <code>0x0E</code> were <code>WHEEL</code>,{' '}
-            <code>KEY</code>, and <code>CONSUMER</code>, now{' '}
-            <A href="/native/commands/move#move"><code>MOVE</code></A> (motion-tagged) and{' '}
-            <A href="/native/commands/inject#inject"><code>INJECT</code></A> (class-tagged);{' '}
-            <code>0x10</code> was <code>CONS_EVENT</code>, now the class-tagged{' '}
-            <A href="/native/commands/catch#usage-event"><code>USAGE_EVENT</code></A>. Retired numbers
-            are never reused.
-          </p>
-        </Card>
-      </div>
+        </div>
+        <p>
+          <code>0x02</code>, <code>0x0D</code>, and <code>0x0E</code> were <code>WHEEL</code>,{' '}
+          <code>KEY</code>, and <code>CONSUMER</code>, now{' '}
+          <A href="/native/commands/move#move"><code>MOVE</code></A> (motion-tagged) and{' '}
+          <A href="/native/commands/inject#inject"><code>INJECT</code></A> (class-tagged);{' '}
+          <code>0x10</code> was <code>CONS_EVENT</code>, now the class-tagged{' '}
+          <A href="/native/commands/catch#usage-event"><code>USAGE_EVENT</code></A>. Retired numbers
+          are never reused.
+        </p>
+      </DocSection>
 
-      <div id="crc" data-search-target>
-        <Card>
-          <CardHeader title="Checksum" subtitle="Rejecting corrupted frames" />
-          <p>
-            The last two bytes are a <a href="https://en.wikipedia.org/wiki/Cyclic_redundancy_check" target="_blank" rel="noreferrer">CRC16-CCITT</a> checksum over{' '}
-            <code>TYPE | SEQ | LEN | PAYLOAD</code>, stored little-endian. On a mismatch the box
-            drops the frame with no reply and resyncs at the next <code>0xA5</code>.
-          </p>
+      <DocSection id="crc" title="Checksum" caption="Rejecting corrupted frames">
+        <p>
+          The last two bytes are a <a href="https://en.wikipedia.org/wiki/Cyclic_redundancy_check" target="_blank" rel="noreferrer">CRC16-CCITT</a> checksum over{' '}
+          <code>TYPE | SEQ | LEN | PAYLOAD</code>, stored little-endian. On a mismatch the box
+          drops the frame with no reply and resyncs at the next <code>0xA5</code>.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Parameter</th><th>Value</th></tr>
@@ -128,7 +125,8 @@ const Frame: Component = () => {
               <tr><td>Final XOR</td><td>None</td></tr>
             </tbody>
           </table>
-          <pre><code class="language-python">{`def crc16_ccitt(data):
+        </div>
+        <pre><code class="language-python">{`def crc16_ccitt(data):
     crc = 0xFFFF
     for b in data:
         crc ^= b << 8
@@ -140,32 +138,36 @@ def encode_frame(type, seq, payload):
     body = bytes([type, seq]) + len(payload).to_bytes(2, "little") + payload
     crc = crc16_ccitt(body)
     return bytes([0xA5]) + body + crc.to_bytes(2, "little")`}</code></pre>
-        </Card>
-      </div>
+      </DocSection>
 
-      <div id="example" data-search-target>
-        <Card>
-          <CardHeader title="Example MOVE frame" />
-          <p>
-            A cursor <A href="/native/commands/move#move"><code>MOVE</code></A> of{' '}
-            <code>dx = 100</code>, <code>dy = 0</code>.
-          </p>
-          <ul>
-            <li>Opcode <code>0x01</code>.</li>
-            <li>Payload: <code>motion</code> (<code>00</code> = cursor), 16-bit <code>dx</code> and <code>dy</code> (<code>64 00</code>, <code>00 00</code>), then <code>flags</code> (<code>00</code>).</li>
-            <li><code>LEN</code> is <code>06 00</code>.</li>
-          </ul>
-          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 01     | 00     | 06 00  | 00     | 64 00  | 00 00  | 00     | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | motion | dx     | dy     | flags  | CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
-          <p>
-            The CRC is the little-endian <code>crc16_ccitt</code> of{' '}
-            <code>01 00 06 00 00 64 00 00 00 00</code>; compute it, don't copy a literal.
-          </p>
-        </Card>
-      </div>
+      <DocSection id="example" title="Example MOVE frame">
+        <p>
+          A cursor <A href="/native/commands/move#move"><code>MOVE</code></A> of{' '}
+          <code>dx = 100</code>, <code>dy = 0</code>.
+        </p>
+        <ul>
+          <li>Opcode <code>0x01</code>.</li>
+          <li>Payload: <code>motion</code> (<code>00</code> = cursor), 16-bit <code>dx</code> and <code>dy</code> (<code>64 00</code>, <code>00 00</code>), then <code>flags</code> (<code>00</code>).</li>
+          <li><code>LEN</code> is <code>06 00</code>.</li>
+        </ul>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '01', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '06 00', name: 'LEN' },
+            { value: '00', name: 'motion' },
+            { value: '64 00', name: 'dx' },
+            { value: '00 00', name: 'dy' },
+            { value: '00', name: 'flags' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
+        <p>
+          The CRC is the little-endian <code>crc16_ccitt</code> of{' '}
+          <code>01 00 06 00 00 64 00 00 00 00</code>; compute it, don't copy a literal.
+        </p>
+      </DocSection>
     </>
   );
 };

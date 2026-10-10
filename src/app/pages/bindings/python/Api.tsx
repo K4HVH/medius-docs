@@ -1,13 +1,12 @@
 import type { Component } from 'solid-js';
 import { A } from '@solidjs/router';
-import { Card, CardHeader } from '../../../../components/surfaces/Card';
-import '../../../../styles/docs.css';
+import { PageHeader } from '../../../shell/PageHeader';
+import { DocSection } from '../../../shell/DocSection';
 
 const Api: Component = () => {
   return (
     <>
-      <Card>
-        <CardHeader title="API index" subtitle="Every Python call, linked to what it does" />
+      <PageHeader>
         <p>
           Every <code>Device</code> call, grouped. What each does is in the{' '}
           <A href="/library">Rust Library</A> and <A href="/native">Native API</A>; types and enums
@@ -20,12 +19,11 @@ const Api: Component = () => {
           <code>find</code> block for the <A href="/native/hardware">box</A>'s reply. Any call raises
           a <A href="/bindings/python/types#errors"><code>MediusError</code></A> on failure.
         </p>
-      </Card>
+      </PageHeader>
 
-      <div id="connect" data-search-target>
-        <Card>
-          <CardHeader title="Connecting & lifecycle" subtitle="Open, share, and release the link" />
-          <p>See <A href="/library/connection">Connection</A> and <A href="/library/lifecycle">Lifecycle</A>.</p>
+      <DocSection id="connect" title="Connecting & lifecycle" caption="Open, share, and release the link">
+        <p>See <A href="/library/connection">Connection</A> and <A href="/library/lifecycle">Lifecycle</A>.</p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Call</th><th>Does</th></tr></thead>
             <tbody>
@@ -36,13 +34,12 @@ const Api: Component = () => {
               <tr><td><code>with Device.find() as dev:</code></td><td>Context manager that closes the link on block exit.</td></tr>
             </tbody>
           </table>
-        </Card>
-      </div>
+        </div>
+      </DocSection>
 
-      <div id="discovery" data-search-target>
-        <Card>
-          <CardHeader title="Discovery" subtitle="Enumerate boxes and open one by identity" />
-          <p>See <A href="/library/discovery">Discovery</A>.</p>
+      <DocSection id="discovery" title="Discovery" caption="Enumerate boxes and open one by identity">
+        <p>See <A href="/library/discovery">Discovery</A>.</p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Call</th><th>Does</th></tr></thead>
             <tbody>
@@ -52,13 +49,12 @@ const Api: Component = () => {
               <tr><td><code>Device.find_keyboard_box()</code></td><td>Open the first box whose clone is a keyboard, with the same errors.</td></tr>
             </tbody>
           </table>
-        </Card>
-      </div>
+        </div>
+      </DocSection>
 
-      <div id="move" data-search-target>
-        <Card>
-          <CardHeader title="Movement" subtitle="Relative cursor and wheel" />
-          <p>See <A href="/library/move">Move</A>. <code>+x</code> right, <code>+y</code> down.</p>
+      <DocSection id="move" title="Movement" caption="Relative cursor and wheel">
+        <p>See <A href="/library/move">Move</A>. <code>+x</code> right, <code>+y</code> down.</p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Call</th><th>Does</th></tr></thead>
             <tbody>
@@ -73,19 +69,18 @@ const Api: Component = () => {
               <tr><td><code>dev.move_axis(motion, timing, pending)</code></td><td>Drive one axis from a <A href="/bindings/python/types#motion"><code>Motion.cursor(dx, dy)</code></A>, <code>Motion.wheel(delta)</code>, or <code>Motion.pan(delta)</code>, with a <code>MoveTiming</code> and a <code>PendingMotion</code>.</td></tr>
             </tbody>
           </table>
-        </Card>
-      </div>
+        </div>
+      </DocSection>
 
-      <div id="inject" data-search-target>
-        <Card>
-          <CardHeader title="Inject" subtitle="Drive any usage: button, key, or media" />
-          <p>
-            See <A href="/library/inject">Inject</A> and the{' '}
-            <A href="/native/injection">injection model</A> (press / soft-release / force-release).
-            Every verb takes a <A href="/bindings/python/types#input"><code>Usage</code></A> built with{' '}
-            <code>Usage.button</code> / <code>key</code> / <code>media</code>; ids are on{' '}
-            <A href="/native/commands/usage">Usage IDs</A>.
-          </p>
+      <DocSection id="inject" title="Inject" caption="Drive any usage: button, key, or media">
+        <p>
+          See <A href="/library/inject">Inject</A> and the{' '}
+          <A href="/native/injection">injection model</A> (press / soft-release / force-release).
+          Every verb takes a <A href="/bindings/python/types#input"><code>Usage</code></A> built with{' '}
+          <code>Usage.button</code> / <code>key</code> / <code>media</code>; ids are on{' '}
+          <A href="/native/commands/usage">Usage IDs</A>.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Call</th><th>Does</th></tr></thead>
             <tbody>
@@ -95,21 +90,20 @@ const Api: Component = () => {
               <tr><td><code>dev.force_release(input)</code></td><td>Sends <code>Action.FORCE_RELEASE</code>.</td></tr>
             </tbody>
           </table>
-          <div class="callout callout--info">
-            <p>
-              The same call for all three:{' '}
-              <code>dev.press(Usage.button(Button.LEFT))</code>,{' '}
-              <code>dev.press(Usage.key(Key.W))</code>,{' '}
-              <code>dev.press(Usage.media(MediaKey.MUTE))</code>.
-            </p>
-          </div>
-        </Card>
-      </div>
+        </div>
+        <div class="callout callout--info">
+          <p>
+            The same call for all three:{' '}
+            <code>dev.press(Usage.button(Button.LEFT))</code>,{' '}
+            <code>dev.press(Usage.key(Key.W))</code>,{' '}
+            <code>dev.press(Usage.media(MediaKey.MUTE))</code>.
+          </p>
+        </div>
+      </DocSection>
 
-      <div id="lock" data-search-target>
-        <Card>
-          <CardHeader title="Locks" subtitle="Weigh physical input" />
-          <p>See <A href="/library/lock">Lock</A>. Build axis/usage targets with <A href="/bindings/python/types#locktarget"><code>LockTarget.x/y/wheel/usage</code></A> (or the <code>button</code>/<code>key</code>/<code>media</code> shortcuts); a <A href="/bindings/python/types#direction"><code>Direction</code></A> picks a direction, and <code>scale</code> takes one of the <A href="/bindings/python/types#scale-constants">scale constants</A>.</p>
+      <DocSection id="lock" title="Locks" caption="Weigh physical input">
+        <p>See <A href="/library/lock">Lock</A>. Build axis/usage targets with <A href="/bindings/python/types#locktarget"><code>LockTarget.x/y/wheel/usage</code></A> (or the <code>button</code>/<code>key</code>/<code>media</code> shortcuts); a <A href="/bindings/python/types#direction"><code>Direction</code></A> picks a direction, and <code>scale</code> takes one of the <A href="/bindings/python/types#scale-constants">scale constants</A>.</p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Call</th><th>Does</th></tr></thead>
             <tbody>
@@ -120,21 +114,20 @@ const Api: Component = () => {
               <tr><td><code>dev.lock_all(what, direction)</code> / <code>unlock_all</code></td><td>Blanket block / release a whole class.</td></tr>
             </tbody>
           </table>
-          <div class="callout callout--warning">
-            <p>
-              A scale auto-clears; the{' '}
-              <A href="/library/guides/connection#keepalive">keepalive</A> holds it.{' '}
-              <code>Direction.WITH</code> and <code>Direction.AGAINST</code> need a live bearing
-              (<code>dev.set_bearing(window_ms, mode)</code>); their refusal rules are on{' '}
-              <A href="/bindings/python/types#direction"><code>Direction</code></A>.
-            </p>
-          </div>
-        </Card>
-      </div>
+        </div>
+        <div class="callout callout--warning">
+          <p>
+            A scale auto-clears; the{' '}
+            <A href="/library/guides/connection#keepalive">keepalive</A> holds it.{' '}
+            <code>Direction.WITH</code> and <code>Direction.AGAINST</code> need a live bearing
+            (<code>dev.set_bearing(window_ms, mode)</code>); their refusal rules are on{' '}
+            <A href="/bindings/python/types#direction"><code>Direction</code></A>.
+          </p>
+        </div>
+      </DocSection>
 
-      <div id="led-admin-options" data-search-target>
-        <Card>
-          <CardHeader title="LED, admin & options" subtitle="Status light, resets, persistent settings" />
+      <DocSection id="led-admin-options" title="LED, admin & options" caption="Status light, resets, persistent settings">
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Call</th><th>Does</th></tr></thead>
             <tbody>
@@ -154,17 +147,16 @@ const Api: Component = () => {
               <tr><td><code>dev.set_render(mode, full)</code></td><td>Pick the texture (<A href="/bindings/python/types#rendermode"><code>RenderMode</code></A>) and whether native motion is rendered by the model rather than relayed. Both share one frame, so <code>full</code> is required, not defaulted; a <code>mode</code> outside <code>RenderMode</code> raises <code>ValueError</code> and nothing is sent. <code>full</code> is off on a box that has not been set. See <A href="/library/options">Options</A>.</td></tr>
             </tbody>
           </table>
-        </Card>
-      </div>
+        </div>
+      </DocSection>
 
-      <div id="queries" data-search-target>
-        <Card>
-          <CardHeader title="Queries" subtitle="Read box state; each blocks for one reply" />
-          <p>
-            See <A href="/library/requests">Requests</A>. Each returns a{' '}
-            <a href="https://docs.python.org/3/library/dataclasses.html" target="_blank" rel="noreferrer">dataclass</a>{' '}
-            from <A href="/bindings/python/types">Types &amp; errors</A>.
-          </p>
+      <DocSection id="queries" title="Queries" caption="Read box state; each blocks for one reply">
+        <p>
+          See <A href="/library/requests">Requests</A>. Each returns a{' '}
+          <a href="https://docs.python.org/3/library/dataclasses.html" target="_blank" rel="noreferrer">dataclass</a>{' '}
+          from <A href="/bindings/python/types">Types &amp; errors</A>.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Call</th><th>Returns</th></tr></thead>
             <tbody>
@@ -186,17 +178,16 @@ const Api: Component = () => {
               <tr><td><code>dev.counters()</code></td><td><A href="/bindings/python/types#counters"><code>Counters</code></A>: <A href="/library/diagnostics">host-side wire counters</A>.</td></tr>
             </tbody>
           </table>
-        </Card>
-      </div>
+        </div>
+      </DocSection>
 
-      <div id="update" data-search-target>
-        <Card>
-          <CardHeader title="Firmware update" subtitle="Write either chip over the open connection" />
-          <p>
-            See <A href="/library/update">Firmware update</A>. Staging blocks for the whole transfer
-            and calls <code>progress(sent, total)</code> as windows are acknowledged; a refusal raises{' '}
-            <A href="/bindings/python/types#errors"><code>UpdateError</code></A>.
-          </p>
+      <DocSection id="update" title="Firmware update" caption="Write either chip over the open connection">
+        <p>
+          See <A href="/library/update">Firmware update</A>. Staging blocks for the whole transfer
+          and calls <code>progress(sent, total)</code> as windows are acknowledged; a refusal raises{' '}
+          <A href="/bindings/python/types#errors"><code>UpdateError</code></A>.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Call</th><th>Does</th></tr></thead>
             <tbody>
@@ -206,13 +197,12 @@ const Api: Component = () => {
               <tr><td><code>dev.update_firmware(target, image, progress=None)</code></td><td>Stage one image and activate it in a single call.</td></tr>
             </tbody>
           </table>
-        </Card>
-      </div>
+        </div>
+      </DocSection>
 
-      <div id="streams" data-search-target>
-        <Card>
-          <CardHeader title="Streams" subtitle="Subscribe to live input and logs" />
-          <p>Consuming events is on <A href="/bindings/python/streams">Streams</A>, the catch feature on <A href="/library/catch">Catch</A>, and logs on <A href="/library/diagnostics">Logs &amp; counters</A>.</p>
+      <DocSection id="streams" title="Streams" caption="Subscribe to live input and logs">
+        <p>Consuming events is on <A href="/bindings/python/streams">Streams</A>, the catch feature on <A href="/library/catch">Catch</A>, and logs on <A href="/library/diagnostics">Logs &amp; counters</A>.</p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Call</th><th>Returns</th></tr></thead>
             <tbody>
@@ -221,30 +211,29 @@ const Api: Component = () => {
               <tr><td><code>dev.logs()</code></td><td><A href="/bindings/python/streams"><code>LogStream</code></A> of device log lines.</td></tr>
             </tbody>
           </table>
+        </div>
+        <p>
+          <code>filters</code> takes one <A href="/bindings/python/types#catchfilter"><code>CatchFilter</code></A>{' '}
+          or an iterable of them, each naming a <A href="/bindings/python/types#catchclass"><code>CatchClass</code></A>{' '}
+          and an id inside it, with an optional <A href="/bindings/python/types#direction"><code>Direction</code></A>{' '}
+          and <A href="/bindings/python/types#capture"><code>Capture</code></A>.
+        </p>
+        <div class="callout callout--info">
           <p>
-            <code>filters</code> takes one <A href="/bindings/python/types#catchfilter"><code>CatchFilter</code></A>{' '}
-            or an iterable of them, each naming a <A href="/bindings/python/types#catchclass"><code>CatchClass</code></A>{' '}
-            and an id inside it, with an optional <A href="/bindings/python/types#direction"><code>Direction</code></A>{' '}
-            and <A href="/bindings/python/types#capture"><code>Capture</code></A>.
+            Box-side refusals get no reply;{' '}
+            <A href="/bindings/python/api#queries"><code>dev.query_catch()</code></A> reads what it holds.
           </p>
-          <div class="callout callout--info">
-            <p>
-              Box-side refusals get no reply;{' '}
-              <A href="/bindings/python/api#queries"><code>dev.query_catch()</code></A> reads what it holds.
-            </p>
-          </div>
-        </Card>
-      </div>
+        </div>
+      </DocSection>
 
-      <div id="clip" data-search-target>
-        <Card>
-          <CardHeader title="Buffered clip playback" subtitle="Preload a per-frame stream, box-clocked" />
-          <p>
-            Build a stream with <code>ClipBuilder</code>, then drive it with the{' '}
-            <A href="/library/clip#handle"><code>ClipHandle</code></A> from <code>dev.clip()</code>.{' '}
-            See <A href="/library/clip">Clip</A>.
-          </p>
-          <div class="api-response-label">CLIPBUILDER</div>
+      <DocSection id="clip" title="Buffered clip playback" caption="Preload a per-frame stream, box-clocked">
+        <p>
+          Build a stream with <code>ClipBuilder</code>, then drive it with the{' '}
+          <A href="/library/clip#handle"><code>ClipHandle</code></A> from <code>dev.clip()</code>.{' '}
+          See <A href="/library/clip">Clip</A>.
+        </p>
+        <div class="api-response-label">CLIPBUILDER</div>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Call</th><th>Appends</th></tr></thead>
             <tbody>
@@ -259,8 +248,9 @@ const Api: Component = () => {
               <tr><td><code>.frame(dx=0, dy=0, wheel=0, pan=0, edges=(), raw=(), transfers=())</code></td><td>One frame carrying the motion deltas plus <code>(usage, action)</code> edges, <code>(ep, direction, data)</code> raw reports, and <code>(ep, setup, out)</code> transfers, within the <A href="/bindings/python/types#clip-constants">clip constants</A>.</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-python">{`from medius import Action, Button, ClipBuilder, Setup, Usage
+        </div>
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-python">{`from medius import Action, Button, ClipBuilder, Setup, Usage
 
 b = ClipBuilder()
 
@@ -269,7 +259,8 @@ b.frame(dx=10, dy=-4, edges=[(Usage.button(Button.LEFT), Action.PRESS)])
 
 # the next tick queues a SET_REPORT to the real device
 b.transfer(0, Setup(0x21, 0x09, 0x0300, 0, 2), bytes([0x04, 0x01]))`}</code></pre>
-          <div class="api-response-label">CLIPHANDLE</div>
+        <div class="api-response-label">CLIPHANDLE</div>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Call</th><th>Effect</th></tr></thead>
             <tbody>
@@ -293,17 +284,16 @@ b.transfer(0, Setup(0x21, 0x09, 0x0300, 0, 2), bytes([0x04, 0x01]))`}</code></pr
               <tr><td><code>clip.query_config()</code></td><td><A href="/bindings/python/types#clipsettings"><code>ClipSettings</code></A>: auto-lock, loop, retain, finalized, and both kinds of trigger, each packet trigger with its <code>hits</code>.</td></tr>
             </tbody>
           </table>
-          <p>
-            <A href="/bindings/python/api#mock"><code>MockBox</code></A> scripts the clip queries and
-            runs a packet through the packet triggers.
-          </p>
-        </Card>
-      </div>
+        </div>
+        <p>
+          <A href="/bindings/python/api#mock"><code>MockBox</code></A> scripts the clip queries and
+          runs a packet through the packet triggers.
+        </p>
+      </DocSection>
 
-      <div id="advanced" data-search-target>
-        <Card>
-          <CardHeader title="Advanced control layer" subtitle="Raw injection, control transfers, rewrite rules, descriptor patches" />
-          <p>Gated on the imperfect-clone opt-in, <code>dev.allow_imperfect_clones(True)</code>. See <A href="/library/advanced/raw">Raw injection</A>, <A href="/library/advanced/transfer">Control transfers</A>, <A href="/library/advanced/rewrite">Rewrite rules</A>, and <A href="/library/advanced/patch">Descriptor patches</A>. With it off, <code>set_rewrite</code> and <code>apply_patch</code> raise <A href="/bindings/python/types#errors"><code>ImperfectRequiredError</code></A>, the box drops <code>dev.raw</code> (sent unchecked), and a transfer returns <code>TransferStatus.REFUSED</code> without raising; queries, removes, clears and <code>set_patch</code> need no opt-in.</p>
+      <DocSection id="advanced" title="Advanced control layer" caption="Raw injection, control transfers, rewrite rules, descriptor patches">
+        <p>Gated on the imperfect-clone opt-in, <code>dev.allow_imperfect_clones(True)</code>. See <A href="/library/advanced/raw">Raw injection</A>, <A href="/library/advanced/transfer">Control transfers</A>, <A href="/library/advanced/rewrite">Rewrite rules</A>, and <A href="/library/advanced/patch">Descriptor patches</A>. With it off, <code>set_rewrite</code> and <code>apply_patch</code> raise <A href="/bindings/python/types#errors"><code>ImperfectRequiredError</code></A>, the box drops <code>dev.raw</code> (sent unchecked), and a transfer returns <code>TransferStatus.REFUSED</code> without raising; queries, removes, clears and <code>set_patch</code> need no opt-in.</p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Call</th><th>Does</th></tr></thead>
             <tbody>
@@ -321,13 +311,12 @@ b.transfer(0, Setup(0x21, 0x09, 0x0300, 0, 2), bytes([0x04, 0x01]))`}</code></pr
               <tr><td><code>dev.query_patch_entry(index)</code></td><td>One patch in full.</td></tr>
             </tbody>
           </table>
-        </Card>
-      </div>
+        </div>
+      </DocSection>
 
-      <div id="transforms" data-search-target>
-        <Card>
-          <CardHeader title="Transforms" subtitle="Swap or remap a field on the wire" />
-          <p>Faithful field transforms, no opt-in. See <A href="/library/transform">Transform</A>. An axis argument is an <A href="/bindings/python/types#axis"><code>Axis</code></A>; <code>remap</code> takes <A href="/bindings/python/types#locktarget"><code>LockTarget</code></A>s (or a <code>Usage</code>), so it can move a button onto a key or media usage. To weigh or reverse a field, use <code>dev.scale</code> (signed percent).</p>
+      <DocSection id="transforms" title="Transforms" caption="Swap or remap a field on the wire">
+        <p>Faithful field transforms, no opt-in. See <A href="/library/transform">Transform</A>. An axis argument is an <A href="/bindings/python/types#axis"><code>Axis</code></A>; <code>remap</code> takes <A href="/bindings/python/types#locktarget"><code>LockTarget</code></A>s (or a <code>Usage</code>), so it can move a button onto a key or media usage. To weigh or reverse a field, use <code>dev.scale</code> (signed percent).</p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Call</th><th>Does</th></tr></thead>
             <tbody>
@@ -339,19 +328,18 @@ b.transfer(0, Setup(0x21, 0x09, 0x0300, 0, 2), bytes([0x04, 0x01]))`}</code></pr
               <tr><td><code>dev.query_transforms()</code></td><td>The <A href="/bindings/python/types#transforms"><code>Transforms</code></A> table, in the order the box applies it.</td></tr>
             </tbody>
           </table>
-        </Card>
-      </div>
+        </div>
+      </DocSection>
 
-      <div id="mock" data-search-target>
-        <Card>
-          <CardHeader title="Mock box" subtitle="In-process fake box for tests, feature-gated" />
-          <p>
-            <code>MockBox</code> needs a library built with the <code>mock</code> feature and raises{' '}
-            <code>RuntimeError</code> without it; check <code>medius.HAS_MOCK</code>. Building it is on{' '}
-            <A href="/bindings/python/build">Build &amp; features</A>, the concept on{' '}
-            <A href="/library/features/mock">Mock</A>.
-          </p>
-          <div class="api-response-label">OPEN</div>
+      <DocSection id="mock" title="Mock box" caption="In-process fake box for tests, feature-gated">
+        <p>
+          <code>MockBox</code> needs a library built with the <code>mock</code> feature and raises{' '}
+          <code>RuntimeError</code> without it; check <code>medius.HAS_MOCK</code>. Building it is on{' '}
+          <A href="/bindings/python/build">Build &amp; features</A>, the concept on{' '}
+          <A href="/library/features/mock">Mock</A>.
+        </p>
+        <div class="api-response-label">OPEN</div>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Call</th><th>Does</th></tr></thead>
             <tbody>
@@ -361,7 +349,9 @@ b.transfer(0, Setup(0x21, 0x09, 0x0300, 0, 2), bytes([0x04, 0x01]))`}</code></pr
               <tr><td><code>mock.clone()</code></td><td>Another handle to the same mock state.</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">SCRIPT</div>
+        </div>
+        <div class="api-response-label">SCRIPT</div>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Call</th><th>Does</th></tr></thead>
             <tbody>
@@ -380,7 +370,9 @@ b.transfer(0, Setup(0x21, 0x09, 0x0300, 0, 2), bytes([0x04, 0x01]))`}</code></pr
               <tr><td><code>mock.push_raw(data)</code>, <code>push_log(level, text)</code>, <code>push_motion</code>, <code>push_usages</code>, <code>push_traffic</code></td><td>Put bytes, a log line or a catch event on the inbound stream, as the box sends them.</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">INSPECT</div>
+        </div>
+        <div class="api-response-label">INSPECT</div>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Call</th><th>Does</th></tr></thead>
             <tbody>
@@ -390,8 +382,9 @@ b.transfer(0, Setup(0x21, 0x09, 0x0300, 0, 2), bytes([0x04, 0x01]))`}</code></pr
               <tr><td><code>mock.clear_recorded()</code></td><td>Empty the record.</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-python">{`from medius import (ClipAction, ClipPacketTrigger, Direction, FrameType, ImperfectStatus,
+        </div>
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-python">{`from medius import (ClipAction, ClipPacketTrigger, Direction, FrameType, ImperfectStatus,
                     MockBox, TrafficClass)
 
 with MockBox() as mock:
@@ -415,12 +408,10 @@ with MockBox() as mock:
     frames = [mock.recorded_frame(i) for i in range(mock.recorded())]
     bind = next(f for f in frames if f.type == FrameType.CLIP_TRIGGER)
     print(bind.payload.hex(" "))      # 04 02 00 01 00 07 01 02 07 20 ff 20`}</code></pre>
-        </Card>
-      </div>
+      </DocSection>
 
-      <div id="module" data-search-target>
-        <Card>
-          <CardHeader title="Library functions" subtitle="Top-level helpers on medius" />
+      <DocSection id="module" title="Library functions" caption="Top-level helpers on medius">
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Call</th><th>Does</th></tr></thead>
             <tbody>
@@ -433,8 +424,8 @@ with MockBox() as mock:
               <tr><td><code>medius.version_string()</code></td><td>The library version string.</td></tr>
             </tbody>
           </table>
-        </Card>
-      </div>
+        </div>
+      </DocSection>
     </>
   );
 };

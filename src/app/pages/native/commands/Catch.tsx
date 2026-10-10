@@ -1,13 +1,13 @@
 import type { Component } from 'solid-js';
 import { A } from '@solidjs/router';
-import { Card, CardHeader } from '../../../../components/surfaces/Card';
-import '../../../../styles/docs.css';
+import { PageHeader } from '../../../shell/PageHeader';
+import { DocSection } from '../../../shell/DocSection';
+import { ByteStrip } from '../../../shell/ByteStrip';
 
 const Catch: Component = () => {
   return (
     <>
-      <Card>
-        <CardHeader title="Catch" subtitle="Stream box traffic, addressed like a lock" />
+      <PageHeader>
         <p>
           <A href="/native/commands/catch#catch"><code>CATCH</code></A> subscribes to traffic through
           the box: physical input, vendor-interface endpoints, proxied control transactions, raw
@@ -45,19 +45,18 @@ const Catch: Component = () => {
           Addressing is the filter: the control link runs at 6&nbsp;Mbaud and vendor bulk alone
           measures ~250&nbsp;KiB/s through the box, so every class at once can't be delivered.
         </p>
-      </Card>
+      </PageHeader>
 
-      <div id="catch" data-search-target>
-        <Card>
-          <CardHeader title="CATCH" subtitle="Add or remove one subscription-table entry" />
-          <p>
-            <code>CATCH</code> carries one table entry: address, direction, subscribe or unsubscribe,
-            and how much of each packet to capture.{' '}
-            <A href="/native/frame#opcodes">Opcode</A> <code>0x0B</code>.
-          </p>
-          <pre class="api-signature">CATCH  0x0B  ·  payload 6 bytes</pre>
-          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
-          <div class="api-response-label">PAYLOAD</div>
+      <DocSection id="catch" title="CATCH" caption="Add or remove one subscription-table entry">
+        <p>
+          <code>CATCH</code> carries one table entry: address, direction, subscribe or unsubscribe,
+          and how much of each packet to capture.{' '}
+          <A href="/native/frame#opcodes">Opcode</A> <code>0x0B</code>.
+        </p>
+        <pre class="api-signature">CATCH  0x0B  ·  payload 6 bytes</pre>
+        <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
+        <div class="api-response-label">PAYLOAD</div>
+        <div class="table-scroll">
           <table class="byte-table">
             <thead>
               <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
@@ -70,11 +69,13 @@ const Catch: Component = () => {
               <tr><td>5</td><td><code>snaplen</code></td><td><code>u8</code></td><td>bytes captured per event; <code>0</code> = the whole packet</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">ADDRESS CLASSES</div>
-          <p>
-            Classes 0 to 3 are the <A href="/native/commands/lock"><code>LOCK</code></A> classes; 4
-            and up are byte-oriented traffic.
-          </p>
+        </div>
+        <div class="api-response-label">ADDRESS CLASSES</div>
+        <p>
+          Classes 0 to 3 are the <A href="/native/commands/lock"><code>LOCK</code></A> classes; 4
+          and up are byte-oriented traffic.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Name</th><th>Value</th><th><code>id</code> means</th><th>With <code>id = 0xFFFF</code></th></tr>
@@ -95,7 +96,9 @@ const Catch: Component = () => {
               <tr><td><code>ANY</code></td><td><code>0xFF</code></td><td>must be <code>0xFFFF</code></td><td>every class</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">DIRECTION</div>
+        </div>
+        <div class="api-response-label">DIRECTION</div>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Value</th><th>Input classes (0 to 3)</th><th>Traffic classes (4 to 11)</th></tr>
@@ -106,62 +109,78 @@ const Catch: Component = () => {
               <tr><td><code>2</code> <code>NEG</code></td><td>the release edge, or the <code>-</code> sign of an axis</td><td>OUT: PC to device</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">SNAPLEN</div>
-          <p>
-            <code>snaplen</code> is per entry: one subscription can take a 64-byte report whole while
-            another cuts a bulk pipe to 16. A cut capture still carries the real length in{' '}
-            <A href="/native/commands/catch#traffic-event"><code>true_len</code></A>.
-          </p>
-          <div class="api-response-label">CAPTURE POINT</div>
-          <p>
-            Input classes are captured at the emission merge point <em>before</em> any{' '}
-            <A href="/native/commands/lock#scale"><code>LOCK</code> scale</A> or{' '}
-            <A href="/native/injection">injection</A>, so a weighed or blocked input still reports
-            its full physical value.
-          </p>
-          <p>
-            <code>EMIT</code> is what the clone put on the wire <em>after</em> injection, locks, and
-            the suppression gate.
-          </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <p>
-            Subscribe to every vendor interrupt endpoint, both directions, capturing the first 32
-            bytes of each packet (<code>class = 6</code>, <code>id = 0xFFFF</code>,{' '}
-            <code>snaplen = 32</code>):
-          </p>
-          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 0B     | 00     | 06 00  | 06     | FF FF  | 00     | 01     | 20     | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | class  | id     | dir    | state  | snaplen| CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
-          <p>
-            Subscribe to everything: <code>class=0xFF, id=0xFFFF, dir=BOTH, state=1</code>.
-            Unsubscribe everything: the same with <code>state=0</code>, which clears the whole table
-            in one frame:
-          </p>
-          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 0B     | 01     | 06 00  | FF     | FF FF  | 00     | 00     | 00     | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | class  | id     | dir    | state  | snaplen| CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
-          <p>
-            A blanket (<code>id = 0xFFFF</code>) stays one wildcard entry, unlike a{' '}
-            <A href="/native/commands/lock#blanket"><code>LOCK</code> button or axis blanket</A>,
-            which expands per member. Library binding:{' '}
-            <A href="/library/catch#catch-events"><code>catch_events</code></A>.
-          </p>
-        </Card>
-      </div>
+        </div>
+        <div class="api-response-label">SNAPLEN</div>
+        <p>
+          <code>snaplen</code> is per entry: one subscription can take a 64-byte report whole while
+          another cuts a bulk pipe to 16. A cut capture still carries the real length in{' '}
+          <A href="/native/commands/catch#traffic-event"><code>true_len</code></A>.
+        </p>
+        <div class="api-response-label">CAPTURE POINT</div>
+        <p>
+          Input classes are captured at the emission merge point <em>before</em> any{' '}
+          <A href="/native/commands/lock#scale"><code>LOCK</code> scale</A> or{' '}
+          <A href="/native/injection">injection</A>, so a weighed or blocked input still reports
+          its full physical value.
+        </p>
+        <p>
+          <code>EMIT</code> is what the clone put on the wire <em>after</em> injection, locks, and
+          the suppression gate.
+        </p>
+        <div class="api-response-label">EXAMPLE</div>
+        <p>
+          Subscribe to every vendor interrupt endpoint, both directions, capturing the first 32
+          bytes of each packet (<code>class = 6</code>, <code>id = 0xFFFF</code>,{' '}
+          <code>snaplen = 32</code>):
+        </p>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '0B', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '06 00', name: 'LEN' },
+            { value: '06', name: 'class' },
+            { value: 'FF FF', name: 'id' },
+            { value: '00', name: 'dir' },
+            { value: '01', name: 'state' },
+            { value: '20', name: 'snaplen' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
+        <p>
+          Subscribe to everything: <code>class=0xFF, id=0xFFFF, dir=BOTH, state=1</code>.
+          Unsubscribe everything: the same with <code>state=0</code>, which clears the whole table
+          in one frame:
+        </p>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '0B', name: 'TYPE' },
+            { value: '01', name: 'SEQ' },
+            { value: '06 00', name: 'LEN' },
+            { value: 'FF', name: 'class' },
+            { value: 'FF FF', name: 'id' },
+            { value: '00', name: 'dir' },
+            { value: '00', name: 'state' },
+            { value: '00', name: 'snaplen' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
+        <p>
+          A blanket (<code>id = 0xFFFF</code>) stays one wildcard entry, unlike a{' '}
+          <A href="/native/commands/lock#blanket"><code>LOCK</code> button or axis blanket</A>,
+          which expands per member. Library binding:{' '}
+          <A href="/library/catch#catch-events"><code>catch_events</code></A>.
+        </p>
+      </DocSection>
 
-      <div id="matching" data-search-target>
-        <Card>
-          <CardHeader title="Table" subtitle="Matching, capacity, refusals" />
-          <p>
-            An exact <code>(class, id)</code> entry ranks above a class blanket, which ranks above{' '}
-            <code>class = 0xFF</code>; ties go to the earlier entry. The highest-ranked entry supplies the{' '}
-            <code>snaplen</code>.
-          </p>
-          <pre class="diagram">{`  table (insertion order)
+      <DocSection id="matching" title="Table" caption="Matching, capacity, refusals">
+        <p>
+          An exact <code>(class, id)</code> entry ranks above a class blanket, which ranks above{' '}
+          <code>class = 0xFF</code>; ties go to the earlier entry. The highest-ranked entry supplies the{' '}
+          <code>snaplen</code>.
+        </p>
+        <pre class="diagram">{`  table (insertion order)
     #0  class = ANY        id = ALL     snaplen = 16
     #1  class = VEND_INTR  id = ALL     snaplen = 32
     #2  class = VEND_INTR  id = 0x83    snaplen = 0
@@ -180,12 +199,13 @@ const Catch: Component = () => {
     +- exact (class, id)?       miss
     +- class blanket?           miss
     +- class = ANY?         #0  HIT  --> snaplen 16`}</pre>
-          <div class="api-response-label">CAPACITY</div>
-          <p>
-            The table holds <strong>32</strong> entries. No reply: a refused entry is absent from{' '}
-            <A href="/native/commands/requests#catch"><code>RESP(CATCH)</code></A>, whose header
-            carries the table-full flag.
-          </p>
+        <div class="api-response-label">CAPACITY</div>
+        <p>
+          The table holds <strong>32</strong> entries. No reply: a refused entry is absent from{' '}
+          <A href="/native/commands/requests#catch"><code>RESP(CATCH)</code></A>, whose header
+          carries the table-full flag.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Refused when</th><th>Why</th></tr>
@@ -197,34 +217,33 @@ const Catch: Component = () => {
               <tr><td><code>class = 0xFF</code> with a specific <code>id</code></td><td><code>id</code> is class-specific, so a wildcard class with a real id addresses nothing coherent</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">LIFECYCLE</div>
-          <p>
-            A subscription is PC-owned state, cleared by control-PC silence (the ~1&nbsp;s timeout), a{' '}
-            <A href="/native/commands/admin#reset"><code>RESET</code></A>, a mouse detach, a{' '}
-            <A href="/native/commands/patch#presentation">re-clone</A>, inter-chip link loss, or an
-            explicit unsubscribe. Every clear but the unsubscribe moves the{' '}
-            <A href="/native/commands/requests#stats"><code>session</code></A> count.
-          </p>
-          <p>
-            The library holds an open table past the silence timeout with its injection keepalive,
-            re-asserting the whole table after a device-side blip and across a control-link reconnect;
-            its own <code>RESET</code> ends the event stream.
-          </p>
-          <p>
-            The HEALTH <A href="/native/commands/requests#health"><code>CATCH_ON</code></A> bit means
-            the table is non-empty.
-          </p>
-        </Card>
-      </div>
+        </div>
+        <div class="api-response-label">LIFECYCLE</div>
+        <p>
+          A subscription is PC-owned state, cleared by control-PC silence (the ~1&nbsp;s timeout), a{' '}
+          <A href="/native/commands/admin#reset"><code>RESET</code></A>, a mouse detach, a{' '}
+          <A href="/native/commands/patch#presentation">re-clone</A>, inter-chip link loss, or an
+          explicit unsubscribe. Every clear but the unsubscribe moves the{' '}
+          <A href="/native/commands/requests#stats"><code>session</code></A> count.
+        </p>
+        <p>
+          The library holds an open table past the silence timeout with its injection keepalive,
+          re-asserting the whole table after a device-side blip and across a control-link reconnect;
+          its own <code>RESET</code> ends the event stream.
+        </p>
+        <p>
+          The HEALTH <A href="/native/commands/requests#health"><code>CATCH_ON</code></A> bit means
+          the table is non-empty.
+        </p>
+      </DocSection>
 
-      <div id="clocks" data-search-target>
-        <Card>
-          <CardHeader title="clk byte" subtitle="Which chip's clock stamped an event" />
-          <p>
-            All three event frames lead with <code>ts_us</code> then <code>clk</code>. The two
-            ESP32-S3s boot independently with unrelated timers, so a stamp compares only against
-            another from the same domain.
-          </p>
+      <DocSection id="clocks" title="clk byte" caption="Which chip's clock stamped an event">
+        <p>
+          All three event frames lead with <code>ts_us</code> then <code>clk</code>. The two
+          ESP32-S3s boot independently with unrelated timers, so a stamp compares only against
+          another from the same domain.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th><code>clk</code></th><th>Stamped by</th><th>Classes</th></tr>
@@ -234,15 +253,16 @@ const Catch: Component = () => {
               <tr><td><code>1</code></td><td>the <strong>device</strong> chip, at the tap</td><td><code>HID_OUT</code>, both OUT directions, a vendor IN packet from <A href="/native/commands/raw#catch"><code>RAW</code></A> or a <A href="/native/commands/clip#items">clip raw entry</A>, <code>CONTROL</code>, <code>CLIP_XFER</code>, <code>EMIT</code>, <code>BUS</code></td></tr>
             </tbody>
           </table>
-          <p>
-            Both clocks are box-local, unrelated to any control-PC clock.
-          </p>
-          <p>
-            Each wraps every ~71.6 minutes (a 32-bit microsecond counter) and returns to zero when
-            that chip reboots, so a value below the previous one is a wrap, a reboot, or a domain
-            change.
-          </p>
-          <pre class="diagram">{`  clk = 0   HID_IN  ts_us = 1286497017   (host chip)
+        </div>
+        <p>
+          Both clocks are box-local, unrelated to any control-PC clock.
+        </p>
+        <p>
+          Each wraps every ~71.6 minutes (a 32-bit microsecond counter) and returns to zero when
+          that chip reboots, so a value below the previous one is a wrap, a reboot, or a domain
+          change.
+        </p>
+        <pre class="diagram">{`  clk = 0   HID_IN  ts_us = 1286497017   (host chip)
   clk = 0   HID_IN  ts_us = 1286544017   (host chip)
                             ----------
                     delta =      47000 µs / 1000 µs poll = 47 polls
@@ -252,43 +272,41 @@ const Catch: Component = () => {
                     ^ smaller than the stamps above, and NOT earlier:
                       a different chip, a different epoch. Subtracting across
                       domains without the measured offset is meaningless.`}</pre>
-          <div class="api-response-label">CORRELATION</div>
-          <p>
-            <A href="/native/commands/requests#catch"><code>RESP(CATCH)</code></A> carries a measured
-            offset between the two clocks, its drift rate, and the round trip that bounds its error.
-          </p>
-          <p>
-            Divide a gap by{' '}
-            <A href="/native/commands/requests#rate"><code>RESP(RATE)</code></A>'s{' '}
-            <code>poll_period_us</code> for a poll count, but only where its{' '}
-            <A href="/native/commands/requests#rate"><code>CHANGE_DRIVEN</code></A> flag is clear: a
-            change-driven device's idle polls never reach the wire and can't be counted.
-          </p>
-        </Card>
-      </div>
+        <div class="api-response-label">CORRELATION</div>
+        <p>
+          <A href="/native/commands/requests#catch"><code>RESP(CATCH)</code></A> carries a measured
+          offset between the two clocks, its drift rate, and the round trip that bounds its error.
+        </p>
+        <p>
+          Divide a gap by{' '}
+          <A href="/native/commands/requests#rate"><code>RESP(RATE)</code></A>'s{' '}
+          <code>poll_period_us</code> for a poll count, but only where its{' '}
+          <A href="/native/commands/requests#rate"><code>CHANGE_DRIVEN</code></A> flag is clear: a
+          change-driven device's idle polls never reach the wire and can't be counted.
+        </p>
+      </DocSection>
 
-      <div id="motion-event" data-search-target>
-        <Card>
-          <CardHeader title="MOTION_EVENT" subtitle="One physical relative-axis snapshot, box → PC" />
-          <p>
-            While an <code>AXIS</code> subscription is active the box pushes a{' '}
-            <code>MOTION_EVENT</code> for each physical report whose motion changed.{' '}
-            <A href="/native/frame#opcodes">Opcode</A> <code>0x0C</code>.
-          </p>
-          <p>
-            <A href="/native/frame#seq"><code>SEQ</code></A> is a rolling per-event counter shared
-            with <A href="/native/commands/catch#usage-event"><code>USAGE_EVENT</code></A> and{' '}
-            <A href="/native/commands/catch#traffic-event"><code>TRAFFIC_EVENT</code></A>, stamped as
-            each event leaves the box, so it orders a mixed stream.
-          </p>
-          <p>
-            <code>SEQ</code> doesn't detect drops: events drop before the stamp, so it runs gapless;
-            losses are in{' '}
-            <A href="/native/commands/requests#catch"><code>RESP(CATCH)</code></A>.
-          </p>
-          <pre class="api-signature">MOTION_EVENT  0x0C  ·  payload 13 bytes</pre>
-          <p><span class="api-badge api-badge--warning">Unsolicited</span></p>
-          <div class="api-response-label">PAYLOAD</div>
+      <DocSection id="motion-event" title="MOTION_EVENT" caption="One physical relative-axis snapshot, box → PC">
+        <p>
+          While an <code>AXIS</code> subscription is active the box pushes a{' '}
+          <code>MOTION_EVENT</code> for each physical report whose motion changed.{' '}
+          <A href="/native/frame#opcodes">Opcode</A> <code>0x0C</code>.
+        </p>
+        <p>
+          <A href="/native/frame#seq"><code>SEQ</code></A> is a rolling per-event counter shared
+          with <A href="/native/commands/catch#usage-event"><code>USAGE_EVENT</code></A> and{' '}
+          <A href="/native/commands/catch#traffic-event"><code>TRAFFIC_EVENT</code></A>, stamped as
+          each event leaves the box, so it orders a mixed stream.
+        </p>
+        <p>
+          <code>SEQ</code> doesn't detect drops: events drop before the stamp, so it runs gapless;
+          losses are in{' '}
+          <A href="/native/commands/requests#catch"><code>RESP(CATCH)</code></A>.
+        </p>
+        <pre class="api-signature">MOTION_EVENT  0x0C  ·  payload 13 bytes</pre>
+        <p><span class="api-badge api-badge--warning">Unsolicited</span></p>
+        <div class="api-response-label">PAYLOAD</div>
+        <div class="table-scroll">
           <table class="byte-table">
             <thead>
               <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
@@ -302,35 +320,44 @@ const Catch: Component = () => {
               <tr><td>11</td><td><code>dpan</code></td><td><code>i16</code></td><td>physical AC Pan (horizontal scroll) delta this report; + = right, little-endian</td></tr>
             </tbody>
           </table>
-          <p>
-            The stamp is taken when the device's interrupt-IN transfer completes, so it is always the
-            host chip's.
-          </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <p>A physical +10 right, no other motion (<code>dx = 10</code>):</p>
-          <pre class="diagram">{`+--------+--------+--------+--------+-------------+--------+--------+--------+--------+--------+--------+
-| A5     | 0C     | 2A     | 0D 00  | 40 42 0F 00 | 00     | 0A 00  | 00 00  | 00 00  | 00 00  | lo hi  |
-+--------+--------+--------+--------+-------------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | ts_us       | clk    | dx     | dy     | dz     | dpan   | CRC16  |
-+--------+--------+--------+--------+-------------+--------+--------+--------+--------+--------+--------+`}</pre>
-        </Card>
-      </div>
+        </div>
+        <p>
+          The stamp is taken when the device's interrupt-IN transfer completes, so it is always the
+          host chip's.
+        </p>
+        <div class="api-response-label">EXAMPLE</div>
+        <p>A physical +10 right, no other motion (<code>dx = 10</code>):</p>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '0C', name: 'TYPE' },
+            { value: '2A', name: 'SEQ' },
+            { value: '0D 00', name: 'LEN' },
+            { value: '40 42 0F 00', name: 'ts_us' },
+            { value: '00', name: 'clk' },
+            { value: '0A 00', name: 'dx' },
+            { value: '00 00', name: 'dy' },
+            { value: '00 00', name: 'dz' },
+            { value: '00 00', name: 'dpan' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
+      </DocSection>
 
-      <div id="usage-event" data-search-target>
-        <Card>
-          <CardHeader title="USAGE_EVENT" subtitle="One physical held-usage snapshot, box → PC" />
-          <p>
-            While a <code>BTN</code>, <code>KEY</code>, or <code>MEDIA</code> subscription is active
-            the box pushes a <code>USAGE_EVENT</code> when that class changes: a class-tagged snapshot
-            of the usages currently held.{' '}
-            <A href="/native/frame#opcodes">Opcode</A> <code>0x0F</code>.
-          </p>
-          <p>
-            It's a full snapshot, not edge deltas, so a dropped frame self-corrects on the next one.
-          </p>
-          <pre class="api-signature">USAGE_EVENT  0x0F  ·  payload 8 + 3n bytes</pre>
-          <p><span class="api-badge api-badge--warning">Unsolicited</span></p>
-          <div class="api-response-label">PAYLOAD</div>
+      <DocSection id="usage-event" title="USAGE_EVENT" caption="One physical held-usage snapshot, box → PC">
+        <p>
+          While a <code>BTN</code>, <code>KEY</code>, or <code>MEDIA</code> subscription is active
+          the box pushes a <code>USAGE_EVENT</code> when that class changes: a class-tagged snapshot
+          of the usages currently held.{' '}
+          <A href="/native/frame#opcodes">Opcode</A> <code>0x0F</code>.
+        </p>
+        <p>
+          It's a full snapshot, not edge deltas, so a dropped frame self-corrects on the next one.
+        </p>
+        <pre class="api-signature">USAGE_EVENT  0x0F  ·  payload 8 + 3n bytes</pre>
+        <p><span class="api-badge api-badge--warning">Unsolicited</span></p>
+        <div class="api-response-label">PAYLOAD</div>
+        <div class="table-scroll">
           <table class="byte-table">
             <thead>
               <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
@@ -345,49 +372,59 @@ const Catch: Component = () => {
               <tr><td>+</td><td><code>id</code></td><td><code>u16</code></td><td>held usage id (a button id, HID keycode with 0xE0-0xE7 modifiers, or Consumer usage), little-endian</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">SNAPSHOT</div>
-          <p>
-            Each entry is 3 bytes and the snapshot is <code>n</code> of them, all one class, since
-            one physical report is one class.
-          </p>
-          <p>
-            Only held usages that match the table appear; with none, no event is emitted.
-          </p>
-          <p>
-            A snapshot lists what is currently <em>held</em>, so the release of a usage is the
-            snapshot that no longer names it. Without <code>cls</code>, "all buttons released" and
-            "all keys released" are the same bytes.
-          </p>
-          <p>
-            The box resolves each usage against its entry's direction, but while any other subscriber
-            holds a wider entry it emits on both edges, and only <code>dir</code> tells the two apart.
-          </p>
-          <p>
-            Route by <strong>class</strong>, not by the usages present, and diff successive snapshots
-            for the usages of interest; matching on present usages misses the release edge while
-            another subscription's usage is held.
-          </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <p>Left Shift held while pressing <code>A</code> (a keys snapshot, two usages both <code>class = 1</code>: Left Shift <code>id = 0xE1</code>, then A <code>id = 0x04</code>):</p>
-          <pre class="diagram">{`+--------+--------+--------+--------+-------------+--------+--------+--------+--------+----------+----------+--------+
-| A5     | 0F     | 2B     | 0E 00  | 40 42 0F 00 | 00     | 01     | 01     | 02     | 01 E1 00 | 01 04 00 | lo hi  |
-+--------+--------+--------+--------+-------------+--------+--------+--------+--------+----------+----------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | ts_us       | clk    | cls    | dir    | n      | usage[0] | usage[1] | CRC16  |
-+--------+--------+--------+--------+-------------+--------+--------+--------+--------+----------+----------+--------+`}</pre>
-        </Card>
-      </div>
+        </div>
+        <div class="api-response-label">SNAPSHOT</div>
+        <p>
+          Each entry is 3 bytes and the snapshot is <code>n</code> of them, all one class, since
+          one physical report is one class.
+        </p>
+        <p>
+          Only held usages that match the table appear; with none, no event is emitted.
+        </p>
+        <p>
+          A snapshot lists what is currently <em>held</em>, so the release of a usage is the
+          snapshot that no longer names it. Without <code>cls</code>, "all buttons released" and
+          "all keys released" are the same bytes.
+        </p>
+        <p>
+          The box resolves each usage against its entry's direction, but while any other subscriber
+          holds a wider entry it emits on both edges, and only <code>dir</code> tells the two apart.
+        </p>
+        <p>
+          Route by <strong>class</strong>, not by the usages present, and diff successive snapshots
+          for the usages of interest; matching on present usages misses the release edge while
+          another subscription's usage is held.
+        </p>
+        <div class="api-response-label">EXAMPLE</div>
+        <p>Left Shift held while pressing <code>A</code> (a keys snapshot, two usages both <code>class = 1</code>: Left Shift <code>id = 0xE1</code>, then A <code>id = 0x04</code>):</p>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '0F', name: 'TYPE' },
+            { value: '2B', name: 'SEQ' },
+            { value: '0E 00', name: 'LEN' },
+            { value: '40 42 0F 00', name: 'ts_us' },
+            { value: '00', name: 'clk' },
+            { value: '01', name: 'cls' },
+            { value: '01', name: 'dir' },
+            { value: '02', name: 'n' },
+            { value: '01 E1 00', name: 'usage[0]' },
+            { value: '01 04 00', name: 'usage[1]' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
+      </DocSection>
 
-      <div id="traffic-event" data-search-target>
-        <Card>
-          <CardHeader title="TRAFFIC_EVENT" subtitle="Byte-oriented class traffic, box → PC" />
-          <p>
-            One frame type carries every{' '}
-            <A href="/native/commands/catch#catch">traffic class</A>, 4 to 11.{' '}
-            <A href="/native/frame#opcodes">Opcode</A> <code>0x16</code>.
-          </p>
-          <pre class="api-signature">TRAFFIC_EVENT  0x16  ·  payload 12 + n bytes</pre>
-          <p><span class="api-badge api-badge--warning">Unsolicited</span></p>
-          <div class="api-response-label">PAYLOAD</div>
+      <DocSection id="traffic-event" title="TRAFFIC_EVENT" caption="Byte-oriented class traffic, box → PC">
+        <p>
+          One frame type carries every{' '}
+          <A href="/native/commands/catch#catch">traffic class</A>, 4 to 11.{' '}
+          <A href="/native/frame#opcodes">Opcode</A> <code>0x16</code>.
+        </p>
+        <pre class="api-signature">TRAFFIC_EVENT  0x16  ·  payload 12 + n bytes</pre>
+        <p><span class="api-badge api-badge--warning">Unsolicited</span></p>
+        <div class="api-response-label">PAYLOAD</div>
+        <div class="table-scroll">
           <table class="byte-table">
             <thead>
               <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
@@ -403,15 +440,17 @@ const Catch: Component = () => {
               <tr><td>12</td><td><code>bytes</code></td><td><code>u8[]</code></td><td>up to <code>snaplen</code> bytes; the frame <A href="/native/frame#layout"><code>LEN</code></A> gives how many arrived</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">TRUNCATION</div>
-          <pre class="diagram">{`  frame LEN = 12 + 16   ->  16 bytes arrived
+        </div>
+        <div class="api-response-label">TRUNCATION</div>
+        <pre class="diagram">{`  frame LEN = 12 + 16   ->  16 bytes arrived
   true_len  = 64        ->  the packet was 64 bytes
                             ------------------------
                             48 bytes were cut by snaplen, not absent from the wire
 
   frame LEN = 12 + 4    ->  4 bytes arrived
   true_len  = 4         ->  the packet really was 4 bytes long`}</pre>
-          <div class="api-response-label">FLAGS BY CLASS</div>
+        <div class="api-response-label">FLAGS BY CLASS</div>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Class</th><th><code>flags</code></th></tr>
@@ -425,12 +464,14 @@ const Catch: Component = () => {
               <tr><td><code>BUS</code></td><td>the event kind (table below)</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">ZERO-LENGTH PACKETS</div>
-          <p>
-            An event is one packet, except a <code>HID_IN</code> or <code>EMIT</code> event on a HID
-            endpoint: that one carries a report of up to 64 bytes whole, however many packets it took. A
-            longer report comes a packet at a time.
-          </p>
+        </div>
+        <div class="api-response-label">ZERO-LENGTH PACKETS</div>
+        <p>
+          An event is one packet, except a <code>HID_IN</code> or <code>EMIT</code> event on a HID
+          endpoint: that one carries a report of up to 64 bytes whole, however many packets it took. A
+          longer report comes a packet at a time.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>A HID endpoint's device sends</th><th>Events</th></tr></thead>
             <tbody>
@@ -440,7 +481,8 @@ const Catch: Component = () => {
               <tr><td>a zero-length packet answering a poll the PC missed: what the device sent before it still waits for the PC</td><td>its <code>HID_IN</code> event, and no <code>EMIT</code> event</td></tr>
             </tbody>
           </table>
-          <pre class="diagram">{`  the device sends            HID_IN              the PC takes               EMIT
+        </div>
+        <pre class="diagram">{`  the device sends            HID_IN              the PC takes               EMIT
 
   [ 32 ] [ ZLP ]      -->  32 bytes, b1     [ 32 ] [ ZLP ]         -->  32 bytes, b1
   [ 32 ] [ 32 ]       -->  64 bytes         [ 32 ] [ 32 ]          -->  64 bytes
@@ -448,19 +490,20 @@ const Catch: Component = () => {
   [ ZLP ]             -->   0 bytes, b1     a report of the box's  -->  its bytes (b1 if it ends in one)
 
   vendor endpoint: one event a packet, so [ 64 ] [ ZLP ] is 64 bytes, then 0 bytes with b1`}</pre>
-          <div class="api-response-label">CONTROL EVENTS</div>
-          <p>
-            <code>CONTROL</code> carries one event per <em>completed transaction</em>:{' '}
-            <code>bytes</code> is <code>[setup 8][data ...]</code> and <code>dir</code> is the data
-            stage's direction.
-          </p>
-          <p>
-            It is the transaction as the game PC received it, the same on every control endpoint. A
-            request served from the box's value cache still produces an event.
-          </p>
-          <pre class="diagram">{`  bytes = A1 01 00 01 00 00 08 00   01 00 00 00 00 00 00 00
+        <div class="api-response-label">CONTROL EVENTS</div>
+        <p>
+          <code>CONTROL</code> carries one event per <em>completed transaction</em>:{' '}
+          <code>bytes</code> is <code>[setup 8][data ...]</code> and <code>dir</code> is the data
+          stage's direction.
+        </p>
+        <p>
+          It is the transaction as the game PC received it, the same on every control endpoint. A
+          request served from the box's value cache still produces an event.
+        </p>
+        <pre class="diagram">{`  bytes = A1 01 00 01 00 00 08 00   01 00 00 00 00 00 00 00
           '------ setup (8) ------'   '---- data stage -------'
           HID GET_REPORT(Input)       dir = 1 (IN), flags = 0 (completed OK)`}</pre>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Part</th><th>Carries</th></tr>
@@ -472,7 +515,9 @@ const Catch: Component = () => {
               <tr><td>b0-b1</td><td>The handshake the PC got. A request a rule refused reads STALL, or NAK for a <code>NAK</code> rule on endpoint 0; a failed request above endpoint 0 reads STALL, as the clone STALLs it there.</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">NO EVENT</div>
+        </div>
+        <div class="api-response-label">NO EVENT</div>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Transaction</th><th>Why</th></tr>
@@ -485,26 +530,28 @@ const Catch: Component = () => {
               <tr><td>a request a new SETUP on its endpoint replaced, or, above endpoint 0, one the box had no room to queue</td><td>the box abandons it</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">CLIP_XFER EVENTS</div>
-          <p>
-            <code>CLIP_XFER</code> carries one event per control transfer a{' '}
-            <A href="/native/commands/clip#items">clip</A> sent to the real device, in{' '}
-            <code>CONTROL</code>'s shape: <code>bytes</code> is <code>[setup 8][IN data]</code>.
-          </p>
-          <p>
-            Only a transfer the box sent raises an event; the rest are counted in{' '}
-            <A href="/native/commands/requests#clip"><code>RESP(CLIP)</code></A>.
-          </p>
-          <div class="api-response-label">BUS EVENT KINDS</div>
-          <p>
-            <code>BUS</code> carries <code>[a][b]</code> in <code>bytes</code> with the kind in{' '}
-            <code>flags</code>, and <code>true_len</code> is the operand count.
-          </p>
-          <p>
-            The same events drive <A href="/native/commands/requests#health">HEALTH</A> bits and{' '}
-            <A href="/native/commands/requests#stats">STATS</A> counters; here they carry a timestamp
-            and their place in the stream.
-          </p>
+        </div>
+        <div class="api-response-label">CLIP_XFER EVENTS</div>
+        <p>
+          <code>CLIP_XFER</code> carries one event per control transfer a{' '}
+          <A href="/native/commands/clip#items">clip</A> sent to the real device, in{' '}
+          <code>CONTROL</code>'s shape: <code>bytes</code> is <code>[setup 8][IN data]</code>.
+        </p>
+        <p>
+          Only a transfer the box sent raises an event; the rest are counted in{' '}
+          <A href="/native/commands/requests#clip"><code>RESP(CLIP)</code></A>.
+        </p>
+        <div class="api-response-label">BUS EVENT KINDS</div>
+        <p>
+          <code>BUS</code> carries <code>[a][b]</code> in <code>bytes</code> with the kind in{' '}
+          <code>flags</code>, and <code>true_len</code> is the operand count.
+        </p>
+        <p>
+          The same events drive <A href="/native/commands/requests#health">HEALTH</A> bits and{' '}
+          <A href="/native/commands/requests#stats">STATS</A> counters; here they carry a timestamp
+          and their place in the stream.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Kind</th><th>Meaning</th><th><code>a</code>, <code>b</code></th></tr>
@@ -522,67 +569,85 @@ const Catch: Component = () => {
               <tr><td><code>9</code></td><td><code>CLONE_DOWN</code></td><td>-</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">EXAMPLE</div>
-          <p>
-            A 64-byte vendor interrupt report arriving IN on endpoint <code>0x83</code>, captured
-            under a <code>snaplen = 16</code> entry (16 bytes present, so payload{' '}
-            <code>LEN = 28</code>):
-          </p>
-          <pre class="diagram">{`+--------+--------+--------+--------+-------------+--------+--------+--------+--------+
-| A5     | 16     | 3C     | 1C 00  | 40 42 0F 00 | 00     | 06     | 83 00  | 01     |
-+--------+--------+--------+--------+-------------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | ts_us       | clk    | class  | id     | dir    |
-+--------+--------+--------+--------+-------------+--------+--------+--------+--------+
+        </div>
+        <div class="api-response-label">EXAMPLE</div>
+        <p>
+          A 64-byte vendor interrupt report arriving IN on endpoint <code>0x83</code>, captured
+          under a <code>snaplen = 16</code> entry (16 bytes present, so payload{' '}
+          <code>LEN = 28</code>):
+        </p>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '16', name: 'TYPE' },
+            { value: '3C', name: 'SEQ' },
+            { value: '1C 00', name: 'LEN' },
+            { value: '40 42 0F 00', name: 'ts_us' },
+            { value: '00', name: 'clk' },
+            { value: '06', name: 'class' },
+            { value: '83 00', name: 'id' },
+            { value: '01', name: 'dir' },
+            { value: '00', name: 'flags' },
+            { value: '40 00', name: 'true_len' },
+            { value: '04 01 12 00 ... (16 bytes)', name: 'bytes: 16 of 64, so the rest was cut' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
+        <p>
+          A <code>SET_INTERFACE</code> bus event on interface 1, alternate setting 2 (two operand
+          bytes, so payload <code>LEN = 14</code>):
+        </p>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '16', name: 'TYPE' },
+            { value: '3D', name: 'SEQ' },
+            { value: '0E 00', name: 'LEN' },
+            { value: '41 42 0F 00', name: 'ts_us' },
+            { value: '01', name: 'clk' },
+            { value: '0A', name: 'class' },
+            { value: '00 00', name: 'id' },
+            { value: '00', name: 'dir' },
+            { value: '05', name: 'flags' },
+            { value: '02 00', name: 'true_len' },
+            { value: '01', name: 'a=iface' },
+            { value: '02', name: 'b=alt' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
+        <p>
+          A <code>SET_REPORT</code> on EP0 that a <code>STALL</code> rule refused:{' '}
+          <code>flags = 0x81</code>, <code>RULE</code> with handshake <code>1</code> (STALL), and the
+          two data bytes the PC sent (payload <code>LEN = 22</code>):
+        </p>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '16', name: 'TYPE' },
+            { value: '3E', name: 'SEQ' },
+            { value: '16 00', name: 'LEN' },
+            { value: '42 42 0F 00', name: 'ts_us' },
+            { value: '01', name: 'clk' },
+            { value: '08', name: 'class' },
+            { value: '00 00', name: 'id' },
+            { value: '02', name: 'dir' },
+            { value: '81', name: 'flags' },
+            { value: '0A 00', name: 'true_len' },
+            { value: '21 09 00 02 00 00 02 00', name: 'setup' },
+            { value: '01 00', name: 'data' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
+      </DocSection>
 
-+--------+--------+---------------------------------------+--------+
-| 00     | 40 00  | 04 01 12 00 ...        (16 bytes)     | lo hi  |
-+--------+--------+---------------------------------------+--------+
-| flags  |true_len| bytes: 16 of 64, so the rest was cut  | CRC16  |
-+--------+--------+---------------------------------------+--------+`}</pre>
-          <p>
-            A <code>SET_INTERFACE</code> bus event on interface 1, alternate setting 2 (two operand
-            bytes, so payload <code>LEN = 14</code>):
-          </p>
-          <pre class="diagram">{`+--------+--------+--------+--------+-------------+--------+--------+--------+--------+
-| A5     | 16     | 3D     | 0E 00  | 41 42 0F 00 | 01     | 0A     | 00 00  | 00     |
-+--------+--------+--------+--------+-------------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | ts_us       | clk    | class  | id     | dir    |
-+--------+--------+--------+--------+-------------+--------+--------+--------+--------+
-
-+--------+--------+--------+--------+--------+
-| 05     | 02 00  | 01     | 02     | lo hi  |
-+--------+--------+--------+--------+--------+
-| flags  |true_len| a=iface| b=alt  | CRC16  |
-+--------+--------+--------+--------+--------+`}</pre>
-          <p>
-            A <code>SET_REPORT</code> on EP0 that a <code>STALL</code> rule refused:{' '}
-            <code>flags = 0x81</code>, <code>RULE</code> with handshake <code>1</code> (STALL), and the
-            two data bytes the PC sent (payload <code>LEN = 22</code>):
-          </p>
-          <pre class="diagram">{`+--------+--------+--------+--------+-------------+--------+--------+--------+--------+
-| A5     | 16     | 3E     | 16 00  | 42 42 0F 00 | 01     | 08     | 00 00  | 02     |
-+--------+--------+--------+--------+-------------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | ts_us       | clk    | class  | id     | dir    |
-+--------+--------+--------+--------+-------------+--------+--------+--------+--------+
-
-+--------+--------+-------------------------+--------+--------+
-| 81     | 0A 00  | 21 09 00 02 00 00 02 00 | 01 00  | lo hi  |
-+--------+--------+-------------------------+--------+--------+
-| flags  |true_len| setup                   | data   | CRC16  |
-+--------+--------+-------------------------+--------+--------+`}</pre>
-        </Card>
-      </div>
-
-      <div id="rules" data-search-target>
-        <Card>
-          <CardHeader title="Rules and taps" subtitle="Tap positions around the rewrite table" />
-          <p>
-            Flags bit 7, <code>RULE</code>, marks a packet a{' '}
-            <A href="/native/commands/rewrite">rewrite rule</A> acted on at the event's own class:
-            changed its bytes, dropped it, answered it or refused it. A <code>PASS</code>, or a{' '}
-            <code>PATCH</code> that changed no byte, leaves it clear.
-          </p>
-          <pre class="diagram">{`  packet
+      <DocSection id="rules" title="Rules and taps" caption="Tap positions around the rewrite table">
+        <p>
+          Flags bit 7, <code>RULE</code>, marks a packet a{' '}
+          <A href="/native/commands/rewrite">rewrite rule</A> acted on at the event's own class:
+          changed its bytes, dropped it, answered it or refused it. A <code>PASS</code>, or a{' '}
+          <code>PATCH</code> that changed no byte, leaves it clear.
+        </p>
+        <pre class="diagram">{`  packet
      |
      +--> tap: HID_IN, HID_OUT, vendor OUT    the bytes as they arrived
      v
@@ -591,6 +656,7 @@ const Catch: Component = () => {
      +--> tap: vendor IN, EMIT                the bytes delivered
      v
   game PC or real device`}</pre>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Class</th><th>Bytes</th><th><code>RULE</code> set when</th></tr>
@@ -603,38 +669,35 @@ const Catch: Component = () => {
               <tr><td><code>CONTROL</code></td><td>the transaction the PC received, on every control endpoint</td><td>a rule rewrote its data, answered it or refused it</td></tr>
             </tbody>
           </table>
-          <p>
-            <code>CLIP_XFER</code> carries a transfer status in its flags byte and never{' '}
-            <code>RULE</code>: a clip's transfer runs past every rule.
-          </p>
-        </Card>
-      </div>
+        </div>
+        <p>
+          <code>CLIP_XFER</code> carries a transfer status in its flags byte and never{' '}
+          <code>RULE</code>: a clip's transfer runs past every rule.
+        </p>
+      </DocSection>
 
-      <div id="delivery" data-search-target>
-        <Card>
-          <CardHeader title="Delivery" subtitle="Best-effort, ranked, and counted per entry" />
-          <p>
-            Events drain through strict-priority queues.
-          </p>
-          <pre class="diagram">{`  BTN KEY MEDIA AXIS BUS    -->  [ queue 0 ]  --+
+      <DocSection id="delivery" title="Delivery" caption="Best-effort, ranked, and counted per entry">
+        <p>
+          Events drain through strict-priority queues.
+        </p>
+        <pre class="diagram">{`  BTN KEY MEDIA AXIS BUS    -->  [ queue 0 ]  --+
   HID_IN HID_OUT                                |
   VEND_INTR EMIT            -->  [ queue 1 ]  --+--->  control link, 6 Mbaud
   CONTROL CLIP_XFER         -->  [ queue 2 ]  --+
   VEND_BULK                 -->  [ queue 3 ]  --+
 
   strict priority: each queue drains fully before the next`}</pre>
-          <p>
-            Under a busy mouse, bulk can go undrained indefinitely: the control link can't carry bulk
-            plus input.
-          </p>
-          <p>
-            Under back-pressure the box drops events rather than stall the report path, so the stream
-            never delays reports to the game PC. Every drop is counted{' '}
-            <em>per entry</em> in{' '}
-            <A href="/native/commands/requests#catch"><code>RESP(CATCH)</code></A>.
-          </p>
-        </Card>
-      </div>
+        <p>
+          Under a busy mouse, bulk can go undrained indefinitely: the control link can't carry bulk
+          plus input.
+        </p>
+        <p>
+          Under back-pressure the box drops events rather than stall the report path, so the stream
+          never delays reports to the game PC. Every drop is counted{' '}
+          <em>per entry</em> in{' '}
+          <A href="/native/commands/requests#catch"><code>RESP(CATCH)</code></A>.
+        </p>
+      </DocSection>
     </>
   );
 };

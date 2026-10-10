@@ -1,13 +1,13 @@
 import type { Component } from 'solid-js';
 import { A } from '@solidjs/router';
-import { Card, CardHeader } from '../../../../components/surfaces/Card';
-import '../../../../styles/docs.css';
+import { PageHeader } from '../../../shell/PageHeader';
+import { DocSection } from '../../../shell/DocSection';
+import { ByteStrip } from '../../../shell/ByteStrip';
 
 const Move: Component = () => {
   return (
     <>
-      <Card>
-        <CardHeader title="Move" subtitle="Cursor motion, scroll, and pan" />
+      <PageHeader>
         <p>
           <A href="/native/commands/move#move"><code>MOVE</code></A> drives a relative Axis, picked
           by a <code>motion</code> byte: the cursor pair (X and Y together), the wheel, or AC Pan
@@ -18,26 +18,27 @@ const Move: Component = () => {
           The momentary inputs (buttons, keys, media) use{' '}
           <A href="/native/commands/inject#inject"><code>INJECT</code></A>.
         </p>
-        <table class="api-params">
-          <thead><tr><th>motion</th><th>Axis</th><th>carries</th><th>payload</th></tr></thead>
-          <tbody>
-            <tr><td><code>0</code></td><td><A href="/native/commands/move#move">cursor</A> (X, Y)</td><td><code>dx</code>, <code>dy</code> (i16)</td><td>6 bytes</td></tr>
-            <tr><td><code>1</code></td><td><A href="/native/commands/move#wheel">wheel</A></td><td><code>dz</code> (i16)</td><td>4 bytes</td></tr>
-            <tr><td><code>2</code></td><td><A href="/native/commands/move#pan">pan</A> (AC Pan)</td><td><code>dpan</code> (i16)</td><td>4 bytes</td></tr>
-          </tbody>
-        </table>
-      </Card>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>motion</th><th>Axis</th><th>carries</th><th>payload</th></tr></thead>
+            <tbody>
+              <tr><td><code>0</code></td><td><A href="/native/commands/move#move">cursor</A> (X, Y)</td><td><code>dx</code>, <code>dy</code> (i16)</td><td>6 bytes</td></tr>
+              <tr><td><code>1</code></td><td><A href="/native/commands/move#wheel">wheel</A></td><td><code>dz</code> (i16)</td><td>4 bytes</td></tr>
+              <tr><td><code>2</code></td><td><A href="/native/commands/move#pan">pan</A> (AC Pan)</td><td><code>dpan</code> (i16)</td><td>4 bytes</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </PageHeader>
 
-      <div id="move" data-search-target>
-        <Card>
-          <CardHeader title="MOVE" subtitle="Relative axis injection" />
-          <p>
-            <code>MOVE</code> shifts an axis by a relative amount, not a screen position.{' '}
-            <A href="/native/frame#opcodes">Opcode</A> <code>0x01</code>.
-          </p>
-          <pre class="api-signature">MOVE  0x01  ·  cursor payload 6 bytes</pre>
-          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
-          <div class="api-response-label">PAYLOAD (cursor, motion = 0)</div>
+      <DocSection id="move" title="MOVE" caption="Relative axis injection">
+        <p>
+          <code>MOVE</code> shifts an axis by a relative amount, not a screen position.{' '}
+          <A href="/native/frame#opcodes">Opcode</A> <code>0x01</code>.
+        </p>
+        <pre class="api-signature">MOVE  0x01  ·  cursor payload 6 bytes</pre>
+        <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
+        <div class="api-response-label">PAYLOAD (cursor, motion = 0)</div>
+        <div class="table-scroll">
           <table class="byte-table">
             <thead>
               <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
@@ -49,36 +50,43 @@ const Move: Component = () => {
               <tr><td>5</td><td><code>flags</code></td><td><code>u8</code></td><td>riding override, <code>0</code> for a plain move</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">GUARANTEES</div>
-          <pre class="diagram">{`exact   net move = the sum of every delta sent
+        </div>
+        <div class="api-response-label">GUARANTEES</div>
+        <pre class="diagram">{`exact   net move = the sum of every delta sent
 range   full i16 per axis, no clamp
 signs   +x right, +y down (screen-style), +z wheel up
 paced   a large move drains across frames; nothing is dropped`}</pre>
-          <p>
-            The box carries any remainder in its{' '}
-            <A href="/native/injection#state">accumulator</A>;{' '}
-            <A href="/native/commands/admin#reset"><code>RESET</code></A> zeroes it. Library binding:{' '}
-            <A href="/library/move#move-rel"><code>move_rel</code></A>.
-          </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <p>Cursor <code>dx = 100</code>, <code>dy = 0</code> (<code>motion = 0</code>):</p>
-          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 01     | 00     | 06 00  | 00     | 64 00  | 00 00  | 00     | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | motion | dx     | dy     | flags  | CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
-        </Card>
-      </div>
+        <p>
+          The box carries any remainder in its{' '}
+          <A href="/native/injection#state">accumulator</A>;{' '}
+          <A href="/native/commands/admin#reset"><code>RESET</code></A> zeroes it. Library binding:{' '}
+          <A href="/library/move#move-rel"><code>move_rel</code></A>.
+        </p>
+        <div class="api-response-label">EXAMPLE</div>
+        <p>Cursor <code>dx = 100</code>, <code>dy = 0</code> (<code>motion = 0</code>):</p>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '01', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '06 00', name: 'LEN' },
+            { value: '00', name: 'motion' },
+            { value: '64 00', name: 'dx' },
+            { value: '00 00', name: 'dy' },
+            { value: '00', name: 'flags' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
+      </DocSection>
 
-      <div id="wheel" data-search-target>
-        <Card>
-          <CardHeader title="MOVE (wheel)" subtitle="Vertical scroll" />
-          <p>
-            With <code>motion = 1</code>, <code>MOVE</code> scrolls the wheel by a relative amount.
-          </p>
-          <pre class="api-signature">MOVE  0x01  ·  wheel payload 4 bytes</pre>
-          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
-          <div class="api-response-label">PAYLOAD (wheel, motion = 1)</div>
+      <DocSection id="wheel" title="MOVE (wheel)" caption="Vertical scroll">
+        <p>
+          With <code>motion = 1</code>, <code>MOVE</code> scrolls the wheel by a relative amount.
+        </p>
+        <pre class="api-signature">MOVE  0x01  ·  wheel payload 4 bytes</pre>
+        <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
+        <div class="api-response-label">PAYLOAD (wheel, motion = 1)</div>
+        <div class="table-scroll">
           <table class="byte-table">
             <thead>
               <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
@@ -89,35 +97,41 @@ paced   a large move drains across frames; nothing is dropped`}</pre>
               <tr><td>3</td><td><code>flags</code></td><td><code>u8</code></td><td>riding override, <code>0</code> for a plain move</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">EFFECT</div>
-          <p>
-            The box adds <code>dz</code> to its{' '}
-            <A href="/native/injection#state">accumulator</A> and drains it across{' '}
-            <A href="/native/frame">frames</A> with carry, no clamp.{' '}
-            <A href="/native/commands/admin#reset"><code>RESET</code></A> clears it. Library binding:{' '}
-            <A href="/library/move#wheel"><code>wheel</code></A>.
-          </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <p>Wheel <code>dz = 1</code>, one step up (<code>motion = 1</code>):</p>
-          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 01     | 00     | 04 00  | 01     | 01 00  | 00     | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | motion | dz     | flags  | CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
-        </Card>
-      </div>
+        </div>
+        <div class="api-response-label">EFFECT</div>
+        <p>
+          The box adds <code>dz</code> to its{' '}
+          <A href="/native/injection#state">accumulator</A> and drains it across{' '}
+          <A href="/native/frame">frames</A> with carry, no clamp.{' '}
+          <A href="/native/commands/admin#reset"><code>RESET</code></A> clears it. Library binding:{' '}
+          <A href="/library/move#wheel"><code>wheel</code></A>.
+        </p>
+        <div class="api-response-label">EXAMPLE</div>
+        <p>Wheel <code>dz = 1</code>, one step up (<code>motion = 1</code>):</p>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '01', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '04 00', name: 'LEN' },
+            { value: '01', name: 'motion' },
+            { value: '01 00', name: 'dz' },
+            { value: '00', name: 'flags' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
+      </DocSection>
 
-      <div id="pan" data-search-target>
-        <Card>
-          <CardHeader title="MOVE (pan)" subtitle="Horizontal scroll (AC Pan)" />
-          <p>
-            With <code>motion = 2</code>, <code>MOVE</code> drives AC Pan, horizontal scroll
-            (Consumer usage <code>0x0238</code>), by a relative amount. Pan is a relative axis like
-            the wheel.
-          </p>
-          <pre class="api-signature">MOVE  0x01  ·  pan payload 4 bytes</pre>
-          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
-          <div class="api-response-label">PAYLOAD (pan, motion = 2)</div>
+      <DocSection id="pan" title="MOVE (pan)" caption="Horizontal scroll (AC Pan)">
+        <p>
+          With <code>motion = 2</code>, <code>MOVE</code> drives AC Pan, horizontal scroll
+          (Consumer usage <code>0x0238</code>), by a relative amount. Pan is a relative axis like
+          the wheel.
+        </p>
+        <pre class="api-signature">MOVE  0x01  ·  pan payload 4 bytes</pre>
+        <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
+        <div class="api-response-label">PAYLOAD (pan, motion = 2)</div>
+        <div class="table-scroll">
           <table class="byte-table">
             <thead>
               <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
@@ -128,35 +142,41 @@ paced   a large move drains across frames; nothing is dropped`}</pre>
               <tr><td>3</td><td><code>flags</code></td><td><code>u8</code></td><td>riding override, <code>0</code> for a plain move</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">EFFECT</div>
-          <p>
-            The box adds <code>dpan</code> to its{' '}
-            <A href="/native/injection#state">accumulator</A> and drains it across{' '}
-            <A href="/native/frame">frames</A> with carry, no clamp, as for the wheel.{' '}
-            <A href="/native/commands/admin#reset"><code>RESET</code></A> clears it. Pan is{' '}
-            <A href="/native/commands/lock">lockable</A> in any direction and{' '}
-            <A href="/native/commands/catch#motion-event">catchable</A> as a motion event's fourth
-            axis.
-          </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <p>Pan <code>dpan = 1</code>, one step right (<code>motion = 2</code>):</p>
-          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 01     | 00     | 04 00  | 02     | 01 00  | 00     | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | motion | dpan   | flags  | CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
-        </Card>
-      </div>
+        </div>
+        <div class="api-response-label">EFFECT</div>
+        <p>
+          The box adds <code>dpan</code> to its{' '}
+          <A href="/native/injection#state">accumulator</A> and drains it across{' '}
+          <A href="/native/frame">frames</A> with carry, no clamp, as for the wheel.{' '}
+          <A href="/native/commands/admin#reset"><code>RESET</code></A> clears it. Pan is{' '}
+          <A href="/native/commands/lock">lockable</A> in any direction and{' '}
+          <A href="/native/commands/catch#motion-event">catchable</A> as a motion event's fourth
+          axis.
+        </p>
+        <div class="api-response-label">EXAMPLE</div>
+        <p>Pan <code>dpan = 1</code>, one step right (<code>motion = 2</code>):</p>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '01', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '04 00', name: 'LEN' },
+            { value: '02', name: 'motion' },
+            { value: '01 00', name: 'dpan' },
+            { value: '00', name: 'flags' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
+      </DocSection>
 
-      <div id="flags" data-search-target>
-        <Card>
-          <CardHeader title="MOVE flags" subtitle="Per-command movement-riding override" />
-          <p>
-            The <code>flags</code> byte overrides{' '}
-            <A href="/native/commands/option#move-ride">movement riding</A> for this command only.
-          </p>
-          <pre class="api-signature">MOVE  0x01  ·  flags at offset 5 (cursor) / 3 (wheel)</pre>
-          <div class="api-response-label">FLAGS</div>
+      <DocSection id="flags" title="MOVE flags" caption="Per-command movement-riding override">
+        <p>
+          The <code>flags</code> byte overrides{' '}
+          <A href="/native/commands/option#move-ride">movement riding</A> for this command only.
+        </p>
+        <pre class="api-signature">MOVE  0x01  ·  flags at offset 5 (cursor) / 3 (wheel)</pre>
+        <div class="api-response-label">FLAGS</div>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Bit</th><th>Name</th><th>Effect</th></tr></thead>
             <tbody>
@@ -165,25 +185,33 @@ paced   a large move drains across frames; nothing is dropped`}</pre>
               <tr><td><code>0x04</code></td><td><code>DISCARD</code></td><td>Drop the motion already held for a ride.</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">EFFECT</div>
-          <p>
-            Order: discard, flush, then the delta. <code>FLUSH</code> and <code>DISCARD</code> together
-            refuse the frame. Injected motion lands in one of two{' '}
-            <A href="/native/injection#state">accumulators</A>, so a bypassing delta never carries
-            held motion out with it. Library bindings:{' '}
-            <A href="/library/move#move-rel-now"><code>move_rel_now</code></A>,{' '}
-            <A href="/library/move#flush-motion"><code>flush_motion</code></A>,{' '}
-            <A href="/library/move#discard-motion"><code>discard_motion</code></A>.
-          </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <p>Flush held motion with no delta (<code>flags = 0x02</code>):</p>
-          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 01     | 00     | 06 00  | 00     | 00 00  | 00 00  | 02     | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | motion | dx     | dy     | flags  | CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
-        </Card>
-      </div>
+        </div>
+        <div class="api-response-label">EFFECT</div>
+        <p>
+          Order: discard, flush, then the delta. <code>FLUSH</code> and <code>DISCARD</code> together
+          refuse the frame. Injected motion lands in one of two{' '}
+          <A href="/native/injection#state">accumulators</A>, so a bypassing delta never carries
+          held motion out with it. Library bindings:{' '}
+          <A href="/library/move#move-rel-now"><code>move_rel_now</code></A>,{' '}
+          <A href="/library/move#flush-motion"><code>flush_motion</code></A>,{' '}
+          <A href="/library/move#discard-motion"><code>discard_motion</code></A>.
+        </p>
+        <div class="api-response-label">EXAMPLE</div>
+        <p>Flush held motion with no delta (<code>flags = 0x02</code>):</p>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '01', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '06 00', name: 'LEN' },
+            { value: '00', name: 'motion' },
+            { value: '00 00', name: 'dx' },
+            { value: '00 00', name: 'dy' },
+            { value: '02', name: 'flags' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
+      </DocSection>
     </>
   );
 };

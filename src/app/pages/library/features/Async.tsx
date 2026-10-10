@@ -1,13 +1,12 @@
 import type { Component } from 'solid-js';
 import { A } from '@solidjs/router';
-import { Card, CardHeader } from '../../../../components/surfaces/Card';
-import '../../../../styles/docs.css';
+import { PageHeader } from '../../../shell/PageHeader';
+import { DocSection } from '../../../shell/DocSection';
 
 const Async: Component = () => {
   return (
     <>
-      <Card>
-        <CardHeader title="Async" subtitle="AsyncDevice on any executor" />
+      <PageHeader>
         <p>
           <code>AsyncDevice</code> is <A href="/library/connection"><code>Device</code></A> with its
           queries as futures, behind the off-by-default <code>async</code> flag.
@@ -21,22 +20,21 @@ const Async: Component = () => {
           <code>Result</code> is the fallible return type (see <A href="/library/types/errors">Errors</A>).
         </p>
         <p>See also: <A href="/library/guides/calls#call-kinds">call kinds &amp; timeouts</A>, <A href="/library/guides/connection#threading">concurrency</A>, <A href="/library/guides/testing#testing">testing</A>.</p>
-      </Card>
+      </PageHeader>
 
-      <div id="construction" data-search-target>
-        <Card>
-          <CardHeader title="Construction" subtitle="open, find, into_async, into_inner" />
+      <DocSection id="construction" title="Construction" caption="open, find, into_async, into_inner">
 
-          <pre class="api-signature">fn open(path: impl AsRef&lt;Path&gt;) -&gt; Result&lt;AsyncDevice&gt;</pre>
-          <p><span class="api-badge api-badge--responded">Blocks</span></p>
-          <pre class="api-signature">fn find() -&gt; Result&lt;AsyncDevice&gt;</pre>
-          <p><span class="api-badge api-badge--responded">Blocks</span></p>
-          <pre class="api-signature">fn into_async(self) -&gt; AsyncDevice</pre>
-          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
-          <pre class="api-signature">fn into_inner(self) -&gt; Device</pre>
-          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+        <pre class="api-signature">fn open(path: impl AsRef&lt;Path&gt;) -&gt; Result&lt;AsyncDevice&gt;</pre>
+        <p><span class="api-badge api-badge--responded">Blocks</span></p>
+        <pre class="api-signature">fn find() -&gt; Result&lt;AsyncDevice&gt;</pre>
+        <p><span class="api-badge api-badge--responded">Blocks</span></p>
+        <pre class="api-signature">fn into_async(self) -&gt; AsyncDevice</pre>
+        <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+        <pre class="api-signature">fn into_inner(self) -&gt; Device</pre>
+        <p><span class="api-badge api-badge--executed">No round-trip</span></p>
 
-          <div class="api-response-label">CONSTRUCTORS</div>
+        <div class="api-response-label">CONSTRUCTORS</div>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr>
@@ -72,9 +70,10 @@ const Async: Component = () => {
               </tr>
             </tbody>
           </table>
+        </div>
 
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`// find, open and handshake (blocks)
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`// find, open and handshake (blocks)
 let device = AsyncDevice::find()?;
 
 // or by path:
@@ -83,34 +82,32 @@ let device = AsyncDevice::open("/dev/ttyACM0")?;
 // or reinterpret an open Device:
 let device = Device::find()?.into_async();`}</code></pre>
 
-          <div class="callout callout--info">
-            <p>
-              Everything else on <A href="/library/connection"><code>Device</code></A> is mirrored on{' '}
-              <code>AsyncDevice</code> and stays synchronous, including{' '}
-              <A href="/library/diagnostics#counters"><code>counters</code></A>,{' '}
-              <A href="/library/diagnostics#logs"><code>logs</code></A>,{' '}
-              <A href="/library/lifecycle#reapply"><code>reapply</code></A>, and{' '}
-              <A href="/library/lifecycle#reconnect"><code>reconnect</code></A>.
-            </p>
-          </div>
-        </Card>
-      </div>
-
-      <div id="queries" data-search-target>
-        <Card>
-          <CardHeader title="Queries" subtitle="Every query method is a future" />
-
-          <pre class="api-signature">async fn query_version(&self) -&gt; Result&lt;Version&gt;</pre>
-          <p><span class="api-badge api-badge--responded">Blocks</span></p>
-          <pre class="api-signature">async fn query_health(&self) -&gt; Result&lt;Health&gt;</pre>
-          <p><span class="api-badge api-badge--responded">Blocks</span></p>
-
+        <div class="callout callout--info">
           <p>
-            Each future awaits the correlated <A href="/native/commands/requests#resp"><code>RESP</code></A>{' '}
-            with the default timeout, then resolves to its struct.
+            Everything else on <A href="/library/connection"><code>Device</code></A> is mirrored on{' '}
+            <code>AsyncDevice</code> and stays synchronous, including{' '}
+            <A href="/library/diagnostics#counters"><code>counters</code></A>,{' '}
+            <A href="/library/diagnostics#logs"><code>logs</code></A>,{' '}
+            <A href="/library/lifecycle#reapply"><code>reapply</code></A>, and{' '}
+            <A href="/library/lifecycle#reconnect"><code>reconnect</code></A>.
           </p>
+        </div>
+      </DocSection>
 
-          <div class="api-response-label">RETURNS</div>
+      <DocSection id="queries" title="Queries" caption="Every query method is a future">
+
+        <pre class="api-signature">async fn query_version(&self) -&gt; Result&lt;Version&gt;</pre>
+        <p><span class="api-badge api-badge--responded">Blocks</span></p>
+        <pre class="api-signature">async fn query_health(&self) -&gt; Result&lt;Health&gt;</pre>
+        <p><span class="api-badge api-badge--responded">Blocks</span></p>
+
+        <p>
+          Each future awaits the correlated <A href="/native/commands/requests#resp"><code>RESP</code></A>{' '}
+          with the default timeout, then resolves to its struct.
+        </p>
+
+        <div class="api-response-label">RETURNS</div>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr>
@@ -132,20 +129,20 @@ let device = Device::find()?.into_async();`}</code></pre>
               </tr>
             </tbody>
           </table>
-          <p>
-            Every other query resolves the same way; the full list is on{' '}
-            <A href="/library/requests#async"><code>Requests</code></A>.
-          </p>
+        </div>
+        <p>
+          Every other query resolves the same way; the full list is on{' '}
+          <A href="/library/requests#async"><code>Requests</code></A>.
+        </p>
 
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`async fn run(device: &AsyncDevice) -> medius::Result<()> {
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`async fn run(device: &AsyncDevice) -> medius::Result<()> {
     let v = device.query_version().await?;
     let h = device.query_health().await?;
     println!("{v}, link_up={}", h.link_up);
     Ok(())
 }`}</code></pre>
-        </Card>
-      </div>
+      </DocSection>
 
     </>
   );

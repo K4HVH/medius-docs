@@ -1,62 +1,47 @@
-import { describe, it, expect } from 'vitest';
-import { getDocRoutes, sectionForPath, parseRoutes } from '../../scripts/lib/routes';
-
-const APP = `
-  <Route path="/" component={Home} />
-  <Route path="/" component={DocsLayout}>
-    <Route path="/native" component={NativeIntroduction} />
-    <Route path="/native/commands/clip" component={CmdClip} />
-    <Route path="/library" component={LibIntroduction} />
-    <Route path="/library/clip" component={LibClip} />
-    <Route path="/bindings" component={BindingsOverview} />
-    <Route path="/bindings/python" component={PyInstall} />
-    <Route path="/dashboard" component={DashboardDevice} />
-    <Route path="/dashboard/control" component={DashboardControl} />
-  </Route>
-  <Route path="*" component={() => <Navigate href="/" />} />
-`;
-
-describe('parseRoutes', () => {
-  it('extracts every path attribute in source order, de-duplicated', () => {
-    expect(parseRoutes(APP)).toEqual([
-      '/',
-      '/native',
-      '/native/commands/clip',
-      '/library',
-      '/library/clip',
-      '/bindings',
-      '/bindings/python',
-      '/dashboard',
-      '/dashboard/control',
-      '*',
-    ]);
-  });
-});
+import { describe, it, expect, vi } from 'vitest';
+import { getDocRoutes } from '../../scripts/lib/routes';
 
 describe('getDocRoutes', () => {
-  it('keeps doc routes and drops home, catch-all, and dashboard', () => {
-    expect(getDocRoutes(APP).map((r) => r.path)).toEqual([
-      '/native',
-      '/native/commands/clip',
-      '/library',
-      '/library/clip',
-      '/bindings',
-      '/bindings/python',
-    ]);
+  const routes = getDocRoutes();
+  const paths = routes.map((r) => r.path);
+
+  it('prerenders every page but Home, the dashboard included', () => {
+    expect(paths).toContain('/native');
+    expect(paths).toContain('/dashboard');
+    expect(paths).toContain('/dashboard/setup');
+    expect(paths).toContain('/dashboard/changelog');
+    expect(paths).not.toContain('/');
+    expect(paths).not.toContain('/404');
   });
 
-  it('tags each route with its top-level section', () => {
-    const bySection = Object.fromEntries(getDocRoutes(APP).map((r) => [r.path, r.section]));
+  it('tags each route with its section label', () => {
+    const bySection = Object.fromEntries(routes.map((r) => [r.path, r.section]));
     expect(bySection['/native/commands/clip']).toBe('Native API');
     expect(bySection['/library/clip']).toBe('Rust Library');
     expect(bySection['/bindings/python']).toBe('Bindings');
+    expect(bySection['/dashboard/setup']).toBe('Dashboard');
+    expect(bySection['/ai']).toBe('AI access');
   });
 });
 
-describe('sectionForPath', () => {
-  it('maps a path prefix to its section, and section roots to themselves', () => {
-    expect(sectionForPath('/native')).toBe('Native API');
-    expect(sectionForPath('/library/types/enums')).toBe('Rust Library');
-    expect(sectionForPath('/bindings/c/api')).toBe('Bindings');
+describe('pagePath', () => {
+  it("shows an item's address as its parent page", async () => {
+    const { pagePath } = await import('../../src/app/routes');
+    expect(pagePath('/guide/help/bsod')).toBe('/guide/help');
+    expect(pagePath('/native')).toBe('/native');
+  });
+
+  it('leaves alone an item the server answered with the 404 page', async () => {
+    vi.resetModules();
+    document.documentElement.setAttribute('data-not-found', '');
+    window.history.replaceState(null, '', '/guide/help/nope');
+    try {
+      const { pagePath } = await import('../../src/app/routes');
+      expect(pagePath('/guide/help/nope')).toBe('/guide/help/nope');
+      expect(pagePath('/guide/help/bsod')).toBe('/guide/help');
+    } finally {
+      document.documentElement.removeAttribute('data-not-found');
+      window.history.replaceState(null, '', '/');
+    }
   });
 });

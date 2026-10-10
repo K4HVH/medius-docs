@@ -2,7 +2,7 @@ import { For, Match, Show, Switch, createEffect, createResource, createSignal, o
 import { useNavigate } from '@solidjs/router';
 import { Button } from '../../../components/inputs/Button';
 import { Checkbox } from '../../../components/inputs/Checkbox';
-import { Combobox } from '../../../components/inputs/Combobox';
+import { Segmented } from '../../shell/Segmented';
 import { FileUpload } from '../../../components/inputs/FileUpload';
 import {
   FLASH_SIZE_BYTES,
@@ -16,7 +16,6 @@ import { downloadAsset, fetchReleases } from '../../../dashboard/firmware';
 import { PROTO_VER } from '../../../dashboard/protocol';
 import { ConnectPanel } from './ConnectPanel';
 import { useDashboard } from './context';
-import { checkColumn, note, row, section } from './ui';
 
 type Chips = 'both' | FlashChip;
 const NAME: Record<FlashChip, string> = { device: 'Main chip', host: 'Mouse-side chip' };
@@ -26,7 +25,6 @@ const fmt = (v: Semver | null) => (v ? `v${v.major}.${v.minor}.${v.patch}` : 'un
 const same = (a: Semver | null, b: Semver | null) =>
   !!a && !!b && a.major === b.major && a.minor === b.minor && a.patch === b.patch;
 const fmtBytes = (n: number) => (n < 1024 ? `${n} B` : `${(n / 1024).toFixed(0)} KB`);
-const muted = { 'margin-top': 'var(--g-spacing-sm)', color: 'var(--g-text-secondary)' } as const;
 
 // Flashes the selected box over USB2: the Update page's update, with any medius image.
 export const Usb2Flash = (props: { via: () => JSX.Element; onBusy?: (busy: boolean) => void }) => {
@@ -171,10 +169,14 @@ export const Usb2Flash = (props: { via: () => JSX.Element; onBusy?: (busy: boole
         )}
       </For>
       <Show when={landed().length}>
-        <div class="callout callout--info">
-          {reverted().length ? '' : p.lead}
-          {runs(landed())}
-        </div>
+        {/* A result that went through reads as every other good result does: a lit line, then the facts. */}
+        <Show when={!reverted().length}>
+          <p class="state">
+            <span class="dot ok" />
+            {p.lead}
+          </p>
+        </Show>
+        <p class="mut">{runs(landed())}</p>
       </Show>
       <Show when={otherWire()}>
         {(proto) => (
@@ -184,7 +186,7 @@ export const Usb2Flash = (props: { via: () => JSX.Element; onBusy?: (busy: boole
           </div>
         )}
       </Show>
-      <div style={row}>
+      <div class="acts">
         <Button variant="primary" onClick={() => navigate('/dashboard')}>
           Go to my box
         </Button>
@@ -198,7 +200,7 @@ export const Usb2Flash = (props: { via: () => JSX.Element; onBusy?: (busy: boole
   return (
     <Switch>
       <Match when={run()?.outcome === 'verified'}>
-        <Outcome lead="Flashed and verified. " />
+        <Outcome lead="Flashed and verified." />
       </Match>
 
       <Match when={run()?.outcome === 'sent'}>
@@ -207,13 +209,13 @@ export const Usb2Flash = (props: { via: () => JSX.Element; onBusy?: (busy: boole
           fallback={
             <>
               {props.via()}
-              <div style={section}>
+              <div>
                 <ConnectPanel />
               </div>
             </>
           }
         >
-          <Outcome lead="The box is back. " />
+          <Outcome lead="The box is back." />
         </Show>
       </Match>
 
@@ -222,44 +224,50 @@ export const Usb2Flash = (props: { via: () => JSX.Element; onBusy?: (busy: boole
         <Show
           when={dash.status() === 'connected'}
           fallback={
-            <div style={section}>
+            <div>
               <ConnectPanel />
             </div>
           }
         >
-          <div class="api-response-label" style={section}>CHIP</div>
-          <Combobox
-            options={[
-              { value: 'both', label: 'Both chips', disabled: hostMissing() },
-              { value: 'device', label: 'Main chip' },
-              { value: 'host', label: 'Mouse-side chip', disabled: hostMissing() },
-            ]}
-            value={chips()}
-            disabled={busy()}
-            onChange={(v) => setChips(v as Chips)}
-          />
+          <div class="labelled">
+            <span class="field-l">Chip</span>
+            <Segmented
+              name="Chip"
+              options={[
+                { value: 'both', label: 'Both chips', disabled: hostMissing() },
+                { value: 'device', label: 'Main chip' },
+                { value: 'host', label: 'Mouse-side chip', disabled: hostMissing() },
+              ]}
+              value={chips()}
+              disabled={busy()}
+              onChange={(v) => setChips(v as Chips)}
+            />
+          </div>
           <Show when={hostMissing()}>
-            <p style={muted}>The mouse-side chip isn't answering. Flash it over USB3.</p>
+            <p class="mut">The mouse-side chip isn't answering. Flash it over USB3.</p>
           </Show>
 
-          <div class="api-response-label" style={section}>SOURCE</div>
-          <Combobox
-            options={[
-              { value: 'release', label: 'Latest release' },
-              { value: 'upload', label: 'Upload a file' },
-            ]}
-            value={source()}
-            disabled={busy()}
-            onChange={(v) => setSource(v as 'release' | 'upload')}
-          />
+          <div class="labelled">
+            <span class="field-l">Source</span>
+            <Segmented
+              name="Source"
+              options={[
+                { value: 'release', label: 'Latest release' },
+                { value: 'upload', label: 'Upload a file' },
+              ]}
+              value={source()}
+              disabled={busy()}
+              onChange={(v) => setSource(v as 'release' | 'upload')}
+            />
+          </div>
 
           <Show when={source() === 'release'}>
             <Switch>
               <Match when={releases.loading}>
-                <p>Loading releases...</p>
+                <p data-search-skip>Loading releases...</p>
               </Match>
               <Match when={releases.error}>
-                <div class="callout callout--warning" style={note}>
+                <div class="callout callout--warning">
                   Couldn't reach the firmware downloads. Choose Upload a file.
                 </div>
               </Match>
@@ -269,13 +277,13 @@ export const Usb2Flash = (props: { via: () => JSX.Element; onBusy?: (busy: boole
                     <Show
                       when={asset(c)}
                       fallback={
-                        <div class="callout callout--warning" style={note}>
+                        <div class="callout callout--warning">
                           No <code>{ASSET[c]}</code> in the latest release. Upload one.
                         </div>
                       }
                     >
                       {(a) => (
-                        <p style={muted}>
+                        <p class="mut">
                           <code>{a().name}</code> ({fmtBytes(a().size)}) from {latest()?.tag}
                         </p>
                       )}
@@ -290,7 +298,7 @@ export const Usb2Flash = (props: { via: () => JSX.Element; onBusy?: (busy: boole
             <For each={wanted()}>
               {(c) => (
                 <>
-                  <div style={section}>
+                  <div>
                     <FileUpload
                       accept=".bin"
                       maxSize={FLASH_SIZE_BYTES}
@@ -306,7 +314,7 @@ export const Usb2Flash = (props: { via: () => JSX.Element; onBusy?: (busy: boole
                   </div>
                   <Show when={pickErr()[c] ?? refusal(c)}>
                     {(m) => (
-                      <div class="callout callout--danger" role="alert" style={note}>
+                      <div class="callout callout--danger" role="alert">
                         {m()}
                       </div>
                     )}
@@ -317,27 +325,27 @@ export const Usb2Flash = (props: { via: () => JSX.Element; onBusy?: (busy: boole
           </Show>
 
           <Show when={split()}>
-            <div class="callout callout--warning" style={section}>
+            <div class="callout callout--warning">
               The main chip would run {fmt(after('device'))} and the mouse-side chip {fmt(after('host'))}. If they
               can't talk to each other, the mouse stops working and the mouse-side chip can only be flashed over
               USB3.
             </div>
-            <div style={checkColumn}>
+            <div class="checks col">
               <Checkbox checked={anyway()} disabled={busy()} onChange={setAnyway} label="Flash anyway" />
             </div>
           </Show>
 
           <Show when={err() ?? (run()?.outcome === 'failed' ? (dash.error() ?? "That flash didn't finish.") : null)}>
             {(m) => (
-              <div class="callout callout--danger" role="alert" style={section}>
+              <div class="callout callout--danger" role="alert">
                 {m()}
               </div>
             )}
           </Show>
           <Show when={!known()}>
-            <p style={muted}>Reading the box's firmware...</p>
+            <p class="mut">Reading the box's firmware...</p>
           </Show>
-          <div style={{ ...section, ...row }}>
+          <div class="acts">
             <Button variant="primary" disabled={!canFlash()} onClick={() => void flash()}>
               Flash
             </Button>

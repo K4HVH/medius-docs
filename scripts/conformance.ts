@@ -51,19 +51,34 @@ const SIGS = (b: string) =>
   strip(
     [...b.matchAll(/<pre class="api-signature">([\s\S]*?)<\/pre>/g)].map((m) => m[1]).join(' \n '),
   );
+// Docs pages open with a page header (the intro, first in its page as the first card was) and hold
+// sections; dashboard pages hold cards.
 function cards(src: string): CardBlock[] {
+  const block = (title: string, subtitle: string | undefined, body: string, start: number): CardBlock => ({
+    title,
+    subtitle: subtitle ?? '',
+    body,
+    start,
+    sig: SIGS(body),
+  });
   return [
-    ...src.matchAll(
-      /<CardHeader\s+title="([^"]*)"(?:\s+subtitle="([^"]*)")?[^>]*\/>([\s\S]*?)<\/Card>/g,
+    ...[...src.matchAll(/<PageHeader(?:\s+id="[^"]*")?(?:\s+lead="([^"]*)")?\s*(?:\/>|>([\s\S]*?)<\/PageHeader>)/g)].map((m) =>
+      block('page header', m[1], m[2] ?? '', m.index!),
     ),
-  ].map((m) => ({
-    title: m[1],
-    subtitle: m[2] ?? '',
-    body: m[3],
-    start: m.index!,
-    sig: SIGS(m[3]),
-  }));
+    ...[
+      ...src.matchAll(
+        /<DocSection(?:\s+id="[^"]*")?\s+title="([^"]*)"(?:\s+caption="([^"]*)")?\s*>([\s\S]*?)<\/DocSection>/g,
+      ),
+      ...src.matchAll(/<CardHeader\s+title="([^"]*)"(?:\s+subtitle="([^"]*)")?[^>]*\/>([\s\S]*?)<\/Card>/g),
+    ].map((m) => block(m[1], m[2], m[3], m.index!)),
+  ].sort((a, b) => a.start - b.start);
 }
+// An index row's tag is the subtitle its tile carried.
+const tags = (src: string) =>
+  [...src.matchAll(/<IndexRow\s+href="[^"]*"\s+title="([^"]*)"(?:\s+tag="([^"]*)")?/g)]
+    .filter((m) => m[2])
+    .map((m) => block0(m[1], m[2], m.index!));
+const block0 = (title: string, subtitle: string, start: number): CardBlock => ({ title, subtitle, body: '', start, sig: '' });
 
 // A method section's signature is a CALL you make; a type card's is a declaration or a constructor
 // list.
@@ -293,7 +308,7 @@ rates.set('cell-punctuation', `${punctChecked} cells measured against their own 
 // ---- subtitles: no trailing period ----
 derived(
   'subtitle-period',
-  allCards.filter(({ c }) => c.subtitle),
+  [...allCards, ...files.flatMap((f) => tags(srcOf.get(f)!).map((c) => ({ f, c })))].filter(({ c }) => c.subtitle),
   ({ c }) => !/[.]$/.test(c.subtitle),
   ({ f, c }) => [f, lineAt(f, c), `"${c.title}" subtitle ends in a period`],
 );
@@ -327,12 +342,16 @@ for (const f of files) {
 // ---- anchors, following component composition ----
 // A route's page often renders children that own the ids (/dashboard -> Device -> DeviceOptions), so an
 // id check that reads only the route's own file reports anchors that resolve fine in the browser.
-const appFile = join(ROOT, 'src/app/App.tsx');
-const app = readFileSync(appFile, 'utf8');
+// Each route's page, from the table of lazily loaded pages: `'/path': page(() => import('./pages/X'))`.
+const tableFile = join(ROOT, 'src/app/lazyPages.ts');
+const table = readFileSync(tableFile, 'utf8');
 const importsOf = (src: string, file: string) => {
   const map = new Map<string, string>();
   for (const m of src.matchAll(/import\s+(\w+)[^'";]*from\s+'(\.[^']+)'/g))
     map.set(m[1], resolve(dirname(file), m[2]) + '.tsx');
+  for (const m of src.matchAll(/import\s+(?:\w+\s*,\s*)?\{([^}]*)\}\s*from\s+'(\.[^']+)'/g))
+    for (const name of m[1].split(',').map((n) => n.trim().split(/\s+as\s+/).pop()!).filter(Boolean))
+      map.set(name, resolve(dirname(file), m[2]) + '.tsx');
   for (const m of src.matchAll(/const\s+(\w+)\s*=\s*lazy\(\(\)\s*=>\s*import\('(\.[^']+)'\)\)/g))
     map.set(m[1], resolve(dirname(file), m[2]) + '.tsx');
   return map;
@@ -348,17 +367,24 @@ function idsWithChildren(file: string, seen = new Set<string>()): Set<string> {
     return out;
   }
   for (const m of src.matchAll(/id="([A-Za-z0-9-]+)"/g)) out.add(m[1]);
+  // A page tab is an anchor too: its hash opens it.
+  for (const m of src.matchAll(/<Pane key="([A-Za-z0-9-]+)"/g)) out.add(m[1]);
+  // A page that renders a section per data entry (the FAQ) takes its ids from that entry's `id`.
+  for (const m of src.matchAll(/from\s+'(\.[^']*\/data\/[^']+)'/g)) {
+    try {
+      for (const d of readFileSync(resolve(dirname(file), m[1]) + '.ts', 'utf8').matchAll(/\bid: '([a-z0-9-]+)'/g)) out.add(d[1]);
+    } catch {
+      // not a data module this page reads ids from
+    }
+  }
   for (const [name, path] of importsOf(src, file))
     if (new RegExp(`<${name}\\b`).test(src))
       for (const id of idsWithChildren(path, seen)) out.add(id);
   return out;
 }
-const appImports = importsOf(app, appFile);
 const routeIds = new Map<string, Set<string>>();
-for (const m of app.matchAll(/path="([^"]+)"\s+component=\{(\w+)\}/g)) {
-  const file = appImports.get(m[2]);
-  if (file) routeIds.set(m[1], idsWithChildren(file));
-}
+for (const m of table.matchAll(/'([^']+)': \w+\(\(\) => import\('(\.[^']+)'\)\)/g))
+  routeIds.set(m[1], idsWithChildren(resolve(dirname(tableFile), m[2]) + '.tsx'));
 const checkAnchor = (from: string, line: number, href: string) => {
   const [route, anchor] = href.split('#');
   if (!anchor) return;
@@ -372,10 +398,6 @@ const checkAnchor = (from: string, line: number, href: string) => {
 for (const f of files)
   for (const m of srcOf.get(f)!.matchAll(/href="(\/[^"]*#[A-Za-z0-9-]+)"/g))
     checkAnchor(f, lineOf(srcOf.get(f)!, m.index!), m[1]);
-const idxFile = join(ROOT, 'src/app/searchIndex.ts');
-const idx = readFileSync(idxFile, 'utf8');
-for (const m of idx.matchAll(/path: '(\/[^']+)'/g))
-  checkAnchor(idxFile, lineOf(idx, m.index!), m[1]);
 
 // ---- a paragraph that runs past every other paragraph on its page ----
 // Measured per PARAGRAPH, not per card: a card grouping eight enums is long because it covers eight

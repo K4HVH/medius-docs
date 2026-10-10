@@ -1,0 +1,293 @@
+/* Content: what sits inside a page. Values from the approved mockup. */
+
+/* Element styles take their scope through :where(), so the spacing rules that follow a heading or a
+   label (two classes) always win over them. */
+
+/* Running text. The measure stays near 66 characters; tables, code and strips take the full column. */
+:where(.page-header, .doc-section) p { margin: 16px 0 0; line-height: 1.6; color: var(--text-2); text-wrap: pretty; overflow-wrap: break-word; }
+:where(.page-header, .doc-section) :is(ul, ol) { margin: 16px 0 0; padding-left: 22px; color: var(--text-2); }
+:where(.page-header, .doc-section) li { margin: 6px 0 0; line-height: 1.6; }
+:where(.page-header, .doc-section) li::marker { color: var(--dim); }
+:where(.page-header, .doc-section, .pb, .rel-r) :where(p, li, td, .callout) a {
+  color: var(--text); text-decoration: underline; text-decoration-color: var(--line-2);
+  text-underline-offset: 4px; transition: text-decoration-color 0.25s;
+}
+:where(.page-header, .doc-section, .pb, .rel-r) :where(p, li, td, .callout) a:hover { color: var(--text); text-decoration-color: var(--accent); }
+:not(pre) > code {
+  padding: 0; border: 0; background: none; font: 500 0.9em/1 var(--mono); color: var(--text);
+  white-space: normal; overflow-wrap: break-word;
+}
+:is(.byte-table td, .api-params td:first-child, th) code { font-size: 1em; font-weight: inherit; color: inherit; }
+
+/* The label over a table, a code sample or a strip: blue mono caps. */
+.api-response-label {
+  margin: 28px 0 0; font: 500 11px/1 var(--mono); letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--accent);
+}
+.api-response-label + :is(p, pre, .table-scroll, .callout, .bytes, ul, ol) { margin-top: 12px; }
+
+/* A call's signature: one mono strip in a hairline box. */
+pre.api-signature {
+  margin: 20px 0 0; padding: 14px 18px; border: 1px solid var(--line); background: var(--well);
+  font: 500 14px/1.6 var(--mono); color: var(--text); white-space: pre-wrap; overflow-wrap: anywhere;
+}
+
+/* Delivery badges: mono caps labels. */
+.api-badge {
+  display: inline-block; padding: 3px 8px; border: 1px solid; vertical-align: middle;
+  font: 500 11px/1.5 var(--mono); letter-spacing: 0.12em; text-transform: uppercase;
+}
+.api-badge--executed { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 50%, transparent); }
+.api-badge--responded { color: var(--text); border-color: var(--line-2); }
+.api-badge--warning { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 50%, transparent); }
+.api-badge--broken { color: var(--color-red-300); border-color: color-mix(in srgb, var(--bad) 70%, transparent); }
+
+/* Tables: a hairline box that scrolls inside itself, dim mono caps headers, the first column in mono.
+   A row's first cell lights on hover. */
+.table-scroll { margin-top: 20px; overflow-x: auto; overflow-y: hidden; border: 1px solid var(--line); background: var(--well); }
+:is(.api-params, .byte-table) { width: 100%; margin: 0; border-collapse: collapse; font-size: 14px; }
+:is(.api-params, .byte-table) th {
+  padding: 12px 16px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap;
+  font: 500 10.5px/1 var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--dim);
+}
+:is(.api-params, .byte-table) td {
+  padding: 13px 16px; border-bottom: 1px solid var(--line); vertical-align: top; line-height: 1.55;
+  color: var(--text-2); text-wrap: pretty;
+}
+:is(.api-params, .byte-table) tr:last-child td { border-bottom: 0; }
+:is(.api-params, .byte-table) td:first-child { font-family: var(--mono); font-size: 13.5px; color: var(--text); }
+.byte-table td { font-family: var(--mono); font-size: 13.5px; }
+@media (max-width: 600px) {
+  :is(.api-params, .byte-table) :is(th, td) { padding: 10px 12px; }
+}
+@media (hover: hover) and (min-width: 601px) {
+  :is(.api-params, .byte-table) tbody td { transition: color 0.25s, box-shadow 0.25s; }
+  :is(.api-params, .byte-table) tbody tr:hover td { color: var(--text); }
+  :is(.api-params, .byte-table) tbody tr:hover td:first-child { box-shadow: inset 2px 0 var(--accent); }
+}
+
+/* Callouts: a hairline box edged in the kind's colour. In the docs, a two-cell box with the kind as a
+   mono caps label beside the text; the dashboard's alerts keep their words as they are. */
+.callout {
+  position: relative; margin-top: 20px; padding: 13px 18px; border: 1px solid var(--line);
+  border-left: 2px solid var(--callout, var(--accent)); background: var(--well); color: var(--text-2);
+}
+.callout--info { --callout: var(--accent); }
+.callout--warning { --callout: var(--warn); }
+.callout--danger { --callout: var(--color-red-300); }
+.callout > * { margin: 0; max-width: none; }
+.callout > * + * { margin-top: 10px; }
+:where(.page-header, .doc-section) .callout { padding-left: 138px; min-height: 50px; border-left-width: 1px; border-left-color: var(--line); }
+:where(.page-header, .doc-section) .callout::before {
+  position: absolute; top: 0; bottom: 0; left: 0; width: 120px; padding: 16px;
+  border-right: 1px solid var(--line); color: var(--callout);
+  font: 500 11px/1.5 var(--mono); letter-spacing: 0.12em; text-transform: uppercase;
+}
+:where(.page-header, .doc-section) .callout--info::before { content: 'Note'; }
+:where(.page-header, .doc-section) .callout--warning::before { content: 'Warning'; }
+:where(.page-header, .doc-section) .callout--danger::before { content: 'Danger'; }
+@media (max-width: 600px) {
+  :where(.page-header, .doc-section) .callout { padding: 42px 16px 14px; }
+  :where(.page-header, .doc-section) .callout::before { bottom: auto; width: auto; padding: 14px 16px 0; border-right: 0; }
+}
+
+/* Diagrams and code: mono in a hairline box that scrolls inside itself. */
+:where(.page-header, .doc-section) pre:not(.api-signature) {
+  margin: 20px 0 0; padding: 18px 22px; overflow-x: auto; border: 1px solid var(--line); background: #050505;
+  font: 400 13.5px/1.7 var(--mono); color: #bdbdbd;
+}
+pre.diagram { white-space: pre; color: var(--text-2); }
+pre code[class*='language-'] { font: inherit; color: #bdbdbd; }
+.token.property, .token.attr-name, .token.variable, .token.parameter, .token.deleted { color: #d4d4d4; }
+.token.keyword, .token.boolean, .token.atrule, .token.tag, .token.macro, .token.directive, .token.important { color: #4d9fff; }
+.token.class-name, .token.builtin, .token.constant, .token.symbol, .token.namespace, .token.lifetime-annotation,
+.token.attribute { color: #9fd0ff; }
+.token.function { color: #ffffff; }
+.token.number, .token.string, .token.char, .token.attr-value, .token.regex, .token.url, .token.inserted { color: #f0b56a; }
+.token.punctuation, .token.operator, .token.entity { color: #9a9a9a; }
+.token.comment, .token.prolog, .token.doctype, .token.cdata { color: #6e798a; font-style: italic; }
+
+/* A section a search result or a hash link lands on: a blue outline that fades. */
+@keyframes search-highlight-ring {
+  0%, 40% { outline-color: var(--accent); }
+  100% { outline-color: transparent; }
+}
+.search-highlight { outline: 1px solid transparent; outline-offset: 8px; animation: search-highlight-ring 2s var(--ease) forwards; }
+
+/* Index rows inside a docs page sit under the section heading like its content. */
+.doc-section > .go:first-of-type { margin-top: 18px; }
+
+/* Byte strips: a frame's values over its field names, the payload lit apart from the framing. A long
+   frame wraps; every row fills the width and no cell is narrower than its text. */
+.bytes {
+  display: flex; flex-wrap: wrap; margin-top: 16px;
+  border-top: 1px solid var(--line); border-left: 1px solid var(--line); background: var(--well);
+}
+.bytes > div {
+  flex: var(--w) 1 calc(var(--w) * 64px); min-width: max-content;
+  display: grid; gap: 10px; align-content: start; padding: 16px 12px 14px;
+  border-right: 1px solid var(--line); border-bottom: 1px solid var(--line);
+  transition: background 0.5s ease;
+}
+.bytes b { font: 500 20px/1 var(--mono); color: var(--muted); white-space: nowrap; transition: color 0.5s; }
+.bytes span { font: 500 11px/1.5 var(--mono); letter-spacing: 0.06em; color: var(--dim); white-space: nowrap; }
+.bytes .pl { background: rgba(0, 128, 255, 0.07); }
+.bytes .pl b { color: var(--text); }
+.bytes .pl span { color: var(--accent); }
+.bytes div.hit { background: rgba(0, 128, 255, 0.28); transition: none; }
+.bytes div.hit b { color: var(--text); transition: none; }
+@media (max-width: 600px) {
+  .bytes b { font-size: 17px; }
+  .bytes > .long { flex-basis: 100%; min-width: 0; }
+  .bytes .long b { white-space: normal; line-height: 1.3; }
+}
+
+/* Changelog: each release's version and date stay beside its notes while they scroll, and its commits
+   fold under them, grouped by repo. Changelog.tsx renders them; server/fill.ts writes the same markup for
+   crawlers, with the commits in a <details>. */
+.rels { margin-top: 40px; }
+.rel {
+  display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); gap: 0 48px; align-items: start;
+  padding: 40px 0 44px; border-top: 1px solid var(--line); overflow-wrap: break-word;
+}
+.rel-l { position: sticky; top: calc(var(--nav-h) + 28px); display: grid; gap: 14px; align-content: start; justify-items: start; }
+.doc .rel-l h2 { margin: 0; padding: 0; border: 0; font: 700 clamp(40px, 4.4vw, 64px)/0.9 var(--sans); letter-spacing: -0.04em; color: var(--text); }
+.rel time { color: var(--dim); }
+.rel ul { margin: 10px 0 0; padding-left: 20px; color: var(--text-2); }
+.rel li { margin: 6px 0 0; }
+.rel p { margin: 12px 0 0; color: var(--text-2); }
+.doc .rel p.sublabel { margin: 22px 0 0; }
+.doc .rel-r > p.sublabel:first-child, .doc .cmts > p.sublabel:first-child { margin-top: 0; }
+.rel strong { color: var(--text); font-weight: 600; }
+.rel code { padding: 1px 5px; border: 1px solid var(--line-2); background: var(--ground); font: 500 0.88em/1 var(--mono); }
+.more { margin-top: 20px; }
+.more > button svg { transition: transform 0.35s var(--ease); }
+.more.open > button svg { transform: rotate(90deg); }
+.more .body { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.45s var(--ease); }
+.more.open .body { grid-template-rows: 1fr; }
+.more .body > div { overflow: hidden; }
+.more .cmts { padding-top: 18px; }
+.cmts ol { list-style: none; margin: 6px 0 0; padding: 0; font: 400 13px/1.9 var(--mono); color: var(--text-2); }
+.cmts ol code { margin-left: 10px; padding: 0; border: 0; background: none; font: 400 12px/1 var(--mono); color: var(--dim); }
+.rel details { margin-top: 20px; }
+@media (max-width: 900px) {
+  .rel { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .rel-l {
+    top: calc(var(--nav-h) + 49px); z-index: 4; display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px;
+    padding: 10px 0; background: var(--ground); border-bottom: 1px solid var(--line);
+  }
+  .doc .rel-l h2 { font-size: 40px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .more .body, .more > button svg { transition: none; }
+}
+
+/* Guide. A filter over a table or a list, its count beside it; a device's status as a lamp; a small link
+   to the setting a row or an answer points at. */
+.filter { display: flex; align-items: center; gap: 20px; margin-top: 32px; }
+.filter label { flex: 1; position: relative; }
+.filter input {
+  width: 100%; height: 46px; padding: 0 14px 0 40px; background: var(--well); border: 1px solid var(--line-2);
+  color: var(--text); font: 400 15px/1 var(--sans); transition: border-color 0.3s;
+}
+.filter input::placeholder { color: var(--dim); }
+.filter input:focus { outline: none; border-color: var(--primary); }
+.filter input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
+.filter svg { position: absolute; left: 14px; top: 15px; width: 16px; height: 16px; color: var(--dim); }
+.filter .n { color: var(--muted); white-space: nowrap; }
+.filter .n b { display: inline-block; min-width: 2ch; text-align: right; font: 500 15px/1 var(--mono); color: var(--text); }
+.doc p.none { margin: 0; padding: 16px; color: var(--muted); }
+/* Alone under a filter, rather than inside the table it empties. */
+.docs-page > p.none { margin-top: 32px; padding: 0; }
+.doc p.src { margin-top: 12px; font-size: 13.5px; color: var(--dim); }
+/* A link outside a docs section, drawn as one inside it is. */
+.ln-a { color: var(--text); text-decoration: underline; text-decoration-color: var(--line-2); text-underline-offset: 4px; transition: text-decoration-color 0.25s; }
+.ln-a:hover { color: var(--text); text-decoration-color: var(--accent); }
+.status { display: inline-flex; align-items: center; gap: 8px; color: var(--text-2); white-space: nowrap; }
+.status::before { content: ""; width: 6px; height: 6px; background: var(--dim); }
+.status.ok::before { background: var(--ok); }
+.status.warn::before { background: var(--warn); }
+.status.bad::before { background: var(--bad); }
+.status.bad { color: var(--muted); }
+a.fix {
+  display: inline-flex; align-items: center; gap: 8px; height: 28px; padding: 0 10px; border: 1px solid var(--line-2);
+  background: var(--well); font: 500 11px/1 var(--mono); letter-spacing: 0.04em; color: var(--text);
+  white-space: nowrap; vertical-align: middle; text-decoration: none; transition: border-color 0.25s;
+}
+a.fix:hover { border-color: var(--primary); color: var(--text); text-decoration: none; }
+a.fix .arr { width: 11px; height: 11px; margin: 0; }
+.api-params td.v { color: var(--text); font: 500 13.5px/1.5 var(--mono); }
+.api-params .ni { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
+.api-params.fixed { table-layout: fixed; }
+.api-params.fixed td { overflow-wrap: anywhere; }
+/* Tables of things rather than code: names in the text face, and on the device list the kind and the
+   release muted beside the name. */
+:is(.api-params).names td:first-child { font-family: var(--sans); font-size: 14px; }
+.compat td { vertical-align: middle; padding-block: 11px; }
+.compat td:nth-child(2), .compat td.v { color: var(--muted); }
+.compat .vp { display: block; margin-top: 2px; font: 400 11.5px/1.3 var(--mono); color: var(--dim); }
+@media (max-width: 900px) {
+  .filter { flex-wrap: wrap; gap: 10px 20px; }
+  .filter label { flex-basis: 100%; }
+}
+/* On a phone a device row stacks: name and status, kind and boxes, then the note and the release. */
+@media (max-width: 700px) {
+  .compat colgroup, .compat thead { display: none; }
+  .compat tbody tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 12px; padding: 12px 14px; border-bottom: 1px solid var(--line); }
+  .compat tbody tr:last-child { border-bottom: 0; }
+  .compat td { padding: 0; border: 0; }
+  .compat td:nth-child(1) { grid-column: 1; }
+  .compat td:nth-child(2) { grid-column: 1; grid-row: 2; color: var(--dim); font-size: 13px; }
+  .compat td:nth-child(3) { grid-column: 2; grid-row: 1; justify-self: end; }
+  .compat td:nth-child(4) { grid-column: 1 / -1; }
+  .compat td:nth-child(4):empty, .compat td:nth-child(5):empty { display: none; }
+  .compat td:nth-child(5) { grid-column: 1 / -1; color: var(--dim); font-size: 13px; }
+  .compat td:nth-child(5)::before { content: "Reported "; }
+  .compat td:nth-child(6) { grid-column: 2; grid-row: 2; justify-self: end; color: var(--dim); font-size: 13px; }
+  .compat td:nth-child(6):not(:empty)::after { content: " boxes"; }
+}
+
+/* Numbered steps: each number lights as the list arrives. */
+.numbered { margin: 18px 0 0; padding: 0; list-style: none; counter-reset: s; }
+.doc .numbered li { display: grid; grid-template-columns: 32px minmax(0, 1fr); gap: 0 16px; align-items: center; margin: 0; padding: 8px 0; color: var(--text-2); counter-increment: s; }
+.numbered li::before {
+  content: counter(s); display: grid; place-items: center; width: 32px; height: 32px; font: 500 12px/1 var(--mono);
+  color: var(--dim); border: 1px solid var(--line-2); background: var(--ground);
+  transition: color 0.4s, border-color 0.4s; transition-delay: var(--d, 0ms);
+}
+.numbered.lit li::before { color: var(--text); border-color: var(--accent); }
+
+/* Help: a question and its answer side by side; a rule between rows, none over a group's first. */
+.qas { margin-top: 6px; }
+.qa { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 8px 40px; padding: 18px 0; border-top: 1px solid var(--line); scroll-margin-top: calc(var(--nav-h) + 24px); }
+.qa.first { border-top: 0; }
+.doc .qa h3 { margin: 0; font: 600 17px/1.4 var(--sans); letter-spacing: -0.01em; color: var(--text); }
+.doc .qa p { margin: 0; color: var(--text-2); }
+.qa .qlinks { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.qa mark { background: none; color: var(--text); box-shadow: inset 0 -2px var(--accent); }
+@media (max-width: 1000px) {
+  .qa { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Page not found: the address asked for, and where to go instead. */
+.lost { padding-top: 24px; }
+.doc .lost h1.label { margin: 0; color: var(--muted); }
+.lost .num { display: block; overflow: hidden; margin-top: 18px; font: 700 clamp(96px, 14vw, 200px)/0.85 var(--sans); letter-spacing: -0.05em; color: var(--text); }
+.lost .num > span { display: block; animation: up 1s var(--ease) 0.15s both; }
+.req {
+  display: grid; grid-template-columns: 48px minmax(0, 1fr) auto; gap: 10px; margin-top: 28px; padding: 0 10px;
+  font: 400 12.5px/32px var(--mono); color: var(--text); background: color-mix(in srgb, var(--accent) 8%, transparent);
+  box-shadow: inset 2px 0 var(--accent);
+}
+.req span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.req .x { color: var(--bad); }
+.doc .lost + nav.index { margin-top: 40px; }
+@media (prefers-reduced-motion: reduce) {
+  .lost .num > span { animation: none; }
+}
+
+/* Start here: the next pages, after the requirements. */
+.doc nav.index { margin-top: 48px; }
+.doc nav.index .go { padding-block: 24px; }
+.doc nav.index .go h3 { font-size: 28px; }
+

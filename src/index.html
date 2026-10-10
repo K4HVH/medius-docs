@@ -3,45 +3,38 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
-    <!-- Site-wide defaults; RouteMeta updates title/description/canonical/og/twitter per route. -->
+    <!-- An unfurler (Discord) reads the stripe colour here; a browser's address bar stays black. RouteMeta keeps
+         each page's colour in data-embed, and the prerender puts it in content. -->
+    <meta name="theme-color" content="#0080ff" data-embed="#0080ff" />
+    <script>document.querySelector('meta[name="theme-color"]').content = '#000000';</script>
+    <!-- Home's entry in src/app/routes.ts; RouteMeta rewrites these per route. -->
     <meta
       name="description"
-      content="Medius documentation: the mouse-passthrough firmware's binary control protocol and device behaviour, and the medius Rust library."
+      content="Medius is replacement firmware for the MAKCU box: it clones your mouse or keyboard to the PC and adds input sent over an open protocol."
     />
     <link rel="canonical" href="https://medius.k4tech.net/" />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://medius.k4tech.net/" />
-    <meta property="og:site_name" content="Medius Documentation" />
-    <meta property="og:title" content="Medius Documentation" />
+    <meta property="og:site_name" content="Medius" />
+    <meta property="og:title" content="Medius: replacement firmware for the MAKCU box" />
     <meta
       property="og:description"
-      content="Medius documentation: the mouse-passthrough firmware's binary control protocol and device behaviour, and the medius Rust library."
-    />
-    <meta property="og:image" content="https://medius.k4tech.net/favicon.png" />
-    <meta property="og:image:type" content="image/png" />
-    <meta property="og:image:width" content="1024" />
-    <meta property="og:image:height" content="1024" />
-    <meta
-      property="og:image:alt"
-      content="Medius Documentation favicon shown as the social preview image."
+      content="Medius is replacement firmware for the MAKCU box: it clones your mouse or keyboard to the PC and adds input sent over an open protocol."
     />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Medius Documentation" />
+    <meta name="twitter:title" content="Medius: replacement firmware for the MAKCU box" />
     <meta
       name="twitter:description"
-      content="Medius documentation: the mouse-passthrough firmware's binary control protocol and device behaviour, and the medius Rust library."
+      content="Medius is replacement firmware for the MAKCU box: it clones your mouse or keyboard to the PC and adds input sent over an open protocol."
     />
-    <meta name="twitter:image" content="https://medius.k4tech.net/favicon.png" />
-    <meta
-      name="twitter:image:alt"
-      content="Medius Documentation favicon shown as the social preview image."
-    />
+    <link rel="preload" href="/fonts/inter-latin-var.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/ibm-plex-mono-latin-400.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <title>Medius Documentation</title>
+    <link rel="icon" type="image/png" sizes="512x512" href="/favicon.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <title>Medius: replacement firmware for the MAKCU box</title>
   </head>
   <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
 
     <script src="/index.tsx" type="module"></script>

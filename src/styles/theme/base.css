@@ -1,0 +1,59 @@
+/* Base: type, colour, focus, scrollbars. Layout lives in shell.css. */
+
+/* A hidden element stays hidden, whatever display a component gives it. */
+[hidden] { display: none !important; }
+
+html,
+body {
+  background: var(--ground);
+  color: var(--text);
+  font-family: var(--sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--sans);
+  color: var(--text);
+}
+
+code, pre, kbd, samp {
+  font-family: var(--mono);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+::selection {
+  background: rgba(0, 128, 255, 0.35);
+}
+
+/* Scrollbars: a thin square graphite bar that turns blue on hover and while dragged.
+   Firefox takes the standard properties instead. Chrome lets the standard properties win over
+   ::-webkit-scrollbar, so the ones MidnightUI sets for Firefox are reset where the pseudo-element works. */
+@supports selector(::-webkit-scrollbar) {
+  * { scrollbar-width: auto; scrollbar-color: auto; }
+}
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+html::-webkit-scrollbar-track { background: var(--ground); }
+::-webkit-scrollbar-thumb { background: var(--line-2); border: 3px solid transparent; border-radius: 0; background-clip: padding-box; }
+::-webkit-scrollbar-thumb:hover { background-color: var(--primary); background-clip: padding-box; }
+::-webkit-scrollbar-thumb:active { background-color: var(--accent); background-clip: padding-box; }
+::-webkit-scrollbar-corner { background: transparent; }
+@supports not selector(::-webkit-scrollbar) {
+  * { scrollbar-width: thin; scrollbar-color: var(--line-2) transparent; }
+}
+
+/* The page glides to an anchor, as the mockup does; reduced motion jumps. */
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
+
+html.locked { overflow: hidden; }
+
+.label { font: 500 11px/1 var(--mono); letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent); margin: 0; }
+.caps { font: 500 11px/1.5 var(--mono); letter-spacing: 0.12em; text-transform: uppercase; }
+.nc { text-transform: none; }
+.nw { white-space: nowrap; }

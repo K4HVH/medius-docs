@@ -1,0 +1,398 @@
+/* Shell: the nav, buttons, sidebar, page header, sections and footer. Values from the approved mockup. */
+
+/* Arrows ease 5px on hover; the outward arrow moves up and right. */
+.arr { flex: none; margin-top: -1px; transition: transform 0.45s var(--ease); }
+:is(a, button):hover .arr { transform: translateX(5px); }
+:is(a, button):hover .arr.ne { transform: translate(4px, -4px); }
+
+/* Buttons: square. The primary's fill grows from the left and shrinks back to it; the secondary
+   lights its border. */
+.btn {
+  position: relative; isolation: isolate; overflow: hidden;
+  display: inline-flex; align-items: center; justify-content: center; gap: 14px;
+  height: 48px; padding-inline: 22px;
+  font: 600 13px/1 var(--sans); letter-spacing: 0.08em; text-transform: uppercase;
+  border: 1px solid var(--line-2); color: var(--text); background: transparent;
+  text-decoration: none; transition: border-color 0.35s ease;
+}
+.btn:hover { border-color: var(--primary); color: var(--text); text-decoration: none; }
+.btn.primary { border-color: transparent; background: linear-gradient(205deg, var(--primary), var(--primary-2)); }
+.btn.primary::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; background: var(--accent);
+  transform: scaleX(0); transform-origin: left; transition: transform 0.45s var(--ease);
+}
+.btn.primary:hover::before { transform: scaleX(1); }
+.btn.sm { height: 36px; padding-inline: 14px; gap: 10px; font-size: 12px; }
+
+/* The window scrolls. MidnightUI pins html, body and #root to the viewport for an inner scroller. */
+html, body { height: auto; overflow: visible; }
+#root { height: auto; min-height: 100%; }
+html { scroll-padding-top: calc(var(--nav-h) + 24px); }
+
+/* Docs: a ruled sidebar, the page filling its column, the rail on wide screens. */
+.docs {
+  --side: 264px; position: relative; z-index: 2; display: grid;
+  grid-template-columns: var(--side) minmax(0, 1fr) 200px; align-content: start; padding-top: var(--nav-h); min-height: 100svh;
+  background: linear-gradient(var(--line), var(--line)) calc(var(--side) - 1px) 0 / 1px 100% no-repeat;
+}
+.doc {
+  min-width: 0; width: 100%;
+  padding: 56px clamp(24px, 4vw, 56px) 24px;
+}
+/* The dashboard, and a page with no sections to list, take the rail's width too. */
+@media (min-width: 901px) {
+  .docs.tool, .docs:not(:has(section.doc-section[id])) { grid-template-columns: var(--side) minmax(0, 1fr); }
+}
+@media (max-width: 1240px) {
+  .docs { --side: 248px; grid-template-columns: var(--side) minmax(0, 1fr); }
+}
+@media (max-width: 900px) {
+  html { scroll-padding-top: calc(var(--nav-h) + 49px + 24px); }
+  .docs, .docs.tool { grid-template-columns: minmax(0, 1fr); background: none; }
+  .doc { padding: 36px var(--gutter) 24px; }
+}
+
+/* Nav: transparent over the landing hero, frosted once the page moves; a blue line tracks scroll. The
+   frost fades with the tint. A page change moves it at the pace of the page's fade (`routed`). */
+.nav {
+  position: fixed; top: env(safe-area-inset-top, 0px); left: 0; right: 0; z-index: 20;
+  height: var(--nav-h); display: flex; align-items: center; gap: 40px; padding-inline: var(--gutter);
+  border-bottom: 1px solid transparent;
+  backdrop-filter: blur(0) saturate(1); -webkit-backdrop-filter: blur(0) saturate(1);
+  transition: background-color 0.4s ease, border-color 0.4s ease, backdrop-filter 0.4s ease, -webkit-backdrop-filter 0.4s ease;
+}
+.nav.routed { transition-duration: 0.12s; }
+.nav::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 1px; background: var(--accent);
+  transform-origin: left; transform: scaleX(var(--prog, 0)); opacity: var(--prog-o, 0);
+  transition: opacity 0.3s ease; pointer-events: none;
+}
+.nav.solid {
+  background: rgba(10, 10, 10, 0.85); backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4); border-bottom-color: var(--line);
+}
+.brand { font: 700 18px/1 var(--sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text); text-decoration: none; }
+.brand:hover { color: var(--text); text-decoration: none; }
+.links { display: flex; gap: 32px; margin-left: auto; }
+.links a {
+  position: relative; font: 500 13px/1 var(--sans); letter-spacing: 0.04em; text-transform: uppercase;
+  color: var(--muted); text-decoration: none; transition: color 0.25s;
+}
+.links a::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: -8px; height: 1px; background: var(--accent);
+  transform: scaleX(0); transform-origin: left; transition: transform 0.4s var(--ease);
+}
+.links a:hover, .links a[aria-current] { color: var(--text); text-decoration: none; }
+.links a:hover::after, .links a[aria-current]::after { transform: scaleX(1); }
+.menu-btn {
+  display: none; margin-left: auto; font: 500 12px/1 var(--mono); letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--text); background: none; border: 1px solid var(--line-2);
+  padding: 10px 12px; cursor: pointer;
+}
+[aria-disabled="true"] { cursor: not-allowed; }
+
+/* Footer */
+.site-footer {
+  position: relative; z-index: 1; border-top: 1px solid var(--line);
+  padding: 56px var(--gutter) 40px; display: grid; grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 32px 0; background: var(--ground);
+}
+.site-footer > div:first-child { grid-column: span 4; }
+.site-footer .brand { display: block; margin-bottom: 16px; }
+.site-footer p { margin: 0; color: var(--muted); font-size: 14px; }
+.site-footer h4.label { margin: 0 0 16px; }
+.site-footer ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; font-size: 14px; }
+.site-footer li { margin: 0; line-height: 1.4; }
+.site-footer ul a { color: var(--muted); text-decoration: none; transition: color 0.25s; }
+.site-footer ul a:hover { color: var(--text); text-decoration: none; }
+.legal {
+  grid-column: 1 / -1; display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+  padding-top: 24px; border-top: 1px solid var(--line); color: var(--dim);
+}
+
+@media (max-width: 900px) {
+  .nav .btn { display: none; }
+  .menu-btn { display: block; }
+  .links {
+    position: fixed; top: calc(env(safe-area-inset-top, 0px) + var(--nav-h)); left: 0; right: 0; bottom: 0;
+    display: grid; align-content: start; gap: 0; margin: 0; padding: 8px var(--gutter);
+    background: var(--ground); opacity: 0; visibility: hidden;
+    transition: opacity 0.18s ease, visibility 0s linear 0.18s;
+  }
+  /* The bar darkens with the panel opening under it and clears as the panel fades. No frost meanwhile: a
+     backdrop filter would hold the fixed panel inside the bar. */
+  .nav.open {
+    background: var(--ground); border-bottom-color: var(--line);
+    transition: background-color 0.25s ease, border-color 0.25s ease;
+  }
+  .nav.closing { transition: background-color 0.18s ease, border-color 0.18s ease; }
+  .nav.open, .nav.closing { backdrop-filter: none; -webkit-backdrop-filter: none; }
+  .nav.open .links { opacity: 1; visibility: visible; transition: opacity 0.25s ease; }
+  .links a {
+    font: 600 34px/1 var(--sans); letter-spacing: -0.03em; text-transform: none; color: var(--text);
+    padding: 20px 0; border-bottom: 1px solid var(--line);
+  }
+  .links a::after { display: none; }
+  .site-footer { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px 16px; padding-top: 40px; }
+  .site-footer > div:first-child { grid-column: 1 / -1; }
+}
+
+/* Sidebar: ruled, sticky; the current page carries a blue left edge. */
+.side {
+  position: sticky; top: var(--nav-h); align-self: start; height: calc(100svh - var(--nav-h));
+  overflow-y: auto; padding: 56px 0 64px;
+  -webkit-mask: linear-gradient(#000 calc(100% - 48px), transparent);
+  mask: linear-gradient(#000 calc(100% - 48px), transparent);
+}
+.sections {
+  position: relative; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.4fr);
+  margin: 0 24px 24px; border: 1px solid var(--line-2);
+}
+/* The section's fill slides to the section picked. */
+.sections .ind {
+  position: absolute; top: 0; left: 0; width: 0; height: 100%; background: var(--line); opacity: 0; pointer-events: none;
+  transition: left 0.45s var(--ease), width 0.45s var(--ease), opacity 0.2s;
+}
+.sections.langs { margin-top: -12px; grid-template-columns: repeat(3, auto); }
+.sections a {
+  position: relative; padding: 9px 0 9px 0.1em; text-align: center; color: var(--muted); font: 500 10.5px/1 var(--mono);
+  letter-spacing: 0.1em; text-transform: uppercase; text-decoration: none;
+  transition: color 0.25s, background 0.25s;
+}
+.sections a:not(:first-of-type) { border-left: 1px solid var(--line-2); }
+.sections a:hover { color: var(--text); text-decoration: none; }
+.sections a[aria-current] { color: var(--text); }
+@media (forced-colors: active) {
+  .sections .ind { outline: 2px solid CanvasText; outline-offset: -2px; }
+}
+.search {
+  display: flex; justify-content: space-between; align-items: center; width: calc(100% - 48px);
+  margin: 0 24px 28px; padding: 10px 12px; border: 1px solid var(--line-2); background: none;
+  color: var(--dim); cursor: pointer; transition: border-color 0.25s, color 0.25s;
+}
+.search:hover { border-color: var(--primary); color: var(--muted); }
+.search kbd { font: inherit; color: var(--muted); }
+.group { margin-bottom: 26px; }
+.group .label { padding-inline: 24px; margin-bottom: 10px; }
+.group a {
+  position: relative; display: block; padding: 6px 24px 6px 22px; font-size: 14px; color: var(--muted);
+  border-left: 2px solid transparent; text-decoration: none; transition: color 0.25s;
+}
+.group a:hover { color: var(--text); text-decoration: none; }
+.group a[aria-current] { color: var(--text); }
+/* The page's edge travels to the page picked, and fades in with the sidebar's first arrival. */
+.side .mark {
+  position: absolute; top: 0; left: 0; width: 0; height: 0; border-left: 2px solid var(--accent); opacity: 0;
+  background: linear-gradient(90deg, rgba(0, 128, 255, 0.08), transparent 70%); pointer-events: none;
+  transition: top 0.45s var(--ease), height 0.45s var(--ease), opacity 0.2s;
+}
+.side.entering .mark { animation: fade 0.6s ease 0.3s both; }
+.side:focus-within { -webkit-mask: none; mask: none; }
+.docbar { display: none; }
+
+@media (max-width: 900px) {
+  .side {
+    position: fixed; top: calc(var(--nav-h) + 49px); left: 0; right: 0; bottom: 0; height: auto;
+    align-self: stretch; z-index: 15; background: var(--ground); padding-top: 24px;
+    opacity: 0; visibility: hidden; transition: opacity 0.25s ease, visibility 0s linear 0.25s;
+    -webkit-mask: none; mask: none;
+  }
+  .side.open { opacity: 1; visibility: visible; transition: opacity 0.25s ease; }
+  .docbar {
+    display: flex; justify-content: space-between; align-items: center; position: sticky;
+    top: var(--nav-h); z-index: 16; padding: 0 var(--gutter); height: 49px; width: 100%;
+    border: 0; border-bottom: 1px solid var(--line); background: var(--ground); color: var(--muted);
+    cursor: pointer; text-align: left;
+    /* It comes with the docs' layout, as the sidebar's links cascade in on a wide screen. */
+    animation: fade 0.45s ease 0.08s both;
+  }
+  .docbar b { color: var(--text); font-weight: 500; }
+}
+
+/* Page header: crumbs to the parent, the page's h1, the lead. */
+.doc > * { min-width: 0; }
+.doc > .page-header + div { margin-top: 32px; }
+.doc > div + div { margin-top: 24px; }
+.page-header__bar { display: flex; justify-content: space-between; align-items: center; gap: 16px; min-height: 28px; }
+.crumbs { margin: 0; color: var(--dim); }
+.crumbs a { color: var(--dim); text-decoration: none; transition: color 0.25s; }
+.crumbs a:hover { color: var(--text); text-decoration: none; }
+.page-header h1 {
+  margin: 20px 0 0; font: 700 clamp(44px, 5vw, 72px)/1 var(--sans); letter-spacing: -0.035em; color: var(--text);
+}
+/* The title's line clips it, so on arrival it rises out of the line. */
+.page-header h1 .mask { display: block; overflow: hidden; padding-bottom: 0.1em; margin-bottom: -0.1em; }
+.page-header h1 .mask > span { display: block; }
+
+/* Sections: a rule, a heading, the content. The gaps are set on what is drawn: 44px from the last ink
+   above the rule, 44px from the rule to the heading's capitals, 24px from its baseline to the content. */
+.doc-h2 {
+  position: relative; margin: 44px 0 0; padding-top: 38px; border-top: 1px solid var(--line);
+  font: 600 26px/1.2 var(--sans); letter-spacing: -0.02em; color: var(--text);
+  display: flex; justify-content: space-between; align-items: baseline; gap: 6px 16px; flex-wrap: wrap;
+}
+.doc-h2::before {
+  content: ""; position: absolute; left: 0; right: 0; top: -1px; height: 1px; background: var(--accent);
+  transform: scaleX(0); transform-origin: left; transition: transform 0.8s var(--ease);
+}
+.doc-h2.act::before { transform: scaleX(1); }
+.doc-caption { color: var(--dim); font-weight: 400; text-wrap: balance; }
+
+/* The link icon beside a place the site links to (shell/CopyLink.tsx): shown while its heading, label or
+   row is under the pointer, or while it has focus, and always where nothing hovers. It comes in as the
+   arrows in links move; Copied comes in beside it the same way, over whatever is there. Where the icon
+   shows only on hover, it takes no room in the line (its right margin gives back its width), so a heading
+   or a name wraps as it would without it; its vertical margins keep a small label's line as it was. */
+.cl {
+  all: unset; box-sizing: border-box; position: relative; top: -2px; display: inline-grid; place-items: center;
+  width: 24px; height: 24px; margin: -7px 0 -7px 6px; vertical-align: middle; line-height: 0; cursor: pointer;
+  color: var(--dim); transition: opacity 0.3s, transform 0.45s var(--ease), color 0.3s;
+}
+.cl:hover { color: var(--text); }
+.cl:focus-visible { outline: 1px solid var(--primary); outline-offset: 2px; }
+.cl::after {
+  content: attr(data-said); position: absolute; left: calc(100% + 2px); top: 50%; padding: 3px 6px; pointer-events: none;
+  font: 500 11px/1 var(--mono); letter-spacing: 0.16em; text-transform: uppercase; white-space: nowrap; color: var(--muted);
+  background: var(--ground); opacity: 0; transform: translate(-4px, -50%); transition: opacity 0.3s, transform 0.45s var(--ease);
+}
+.cl:not([data-said])::after { display: none; }
+.cl[data-side="left"]::after { left: auto; right: calc(100% + 2px); transform: translate(4px, -50%); }
+.cl[data-state]::after { opacity: 1; transform: translate(0, -50%); }
+@media (hover: hover) {
+  .cl { margin-right: -30px; opacity: 0; transform: translateX(-4px); }
+  :hover > .cl, .doc-h2:hover .cl, tr:hover .cl, .cl:focus-visible, .cl[data-state] { opacity: 1; transform: none; }
+}
+.cl-said { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+:is(.page-header, .doc-section):has(> p:last-child) + .doc-section > .doc-h2 { margin-top: 37px; }
+.doc-h2 + p { margin-top: 13px; }
+.doc-h2 + :is(.table-scroll, pre, .callout, .bytes, .api-response-label, ul, ol) { margin-top: 18px; }
+
+/* On this page */
+.toc { position: sticky; top: var(--nav-h); align-self: start; padding: 56px 24px 0 0; }
+.toc .label { margin-bottom: 16px; }
+.toc nav { position: relative; border-left: 1px solid var(--line); }
+.toc.arriving .ind { animation: fade 0.6s ease 0.4s both; }
+.toc a { display: block; padding: 5px 0 5px 14px; font-size: 13px; color: var(--muted); text-decoration: none; transition: color 0.25s; }
+.toc a:hover, .toc a.act { color: var(--text); text-decoration: none; }
+.toc .ind {
+  position: absolute; left: -1px; width: 1px; background: var(--accent);
+  transition: top 0.45s var(--ease), height 0.45s var(--ease);
+}
+
+/* Index rows: name left, tag and arrow right; a blue rule wipes across on hover. */
+.go {
+  position: relative; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center;
+  padding-block: 32px; border-top: 1px solid var(--line); color: var(--text); text-decoration: none;
+}
+.go:last-child { border-bottom: 1px solid var(--line); }
+.go::before {
+  content: ""; position: absolute; left: 0; right: 0; top: -1px; height: 1px; background: var(--accent);
+  transform: scaleX(0); transform-origin: left; transition: transform 0.6s var(--ease);
+}
+.go:hover, .go:focus-visible { color: var(--text); text-decoration: none; }
+.go:hover::before, .go:focus-visible::before { transform: scaleX(1); }
+.go h3 { margin: 0; font: 600 clamp(40px, 5.2vw, 80px)/1 var(--sans); letter-spacing: -0.035em; color: var(--text); transition: color 0.3s; }
+.go:hover h3 { color: var(--accent); }
+.go-r { display: flex; justify-content: space-between; align-items: center; gap: 24px; color: var(--muted); }
+.go-r .arr { width: 24px; height: 24px; color: var(--muted); transition: transform 0.45s var(--ease), color 0.3s; }
+.go:hover .go-r .arr { color: var(--text); }
+.docs-page .go { padding-block: 22px; }
+.docs-page .go h3 { font-size: 32px; letter-spacing: -0.02em; }
+
+@media (max-width: 1240px) {
+  .toc { display: none; }
+}
+
+@media (max-width: 900px) {
+  .page-header .crumbs { display: none; }
+  /* The crumbs are in the page bar above; a header bar left empty takes no room. */
+  .page-header__bar:not(:has(> .ai-actions)) { display: none; }
+  .page-header h1 { margin-top: 0; }
+  .doc-caption { flex-basis: 100%; }
+  .go { grid-template-columns: minmax(0, 1fr); row-gap: 12px; padding-block: 26px; }
+  .go-r { font-size: 15px; }
+}
+
+/* The AI menu beside the crumbs, portaled to the body. */
+.ai-actions { display: inline-flex; align-items: center; }
+.ai-actions__menu {
+  position: fixed; z-index: 1000; display: flex; flex-direction: column; min-width: 190px; padding: 4px;
+  border: 1px solid var(--line-2); background: #0a0a0a;
+}
+.ai-actions__item {
+  display: block; width: 100%; padding: 8px 12px; border: 0; background: transparent; text-align: left;
+  font: 500 13px/1.4 var(--sans); color: var(--text-2); text-decoration: none; white-space: nowrap; cursor: pointer;
+  transition: color 0.2s, background 0.2s;
+}
+.ai-actions__item:hover { color: var(--text); background: var(--line); text-decoration: none; }
+.ai-actions__sep { height: 1px; margin: 4px 0; background: var(--line); }
+
+
+/* Search: a ruled panel over the dimmed page. It rises in, its results cascade, and a blue edge moves
+   through them as the sidebar's moves through the pages. On a phone it fills the screen. */
+.srch {
+  position: fixed; inset: 0; z-index: 60; display: grid; justify-items: center; align-items: start;
+  padding: 12vh 16px 16px; background: color-mix(in srgb, var(--ground) 74%, transparent);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); animation: fade 0.2s ease both;
+}
+/* Closing plays the opening back: an animation's fill outranks a transition, so it needs keyframes. */
+.srch.closing { animation: fade-out 0.15s ease both; }
+.srch.closing .srch-p { animation: srch-out 0.15s ease both; }
+@keyframes fade-out { to { opacity: 0; } }
+@keyframes srch-out { to { opacity: 0; transform: translateY(-10px); } }
+.srch-p {
+  width: min(720px, 100%); max-height: min(640px, 76vh); display: grid; grid-template-rows: auto minmax(0, 1fr) auto;
+  background: var(--g-background); border: 1px solid var(--line-2); box-shadow: 0 30px 90px rgba(0, 0, 0, 0.65);
+  animation: srch-in 0.3s var(--ease) both;
+}
+@keyframes srch-in { from { opacity: 0; transform: translateY(-10px); } }
+.srch-q { display: flex; align-items: center; gap: 14px; height: 62px; padding: 0 18px; border-bottom: 1px solid var(--line-2); }
+.srch-q svg { flex: none; width: 16px; height: 16px; color: var(--dim); }
+.srch-q input {
+  flex: 1; min-width: 0; height: 100%; padding: 0; background: none; border: 0; outline: none;
+  color: var(--text); font: 400 17px/1 var(--sans); caret-color: var(--accent);
+}
+.srch-q input::placeholder { color: var(--dim); }
+.srch kbd {
+  display: inline-block; padding: 3px 6px; border: 1px solid var(--line-2); color: var(--muted);
+  font: 500 10.5px/1 var(--mono); letter-spacing: 0.08em;
+}
+.srch-x { display: none; padding: 8px 0; background: none; border: 0; color: var(--muted); cursor: pointer; }
+.srch-l { position: relative; overflow-y: auto; overscroll-behavior: contain; padding: 6px 0 12px; }
+.srch-l .mark {
+  position: absolute; left: 0; right: 0; top: 0; height: 0; opacity: 0; pointer-events: none;
+  border-left: 2px solid var(--accent); background: linear-gradient(90deg, rgba(0, 128, 255, 0.1), transparent 70%);
+  transition: top 0.22s var(--ease), height 0.22s var(--ease), opacity 0.2s;
+}
+.srch-g { margin: 0; padding: 14px 20px 6px; color: var(--dim); }
+.srch-o {
+  position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline;
+  gap: 3px 18px; padding: 10px 20px; cursor: pointer;
+}
+/* The results cascade as the panel opens; typing changes the list in place. */
+.srch.opening .srch-o { animation: rowin 0.4s var(--ease) calc(80ms + var(--i, 0) * 22ms) both; }
+.srch-o .t { min-width: 0; color: var(--text-2); font-size: 15px; transition: color 0.2s; }
+.srch-o[aria-selected="true"] .t { color: var(--text); }
+.srch-o .c { color: var(--dim); white-space: nowrap; font-size: 10.5px; }
+/* A snippet keeps two lines, enough for the words it was cut around. */
+.srch-o .d {
+  grid-column: 1 / -1; min-width: 0; color: var(--muted); font-size: 13.5px; line-height: 1.45;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden;
+}
+.srch mark { background: none; color: var(--accent); }
+.srch-none { margin: 0; padding: 26px 20px; color: var(--muted); }
+.srch-fail { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; }
+.srch-fail p { margin: 0; }
+.srch-f { display: flex; flex-wrap: wrap; gap: 8px 22px; padding: 11px 20px; border-top: 1px solid var(--line-2); color: var(--dim); }
+.srch-f span { display: inline-flex; align-items: center; gap: 6px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+@media (max-width: 700px) {
+  .srch { padding: 0; align-items: stretch; }
+  .srch-p { width: 100%; max-height: none; height: 100%; border: 0; box-shadow: none; }
+  .srch .srch-esc, .srch-f { display: none; }
+  .srch-x { display: block; }
+  .srch-o .c { grid-column: 1 / -1; grid-row: 2; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .srch.closing { opacity: 0; }
+}

@@ -1,13 +1,13 @@
 import type { Component } from 'solid-js';
 import { A } from '@solidjs/router';
-import { Card, CardHeader } from '../../../../components/surfaces/Card';
-import '../../../../styles/docs.css';
+import { PageHeader } from '../../../shell/PageHeader';
+import { DocSection } from '../../../shell/DocSection';
+import { ByteStrip } from '../../../shell/ByteStrip';
 
 const Clip: Component = () => {
   return (
     <>
-      <Card>
-        <CardHeader title="CLIP" subtitle="Preloaded input, played back by the box frame by frame" />
+      <PageHeader>
         <p>
           A clip is a ring of per-frame entries on the box. The box drains one entry per native frame
           into the same <A href="/native/injection#state">injection state</A> that{' '}
@@ -83,17 +83,16 @@ const Clip: Component = () => {
           </tbody>
         </table>
         </div>
-      </Card>
+      </PageHeader>
 
-      <div id="entries" data-search-target>
-        <Card>
-          <CardHeader title="Entry format" subtitle="CLIP_APPEND bytes" />
-          <p>
-            A clip is a byte stream of variable-length entries, little-endian. The first byte of each entry is
-            a tag: <code>0x00</code> is a <code>gap run</code>, any other value is a{' '}
-            <code>content tick</code>'s flags.
-          </p>
-          <div class="api-response-label">GAP RUN</div>
+      <DocSection id="entries" title="Entry format" caption="CLIP_APPEND bytes">
+        <p>
+          A clip is a byte stream of variable-length entries, little-endian. The first byte of each entry is
+          a tag: <code>0x00</code> is a <code>gap run</code>, any other value is a{' '}
+          <code>content tick</code>'s flags.
+        </p>
+        <div class="api-response-label">GAP RUN</div>
+        <div class="table-scroll">
           <table class="byte-table">
             <thead>
               <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
@@ -103,11 +102,13 @@ const Clip: Component = () => {
               <tr><td>1</td><td><code>count</code></td><td><code>u16</code></td><td>frames the endpoint NAKs, byte-identical to an idle mouse; little-endian</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">CONTENT TICK</div>
-          <p>
-            Motion, edges, raw reports and control transfers applied on one frame; <code>flags</code>{' '}
-            selects which fields follow.
-          </p>
+        </div>
+        <div class="api-response-label">CONTENT TICK</div>
+        <p>
+          Motion, edges, raw reports and control transfers applied on one frame; <code>flags</code>{' '}
+          selects which fields follow.
+        </p>
+        <div class="table-scroll">
           <table class="byte-table">
             <thead>
               <tr><th>Offset</th><th>Field</th><th>Type</th><th>Present when</th></tr>
@@ -125,20 +126,22 @@ const Clip: Component = () => {
               <tr><td>+</td><td><code>xfer</code></td><td><code>n items</code></td><td>each a <A href="/native/commands/clip#items">transfer item</A></td></tr>
             </tbody>
           </table>
-          <p>
-            The fields follow in the table's order, and an entry is at most 512 bytes, one{' '}
-            <A href="/native/commands/clip#append"><code>CLIP_APPEND</code></A> payload.
-          </p>
-          <p>
-            An invalid entry (a reserved bit, a count out of range, a length past 512 bytes) faults
-            the clip when playback reaches it.
-          </p>
-          <div class="api-response-label">EDGES</div>
-          <p>
-            An edge reuses <A href="/native/commands/inject#inject"><code>INJECT</code></A>'s tuple, so
-            one clip drives every input class.
-          </p>
-          <div class="api-response-label">CLASS</div>
+        </div>
+        <p>
+          The fields follow in the table's order, and an entry is at most 512 bytes, one{' '}
+          <A href="/native/commands/clip#append"><code>CLIP_APPEND</code></A> payload.
+        </p>
+        <p>
+          An invalid entry (a reserved bit, a count out of range, a length past 512 bytes) faults
+          the clip when playback reaches it.
+        </p>
+        <div class="api-response-label">EDGES</div>
+        <p>
+          An edge reuses <A href="/native/commands/inject#inject"><code>INJECT</code></A>'s tuple, so
+          one clip drives every input class.
+        </p>
+        <div class="api-response-label">CLASS</div>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Name</th><th>Value</th><th><code>id</code> is</th></tr>
@@ -149,6 +152,8 @@ const Clip: Component = () => {
               <tr><td>media</td><td><code>2</code></td><td>a 16-bit <A href="/native/commands/usage#consumer">Consumer usage</A></td></tr>
             </tbody>
           </table>
+        </div>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Action</th><th>Value</th><th>Effect</th></tr>
@@ -159,18 +164,20 @@ const Clip: Component = () => {
               <tr><td>force-release</td><td><code>2</code></td><td>Force it inactive, masking a physical hold too.</td></tr>
             </tbody>
           </table>
-          <p>
-            An edge is a level: it holds until a later tick changes it, and the box NAKs while it is
-            unchanged.
-          </p>
-          <div class="api-response-label">COMBINED TICK</div>
-          <p>
-            Several flag bits stack their fields in one tick: a move, a pan and a press on the same
-            frame, in one report.
-          </p>
-          <pre class="diagram">{`0D 0A 00 FC FF 02 00 01 00 00 00 01
+        </div>
+        <p>
+          An edge is a level: it holds until a later tick changes it, and the box NAKs while it is
+          unchanged.
+        </p>
+        <div class="api-response-label">COMBINED TICK</div>
+        <p>
+          Several flag bits stack their fields in one tick: a move, a pan and a press on the same
+          frame, in one report.
+        </p>
+        <pre class="diagram">{`0D 0A 00 FC FF 02 00 01 00 00 00 01
    flags=XY|PAN|EDGES   dx=+10 dy=-4   pan=+2   n=1   edge[class=0 button, id=0 Left, action=1 press]`}</pre>
-          <div class="api-response-label">PLAYBACK ORDER</div>
+        <div class="api-response-label">PLAYBACK ORDER</div>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Frame</th><th>Entry</th><th>Clone emits</th></tr>
@@ -184,26 +191,25 @@ const Clip: Component = () => {
               <tr><td><code>7</code></td><td>key <code>A</code> press</td><td><code>A</code> down</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">EXAMPLE ENTRIES</div>
-          <p>Move up-right, press <code>A</code>, idle 5 frames.</p>
-          <pre class="diagram">{`01 0A 00 F6 FF        flags=XY,   dx=+10  dy=-10
+        </div>
+        <div class="api-response-label">EXAMPLE ENTRIES</div>
+        <p>Move up-right, press <code>A</code>, idle 5 frames.</p>
+        <pre class="diagram">{`01 0A 00 F6 FF        flags=XY,   dx=+10  dy=-10
 04 01 01 04 00 01     flags=EDGES n=1  edge[class=1 key, id=0x04 'A', action=1 press]
 00 05 00              tag=gap,    count=5  (NAK 5 frames)`}</pre>
-        </Card>
-      </div>
+      </DocSection>
 
-      <div id="items" data-search-target>
-        <Card>
-          <CardHeader title="Raw and transfer items" subtitle="Raw reports and control transfers on a content tick" />
-          <p>
-            A raw item is <A href="/native/commands/raw#raw"><code>RAW</code></A>'s payload with its length,
-            and a transfer item is{' '}
-            <A href="/native/commands/transfer#transfer"><code>TRANSFER</code></A>'s payload. Both need{' '}
-            <A href="/native/commands/option#imperfect"><code>OPTION(IMPERFECT)</code></A>, read as the
-            tick plays: with it off the item is discarded and counted in{' '}
-            <A href="/native/commands/requests#clip"><code>gated</code></A>.
-          </p>
-          <div class="api-response-label">RAW ITEM</div>
+      <DocSection id="items" title="Raw and transfer items" caption="Raw reports and control transfers on a content tick">
+        <p>
+          A raw item is <A href="/native/commands/raw#raw"><code>RAW</code></A>'s payload with its length,
+          and a transfer item is{' '}
+          <A href="/native/commands/transfer#transfer"><code>TRANSFER</code></A>'s payload. Both need{' '}
+          <A href="/native/commands/option#imperfect"><code>OPTION(IMPERFECT)</code></A>, read as the
+          tick plays: with it off the item is discarded and counted in{' '}
+          <A href="/native/commands/requests#clip"><code>gated</code></A>.
+        </p>
+        <div class="api-response-label">RAW ITEM</div>
+        <div class="table-scroll">
           <table class="byte-table">
             <thead>
               <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
@@ -215,7 +221,9 @@ const Clip: Component = () => {
               <tr><td>4</td><td><code>bytes</code></td><td><code>u8[]</code></td><td>report, verbatim; sent in entry order, ahead of the tick's report</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">TRANSFER ITEM</div>
+        </div>
+        <div class="api-response-label">TRANSFER ITEM</div>
+        <div class="table-scroll">
           <table class="byte-table">
             <thead>
               <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
@@ -226,12 +234,14 @@ const Clip: Component = () => {
               <tr><td>9</td><td><code>data</code></td><td><code>u8[]</code></td><td>OUT data: <code>wLength</code> bytes when bit 7 of the first setup byte (the request type) is clear, absent when it is set</td></tr>
             </tbody>
           </table>
-          <p>
-            The box queues transfers (1&nbsp;KiB) and runs them one at a time. Each result arrives as a{' '}
-            <A href="/native/commands/catch#traffic-event"><code>CLIP_XFER</code></A> event, in drain
-            order.
-          </p>
-          <div class="api-response-label">TRANSFER QUEUE</div>
+        </div>
+        <p>
+          The box queues transfers (1&nbsp;KiB) and runs them one at a time. Each result arrives as a{' '}
+          <A href="/native/commands/catch#traffic-event"><code>CLIP_XFER</code></A> event, in drain
+          order.
+        </p>
+        <div class="api-response-label">TRANSFER QUEUE</div>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Event</th><th>Effect</th></tr>
@@ -243,7 +253,9 @@ const Clip: Component = () => {
               <tr><td><code>OPTION(IMPERFECT)</code> turned off</td><td>dropped, each counted in <code>gated</code></td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">NATIVE STATE</div>
+        </div>
+        <div class="api-response-label">NATIVE STATE</div>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Report</th><th>On release</th></tr>
@@ -253,34 +265,33 @@ const Clip: Component = () => {
               <tr><td>a raw IN item on any other report</td><td>stays as sent, as after a <A href="/native/commands/raw#raw"><code>RAW</code></A> command</td></tr>
             </tbody>
           </table>
-          <p>
-            The clip releases its held input on <code>STOP</code>, its natural end, a loop wrap,{' '}
-            <code>RESTART</code>, <code>CLEAR</code>, a fault and a hard stop. A native report or a later
-            raw report that reaches the wire first replaces the raw bytes.
-          </p>
-          <div class="api-response-label">EXAMPLE ENTRIES</div>
-          <p>
-            One raw report OUT on endpoint 2, then a <code>SET_REPORT</code> with two bytes of OUT data
-            on EP0.
-          </p>
-          <pre class="diagram">{`10 01 02 02 03 00 A1 B2 C3
+        </div>
+        <p>
+          The clip releases its held input on <code>STOP</code>, its natural end, a loop wrap,{' '}
+          <code>RESTART</code>, <code>CLEAR</code>, a fault and a hard stop. A native report or a later
+          raw report that reaches the wire first replaces the raw bytes.
+        </p>
+        <div class="api-response-label">EXAMPLE ENTRIES</div>
+        <p>
+          One raw report OUT on endpoint 2, then a <code>SET_REPORT</code> with two bytes of OUT data
+          on EP0.
+        </p>
+        <pre class="diagram">{`10 01 02 02 03 00 A1 B2 C3
    flags=RAW   n=1   item[ep_num=2, dir=2 OUT, len=3, bytes=A1 B2 C3]
 20 01 00 21 09 00 03 00 00 02 00 04 01
    flags=XFER  n=1   item[ep=0, setup=21 09 00 03 00 00 02 00 (wLength=2), data=04 01]`}</pre>
-        </Card>
-      </div>
+      </DocSection>
 
-      <div id="append" data-search-target>
-        <Card>
-          <CardHeader title="CLIP_APPEND" subtitle="Fill the ring" />
-          <p>
-            Appends whole <A href="/native/commands/clip#entries">entries</A> to the ring's tail: while
-            stopped to preload, or while playing (streaming mode) to top up.{' '}
-            <A href="/native/frame#opcodes">Opcode</A> <code>0x12</code>.
-          </p>
-          <pre class="api-signature">CLIP_APPEND  0x12  ·  payload = one or more whole entries</pre>
-          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
-          <div class="api-response-label">PAYLOAD</div>
+      <DocSection id="append" title="CLIP_APPEND" caption="Fill the ring">
+        <p>
+          Appends whole <A href="/native/commands/clip#entries">entries</A> to the ring's tail: while
+          stopped to preload, or while playing (streaming mode) to top up.{' '}
+          <A href="/native/frame#opcodes">Opcode</A> <code>0x12</code>.
+        </p>
+        <pre class="api-signature">CLIP_APPEND  0x12  ·  payload = one or more whole entries</pre>
+        <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
+        <div class="api-response-label">PAYLOAD</div>
+        <div class="table-scroll">
           <table class="byte-table">
             <thead>
               <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
@@ -289,33 +300,34 @@ const Clip: Component = () => {
               <tr><td>0</td><td><code>entries</code></td><td><code>bytes</code></td><td>a whole number of <A href="/native/commands/clip#entries">entries</A>, back to back (up to the 512-byte frame limit)</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">DROP DETECTION</div>
-          <p>
-            The frame <A href="/native/frame#seq"><code>SEQ</code></A> doubles as an append sequence
-            number: the box expects each <code>CLIP_APPEND</code> to be the previous <code>SEQ</code> plus one.
-          </p>
-          <p>
-            The link is <A href="/native/injection#fire-and-forget">fire-and-forget</A>, so a lost frame
-            shows as a <code>SEQ</code> gap and the box marks the clip <code>faulted</code> in{' '}
-            <A href="/native/commands/requests#clip"><code>QUERY(CLIP)</code></A>. Recover with{' '}
-            <code>CLEAR</code>, then rebuild.
-          </p>
-          <p>
-            Pack whole entries per frame; never split one entry across two appends.
-          </p>
-          <div class="api-response-label">FLOW CONTROL</div>
-          <p>
-            An append that doesn't fit the ring is dropped whole and faults the clip, never written as a
-            partial entry.
-          </p>
-          <p>
-            Keep an append under{' '}
-            <A href="/native/commands/requests#clip"><code>QUERY(CLIP)</code></A>'s <code>free</code> bytes.
-            In streaming mode the head drains while the host appends to the tail, so{' '}
-            <code>free</code> recovers as it plays. The ring is 64 KB with PSRAM and 16 KB without;
-            never assume a size.
-          </p>
-          <pre class="diagram">{`  the ring, read by QUERY(CLIP):
+        </div>
+        <div class="api-response-label">DROP DETECTION</div>
+        <p>
+          The frame <A href="/native/frame#seq"><code>SEQ</code></A> doubles as an append sequence
+          number: the box expects each <code>CLIP_APPEND</code> to be the previous <code>SEQ</code> plus one.
+        </p>
+        <p>
+          The link is <A href="/native/injection#fire-and-forget">fire-and-forget</A>, so a lost frame
+          shows as a <code>SEQ</code> gap and the box marks the clip <code>faulted</code> in{' '}
+          <A href="/native/commands/requests#clip"><code>QUERY(CLIP)</code></A>. Recover with{' '}
+          <code>CLEAR</code>, then rebuild.
+        </p>
+        <p>
+          Pack whole entries per frame; never split one entry across two appends.
+        </p>
+        <div class="api-response-label">FLOW CONTROL</div>
+        <p>
+          An append that doesn't fit the ring is dropped whole and faults the clip, never written as a
+          partial entry.
+        </p>
+        <p>
+          Keep an append under{' '}
+          <A href="/native/commands/requests#clip"><code>QUERY(CLIP)</code></A>'s <code>free</code> bytes.
+          In streaming mode the head drains while the host appends to the tail, so{' '}
+          <code>free</code> recovers as it plays. The ring is 64 KB with PSRAM and 16 KB without;
+          never assume a size.
+        </p>
+        <pre class="diagram">{`  the ring, read by QUERY(CLIP):
 
        free                        buffered (total)
   +----------------+----------------------------------------+
@@ -324,33 +336,41 @@ const Clip: Component = () => {
   |    free)       |                                        |
   +----------------+----------------------------------------+
    append > free  -->  dropped whole + clip faulted`}</pre>
-          <p>
-            Library binding: <A href="/library/clip#builder"><code>ClipBuilder</code></A> +{' '}
-            <A href="/library/clip#handle"><code>append</code></A>, which splits a large clip into whole-entry
-            frames.
-          </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <p>Append one content tick, cursor <code>dx = 10</code> (a 5-byte entry, so <code>LEN = 5</code>):</p>
-          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 12     | 00     | 05 00  | 01     | 0A 00  | 00 00  | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | flags  | dx     | dy     | CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+--------+
-                    ^ append seq     \\- one XY content tick --/`}</pre>
-        </Card>
-      </div>
+        <p>
+          Library binding: <A href="/library/clip#builder"><code>ClipBuilder</code></A> +{' '}
+          <A href="/library/clip#handle"><code>append</code></A>, which splits a large clip into whole-entry
+          frames.
+        </p>
+        <div class="api-response-label">EXAMPLE</div>
+        <p>Append one content tick, cursor <code>dx = 10</code> (a 5-byte entry, so <code>LEN = 5</code>):</p>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '12', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '05 00', name: 'LEN' },
+            { value: '01', name: 'flags' },
+            { value: '0A 00', name: 'dx' },
+            { value: '00 00', name: 'dy' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
+        <p>
+          <code>SEQ</code> is the append sequence. <code>flags</code>, <code>dx</code> and <code>dy</code> are
+          the one XY content tick.
+        </p>
+      </DocSection>
 
-      <div id="ctrl" data-search-target>
-        <Card>
-          <CardHeader title="CLIP_CTRL" subtitle="Drive the playback engine" />
-          <p>
-            One byte of <code>op</code> selects an engine verb; settings live on{' '}
-            <A href="/native/commands/clip#set"><code>CLIP_SET</code></A>.{' '}
-            <A href="/native/frame#opcodes">Opcode</A> <code>0x13</code>.
-          </p>
-          <pre class="api-signature">CLIP_CTRL  0x13  ·  payload [op u8]</pre>
-          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
-          <div class="api-response-label">PAYLOAD</div>
+      <DocSection id="ctrl" title="CLIP_CTRL" caption="Drive the playback engine">
+        <p>
+          One byte of <code>op</code> selects an engine verb; settings live on{' '}
+          <A href="/native/commands/clip#set"><code>CLIP_SET</code></A>.{' '}
+          <A href="/native/frame#opcodes">Opcode</A> <code>0x13</code>.
+        </p>
+        <pre class="api-signature">CLIP_CTRL  0x13  ·  payload [op u8]</pre>
+        <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
+        <div class="api-response-label">PAYLOAD</div>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>op</th><th>Name</th><th>Effect</th></tr>
@@ -366,16 +386,18 @@ const Clip: Component = () => {
               <tr><td><code>7</code></td><td><code>FINALIZE</code></td><td>mark the buffered clip complete; the box stops treating an emptied ring as an underrun</td></tr>
             </tbody>
           </table>
-          <p>
-            Ops <code>0</code>-<code>5</code> (<code>START</code> through <code>TOGGLE</code>) double as the{' '}
-            <code>action</code> byte a <A href="/native/commands/clip#trigger"><code>CLIP_TRIGGER</code></A> fires
-            on a physical edge or a <A href="/native/commands/clip#packet-triggers">matched packet</A>;{' '}
-            <code>CLEAR</code> and <code>FINALIZE</code> are host-only.
-          </p>
-          <div class="api-response-label">STATE</div>
-          <p>
-            <A href="/native/commands/requests#clip"><code>QUERY(CLIP)</code></A> reports one of four states.
-          </p>
+        </div>
+        <p>
+          Ops <code>0</code>-<code>5</code> (<code>START</code> through <code>TOGGLE</code>) double as the{' '}
+          <code>action</code> byte a <A href="/native/commands/clip#trigger"><code>CLIP_TRIGGER</code></A> fires
+          on a physical edge or a <A href="/native/commands/clip#packet-triggers">matched packet</A>;{' '}
+          <code>CLEAR</code> and <code>FINALIZE</code> are host-only.
+        </p>
+        <div class="api-response-label">STATE</div>
+        <p>
+          <A href="/native/commands/requests#clip"><code>QUERY(CLIP)</code></A> reports one of four states.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Value</th><th>State</th><th>Means</th></tr></thead>
             <tbody>
@@ -385,55 +407,59 @@ const Clip: Component = () => {
               <tr><td><code>3</code></td><td><code>faulted</code></td><td>a <code>SEQ</code> gap, an overflow or an <A href="/native/commands/clip#entries">invalid entry</A> broke the stream; <code>CLEAR</code> and rebuild</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">UNDERRUN</div>
-          <p>
-            In streaming mode, if the ring drains with no <code>FINALIZE</code>, the box idles (NAKs, holding
-            its levels) and stays <code>playing</code> until refilled; a topping-up host or any keepalive
-            resets the 1 s silence timer.
-          </p>
-          <p>
-            A finalized clip ends when the ring empties, or replays from the head if{' '}
-            <A href="/native/commands/clip#set"><code>loop</code></A> is set.
-          </p>
-          <div class="api-response-label">STOPS ON</div>
-          <pre class="diagram">{`STOP        an explicit STOP or CLEAR op
+        </div>
+        <div class="api-response-label">UNDERRUN</div>
+        <p>
+          In streaming mode, if the ring drains with no <code>FINALIZE</code>, the box idles (NAKs, holding
+          its levels) and stays <code>playing</code> until refilled; a topping-up host or any keepalive
+          resets the 1 s silence timer.
+        </p>
+        <p>
+          A finalized clip ends when the ring empties, or replays from the head if{' '}
+          <A href="/native/commands/clip#set"><code>loop</code></A> is set.
+        </p>
+        <div class="api-response-label">STOPS ON</div>
+        <pre class="diagram">{`STOP        an explicit STOP or CLEAR op
 silence     a full 1 s of control-PC silence
 RESET       a RESET command
 detach      the cloned device unplugs
 link loss   the inter-chip link drops
 re-clone    the box clones a device again`}</pre>
-          <p>
-            Each halts playback and releases the clip's lock; a hard stop (<code>silence</code>,{' '}
-            <A href="/native/commands/admin#reset"><code>RESET</code></A>, detach, link loss,{' '}
-            <A href="/native/commands/patch#presentation">re-clone</A>) also clears the ring, settings
-            and trigger set, which a host reloads. The{' '}
-            <A href="/native/injection#safety">1&nbsp;s silence auto-clear</A> applies to a clip like
-            any other injection.
-          </p>
-          <p>A hard stop moves the <A href="/native/commands/requests#stats"><code>session</code></A> count.</p>
-          <p>Library binding: <A href="/library/clip"><code>Device::clip()</code></A>.</p>
-          <div class="api-response-label">EXAMPLE</div>
-          <p>Start playback (<code>op = 0</code>, a single-byte payload so <code>LEN = 1</code>):</p>
-          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+
-| A5     | 13     | 00     | 01 00  | 00     | lo hi  |
-+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | op     | CRC16  |
-+--------+--------+--------+--------+--------+--------+`}</pre>
-        </Card>
-      </div>
+        <p>
+          Each halts playback and releases the clip's lock; a hard stop (<code>silence</code>,{' '}
+          <A href="/native/commands/admin#reset"><code>RESET</code></A>, detach, link loss,{' '}
+          <A href="/native/commands/patch#presentation">re-clone</A>) also clears the ring, settings
+          and trigger set, which a host reloads. The{' '}
+          <A href="/native/injection#safety">1&nbsp;s silence auto-clear</A> applies to a clip like
+          any other injection.
+        </p>
+        <p>A hard stop moves the <A href="/native/commands/requests#stats"><code>session</code></A> count.</p>
+        <p>Library binding: <A href="/library/clip"><code>Device::clip()</code></A>.</p>
+        <div class="api-response-label">EXAMPLE</div>
+        <p>Start playback (<code>op = 0</code>, a single-byte payload so <code>LEN = 1</code>):</p>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '13', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '01 00', name: 'LEN' },
+            { value: '00', name: 'op' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
+      </DocSection>
 
-      <div id="set" data-search-target>
-        <Card>
-          <CardHeader title="CLIP_SET" subtitle="Set a clip setting" />
-          <p>
-            Sets one clip setting, <A href="/native/commands/option">OPTION</A>-shaped. A setting holds
-            until changed or cleared by a <A href="/native/commands/clip#ctrl">hard stop</A>;{' '}
-            <A href="/native/commands/requests#clip"><code>QUERY(CLIP)</code></A> reads them all back.{' '}
-            <A href="/native/frame#opcodes">Opcode</A> <code>0x14</code>.
-          </p>
-          <pre class="api-signature">CLIP_SET  0x14  ·  payload [id u8][value u8]</pre>
-          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
-          <div class="api-response-label">PAYLOAD</div>
+      <DocSection id="set" title="CLIP_SET" caption="Set a clip setting">
+        <p>
+          Sets one clip setting, <A href="/native/commands/option">OPTION</A>-shaped. A setting holds
+          until changed or cleared by a <A href="/native/commands/clip#ctrl">hard stop</A>;{' '}
+          <A href="/native/commands/requests#clip"><code>QUERY(CLIP)</code></A> reads them all back.{' '}
+          <A href="/native/frame#opcodes">Opcode</A> <code>0x14</code>.
+        </p>
+        <pre class="api-signature">CLIP_SET  0x14  ·  payload [id u8][value u8]</pre>
+        <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
+        <div class="api-response-label">PAYLOAD</div>
+        <div class="table-scroll">
           <table class="byte-table">
             <thead>
               <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
@@ -443,7 +469,9 @@ re-clone    the box clones a device again`}</pre>
               <tr><td>1</td><td><code>value</code></td><td><code>u8</code></td><td>new value</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">SETTINGS</div>
+        </div>
+        <div class="api-response-label">SETTINGS</div>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>id</th><th>Setting</th><th>value</th><th>Effect</th></tr>
@@ -455,12 +483,14 @@ re-clone    the box clones a device again`}</pre>
               <tr><td><code>3</code></td><td><code>ride</code></td><td><code>0</code> / <code>1</code></td><td>the clip's motion waits to ride a native report; <code>0</code> (the default) plays it on the box's own clock (below)</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">AUTO-LOCK</div>
-          <p>
-            <code>autolock</code> locks are clip-owned and released on <code>STOP</code>; a host{' '}
-            <A href="/native/commands/lock"><code>LOCK</code></A> is untouched. <code>0</code> = no
-            auto-lock; <code>0x1F</code> = every class.
-          </p>
+        </div>
+        <div class="api-response-label">AUTO-LOCK</div>
+        <p>
+          <code>autolock</code> locks are clip-owned and released on <code>STOP</code>; a host{' '}
+          <A href="/native/commands/lock"><code>LOCK</code></A> is untouched. <code>0</code> = no
+          auto-lock; <code>0x1F</code> = every class.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Bit</th><th>Mask</th><th>Locks</th></tr></thead>
             <tbody>
@@ -471,53 +501,58 @@ re-clone    the box clones a device again`}</pre>
               <tr><td><code>b4</code></td><td><code>0x10</code></td><td>every media usage</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">RIDE</div>
-          <p>
-            A clip's motion bypasses <A href="/native/commands/option#move-ride">movement riding</A> by
-            default, so it plays on its own timeline; <code>ride</code> puts it back on the ride,
-            additive to physical motion and dropped while the mouse is still.
-          </p>
-          <p>
-            While <A href="/native/commands/option#render">rendering</A> is on with a profile armed, a
-            clip's cursor motion is rendered like a <A href="/native/commands/move"><code>MOVE</code></A>{' '}
-            with no flag and rides the same way; <code>ride</code> then applies to the wheel and pan
-            alone. Edges stay on the clip tick, ahead of the rendered motion.
-          </p>
-          <p>
-            Library binding: <A href="/library/clip#handle"><code>set_autolock</code></A>,{' '}
-            <A href="/library/clip#handle"><code>set_loop</code></A>,{' '}
-            <A href="/library/clip#handle"><code>set_retain</code></A>,{' '}
-            <A href="/library/clip#handle"><code>set_ride</code></A>.
-          </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <p>Turn looping on (<code>id = 1</code>, <code>value = 1</code>, so <code>LEN = 2</code>):</p>
-          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 14     | 00     | 02 00  | 01     | 01     | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | id     | value  | CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+`}</pre>
-        </Card>
-      </div>
+        </div>
+        <div class="api-response-label">RIDE</div>
+        <p>
+          A clip's motion bypasses <A href="/native/commands/option#move-ride">movement riding</A> by
+          default, so it plays on its own timeline; <code>ride</code> puts it back on the ride,
+          additive to physical motion and dropped while the mouse is still.
+        </p>
+        <p>
+          While <A href="/native/commands/option#render">rendering</A> is on with a profile armed, a
+          clip's cursor motion is rendered like a <A href="/native/commands/move"><code>MOVE</code></A>{' '}
+          with no flag and rides the same way; <code>ride</code> then applies to the wheel and pan
+          alone. Edges stay on the clip tick, ahead of the rendered motion.
+        </p>
+        <p>
+          Library binding: <A href="/library/clip#handle"><code>set_autolock</code></A>,{' '}
+          <A href="/library/clip#handle"><code>set_loop</code></A>,{' '}
+          <A href="/library/clip#handle"><code>set_retain</code></A>,{' '}
+          <A href="/library/clip#handle"><code>set_ride</code></A>.
+        </p>
+        <div class="api-response-label">EXAMPLE</div>
+        <p>Turn looping on (<code>id = 1</code>, <code>value = 1</code>, so <code>LEN = 2</code>):</p>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '14', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '02 00', name: 'LEN' },
+            { value: '01', name: 'id' },
+            { value: '01', name: 'value' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
+      </DocSection>
 
-      <div id="trigger" data-search-target>
-        <Card>
-          <CardHeader title="CLIP_TRIGGER" subtitle="Bind a physical edge or a matched packet to an engine verb" />
-          <p>
-            Fires a <A href="/native/commands/clip#ctrl"><code>CLIP_CTRL</code></A> verb on the box from a
-            physical edge (as <A href="/native/commands/catch"><code>CATCH</code></A> reports it) or a
-            matched packet, with no host round-trip, so even the first emitted frame is box-timed.
-          </p>
-          <p>
-            Triggers are a{' '}
-            <A href="/native/commands/lock"><code>LOCK</code></A>-shaped managed set. The{' '}
-            <code>class</code> byte picks the kind: an input class makes one of up to eight bindings,
-            keyed by <code>(class, id, edge)</code>, and a traffic class makes one of up to eight{' '}
-            <A href="/native/commands/clip#packet-triggers">packet triggers</A>.{' '}
-            <A href="/native/frame#opcodes">Opcode</A> <code>0x15</code>.
-          </p>
-          <pre class="api-signature">CLIP_TRIGGER  0x15  ·  payload [class u8][id u16][edge u8][action u8][flags u8]</pre>
-          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
-          <div class="api-response-label">PAYLOAD</div>
+      <DocSection id="trigger" title="CLIP_TRIGGER" caption="Bind a physical edge or a matched packet to an engine verb">
+        <p>
+          Fires a <A href="/native/commands/clip#ctrl"><code>CLIP_CTRL</code></A> verb on the box from a
+          physical edge (as <A href="/native/commands/catch"><code>CATCH</code></A> reports it) or a
+          matched packet, with no host round-trip, so even the first emitted frame is box-timed.
+        </p>
+        <p>
+          Triggers are a{' '}
+          <A href="/native/commands/lock"><code>LOCK</code></A>-shaped managed set. The{' '}
+          <code>class</code> byte picks the kind: an input class makes one of up to eight bindings,
+          keyed by <code>(class, id, edge)</code>, and a traffic class makes one of up to eight{' '}
+          <A href="/native/commands/clip#packet-triggers">packet triggers</A>.{' '}
+          <A href="/native/frame#opcodes">Opcode</A> <code>0x15</code>.
+        </p>
+        <pre class="api-signature">CLIP_TRIGGER  0x15  ·  payload [class u8][id u16][edge u8][action u8][flags u8]</pre>
+        <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
+        <div class="api-response-label">PAYLOAD</div>
+        <div class="table-scroll">
           <table class="byte-table">
             <thead>
               <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
@@ -530,7 +565,9 @@ re-clone    the box clones a device again`}</pre>
               <tr><td>5</td><td><code>flags</code></td><td><code>u8</code></td><td>bit0 present, bit1 consume (below)</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">CLASS</div>
+        </div>
+        <div class="api-response-label">CLASS</div>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Name</th><th>Value</th><th><code>id</code> is</th></tr></thead>
             <tbody>
@@ -540,6 +577,8 @@ re-clone    the box clones a device again`}</pre>
               <tr><td>any</td><td><code>0xFF</code></td><td>ignored (any input fires)</td></tr>
             </tbody>
           </table>
+        </div>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Edge</th><th>Value</th><th>Fires on</th></tr></thead>
             <tbody>
@@ -548,7 +587,9 @@ re-clone    the box clones a device again`}</pre>
               <tr><td>release</td><td><code>2</code></td><td>the physical release</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">FLAGS</div>
+        </div>
+        <div class="api-response-label">FLAGS</div>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Bit</th><th>Mask</th><th>Effect</th></tr></thead>
             <tbody>
@@ -556,8 +597,9 @@ re-clone    the box clones a device again`}</pre>
               <tr><td><code>b1</code></td><td><code>0x02</code></td><td>consume: lock the trigger usage while it stays active. Press edge only; a release-edge binding stores the flag and never acts on it</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">KINDS</div>
-          <pre class="diagram">{`  class 0..2, 0xFF                          class 4..9
+        </div>
+        <div class="api-response-label">KINDS</div>
+        <pre class="diagram">{`  class 0..2, 0xFF                          class 4..9
   a physical edge                           a packet on a traffic surface
   button, key, media                        HID_IN, HID_OUT, VEND_INTR, VEND_BULK, CONTROL, EMIT
           |                                         |
@@ -568,84 +610,91 @@ re-clone    the box clones a device again`}</pre>
           |                                         |
           +------------> one CLIP_CTRL op <---------+
                          0 START .. 5 TOGGLE, run on the box`}</pre>
-          <p>
-            Re-sending the same <code>(class, id, edge)</code> key replaces that binding; clearing{' '}
-            <code>present</code> removes it.
-          </p>
-          <p>
-            The clear-all sentinel wipes the whole set, input bindings and packet triggers alike:{' '}
-            <code>class = 0xFF</code>, <code>id = 0xFFFF</code>, <code>edge = 0</code> (both),{' '}
-            <code>flags = 0</code>.
-          </p>
-          <p>
-            Preload the ring (and{' '}
-            <A href="/native/commands/clip#ctrl"><code>FINALIZE</code></A> it for a replayable macro)
-            before binding.
-          </p>
-          <p>
-            Library binding: <A href="/library/clip#handle"><code>bind</code></A>,{' '}
-            <A href="/library/clip#handle"><code>unbind</code></A>,{' '}
-            <A href="/library/clip#handle"><code>clear_triggers</code></A>.
-          </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <p>
-            Bind the <code>A</code> key's press to <code>START</code> (<code>class = 1</code>,{' '}
-            <code>id = 0x04</code>, <code>edge = 1</code> press, <code>action = 0</code> start,{' '}
-            <code>flags = 0x01</code> present):
-          </p>
-          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 15     | 00     | 06 00  | 01     | 04 00  | 01     | 00     | 01     | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | class  | id     | edge   | action | flags  | CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
-        </Card>
-      </div>
+        <p>
+          Re-sending the same <code>(class, id, edge)</code> key replaces that binding; clearing{' '}
+          <code>present</code> removes it.
+        </p>
+        <p>
+          The clear-all sentinel wipes the whole set, input bindings and packet triggers alike:{' '}
+          <code>class = 0xFF</code>, <code>id = 0xFFFF</code>, <code>edge = 0</code> (both),{' '}
+          <code>flags = 0</code>.
+        </p>
+        <p>
+          Preload the ring (and{' '}
+          <A href="/native/commands/clip#ctrl"><code>FINALIZE</code></A> it for a replayable macro)
+          before binding.
+        </p>
+        <p>
+          Library binding: <A href="/library/clip#handle"><code>bind</code></A>,{' '}
+          <A href="/library/clip#handle"><code>unbind</code></A>,{' '}
+          <A href="/library/clip#handle"><code>clear_triggers</code></A>.
+        </p>
+        <div class="api-response-label">EXAMPLE</div>
+        <p>
+          Bind the <code>A</code> key's press to <code>START</code> (<code>class = 1</code>,{' '}
+          <code>id = 0x04</code>, <code>edge = 1</code> press, <code>action = 0</code> start,{' '}
+          <code>flags = 0x01</code> present):
+        </p>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '15', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '06 00', name: 'LEN' },
+            { value: '01', name: 'class' },
+            { value: '04 00', name: 'id' },
+            { value: '01', name: 'edge' },
+            { value: '00', name: 'action' },
+            { value: '01', name: 'flags' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
+      </DocSection>
 
-      <div id="packet-triggers" data-search-target>
-        <Card>
-          <CardHeader title="Packet triggers" subtitle="CLIP_TRIGGER with a traffic class" />
-          <p>
-            A traffic class in the <code>class</code> byte makes a packet trigger: a packet on that
-            surface whose head matches runs the verb, as an input edge does. The match follows the six
-            bytes every binding has.{' '}
-            <A href="/native/frame#opcodes">Opcode</A> <code>0x15</code>.
-          </p>
-          <pre class="api-signature">CLIP_TRIGGER  0x15  ·  packet payload 8 + 2 x mlen bytes</pre>
-          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
-          <div class="api-response-label">PAYLOAD</div>
-          <div class="table-scroll">
-          <table class="byte-table">
-            <thead>
-              <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
-            </thead>
-            <tbody>
-              <tr><td>0</td><td><code>class</code></td><td><code>u8</code></td><td>traffic class, <code>4</code>-<code>9</code> (below)</td></tr>
-              <tr><td>1</td><td><code>id</code></td><td><code>u16</code></td><td>class address as in <A href="/native/commands/catch#catch"><code>CATCH</code></A>, little-endian; <code>0xFFFF</code> = any</td></tr>
-              <tr><td>3</td><td><code>dir</code></td><td><code>u8</code></td><td>packet direction: <code>0</code> both, <code>1</code> IN, <code>2</code> OUT</td></tr>
-              <tr><td>4</td><td><code>action</code></td><td><code>u8</code></td><td>the <A href="/native/commands/clip#ctrl"><code>CLIP_CTRL</code></A> op to fire, <code>0</code>-<code>5</code></td></tr>
-              <tr><td>5</td><td><code>flags</code></td><td><code>u8</code></td><td>bit0 present, bit1 consume, bit2 <code>RUN</code> (below)</td></tr>
-              <tr><td>6</td><td><code>slen</code></td><td><code>u8</code></td><td>selector length: below <code>mlen</code> with <code>RUN</code>, <code>0</code> without</td></tr>
-              <tr><td>7</td><td><code>mlen</code></td><td><code>u8</code></td><td>match length, <code>0</code>-<code>16</code>; <code>0</code> takes every packet on the address</td></tr>
-              <tr><td>8</td><td><code>match</code></td><td><code>u8[]</code></td><td><code>mlen</code> head bytes to compare</td></tr>
-              <tr><td>8+mlen</td><td><code>mask</code></td><td><code>u8[]</code></td><td><code>mlen</code> mask bytes: a packet matches when each head byte ANDed with its mask byte equals the match byte; bytes past the mask are ignored</td></tr>
-            </tbody>
-          </table>
-          </div>
-          <div class="api-response-label">SURFACES</div>
-          <div class="table-scroll">
-          <table class="api-params">
-            <thead><tr><th>Class</th><th>Value</th><th>Carries</th><th>Head</th></tr></thead>
-            <tbody>
-              <tr><td><code>HID_IN</code></td><td><code>4</code></td><td>IN</td><td>the device's report as it arrived, ahead of any rewrite</td></tr>
-              <tr><td><code>HID_OUT</code></td><td><code>5</code></td><td>OUT</td><td>a report the PC writes to the device</td></tr>
-              <tr><td><code>VEND_INTR</code></td><td><code>6</code></td><td>IN, OUT</td><td>a relayed vendor interrupt packet</td></tr>
-              <tr><td><code>VEND_BULK</code></td><td><code>7</code></td><td>IN, OUT</td><td>a relayed vendor bulk packet</td></tr>
-              <tr><td><code>CONTROL</code></td><td><code>8</code></td><td>IN, OUT</td><td>a control request: the 8 setup bytes, then the first 8 OUT data bytes</td></tr>
-              <tr><td><code>EMIT</code></td><td><code>9</code></td><td>IN</td><td>an emitted report, the clip's own frames included; a clip's <A href="/native/commands/clip#items">raw items</A> pass unmatched</td></tr>
-            </tbody>
-          </table>
-          </div>
-          <div class="api-response-label">FLAGS</div>
+      <DocSection id="packet-triggers" title="Packet triggers" caption="CLIP_TRIGGER with a traffic class">
+        <p>
+          A traffic class in the <code>class</code> byte makes a packet trigger: a packet on that
+          surface whose head matches runs the verb, as an input edge does. The match follows the six
+          bytes every binding has.{' '}
+          <A href="/native/frame#opcodes">Opcode</A> <code>0x15</code>.
+        </p>
+        <pre class="api-signature">CLIP_TRIGGER  0x15  ·  packet payload 8 + 2 x mlen bytes</pre>
+        <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
+        <div class="api-response-label">PAYLOAD</div>
+        <div class="table-scroll">
+        <table class="byte-table">
+          <thead>
+            <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>0</td><td><code>class</code></td><td><code>u8</code></td><td>traffic class, <code>4</code>-<code>9</code> (below)</td></tr>
+            <tr><td>1</td><td><code>id</code></td><td><code>u16</code></td><td>class address as in <A href="/native/commands/catch#catch"><code>CATCH</code></A>, little-endian; <code>0xFFFF</code> = any</td></tr>
+            <tr><td>3</td><td><code>dir</code></td><td><code>u8</code></td><td>packet direction: <code>0</code> both, <code>1</code> IN, <code>2</code> OUT</td></tr>
+            <tr><td>4</td><td><code>action</code></td><td><code>u8</code></td><td>the <A href="/native/commands/clip#ctrl"><code>CLIP_CTRL</code></A> op to fire, <code>0</code>-<code>5</code></td></tr>
+            <tr><td>5</td><td><code>flags</code></td><td><code>u8</code></td><td>bit0 present, bit1 consume, bit2 <code>RUN</code> (below)</td></tr>
+            <tr><td>6</td><td><code>slen</code></td><td><code>u8</code></td><td>selector length: below <code>mlen</code> with <code>RUN</code>, <code>0</code> without</td></tr>
+            <tr><td>7</td><td><code>mlen</code></td><td><code>u8</code></td><td>match length, <code>0</code>-<code>16</code>; <code>0</code> takes every packet on the address</td></tr>
+            <tr><td>8</td><td><code>match</code></td><td><code>u8[]</code></td><td><code>mlen</code> head bytes to compare</td></tr>
+            <tr><td>8+mlen</td><td><code>mask</code></td><td><code>u8[]</code></td><td><code>mlen</code> mask bytes: a packet matches when each head byte ANDed with its mask byte equals the match byte; bytes past the mask are ignored</td></tr>
+          </tbody>
+        </table>
+        </div>
+        <div class="api-response-label">SURFACES</div>
+        <div class="table-scroll">
+        <table class="api-params">
+          <thead><tr><th>Class</th><th>Value</th><th>Carries</th><th>Head</th></tr></thead>
+          <tbody>
+            <tr><td><code>HID_IN</code></td><td><code>4</code></td><td>IN</td><td>the device's report as it arrived, ahead of any rewrite</td></tr>
+            <tr><td><code>HID_OUT</code></td><td><code>5</code></td><td>OUT</td><td>a report the PC writes to the device</td></tr>
+            <tr><td><code>VEND_INTR</code></td><td><code>6</code></td><td>IN, OUT</td><td>a relayed vendor interrupt packet</td></tr>
+            <tr><td><code>VEND_BULK</code></td><td><code>7</code></td><td>IN, OUT</td><td>a relayed vendor bulk packet</td></tr>
+            <tr><td><code>CONTROL</code></td><td><code>8</code></td><td>IN, OUT</td><td>a control request: the 8 setup bytes, then the first 8 OUT data bytes</td></tr>
+            <tr><td><code>EMIT</code></td><td><code>9</code></td><td>IN</td><td>an emitted report, the clip's own frames included; a clip's <A href="/native/commands/clip#items">raw items</A> pass unmatched</td></tr>
+          </tbody>
+        </table>
+        </div>
+        <div class="api-response-label">FLAGS</div>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Bit</th><th>Mask</th><th>Effect</th></tr></thead>
             <tbody>
@@ -654,13 +703,14 @@ re-clone    the box clones a device again`}</pre>
               <tr><td><code>b2</code></td><td><code>0x04</code></td><td><code>RUN</code>: run the verb on the first of a run of matching packets, where a trigger without it runs the verb on every packet it is the most specific match for</td></tr>
             </tbody>
           </table>
-          <p>
-            The key is <code>(class, id, dir, mlen, match, mask)</code>: the same key overwrites, and{' '}
-            <code>present</code> clear with the same key removes. The box holds 8 packet triggers
-            beside the 8 bindings, with 112 match bytes between them.
-          </p>
-          <div class="api-response-label">PACKET PATH</div>
-          <pre class="diagram">{`  packet at a surface
+        </div>
+        <p>
+          The key is <code>(class, id, dir, mlen, match, mask)</code>: the same key overwrites, and{' '}
+          <code>present</code> clear with the same key removes. The box holds 8 packet triggers
+          beside the 8 bindings, with 112 match bytes between them.
+        </p>
+        <div class="api-response-label">PACKET PATH</div>
+        <pre class="diagram">{`  packet at a surface
         |
         v
   [ packet triggers ]   read the bytes as they arrived; only the most specific one acts
@@ -672,7 +722,8 @@ re-clone    the box clones a device again`}</pre>
         |
         v
   delivered             to the game PC (IN) or the real device (OUT)`}</pre>
-          <div class="api-response-label">RULES</div>
+        <div class="api-response-label">RULES</div>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Name</th><th>Behaviour</th></tr>
@@ -691,12 +742,14 @@ re-clone    the box clones a device again`}</pre>
               <tr><td>lifetime</td><td>Packet triggers are clip config: soft state, cleared with the rest of it on a <A href="/native/commands/clip#ctrl">hard stop</A>.</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">REFUSED</div>
-          <p>
-            A refused frame is dropped whole, with no reply, and leaves the set unchanged: a new key
-            isn't added and an existing key keeps its trigger. Compare what{' '}
-            <code>QUERY(CLIP)</code> reads back with what was sent.
-          </p>
+        </div>
+        <div class="api-response-label">REFUSED</div>
+        <p>
+          A refused frame is dropped whole, with no reply, and leaves the set unchanged: a new key
+          isn't added and an existing key keeps its trigger. Compare what{' '}
+          <code>QUERY(CLIP)</code> reads back with what was sent.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Frame</th><th>Why</th></tr>
@@ -713,35 +766,43 @@ re-clone    the box clones a device again`}</pre>
               <tr><td><code>dir = 2</code> on <code>HID_IN</code> or <code>EMIT</code>, <code>dir = 1</code> on <code>HID_OUT</code></td><td>The class never carries that direction.</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">EFFECT</div>
-          <p>
-            No reply. Library binding:{' '}
-            <A href="/library/clip#packet-triggers"><code>bind_packet</code></A>,{' '}
-            <A href="/library/clip#packet-triggers"><code>unbind_packet</code></A>,{' '}
-            <A href="/library/clip#handle"><code>clear_triggers</code></A>.
-          </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <p>
-            Bind <code>HID_IN</code> interface 2, IN, to <code>START</code>, with consume and{' '}
-            <code>RUN</code> (<code>flags = 0x07</code>): report ID <code>0x07</code> is the selector
-            (<code>slen = 1</code>) and bit 5 of the next byte is the condition, so{' '}
-            <code>LEN = 12</code>.
-          </p>
-          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 15     | 00     | 0C 00  | 04     | 02 00  | 01     | 00     | 07     |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | class  | id     | dir    | action | flags  |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-
-| 01     | 02     | 07 20  | FF 20  | lo hi  |
-+--------+--------+--------+--------+--------+
-| slen   | mlen   | match  | mask   | CRC16  |
-+--------+--------+--------+--------+--------+`}</pre>
-          <p>The same trigger removed: the key stays, <code>action</code>, <code>flags</code> and <code>slen</code> are zero.</p>
-          <pre class="diagram">{`04 02 00 01 00 00 00 02 07 20 FF 20
+        </div>
+        <div class="api-response-label">EFFECT</div>
+        <p>
+          No reply. Library binding:{' '}
+          <A href="/library/clip#packet-triggers"><code>bind_packet</code></A>,{' '}
+          <A href="/library/clip#packet-triggers"><code>unbind_packet</code></A>,{' '}
+          <A href="/library/clip#handle"><code>clear_triggers</code></A>.
+        </p>
+        <div class="api-response-label">EXAMPLE</div>
+        <p>
+          Bind <code>HID_IN</code> interface 2, IN, to <code>START</code>, with consume and{' '}
+          <code>RUN</code> (<code>flags = 0x07</code>): report ID <code>0x07</code> is the selector
+          (<code>slen = 1</code>) and bit 5 of the next byte is the condition, so{' '}
+          <code>LEN = 12</code>.
+        </p>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '15', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '0C 00', name: 'LEN' },
+            { value: '04', name: 'class' },
+            { value: '02 00', name: 'id' },
+            { value: '01', name: 'dir' },
+            { value: '00', name: 'action' },
+            { value: '07', name: 'flags' },
+            { value: '01', name: 'slen' },
+            { value: '02', name: 'mlen' },
+            { value: '07 20', name: 'match' },
+            { value: 'FF 20', name: 'mask' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
+        <p>The same trigger removed: the key stays, <code>action</code>, <code>flags</code> and <code>slen</code> are zero.</p>
+        <pre class="diagram">{`04 02 00 01 00 00 00 02 07 20 FF 20
    class=4 HID_IN   id=2   dir=1 IN   action=0   flags=0   slen=0   mlen=2   match=07 20   mask=FF 20`}</pre>
-        </Card>
-      </div>
+      </DocSection>
     </>
   );
 };

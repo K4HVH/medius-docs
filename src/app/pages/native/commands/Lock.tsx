@@ -1,13 +1,14 @@
 import type { Component } from 'solid-js';
 import { A } from '@solidjs/router';
-import { Card, CardHeader } from '../../../../components/surfaces/Card';
-import '../../../../styles/docs.css';
+import { PageHeader } from '../../../shell/PageHeader';
+import { DocSection } from '../../../shell/DocSection';
+import { ByteStrip } from '../../../shell/ByteStrip';
+import { Anchor } from '../../../shell/Anchor';
 
 const Lock: Component = () => {
   return (
     <>
-      <Card>
-        <CardHeader title="Lock" subtitle="Weigh one physical input by class" />
+      <PageHeader>
         <p>
           <A href="/native/commands/lock#lock"><code>LOCK</code></A> sets how much of one physical
           input reaches the game PC. <A href="/native/injection">Injection</A> drives that input at
@@ -26,31 +27,32 @@ const Lock: Component = () => {
           <A href="/native/commands/lock#bearing">bearing</A>, in one of two{' '}
           <A href="/native/commands/lock#geometry">geometries</A>.
         </p>
-        <table class="api-params">
-          <thead>
-            <tr><th>Class</th><th>Value</th><th><code>id</code> is</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>button</td><td><code>0</code></td><td>a <A href="/native/commands/usage#buttons">button id</A> (0=Left .. 4=Side2, then numeric to the declared count)</td></tr>
-            <tr><td>key</td><td><code>1</code></td><td>a <A href="/native/commands/usage#keycodes">HID keyboard usage</A> (0xE0-0xE7 = modifier)</td></tr>
-            <tr><td>media</td><td><code>2</code></td><td>a 16-bit <A href="/native/commands/usage#consumer">Consumer usage</A></td></tr>
-            <tr><td>axis</td><td><code>3</code></td><td>0=X, 1=Y, 2=wheel, 3=pan (the sign is the direction)</td></tr>
-          </tbody>
-        </table>
-      </Card>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Class</th><th>Value</th><th><code>id</code> is</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>button</td><td><code>0</code></td><td>a <A href="/native/commands/usage#buttons">button id</A> (0=Left .. 4=Side2, then numeric to the declared count)</td></tr>
+              <tr><td>key</td><td><code>1</code></td><td>a <A href="/native/commands/usage#keycodes">HID keyboard usage</A> (0xE0-0xE7 = modifier)</td></tr>
+              <tr><td>media</td><td><code>2</code></td><td>a 16-bit <A href="/native/commands/usage#consumer">Consumer usage</A></td></tr>
+              <tr><td>axis</td><td><code>3</code></td><td>0=X, 1=Y, 2=wheel, 3=pan (the sign is the direction)</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </PageHeader>
 
-      <div id="lock" data-search-target>
-        <Card>
-          <CardHeader title="LOCK" subtitle="Block, pass, or amplify" />
-          <p>
-            A momentary usage shares{' '}
-            <A href="/native/commands/inject#inject"><code>INJECT</code></A>'s{' '}
-            <code>(class, id)</code> space, so a button locks like a key.{' '}
-            <A href="/native/frame#opcodes">Opcode</A> <code>0x0A</code>.
-          </p>
-          <pre class="api-signature">LOCK  0x0A  ·  payload 6 bytes</pre>
-          <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
-          <div class="api-response-label">PAYLOAD</div>
+      <DocSection id="lock" title="LOCK" caption="Block, pass, or amplify">
+        <p>
+          A momentary usage shares{' '}
+          <A href="/native/commands/inject#inject"><code>INJECT</code></A>'s{' '}
+          <code>(class, id)</code> space, so a button locks like a key.{' '}
+          <A href="/native/frame#opcodes">Opcode</A> <code>0x0A</code>.
+        </p>
+        <pre class="api-signature">LOCK  0x0A  ·  payload 6 bytes</pre>
+        <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
+        <div class="api-response-label">PAYLOAD</div>
+        <div class="table-scroll">
           <table class="byte-table">
             <thead>
               <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
@@ -62,9 +64,10 @@ const Lock: Component = () => {
               <tr><td>4</td><td><code>scale</code></td><td><code>i16</code></td><td>percent of the physical value kept, little-endian, <A href="/native/commands/lock#scale"><code>-255 to 255</code></A></td></tr>
             </tbody>
           </table>
+        </div>
 
-          <div id="scale" data-search-target>
-            <div class="api-response-label">SCALE</div>
+        <Anchor id="scale" label="SCALE">
+          <div class="table-scroll">
             <table class="api-params">
               <thead>
                 <tr><th>Name</th><th>Value</th><th>Effect</th></tr>
@@ -77,7 +80,9 @@ const Lock: Component = () => {
                 <tr><td>max</td><td><code>255</code></td><td>2.55x. Anything above <code>100</code> amplifies.</td></tr>
               </tbody>
             </table>
-            <div class="api-response-label">RULES</div>
+          </div>
+          <div class="api-response-label">RULES</div>
+          <div class="table-scroll">
             <table class="api-params">
               <thead>
                 <tr><th>Name</th><th>What the box does</th></tr>
@@ -92,70 +97,70 @@ const Lock: Component = () => {
                 <tr><td>order</td><td>A scale is in force before the box acts on anything sent after it, a <A href="/native/commands/clip#set">clip's auto-lock</A> included: once a later command's effect reaches the PC, no physical input passes at the old scale.</td></tr>
               </tbody>
             </table>
-            <div class="callout callout--warning">
-              <p>
-                Weighing runs before injected motion drains, so a gain that fills an axis leaves
-                injected motion no room. It is held, not dropped, and leaves as one report once room
-                opens.
-              </p>
-              <p>
-                The threshold is the field's declared maximum divided by the gain: at <code>255</code>{' '}
-                on an 8-bit axis the field fills at a physical delta of <code>50</code> and clamps
-                from <code>51</code>.
-              </p>
-              <p>
-                <A href="/native/commands/option#move-ride"><code>MOVE_RIDE</code></A> doesn't bound
-                it: a moved report re-opens the ride window, and riding never gates the immediate{' '}
-                <A href="/native/injection#state">accumulator</A>.
-              </p>
-            </div>
           </div>
-
-          <div id="direction" data-search-target>
-            <div class="api-response-label">DIRECTION</div>
-            <div class="table-scroll">
-              <table class="api-params">
-                <thead>
-                  <tr><th>Name</th><th>Value</th><th>Axis</th><th>Button, key, media</th></tr>
-                </thead>
-                <tbody>
-                  <tr><td>both</td><td><code>0</code></td><td>Both signs.</td><td>Press and release.</td></tr>
-                  <tr><td>positive</td><td><code>1</code></td><td>Positive sign only (<code>+</code>).</td><td>Press only (<code>0 to 1</code>).</td></tr>
-                  <tr><td>negative</td><td><code>2</code></td><td>Negative sign only (<code>-</code>).</td><td>Release only (<code>1 to 0</code>).</td></tr>
-                  <tr><td>with</td><td><code>3</code></td><td>The sign the box is <A href="/native/commands/lock#bearing">injecting</A>.</td><td>Refused on a button or key. Media locks the whole usage, as <code>0</code> would.</td></tr>
-                  <tr><td>against</td><td><code>4</code></td><td>The sign opposing it.</td><td>Refused on a button or key. Media locks the whole usage, as <code>0</code> would.</td></tr>
-                </tbody>
-              </table>
-            </div>
+          <div class="callout callout--warning">
             <p>
-              Media has no sign and no edge, so{' '}
-              <A href="/native/commands/requests#locks"><code>RESP(LOCKS)</code></A> always reports
-              its direction as <code>0</code>. Every shipped client refuses <code>3</code> and{' '}
-              <code>4</code> on all three momentary classes.
+              Weighing runs before injected motion drains, so a gain that fills an axis leaves
+              injected motion no room. It is held, not dropped, and leaves as one report once room
+              opens.
             </p>
             <p>
-              On an axis, <code>0</code> writes the scale to the two fixed-sign slots and a pass to the
-              relative pair, so a <code>both</code> of 50 means 50% whether or not a bearing is live.
-              An unlock clears all four.
+              The threshold is the field's declared maximum divided by the gain: at <code>255</code>{' '}
+              on an 8-bit axis the field fills at a physical delta of <code>50</code> and clamps
+              from <code>51</code>.
+            </p>
+            <p>
+              <A href="/native/commands/option#move-ride"><code>MOVE_RIDE</code></A> doesn't bound
+              it: a moved report re-opens the ride window, and riding never gates the immediate{' '}
+              <A href="/native/injection#state">accumulator</A>.
             </p>
           </div>
+        </Anchor>
 
-          <div id="blanket" data-search-target>
-            <div class="api-response-label">BLANKET</div>
-            <p>An <code>id</code> of <code>0xFFFF</code> addresses the whole class in one command.</p>
-            <div class="table-scroll">
-              <table class="api-params">
-                <thead>
-                  <tr><th>Class</th><th>Covers</th><th>Direction</th><th>Reads back as</th></tr>
-                </thead>
-                <tbody>
-                  <tr><td>button</td><td>Every button the device declares.</td><td>As a named button.</td><td>One entry per button and edge, under its own id.</td></tr>
-                  <tr><td>key</td><td>Every keyboard usage.</td><td>Honoured: <code>1</code> blocks press edges, <code>2</code> release edges, <code>0</code> both.</td><td>One entry per blocked edge, id <code>0xFFFF</code>.</td></tr>
-                  <tr><td>media</td><td>Every Consumer usage.</td><td>Ignored.</td><td>One entry, id <code>0xFFFF</code>, direction <code>0</code>.</td></tr>
-                  <tr><td>axis</td><td>X, Y, the wheel, and pan.</td><td>As a named axis.</td><td>One entry per axis and direction, under its own id.</td></tr>
-                </tbody>
-              </table>
-            </div>
+        <Anchor id="direction" label="DIRECTION">
+          <div class="table-scroll">
+            <table class="api-params">
+              <thead>
+                <tr><th>Name</th><th>Value</th><th>Axis</th><th>Button, key, media</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>both</td><td><code>0</code></td><td>Both signs.</td><td>Press and release.</td></tr>
+                <tr><td>positive</td><td><code>1</code></td><td>Positive sign only (<code>+</code>).</td><td>Press only (<code>0 to 1</code>).</td></tr>
+                <tr><td>negative</td><td><code>2</code></td><td>Negative sign only (<code>-</code>).</td><td>Release only (<code>1 to 0</code>).</td></tr>
+                <tr><td>with</td><td><code>3</code></td><td>The sign the box is <A href="/native/commands/lock#bearing">injecting</A>.</td><td>Refused on a button or key. Media locks the whole usage, as <code>0</code> would.</td></tr>
+                <tr><td>against</td><td><code>4</code></td><td>The sign opposing it.</td><td>Refused on a button or key. Media locks the whole usage, as <code>0</code> would.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            Media has no sign and no edge, so{' '}
+            <A href="/native/commands/requests#locks"><code>RESP(LOCKS)</code></A> always reports
+            its direction as <code>0</code>. Every shipped client refuses <code>3</code> and{' '}
+            <code>4</code> on all three momentary classes.
+          </p>
+          <p>
+            On an axis, <code>0</code> writes the scale to the two fixed-sign slots and a pass to the
+            relative pair, so a <code>both</code> of 50 means 50% whether or not a bearing is live.
+            An unlock clears all four.
+          </p>
+        </Anchor>
+
+        <Anchor id="blanket" label="BLANKET">
+          <p>An <code>id</code> of <code>0xFFFF</code> addresses the whole class in one command.</p>
+          <div class="table-scroll">
+            <table class="api-params">
+              <thead>
+                <tr><th>Class</th><th>Covers</th><th>Direction</th><th>Reads back as</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>button</td><td>Every button the device declares.</td><td>As a named button.</td><td>One entry per button and edge, under its own id.</td></tr>
+                <tr><td>key</td><td>Every keyboard usage.</td><td>Honoured: <code>1</code> blocks press edges, <code>2</code> release edges, <code>0</code> both.</td><td>One entry per blocked edge, id <code>0xFFFF</code>.</td></tr>
+                <tr><td>media</td><td>Every Consumer usage.</td><td>Ignored.</td><td>One entry, id <code>0xFFFF</code>, direction <code>0</code>.</td></tr>
+                <tr><td>axis</td><td>X, Y, the wheel, and pan.</td><td>As a named axis.</td><td>One entry per axis and direction, under its own id.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="table-scroll">
             <table class="api-params">
               <thead>
                 <tr><th>Blanket</th><th>Storage</th></tr>
@@ -166,91 +171,113 @@ const Lock: Component = () => {
               </tbody>
             </table>
           </div>
+        </Anchor>
 
 
-          <div id="clearing" data-search-target>
-            <div class="api-response-label">CLEARS ON</div>
-            <pre class="diagram">{`unlock      the matching unlock (scale = 100); direction 0 clears
+        <Anchor id="clearing" label="CLEARS ON">
+          <pre class="diagram">{`unlock      the matching unlock (scale = 100); direction 0 clears
             all four slots of that target
 silence     ~1 s with no control-PC frame
 RESET       a RESET command
 link loss   the inter-chip link drops
 detach      the real device goes away
 re-clone    the box binds a device again`}</pre>
-            <p>
-              A keepalive holds one past a second of quiet. Injection auto-clears on the same events;
-              see <A href="/native/injection#safety">Injection</A>.
-            </p>
-            <p>Every clear here but the unlock moves the <A href="/native/commands/requests#stats"><code>session</code></A> count.</p>
-          </div>
+          <p>
+            A keepalive holds one past a second of quiet. Injection auto-clears on the same events;
+            see <A href="/native/injection#safety">Injection</A>.
+          </p>
+          <p>Every clear here but the unlock moves the <A href="/native/commands/requests#stats"><code>session</code></A> count.</p>
+        </Anchor>
 
-          <div class="api-response-label">EFFECT</div>
-          <p>
-            Scales are PC-owned and invisible to the game PC.{' '}
-            <A href="/native/commands/requests#locks"><code>QUERY(LOCKS)</code></A> reads the active
-            set; the HEALTH{' '}
-            <A href="/native/commands/requests#health"><code>LOCK_ON</code></A> bit is set while
-            anything is off a full pass.
-          </p>
-          <p>
-            Library bindings:{' '}
-            <A href="/library/lock#scale"><code>scale</code></A>,{' '}
-            <A href="/library/lock#lock"><code>lock</code></A>,{' '}
-            <A href="/library/lock#unlock"><code>unlock</code></A>, and{' '}
-            <A href="/library/lock#lock-all"><code>scale_all</code></A>, which sends this frame for
-            buttons, keys and media and per-axis frames for X, Y, the wheel and pan.
-          </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <p>Block the wheel's negative (scroll-down) sign: <code>class = 3</code> (axis), <code>id = 2</code> (wheel), <code>direction = 2</code>, <code>scale = 0</code>:</p>
-          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 0A     | 00     | 06 00  | 03     | 02 00  | 02     | 00 00  | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | class  | id     | dir    | scale  | CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
-          <p>
-            Keep 40% of leftward movement while the bearing on X is positive: <code>direction = 4</code>{' '}
-            (against), <code>scale = 40</code>. A physical <code>-10</code> then leaves as{' '}
-            <code>-4</code>, and as <code>-10</code> again once the bearing lapses:
-          </p>
-          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 0A     | 01     | 06 00  | 03     | 00 00  | 04     | 28 00  | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | class  | id     | dir    | scale  | CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
-          <p>
-            Invert X on both signs: <code>scale = -100</code>, which is <code>0xFF9C</code>{' '}
-            little-endian.
-          </p>
-          <pre class="diagram">{`+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| A5     | 0A     | 02     | 06 00  | 03     | 00 00  | 00     | 9C FF  | lo hi  |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-| SOF    | TYPE   | SEQ    | LEN    | class  | id     | dir    | scale  | CRC16  |
-+--------+--------+--------+--------+--------+--------+--------+--------+--------+`}</pre>
-        </Card>
-      </div>
+        <div class="api-response-label">EFFECT</div>
+        <p>
+          Scales are PC-owned and invisible to the game PC.{' '}
+          <A href="/native/commands/requests#locks"><code>QUERY(LOCKS)</code></A> reads the active
+          set; the HEALTH{' '}
+          <A href="/native/commands/requests#health"><code>LOCK_ON</code></A> bit is set while
+          anything is off a full pass.
+        </p>
+        <p>
+          Library bindings:{' '}
+          <A href="/library/lock#scale"><code>scale</code></A>,{' '}
+          <A href="/library/lock#lock"><code>lock</code></A>,{' '}
+          <A href="/library/lock#unlock"><code>unlock</code></A>, and{' '}
+          <A href="/library/lock#lock-all"><code>scale_all</code></A>, which sends this frame for
+          buttons, keys and media and per-axis frames for X, Y, the wheel and pan.
+        </p>
+        <div class="api-response-label">EXAMPLE</div>
+        <p>Block the wheel's negative (scroll-down) sign: <code>class = 3</code> (axis), <code>id = 2</code> (wheel), <code>direction = 2</code>, <code>scale = 0</code>:</p>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '0A', name: 'TYPE' },
+            { value: '00', name: 'SEQ' },
+            { value: '06 00', name: 'LEN' },
+            { value: '03', name: 'class' },
+            { value: '02 00', name: 'id' },
+            { value: '02', name: 'dir' },
+            { value: '00 00', name: 'scale' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
+        <p>
+          Keep 40% of leftward movement while the bearing on X is positive: <code>direction = 4</code>{' '}
+          (against), <code>scale = 40</code>. A physical <code>-10</code> then leaves as{' '}
+          <code>-4</code>, and as <code>-10</code> again once the bearing lapses:
+        </p>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '0A', name: 'TYPE' },
+            { value: '01', name: 'SEQ' },
+            { value: '06 00', name: 'LEN' },
+            { value: '03', name: 'class' },
+            { value: '00 00', name: 'id' },
+            { value: '04', name: 'dir' },
+            { value: '28 00', name: 'scale' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
+        <p>
+          Invert X on both signs: <code>scale = -100</code>, which is <code>0xFF9C</code>{' '}
+          little-endian.
+        </p>
+        <ByteStrip
+          fields={[
+            { value: 'A5', name: 'SOF' },
+            { value: '0A', name: 'TYPE' },
+            { value: '02', name: 'SEQ' },
+            { value: '06 00', name: 'LEN' },
+            { value: '03', name: 'class' },
+            { value: '00 00', name: 'id' },
+            { value: '00', name: 'dir' },
+            { value: '9C FF', name: 'scale' },
+            { value: 'lo hi', name: 'CRC16' },
+          ]}
+        />
+      </DocSection>
 
-      <div id="bearing" data-search-target>
-        <Card>
-          <CardHeader title="Bearing" subtitle="Current injected direction" />
-          <p>
-            <code>with</code> and <code>against</code> weigh a physical delta by its sign relative
-            to the bearing. The box reads it at the{' '}
-            <A href="/native/injection">merge point</A>, where pending injection and the arriving
-            report are both present.
-          </p>
-          <pre class="diagram">{`  MOVE(+10)        MOVE(+10)                          idle
+      <DocSection id="bearing" title="Bearing" caption="Current injected direction">
+        <p>
+          <code>with</code> and <code>against</code> weigh a physical delta by its sign relative
+          to the bearing. The box reads it at the{' '}
+          <A href="/native/injection">merge point</A>, where pending injection and the arriving
+          report are both present.
+        </p>
+        <pre class="diagram">{`  MOVE(+10)        MOVE(+10)                          idle
       |                |
       v                v
   ----+----------------+---------------------------------------> t
       |<-- restarted ->|<------ window ------->|
        bearing +X       bearing +X               no bearing`}</pre>
-          <div class="api-response-label">LIFETIME</div>
-          <p>
-            Each axis has its own bearing and deadline, set by{' '}
-            <A href="/native/commands/option#bearing"><code>OPTION(BEARING)</code></A>. A window of{' '}
-            <code>0</code> holds no bearing, so <code>with</code> and <code>against</code> stop
-            weighing without being cleared.
-          </p>
+        <div class="api-response-label">LIFETIME</div>
+        <p>
+          Each axis has its own bearing and deadline, set by{' '}
+          <A href="/native/commands/option#bearing"><code>OPTION(BEARING)</code></A>. A window of{' '}
+          <code>0</code> holds no bearing, so <code>with</code> and <code>against</code> stop
+          weighing without being cleared.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Event</th><th>Bearing</th></tr>
@@ -266,16 +293,15 @@ re-clone    the box binds a device again`}</pre>
               <tr><td><A href="/native/commands/admin#reset"><code>RESET</code></A>, ~1 s of control-PC silence, link loss, detach</td><td>Cleared with the rest of the PC-owned state.</td></tr>
             </tbody>
           </table>
-        </Card>
-      </div>
+        </div>
+      </DocSection>
 
-      <div id="geometry" data-search-target>
-        <Card>
-          <CardHeader title="Geometry" subtitle="Per axis, or projected onto the bearing" />
-          <p>
-            Set by <A href="/native/commands/option#bearing"><code>OPTION(BEARING)</code></A>. The two
-            modes agree while the bearing has one nonzero component, and differ once both are.
-          </p>
+      <DocSection id="geometry" title="Geometry" caption="Per axis, or projected onto the bearing">
+        <p>
+          Set by <A href="/native/commands/option#bearing"><code>OPTION(BEARING)</code></A>. The two
+          modes agree while the bearing has one nonzero component, and differ once both are.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Mode</th><th>Value</th><th>Weighs</th></tr>
@@ -285,7 +311,8 @@ re-clone    the box binds a device again`}</pre>
               <tr><td>vector</td><td><code>1</code></td><td>Only the movement along the injected direction.</td></tr>
             </tbody>
           </table>
-          <pre class="diagram">{`the bearing is down-right at 45 degrees, the device moves straight right
+        </div>
+        <pre class="diagram">{`the bearing is down-right at 45 degrees, the device moves straight right
 
         o----------->  h   (+12, 0)
          \\         /   across b  (+6, -6)  untouched by with / against
@@ -294,17 +321,18 @@ re-clone    the box binds a device again`}</pre>
             \\   /
              \\ /
               +        along b   (+6, +6)  weighed by with / against`}</pre>
-          <p>
-            In vector mode the relative pair addresses the XY bearing as a whole: the box takes the lower
-            of the X and Y scales and applies it to both.
-          </p>
-          <p>
-            <A href="/native/commands/requests#locks"><code>RESP(LOCKS)</code></A> reports that
-            effective number on both axes, so a readback replayed as commands levels the higher stored
-            byte down to it.
-          </p>
-          <p>The wheel and pan are never projected; each weighs against its own bearing.</p>
-          <div class="api-response-label">TWO STAGES</div>
+        <p>
+          In vector mode the relative pair addresses the XY bearing as a whole: the box takes the lower
+          of the X and Y scales and applies it to both.
+        </p>
+        <p>
+          <A href="/native/commands/requests#locks"><code>RESP(LOCKS)</code></A> reports that
+          effective number on both axes, so a readback replayed as commands levels the higher stored
+          byte down to it.
+        </p>
+        <p>The wheel and pan are never projected; each weighs against its own bearing.</p>
+        <div class="api-response-label">TWO STAGES</div>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Stage</th><th>Reads</th><th>Acts on</th></tr>
@@ -314,13 +342,14 @@ re-clone    the box binds a device again`}</pre>
               <tr><td>2. weigh</td><td>Each axis's fixed pair, chosen by the sign now in the field.</td><td>What stage 1 left, not the delta the report carried.</td></tr>
             </tbody>
           </table>
-          <p>
-            A fixed-sign scale governs what reaches the game PC, so it covers the across part as
-            well as the physical delta. Only the relative pair is redistributed; the fixed pair is
-            per axis in both modes.
-          </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre class="diagram">{`  bearing +X +Y
+        </div>
+        <p>
+          A fixed-sign scale governs what reaches the game PC, so it covers the across part as
+          well as the physical delta. Only the relative pair is redistributed; the fixed pair is
+          per axis in both modes.
+        </p>
+        <div class="api-response-label">EXAMPLE</div>
+        <pre class="diagram">{`  bearing +X +Y
   LOCK(axis X, with, 0)  LOCK(axis Y, with, 0)   the bearing's relative scale is 0
   LOCK(axis Y, negative, 0)                      Y's negative sign is blocked
 
@@ -331,13 +360,12 @@ re-clone    the box binds a device again`}</pre>
            leaves        +6    -6
   stage 2  scale        100     0   on the sign now in each field
   emitted                +6     0`}</pre>
-          <p>
-            Per axis, stage 2 would leave Y alone, since the report carried nothing there. With a scale
-            of <code>200</code> instead of the block, the same <code>-6</code> leaves as{' '}
-            <code>-12</code>.
-          </p>
-        </Card>
-      </div>
+        <p>
+          Per axis, stage 2 would leave Y alone, since the report carried nothing there. With a scale
+          of <code>200</code> instead of the block, the same <code>-6</code> leaves as{' '}
+          <code>-12</code>.
+        </p>
+      </DocSection>
     </>
   );
 };

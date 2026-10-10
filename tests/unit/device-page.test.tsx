@@ -8,6 +8,8 @@ import { PROTO_VER } from '../../src/dashboard/protocol';
 const mock = vi.hoisted(() => ({
   identifies: 0,
   identifying: false,
+  identifyRefused: false,
+  setLink: (_l: object | null) => {},
   supported: true,
   secure: true,
   status: 'disconnected' as string,
@@ -20,8 +22,13 @@ const mock = vi.hoisted(() => ({
   error: null as string | null,
 }));
 
-vi.mock('../../src/app/pages/dashboard/context', () => ({
+vi.mock('../../src/app/pages/dashboard/context', async () => {
+  const { createSignal } = await import('solid-js');
+  const [link, setLink] = createSignal<object | null>({});
+  mock.setLink = setLink;
+  return {
   useDashboard: () => ({
+    link,
     supported: mock.supported,
     secure: mock.secure,
     status: () => mock.status,
@@ -41,20 +48,24 @@ vi.mock('../../src/app/pages/dashboard/context', () => ({
     disconnect: async () => {},
     identify: async () => {
       mock.identifies += 1;
+      if (mock.identifyRefused) throw new Error('The box refused that.');
     },
     identifying: () => mock.identifying,
     update: () => ({ device: true, host: true, page: mock.runPage, outcome: 'running' }),
     deviceLog: () => [],
+    deviceLogAdded: () => 0,
     clearDeviceLog: () => {},
     poll: () => () => null,
     refreshPoll: () => {},
   }),
-}));
+  };
+});
 
 const navigate = vi.hoisted(() => vi.fn());
 vi.mock('@solidjs/router', () => ({
   useNavigate: () => navigate,
   A: (p: { children: unknown }) => p.children,
+  useLocation: () => ({ pathname: '/dashboard', hash: '' }),
 }));
 
 import Device from '../../src/app/pages/dashboard/Device';
@@ -72,6 +83,23 @@ afterEach(() => {
 });
 
 describe('Device', () => {
+  it('keeps the page in a browser without Web Serial, with the reason where Connect was', async () => {
+    mock.supported = false;
+    const { container, queryByRole } = render(() => <Device />);
+    await waitFor(() => expect(container.textContent).toContain('Your box'));
+    expect(container.textContent).toMatch(/can't talk to your box/i);
+    expect(container.textContent).not.toMatch(/Browser not supported/);
+    expect(queryByRole('button', { name: /^connect$/i })).toBeNull();
+  });
+
+  it('keeps the page on an insecure origin, with the reason where Connect was', async () => {
+    mock.secure = false;
+    const { container } = render(() => <Device />);
+    await waitFor(() => expect(container.textContent).toContain('Your box'));
+    expect(container.textContent).toMatch(/isn't secure/i);
+    expect(container.textContent).not.toMatch(/Page not secure/);
+  });
+
   it('uses the same browser wording as every other page, not its own', async () => {
     mock.supported = false;
     const { container } = render(() => <Device />);
@@ -105,11 +133,11 @@ describe('Device', () => {
       expect(text).toMatch(/Update needed/i);
       expect(text).toMatch(/use the rest of the dashboard/i);
       // the live-health panel belongs to the current wire and must not be offered
-      expect(text).not.toMatch(/Live device health/i);
+      expect(container.querySelector('#status')).toBeNull();
     });
   });
 
-  it('a box newer than the page is called newer and pointed at Reload and Advanced, never told to update', async () => {
+  it('a box newer than the page is called newer and pointed at Reload and the manual flash, never told to update', async () => {
     mock.status = 'connected';
     mock.updateOnly = true;
     mock.protoVer = PROTO_VER + 1;
@@ -121,11 +149,11 @@ describe('Device', () => {
       await waitFor(() => expect(container.textContent).toMatch(/Newer firmware/));
       const text = container.textContent ?? '';
       expect(text).toContain(`This box speaks protocol ${PROTO_VER + 1} and this page protocol ${PROTO_VER}.`);
-      expect(text).toContain('It can still be flashed from Advanced.');
+      expect(text).toContain("It can still be flashed by hand, on Update's Manual tab.");
       expect(text).not.toMatch(/Update needed/i);
-      expect(text).not.toMatch(/Live device health/i);
-      getByRole('button', { name: 'Advanced' }).click();
-      expect(navigate).toHaveBeenCalledWith('/dashboard/advanced');
+      expect(container.querySelector('#status')).toBeNull();
+      getByRole('button', { name: 'Manual flash' }).click();
+      expect(navigate).toHaveBeenCalledWith('/dashboard/update#manual');
       getByRole('button', { name: /reload/i }).click();
       expect(reload).toHaveBeenCalled();
     } finally {
@@ -140,7 +168,7 @@ describe('Device', () => {
     await waitFor(() => {
       const text = container.textContent ?? '';
       expect(text).not.toMatch(/Update needed/i);
-      expect(text).toMatch(/Live device health/i);
+      expect(container.querySelector('#status')).not.toBeNull();
     });
   });
 
@@ -153,7 +181,6 @@ describe('Device', () => {
     await waitFor(() => {
       const text = container.textContent ?? '';
       expect(text).toMatch(/Factory reset/i);
-      expect(text).toMatch(/Erase everything saved/i);
       expect(text).toMatch(/box name/i);
       expect(text).toMatch(/learned/i);
       expect(text).toMatch(/then restarts/i);
@@ -195,12 +222,22 @@ describe('Device', () => {
     expect(navigate).toHaveBeenCalledWith('/dashboard/update');
   });
 
-  it('while Advanced flashes this box, the card takes you to Advanced', async () => {
+  it('names the box as updating in the header, not as disconnected, while it updates', async () => {
+    mock.status = 'flashing';
+    const { container } = render(() => <Device />);
+    expect(container.querySelector('.conn')!.textContent).toMatch(/^Updating/);
+    mock.status = 'lost';
+    cleanup();
+    const lost = render(() => <Device />);
+    expect(lost.container.querySelector('.conn')!.textContent).toMatch(/^Not answering/);
+  });
+
+  it('while the manual flash runs on this box, the card takes you to it', async () => {
     mock.status = 'flashing';
     mock.runPage = 'advanced';
     const { getByRole } = render(() => <Device />);
-    getByRole('button', { name: /go to advanced/i }).click();
-    expect(navigate).toHaveBeenCalledWith('/dashboard/advanced');
+    getByRole('button', { name: /go to manual flash/i }).click();
+    expect(navigate).toHaveBeenCalledWith('/dashboard/update#manual');
   });
 
   it('offers no Identify for a box newer than the page: the light command may have changed', () => {
@@ -227,6 +264,26 @@ describe('Device', () => {
     expect(names.indexOf('Identify')).toBe(names.indexOf('Disconnect') - 1);
     getByRole('button', { name: 'Identify' }).click();
     expect(mock.identifies).toBe(1);
+  });
+
+  it('a refused identify says so under the buttons that sent it', async () => {
+    mock.status = 'connected';
+    mock.identifyRefused = true;
+    const { getByRole, findByRole } = render(() => <Device />);
+    getByRole('button', { name: 'Identify' }).click();
+    expect((await findByRole('alert')).textContent).toBe('The box refused that.');
+    mock.identifyRefused = false;
+  });
+
+  it('drops a refused identify once the box is reached over a new link', async () => {
+    mock.status = 'connected';
+    mock.identifyRefused = true;
+    const { getByRole, findByRole, queryByRole } = render(() => <Device />);
+    getByRole('button', { name: 'Identify' }).click();
+    await findByRole('alert');
+    mock.identifyRefused = false;
+    mock.setLink({});
+    await waitFor(() => expect(queryByRole('alert')).toBeNull());
   });
 
   it('says it is identifying while the light blinks', () => {

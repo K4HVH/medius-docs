@@ -21,13 +21,15 @@ const mock = vi.hoisted(() => ({
   flashes: 0,
   holdFlash: false,
   metas: [] as unknown[],
+  supported: true,
+  secure: true,
 }));
 
 vi.mock('../../src/app/pages/dashboard/context', () => ({
   // The selected box's session, read through the registry: Advanced is not inside BoxScope.
   useBoxes: () => ({
-    supported: true,
-    secure: true,
+    supported: mock.supported,
+    secure: mock.secure,
     scope: () => ({
       status: () => mock.s!.status(),
       name: () => 'Desk',
@@ -86,7 +88,11 @@ vi.mock('../../src/app/pages/dashboard/AdvancedUsb2', () => ({
 }));
 
 const navigate = vi.hoisted(() => vi.fn());
-vi.mock('@solidjs/router', () => ({ useNavigate: () => navigate }));
+vi.mock('@solidjs/router', () => ({
+  useNavigate: () => navigate,
+  useLocation: () => ({ pathname: '/dashboard/advanced', hash: '' }),
+  A: (p: { children: unknown }) => p.children,
+}));
 
 import Advanced from '../../src/app/pages/dashboard/Advanced';
 
@@ -101,20 +107,40 @@ afterEach(() => {
   mock.flashes = 0;
   mock.metas = [];
   mock.holdFlash = false;
+  mock.supported = true;
+  mock.secure = true;
   navigate.mockClear();
 });
 
+// Each control sits in a field under its label: Via, Chip and Image are dropdowns, Source a segmented
+// choice.
+const field = (r: ReturnType<typeof render>, label: string) => {
+  const f = [...r.container.querySelectorAll('.labelled')].find((el) => el.querySelector('.field-l')?.textContent === label);
+  if (!f) throw new Error(`no ${label} field`);
+  return f as HTMLElement;
+};
+const dropdown = (r: ReturnType<typeof render>, label: string) =>
+  field(r, label).querySelector('.dd-b') as HTMLButtonElement;
+// The option list only exists once the dropdown is open.
+const optionOf = (r: ReturnType<typeof render>, label: string, option: RegExp) =>
+  [...field(r, label).querySelectorAll('[role="option"]')].find((o) => option.test(o.textContent ?? '')) as
+    | HTMLElement
+    | undefined;
+const choose = async (r: ReturnType<typeof render>, label: string, option: RegExp) => {
+  fireEvent.click(dropdown(r, label));
+  const o = await waitFor(() => {
+    const el = optionOf(r, label, option);
+    if (!el) throw new Error(`no ${label} option ${option}`);
+    return el;
+  });
+  fireEvent.click(o);
+};
+const sourceRadios = (r: ReturnType<typeof render>) =>
+  [...field(r, 'Source').querySelectorAll('[role="radio"]')] as HTMLButtonElement[];
+
 // Switch SOURCE to the upload path and return the real file input.
 const openUpload = async (r: ReturnType<typeof render>) => {
-  const source = r.container.querySelectorAll('[role="combobox"]')[3] as HTMLElement;
-  fireEvent.click(source);
-  fireEvent.keyDown(source, { key: 'Enter' });
-  await new Promise((res) => setTimeout(res, 20));
-  const upload = [...document.querySelectorAll('[role="option"]')].find((o) =>
-    /upload a file/i.test(o.textContent ?? ''),
-  );
-  if (!upload) throw new Error('no upload option');
-  fireEvent.click(upload);
+  fireEvent.click(field(r, 'Source').querySelector('[role="radio"][data-v="upload"]') as HTMLElement);
   return waitFor(() => {
     const el = r.container.querySelector('input[type="file"]');
     if (!el) throw new Error('no file input');
@@ -146,15 +172,7 @@ describe('Advanced', () => {
     expect(r.container.textContent).not.toMatch(/button next to USB3/i);
 
     // Switch to the mouse-side chip and the badge must follow the socket, not stay put.
-    const chip = r.container.querySelectorAll('[role="combobox"]')[1] as HTMLElement;
-    fireEvent.click(chip);
-    fireEvent.keyDown(chip, { key: 'Enter' });
-    await new Promise((res) => setTimeout(res, 20));
-    const mouseSide = [...document.querySelectorAll('[role="option"]')].find((o) =>
-      /mouse-side/i.test(o.textContent ?? ''),
-    );
-    if (!mouseSide) throw new Error('no mouse-side option');
-    fireEvent.click(mouseSide);
+    await choose(r, 'Chip', /mouse-side/i);
     await openGate(r);
     await waitFor(() => expect(r.container.textContent).toMatch(/button next to USB3/i));
     expect(r.container.textContent).not.toMatch(/button next to USB1/i);
@@ -165,20 +183,7 @@ describe('Advanced', () => {
     // unconditionally erased the reason in the same tick it was set.
     const r = render(() => <Advanced />);
     await openGate(r);
-    const source = r.container.querySelectorAll('[role="combobox"]')[3] as HTMLElement;
-    fireEvent.click(source);
-    fireEvent.keyDown(source, { key: 'Enter' });
-    await new Promise((res) => setTimeout(res, 20));
-    const upload = [...document.querySelectorAll('[role="option"]')].find((o) =>
-      /upload a file/i.test(o.textContent ?? ''),
-    );
-    if (!upload) throw new Error('no upload option');
-    fireEvent.click(upload);
-    const input = await waitFor(() => {
-      const el = r.container.querySelector('input[type="file"]');
-      if (!el) throw new Error('no file input');
-      return el as HTMLInputElement;
-    });
+    const input = await openUpload(r);
     // Over the 4 MB cap, so FileUpload rejects it and hands back an empty selection.
     const huge = new File([new Uint8Array(16)], 'huge.bin');
     Object.defineProperty(huge, 'size', { value: 8 * 1024 * 1024 });
@@ -197,15 +202,7 @@ describe('Advanced', () => {
     r.getByRole('button', { name: /^flash$/i }).click();
     const alert = await r.findByRole('alert');
     expect(alert.textContent).toMatch(/did not finish/i);
-    const chip = r.container.querySelectorAll('[role="combobox"]')[1] as HTMLElement;
-    fireEvent.click(chip);
-    fireEvent.keyDown(chip, { key: 'Enter' });
-    await new Promise((res) => setTimeout(res, 20));
-    const mouseSide = [...document.querySelectorAll('[role="option"]')].find((o) =>
-      /mouse-side/i.test(o.textContent ?? ''),
-    );
-    if (!mouseSide) throw new Error('no mouse-side option');
-    fireEvent.click(mouseSide);
+    await choose(r, 'Chip', /mouse-side/i);
     await waitFor(() => expect(r.queryByRole('alert')).toBeNull());
   });
 
@@ -217,9 +214,10 @@ describe('Advanced', () => {
     await openGate(r);
     r.getByRole('button', { name: /^flash$/i }).click();
     await waitFor(() => {
-      const boxes = [...r.container.querySelectorAll('.combobox--disabled')];
       // Via, chip, image and source: all four were live across the two awaits.
-      expect(boxes).toHaveLength(4);
+      for (const label of ['Via', 'Chip', 'Image']) expect(dropdown(r, label)).toBeDisabled();
+      expect(field(r, 'Source').querySelector('.seg--disabled')).not.toBeNull();
+      for (const radio of sourceRadios(r)) expect(radio).toBeDisabled();
     });
   });
 
@@ -249,23 +247,32 @@ describe('Advanced', () => {
   });
 
 
+  it('a file that is no firmware image is refused, not also called an image of the other kind', async () => {
+    const r = render(() => <Advanced />);
+    await openGate(r);
+    const input = await openUpload(r);
+    const bytes = new Uint8Array(3000).fill(0x5a);
+    const junk = new File([bytes], 'junk.bin');
+    Object.defineProperty(junk, 'arrayBuffer', { value: () => Promise.resolve(bytes.buffer as ArrayBuffer) });
+    Object.defineProperty(input, 'files', { value: [junk], configurable: true });
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    await waitFor(() => expect(r.getByRole('alert').textContent).toMatch(/not an esp32-s3 firmware image/i));
+    expect(r.container.textContent).not.toMatch(/looks like/i);
+  });
+
   it('a disabled chip picker cannot be selected from, not merely styled', async () => {
     // The class was the only thing `disabled` did; a list already open could still be picked from.
     mock.holdFlash = true;
     const r = render(() => <Advanced />);
     await openGate(r);
-    const chip = r.container.querySelectorAll('[role="combobox"]')[1] as HTMLElement;
-    fireEvent.click(chip);
-    fireEvent.keyDown(chip, { key: 'Enter' });
-    await new Promise((res) => setTimeout(res, 20));
+    fireEvent.click(dropdown(r, 'Chip'));
+    await waitFor(() => expect(optionOf(r, 'Chip', /mouse-side/i)).toBeTruthy());
     r.getByRole('button', { name: /^flash$/i }).click();
-    await waitFor(() => expect(r.container.querySelectorAll('.combobox--disabled')).toHaveLength(4));
-    const mouseSide = [...document.querySelectorAll('[role="option"]')].find((o) =>
-      /mouse-side/i.test(o.textContent ?? ''),
-    );
+    await waitFor(() => expect(dropdown(r, 'Chip')).toBeDisabled());
+    const mouseSide = optionOf(r, 'Chip', /mouse-side/i);
     if (mouseSide) fireEvent.click(mouseSide);
     // Still the main chip: the selection did not take.
-    expect(r.container.textContent).toMatch(/Main chip/i);
+    expect(dropdown(r, 'Chip').textContent).toMatch(/Main chip/i);
   });
 
 
@@ -295,6 +302,15 @@ describe('Advanced', () => {
     await waitFor(() => expect(mock.metas).toEqual([{ page: 'advanced', chip: 'device', source: 'file' }]));
   });
 
+  it('says why a flash failed under the Flash button, where the reader is looking', async () => {
+    mock.flashOk = false;
+    const r = render(() => <Advanced />);
+    await openGate(r);
+    r.getByRole('button', { name: /^flash$/i }).click();
+    const alert = await r.findByRole('alert');
+    expect(alert.previousElementSibling?.querySelector('button')?.textContent).toBe('Flash');
+  });
+
   it('a failed flash says the reason, and leaves the instruction to the badge', async () => {
     mock.flashOk = false;
     const r = render(() => <Advanced />);
@@ -313,23 +329,7 @@ describe('Advanced', () => {
   it('a second file whose read fails cannot leave the first file armed to flash', async () => {
     const r = render(() => <Advanced />);
     await openGate(r);
-
-    // The option list renders through a portal, so it is read off the document, and it only exists
-    // once the combobox is open. SOURCE is the fourth one on the page.
-    const source = r.container.querySelectorAll('[role="combobox"]')[3] as HTMLElement;
-    fireEvent.click(source);
-    fireEvent.keyDown(source, { key: 'Enter' });
-    await new Promise((res) => setTimeout(res, 20));
-    const upload = [...document.querySelectorAll('[role="option"]')].find((o) =>
-      /upload a file/i.test(o.textContent ?? ''),
-    );
-    if (!upload) throw new Error('no upload option');
-    fireEvent.click(upload);
-    const input = await waitFor(() => {
-      const el = r.container.querySelector('input[type="file"]');
-      if (!el) throw new Error('no file input');
-      return el as HTMLInputElement;
-    });
+    const input = await openUpload(r);
 
     // validateImage wants >= 1024 bytes starting 0xE9.
     const bytes = new Uint8Array(2048);
@@ -361,8 +361,7 @@ describe('Advanced', () => {
   it('starts on ROM download while the box is not connected', async () => {
     const r = render(() => <Advanced />);
     await openGate(r);
-    const via = r.container.querySelectorAll('[role="combobox"]')[0] as HTMLElement;
-    expect(via.textContent).toContain('ROM download, USB1 or USB3');
+    expect(dropdown(r, 'Via').textContent).toContain('ROM download, USB1 or USB3');
     expect(r.container.textContent).not.toContain('usb2 form');
   });
 
@@ -370,8 +369,7 @@ describe('Advanced', () => {
     mock.s!.setStatus('connected');
     const r = render(() => <Advanced />);
     await waitFor(() => expect(r.container.textContent).toContain('usb2 form'));
-    const via = r.container.querySelectorAll('[role="combobox"]')[0] as HTMLElement;
-    expect(via.textContent).toContain('Control port, USB2 (Desk)');
+    expect(dropdown(r, 'Via').textContent).toContain('Control port, USB2 (Desk)');
     expect(r.queryByRole('button', { name: /^flash$/i })).toBeNull();
   });
 
@@ -416,6 +414,33 @@ describe('Advanced', () => {
     expect(r.queryByRole('button', { name: /^flash$/i })).toBeNull();
   });
 
+  it('names the chip being written, so a two-chip flash does not count to 100 twice unexplained', async () => {
+    mock.s!.setStatus('flashing');
+    mock.s!.setProgress({ phase: 'writing', chip: 'host', written: 10, total: 100 } as never);
+    const r = render(() => <Advanced />);
+    await waitFor(() => expect(r.container.querySelector('#flashing .cue')?.textContent).toBe('Flashing the mouse-side chip'));
+    mock.s!.setProgress({ phase: 'writing', chip: 'device', written: 10, total: 100 } as never);
+    await waitFor(() => expect(r.container.querySelector('#flashing .cue')?.textContent).toBe('Flashing the main chip'));
+    mock.s!.setProgress({ phase: 'restarting' });
+    await waitFor(() => expect(r.container.querySelector('#flashing .cue')?.textContent).toBe('Flashing'));
+  });
+
+  it('names a phase with no count and runs the wait, never a 0% figure', async () => {
+    mock.s!.setStatus('flashing');
+    mock.s!.setProgress({ phase: 'connecting' });
+    const r = render(() => <Advanced />);
+    await waitFor(() => expect(r.container.querySelector('.pct')?.textContent).toBe('Connecting'));
+    expect(r.container.querySelector('.track.wait')).not.toBeNull();
+    mock.s!.setProgress({ phase: 'writing', written: 25, total: 100 });
+    await waitFor(() => expect(r.container.querySelector('.pct')?.textContent).toBe('25%'));
+    expect(r.container.querySelector('.track.wait')).toBeNull();
+    for (const [phase, word] of [['restarting', 'Restarting'], ['verifying', 'Verifying']]) {
+      mock.s!.setProgress({ phase });
+      await waitFor(() => expect(r.container.querySelector('.pct')?.textContent).toBe(word));
+      expect(r.container.querySelector('.track.wait')).not.toBeNull();
+    }
+  });
+
   it('comes back on the control port for a result Advanced started, whatever the box is doing now', async () => {
     mock.s!.setStatus('disconnected');
     mock.s!.setUpdate({ page: 'advanced', outcome: 'sent' });
@@ -427,9 +452,11 @@ describe('Advanced', () => {
     mock.s!.setStatus('connected');
     const r = render(() => <Advanced />);
     await waitFor(() => expect(r.container.textContent).toContain('usb2 form'));
-    expect(r.container.querySelectorAll('.combobox--disabled')).toHaveLength(0);
+    expect(dropdown(r, 'Via')).not.toBeDisabled();
+    expect(r.container.querySelector('.dd--disabled')).toBeNull();
     r.getByRole('button', { name: 'usb2 busy' }).click();
-    await waitFor(() => expect(r.container.querySelectorAll('.combobox--disabled')).toHaveLength(1));
+    await waitFor(() => expect(dropdown(r, 'Via')).toBeDisabled());
+    expect(field(r, 'Via').querySelector('.dd.dd--disabled')).not.toBeNull();
   });
 
   it("says don't close the tab while the box updates over the control port", async () => {
@@ -452,5 +479,22 @@ describe('Advanced', () => {
     input.dispatchEvent(new Event('change', { bubbles: true }));
     await waitFor(() => expect(r.container.textContent).toContain("This is the mouse-side chip's image."));
     expect(r.getByRole('button', { name: /^flash$/i })).toBeDisabled();
+  });
+
+  it('keeps the form in a browser without Web Serial, with the reason where Flash was', async () => {
+    mock.supported = false;
+    const r = render(() => <Advanced />);
+    await waitFor(() => ['Via', 'Chip', 'Image', 'Source'].forEach((label) => field(r, label)));
+    expect(r.container.textContent).toMatch(/Open this page in Chrome/);
+    expect(r.container.textContent).not.toMatch(/Browser not supported/);
+    expect(r.queryByRole('button', { name: /^flash$/i })).toBeNull();
+  });
+
+  it('keeps the form on an insecure origin, with the reason where Flash was', async () => {
+    mock.secure = false;
+    const r = render(() => <Advanced />);
+    await waitFor(() => ['Via', 'Chip', 'Image', 'Source'].forEach((label) => field(r, label)));
+    expect(r.container.textContent).toMatch(/isn't secure/);
+    expect(r.queryByRole('button', { name: /^flash$/i })).toBeNull();
   });
 });

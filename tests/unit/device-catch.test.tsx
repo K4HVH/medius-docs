@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { render, cleanup, fireEvent } from '@solidjs/testing-library';
+import { render, cleanup, fireEvent, waitFor } from '@solidjs/testing-library';
 import {
   type CatchFilter,
   type TrafficEvent,
@@ -11,14 +11,23 @@ import {
 const settle = () => new Promise((r) => setTimeout(r, 20));
 
 const mock = vi.hoisted(() => ({
-  setEvents: (_v: unknown[]) => {},
+  // As the session holds them: the list and its count of every event added change together.
+  push: (_v: unknown[]) => {},
+  clear: () => {},
   caught: [] as unknown[],
+  refuse: false,
+  // The box takes the subscription but leaves it out of its table.
+  unknown: false,
+  // Refuses every entry after this many.
+  refuseAfter: -1,
+  uncatches: 0,
 }));
 
 vi.mock('../../src/app/pages/dashboard/context', async () => {
   const { createSignal } = await import('solid-js');
-  const [events, setEvents] = createSignal<unknown[]>([]);
-  mock.setEvents = setEvents;
+  const [events, setEvents] = createSignal<{ list: unknown[]; added: number }>({ list: [], added: 0 });
+  mock.push = (evs) => setEvents((e) => ({ list: [...e.list, ...evs].slice(-200), added: e.added + evs.length }));
+  mock.clear = () => setEvents((e) => ({ list: [], added: e.added }));
   const state = () => ({
     tableFull: false,
     dropped: 0,
@@ -26,9 +35,13 @@ vi.mock('../../src/app/pages/dashboard/context', async () => {
     entries: mock.caught.map((f) => ({ ...(f as object), dropped: 0 })),
   });
   const link = {
-    uncatch: async () => {},
+    uncatch: async () => {
+      mock.uncatches += 1;
+      mock.caught = [];
+    },
     catch: async (f: unknown) => {
-      mock.caught.push(f);
+      if (mock.refuse || (mock.refuseAfter >= 0 && mock.caught.length >= mock.refuseAfter)) throw new Error('The box refused that.');
+      if (!mock.unknown) mock.caught.push(f);
     },
     queryCatch: async () => state(),
   };
@@ -39,8 +52,9 @@ vi.mock('../../src/app/pages/dashboard/context', async () => {
       link: () => link,
       poll: () => state,
       refreshPoll: () => {},
-      inputEvents: events,
-      clearInputEvents: () => {},
+      inputEvents: () => events().list,
+      inputEventsAdded: () => events().added,
+      clearInputEvents: () => mock.clear(),
     }),
   };
 });
@@ -49,8 +63,12 @@ import DeviceEventCatch from '../../src/app/pages/dashboard/DeviceEventCatch';
 
 afterEach(() => {
   cleanup();
+  mock.refuse = false;
+  mock.unknown = false;
+  mock.refuseAfter = -1;
+  mock.uncatches = 0;
   mock.caught = [];
-  mock.setEvents([]);
+  mock.clear();
 });
 
 const traffic = (over: Partial<TrafficEvent>): TrafficEvent => ({
@@ -67,27 +85,58 @@ const traffic = (over: Partial<TrafficEvent>): TrafficEvent => ({
 
 const GET_REPORT = [0xa1, 0x01, 0x00, 0x03, 0x00, 0x00, 0x03, 0x00];
 
-const radio = (container: HTMLElement, name: string): HTMLInputElement => {
-  const el = [...container.querySelectorAll('input[type=radio]')].find(
-    (i) => (i.closest('label') ?? i.parentElement)?.textContent?.trim() === name,
-  );
+const radio = (container: HTMLElement, name: string): HTMLButtonElement => {
+  const el = [...container.querySelectorAll('[role="radio"]')].find((b) => b.textContent?.trim() === name);
   if (!el) throw new Error(`no radio labelled ${name}`);
-  return el as HTMLInputElement;
+  return el as HTMLButtonElement;
 };
 
-// The log only renders while a subscription is live, so every case starts one.
+const button = (container: HTMLElement, name: string): HTMLButtonElement => {
+  const el = [...container.querySelectorAll('button:not([role])')].find((b) => b.textContent?.trim() === name);
+  if (!el) throw new Error(`no button named ${name}`);
+  return el as HTMLButtonElement;
+};
+
+// Each line of the log as its cells: the sequence number, the clock and the event.
+const lines = (container: HTMLElement): string[][] =>
+  [...container.querySelectorAll('[role="log"] > div')].map((r) => [...r.children].map((c) => c.textContent ?? ''));
+
+// Every case starts a subscription, as a reader would before the box sends anything.
 const watching = async (preset = 'Raw endpoints') => {
   const view = render(() => <DeviceEventCatch />);
-  fireEvent.click(radio(view.container, preset));
-  fireEvent.click(view.getByText('Watch'));
+  // The preset is a dropdown: open it and pick by name.
+  const field = [...view.container.querySelectorAll('.labelled')].find((l) => l.querySelector('.field-l')?.textContent === 'Preset')!;
+  fireEvent.click(field.querySelector('.dd-b')!);
   await settle();
-  return { ...view, log: () => view.container.querySelector('pre.diagram')?.textContent ?? '' };
+  fireEvent.click([...field.querySelectorAll('[role="option"]')].find((o) => o.textContent === preset)!);
+  fireEvent.click(button(view.container, 'Watch'));
+  await settle();
+  return {
+    ...view,
+    log: () => lines(view.container).map((l) => l.join(' ')).join('\n'),
+    bodies: () => lines(view.container).map((l) => l[2]),
+  };
 };
 
+let seq = 0;
 const show = async (...evs: TrafficEvent[]) => {
-  mock.setEvents(evs.map((traffic, i) => ({ seq: i, ev: { kind: 'traffic', traffic } })));
+  mock.push(evs.map((traffic) => ({ seq: seq++, ev: { kind: 'traffic', traffic } })));
   await settle();
 };
+
+describe('DeviceEventCatch log', () => {
+  it('copies the log, one line a row', async () => {
+    const writeText = vi.fn(async () => {});
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+    const { container } = await watching();
+    await show(traffic({ bytes: new Uint8Array([...GET_REPORT, 0xaa]) }));
+    fireEvent.click(button(container, 'Copy'));
+    await settle();
+    expect(writeText).toHaveBeenCalledTimes(1);
+    expect((writeText.mock.calls[0] as unknown as [string])[0]).toContain('clip-transfer in 0x0 OK [a1 01 00 03 00 00 03 00] [aa]');
+    await waitFor(() => expect(button(container, 'Copied')).toBeTruthy());
+  });
+});
 
 describe('DeviceEventCatch clip transfers', () => {
   it('subscribes to a clip\'s transfers with the raw endpoints', async () => {
@@ -104,7 +153,7 @@ describe('DeviceEventCatch clip transfers', () => {
   });
 
   it('reads the flags byte of a clip transfer as a transfer status', async () => {
-    const { log } = await watching();
+    const { bodies } = await watching();
     const out = { dir: Direction.Negative, bytes: new Uint8Array([0x21, 0x09, 0x00, 0x03, 0x00, 0x00, 0x02, 0x00]) };
     await show(
       traffic({ ...out, flags: 0xfd }),
@@ -112,29 +161,27 @@ describe('DeviceEventCatch clip transfers', () => {
       traffic({ ...out, flags: 0xff }),
       traffic({ ...out, flags: 0xfc }),
     );
-    // Newest first. An OUT transfer's event carries the setup packet alone, so one group of bytes.
-    const bodies = log().split('\n').map((line) => line.replace(/^#\d+ D\+[\d.]+ms {2}/, ''));
-    expect(bodies).toEqual([
-      'clip-transfer out 0x0 REFUSED [21 09 00 03 00 00 02 00]',
-      'clip-transfer out 0x0 NO DEVICE [21 09 00 03 00 00 02 00]',
-      'clip-transfer out 0x0 NAK [21 09 00 03 00 00 02 00]',
+    // Oldest first. An OUT transfer's event carries the setup packet alone, so one group of bytes.
+    expect(bodies()).toEqual([
       'clip-transfer out 0x0 STALL [21 09 00 03 00 00 02 00]',
+      'clip-transfer out 0x0 NAK [21 09 00 03 00 00 02 00]',
+      'clip-transfer out 0x0 NO DEVICE [21 09 00 03 00 00 02 00]',
+      'clip-transfer out 0x0 REFUSED [21 09 00 03 00 00 02 00]',
     ]);
   });
 
   it('splits a control transaction the same way, and names the handshake the game PC got', async () => {
-    const { log } = await watching();
+    const { bodies } = await watching();
     const setup = [0x80, 0x06, 0x00, 0x01, 0x00, 0x00, 0x12, 0x00];
     await show(
       traffic({ cls: CatchClass.Control, flags: 0x01, bytes: new Uint8Array(setup) }),
       traffic({ cls: CatchClass.Control, flags: 0x02, bytes: new Uint8Array(setup) }),
       traffic({ cls: CatchClass.Control, flags: 0x00, bytes: new Uint8Array([...setup, 0x12, 0x01]) }),
     );
-    const bodies = log().split('\n').map((line) => line.replace(/^#\d+ D\+[\d.]+ms {2}/, ''));
-    expect(bodies).toEqual([
-      'control in 0x0 [80 06 00 01 00 00 12 00] [12 01]',
-      'control in 0x0 NAK [80 06 00 01 00 00 12 00]',
+    expect(bodies()).toEqual([
       'control in 0x0 STALL [80 06 00 01 00 00 12 00]',
+      'control in 0x0 NAK [80 06 00 01 00 00 12 00]',
+      'control in 0x0 [80 06 00 01 00 00 12 00] [12 01]',
     ]);
   });
 
@@ -179,9 +226,7 @@ describe('DeviceEventCatch clip transfers', () => {
     const { container, getByText, findByText } = render(() => <DeviceEventCatch />);
     fireEvent.click(radio(container, 'Custom table'));
     await settle();
-    const box = container.querySelector('[role="combobox"]') as HTMLElement;
-    fireEvent.click(box);
-    fireEvent.keyDown(box, { key: 'Enter' });
+    fireEvent.click(container.querySelector('.dd-b') as HTMLElement);
     await settle();
     const option = [...document.querySelectorAll('[role="option"]')].find(
       (o) => o.textContent?.trim() === 'clip-transfer (11)',
@@ -192,6 +237,30 @@ describe('DeviceEventCatch clip transfers', () => {
     fireEvent.click(getByText('Add entry'));
     await settle();
     expect(getByText('clip-transfer any first 16B')).toBeTruthy();
+  });
+});
+
+describe('DeviceEventCatch event log', () => {
+  // A drawn line keeps its text, so a baseline that moved under it would leave the log mixing two.
+  const times = (container: HTMLElement) => lines(container).map((l) => l[1]);
+
+  it('times each line from the earliest stamp on its clock, and draws the log again when an earlier one arrives', async () => {
+    const { container } = await watching();
+    await show(traffic({ tsUs: 5000 }), traffic({ tsUs: 6500, clk: ClockDomain.Host }));
+    await show(traffic({ tsUs: 7250 }));
+    expect(times(container)).toEqual(['D+0.000ms', 'H+0.000ms', 'D+2.250ms']);
+    // The box drains its queues out of tap order, so a stamp before the first can arrive after it.
+    await show(traffic({ tsUs: 4000 }));
+    expect(times(container)).toEqual(['D+1.000ms', 'H+0.000ms', 'D+3.250ms', 'D+0.000ms']);
+  });
+
+  it('keeps the baseline when the oldest lines leave the log', async () => {
+    const { container } = await watching();
+    await show(...Array.from({ length: 200 }, (_, i) => traffic({ tsUs: 1000 + i * 1000 })));
+    await show(traffic({ tsUs: 201_000 }));
+    expect(lines(container)).toHaveLength(200);
+    expect(times(container)[0]).toBe('D+1.000ms');
+    expect(times(container).at(-1)).toBe('D+200.000ms');
   });
 });
 
@@ -231,5 +300,36 @@ describe('DeviceEventCatch whole-number fields', () => {
     await settle();
     const chips = [...container.querySelectorAll('.chip__label')].map((c) => c.textContent ?? '');
     expect(chips.some((c) => c.includes(shown))).toBe(true);
+  });
+});
+
+describe('DeviceEventCatch refused', () => {
+  it('a refused subscription says so and goes back to Watch, not to a log waiting on nothing', async () => {
+    mock.refuse = true;
+    const { container, getByRole } = await watching();
+    await waitFor(() => expect(getByRole('alert').textContent).toBe('The box refused that.'));
+    expect(button(container, 'Watch')).toBeTruthy();
+  });
+});
+
+describe('DeviceEventCatch refused part-way', () => {
+  it('drops the entries the box took before it refused one', async () => {
+    mock.refuseAfter = 2;
+    const { getByRole } = await watching('All input');
+    await waitFor(() => expect(getByRole('alert').textContent).toBe('The box refused that.'));
+    // One clear before subscribing, one after the refusal.
+    expect(mock.uncatches).toBe(2);
+    expect(mock.caught).toEqual([]);
+  });
+});
+
+describe('DeviceEventCatch entries left out', () => {
+  it('names one unknown address in the singular and several in the plural', async () => {
+    mock.unknown = true;
+    const one = await watching('Buttons');
+    await waitFor(() => expect(one.container.textContent).toMatch(/refused 1 of 1 entry: .*doesn't know that address\./));
+    cleanup();
+    const many = await watching('All input');
+    await waitFor(() => expect(many.container.textContent).toMatch(/refused 4 of 4 entries: .*doesn't know those addresses\./));
   });
 });

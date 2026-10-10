@@ -3,12 +3,9 @@
 
 import { For, Show, createMemo, createSignal } from 'solid-js';
 import { A } from '@solidjs/router';
-import { Card, CardHeader } from '../../../components/surfaces/Card';
 import { Button } from '../../../components/inputs/Button';
 import { Chip } from '../../../components/display/Chip';
-import { Combobox } from '../../../components/inputs/Combobox';
 import { NumberInput } from '../../../components/inputs/NumberInput';
-import { RadioGroup } from '../../../components/inputs/RadioGroup';
 import { TextField } from '../../../components/inputs/TextField';
 import {
   type RewriteRule,
@@ -25,7 +22,9 @@ import {
 } from '../../../dashboard/protocol';
 import { useDashboard } from './context';
 import { createCommand } from './action';
-import { chips, label, muted, row, section } from './ui';
+import { Panel } from '../../shell/Panel';
+import { Segmented } from '../../shell/Segmented';
+import { Select } from '../../shell/Select';
 import {
   TRAFFIC_CLASS_BLURB,
   TRAFFIC_CLASS_OPTIONS,
@@ -89,9 +88,6 @@ const describe = (e: RewriteRuleInfo): string => {
   const head = `${displayName(rewriteActionName(e.action))} ${rewriteClassName(e.cls)} ${where} ${trafficDirWord(e.dir)}`;
   return e.hits ? `${head}, ${e.hits} ${e.hits === 1 ? 'hit' : 'hits'}` : head;
 };
-
-// Combobox returns a string or an array; the action picker is single-select.
-const one = (v: string | string[]): string => (Array.isArray(v) ? v[0] : v);
 
 const DeviceRewrite = () => {
   const dash = useDashboard();
@@ -158,27 +154,34 @@ const DeviceRewrite = () => {
 
   return (
     <Show when={dash.status() === 'connected'}>
-      <div id="rewrite-rules" data-search-target>
-        <Card>
-          <CardHeader title="Rewrite rules" subtitle="Change relayed traffic" />
+      <Panel id="rewrite-rules" title="Rewrite rules">
+        <Show
+          when={allowed()}
+          fallback={
+            <p class="mut">
+              Rewrite rules need <A href="/dashboard#imperfect-clone">imperfect clones</A>, on Device's
+              Options tab.
+            </p>
+          }
+        >
+          <div class="labelled">
+            <span class="field-l">Class</span>
+            <Segmented
+              name="rw-class"
+              label="Class"
+              value={rwClass()}
+              onChange={chooseClass}
+              options={TRAFFIC_CLASS_OPTIONS}
+            />
+          </div>
+          <p class="mut">{classBlurb(cls())}</p>
 
-          <Show
-            when={allowed()}
-            fallback={
-              <p style={muted}>
-                Rewrite rules need <A href="/dashboard#imperfect-clone">imperfect clones</A>, on the
-                Device tab.
-              </p>
-            }
-          >
-            <div style={label}>Class</div>
-            <RadioGroup name="rw-class" value={rwClass()} onChange={chooseClass} options={TRAFFIC_CLASS_OPTIONS} />
-            <p style={{ ...muted, 'margin-top': '4px' }}>{classBlurb(cls())}</p>
-
-            <div style={section}>
-              <div style={label}>Id</div>
-              <RadioGroup
+          <div class="acts">
+            <div class="labelled">
+              <span class="field-l">Id</span>
+              <Segmented
                 name="rw-anyid"
+                label="Id"
                 value={rwAnyId()}
                 onChange={setRwAnyId}
                 options={[
@@ -186,109 +189,105 @@ const DeviceRewrite = () => {
                   { value: 'one', label: 'One id' },
                 ]}
               />
-              <Show when={rwAnyId() === 'one'}>
-                <div style={{ ...section, 'max-width': '11rem' }}>
-                  <NumberInput
-                    label={trafficIdLabel(cls())}
-                    value={rwId()}
-                    min={0}
-                    max={65534}
-                    precision={0}
-                    onChange={(v) => setRwId(v ?? 0)}
-                  />
+            </div>
+            <Show when={rwAnyId() === 'one'}>
+              <div class="fw-m">
+                <NumberInput
+                  label={trafficIdLabel(cls())}
+                  value={rwId()}
+                  min={0}
+                  max={65534}
+                  precision={0}
+                  onChange={(v) => setRwId(v ?? 0)}
+                />
+              </div>
+            </Show>
+          </div>
+
+          <div class="labelled">
+            <span class="field-l">Direction</span>
+            <Segmented
+              name="rw-dir"
+              label="Direction"
+              value={rwDir()}
+              onChange={setRwDir}
+              options={[
+                { value: String(Direction.Both), label: 'Both' },
+                { value: String(Direction.Positive), label: 'In' },
+                { value: String(Direction.Negative), label: 'Out' },
+              ]}
+            />
+          </div>
+
+          <div class="labelled">
+            <span class="field-l">Action</span>
+            <Select label="Action" value={rwAction()} onChange={setRwAction} options={actionOptions()} />
+          </div>
+          <p class="mut">{actionBlurb(cls(), action())}</p>
+
+          <div class="acts">
+            <div class="grow">
+              <TextField label="Match (hex)" value={rwMatch()} onInput={setRwMatch} placeholder="e.g. 21 09" />
+            </div>
+            <div class="grow">
+              <TextField label="Mask (hex)" value={rwMask()} onInput={setRwMask} placeholder="e.g. ff ff" />
+            </div>
+          </div>
+          <p class="mut">
+            Match and mask: same length, at most {REWRITE_MATCH_MAX} bytes. Blank matches every
+            packet on that address.
+          </p>
+
+          <Show when={carriesPayload(action())}>
+            <div class="acts">
+              <Show when={readsOffset(action())}>
+                <div class="fw-s">
+                  <NumberInput label="Offset" value={rwOff()} min={0} max={65534} precision={0} onChange={(v) => setRwOff(v ?? 0)} />
                 </div>
               </Show>
-            </div>
-
-            <div style={section}>
-              <div style={label}>Direction</div>
-              <RadioGroup
-                name="rw-dir"
-                value={rwDir()}
-                onChange={setRwDir}
-                options={[
-                  { value: String(Direction.Both), label: 'Both' },
-                  { value: String(Direction.Positive), label: 'In' },
-                  { value: String(Direction.Negative), label: 'Out' },
-                ]}
-              />
-            </div>
-
-            <div style={section}>
-              <div style={label}>Action</div>
-              <Combobox value={rwAction()} onChange={(v) => setRwAction(one(v))} options={actionOptions()} />
-              <p style={{ ...muted, 'margin-top': '4px' }}>{actionBlurb(cls(), action())}</p>
-            </div>
-
-            <div style={{ ...section, ...row }}>
-              <div style={{ flex: '1 1 140px' }}>
-                <TextField label="Match (hex)" value={rwMatch()} onInput={setRwMatch} placeholder="e.g. 21 09" />
+              <div class="grow">
+                <TextField label="Payload (hex)" value={rwPayload()} onInput={setRwPayload} placeholder="e.g. 04 00" />
               </div>
-              <div style={{ flex: '1 1 140px' }}>
-                <TextField label="Mask (hex)" value={rwMask()} onInput={setRwMask} placeholder="e.g. ff ff" />
-              </div>
-            </div>
-            <p style={{ ...muted, 'margin-top': '4px' }}>
-              Match and mask: same length, at most {REWRITE_MATCH_MAX} bytes. Blank matches every
-              packet on that address.
-            </p>
-
-            <Show when={carriesPayload(action())}>
-              <div style={{ ...section, ...row, 'align-items': 'flex-end' }}>
-                <Show when={readsOffset(action())}>
-                  <div style={{ 'max-width': '8rem' }}>
-                    <NumberInput label="Offset" value={rwOff()} min={0} max={65534} precision={0} onChange={(v) => setRwOff(v ?? 0)} />
-                  </div>
-                </Show>
-                <div style={{ flex: '1 1 220px' }}>
-                  <TextField label="Payload (hex)" value={rwPayload()} onInput={setRwPayload} placeholder="e.g. 04 00" />
-                </div>
-              </div>
-            </Show>
-
-            <div style={{ ...section, ...row }}>
-              <Button variant="primary" disabled={cmd.busy()} onClick={addRule}>
-                Add rule
-              </Button>
-              <Button variant="secondary" disabled={cmd.busy() || entries().length === 0} onClick={clearAll}>
-                Clear all
-              </Button>
-            </div>
-
-            <Show when={rewrite()?.tableFull}>
-              <div class="callout callout--warning" style={section}>
-                The box refused the last rule: it holds {REWRITE_TAB_MAX} rules and {REWRITE_POOL} bytes of
-                rule payload. Remove or shorten one, then retry.
-              </div>
-            </Show>
-            <Show when={cmd.error()}>
-              <div class="callout callout--danger" role="alert" style={section}>
-                {cmd.error()}
-              </div>
-            </Show>
-
-            <div style={section}>
-              <div style={label}>
-                Active ({entries().length} of {REWRITE_TAB_MAX})
-              </div>
-              <Show
-                when={entries().length > 0}
-                fallback={<p>None.</p>}
-              >
-                <div style={chips}>
-                  <For each={entries()}>
-                    {(e, i) => (
-                      <Chip variant="info" onRemove={() => removeAt(i())}>
-                        {describe(e)}
-                      </Chip>
-                    )}
-                  </For>
-                </div>
-              </Show>
             </div>
           </Show>
-        </Card>
-      </div>
+
+          <div class="acts">
+            <Button variant="primary" disabled={cmd.busy()} onClick={addRule}>
+              Add rule
+            </Button>
+            <Button variant="secondary" disabled={cmd.busy() || entries().length === 0} onClick={clearAll}>
+              Clear all
+            </Button>
+          </div>
+
+          <Show when={rewrite()?.tableFull}>
+            <div class="callout callout--warning">
+              The box refused the last rule: it holds {REWRITE_TAB_MAX} rules and {REWRITE_POOL} bytes of
+              rule payload. Remove or shorten one, then retry.
+            </div>
+          </Show>
+          <Show when={cmd.error()}>
+            <div class="callout callout--danger" role="alert">
+              {cmd.error()}
+            </div>
+          </Show>
+
+          <p class="sublabel">
+            Active ({entries().length} of {REWRITE_TAB_MAX})
+          </p>
+          <Show when={entries().length > 0} fallback={<p data-search-skip>None.</p>}>
+            <div class="chips">
+              <For each={entries()}>
+                {(e, i) => (
+                  <Chip variant="info" onRemove={() => removeAt(i())}>
+                    {describe(e)}
+                  </Chip>
+                )}
+              </For>
+            </div>
+          </Show>
+        </Show>
+      </Panel>
     </Show>
   );
 };

@@ -1,10 +1,8 @@
 // Moves a native field's value into another before the clone emits it. Weighing is the lock card's.
 
 import { For, Show, createMemo, createSignal } from 'solid-js';
-import { Card, CardHeader } from '../../../components/surfaces/Card';
 import { Button } from '../../../components/inputs/Button';
 import { Chip } from '../../../components/display/Chip';
-import { RadioGroup } from '../../../components/inputs/RadioGroup';
 import {
   type NamedUsage,
   type Transform,
@@ -20,7 +18,8 @@ import {
 import { useDashboard } from './context';
 import { createCommand } from './action';
 import { UsagePicker, type PickerClass, type UsageValue } from './UsagePicker';
-import { chips, label, row, section } from './ui';
+import { Panel, Panels } from '../../shell/Panel';
+import { Segmented } from '../../shell/Segmented';
 
 const AXES: NamedUsage[] = [
   { id: LockAxis.X, name: 'X (left/right)', group: 'Axes' },
@@ -145,75 +144,81 @@ const DeviceTransform = () => {
 
   return (
     <Show when={dash.status() === 'connected'}>
-      <div id="transforms" data-search-target>
-        <Card>
-          <CardHeader title="Transforms" subtitle="Move native inputs between fields" />
-
-          <div style={section}>
-            <div style={label}>Operation</div>
-            <RadioGroup name="transform-op" value={op()} onChange={chooseOp} options={OP_LABELS} />
+      <Panels>
+        <Panel id="transform" title="Transform">
+          <div class="labelled">
+            <span class="field-l">Operation</span>
+            <Segmented name="transform-op" label="Operation" value={op()} onChange={chooseOp} options={OP_LABELS} />
           </div>
 
-          <div style={section}>
-            <UsagePicker
-              classes={sourceClasses()}
-              name="transform-source"
-              value={source()}
-              onChange={chooseSource}
-              classLabel="From"
-              usageLabel={srcLabel()}
-            />
+          <div class="acts">
+            <div class="acts">
+              <UsagePicker
+                classes={sourceClasses()}
+                name="transform-source"
+                value={source()}
+                onChange={chooseSource}
+                classLabel="From"
+                usageLabel={srcLabel()}
+              />
+            </div>
+            <div class="acts">
+              <UsagePicker
+                classes={destClasses()}
+                name="transform-dest"
+                value={dest()}
+                onChange={(v) => setDest(v)}
+                classLabel="To"
+                usageLabel={dstLabel()}
+              />
+            </div>
           </div>
 
-          <div style={section}>
-            <UsagePicker
-              classes={destClasses()}
-              name="transform-dest"
-              value={dest()}
-              onChange={(v) => setDest(v)}
-              classLabel="To"
-              usageLabel={dstLabel()}
-            />
-          </div>
-
-          <div style={{ ...section, ...row }}>
+          <div class="acts">
             <Button variant="primary" disabled={cmd.busy()} onClick={apply}>
               Apply
-            </Button>
-            <Button variant="secondary" disabled={cmd.busy() || active().length === 0} onClick={clearAll}>
-              Clear all
             </Button>
           </div>
 
           <Show when={full()}>
-            <div class="callout callout--warning" style={section}>
+            <div class="callout callout--warning">
               The {TRANSFORM_MAX_ENTRIES}-entry table is full. Remove an entry first.
             </div>
           </Show>
           <Show when={cmd.error()}>
-            <div class="callout callout--danger" role="alert" style={section}>
+            <div class="callout callout--danger" role="alert">
               {cmd.error()}
             </div>
           </Show>
+        </Panel>
 
-          <div style={section}>
-            <div style={label}>
-              Active ({active().length} of {TRANSFORM_MAX_ENTRIES})
+        <Panel
+          id="active-transforms"
+          title="Active"
+          aside={
+            <div class="pr">
+              <span class="caps">
+                {active().length} of {TRANSFORM_MAX_ENTRIES}
+              </span>
+              <Button variant="subtle" disabled={cmd.busy() || active().length === 0} onClick={clearAll}>
+                Clear all
+              </Button>
             </div>
-            <Show when={active().length > 0} fallback={<p>None.</p>}>
-              <div style={chips}>
-                <For each={active()}>
-                  {(t) => (
-                    <Chip variant="info" onRemove={() => remove(t)}>
-                      {describe(t)}
-                    </Chip>
-                  )}
-                </For>
-              </div>
-            </Show>
-          </div>
-        </Card>
-      </div>
+          }
+        >
+          <Show when={active().length > 0} fallback={<p class="mut" data-search-skip>None.</p>}>
+            <div class="chips">
+              <For each={active()}>
+                {(t) => (
+                  <Chip variant="info" onRemove={() => remove(t)}>
+                    {describe(t)}
+                  </Chip>
+                )}
+              </For>
+            </div>
+          </Show>
+        </Panel>
+      </Panels>
     </Show>
   );
 };

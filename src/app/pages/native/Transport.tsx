@@ -1,45 +1,40 @@
 import type { Component } from 'solid-js';
 import { A } from '@solidjs/router';
-import { Card, CardHeader } from '../../../components/surfaces/Card';
-import '../../../styles/docs.css';
+import { PageHeader } from '../../shell/PageHeader';
+import { DocSection } from '../../shell/DocSection';
 
 const Transport: Component = () => {
   return (
     <>
-      <Card>
-        <CardHeader title="Transport" subtitle="USB-serial port" />
+      <PageHeader>
         <p>
           The box enumerates as an ordinary USB-serial port carrying raw bytes. Open it at the fixed
           baud, send <A href="/native/frame">frames</A>, and confirm the box with the{' '}
           <A href="/native/connection">handshake</A>.
         </p>
-      </Card>
+      </PageHeader>
 
-      <div id="serial" data-search-target>
-        <Card>
-          <CardHeader title="Serial link" subtitle="Baud and framing" />
-          <p>
-            Fixed <code>6,000,000</code> baud (6 Mbaud), no negotiation; any other baud fails.
-          </p>
-          <p>
-            The box speaks <A href="/native/frame">framed binary</A> from the first byte.
-          </p>
-          <ul>
-            <li>No ASCII console.</li>
-            <li>No <code>115200</code> startup step.</li>
-            <li>No baud-switch frame.</li>
-            <li>Baud is never saved on the box, so a bad setting can't lock a client out.</li>
-          </ul>
-        </Card>
-      </div>
+      <DocSection id="serial" title="Serial link" caption="Baud and framing">
+        <p>
+          Fixed <code>6,000,000</code> baud (6 Mbaud), no negotiation; any other baud fails.
+        </p>
+        <p>
+          The box speaks <A href="/native/frame">framed binary</A> from the first byte.
+        </p>
+        <ul>
+          <li>No ASCII console.</li>
+          <li>No <code>115200</code> startup step.</li>
+          <li>No baud-switch frame.</li>
+          <li>Baud is never saved on the box, so a bad setting can't lock a client out.</li>
+        </ul>
+      </DocSection>
 
-      <div id="usb-identity" data-search-target>
-        <Card>
-          <CardHeader title="USB identity" subtitle="WCH CH343 bridge" />
-          <p>
-            A <a href="https://www.wch-ic.com" target="_blank" rel="noreferrer">WCH</a> <a href="https://www.wch-ic.com/products/CH343.html" target="_blank" rel="noreferrer"><code>CH343</code></a> does the USB-to-serial conversion. Match its VID and PID to find
-            the box among other serial devices.
-          </p>
+      <DocSection id="usb-identity" title="USB identity" caption="WCH CH343 bridge">
+        <p>
+          A <a href="https://www.wch-ic.com" target="_blank" rel="noreferrer">WCH</a> <a href="https://www.wch-ic.com/products/CH343.html" target="_blank" rel="noreferrer"><code>CH343</code></a> does the USB-to-serial conversion. Match its VID and PID to find
+          the box among other serial devices.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr>
@@ -74,17 +69,17 @@ const Transport: Component = () => {
               </tr>
             </tbody>
           </table>
+        </div>
+        <p>
+          <code>8N1</code> is 8 data bits, no parity, 1 stop bit.
+        </p>
+        <div class="callout callout--info">
           <p>
-            <code>8N1</code> is 8 data bits, no parity, 1 stop bit.
+            Handshake on <A href="/native/connection">Connection</A>, wire format on{' '}
+            <A href="/native/frame">Frame Format</A>.
           </p>
-          <div class="callout callout--info">
-            <p>
-              Handshake on <A href="/native/connection">Connection</A>, wire format on{' '}
-              <A href="/native/frame">Frame Format</A>.
-            </p>
-          </div>
-        </Card>
-      </div>
+        </div>
+      </DocSection>
     </>
   );
 };

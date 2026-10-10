@@ -1,7 +1,18 @@
+import { MemoryRouter, Route, createMemoryHistory } from '@solidjs/router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, waitFor } from '@solidjs/testing-library';
 import type { StatsSummary } from '../../src/dashboard/stats';
 import Stats from '../../src/app/pages/dashboard/Stats';
+
+const InRoute = () => {
+  const history = createMemoryHistory();
+  history.set({ value: '/dashboard/stats' });
+  return (
+    <MemoryRouter history={history}>
+      <Route path="*" component={Stats} />
+    </MemoryRouter>
+  );
+};
 
 const weeks = (n: number, at: (i: number) => number = () => 0) =>
   Array.from({ length: 26 }, (_, i) => ({ key: `2026-04-${String(i + 1).padStart(2, '0')}`, n: i < n ? at(i) : 0 }));
@@ -82,7 +93,7 @@ afterEach(() => {
 describe('Stats page', () => {
   it('shows the totals', async () => {
     answer(FULL);
-    const r = render(() => <Stats />);
+    const r = render(() => <InRoute />);
     const figures = await r.findByTestId('figures');
     expect(figures.textContent).toContain('1,204');
     expect(figures.textContent).toContain('Unique boxes');
@@ -94,7 +105,7 @@ describe('Stats page', () => {
 
   it('draws each breakdown with its labels and numbers', async () => {
     answer(FULL);
-    const r = render(() => <Stats />);
+    const r = render(() => <InRoute />);
     await r.findByTestId('figures');
     const text = r.container.textContent!;
     for (const s of [
@@ -106,6 +117,7 @@ describe('Stats page', () => {
       'Unconfirmed',
       'Update, USB2',
       'Set up, ROM download',
+      'Manual flash, ROM download',
       'Mouse-side chip',
       'Australia',
       'Unknown',
@@ -115,31 +127,40 @@ describe('Stats page', () => {
       expect(text).toContain(s);
   });
 
-  it('carries no notes and no list of what is collected, and each subtitle names a scope', async () => {
+  it('carries no notes, no lead and no subtitles; the two scopes sit at their panel headings', async () => {
     answer(FULL);
-    const r = render(() => <Stats />);
+    const r = render(() => <InRoute />);
     await r.findByTestId('figures');
     expect(r.container.querySelector('#collected')).toBeNull();
     expect(r.container.textContent).not.toMatch(/Counted since|recounts|different versions|Data collected/);
-    const subtitles = [...r.container.querySelectorAll('.card__header small')].map((e) => e.textContent);
-    expect(subtitles).toEqual([
-      'All boxes, all time',
-      'Last 26 weeks and 90 days',
-      'Last 30 days',
-      'Cloned by the boxes',
-      'Update, Advanced and Set up',
-      'Each box as last seen',
+    expect(r.container.querySelector('.page-header h1')?.textContent).toBe('Usage stats');
+    expect(r.container.querySelector('.page-header .lead')).toBeNull();
+    expect(r.container.querySelector('.card__header small')).toBeNull();
+    const asides = [...r.container.querySelectorAll('.ph .caps')].map((e) => [e.closest('.pn')!.querySelector('h2')!.textContent, e.textContent]);
+    expect(asides).toEqual([
+      ['Main chip', 'Last 30 days'],
+      ['Country', 'As last seen'],
     ]);
   });
 
-  it('shows the totals as tiles, each a value over its label', async () => {
+  it('puts the breakdowns on five tabs, the hash naming the one open', async () => {
     answer(FULL);
-    const r = render(() => <Stats />);
+    const r = render(() => <InRoute />);
+    await r.findByTestId('figures');
+    const tabs = [...r.container.querySelectorAll('[role="tab"]')];
+    expect(tabs.map((t) => t.textContent)).toEqual(['Boxes over time', 'Firmware in use', 'Devices', 'Flashes', 'Countries and systems']);
+    expect(tabs.map((t) => (t as HTMLElement).dataset.tab)).toEqual(['boxes-over-time', 'firmware', 'devices', 'flashes', 'countries']);
+    const open = () => r.container.querySelector('.pane:not([hidden])')?.getAttribute('data-pane');
+    expect(open()).toBe('boxes-over-time');
+    fireEvent.click(tabs[3]);
+    await waitFor(() => expect(open()).toBe('flashes'));
+  });
+
+  it('shows the totals as figures, each a label over its value', async () => {
+    answer(FULL);
+    const r = render(() => <InRoute />);
     const figures = await r.findByTestId('figures');
-    const tiles = [...figures.querySelectorAll('.stat-figure')].map((t) => [
-      t.querySelector('.stat-figure__value')!.textContent,
-      t.querySelector('.stat-figure__label')!.textContent,
-    ]);
+    const tiles = [...figures.querySelectorAll(':scope > div')].map((t) => [t.querySelector('dd')!.textContent, t.querySelector('dt')!.textContent]);
     expect(tiles[0]).toEqual(['1,204', 'Unique boxes']);
     expect(tiles.map((x) => x[1])).toEqual([
       'Unique boxes',
@@ -155,49 +176,92 @@ describe('Stats page', () => {
 
   it('rounds the success rate down, and says None with no flashes', async () => {
     answer({ ...FULL, flashes: { ...FULL.flashes, total: 200, succeeded: 199 } });
-    const r = render(() => <Stats />);
+    const r = render(() => <InRoute />);
     const figures = await r.findByTestId('figures');
     expect(figures.textContent).toContain('99%');
     expect(figures.textContent).toContain('Success rate');
     cleanup();
     answer({ ...EMPTY, boxes: { ...EMPTY.boxes, total: 3 } });
-    const e = render(() => <Stats />);
+    const e = render(() => <InRoute />);
     const f2 = await e.findByTestId('figures');
     expect(f2.textContent).toContain('None');
-    expect(e.container.querySelector('#firmware')!.textContent).toContain('None.');
+    expect(e.container.querySelector('[data-pane="firmware"]')!.textContent).toContain('None.');
   });
 
   it('names release or file as the source, as Advanced does, and kind 0 as Unknown', async () => {
     answer(FULL);
-    const r = render(() => <Stats />);
+    const r = render(() => <InRoute />);
     await r.findByTestId('figures');
-    expect(r.container.querySelector('#flashes')!.textContent).toContain('Source');
-    expect(r.container.querySelector('#flashes')!.textContent).not.toMatch(/\bImage\b/);
-    expect(r.container.querySelector('#devices')!.textContent).toContain('Unknown');
+    expect(r.container.querySelector('[data-pane="flashes"]')!.textContent).toContain('Source');
+    expect(r.container.querySelector('[data-pane="flashes"]')!.textContent).not.toMatch(/\bImage\b/);
+    expect(r.container.querySelector('[data-pane="devices"]')!.textContent).toContain('Unknown');
   });
 
   it('scales the bars to the largest named row, not to Others', async () => {
     const countries = [{ key: 'AU', n: 100 }, ...Array.from({ length: 30 }, (_, i) => ({ key: `Z${String.fromCharCode(65 + (i % 26))}${i}`, n: 90 }))];
     answer({ ...FULL, countries });
-    const r = render(() => <Stats />);
+    const r = render(() => <InRoute />);
     await r.findByTestId('figures');
-    const fills = [...r.container.querySelector('#countries .stat-bars')!.querySelectorAll('.stat-bars__fill')] as HTMLElement[];
+    const fills = [...r.container.querySelector('[data-pane="countries"] .bars')!.querySelectorAll('.t i')] as HTMLElement[];
     expect(fills[0].style.width).toBe('100%');
     expect(fills.at(-1)!.style.width).toBe('100%');
   });
 
-  it('gives each week the split by result in its tooltip', async () => {
-    const perWeek = FULL.flashes.perWeek.map((w, i) => (i === 25 ? { ...w, verified: 20, written: 9, failed: 2 } : w));
+  it('reads the latest week over a chart, and the column pointed at instead, with its split by result', async () => {
+    const perWeek = FULL.flashes.perWeek.map((w, i) =>
+      i === 25 ? { ...w, verified: 20, written: 9, failed: 2 } : i === 3 ? { ...w, verified: 5, reverted: 1 } : w,
+    );
     answer({ ...FULL, flashes: { ...FULL.flashes, perWeek } });
-    const r = render(() => <Stats />);
+    const r = render(() => <InRoute />);
     await r.findByTestId('figures');
-    const titles = [...r.container.querySelectorAll('#flashes svg title')].map((t) => t.textContent);
-    expect(titles.at(-1)).toMatch(/: 31 \(Verified 20, Written \(ROM download\) 9, Failed 2\)$/);
+    const pn = r.container.querySelector('#flashes-per-week')!;
+    const readout = () => [pn.querySelector('.readout b')!.textContent, pn.querySelector('.readout span')!.textContent];
+    const legend = () => [...pn.querySelectorAll('.legend span')].map((e) => e.textContent);
+    expect(readout()).toEqual(['31', 'This week']);
+    expect(legend()).toEqual(['Verified 20', 'Written (ROM download) 9', 'Reverted 0', 'Unconfirmed 0', 'Failed 2']);
+    const cols = pn.querySelectorAll('.cols > span');
+    expect(cols).toHaveLength(26);
+    fireEvent.pointerEnter(cols[3]);
+    expect(readout()).toEqual(['6', '4 Apr']);
+    expect(legend()).toEqual(['Verified 5', 'Written (ROM download) 0', 'Reverted 1', 'Unconfirmed 0', 'Failed 0']);
+    fireEvent.pointerLeave(pn.querySelector('.cols')!);
+    expect(readout()).toEqual(['31', 'This week']);
+    expect(pn.querySelector('.cols')!.getAttribute('aria-label')).toBe('Flashes per week, 1 Apr to this week, peak 31');
+  });
+
+  it('reads the largest entry over the firmware bars, and the row pointed at instead', async () => {
+    answer(FULL);
+    const r = render(() => <InRoute />);
+    await r.findByTestId('figures');
+    const pn = r.container.querySelector('#firmware-versions')!;
+    const readout = () => [pn.querySelector('.readout b')!.textContent, pn.querySelector('.readout span')!.textContent];
+    expect(readout()).toEqual(['700', 'v3.4.4']);
+    fireEvent.pointerEnter(pn.querySelectorAll('.br')[1]);
+    expect(readout()).toEqual(['122', 'v3.4.2']);
+    fireEvent.pointerLeave(pn.querySelector('.bars')!);
+    expect(readout()).toEqual(['700', 'v3.4.4']);
+  });
+
+  it('colours each result bar as its part of the weekly columns', async () => {
+    answer(FULL);
+    const r = render(() => <InRoute />);
+    await r.findByTestId('figures');
+    const tracks = [...r.container.querySelectorAll('#flash-results .br')].map((b) => [
+      b.querySelector('span')!.textContent,
+      b.querySelector('.t')!.className,
+    ]);
+    expect(tracks).toEqual([
+      ['Verified', 't s-ok'],
+      ['Written (ROM download)', 't s-wr'],
+      ['Unconfirmed', 't s-mut'],
+      ['Failed', 't s-bad'],
+      ['Reverted', 't s-warn'],
+    ]);
   });
 
   it('shows zeros and an empty note for each chart with nothing counted', async () => {
     answer(EMPTY);
-    const r = render(() => <Stats />);
+    const r = render(() => <InRoute />);
     const figures = await r.findByTestId('figures');
     expect(figures.textContent).toContain('0');
     expect(figures.textContent).not.toContain('NaN');
@@ -206,19 +270,19 @@ describe('Stats page', () => {
 
   it('names a device with no product string by its kind, and no label says what something lacks', async () => {
     answer({ ...FULL, devices: { ...FULL.devices, top: [{ vid: 0x1915, pid: 0xaf28, kind: 1, product: null, boxes: 2 }] } });
-    const r = render(() => <Stats />);
+    const r = render(() => <InRoute />);
     await r.findByTestId('figures');
     // The second table, Most used; the first is By kind.
-    const cell = r.container.querySelectorAll('#devices table')[1].querySelector('tbody td')!;
+    const cell = r.container.querySelector('#top-devices table tbody td')!;
     expect(cell.textContent).toBe('Keyboard');
     expect(r.container.textContent).not.toMatch(/Unnamed|Didn't come back/);
   });
 
   it('an empty most used list says None', async () => {
     answer({ ...FULL, devices: { ...FULL.devices, top: [] } });
-    const r = render(() => <Stats />);
+    const r = render(() => <InRoute />);
     await r.findByTestId('figures');
-    expect(r.container.querySelector('#devices')!.textContent).toContain('None.');
+    expect(r.container.querySelector('#top-devices')!.textContent).toContain('None.');
   });
 
   it('a failed read says so, and Retry shows it reading again', async () => {
@@ -229,7 +293,7 @@ describe('Stats page', () => {
       return new Response(JSON.stringify(FULL), { status: 200 });
     });
     vi.stubGlobal('fetch', f);
-    const r = render(() => <Stats />);
+    const r = render(() => <InRoute />);
     await waitFor(() => expect(r.getByRole('alert').textContent).toContain("Couldn't load the stats (500)."));
     fireEvent.click(r.getByRole('button', { name: 'Retry' }));
     await waitFor(() => expect(r.container.textContent).toContain('Loading...'));

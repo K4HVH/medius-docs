@@ -1,13 +1,12 @@
 import type { Component } from 'solid-js';
 import { A } from '@solidjs/router';
-import { Card, CardHeader } from '../../../../components/surfaces/Card';
-import '../../../../styles/docs.css';
+import { PageHeader } from '../../../shell/PageHeader';
+import { DocSection } from '../../../shell/DocSection';
 
 const Usage: Component = () => {
   return (
     <>
-      <Card>
-        <CardHeader title="Usage IDs" subtitle="Ids for INJECT and LOCK" />
+      <PageHeader>
         <p>
           <A href="/native/commands/inject#inject"><code>INJECT</code></A> and{' '}
           <A href="/native/commands/lock#lock"><code>LOCK</code></A> name an input by an{' '}
@@ -16,19 +15,18 @@ const Usage: Component = () => {
           <A href="/native/commands/usage#keycodes">HID keyboard usage</A> for a key, or a 16-bit{' '}
           <A href="/native/commands/usage#consumer">Consumer usage</A> for a media key.
         </p>
-      </Card>
+      </PageHeader>
 
-      <div id="buttons" data-search-target>
-        <Card>
-          <CardHeader title="Button ids" subtitle="Mouse buttons (class = button)" />
-          <p>
-            A semantic id, bound at clone time to the mouse's buttons, shared by{' '}
-            <A href="/native/commands/inject#button"><code>INJECT</code></A> and{' '}
-            <A href="/native/commands/lock#lock"><code>LOCK</code></A>. The first five are named;
-            each further declared button gets a numeric id, up to{' '}
-            <A href="/native/commands/requests#caps"><code>CAPS</code></A> <code>n_buttons</code>.
-            An id past that count is a no-op, so read <code>n_buttons</code> first.
-          </p>
+      <DocSection id="buttons" title="Button ids" caption="Mouse buttons (class = button)">
+        <p>
+          A semantic id, bound at clone time to the mouse's buttons, shared by{' '}
+          <A href="/native/commands/inject#button"><code>INJECT</code></A> and{' '}
+          <A href="/native/commands/lock#lock"><code>LOCK</code></A>. The first five are named;
+          each further declared button gets a numeric id, up to{' '}
+          <A href="/native/commands/requests#caps"><code>CAPS</code></A> <code>n_buttons</code>.
+          An id past that count is a no-op, so read <code>n_buttons</code> first.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Button</th><th><code>id</code></th></tr></thead>
             <tbody>
@@ -40,24 +38,23 @@ const Usage: Component = () => {
               <tr><td>further declared buttons</td><td><code>5 .. n_buttons - 1</code></td></tr>
             </tbody>
           </table>
-          <p>
-            The Rust library names the five as{' '}
-            <A href="/library/types/structs#button"><code>Button</code></A> constants
-            (<code>Button::LEFT</code> to <code>Button::SIDE2</code>) and takes further ids up to the
-            declared count.
-          </p>
-        </Card>
-      </div>
+        </div>
+        <p>
+          The Rust library names the five as{' '}
+          <A href="/library/types/structs#button"><code>Button</code></A> constants
+          (<code>Button::LEFT</code> to <code>Button::SIDE2</code>) and takes further ids up to the
+          declared count.
+        </p>
+      </DocSection>
 
-      <div id="keycodes" data-search-target>
-        <Card>
-          <CardHeader title="HID keyboard usages" subtitle="Keys and modifiers (class = key)" />
-          <p>
-            A HID Keyboard/Keypad usage from the{' '}
-            <a href="https://www.usb.org/sites/default/files/hut1_5.pdf" target="_blank" rel="noreferrer">USB HID Usage Tables</a>{' '}
-            (page 0x07). <code>0xE0</code>-<code>0xE7</code> are modifiers and fold into the
-            modifier byte; any other usage fills a keycode slot. Common ones:
-          </p>
+      <DocSection id="keycodes" title="HID keyboard usages" caption="Keys and modifiers (class = key)">
+        <p>
+          A HID Keyboard/Keypad usage from the{' '}
+          <a href="https://www.usb.org/sites/default/files/hut1_5.pdf" target="_blank" rel="noreferrer">USB HID Usage Tables</a>{' '}
+          (page 0x07). <code>0xE0</code>-<code>0xE7</code> are modifiers and fold into the
+          modifier byte; any other usage fills a keycode slot. Common ones:
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Key</th><th>Usage</th></tr></thead>
             <tbody>
@@ -73,6 +70,8 @@ const Usage: Component = () => {
               <tr><td>Right / Left / Down / Up</td><td><code>0x4F</code> / <code>0x50</code> / <code>0x51</code> / <code>0x52</code></td></tr>
             </tbody>
           </table>
+        </div>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Modifier</th><th>Usage</th></tr></thead>
             <tbody>
@@ -80,24 +79,23 @@ const Usage: Component = () => {
               <tr><td>Right Ctrl / Shift / Alt / GUI</td><td><code>0xE4</code> / <code>0xE5</code> / <code>0xE6</code> / <code>0xE7</code></td></tr>
             </tbody>
           </table>
-          <p>
-            The Rust library exposes these as named{' '}
-            <A href="/library/types/structs#key"><code>Key</code></A> constants
-            (<code>Key::A</code>, <code>Key::LEFT_SHIFT</code>, ...).
-          </p>
-        </Card>
-      </div>
+        </div>
+        <p>
+          The Rust library exposes these as named{' '}
+          <A href="/library/types/structs#key"><code>Key</code></A> constants
+          (<code>Key::A</code>, <code>Key::LEFT_SHIFT</code>, ...).
+        </p>
+      </DocSection>
 
-      <div id="consumer" data-search-target>
-        <Card>
-          <CardHeader title="Consumer usages" subtitle="Media keys (class = media)" />
-          <p>
-            A 16-bit usage from the Consumer page (0x0C) of the{' '}
-            <a href="https://www.usb.org/sites/default/files/hut1_5.pdf" target="_blank" rel="noreferrer">USB HID Usage Tables</a>.
-            Available only on a board with a Consumer collection (the{' '}
-            <A href="/native/commands/requests#caps"><code>CAPS</code></A> <code>CONSUMER</code>{' '}
-            flag). Common transport controls:
-          </p>
+      <DocSection id="consumer" title="Consumer usages" caption="Media keys (class = media)">
+        <p>
+          A 16-bit usage from the Consumer page (0x0C) of the{' '}
+          <a href="https://www.usb.org/sites/default/files/hut1_5.pdf" target="_blank" rel="noreferrer">USB HID Usage Tables</a>.
+          Available only on a board with a Consumer collection (the{' '}
+          <A href="/native/commands/requests#caps"><code>CAPS</code></A> <code>CONSUMER</code>{' '}
+          flag). Common transport controls:
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Media key</th><th>Usage</th></tr></thead>
             <tbody>
@@ -112,13 +110,13 @@ const Usage: Component = () => {
               <tr><td>Volume down</td><td><code>0x00EA</code></td></tr>
             </tbody>
           </table>
-          <p>
-            The Rust library exposes these as named{' '}
-            <A href="/library/types/structs#media-key"><code>MediaKey</code></A> constants
-            (<code>MediaKey::VOLUME_UP</code>, ...).
-          </p>
-        </Card>
-      </div>
+        </div>
+        <p>
+          The Rust library exposes these as named{' '}
+          <A href="/library/types/structs#media-key"><code>MediaKey</code></A> constants
+          (<code>MediaKey::VOLUME_UP</code>, ...).
+        </p>
+      </DocSection>
     </>
   );
 };

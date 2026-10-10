@@ -1,14 +1,13 @@
-import { For, type JSX, Match, Show, Switch, createResource } from 'solid-js';
-import { Card, CardHeader } from '../../../components/surfaces/Card';
+import { For, Match, Show, Switch, createResource, createSignal } from 'solid-js';
 import { Button } from '../../../components/inputs/Button';
-import { type Count, type StatsSummary, type WeekFlashes, fetchStats } from '../../../dashboard/stats';
-import { Section } from './Section';
-import '../../../styles/docs.css';
+import { type Count as Counted, type StatsSummary, type WeekFlashes, fetchStats } from '../../../dashboard/stats';
+import { PageHeader } from '../../shell/PageHeader';
+import { PageTabs, Pane } from '../../shell/PageTabs';
+import { Panel, Panels } from '../../shell/Panel';
+import { Count } from '../../shell/Count';
 
 // Longer lists end in one row summing the rest.
 const MAX_ROWS = 12;
-
-const SCOPE = 'All boxes, all time';
 
 const num = (n: number) => n.toLocaleString();
 
@@ -40,7 +39,8 @@ const RESULT: Record<keyof Omit<WeekFlashes, 'week'>, string> = {
   sent: 'Unconfirmed',
   failed: 'Failed',
 };
-const PAGE: Record<string, string> = { update: 'Update', advanced: 'Advanced', setup: 'Set up' };
+// Flashes from the Manual tab still record the page it replaced.
+const PAGE: Record<string, string> = { update: 'Update', advanced: 'Manual flash', setup: 'Set up' };
 const ROUTE: Record<string, string> = { usb2: 'USB2', rom: 'ROM download' };
 const CHIPS: Record<string, string> = { both: 'Both chips', device: 'Main chip', host: 'Mouse-side chip' };
 const SOURCE: Record<string, string> = { release: 'Release', file: 'File' };
@@ -65,40 +65,54 @@ const country = (code: string) => {
 const hex4 = (n: number) => n.toString(16).toUpperCase().padStart(4, '0');
 
 interface Row {
+  key: string;
   label: string;
   n: number;
   // The row summing the rest, which doesn't set the scale.
   rest?: boolean;
 }
 
-const rows = (counts: Count[], label: (key: string) => string): Row[] => {
-  const all = counts.map((c) => ({ label: label(c.key), n: c.n }));
+const rows = (counts: Counted[], label: (key: string) => string): Row[] => {
+  const all = counts.map((c) => ({ key: c.key, label: label(c.key), n: c.n }));
   if (all.length <= MAX_ROWS) return all;
   const rest = all.slice(MAX_ROWS - 1);
   return [
     ...all.slice(0, MAX_ROWS - 1),
-    { label: `Others (${rest.length})`, n: rest.reduce((a, r) => a + r.n, 0), rest: true },
+    { key: 'others', label: `Others (${rest.length})`, n: rest.reduce((a, r) => a + r.n, 0), rest: true },
   ];
 };
 
-const Empty = () => <p class="stat-empty">None.</p>;
+const Empty = () => <p class="mut" data-search-skip>None.</p>;
 
-const Bars = (props: { rows: Row[] }) => {
+// The figure over a chart: what the chart stands at, or the entry under the pointer.
+const Readout = (props: { n: number; label: string }) => (
+  <div class="readout">
+    <b>{num(props.n)}</b>
+    <span class="caps">{props.label}</span>
+  </div>
+);
+
+// A row per entry, to the scale of the largest named one. With `readout`, the figure over the bars is the
+// largest entry, or the row pointed at.
+const Bars = (props: { rows: Row[]; tone?: Record<string, string>; readout?: boolean }) => {
   const max = () => Math.max(0, ...props.rows.filter((r) => !r.rest).map((r) => r.n));
+  const [at, setAt] = createSignal<number | null>(null);
+  const read = () => props.rows[at() ?? 0];
   return (
     <Show when={max() > 0} fallback={<Empty />}>
-      <div class="stat-bars">
+      <Show when={props.readout}>
+        <Readout n={read().n} label={read().label} />
+      </Show>
+      <div class="bars chart" onPointerLeave={() => setAt(null)}>
         <For each={props.rows}>
-          {(r) => (
-            <>
-              <span class="stat-bars__label" title={r.label}>
-                {r.label}
+          {(r, i) => (
+            <div class="br" onPointerEnter={() => setAt(i())}>
+              <span title={r.label}>{r.label}</span>
+              <span class={`t${props.tone?.[r.key] ? ` ${props.tone[r.key]}` : ''}`}>
+                <i style={{ width: `${Math.min(100, (r.n / max()) * 100)}%` }} />
               </span>
-              <span class="stat-bars__track">
-                <span class="stat-bars__fill" style={{ width: `${Math.min(100, (r.n / max()) * 100)}%` }} />
-              </span>
-              <span class="stat-bars__value">{num(r.n)}</span>
-            </>
+              <b>{num(r.n)}</b>
+            </div>
           )}
         </For>
       </div>
@@ -107,7 +121,8 @@ const Bars = (props: { rows: Row[] }) => {
 };
 
 // One column per entry, oldest first, each split into stacked parts. The last is still counting, so it
-// is drawn fainter and named by `now`.
+// is drawn fainter and named by `now`. The figure over the columns is the last one, or the one pointed
+// at; with several parts, the legend gives that column's split.
 const Columns = (props: {
   keys: string[];
   parts: { name: string; cls: string; values: number[] }[];
@@ -117,54 +132,58 @@ const Columns = (props: {
 }) => {
   const totals = () => props.keys.map((_, i) => props.parts.reduce((a, p) => a + p.values[i], 0));
   const max = () => Math.max(0, ...totals());
-  const w = 10;
+  const last = () => props.keys.length - 1;
+  const [at, setAt] = createSignal<number | null>(null);
+  const shown = () => at() ?? last();
+  const name = (i: number) => (i === last() ? props.now : props.label(props.keys[i]));
   return (
     <Show when={max() > 0} fallback={<Empty />}>
-      <svg
-        class="stat-columns"
-        viewBox={`0 0 ${props.keys.length * w} 100`}
-        preserveAspectRatio="none"
+      <Readout n={totals()[shown()]} label={name(shown())} />
+      <div
+        class="cols chart"
         role="img"
         aria-label={`${props.what}, ${props.label(props.keys[0])} to ${props.now.toLowerCase()}, peak ${num(max())}`}
+        onPointerLeave={() => setAt(null)}
       >
         <For each={props.keys}>
-          {(key, i) => {
-            let y = 100;
-            const split = () =>
-              props.parts.length > 1
-                ? ` (${props.parts.filter((p) => p.values[i()] > 0).map((p) => `${p.name} ${num(p.values[i()])}`).join(', ')})`
-                : '';
-            return (
-              <g class={i() === props.keys.length - 1 ? 'stat-col--now' : undefined}>
-                <title>{`${i() === props.keys.length - 1 ? props.now : props.label(key)}: ${num(totals()[i()])}${totals()[i()] ? split() : ''}`}</title>
-                <For each={props.parts}>
-                  {(p) => {
-                    // A count too small for the scale still shows.
-                    const n = p.values[i()];
-                    const h = n > 0 ? Math.max(1.5, (n / max()) * 100) : 0;
-                    y -= h;
-                    return <rect class={p.cls} x={i() * w + 1} y={y} width={w - 2} height={h} />;
-                  }}
-                </For>
-              </g>
-            );
-          }}
+          {(_, i) => (
+            <span classList={{ now: i() === last() }} onPointerEnter={() => setAt(i())}>
+              <For each={props.parts}>
+                {(p) => (
+                  // A count too small for the scale still shows.
+                  <Show when={p.values[i()] > 0}>
+                    <i class={p.cls} style={{ height: `${Math.max(1.5, (p.values[i()] / max()) * 100)}%` }} />
+                  </Show>
+                )}
+              </For>
+            </span>
+          )}
         </For>
-        <line class="stat-columns__base" x1="0" y1="100" x2={props.keys.length * w} y2="100" vector-effect="non-scaling-stroke" />
-      </svg>
-      <div class="stat-axis">
+      </div>
+      <div class="axis caps">
         <span>{props.label(props.keys[0])}</span>
         <span>Peak {num(max())}</span>
         <span>{props.now}</span>
       </div>
+      <Show when={props.parts.length > 1}>
+        <div class="legend caps">
+          <For each={props.parts}>
+            {(p) => (
+              <span class={p.cls}>
+                {p.name} <b>{num(p.values[shown()])}</b>
+              </span>
+            )}
+          </For>
+        </div>
+      </Show>
     </Show>
   );
 };
 
-const series = (counts: Count[], what: string, now: string) => (
+const series = (counts: Counted[], what: string, now: string) => (
   <Columns
     keys={counts.map((c) => c.key)}
-    parts={[{ name: what, cls: 'stat-fill--primary', values: counts.map((c) => c.n) }]}
+    parts={[{ name: what, cls: '', values: counts.map((c) => c.n) }]}
     label={shortDate}
     what={what}
     now={now}
@@ -172,196 +191,177 @@ const series = (counts: Count[], what: string, now: string) => (
 );
 
 const RESULT_PARTS: { key: keyof typeof RESULT; cls: string }[] = [
-  { key: 'verified', cls: 'stat-fill--success' },
-  { key: 'written', cls: 'stat-fill--written' },
-  { key: 'reverted', cls: 'stat-fill--warning' },
-  { key: 'sent', cls: 'stat-fill--muted' },
-  { key: 'failed', cls: 'stat-fill--danger' },
+  { key: 'verified', cls: 's-ok' },
+  { key: 'written', cls: 's-wr' },
+  { key: 'reverted', cls: 's-warn' },
+  { key: 'sent', cls: 's-mut' },
+  { key: 'failed', cls: 's-bad' },
+];
+const RESULT_TONE: Record<string, string> = Object.fromEntries(RESULT_PARTS.map((p) => [p.key, p.cls]));
+
+const TABS = [
+  { key: 'boxes-over-time', label: 'Boxes over time' },
+  { key: 'firmware', label: 'Firmware in use' },
+  { key: 'devices', label: 'Devices' },
+  { key: 'flashes', label: 'Flashes' },
+  { key: 'countries', label: 'Countries and systems' },
 ];
 
-// Line height 1, as Section's label has.
-const Group = (props: { title: string; children: JSX.Element }) => (
-  <div>
-    <div class="api-response-label" style={{ 'line-height': '1' }}>
-      {props.title}
-    </div>
-    {props.children}
-  </div>
-);
-
-const Figure = (props: { value: string; label: string }) => (
-  <div class="stat-figure">
-    <div class="stat-figure__value">{props.value}</div>
-    <div class="stat-figure__label">{props.label}</div>
-  </div>
-);
+const Scope = (props: { children: string }) => <span class="caps">{props.children}</span>;
 
 const Summary = (props: { s: StatsSummary }) => {
   const s = () => props.s;
-  // Rounded down, so 199 of 200 is not 100%.
-  const rate = () => (s().flashes.total ? `${Math.floor((s().flashes.succeeded / s().flashes.total) * 100)}%` : 'None');
+  const figures = (): [string, number | null, (n: number) => string][] => [
+    ['Unique boxes', s().boxes.total, num],
+    ['New this week', s().boxes.newPerWeek.at(-1)?.n ?? 0, num],
+    ['Active in 7 days', s().boxes.active7, num],
+    ['Active in 30 days', s().boxes.active30, num],
+    ['Unique devices', s().devices.unique, num],
+    ['Flashes', s().flashes.total, num],
+    // Rounded down, so 199 of 200 is not 100%.
+    ['Success rate', s().flashes.total ? Math.floor((s().flashes.succeeded / s().flashes.total) * 100) : null, (n) => `${n}%`],
+    ['Countries', s().countries.filter((c) => c.key !== 'unknown').length, num],
+  ];
   return (
     <>
-      <div id="stats" data-search-target>
-        <Card>
-          <CardHeader title="Usage stats" subtitle={SCOPE} />
-          <div class="stat-figures" data-testid="figures">
-            <Figure value={num(s().boxes.total)} label="Unique boxes" />
-            <Figure value={num(s().boxes.newPerWeek.at(-1)?.n ?? 0)} label="New this week" />
-            <Figure value={num(s().boxes.active7)} label="Active in 7 days" />
-            <Figure value={num(s().boxes.active30)} label="Active in 30 days" />
-            <Figure value={num(s().devices.unique)} label="Unique devices" />
-            <Figure value={num(s().flashes.total)} label="Flashes" />
-            <Figure value={rate()} label="Success rate" />
-            <Figure value={num(s().countries.filter((c) => c.key !== 'unknown').length)} label="Countries" />
-          </div>
-        </Card>
-      </div>
-
-      <div id="boxes-over-time" data-search-target>
-        <Card>
-          <CardHeader title="Boxes over time" subtitle="Last 26 weeks and 90 days" />
-          <Section title="New per week" first>
-            {series(s().boxes.newPerWeek, 'New boxes per week', 'This week')}
-          </Section>
-          <Section title="Active per day">{series(s().boxes.activePerDay, 'Active boxes per day', 'Today')}</Section>
-        </Card>
-      </div>
-
-      <div id="firmware" data-search-target>
-        <Card>
-          <CardHeader title="Firmware in use" subtitle="Last 30 days" />
-          <Section title="Main chip" first>
-            <Bars rows={rows(s().firmware.versions, (v) => `v${v}`)} />
-          </Section>
-        </Card>
-      </div>
-
-      <div id="devices" data-search-target>
-        <Card>
-          <CardHeader title="Devices" subtitle="Cloned by the boxes" />
-          <Section title="By kind" first>
-            <Show when={s().devices.byKind.length > 0} fallback={<Empty />}>
-              <table class="api-params">
-                <thead>
-                  <tr>
-                    <th>Kind</th>
-                    <th>Devices</th>
-                    <th>Boxes</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <For each={s().devices.byKind}>
-                    {(k) => (
-                      <tr>
-                        <td>{KIND[k.kind] ?? 'Unknown'}</td>
-                        <td>{num(k.devices)}</td>
-                        <td>{num(k.boxes)}</td>
-                      </tr>
-                    )}
-                  </For>
-                </tbody>
-              </table>
-            </Show>
-          </Section>
-          <Section title="Most used">
-            <Show when={s().devices.top.length > 0} fallback={<Empty />}>
-              <table class="api-params">
-                <thead>
-                  <tr>
-                    <th>Device</th>
-                    <th>VID:PID</th>
-                    <th>Boxes</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <For each={s().devices.top}>
-                    {(d) => (
-                      <tr>
-                        <td class="stat-wrap">
-                          <Show when={d.product} fallback={KIND[d.kind] ?? 'Unknown'}>
-                            {d.product}
-                            <div class="stat-sub">{KIND[d.kind] ?? 'Unknown'}</div>
-                          </Show>
-                        </td>
-                        <td>
-                          {hex4(d.vid)}:{hex4(d.pid)}
-                        </td>
-                        <td>{num(d.boxes)}</td>
-                      </tr>
-                    )}
-                  </For>
-                </tbody>
-              </table>
-            </Show>
-          </Section>
-        </Card>
-      </div>
-
-      <div id="flashes" data-search-target>
-        <Card>
-          <CardHeader title="Flashes" subtitle="Update, Advanced and Set up" />
-          <Section title="Per week" first>
-            <Columns
-              keys={s().flashes.perWeek.map((w) => w.week)}
-              parts={RESULT_PARTS.map((p) => ({ name: RESULT[p.key], cls: p.cls, values: s().flashes.perWeek.map((w) => w[p.key]) }))}
-              label={shortDate}
-              what="Flashes per week"
-              now="This week"
-            />
-            <Show when={s().flashes.total > 0}>
-              <div class="stat-legend">
-                <For each={RESULT_PARTS}>
-                  {(p) => (
-                    <span>
-                      <span class={`stat-swatch ${p.cls}`} />
-                      {RESULT[p.key]}
-                    </span>
-                  )}
-                </For>
-              </div>
-            </Show>
-          </Section>
-          <Section>
-            <div class="stat-split">
-              <Group title="Result">
-                <Bars rows={rows(s().flashes.byResult, (k) => RESULT[k as keyof typeof RESULT] ?? k)} />
-              </Group>
-              <Group title="Page and route">
-                <Bars rows={rows(s().flashes.byRoute, route)} />
-              </Group>
-              <Group title="Chips">
-                <Bars rows={rows(s().flashes.byChips, (k) => CHIPS[k] ?? k)} />
-              </Group>
-              <Group title="Source">
-                <Bars rows={rows(s().flashes.bySource, (k) => SOURCE[k] ?? k)} />
-              </Group>
-              <Group title="Version flashed">
-                <Bars rows={rows(s().flashes.byVersion, (v) => `v${v}`)} />
-              </Group>
+      <dl class="vit eight caps" id="stats" data-testid="figures">
+        <For each={figures()}>
+          {([label, n, format]) => (
+            <div>
+              <dt>{label}</dt>
+              <dd class="big">{n === null ? 'None' : <Count to={n} format={format} />}</dd>
             </div>
-          </Section>
-        </Card>
-      </div>
+          )}
+        </For>
+      </dl>
 
-      <div id="countries" data-search-target>
-        <Card>
-          <CardHeader title="Countries and systems" subtitle="Each box as last seen" />
-          <Section first>
-            <div class="stat-split">
-              <Group title="Country">
-                <Bars rows={rows(s().countries, country)} />
-              </Group>
-              <Group title="System">
-                <Bars rows={rows(s().os, (k) => OS[k] ?? k)} />
-              </Group>
-              <Group title="Browser">
-                <Bars rows={rows(s().browsers, (k) => BROWSER[k] ?? k)} />
-              </Group>
-            </div>
-          </Section>
-        </Card>
-      </div>
+      <PageTabs id="stats" tabs={TABS}>
+        <Pane key="boxes-over-time">
+          <Panels>
+            <Panel id="new-boxes" title="New per week" wide>
+              {series(s().boxes.newPerWeek, 'New boxes per week', 'This week')}
+            </Panel>
+            <Panel id="active-boxes" title="Active per day" wide>
+              {series(s().boxes.activePerDay, 'Active boxes per day', 'Today')}
+            </Panel>
+          </Panels>
+        </Pane>
+
+        <Pane key="firmware">
+          <Panels>
+            <Panel id="firmware-versions" title="Main chip" aside={<Scope>Last 30 days</Scope>} wide>
+              <Bars rows={rows(s().firmware.versions, (v) => `v${v}`)} readout />
+            </Panel>
+          </Panels>
+        </Pane>
+
+        <Pane key="devices">
+          <Panels>
+            <Panel id="device-kinds" title="By kind" wide>
+              <Show when={s().devices.byKind.length > 0} fallback={<Empty />}>
+                <div class="table-scroll">
+                  <table class="api-params names">
+                    <thead>
+                      <tr>
+                        <th>Kind</th>
+                        <th class="num">Devices</th>
+                        <th class="num">Boxes</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <For each={s().devices.byKind}>
+                        {(k) => (
+                          <tr>
+                            <td>{KIND[k.kind] ?? 'Unknown'}</td>
+                            <td class="num">{num(k.devices)}</td>
+                            <td class="num">{num(k.boxes)}</td>
+                          </tr>
+                        )}
+                      </For>
+                    </tbody>
+                  </table>
+                </div>
+              </Show>
+            </Panel>
+            <Panel id="top-devices" title="Most used" wide>
+              <Show when={s().devices.top.length > 0} fallback={<Empty />}>
+                <div class="table-scroll">
+                  <table class="api-params names">
+                    <thead>
+                      <tr>
+                        <th>Device</th>
+                        <th>VID:PID</th>
+                        <th class="num">Boxes</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <For each={s().devices.top}>
+                        {(d) => (
+                          <tr>
+                            <td class="wrap">
+                              <Show when={d.product} fallback={KIND[d.kind] ?? 'Unknown'}>
+                                {d.product}
+                                <span class="sub">{KIND[d.kind] ?? 'Unknown'}</span>
+                              </Show>
+                            </td>
+                            <td>
+                              {hex4(d.vid)}:{hex4(d.pid)}
+                            </td>
+                            <td class="num">{num(d.boxes)}</td>
+                          </tr>
+                        )}
+                      </For>
+                    </tbody>
+                  </table>
+                </div>
+              </Show>
+            </Panel>
+          </Panels>
+        </Pane>
+
+        <Pane key="flashes">
+          <Panels>
+            <Panel id="flashes-per-week" title="Per week" wide>
+              <Columns
+                keys={s().flashes.perWeek.map((w) => w.week)}
+                parts={RESULT_PARTS.map((p) => ({ name: RESULT[p.key], cls: p.cls, values: s().flashes.perWeek.map((w) => w[p.key]) }))}
+                label={shortDate}
+                what="Flashes per week"
+                now="This week"
+              />
+            </Panel>
+            <Panel id="flash-results" title="Result">
+              <Bars rows={rows(s().flashes.byResult, (k) => RESULT[k as keyof typeof RESULT] ?? k)} tone={RESULT_TONE} />
+            </Panel>
+            <Panel id="flash-routes" title="Page and route">
+              <Bars rows={rows(s().flashes.byRoute, route)} />
+            </Panel>
+            <Panel id="flash-chips" title="Chips">
+              <Bars rows={rows(s().flashes.byChips, (k) => CHIPS[k] ?? k)} />
+            </Panel>
+            <Panel id="flash-sources" title="Source">
+              <Bars rows={rows(s().flashes.bySource, (k) => SOURCE[k] ?? k)} />
+            </Panel>
+            <Panel id="flash-versions" title="Version flashed" wide>
+              <Bars rows={rows(s().flashes.byVersion, (v) => `v${v}`)} />
+            </Panel>
+          </Panels>
+        </Pane>
+
+        <Pane key="countries">
+          <Panels>
+            <Panel id="country" title="Country" aside={<Scope>As last seen</Scope>} wide>
+              <Bars rows={rows(s().countries, country)} readout />
+            </Panel>
+            <Panel id="system" title="System">
+              <Bars rows={rows(s().os, (k) => OS[k] ?? k)} />
+            </Panel>
+            <Panel id="browser" title="Browser">
+              <Bars rows={rows(s().browsers, (k) => BROWSER[k] ?? k)} />
+            </Panel>
+          </Panels>
+        </Pane>
+      </PageTabs>
     </>
   );
 };
@@ -378,30 +378,34 @@ const Stats = () => {
   };
   return (
     <>
+      <PageHeader />
       <Switch
         fallback={
-          <div id="stats" data-search-target>
-            <Card>
-              <CardHeader title="Usage stats" subtitle={SCOPE} />
-              <p>Loading...</p>
-            </Card>
-          </div>
+          <Panels>
+            <Panel id="stats" wide>
+              {/* The server fills this for crawlers. */}
+              <div data-fill="stats">
+                <p class="mut" data-search-skip>Loading...</p>
+              </div>
+            </Panel>
+          </Panels>
         }
       >
         <Match when={summary.state === 'errored'}>
-          <div id="stats" data-search-target>
-            <Card>
-              <CardHeader title="Usage stats" subtitle={SCOPE} />
+          <Panels>
+            <Panel id="stats" wide>
               <div class="callout callout--warning" role="alert">
                 {(summary.error as Error).message}
               </div>
-              <Button variant="secondary" onClick={() => void refetch()}>
-                Retry
-              </Button>
-            </Card>
-          </div>
+              <div class="acts">
+                <Button variant="secondary" onClick={() => void refetch()}>
+                  Retry
+                </Button>
+              </div>
+            </Panel>
+          </Panels>
         </Match>
-        <Match when={value()}>{(s) => <Summary s={s()} />}</Match>
+        <Match when={value()}>{(v) => <Summary s={v()} />}</Match>
       </Switch>
     </>
   );

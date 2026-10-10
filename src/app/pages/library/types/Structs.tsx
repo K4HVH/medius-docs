@@ -1,27 +1,23 @@
 import type { Component } from 'solid-js';
 import { A } from '@solidjs/router';
-import { Card, CardHeader } from '../../../../components/surfaces/Card';
-import '../../../../styles/docs.css';
+import { PageHeader } from '../../../shell/PageHeader';
+import { DocSection } from '../../../shell/DocSection';
 
 const Structs: Component = () => {
   return (
     <>
-      <div id="structs" data-search-target>
-        <Card>
-          <CardHeader title="Structs" subtitle="Values the box reports back" />
-          <p>
-            Public fields, returned by queries and discovery.
-          </p>
-        </Card>
-      </div>
-      <div id="version" data-search-target>
-        <Card>
-          <CardHeader title="Version" subtitle="Firmware identity and box id" />
-          <p>
-            Firmware identity from{' '}
-            <A href="/library/requests#version"><code>query_version()</code></A>. <code>Display</code>{' '}
-            prints <code>fw M.m.p</code> and omits <code>proto_ver</code>; read it from the field.
-          </p>
+      <PageHeader id="structs">
+        <p>
+          Public fields, returned by queries and discovery.
+        </p>
+      </PageHeader>
+      <DocSection id="version" title="Version" caption="Firmware identity and box id">
+        <p>
+          Firmware identity from{' '}
+          <A href="/library/requests#version"><code>query_version()</code></A>. <code>Display</code>{' '}
+          prints <code>fw M.m.p</code> and omits <code>proto_ver</code>; read it from the field.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -33,30 +29,31 @@ const Structs: Component = () => {
               <tr><td><code>name</code></td><td><code>String</code></td><td>The box's human-readable name (a synthesised default when unset), set via <A href="/library/options#set-name"><code>set_name</code></A>.</td></tr>
             </tbody>
           </table>
+        </div>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Method</th><th>Returns</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>mac_hex()</code></td><td><code>String</code></td><td>The MAC as 12 lowercase hex digits, the id used by <A href="/library/discovery#open-by-id"><code>open_by_id</code></A>.</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::Version;
+        </div>
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`use medius::Version;
 
 let v = Version { proto_ver: 9, fw_major: 3, fw_minor: 4, fw_patch: 5, mac: [0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc], name: "Loki".into() };
 assert_eq!(v.to_string(), "fw 3.4.5"); // Display omits proto_ver
 assert_eq!(v.mac_hex(), "123456789abc");
 println!("{v} (protocol {}, box {}, name {})", v.proto_ver, v.mac_hex(), v.name);`}</code></pre>
-        </Card>
-      </div>
-      <div id="health" data-search-target>
-        <Card>
-          <CardHeader title="Health" subtitle="Box readiness flags" />
-          <p>
-            Box readiness from <A href="/library/requests#health"><code>query_health()</code></A>, one
-            bool per bit of a <code>u16</code> flags word. <code>from_flags(u16)</code> and{' '}
-            <code>to_flags()</code> convert it: bits 0 to 7 hold the first eight fields, and the high
-            byte the <A href="/library/advanced/rewrite">advanced control layer</A>'s three.
-          </p>
+      </DocSection>
+      <DocSection id="health" title="Health" caption="Box readiness flags">
+        <p>
+          Box readiness from <A href="/library/requests#health"><code>query_health()</code></A>, one
+          bool per bit of a <code>u16</code> flags word. <code>from_flags(u16)</code> and{' '}
+          <code>to_flags()</code> convert it: bits 0 to 7 hold the first eight fields, and the high
+          byte the <A href="/library/advanced/rewrite">advanced control layer</A>'s three.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>True when</th></tr></thead>
             <tbody>
@@ -73,25 +70,24 @@ println!("{v} (protocol {}, box {}, name {})", v.proto_ver, v.mac_hex(), v.name)
               <tr><td><code>transform_on</code></td><td><code>bool</code></td><td>A <A href="/library/transform">field transform</A> is active (v3.4.0).</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::Health;
+        </div>
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`use medius::Health;
 
 let h = Health::from_flags(0b0000_0011); // link_up | mouse_attached
 assert!(h.link_up && h.mouse_attached);
 assert!(!h.clone_configured && !h.rewrite_on);
 assert_eq!(h.to_flags(), 0b0000_0011); // round-trips to the same word`}</code></pre>
-        </Card>
-      </div>
-      <div id="device-info" data-search-target>
-        <Card>
-          <CardHeader title="DeviceInfo" subtitle="Clone's USB identity, kind, product" />
-          <p>
-            USB identity from{' '}
-            <A href="/library/requests#device-info"><code>device_info()</code></A>. Every field is zero
-            or empty with nothing cloned, which <code>is_cloned()</code> reads: a clone with no HID
-            interface (a vendor-class pad, <code>n_hid</code> 0 in <A href="#caps"><code>Caps</code></A>) has
-            its identity filled in all the same. <code>Display</code> prints <code>VVVV:PPPP product</code>.
-          </p>
+      </DocSection>
+      <DocSection id="device-info" title="DeviceInfo" caption="Clone's USB identity, kind, product">
+        <p>
+          USB identity from{' '}
+          <A href="/library/requests#device-info"><code>device_info()</code></A>. Every field is zero
+          or empty with nothing cloned, which <code>is_cloned()</code> reads: a clone with no HID
+          interface (a vendor-class pad, <code>n_hid</code> 0 in <A href="#caps"><code>Caps</code></A>) has
+          its identity filled in all the same. <code>Display</code> prints <code>VVVV:PPPP product</code>.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -105,8 +101,9 @@ assert_eq!(h.to_flags(), 0b0000_0011); // round-trips to the same word`}</code><
               <tr><td><code>product</code></td><td><code>String</code></td><td>The product string the device serves, in ASCII with <code>?</code> for each character outside it (empty when it serves none).</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::{DeviceInfo, DeviceKind};
+        </div>
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`use medius::{DeviceInfo, DeviceKind};
 
 let d = DeviceInfo {
     vid: 0x046D, pid: 0xC08B, bcd_device: 0, bcd_usb: 0x0201,
@@ -115,16 +112,14 @@ let d = DeviceInfo {
 assert_eq!(d.to_string(), "046D:C08B G502"); // Display is VVVV:PPPP product
 assert!(d.is_cloned());
 assert!(!DeviceInfo::default().is_cloned()); // nothing cloned`}</code></pre>
-        </Card>
-      </div>
-      <div id="caps" data-search-target>
-        <Card>
-          <CardHeader title="Caps" subtitle="The whole device, mouse and keyboard" />
-          <p>
-            Everything one <A href="/library/requests#caps"><code>caps()</code></A> query returns.{' '}
-            <code>has_mouse()</code> / <code>has_keyboard()</code> report which are bound;{' '}
-            <code>is_composite()</code> is true when the device has more than one HID interface.
-          </p>
+      </DocSection>
+      <DocSection id="caps" title="Caps" caption="The whole device, mouse and keyboard">
+        <p>
+          Everything one <A href="/library/requests#caps"><code>caps()</code></A> query returns.{' '}
+          <code>has_mouse()</code> / <code>has_keyboard()</code> report which are bound;{' '}
+          <code>is_composite()</code> is true when the device has more than one HID interface.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -134,23 +129,22 @@ assert!(!DeviceInfo::default().is_cloned()); // nothing cloned`}</code></pre>
               <tr><td><code>kbd_change_driven</code></td><td><code>bool</code></td><td>True when a keyboard is bound: it reports only on a key change, so its rate has no continuous cadence.</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`let caps = device.caps()?;
+        </div>
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`let caps = device.caps()?;
 if caps.has_keyboard() && caps.keyboard.has_consumer {
     // media injection works on this device
 }
 println!("{} mouse buttons", caps.mouse.n_buttons);`}</code></pre>
-        </Card>
-      </div>
-      <div id="mouse-caps" data-search-target>
-        <Card>
-          <CardHeader title="MouseCaps" subtitle="What the cloned mouse can do" />
-          <p>
-            Semantic capabilities from{' '}
-            <A href="/library/requests#caps"><code>caps()</code></A>. Every
-            field is zero when no relative-axis mouse interface is bound.{' '}
-            <code>is_composite()</code> is true when <code>n_hid &gt; 1</code>.
-          </p>
+      </DocSection>
+      <DocSection id="mouse-caps" title="MouseCaps" caption="What the cloned mouse can do">
+        <p>
+          Semantic capabilities from{' '}
+          <A href="/library/requests#caps"><code>caps()</code></A>. Every
+          field is zero when no relative-axis mouse interface is bound.{' '}
+          <code>is_composite()</code> is true when <code>n_hid &gt; 1</code>.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -163,22 +157,21 @@ println!("{} mouse buttons", caps.mouse.n_buttons);`}</code></pre>
               <tr><td><code>n_hid</code></td><td><code>u8</code></td><td>Cloned HID interfaces; <code>&gt;1</code> = composite, 0 with nothing cloned or for a clone with no HID interface (<A href="#device-info"><code>DeviceInfo::is_cloned</code></A> tells them apart).</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::MouseCaps;
+        </div>
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`use medius::MouseCaps;
 
 let c = MouseCaps { n_buttons: 5, has_x: true, has_y: true, has_wheel: true, has_pan: false, has_report_id: false, n_hid: 1 };
 assert!(!c.is_composite()); // single HID interface`}</code></pre>
-        </Card>
-      </div>
-      <div id="rate" data-search-target>
-        <Card>
-          <CardHeader title="Rate" subtitle="The native report rate the box tracks" />
-          <p>
-            Live rate from <A href="/library/requests#query-rate"><code>query_rate()</code></A>.{' '}
-            <code>native_hz()</code> converts the period to hertz, <code>None</code> while{' '}
-            <code>native_period_us</code> is <code>0</code>. On a change-driven input,{' '}
-            <code>poll_period_us</code> is the only rate.
-          </p>
+      </DocSection>
+      <DocSection id="rate" title="Rate" caption="The native report rate the box tracks">
+        <p>
+          Live rate from <A href="/library/requests#query-rate"><code>query_rate()</code></A>.{' '}
+          <code>native_hz()</code> converts the period to hertz, <code>None</code> while{' '}
+          <code>native_period_us</code> is <code>0</code>. On a change-driven input,{' '}
+          <code>poll_period_us</code> is the only rate.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -188,27 +181,26 @@ assert!(!c.is_composite()); // single HID interface`}</code></pre>
               <tr><td><code>change_driven</code></td><td><code>bool</code></td><td>The active input is event-driven (keyboard / media), with no continuous cadence.</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::Rate;
+        </div>
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`use medius::Rate;
 
 let r = Rate { native_period_us: 1000, poll_period_us: 1000, confident: true, change_driven: false };
 assert_eq!(r.native_hz(), Some(1000.0));`}</code></pre>
-        </Card>
-      </div>
-      <div id="stats" data-search-target>
-        <Card>
-          <CardHeader title="Stats" subtitle="Delivery and telemetry counters" />
-          <p>
-            Delivery counters from <A href="/library/requests#query-stats"><code>query_stats()</code></A>,
-            decoded from the 31-byte <A href="/native/commands/requests#stats"><code>RESP(STATS)</code></A>.
-          </p>
-          <p>
-            Nonzero <code>tx_drops</code> or <code>tx_wedges</code> means native input slipped on the
-            way to the PC; nonzero <code>link_rx_drops</code> or <code>host_rx_drops</code> means it was
-            lost between the box's two chips; <code>relay_drops</code> is relayed traffic and commands that went no further, not lost native input. The
-            narrowed fields saturate instead of wrapping; the three drop counts are full width, and{' '}
-            <code>session</code> wraps.
-          </p>
+      </DocSection>
+      <DocSection id="stats" title="Stats" caption="Delivery and telemetry counters">
+        <p>
+          Delivery counters from <A href="/library/requests#query-stats"><code>query_stats()</code></A>,
+          decoded from the 31-byte <A href="/native/commands/requests#stats"><code>RESP(STATS)</code></A>.
+        </p>
+        <p>
+          Nonzero <code>tx_drops</code> or <code>tx_wedges</code> means native input slipped on the
+          way to the PC; nonzero <code>link_rx_drops</code> or <code>host_rx_drops</code> means it was
+          lost between the box's two chips; <code>relay_drops</code> is relayed traffic and commands that went no further, not lost native input. The
+          narrowed fields saturate instead of wrapping; the three drop counts are full width, and{' '}
+          <code>session</code> wraps.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -226,17 +218,16 @@ assert_eq!(r.native_hz(), Some(1000.0));`}</code></pre>
               <tr><td><code>session</code></td><td><code>u16</code></td><td>Releases of some or all of the session state a host set: held input, locks, subscriptions, rules, transforms, the clip, and an LED override, which the library does not hold or re-send. 0 at boot; wraps, so compare for inequality. The library watches it for <A href="/library/lifecycle#restart">session recovery</A>; the native <A href="/native/commands/requests#stats"><code>RESP(STATS)</code></A> lists what counts.</td></tr>
             </tbody>
           </table>
-        </Card>
-      </div>
-      <div id="locks" data-search-target>
-        <Card>
-          <CardHeader title="Locks" subtitle="The active input scales" />
-          <p>
-            The active set from <A href="/library/requests#query-locks"><code>query_locks()</code></A>,
-            a list of <A href="/library/types/structs#lock-entry"><code>LockEntry</code></A> across
-            every class, one per direction not passing untouched. The wire format is on the native{' '}
-            <A href="/native/commands/requests#locks"><code>LOCKS</code></A> reply.
-          </p>
+        </div>
+      </DocSection>
+      <DocSection id="locks" title="Locks" caption="The active input scales">
+        <p>
+          The active set from <A href="/library/requests#query-locks"><code>query_locks()</code></A>,
+          a list of <A href="/library/types/structs#lock-entry"><code>LockEntry</code></A> across
+          every class, one per direction not passing untouched. The wire format is on the native{' '}
+          <A href="/native/commands/requests#locks"><code>LOCKS</code></A> reply.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Method</th><th>Returns</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -246,6 +237,8 @@ assert_eq!(r.native_hz(), Some(1000.0));`}</code></pre>
               <tr><td><code>from_entries(Vec&lt;LockEntry&gt;)</code></td><td><code>Locks</code></td><td>Build one from entries, for tests and the <A href="/library/features/mock"><code>MockBox</code></A>.</td></tr>
             </tbody>
           </table>
+        </div>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Case</th><th>What the list holds</th></tr></thead>
             <tbody>
@@ -255,8 +248,9 @@ assert_eq!(r.native_hz(), Some(1000.0));`}</code></pre>
               <tr><td>85 entries reached</td><td>The rest is absent, with nothing marking it. See the native <A href="/native/commands/requests#locks"><code>LOCKS</code></A> budget.</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::{Axis, Button, Direction};
+        </div>
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`use medius::{Axis, Button, Direction};
 
 let locks = device.query_locks()?;
 if locks.is_locked(Axis::X, Direction::Positive) {
@@ -267,17 +261,15 @@ if locks.is_locked(Button::LEFT, Direction::Negative) {
 }
 // how much of a delta opposing the injection survives
 println!("{}%", locks.scale_of(Axis::X, Direction::Against));`}</code></pre>
-        </Card>
-      </div>
-      <div id="lock-entry" data-search-target>
-        <Card>
-          <CardHeader title="LockEntry" subtitle="One entry in a Locks list" />
-          <pre class="api-signature">struct LockEntry {'{'} scope: LockScope, direction: Direction, scale: i16 {'}'}</pre>
-          <p>
-            One weighed direction in a <A href="/library/types/structs#locks"><code>Locks</code></A>{' '}
-            list. Entries mirror the <A href="/native/commands/lock"><code>LOCK</code></A> frame field
-            for field, so an entry is the frame that reproduces it.
-          </p>
+      </DocSection>
+      <DocSection id="lock-entry" title="LockEntry" caption="One entry in a Locks list">
+        <pre class="api-signature">struct LockEntry {'{'} scope: LockScope, direction: Direction, scale: i16 {'}'}</pre>
+        <p>
+          One weighed direction in a <A href="/library/types/structs#locks"><code>Locks</code></A>{' '}
+          list. Entries mirror the <A href="/native/commands/lock"><code>LOCK</code></A> frame field
+          for field, so an entry is the frame that reproduces it.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -286,18 +278,17 @@ println!("{}%", locks.scale_of(Axis::X, Direction::Against));`}</code></pre>
               <tr><td><code>scale</code></td><td><code>i16</code></td><td>Percent of the physical value kept, signed: a negative one reverses what it keeps. A momentary usage is one bit, so the box stores the block or pass it renders: never between them, never negative.</td></tr>
             </tbody>
           </table>
-          <p><code>is_block()</code> is <code>scale == 0</code>: blocked outright rather than weighed.</p>
-        </Card>
-      </div>
-      <div id="bearing" data-search-target>
-        <Card>
-          <CardHeader title="Bearing" subtitle="What With and Against are measured against" />
-          <pre class="api-signature">struct Bearing {'{'} window: Option&lt;Duration&gt;, mode: BearingMode {'}'}</pre>
-          <p>
-            The configured bearing from{' '}
-            <A href="/library/options#query-bearing"><code>query_bearing()</code></A>. The native{' '}
-            <A href="/native/commands/lock#bearing">bearing</A> describes what it does.
-          </p>
+        </div>
+        <p><code>is_block()</code> is <code>scale == 0</code>: blocked outright rather than weighed.</p>
+      </DocSection>
+      <DocSection id="bearing" title="Bearing" caption="What With and Against are measured against">
+        <pre class="api-signature">struct Bearing {'{'} window: Option&lt;Duration&gt;, mode: BearingMode {'}'}</pre>
+        <p>
+          The configured bearing from{' '}
+          <A href="/library/options#query-bearing"><code>query_bearing()</code></A>. The native{' '}
+          <A href="/native/commands/lock#bearing">bearing</A> describes what it does.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -305,19 +296,18 @@ println!("{}%", locks.scale_of(Axis::X, Direction::Against));`}</code></pre>
               <tr><td><code>mode</code></td><td><code>BearingMode</code></td><td><code>PerAxis</code>: each axis reads its own sign. <code>Vector</code>: the physical delta is projected onto the injected direction, and the relative scale weighs only the part along it.</td></tr>
             </tbody>
           </table>
-          <p><code>is_live()</code> reports whether a bearing is held.</p>
-        </Card>
-      </div>
-      <div id="catch-filter" data-search-target>
-        <Card>
-          <CardHeader title="CatchFilter" subtitle="What to catch, and how much" />
-          <pre class="api-signature">struct CatchFilter {'{'} /* private */ {'}'}</pre>
-          <p>
-            One entry in the table passed to{' '}
-            <A href="/library/catch#catch-events"><code>catch_events</code></A> or{' '}
-            <A href="/library/catch#input-events"><code>input_events</code></A>, built with a
-            constructor.
-          </p>
+        </div>
+        <p><code>is_live()</code> reports whether a bearing is held.</p>
+      </DocSection>
+      <DocSection id="catch-filter" title="CatchFilter" caption="What to catch, and how much">
+        <pre class="api-signature">struct CatchFilter {'{'} /* private */ {'}'}</pre>
+        <p>
+          One entry in the table passed to{' '}
+          <A href="/library/catch#catch-events"><code>catch_events</code></A> or{' '}
+          <A href="/library/catch#input-events"><code>input_events</code></A>, built with a
+          constructor.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Constructor</th><th>Addresses</th></tr></thead>
             <tbody>
@@ -331,6 +321,8 @@ println!("{}%", locks.scale_of(Axis::X, Direction::Against));`}</code></pre>
               <tr><td><code>CatchFilter::everything()</code></td><td>Every class, every id, both directions.</td></tr>
             </tbody>
           </table>
+        </div>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Method</th><th>Returns</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -344,28 +336,29 @@ println!("{}%", locks.scale_of(Axis::X, Direction::Against));`}</code></pre>
               <tr><td><code>.same_address(other)</code></td><td><code>bool</code></td><td>Whether both name the same box table entry, whatever their captures.</td></tr>
             </tbody>
           </table>
-          <p>
-            An exact <code>(class, id)</code> is matched before a class blanket, that before the wildcard, and a named direction before <code>Both</code>. That entry supplies the capture:
-          </p>
-          <pre class="diagram">{`catch_events([
+        </div>
+        <p>
+          An exact <code>(class, id)</code> is matched before a class blanket, that before the wildcard, and a named direction before <code>Both</code>. That entry supplies the capture:
+        </p>
+        <pre class="diagram">{`catch_events([
     CatchFilter::everything().with_capture(Capture::First(16)),   // everything, 16 bytes
     CatchFilter::traffic(TrafficClass::VendorInterrupt, 0x83),    // except 0x83, in full
 ])
 
   packet on 0x83  ->  traffic(VendorInterrupt, 0x83)  resolves  ->  whole packet
   packet on 0x84  ->  everything()                    resolves  ->  First(16)`}</pre>
-          <p>
-            Capture is not part of a filter's address, so two filters naming one entry at different
-            lengths are one box entry at the wider of the two. <code>same_address</code> is that
-            comparison; <code>==</code> compares everything.
-          </p>
-          <p>
-            The table holds 32 entries. A subscription past that, an empty one, or a capture on an
-            input class is refused before anything is sent (
-            <A href="/library/types/errors"><code>Error</code></A>).
-          </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::{CatchFilter, Class, TrafficClass};
+        <p>
+          Capture is not part of a filter's address, so two filters naming one entry at different
+          lengths are one box entry at the wider of the two. <code>same_address</code> is that
+          comparison; <code>==</code> compares everything.
+        </p>
+        <p>
+          The table holds 32 entries. A subscription past that, an empty one, or a capture on an
+          input class is refused before anything is sent (
+          <A href="/library/types/errors"><code>Error</code></A>).
+        </p>
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`use medius::{CatchFilter, Class, TrafficClass};
 
 // Press edges of every key, plus one control endpoint, plus bus context.
 let stream = device.catch_events([
@@ -376,18 +369,16 @@ let stream = device.catch_events([
 
 // Dropping the stream clears the whole table.
 drop(stream);`}</code></pre>
-        </Card>
-      </div>
-      <div id="motion-event" data-search-target>
-        <Card>
-          <CardHeader title="MotionEvent" subtitle="One physical relative-axis event" />
-          <p>
-            The payload of a{' '}
-            <A href="/library/types/enums#catch-event"><code>CatchEvent::Motion</code></A>, read off an{' '}
-            <A href="/library/catch#event-stream"><code>EventStream</code></A>. The physical delta at the
-            merge point, <em>before</em> lock suppression or injection, so a locked or injected axis still
-            reports it.
-          </p>
+      </DocSection>
+      <DocSection id="motion-event" title="MotionEvent" caption="One physical relative-axis event">
+        <p>
+          The payload of a{' '}
+          <A href="/library/types/enums#catch-event"><code>CatchEvent::Motion</code></A>, read off an{' '}
+          <A href="/library/catch#event-stream"><code>EventStream</code></A>. The physical delta at the
+          merge point, <em>before</em> lock suppression or injection, so a locked or injected axis still
+          reports it.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -399,26 +390,25 @@ drop(stream);`}</code></pre>
               <tr><td><code>dpan</code></td><td><code>i16</code></td><td>AC Pan (horizontal scroll) this report (right positive).</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::{CatchEvent, CatchFilter};
+        </div>
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`use medius::{CatchEvent, CatchFilter};
 
 let stream = device.catch_events([CatchFilter::watch_axes()])?;
 if let CatchEvent::Motion(m) = stream.recv()? {
     println!("at {} us ({:?}): moved {} {}, wheel {}, pan {}", m.ts_us, m.clock, m.dx, m.dy, m.dz, m.dpan);
 }`}</code></pre>
-        </Card>
-      </div>
+      </DocSection>
 
-      <div id="usage-snapshot" data-search-target>
-        <Card>
-          <CardHeader title="UsageSnapshot" subtitle="One physical held-usage snapshot" />
-          <p>
-            The payload of a{' '}
-            <A href="/library/types/enums#catch-event"><code>CatchEvent::Usages</code></A>: every held{' '}
-            <A href="/library/types/structs#usage"><code>Usage</code></A> of one class (buttons, keys, or
-            media, all one shape), captured before injection. Diff successive snapshots for press/release
-            edges, or test one with <code>is_held</code>; a dropped frame self-corrects on the next.
-          </p>
+      <DocSection id="usage-snapshot" title="UsageSnapshot" caption="One physical held-usage snapshot">
+        <p>
+          The payload of a{' '}
+          <A href="/library/types/enums#catch-event"><code>CatchEvent::Usages</code></A>: every held{' '}
+          <A href="/library/types/structs#usage"><code>Usage</code></A> of one class (buttons, keys, or
+          media, all one shape), captured before injection. Diff successive snapshots for press/release
+          edges, or test one with <code>is_held</code>; a dropped frame self-corrects on the next.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -427,6 +417,8 @@ if let CatchEvent::Motion(m) = stream.recv()? {
               <tr><td><code>usages</code></td><td><code>Vec&lt;<A href="/library/types/structs#usage">Usage</A>&gt;</code></td><td>The held usages, one class per event.</td></tr>
             </tbody>
           </table>
+        </div>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Method</th><th>Returns</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -434,8 +426,9 @@ if let CatchEvent::Motion(m) = stream.recv()? {
               <tr><td><code>class()</code></td><td><code>Option&lt;<A href="/library/types/enums#class">Class</A>&gt;</code></td><td>The class of this snapshot, from its first usage, or <code>None</code> when empty.</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::{Button, CatchEvent, CatchFilter, Class};
+        </div>
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`use medius::{Button, CatchEvent, CatchFilter, Class};
 
 let stream = device.catch_events([CatchFilter::watch_class(Class::Button)])?;
 if let CatchEvent::Usages(s) = stream.recv()? {
@@ -443,18 +436,16 @@ if let CatchEvent::Usages(s) = stream.recv()? {
         println!("left button held");
     }
 }`}</code></pre>
-        </Card>
-      </div>
+      </DocSection>
 
-      <div id="input-event" data-search-target>
-        <Card>
-          <CardHeader title="InputEvent" subtitle="Decoded input edge and its timestamp" />
-          <pre class="api-signature">struct InputEvent {'{'} ts_us: u32, clock: ClockDomain, input: Input {'}'}</pre>
-          <p>
-            What <A href="/library/catch#input-events"><code>input_events</code></A> yields. The{' '}
-            <A href="/library/types/enums#input"><code>Input</code></A> is the edge, decoded from the
-            held-usage snapshots the box sends.
-          </p>
+      <DocSection id="input-event" title="InputEvent" caption="Decoded input edge and its timestamp">
+        <pre class="api-signature">struct InputEvent {'{'} ts_us: u32, clock: ClockDomain, input: Input {'}'}</pre>
+        <p>
+          What <A href="/library/catch#input-events"><code>input_events</code></A> yields. The{' '}
+          <A href="/library/types/enums#input"><code>Input</code></A> is the edge, decoded from the
+          held-usage snapshots the box sends.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -463,25 +454,24 @@ if let CatchEvent::Usages(s) = stream.recv()? {
               <tr><td><code>input</code></td><td><A href="/library/types/enums#input"><code>Input</code></A></td><td>What happened.</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::{CatchFilter, Input};
+        </div>
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`use medius::{CatchFilter, Input};
 
 for ev in device.input_events(CatchFilter::all_input())? {
     if let Input::Press(u) = ev.input {
         println!("{u:?} down at {}", ev.ts_us);
     }
 }`}</code></pre>
-        </Card>
-      </div>
+      </DocSection>
 
-      <div id="traffic-event" data-search-target>
-        <Card>
-          <CardHeader title="TrafficEvent" subtitle="Bytes off one pipe, with what was cut" />
-          <p>
-            The payload of a{' '}
-            <A href="/library/types/enums#catch-event"><code>CatchEvent::Traffic</code></A>: one packet,
-            one completed control transaction, or one bus event.
-          </p>
+      <DocSection id="traffic-event" title="TrafficEvent" caption="Bytes off one pipe, with what was cut">
+        <p>
+          The payload of a{' '}
+          <A href="/library/types/enums#catch-event"><code>CatchEvent::Traffic</code></A>: one packet,
+          one completed control transaction, or one bus event.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -495,6 +485,8 @@ for ev in device.input_events(CatchFilter::all_input())? {
               <tr><td><code>bytes</code></td><td><code>Vec&lt;u8&gt;</code></td><td>What was captured, at most the entry's capture length.</td></tr>
             </tbody>
           </table>
+        </div>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Method</th><th>Returns</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -505,10 +497,12 @@ for ev in device.input_events(CatchFilter::all_input())? {
               <tr><td><code>bulk_end_of_transfer()</code></td><td><code>bool</code></td><td>Whether a <code>VendorBulk</code> event is the last of its transfer.</td></tr>
             </tbody>
           </table>
-          <p>
-            One event frame carries at most 180 bytes, so <code>Capture::Whole</code> still truncates
-            a longer packet, and still says so.
-          </p>
+        </div>
+        <p>
+          One event frame carries at most 180 bytes, so <code>Capture::Whole</code> still truncates
+          a longer packet, and still says so.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Class</th><th>flags</th></tr></thead>
             <tbody>
@@ -521,13 +515,15 @@ for ev in device.input_events(CatchFilter::all_input())? {
               <tr><td>everything else</td><td><code>0</code>.</td></tr>
             </tbody>
           </table>
-          <p>
-            A <code>Control</code> or <code>ClipTransfer</code> event is one completed transaction:{' '}
-            <code>bytes</code> is the 8-byte SETUP packet then the data stage, and{' '}
-            <code>direction</code> says which way that data went. A <code>Control</code> event is the
-            transaction the game PC received, on every control endpoint, and a request served from the
-            box's value cache still raises one.
-          </p>
+        </div>
+        <p>
+          A <code>Control</code> or <code>ClipTransfer</code> event is one completed transaction:{' '}
+          <code>bytes</code> is the 8-byte SETUP packet then the data stage, and{' '}
+          <code>direction</code> says which way that data went. A <code>Control</code> event is the
+          transaction the game PC received, on every control endpoint, and a request served from the
+          box's value cache still raises one.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th><code>Control</code> data</th><th>Holds</th></tr></thead>
             <tbody>
@@ -535,8 +531,9 @@ for ev in device.input_events(CatchFilter::all_input())? {
               <tr><td>OUT</td><td>The data stage the game PC sent, before a <code>Patch</code> or <code>Replace</code> rule rewrote it for the device.</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::{Capture, CatchEvent, CatchFilter, TrafficClass};
+        </div>
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`use medius::{Capture, CatchEvent, CatchFilter, TrafficClass};
 
 let stream = device.catch_events([CatchFilter::traffic(TrafficClass::VendorInterrupt, 0x83)
     .with_capture(Capture::First(16))])?;
@@ -546,22 +543,20 @@ if let CatchEvent::Traffic(t) = stream.recv()? {
         println!("  cut: {} of {} bytes", t.bytes.len(), t.true_len);
     }
 }`}</code></pre>
-        </Card>
-      </div>
+      </DocSection>
 
-      <div id="button" data-search-target>
-        <Card>
-          <CardHeader title="Button" subtitle="The button a command acts on" />
-          <pre class="api-signature">struct Button(pub u8)</pre>
-          <p>
-            The button an <A href="/native/commands/inject#inject"><code>INJECT</code></A> or{' '}
-            <A href="/native/commands/lock#lock"><code>LOCK</code></A> command acts on: an open numeric
-            id, the five standard buttons as named constants and any further id the mouse declares
-            (<A href="/library/requests#caps"><code>caps</code></A> <code>n_buttons</code>). A{' '}
-            <code>Button</code> converts{' '}
-            <code>Into&lt;<A href="/library/types/structs#usage">Usage</A>&gt;</code> as class button,
-            so <A href="/library/inject#inject"><code>inject</code></A> takes one directly.
-          </p>
+      <DocSection id="button" title="Button" caption="The button a command acts on">
+        <pre class="api-signature">struct Button(pub u8)</pre>
+        <p>
+          The button an <A href="/native/commands/inject#inject"><code>INJECT</code></A> or{' '}
+          <A href="/native/commands/lock#lock"><code>LOCK</code></A> command acts on: an open numeric
+          id, the five standard buttons as named constants and any further id the mouse declares
+          (<A href="/library/requests#caps"><code>caps</code></A> <code>n_buttons</code>). A{' '}
+          <code>Button</code> converts{' '}
+          <code>Into&lt;<A href="/library/types/structs#usage">Usage</A>&gt;</code> as class button,
+          so <A href="/library/inject#inject"><code>inject</code></A> takes one directly.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Constant</th><th>id</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -572,6 +567,8 @@ if let CatchEvent::Traffic(t) = stream.recv()? {
               <tr><td><code>Button::SIDE2</code></td><td><code>4</code></td><td>Second thumb button.</td></tr>
             </tbody>
           </table>
+        </div>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Method</th><th>Returns</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -581,25 +578,24 @@ if let CatchEvent::Traffic(t) = stream.recv()? {
               <tr><td><code>.0</code></td><td><code>u8</code></td><td>The id itself; the field is public.</td></tr>
             </tbody>
           </table>
-          <p>
-            Injecting a button the device declares but never itself wires is descriptor-faithful: the
-            box drives the full declared count, and one past it is a no-op.
-          </p>
-        </Card>
-      </div>
-      <div id="usage" data-search-target>
-        <Card>
-          <CardHeader title="Usage" subtitle="A momentary input: (class, id)" />
-          <pre class="api-signature">struct Usage {'{'} class: Class, id: u16 {'}'}</pre>
-          <p>
-            What <A href="/library/inject#inject"><code>inject</code></A> drives and{' '}
-            <A href="/library/types/enums#lock-target"><code>LockTarget</code></A> locks. A{' '}
-            <A href="/library/types/structs#button"><code>Button</code></A>,{' '}
-            <A href="/library/types/structs#key"><code>Key</code></A>, and{' '}
-            <A href="/library/types/structs#media-key"><code>MediaKey</code></A> each{' '}
-            <code>impl Into&lt;Usage&gt;</code>, so any verb takes one directly;{' '}
-            <code>Usage::new(class, id)</code> builds one by hand.
-          </p>
+        </div>
+        <p>
+          Injecting a button the device declares but never itself wires is descriptor-faithful: the
+          box drives the full declared count, and one past it is a no-op.
+        </p>
+      </DocSection>
+      <DocSection id="usage" title="Usage" caption="A momentary input: (class, id)">
+        <pre class="api-signature">struct Usage {'{'} class: Class, id: u16 {'}'}</pre>
+        <p>
+          What <A href="/library/inject#inject"><code>inject</code></A> drives and{' '}
+          <A href="/library/types/enums#lock-target"><code>LockTarget</code></A> locks. A{' '}
+          <A href="/library/types/structs#button"><code>Button</code></A>,{' '}
+          <A href="/library/types/structs#key"><code>Key</code></A>, and{' '}
+          <A href="/library/types/structs#media-key"><code>MediaKey</code></A> each{' '}
+          <code>impl Into&lt;Usage&gt;</code>, so any verb takes one directly;{' '}
+          <code>Usage::new(class, id)</code> builds one by hand.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -607,27 +603,26 @@ if let CatchEvent::Traffic(t) = stream.recv()? {
               <tr><td><code>id</code></td><td><code>u16</code></td><td>The class-specific id: a button id, a HID keycode, or a Consumer usage.</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::{Button, Class, Key, Usage};
+        </div>
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`use medius::{Button, Class, Key, Usage};
 
 let from_button: Usage = Button::LEFT.into();      // Class::Button, id 0
 let from_key: Usage = Key::A.into();               // Class::Key, id 0x04
 let by_hand = Usage::new(Class::Media, 0x00E9);    // volume up
 device.press(from_button)?;                         // press takes any impl Into<Usage>`}</code></pre>
-        </Card>
-      </div>
+      </DocSection>
 
-      <div id="key" data-search-target>
-        <Card>
-          <CardHeader title="Key" subtitle="A HID keyboard keycode" />
-          <p>
-            A newtype over a HID keyboard/keypad usage. It converts{' '}
-            <code>Into&lt;<A href="/library/types/structs#usage">Usage</A>&gt;</code>, so{' '}
-            <A href="/library/inject#inject"><code>inject</code></A> and{' '}
-            <A href="/library/inject#inject"><code>press</code></A> take one directly. Modifiers are the
-            usages{' '}
-            <code>0xE0</code>-<code>0xE7</code>.
-          </p>
+      <DocSection id="key" title="Key" caption="A HID keyboard keycode">
+        <p>
+          A newtype over a HID keyboard/keypad usage. It converts{' '}
+          <code>Into&lt;<A href="/library/types/structs#usage">Usage</A>&gt;</code>, so{' '}
+          <A href="/library/inject#inject"><code>inject</code></A> and{' '}
+          <A href="/library/inject#inject"><code>press</code></A> take one directly. Modifiers are the
+          usages{' '}
+          <code>0xE0</code>-<code>0xE7</code>.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Item</th><th>Returns</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -636,24 +631,23 @@ device.press(from_button)?;                         // press takes any impl Into
               <tr><td><code>usage()</code></td><td><code>u8</code></td><td>The raw keycode byte.</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::Key;
+        </div>
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`use medius::Key;
 
 let a = Key::A;            // 0x04
 let custom = Key::new(0x04);
 assert_eq!(a.usage(), custom.usage());`}</code></pre>
-        </Card>
-      </div>
+      </DocSection>
 
-      <div id="media-key" data-search-target>
-        <Card>
-          <CardHeader title="MediaKey" subtitle="A 16-bit Consumer usage" />
-          <p>
-            A newtype over a 16-bit Consumer usage. It converts{' '}
-            <code>Into&lt;<A href="/library/types/structs#usage">Usage</A>&gt;</code>, so{' '}
-            <A href="/library/inject#inject"><code>inject</code></A> and{' '}
-            <A href="/library/inject#inject"><code>press</code></A> take one directly.
-          </p>
+      <DocSection id="media-key" title="MediaKey" caption="A 16-bit Consumer usage">
+        <p>
+          A newtype over a 16-bit Consumer usage. It converts{' '}
+          <code>Into&lt;<A href="/library/types/structs#usage">Usage</A>&gt;</code>, so{' '}
+          <A href="/library/inject#inject"><code>inject</code></A> and{' '}
+          <A href="/library/inject#inject"><code>press</code></A> take one directly.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Item</th><th>Returns</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -662,24 +656,23 @@ assert_eq!(a.usage(), custom.usage());`}</code></pre>
               <tr><td><code>usage()</code></td><td><code>u16</code></td><td>The raw Consumer usage.</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::MediaKey;
+        </div>
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`use medius::MediaKey;
 
 let vol_up = MediaKey::VOLUME_UP;   // 0x00E9
 let custom = MediaKey::new(0xE9);
 assert_eq!(vol_up.usage(), custom.usage());`}</code></pre>
-        </Card>
-      </div>
+      </DocSection>
 
-      <div id="kbd-caps" data-search-target>
-        <Card>
-          <CardHeader title="KbdCaps" subtitle="What the cloned keyboard can do" />
-          <p>
-            Semantic capabilities from{' '}
-            <A href="/library/requests#caps"><code>caps()</code></A>. Every field is
-            zero when no keyboard is bound. <code>has_consumer</code> gates{' '}
-            <A href="/library/inject#inject">media injection</A>.
-          </p>
+      <DocSection id="kbd-caps" title="KbdCaps" caption="What the cloned keyboard can do">
+        <p>
+          Semantic capabilities from{' '}
+          <A href="/library/requests#caps"><code>caps()</code></A>. Every field is
+          zero when no keyboard is bound. <code>has_consumer</code> gates{' '}
+          <A href="/library/inject#inject">media injection</A>.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -690,16 +683,15 @@ assert_eq!(vol_up.usage(), custom.usage());`}</code></pre>
               <tr><td><code>has_report_id</code></td><td><code>bool</code></td><td>The keyboard report sits behind a HID report ID.</td></tr>
             </tbody>
           </table>
-        </Card>
-      </div>
-      <div id="catch-state" data-search-target>
-        <Card>
-          <CardHeader title="CatchState" subtitle="The live subscription table, read back" />
-          <pre class="api-signature">struct CatchState {'{'} table_full: bool, dropped: u32, clock: ClockEstimate, entries: Vec&lt;CatchEntry&gt; {'}'}</pre>
-          <p>
-            What <A href="/library/requests#query-catch"><code>query_catch()</code></A> returns.
-            Subscribing has no reply of its own, so this is the only view of what the box accepted.
-          </p>
+        </div>
+      </DocSection>
+      <DocSection id="catch-state" title="CatchState" caption="The live subscription table, read back">
+        <pre class="api-signature">struct CatchState {'{'} table_full: bool, dropped: u32, clock: ClockEstimate, entries: Vec&lt;CatchEntry&gt; {'}'}</pre>
+        <p>
+          What <A href="/library/requests#query-catch"><code>query_catch()</code></A> returns.
+          Subscribing has no reply of its own, so this is the only view of what the box accepted.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -709,12 +701,13 @@ assert_eq!(vol_up.usage(), custom.usage());`}</code></pre>
               <tr><td><code>entries</code></td><td><code>Vec&lt;<A href="/library/types/structs#catch-entry">CatchEntry</A>&gt;</code></td><td>The live subscription table, one entry per accepted <A href="/library/types/structs#catch-filter"><code>CatchFilter</code></A>. Empty = catching nothing.</td></tr>
             </tbody>
           </table>
-          <p>
-            An entry absent from <code>entries</code> was refused; <code>table_full</code> says the
-            reason was capacity rather than a malformed filter.
-          </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`let c = device.query_catch()?;
+        </div>
+        <p>
+          An entry absent from <code>entries</code> was refused; <code>table_full</code> says the
+          reason was capacity rather than a malformed filter.
+        </p>
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`let c = device.query_catch()?;
 if c.entries.is_empty() {
     println!("catching nothing");
 }
@@ -726,19 +719,17 @@ for e in &c.entries {
              e.filter.class(), e.filter.id(), e.filter.direction(), e.filter.capture(), e.dropped);
 }
 println!("{} dropped box-wide", c.dropped);`}</code></pre>
-        </Card>
-      </div>
+      </DocSection>
 
-      <div id="catch-entry" data-search-target>
-        <Card>
-          <CardHeader title="CatchEntry" subtitle="One accepted subscription, and what it lost" />
-          <pre class="api-signature">struct CatchEntry {'{'} filter: CatchFilter, dropped: u16 {'}'}</pre>
-          <p>
-            One row of the box's subscription table in a{' '}
-            <A href="/library/types/structs#catch-state"><code>CatchState</code></A>: the{' '}
-            <A href="/library/types/structs#catch-filter"><code>CatchFilter</code></A> the box
-            accepted, echoed back. A blanket comes back as one entry, not one row per id.
-          </p>
+      <DocSection id="catch-entry" title="CatchEntry" caption="One accepted subscription, and what it lost">
+        <pre class="api-signature">struct CatchEntry {'{'} filter: CatchFilter, dropped: u16 {'}'}</pre>
+        <p>
+          One row of the box's subscription table in a{' '}
+          <A href="/library/types/structs#catch-state"><code>CatchState</code></A>: the{' '}
+          <A href="/library/types/structs#catch-filter"><code>CatchFilter</code></A> the box
+          accepted, echoed back. A blanket comes back as one entry, not one row per id.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -746,33 +737,32 @@ println!("{} dropped box-wide", c.dropped);`}</code></pre>
               <tr><td><code>dropped</code></td><td><code>u16</code></td><td>Events <em>this entry</em> could not queue.</td></tr>
             </tbody>
           </table>
-          <p>
-            The box-wide count on <A href="/library/types/structs#catch-state"><code>CatchState</code></A>{' '}
-            shows events are being lost; this one shows which entry. Vendor bulk drops first, by{' '}
-            <A href="/library/catch#event-stream">design</A>.
-          </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`let c = device.query_catch()?;
+        </div>
+        <p>
+          The box-wide count on <A href="/library/types/structs#catch-state"><code>CatchState</code></A>{' '}
+          shows events are being lost; this one shows which entry. Vendor bulk drops first, by{' '}
+          <A href="/library/catch#event-stream">design</A>.
+        </p>
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`let c = device.query_catch()?;
 for e in c.entries.iter().filter(|e| e.dropped > 0) {
     eprintln!("{:?} {:?} lost {} events", e.filter.class(), e.filter.id(), e.dropped);
 }`}</code></pre>
-        </Card>
-      </div>
+      </DocSection>
 
-      <div id="clock-estimate" data-search-target>
-        <Card>
-          <CardHeader title="ClockEstimate" subtitle="How the two chips' timers relate" />
-          <pre class="api-signature">struct ClockEstimate {'{'} offset_us: i32, rate_ppb: Option&lt;i32&gt;, delay_us: u16, age: Option&lt;Duration&gt; {'}'}</pre>
-          <p>
-            The <code>clock</code> field of a{' '}
-            <A href="/library/types/structs#catch-state"><code>CatchState</code></A>, and the only
-            thing that puts stamps from both{' '}
-            <A href="/library/types/enums#clock-domain">clock domains</A> on one timeline.
-          </p>
-          <p>
-            The box measures the difference with a four-timestamp exchange across the inter-chip link,
-            stamping each frame as it reaches the wire rather than when it is queued. The two crystals drift by up to 20 µs per second.
-          </p>
+      <DocSection id="clock-estimate" title="ClockEstimate" caption="How the two chips' timers relate">
+        <pre class="api-signature">struct ClockEstimate {'{'} offset_us: i32, rate_ppb: Option&lt;i32&gt;, delay_us: u16, age: Option&lt;Duration&gt; {'}'}</pre>
+        <p>
+          The <code>clock</code> field of a{' '}
+          <A href="/library/types/structs#catch-state"><code>CatchState</code></A>, and the only
+          thing that puts stamps from both{' '}
+          <A href="/library/types/enums#clock-domain">clock domains</A> on one timeline.
+        </p>
+        <p>
+          The box measures the difference with a four-timestamp exchange across the inter-chip link,
+          stamping each frame as it reaches the wire rather than when it is queued. The two crystals drift by up to 20 µs per second.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -782,13 +772,14 @@ for e in c.entries.iter().filter(|e| e.dropped > 0) {
               <tr><td><code>age</code></td><td><code>Option&lt;Duration&gt;</code></td><td>How long ago the exchange ran. <code>None</code> = no estimate yet.</td></tr>
             </tbody>
           </table>
-          <p>
-            <code>error_bound_us()</code> is half <code>delay_us</code>;{' '}
-            <code>drift_us_over(age)</code> extrapolates <code>rate_ppb</code>, returning 0 for a{' '}
-            <code>None</code> rate.
-          </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`let clock = device.query_catch()?.clock;
+        </div>
+        <p>
+          <code>error_bound_us()</code> is half <code>delay_us</code>;{' '}
+          <code>drift_us_over(age)</code> extrapolates <code>rate_ppb</code>, returning 0 for a{' '}
+          <code>None</code> rate.
+        </p>
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`let clock = device.query_catch()?.clock;
 match clock.age {
     None => println!("no cross-chip estimate yet: compare stamps within one domain only"),
     Some(age) => {
@@ -796,25 +787,23 @@ match clock.age {
         println!("offset {offset_now} us, +/- {} us", clock.error_bound_us());
     }
 }`}</code></pre>
-        </Card>
-      </div>
-      <div id="timeline" data-search-target>
-        <Card>
-          <CardHeader title="Timeline" subtitle="Box stamps on this machine's clock" />
-          <pre class="api-signature">struct Timeline {'{'} /* private */ {'}'}</pre>
-          <p>
-            A catch stamp is microseconds on a chip that booted before this process did: it{' '}
-            <A href="/library/types/enums#clock-domain">wraps, restarts at zero on reboot</A>, and
-            has no relation to any clock here. Feed every event in as it arrives, in order, and{' '}
-            <code>reset</code> a domain whose chip restarted: a device-chip restart raises{' '}
-            <A href="/library/types/structs#counters-snapshot"><code>restarts</code></A>.
-          </p>
-          <p>
-            <code>&amp;event</code> is anything implementing <code>Timestamped</code>: an{' '}
-            <A href="/library/types/structs#input-event"><code>InputEvent</code></A>, a{' '}
-            <A href="/library/types/enums#catch-event"><code>CatchEvent</code></A>, or one of the
-            three frame structs. The decoded and raw paths share one timeline.
-          </p>
+      </DocSection>
+      <DocSection id="timeline" title="Timeline" caption="Box stamps on this machine's clock">
+        <pre class="api-signature">struct Timeline {'{'} /* private */ {'}'}</pre>
+        <p>
+          A catch stamp is microseconds on a chip that booted before this process did: it{' '}
+          <A href="/library/types/enums#clock-domain">wraps, restarts at zero on reboot</A>, and
+          has no relation to any clock here. Feed every event in as it arrives, in order, and{' '}
+          <code>reset</code> a domain whose chip restarted: a device-chip restart raises{' '}
+          <A href="/library/types/structs#counters-snapshot"><code>restarts</code></A>.
+        </p>
+        <p>
+          <code>&amp;event</code> is anything implementing <code>Timestamped</code>: an{' '}
+          <A href="/library/types/structs#input-event"><code>InputEvent</code></A>, a{' '}
+          <A href="/library/types/enums#catch-event"><code>CatchEvent</code></A>, or one of the
+          three frame structs. The decoded and raw paths share one timeline.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Method</th><th>Returns</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -826,29 +815,28 @@ match clock.age {
               <tr><td><code>samples(domain)</code></td><td><code>u64</code></td><td>Events observed for a domain; the floor is a minimum over these.</td></tr>
             </tbody>
           </table>
-          <p>
-            Each domain is tracked separately, so both chips' stamps land on one comparable timeline.
-          </p>
-          <p>
-            The mapping keeps a per-domain minimum of (elapsed here minus elapsed on the box), not
-            an average, because the error is one-sided: an event can arrive late but never early. It
-            improves as it runs and never steps backwards.
-          </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::{CatchFilter, Timeline};
+        </div>
+        <p>
+          Each domain is tracked separately, so both chips' stamps land on one comparable timeline.
+        </p>
+        <p>
+          The mapping keeps a per-domain minimum of (elapsed here minus elapsed on the box), not
+          an average, because the error is one-sided: an event can arrive late but never early. It
+          improves as it runs and never steps backwards.
+        </p>
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`use medius::{CatchFilter, Timeline};
 
 let mut input = device.input_events(CatchFilter::all_input())?;
 let mut time = Timeline::new();
 for ev in input.by_ref().take(20) {
     println!("{:?} at {:?}", ev.input, time.observe(&ev).host);
 }`}</code></pre>
-        </Card>
-      </div>
+      </DocSection>
 
-      <div id="stamped" data-search-target>
-        <Card>
-          <CardHeader title="Stamped" subtitle="One event placed on this machine's clock" />
-          <pre class="api-signature">struct Stamped {'{'} host: Instant, box_us: u64, excess: Duration {'}'}</pre>
+      <DocSection id="stamped" title="Stamped" caption="One event placed on this machine's clock">
+        <pre class="api-signature">struct Stamped {'{'} host: Instant, box_us: u64, excess: Duration {'}'}</pre>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -857,18 +845,17 @@ for ev in input.by_ref().take(20) {
               <tr><td><code>excess</code></td><td><code>Duration</code></td><td>How much later than the measured floor this event arrived. Jitter, not latency: the constant part of the delay is unknowable here.</td></tr>
             </tbody>
           </table>
-        </Card>
-      </div>
+        </div>
+      </DocSection>
 
-      <div id="transform" data-search-target>
-        <Card>
-          <CardHeader title="Transform" subtitle="One field operation and its two fields" />
-          <pre class="api-signature">struct Transform {'{'} op: TransformOp, source: LockTarget, dest: LockTarget {'}'}</pre>
-          <p>
-            One entry in the table passed to{' '}
-            <A href="/library/transform#transform"><code>transform</code></A>. The named constructors
-            cover common cases; <code>new</code> is the general form.
-          </p>
+      <DocSection id="transform" title="Transform" caption="One field operation and its two fields">
+        <pre class="api-signature">struct Transform {'{'} op: TransformOp, source: LockTarget, dest: LockTarget {'}'}</pre>
+        <p>
+          One entry in the table passed to{' '}
+          <A href="/library/transform#transform"><code>transform</code></A>. The named constructors
+          cover common cases; <code>new</code> is the general form.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Method</th><th>Returns</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -878,6 +865,8 @@ for ev in input.by_ref().take(20) {
               <tr><td><code>.key()</code></td><td><A href="/library/types/structs#transform-key"><code>TransformKey</code></A></td><td>The <code>(source, dest)</code> this entry is filed under.</td></tr>
             </tbody>
           </table>
+        </div>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -886,41 +875,37 @@ for ev in input.by_ref().take(20) {
               <tr><td><code>dest</code></td><td><A href="/library/types/enums#lock-target"><code>LockTarget</code></A></td><td>The field the transform writes. The same field as <code>source</code> is <A href="/library/types/errors#errors"><code>Error::TransformOpFields</code></A>. A cross-class remap with no destination collection is refused box-side.</td></tr>
             </tbody>
           </table>
-          <p>
-            The written value is clamped to the destination field's declared range. To weigh a field,
-            or reverse it, use <A href="/library/lock#scale"><code>scale</code></A>, which runs first.
-          </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::{Axis, Button, Key, Transform, TransformOp};
+        </div>
+        <p>
+          The written value is clamped to the destination field's declared range. To weigh a field,
+          or reverse it, use <A href="/library/lock#scale"><code>scale</code></A>, which runs first.
+        </p>
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`use medius::{Axis, Button, Key, Transform, TransformOp};
 
 let swap = Transform::swap(Axis::X, Axis::Y);
 assert_eq!(swap.op, TransformOp::Swap);
 
 let wheel_drives_y = Transform::remap(Axis::Wheel, Axis::Y); // the wheel drives Y
 let side_key = Transform::remap(Button::new(4), Key::A);     // the fifth button types 'A'`}</code></pre>
-        </Card>
-      </div>
-      <div id="transform-key" data-search-target>
-        <Card>
-          <CardHeader title="TransformKey" subtitle="The (source, dest) pair an entry is filed under" />
-          <pre class="api-signature">struct TransformKey {'{'} source: LockTarget, dest: LockTarget {'}'}</pre>
-          <p>
-            What <A href="/library/types/structs#transform"><code>Transform::key</code></A> returns, and
-            what <A href="/library/transform#untransform"><code>untransform</code></A> drops by. Two
-            transforms sharing a key are one entry: setting the second overwrites the first's op in
-            place, keeping its position in the table.
-          </p>
-        </Card>
-      </div>
-      <div id="transforms" data-search-target>
-        <Card>
-          <CardHeader title="Transforms" subtitle="The transform table, read back" />
-          <pre class="api-signature">struct Transforms {'{'} table_full: bool, entries: Vec&lt;Transform&gt; {'}'}</pre>
-          <p>
-            What <A href="/library/transform#query-transforms"><code>query_transforms</code></A>{' '}
-            returns: the held entries, as the commands that rebuild them. Every entry read back is a
-            live one, and the table is re-asserted wholesale on reconnect.
-          </p>
+      </DocSection>
+      <DocSection id="transform-key" title="TransformKey" caption="The (source, dest) pair an entry is filed under">
+        <pre class="api-signature">struct TransformKey {'{'} source: LockTarget, dest: LockTarget {'}'}</pre>
+        <p>
+          What <A href="/library/types/structs#transform"><code>Transform::key</code></A> returns, and
+          what <A href="/library/transform#untransform"><code>untransform</code></A> drops by. Two
+          transforms sharing a key are one entry: setting the second overwrites the first's op in
+          place, keeping its position in the table.
+        </p>
+      </DocSection>
+      <DocSection id="transforms" title="Transforms" caption="The transform table, read back">
+        <pre class="api-signature">struct Transforms {'{'} table_full: bool, entries: Vec&lt;Transform&gt; {'}'}</pre>
+        <p>
+          What <A href="/library/transform#query-transforms"><code>query_transforms</code></A>{' '}
+          returns: the held entries, as the commands that rebuild them. Every entry read back is a
+          live one, and the table is re-asserted wholesale on reconnect.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -928,23 +913,22 @@ let side_key = Transform::remap(Button::new(4), Key::A);     // the fifth button
               <tr><td><code>entries</code></td><td><code>Vec&lt;<A href="/library/types/structs#transform">Transform</A>&gt;</code></td><td>One per installed transform, in installation order, the order the box applies them; two that write the same field do not commute.</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::Transforms;
+        </div>
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`use medius::Transforms;
 
 let table = device.query_transforms()?;
 println!("{}/{} transforms", table.entries.len(), Transforms::CAPACITY);
 for t in &table.entries {
     println!("  {:?} {:?} -> {:?}", t.op, t.source, t.dest);
 }`}</code></pre>
-        </Card>
-      </div>
-      <div id="imperfect-status" data-search-target>
-        <Card>
-          <CardHeader title="ImperfectStatus" subtitle="The imperfect-clone state" />
-          <p>
-            The imperfect-clone state from{' '}
-            <A href="/library/options#query-imperfect"><code>query_imperfect()</code></A>.
-          </p>
+      </DocSection>
+      <DocSection id="imperfect-status" title="ImperfectStatus" caption="The imperfect-clone state">
+        <p>
+          The imperfect-clone state from{' '}
+          <A href="/library/options#query-imperfect"><code>query_imperfect()</code></A>.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -953,15 +937,14 @@ for t in &table.entries {
               <tr><td><code>clone_imperfect</code></td><td><code>bool</code></td><td>The live clone is not an exact copy: an opted-in device the box can't clone exactly, a forced rate, or an applied patch set.</td></tr>
             </tbody>
           </table>
-        </Card>
-      </div>
-      <div id="emit-pace-status" data-search-target>
-        <Card>
-          <CardHeader title="EmitPaceStatus" subtitle="Emit-rate pacing and clone rate" />
-          <p>
-            The emit-rate pacing state from{' '}
-            <A href="/library/options#query-emit-pace"><code>query_emit_pace()</code></A>.
-          </p>
+        </div>
+      </DocSection>
+      <DocSection id="emit-pace-status" title="EmitPaceStatus" caption="Emit-rate pacing and clone rate">
+        <p>
+          The emit-rate pacing state from{' '}
+          <A href="/library/options#query-emit-pace"><code>query_emit_pace()</code></A>.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -972,15 +955,14 @@ for t in &table.entries {
               <tr><td><code>force_active</code></td><td><code>bool</code></td><td>Whether a forced interval is written into the descriptor being served.</td></tr>
             </tbody>
           </table>
-        </Card>
-      </div>
-      <div id="render-status" data-search-target>
-        <Card>
-          <CardHeader title="RenderStatus" subtitle="Motion texture, and whether a profile armed" />
-          <p>
-            The render state from{' '}
-            <A href="/library/options#query-render"><code>query_render()</code></A>.
-          </p>
+        </div>
+      </DocSection>
+      <DocSection id="render-status" title="RenderStatus" caption="Motion texture, and whether a profile armed">
+        <p>
+          The render state from{' '}
+          <A href="/library/options#query-render"><code>query_render()</code></A>.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -989,15 +971,14 @@ for t in &table.entries {
               <tr><td><code>ready</code></td><td><code>bool</code></td><td>Whether a profile has armed for the attached device. Nothing is rendered until it has.</td></tr>
             </tbody>
           </table>
-        </Card>
-      </div>
-      <div id="spread-status" data-search-target>
-        <Card>
-          <CardHeader title="SpreadStatus" subtitle="Spread percent and interval in effect" />
-          <p>
-            The spread state from{' '}
-            <A href="/library/options#query-spread"><code>query_spread()</code></A>.
-          </p>
+        </div>
+      </DocSection>
+      <DocSection id="spread-status" title="SpreadStatus" caption="Spread percent and interval in effect">
+        <p>
+          The spread state from{' '}
+          <A href="/library/options#query-spread"><code>query_spread()</code></A>.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -1005,15 +986,14 @@ for t in &table.entries {
               <tr><td><code>span_us</code></td><td><code>u32</code></td><td>The interval in effect, in microseconds. <code>0</code> whenever nothing is being spread.</td></tr>
             </tbody>
           </table>
-        </Card>
-      </div>
-      <div id="log-line" data-search-target>
-        <Card>
-          <CardHeader title="LogLine" subtitle="One line from the LOG stream" />
-          <p>
-            One line from the box's <A href="/native/commands/admin#log"><code>LOG</code></A> stream,
-            read off a <A href="/library/types/structs#logstream"><code>LogStream</code></A>.
-          </p>
+        </div>
+      </DocSection>
+      <DocSection id="log-line" title="LogLine" caption="One line from the LOG stream">
+        <p>
+          One line from the box's <A href="/native/commands/admin#log"><code>LOG</code></A> stream,
+          read off a <A href="/library/types/structs#logstream"><code>LogStream</code></A>.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -1021,17 +1001,16 @@ for t in &table.entries {
               <tr><td><code>text</code></td><td><code>String</code></td><td>The decoded message.</td></tr>
             </tbody>
           </table>
-        </Card>
-      </div>
-      <div id="port-info" data-search-target>
-        <Card>
-          <CardHeader title="PortInfo" subtitle="A discovered serial port" />
-          <p>
-            A serial port that looks like a Medius box, from{' '}
-            <A href="/library/connection#open"><code>find_medius()</code></A>.{' '}
-            <code>serial</code> is the CH343 adapter's serial string, part of the box{' '}
-            <A href="/library/discovery">identity</A>.
-          </p>
+        </div>
+      </DocSection>
+      <DocSection id="port-info" title="PortInfo" caption="A discovered serial port">
+        <p>
+          A serial port that looks like a Medius box, from{' '}
+          <A href="/library/connection#open"><code>find_medius()</code></A>.{' '}
+          <code>serial</code> is the CH343 adapter's serial string, part of the box{' '}
+          <A href="/library/discovery">identity</A>.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -1041,16 +1020,15 @@ for t in &table.entries {
               <tr><td><code>serial</code></td><td><code>Option&lt;String&gt;</code></td><td>The CH343 adapter's serial string, when it serves one.</td></tr>
             </tbody>
           </table>
-        </Card>
-      </div>
-      <div id="box-info" data-search-target>
-        <Card>
-          <CardHeader title="BoxInfo" subtitle="One discovered box" />
-          <p>
-            One entry from <A href="/library/discovery#list"><code>Device::list()</code></A>, and the
-            value <A href="/library/discovery#find-where"><code>find_where</code></A>'s predicate
-            receives.
-          </p>
+        </div>
+      </DocSection>
+      <DocSection id="box-info" title="BoxInfo" caption="One discovered box">
+        <p>
+          One entry from <A href="/library/discovery#list"><code>Device::list()</code></A>, and the
+          value <A href="/library/discovery#find-where"><code>find_where</code></A>'s predicate
+          receives.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -1059,6 +1037,8 @@ for t in &table.entries {
               <tr><td><code>device</code></td><td><code>Option&lt;<A href="/library/types/structs#device-info">DeviceInfo</A>&gt;</code></td><td>The device it clones. <code>None</code> for a box whose <code>version.proto_ver</code> isn't <A href="/library/connection#zero-config"><code>PROTO_VER</code></A>; opening that box returns <A href="/library/types/errors"><code>Error::BadProtoVer</code></A>.</td></tr>
             </tbody>
           </table>
+        </div>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Method</th><th>Returns</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -1067,16 +1047,15 @@ for t in &table.entries {
               <tr><td><code>serial()</code></td><td><code>Option&lt;&amp;str&gt;</code></td><td>The CH343 adapter's serial, when it has one.</td></tr>
             </tbody>
           </table>
-        </Card>
-      </div>
+        </div>
+      </DocSection>
 
-      <div id="counters-snapshot" data-search-target>
-        <Card>
-          <CardHeader title="CountersSnapshot" subtitle="Link statistics snapshot" />
-          <p>
-            Five running link totals from{' '}
-            <A href="/library/diagnostics#counters"><code>counters()</code></A>.
-          </p>
+      <DocSection id="counters-snapshot" title="CountersSnapshot" caption="Link statistics snapshot">
+        <p>
+          Five running link totals from{' '}
+          <A href="/library/diagnostics#counters"><code>counters()</code></A>.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -1087,31 +1066,27 @@ for t in &table.entries {
               <tr><td><code>restarts</code></td><td><code>u64</code></td><td>Device-chip restarts the library recovered from by re-sending the state it holds. A session release, counted in <A href="/library/types/structs#stats"><code>Stats::session</code></A>, leaves it alone. See <A href="/library/lifecycle#restart">session recovery</A>.</td></tr>
             </tbody>
           </table>
-        </Card>
-      </div>
-      <div id="logstream" data-search-target>
-        <Card>
-          <CardHeader title="LogStream" subtitle="Receiver for the device LOG stream" />
-          <p>
-            Receives the box's <A href="/native/commands/admin#log"><code>LOG</code></A> frames as{' '}
-            <A href="/library/types/structs#log-line"><code>LogLine</code></A> values off a local channel, from{' '}
-            <A href="/library/diagnostics#logs"><code>device.logs()</code></A>. No receive method
-            touches the wire, and clones share the queue. Methods and an example are on{' '}
-            <A href="/library/diagnostics#logs">Logs &amp; counters</A>.
-          </p>
-        </Card>
-      </div>
+        </div>
+      </DocSection>
+      <DocSection id="logstream" title="LogStream" caption="Receiver for the device LOG stream">
+        <p>
+          Receives the box's <A href="/native/commands/admin#log"><code>LOG</code></A> frames as{' '}
+          <A href="/library/types/structs#log-line"><code>LogLine</code></A> values off a local channel, from{' '}
+          <A href="/library/diagnostics#logs"><code>device.logs()</code></A>. No receive method
+          touches the wire, and clones share the queue. Methods and an example are on{' '}
+          <A href="/library/diagnostics#logs">Logs &amp; counters</A>.
+        </p>
+      </DocSection>
 
-      <div id="clip-settings" data-search-target>
-        <Card>
-          <CardHeader title="ClipSettings" subtitle="A clip's persistent config, read back" />
-          <p>
-            A clip's configuration from{' '}
-            <A href="/library/requests#clip-config"><code>ClipHandle::query_config()</code></A>: the
-            readback of the handle setters (<code>set_autolock</code>, <code>set_loop</code>,{' '}
-            <code>set_retain</code>, <code>set_ride</code>, <code>finalize</code>, <code>bind</code>,{' '}
-            <code>bind_packet</code>).
-          </p>
+      <DocSection id="clip-settings" title="ClipSettings" caption="A clip's persistent config, read back">
+        <p>
+          A clip's configuration from{' '}
+          <A href="/library/requests#clip-config"><code>ClipHandle::query_config()</code></A>: the
+          readback of the handle setters (<code>set_autolock</code>, <code>set_loop</code>,{' '}
+          <code>set_retain</code>, <code>set_ride</code>, <code>finalize</code>, <code>bind</code>,{' '}
+          <code>bind_packet</code>).
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -1124,29 +1099,28 @@ for t in &table.entries {
               <tr><td><code>packet_triggers</code></td><td><code>Vec&lt;<A href="/library/types/structs#clip-packet-trigger-entry">ClipPacketTriggerEntry</A>&gt;</code></td><td>The bound packet triggers (up to 8), in the order the box holds them, each with its hit count.</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`let cfg = handle.query_config()?;
+        </div>
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`let cfg = handle.query_config()?;
 if cfg.loop_ && cfg.finalized {
     println!("sealed looping clip, {} triggers", cfg.triggers.len());
 }
 for e in &cfg.packet_triggers {
     println!("{:?} id {} -> {:?}, {} hits", e.trigger.class, e.trigger.id, e.trigger.action, e.hits);
 }`}</code></pre>
-        </Card>
-      </div>
+      </DocSection>
 
-      <div id="clip-trigger" data-search-target>
-        <Card>
-          <CardHeader title="ClipTrigger" subtitle="One input binding that drives a clip" />
-          <p>
-            One physical-input binding for a clip, handed to{' '}
-            <A href="/library/clip#triggers"><code>ClipHandle::bind</code></A>. The box keeps up to 8,
-            keyed by usage and edge.
-          </p>
-          <p>
-            Build one with the constructor, where <code>consume</code> defaults to false:
-          </p>
-          <pre class="api-signature">fn new(on: impl Into&lt;Usage&gt;, edge: Edge, action: ClipAction) -&gt; ClipTrigger</pre>
+      <DocSection id="clip-trigger" title="ClipTrigger" caption="One input binding that drives a clip">
+        <p>
+          One physical-input binding for a clip, handed to{' '}
+          <A href="/library/clip#triggers"><code>ClipHandle::bind</code></A>. The box keeps up to 8,
+          keyed by usage and edge.
+        </p>
+        <p>
+          Build one with the constructor, where <code>consume</code> defaults to false:
+        </p>
+        <pre class="api-signature">fn new(on: impl Into&lt;Usage&gt;, edge: Edge, action: ClipAction) -&gt; ClipTrigger</pre>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -1156,29 +1130,28 @@ for e in &cfg.packet_triggers {
               <tr><td><code>consume</code></td><td><code>bool</code></td><td>Lock the trigger usage while it is active, so its edge never reaches the PC; the <code>.consume()</code> builder sets it true.</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::{Button, ClipAction, ClipTrigger, Edge};
+        </div>
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`use medius::{Button, ClipAction, ClipTrigger, Edge};
 
 // Toggle the clip on a Side1 press, and suppress that press.
 let trig = ClipTrigger::new(Button::SIDE1, Edge::Press, ClipAction::Toggle).consume();
 handle.bind(trig)?;`}</code></pre>
-        </Card>
-      </div>
+      </DocSection>
 
-      <div id="clip-packet-trigger" data-search-target>
-        <Card>
-          <CardHeader title="ClipPacketTrigger" subtitle="One packet binding that drives a clip" />
-          <pre class="api-signature">fn new(class: TrafficClass, id: u16, direction: Direction, action: ClipAction) -&gt; ClipPacketTrigger</pre>
-          <pre class="api-signature">fn matching(self, match_bytes: impl Into&lt;Vec&lt;u8&gt;&gt;, mask: impl Into&lt;Vec&lt;u8&gt;&gt;) -&gt; ClipPacketTrigger</pre>
-          <pre class="api-signature">fn consume(self) -&gt; ClipPacketTrigger</pre>
-          <pre class="api-signature">fn once_per_run(self, selector_len: u8) -&gt; ClipPacketTrigger</pre>
-          <p>
-            One packet binding for a clip, handed to{' '}
-            <A href="/library/clip#packet-triggers"><code>ClipHandle::bind_packet</code></A>. The box
-            keeps up to 8 (<code>CLIP_PKT_TRIG_MAX</code>), keyed by{' '}
-            <code>(class, id, direction, match_bytes, mask)</code>, with 112 match bytes between them
-            (<code>CLIP_PKT_MATCH_POOL</code>).
-          </p>
+      <DocSection id="clip-packet-trigger" title="ClipPacketTrigger" caption="One packet binding that drives a clip">
+        <pre class="api-signature">fn new(class: TrafficClass, id: u16, direction: Direction, action: ClipAction) -&gt; ClipPacketTrigger</pre>
+        <pre class="api-signature">fn matching(self, match_bytes: impl Into&lt;Vec&lt;u8&gt;&gt;, mask: impl Into&lt;Vec&lt;u8&gt;&gt;) -&gt; ClipPacketTrigger</pre>
+        <pre class="api-signature">fn consume(self) -&gt; ClipPacketTrigger</pre>
+        <pre class="api-signature">fn once_per_run(self, selector_len: u8) -&gt; ClipPacketTrigger</pre>
+        <p>
+          One packet binding for a clip, handed to{' '}
+          <A href="/library/clip#packet-triggers"><code>ClipHandle::bind_packet</code></A>. The box
+          keeps up to 8 (<code>CLIP_PKT_TRIG_MAX</code>), keyed by{' '}
+          <code>(class, id, direction, match_bytes, mask)</code>, with 112 match bytes between them
+          (<code>CLIP_PKT_MATCH_POOL</code>).
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -1192,25 +1165,24 @@ handle.bind(trig)?;`}</code></pre>
               <tr><td><code>selector_len</code></td><td><code>u8</code></td><td>With <code>once_per_run</code>, how many leading match bytes select the run's stream within the address, such as a report ID. The rest are the condition. <code>0</code> without.</td></tr>
             </tbody>
           </table>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::{ClipAction, ClipPacketTrigger, Direction, TrafficClass};
+        </div>
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`use medius::{ClipAction, ClipPacketTrigger, Direction, TrafficClass};
 
 // Report ID 7 on interface 2 carries a button in bit 5 of its second byte. Start once per hold.
 let held = ClipPacketTrigger::new(TrafficClass::HidIn, 2, Direction::IN, ClipAction::Start)
     .matching([0x07, 0x20], [0xFF, 0x20])
     .once_per_run(1);
 handle.bind_packet(&held)?;`}</code></pre>
-        </Card>
-      </div>
+      </DocSection>
 
-      <div id="clip-packet-trigger-entry" data-search-target>
-        <Card>
-          <CardHeader title="ClipPacketTriggerEntry" subtitle="One packet trigger the box holds, read back" />
-          <pre class="api-signature">struct ClipPacketTriggerEntry {'{'} trigger: ClipPacketTrigger, hits: u16 {'}'}</pre>
-          <p>
-            One row of{' '}
-            <A href="/library/types/structs#clip-settings"><code>ClipSettings::packet_triggers</code></A>.
-          </p>
+      <DocSection id="clip-packet-trigger-entry" title="ClipPacketTriggerEntry" caption="One packet trigger the box holds, read back">
+        <pre class="api-signature">struct ClipPacketTriggerEntry {'{'} trigger: ClipPacketTrigger, hits: u16 {'}'}</pre>
+        <p>
+          One row of{' '}
+          <A href="/library/types/structs#clip-settings"><code>ClipSettings::packet_triggers</code></A>.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -1218,18 +1190,17 @@ handle.bind_packet(&held)?;`}</code></pre>
               <tr><td><code>hits</code></td><td><code>u16</code></td><td>Packets the trigger has matched as the top-ranked trigger since it was bound or overwritten, saturating. A <code>once_per_run</code> trigger counts every packet of a run and runs its action on the first.</td></tr>
             </tbody>
           </table>
-        </Card>
-      </div>
+        </div>
+      </DocSection>
 
-      <div id="clip-status" data-search-target>
-        <Card>
-          <CardHeader title="ClipStatus" subtitle="Clip ring and playback state" />
-          <p>
-            The clip ring depth and playback counters from{' '}
-            <A href="/library/requests#clip-status"><code>ClipHandle::query_status()</code></A>. Pace top-ups off{' '}
-            <code>free</code>; a <A href="/library/types/enums#clip-state"><code>ClipState::Faulted</code></A>{' '}
-            state means re-sync (stop, then rebuild).
-          </p>
+      <DocSection id="clip-status" title="ClipStatus" caption="Clip ring and playback state">
+        <p>
+          The clip ring depth and playback counters from{' '}
+          <A href="/library/requests#clip-status"><code>ClipHandle::query_status()</code></A>. Pace top-ups off{' '}
+          <code>free</code>; a <A href="/library/types/enums#clip-state"><code>ClipState::Faulted</code></A>{' '}
+          state means re-sync (stop, then rebuild).
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -1247,17 +1218,16 @@ handle.bind_packet(&held)?;`}</code></pre>
               <tr><td><code>held</code></td><td><code>Vec&lt;<A href="/library/types/structs#usage">Usage</A>&gt;</code></td><td>The usages the clip is holding down, buttons, keys, and media in one list like a <A href="/library/types/structs#usage-snapshot"><code>UsageSnapshot</code></A>; test one with <code>is_held(usage)</code>.</td></tr>
             </tbody>
           </table>
-        </Card>
-      </div>
+        </div>
+      </DocSection>
 
-      <div id="chip-firmware" data-search-target>
-        <Card>
-          <CardHeader title="ChipFirmware" subtitle="What one chip is running" />
-          <p>
-            One chip's half of{' '}
-            <A href="/library/requests#firmware-info"><code>firmware_info()</code></A>.{' '}
-            <code>Display</code> renders it as <code>major.minor.patch</code>.
-          </p>
+      <DocSection id="chip-firmware" title="ChipFirmware" caption="What one chip is running">
+        <p>
+          One chip's half of{' '}
+          <A href="/library/requests#firmware-info"><code>firmware_info()</code></A>.{' '}
+          <code>Display</code> renders it as <code>major.minor.patch</code>.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -1266,17 +1236,16 @@ handle.bind_packet(&held)?;`}</code></pre>
               <tr><td><code>state</code></td><td><A href="/library/types/enums#image-state"><code>ImageState</code></A></td><td>Whether that image is confirmed, on probation, or rolled back.</td></tr>
             </tbody>
           </table>
-        </Card>
-      </div>
+        </div>
+      </DocSection>
 
-      <div id="firmware-info" data-search-target>
-        <Card>
-          <CardHeader title="FirmwareInfo" subtitle="Both chips, and what is staged" />
-          <p>
-            Returned by <A href="/library/requests#firmware-info"><code>firmware_info()</code></A>.{' '}
-            <code>any_pending()</code> is true while either chip is still on probation, which is when{' '}
-            <A href="/library/update">an update</A> is refused.
-          </p>
+      <DocSection id="firmware-info" title="FirmwareInfo" caption="Both chips, and what is staged">
+        <p>
+          Returned by <A href="/library/requests#firmware-info"><code>firmware_info()</code></A>.{' '}
+          <code>any_pending()</code> is true while either chip is still on probation, which is when{' '}
+          <A href="/library/update">an update</A> is refused.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -1287,17 +1256,16 @@ handle.bind_packet(&held)?;`}</code></pre>
               <tr><td><code>host_staged</code></td><td><code>bool</code></td><td>The same, for the host chip.</td></tr>
             </tbody>
           </table>
-        </Card>
-      </div>
+        </div>
+      </DocSection>
 
-      <div id="update-progress" data-search-target>
-        <Card>
-          <CardHeader title="UpdateProgress" subtitle="One acknowledged window" />
-          <p>
-            Handed to the closure passed to{' '}
-            <A href="/library/update#stage-firmware"><code>stage_firmware()</code></A>, once per
-            acknowledged window rather than once per chunk.
-          </p>
+      <DocSection id="update-progress" title="UpdateProgress" caption="One acknowledged window">
+        <p>
+          Handed to the closure passed to{' '}
+          <A href="/library/update#stage-firmware"><code>stage_firmware()</code></A>, once per
+          acknowledged window rather than once per chunk.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -1306,24 +1274,25 @@ handle.bind_packet(&held)?;`}</code></pre>
               <tr><td><code>total</code></td><td><code>usize</code></td><td>Bytes in the whole image.</td></tr>
             </tbody>
           </table>
+        </div>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Method</th><th>Returns</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>percent()</code></td><td><code>u8</code></td><td><code>sent</code> as a percentage of <code>total</code>; <code>100</code> when <code>total</code> is <code>0</code>.</td></tr>
             </tbody>
           </table>
-        </Card>
-      </div>
-      <div id="setup" data-search-target>
-        <Card>
-          <CardHeader title="Setup" subtitle="The eight-byte USB setup packet" />
-          <pre class="api-signature">struct Setup {'{'} request_type: u8, request: u8, value: u16, index: u16, length: u16 {'}'}</pre>
-          <p>
-            What a <A href="/library/advanced/transfer#transfer"><code>transfer</code></A> carries. It
-            is the <a href="https://www.usb.org/document-library/usb-20-specification" target="_blank" rel="noreferrer">USB §9.3</a>{' '}
-            setup packet: <code>bmRequestType</code>, <code>bRequest</code>, <code>wValue</code>,{' '}
-            <code>wIndex</code>, <code>wLength</code>, little-endian on the wire.
-          </p>
+        </div>
+      </DocSection>
+      <DocSection id="setup" title="Setup" caption="The eight-byte USB setup packet">
+        <pre class="api-signature">struct Setup {'{'} request_type: u8, request: u8, value: u16, index: u16, length: u16 {'}'}</pre>
+        <p>
+          What a <A href="/library/advanced/transfer#transfer"><code>transfer</code></A> carries. It
+          is the <a href="https://www.usb.org/document-library/usb-20-specification" target="_blank" rel="noreferrer">USB §9.3</a>{' '}
+          setup packet: <code>bmRequestType</code>, <code>bRequest</code>, <code>wValue</code>,{' '}
+          <code>wIndex</code>, <code>wLength</code>, little-endian on the wire.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -1334,35 +1303,34 @@ handle.bind_packet(&held)?;`}</code></pre>
               <tr><td><code>length</code></td><td><code>u16</code></td><td><code>wLength</code>: the data-stage length. For an IN request, how many bytes to read back (the device may return fewer); for an OUT request, the length of the data passed.</td></tr>
             </tbody>
           </table>
-          <pre class="diagram">{`  byte   0            1          2   3         4   5         6   7
+        </div>
+        <pre class="diagram">{`  byte   0            1          2   3         4   5         6   7
         +------------+----------+---------+---------+---------+
         |request_type| request  |  value  |  index  | length  |
         | bmRequest  | bRequest  | wValue  | wIndex  | wLength |
         +------------+----------+---------+---------+---------+
                                   <-- LE -> <-- LE -> <-- LE ->`}</pre>
-          <p>
-            <code>Setup::new</code> builds one from its five fields; <code>is_in</code> reads the
-            direction bit; <code>to_bytes</code> gives the eight wire bytes (<code>&lt;BBHHH&gt;</code>,
-            little-endian).
-          </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::Setup;
+        <p>
+          <code>Setup::new</code> builds one from its five fields; <code>is_in</code> reads the
+          direction bit; <code>to_bytes</code> gives the eight wire bytes (<code>&lt;BBHHH&gt;</code>,
+          little-endian).
+        </p>
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`use medius::Setup;
 
 // GET_DESCRIPTOR(Device): standard device-to-host request for the 18-byte device descriptor.
 let setup = Setup::new(0x80, 0x06, 0x0100, 0x0000, 18);
 assert!(setup.is_in());
 assert_eq!(setup.to_bytes(), [0x80, 0x06, 0x00, 0x01, 0x00, 0x00, 0x12, 0x00]);`}</code></pre>
-        </Card>
-      </div>
-      <div id="transfer-outcome" data-search-target>
-        <Card>
-          <CardHeader title="TransferOutcome" subtitle="The device's reply: status and any IN data" />
-          <pre class="api-signature">struct TransferOutcome {'{'} status: TransferStatus, data: Vec&lt;u8&gt; {'}'}</pre>
-          <p>
-            What <A href="/library/advanced/transfer#transfer"><code>transfer</code></A> returns. A
-            non-<code>Ok</code> <A href="/library/types/enums#transfer-status"><code>status</code></A>{' '}
-            carries no data.
-          </p>
+      </DocSection>
+      <DocSection id="transfer-outcome" title="TransferOutcome" caption="The device's reply: status and any IN data">
+        <pre class="api-signature">struct TransferOutcome {'{'} status: TransferStatus, data: Vec&lt;u8&gt; {'}'}</pre>
+        <p>
+          What <A href="/library/advanced/transfer#transfer"><code>transfer</code></A> returns. A
+          non-<code>Ok</code> <A href="/library/types/enums#transfer-status"><code>status</code></A>{' '}
+          carries no data.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -1370,6 +1338,8 @@ assert_eq!(setup.to_bytes(), [0x80, 0x06, 0x00, 0x01, 0x00, 0x00, 0x12, 0x00]);`
               <tr><td><code>data</code></td><td><code>Vec&lt;u8&gt;</code></td><td>The IN data the device returned. Empty for an OUT transfer, a STALL, or no data.</td></tr>
             </tbody>
           </table>
+        </div>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Method</th><th>Returns</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -1378,20 +1348,19 @@ assert_eq!(setup.to_bytes(), [0x80, 0x06, 0x00, 0x01, 0x00, 0x00, 0x12, 0x00]);`
               <tr><td><code>.ok_data()</code></td><td><code>Option&lt;Vec&lt;u8&gt;&gt;</code></td><td>The data if the transfer completed, else <code>None</code>.</td></tr>
             </tbody>
           </table>
-        </Card>
-      </div>
-      <div id="rewrite-rule" data-search-target>
-        <Card>
-          <CardHeader title="RewriteRule" subtitle="The rule set_rewrite installs" />
-          <pre class="api-signature">fn new(class: RewriteClass, id: u16, direction: Direction, action: RewriteAction) -&gt; RewriteRule</pre>
-          <pre class="api-signature">fn matching(self, match_bytes: impl Into&lt;Vec&lt;u8&gt;&gt;, mask: impl Into&lt;Vec&lt;u8&gt;&gt;) -&gt; RewriteRule</pre>
-          <pre class="api-signature">fn at_offset(self, offset: u16) -&gt; RewriteRule</pre>
-          <pre class="api-signature">fn with_payload(self, payload: impl Into&lt;Vec&lt;u8&gt;&gt;) -&gt; RewriteRule</pre>
-          <p>
-            One entry in the table passed to{' '}
-            <A href="/library/advanced/rewrite#set-rewrite"><code>set_rewrite</code></A>, built by
-            chaining onto <code>new</code>.
-          </p>
+        </div>
+      </DocSection>
+      <DocSection id="rewrite-rule" title="RewriteRule" caption="The rule set_rewrite installs">
+        <pre class="api-signature">fn new(class: RewriteClass, id: u16, direction: Direction, action: RewriteAction) -&gt; RewriteRule</pre>
+        <pre class="api-signature">fn matching(self, match_bytes: impl Into&lt;Vec&lt;u8&gt;&gt;, mask: impl Into&lt;Vec&lt;u8&gt;&gt;) -&gt; RewriteRule</pre>
+        <pre class="api-signature">fn at_offset(self, offset: u16) -&gt; RewriteRule</pre>
+        <pre class="api-signature">fn with_payload(self, payload: impl Into&lt;Vec&lt;u8&gt;&gt;) -&gt; RewriteRule</pre>
+        <p>
+          One entry in the table passed to{' '}
+          <A href="/library/advanced/rewrite#set-rewrite"><code>set_rewrite</code></A>, built by
+          chaining onto <code>new</code>.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Field</th><th>Type</th><th>Meaning</th></tr>
@@ -1406,18 +1375,17 @@ assert_eq!(setup.to_bytes(), [0x80, 0x06, 0x00, 0x01, 0x00, 0x00, 0x12, 0x00]);`
               <tr><td><code>payload</code></td><td><code>Vec&lt;u8&gt;</code></td><td>The bytes an action that carries one supplies. Past the head the box holds for the class (64 bytes for a report class, an 8+2048-byte image for control) it is <A href="/library/types/errors#errors"><code>Error::RewritePayloadTooLarge</code></A>.</td></tr>
             </tbody>
           </table>
-        </Card>
-      </div>
-      <div id="rewrite-table" data-search-target>
-        <Card>
-          <CardHeader title="RewriteTable" subtitle="The rewrite table, read back" />
-          <pre class="api-signature">struct RewriteTable {'{'} table_full: bool, generation: u8, entries: Vec&lt;RewriteEntry&gt; {'}'}</pre>
-          <p>
-            What <A href="/library/advanced/rewrite#query-rewrite"><code>query_rewrite</code></A>{' '}
-            returns: a summary row per rule, without its match, mask, or payload bytes;{' '}
-            <A href="/library/advanced/rewrite#query-rewrite-entry"><code>query_rewrite_entry</code></A>{' '}
-            reads one in full.
-          </p>
+        </div>
+      </DocSection>
+      <DocSection id="rewrite-table" title="RewriteTable" caption="The rewrite table, read back">
+        <pre class="api-signature">struct RewriteTable {'{'} table_full: bool, generation: u8, entries: Vec&lt;RewriteEntry&gt; {'}'}</pre>
+        <p>
+          What <A href="/library/advanced/rewrite#query-rewrite"><code>query_rewrite</code></A>{' '}
+          returns: a summary row per rule, without its match, mask, or payload bytes;{' '}
+          <A href="/library/advanced/rewrite#query-rewrite-entry"><code>query_rewrite_entry</code></A>{' '}
+          reads one in full.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Field</th><th>Type</th><th>Meaning</th></tr>
@@ -1428,22 +1396,21 @@ assert_eq!(setup.to_bytes(), [0x80, 0x06, 0x00, 0x01, 0x00, 0x00, 0x12, 0x00]);`
               <tr><td><code>entries</code></td><td><code>Vec&lt;<A href="/library/types/structs#rewrite-entry">RewriteEntry</A>&gt;</code></td><td>One row per rule, in table order, not the most-specific-first order the box selects a match by. An overwrite moves a rule to the end.</td></tr>
             </tbody>
           </table>
-          <p>
-            <A href="/library/requests#health"><code>query_health</code></A> reports a non-empty table in
-            its <A href="/library/types/structs#health"><code>rewrite_on</code></A> flag.
-          </p>
-        </Card>
-      </div>
-      <div id="rewrite-entry" data-search-target>
-        <Card>
-          <CardHeader title="RewriteEntry" subtitle="One row in a RewriteTable" />
-          <pre class="api-signature">struct RewriteEntry {'{'} class: RewriteClass, id: u16, direction: Direction, action: RewriteAction, match_len: u8, offset: u16, payload_len: u16, hits: u16 {'}'}</pre>
-          <p>
-            One rule's summary in a{' '}
-            <A href="/library/types/structs#rewrite-table"><code>RewriteTable</code></A>: its address and
-            action, the lengths of what it carries, and its hit count. The bytes come from{' '}
-            <A href="/library/advanced/rewrite#query-rewrite-entry"><code>query_rewrite_entry</code></A>.
-          </p>
+        </div>
+        <p>
+          <A href="/library/requests#health"><code>query_health</code></A> reports a non-empty table in
+          its <A href="/library/types/structs#health"><code>rewrite_on</code></A> flag.
+        </p>
+      </DocSection>
+      <DocSection id="rewrite-entry" title="RewriteEntry" caption="One row in a RewriteTable">
+        <pre class="api-signature">struct RewriteEntry {'{'} class: RewriteClass, id: u16, direction: Direction, action: RewriteAction, match_len: u8, offset: u16, payload_len: u16, hits: u16 {'}'}</pre>
+        <p>
+          One rule's summary in a{' '}
+          <A href="/library/types/structs#rewrite-table"><code>RewriteTable</code></A>: its address and
+          action, the lengths of what it carries, and its hit count. The bytes come from{' '}
+          <A href="/library/advanced/rewrite#query-rewrite-entry"><code>query_rewrite_entry</code></A>.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Field</th><th>Type</th><th>Meaning</th></tr>
@@ -1456,20 +1423,19 @@ assert_eq!(setup.to_bytes(), [0x80, 0x06, 0x00, 0x01, 0x00, 0x00, 0x12, 0x00]);`
               <tr><td><code>hits</code></td><td><code>u16</code></td><td>Packets the rule matched as the top-ranked rule since it was installed or last overwritten, a <code>Pass</code> included; saturating.</td></tr>
             </tbody>
           </table>
-        </Card>
-      </div>
-      <div id="patch" data-search-target>
-        <Card>
-          <CardHeader title="Patch" subtitle="The descriptor overwrite set_patch stores" />
-          <pre class="api-signature">fn new(section: PatchSection, offset: u16, bytes: impl Into&lt;Vec&lt;u8&gt;&gt;) -&gt; Patch</pre>
-          <pre class="api-signature">fn in_config(cfg: u8, offset: u16, bytes: impl Into&lt;Vec&lt;u8&gt;&gt;) -&gt; Patch</pre>
-          <pre class="api-signature">fn in_interface(cfg: u8, interface: u8, offset: u16, bytes: impl Into&lt;Vec&lt;u8&gt;&gt;) -&gt; Patch</pre>
-          <pre class="api-signature">fn in_string(index: u8, bytes: impl Into&lt;Vec&lt;u8&gt;&gt;) -&gt; Patch</pre>
-          <p>
-            One entry in the set passed to{' '}
-            <A href="/library/advanced/patch#set-patch"><code>set_patch</code></A>, with a constructor
-            per section.
-          </p>
+        </div>
+      </DocSection>
+      <DocSection id="patch" title="Patch" caption="The descriptor overwrite set_patch stores">
+        <pre class="api-signature">fn new(section: PatchSection, offset: u16, bytes: impl Into&lt;Vec&lt;u8&gt;&gt;) -&gt; Patch</pre>
+        <pre class="api-signature">fn in_config(cfg: u8, offset: u16, bytes: impl Into&lt;Vec&lt;u8&gt;&gt;) -&gt; Patch</pre>
+        <pre class="api-signature">fn in_interface(cfg: u8, interface: u8, offset: u16, bytes: impl Into&lt;Vec&lt;u8&gt;&gt;) -&gt; Patch</pre>
+        <pre class="api-signature">fn in_string(index: u8, bytes: impl Into&lt;Vec&lt;u8&gt;&gt;) -&gt; Patch</pre>
+        <p>
+          One entry in the set passed to{' '}
+          <A href="/library/advanced/patch#set-patch"><code>set_patch</code></A>, with a constructor
+          per section.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Field</th><th>Type</th><th>Meaning</th></tr>
@@ -1482,19 +1448,18 @@ assert_eq!(setup.to_bytes(), [0x80, 0x06, 0x00, 0x01, 0x00, 0x00, 0x12, 0x00]);`
               <tr><td><code>bytes</code></td><td><code>Vec&lt;u8&gt;</code></td><td>The overwrite bytes; empty removes the patch at this key.</td></tr>
             </tbody>
           </table>
-        </Card>
-      </div>
-      <div id="patch-set" data-search-target>
-        <Card>
-          <CardHeader title="PatchSet" subtitle="The stored patch set and its apply state" />
-          <pre class="api-signature">struct PatchSet {'{'} applied: bool, pending: bool, refused: bool, table_full: bool, entries: Vec&lt;PatchEntry&gt; {'}'}</pre>
-          <p>
-            What <A href="/library/advanced/patch#query-patches"><code>query_patches</code></A>{' '}
-            returns, as four apply-state flags over a list of{' '}
-            <A href="/library/types/structs#patch-entry"><code>PatchEntry</code></A>. The list is the
-            stored set; <A href="/library/requests#health"><code>query_health</code></A> reports a
-            patched clone in its <A href="/library/types/structs#health"><code>patch_on</code></A> flag.
-          </p>
+        </div>
+      </DocSection>
+      <DocSection id="patch-set" title="PatchSet" caption="The stored patch set and its apply state">
+        <pre class="api-signature">struct PatchSet {'{'} applied: bool, pending: bool, refused: bool, table_full: bool, entries: Vec&lt;PatchEntry&gt; {'}'}</pre>
+        <p>
+          What <A href="/library/advanced/patch#query-patches"><code>query_patches</code></A>{' '}
+          returns, as four apply-state flags over a list of{' '}
+          <A href="/library/types/structs#patch-entry"><code>PatchEntry</code></A>. The list is the
+          stored set; <A href="/library/requests#health"><code>query_health</code></A> reports a
+          patched clone in its <A href="/library/types/structs#health"><code>patch_on</code></A> flag.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Field</th><th>Set when</th></tr></thead>
             <tbody>
@@ -1504,25 +1469,24 @@ assert_eq!(setup.to_bytes(), [0x80, 0x06, 0x00, 0x01, 0x00, 0x00, 0x12, 0x00]);`
               <tr><td><code>table_full</code></td><td>The box refused the last new patch or overwrite for room: 16 patches in use (<code>PATCH_MAX_ENTRIES</code>), or no space left in the 1024-byte pool. The next change to the set, or a clear, resets it.</td></tr>
             </tbody>
           </table>
-          <pre class="diagram">{`  set_patch --> stored set          (NVS, per VID:PID; pending while it differs from the served set)
+        </div>
+        <pre class="diagram">{`  set_patch --> stored set          (NVS, per VID:PID; pending while it differs from the served set)
                     |
                     |  apply_patch, the opt-in turning on, the device attaching
                     v
                 presented --- checks pass ---> applied   (the clone serves the patched set)
                     |
                     +-------- a check fails ---> refused   (served unpatched; the log names the check)`}</pre>
-        </Card>
-      </div>
-      <div id="patch-entry" data-search-target>
-        <Card>
-          <CardHeader title="PatchEntry" subtitle="One row in a PatchSet" />
-          <pre class="api-signature">struct PatchEntry {'{'} section: PatchSection, cfg: u8, index: u8, offset: u16, len: u16 {'}'}</pre>
-          <p>
-            One patch's key and length in a{' '}
-            <A href="/library/types/structs#patch-set"><code>PatchSet</code></A>, without its bytes;{' '}
-            <A href="/library/advanced/patch#query-patch-entry"><code>query_patch_entry</code></A> reads
-            one in full.
-          </p>
+      </DocSection>
+      <DocSection id="patch-entry" title="PatchEntry" caption="One row in a PatchSet">
+        <pre class="api-signature">struct PatchEntry {'{'} section: PatchSection, cfg: u8, index: u8, offset: u16, len: u16 {'}'}</pre>
+        <p>
+          One patch's key and length in a{' '}
+          <A href="/library/types/structs#patch-set"><code>PatchSet</code></A>, without its bytes;{' '}
+          <A href="/library/advanced/patch#query-patch-entry"><code>query_patch_entry</code></A> reads
+          one in full.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
@@ -1530,8 +1494,8 @@ assert_eq!(setup.to_bytes(), [0x80, 0x06, 0x00, 0x01, 0x00, 0x00, 0x12, 0x00]);`
               <tr><td><code>len</code></td><td><code>u16</code></td><td>How many bytes the patch overwrites.</td></tr>
             </tbody>
           </table>
-        </Card>
-      </div>
+        </div>
+      </DocSection>
 
     </>
   );

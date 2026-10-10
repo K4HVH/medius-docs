@@ -1,36 +1,35 @@
 import type { Component } from 'solid-js';
 import { A } from '@solidjs/router';
-import { Card, CardHeader } from '../../../components/surfaces/Card';
-import '../../../styles/docs.css';
+import { PageHeader } from '../../shell/PageHeader';
+import { DocSection } from '../../shell/DocSection';
 
 const Connection: Component = () => {
   return (
     <>
-      <Card>
-        <CardHeader title="Connecting" subtitle="Open, find, and release the port" />
+      <PageHeader>
         <p>
           <code>Device</code> is the handle. Opening one finds the box, runs the{' '}
           <A href="/native/connection">handshake</A>, and starts the background threads in one call.
+          Dropping the last handle <A href="/library/guides/connection#release">releases the port</A>.
         </p>
         <p>See also: <A href="/library/guides/connection#choosing-a-port">choosing a port</A>, <A href="/library/guides/connection#threading">threading</A>, <A href="/library/guides/connection#keepalive">keepalive &amp; teardown</A>, and the box <A href="/native/connection#handshake">handshake</A>.</p>
-      </Card>
+      </PageHeader>
 
-      <div id="open" data-search-target>
-        <Card>
-          <CardHeader title="Open a device" subtitle="Auto-detect, or a known path" />
-          <pre class="api-signature">fn Device::open(path: impl AsRef&lt;Path&gt;) -&gt; Result&lt;Device&gt;</pre>
-          <p><span class="api-badge api-badge--responded">Blocks</span></p>
-          <pre class="api-signature">fn Device::find() -&gt; Result&lt;Device&gt;</pre>
-          <p><span class="api-badge api-badge--responded">Blocks</span></p>
-          <pre class="api-signature">fn find_medius() -&gt; Vec&lt;PortInfo&gt;</pre>
-          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
-          <p>
-            <code>open</code> and <code>find</code> block on the{' '}
-            <A href="/native/connection#handshake">handshake</A>. Auto-detect matches on{' '}
-            <A href="/native/transport">USB identity</A> (vid <code>0x1A86</code>, pid{' '}
-            <code>0x55D3</code>), the WCH CH343 bridge in every box.
-          </p>
-          <div class="api-response-label">FUNCTIONS</div>
+      <DocSection id="open" title="Open a device" caption="Auto-detect, or a known path">
+        <pre class="api-signature">fn Device::open(path: impl AsRef&lt;Path&gt;) -&gt; Result&lt;Device&gt;</pre>
+        <p><span class="api-badge api-badge--responded">Blocks</span></p>
+        <pre class="api-signature">fn Device::find() -&gt; Result&lt;Device&gt;</pre>
+        <p><span class="api-badge api-badge--responded">Blocks</span></p>
+        <pre class="api-signature">fn find_medius() -&gt; Vec&lt;PortInfo&gt;</pre>
+        <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+        <p>
+          <code>open</code> and <code>find</code> block on the{' '}
+          <A href="/native/connection#handshake">handshake</A>. Auto-detect matches on{' '}
+          <A href="/native/transport">USB identity</A> (vid <code>0x1A86</code>, pid{' '}
+          <code>0x55D3</code>), the WCH CH343 bridge in every box.
+        </p>
+        <div class="api-response-label">FUNCTIONS</div>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr>
@@ -53,25 +52,24 @@ const Connection: Component = () => {
               </tr>
             </tbody>
           </table>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::Device;
+        </div>
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`use medius::Device;
 
 // auto-detect the box:
 let dev = Device::find()?;
 
 // or open a known path:
 let dev = Device::open("/dev/ttyACM0")?;`}</code></pre>
-        </Card>
-      </div>
+      </DocSection>
 
-      <div id="zero-config" data-search-target>
-        <Card>
-          <CardHeader title="Zero config" subtitle="Three read-only values" />
-          <p>
-            Nothing to configure. Two defaults bound the{' '}
-            <A href="/native/commands/requests#requests"><code>QUERY</code></A> wait and the keepalive
-            timer.
-          </p>
+      <DocSection id="zero-config" title="Zero config" caption="Three read-only values">
+        <p>
+          Nothing to configure. Two defaults bound the{' '}
+          <A href="/native/commands/requests#requests"><code>QUERY</code></A> wait and the keepalive
+          timer.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr>
@@ -94,40 +92,38 @@ let dev = Device::open("/dev/ttyACM0")?;`}</code></pre>
               </tr>
             </tbody>
           </table>
-          <p>
-            <code>PROTO_VER</code> is the{' '}
-            <A href="/native/frame#layout"><code>control protocol</code></A> version this build speaks.
-            A box reporting anything else is refused at the{' '}
-            <A href="/native/connection#handshake">handshake</A>.
-          </p>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::{DEFAULT_QUERY_TIMEOUT, DEFAULT_KEEPALIVE_CADENCE, PROTO_VER};
+        </div>
+        <p>
+          <code>PROTO_VER</code> is the{' '}
+          <A href="/native/frame#layout"><code>control protocol</code></A> version this build speaks.
+          A box reporting anything else is refused at the{' '}
+          <A href="/native/connection#handshake">handshake</A>.
+        </p>
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`use medius::{DEFAULT_QUERY_TIMEOUT, DEFAULT_KEEPALIVE_CADENCE, PROTO_VER};
 
 println!("query timeout:     {:?}", DEFAULT_QUERY_TIMEOUT);   // 1s
 println!("keepalive cadence: {:?}", DEFAULT_KEEPALIVE_CADENCE); // 500ms
 println!("speaks protocol:   {}", PROTO_VER);                   // 9`}</code></pre>
-        </Card>
-      </div>
+      </DocSection>
 
-      <div id="async" data-search-target>
-        <Card>
-          <CardHeader title="Async device" subtitle="The same link, with awaitable queries" />
-          <pre class="api-signature">fn AsyncDevice::open(path: impl AsRef&lt;Path&gt;) -&gt; Result&lt;AsyncDevice&gt;</pre>
-          <p><span class="api-badge api-badge--responded">Blocks</span></p>
-          <pre class="api-signature">fn AsyncDevice::find() -&gt; Result&lt;AsyncDevice&gt;</pre>
-          <p><span class="api-badge api-badge--responded">Blocks</span></p>
-          <pre class="api-signature">fn into_async(self) -&gt; AsyncDevice</pre>
-          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
-          <pre class="api-signature">fn into_inner(self) -&gt; Device</pre>
-          <p><span class="api-badge api-badge--executed">No round-trip</span></p>
-          <p>
-            Behind the <code>async</code> feature,{' '}
-            <A href="/library/features/async"><code>AsyncDevice</code></A> makes the queries futures;{' '}
-            <A href="/native/injection#fire-and-forget">fire-and-forget</A> calls stay synchronous.
-          </p>
-          <pre><code class="language-bash">cargo add medius --features async</code></pre>
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use futures::executor::block_on;
+      <DocSection id="async" title="Async device" caption="The same link, with awaitable queries">
+        <pre class="api-signature">fn AsyncDevice::open(path: impl AsRef&lt;Path&gt;) -&gt; Result&lt;AsyncDevice&gt;</pre>
+        <p><span class="api-badge api-badge--responded">Blocks</span></p>
+        <pre class="api-signature">fn AsyncDevice::find() -&gt; Result&lt;AsyncDevice&gt;</pre>
+        <p><span class="api-badge api-badge--responded">Blocks</span></p>
+        <pre class="api-signature">fn into_async(self) -&gt; AsyncDevice</pre>
+        <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+        <pre class="api-signature">fn into_inner(self) -&gt; Device</pre>
+        <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+        <p>
+          Behind the <code>async</code> feature,{' '}
+          <A href="/library/features/async"><code>AsyncDevice</code></A> makes the queries futures;{' '}
+          <A href="/native/injection#fire-and-forget">fire-and-forget</A> calls stay synchronous.
+        </p>
+        <pre><code class="language-bash">cargo add medius --features async</code></pre>
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`use futures::executor::block_on;
 use medius::AsyncDevice;
 
 // find and open as async:
@@ -137,8 +133,7 @@ dev.move_rel(10, 0)?;                          // fire-and-forget, stays sync
 
 // or open a known path:
 let dev = AsyncDevice::open("/dev/ttyACM0")?;`}</code></pre>
-        </Card>
-      </div>
+      </DocSection>
 
     </>
   );

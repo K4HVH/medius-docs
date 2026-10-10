@@ -1,19 +1,18 @@
 import type { Component } from 'solid-js';
 import { A } from '@solidjs/router';
-import { Card, CardHeader } from '../../../components/surfaces/Card';
-import '../../../styles/docs.css';
+import { PageHeader } from '../../shell/PageHeader';
+import { DocSection } from '../../shell/DocSection';
 
 const Hardware: Component = () => {
   return (
     <>
-      <div id="ports" data-search-target>
-        <Card>
-          <CardHeader title="Ports" subtitle="Three USB ports and cabling" />
-          <p>
-            Inside are two <a href="https://www.espressif.com/en/products/socs" target="_blank" rel="noreferrer">ESP32</a>-S3 microcontrollers and a <a href="https://www.wch-ic.com/products/CH343.html" target="_blank" rel="noreferrer"><code>CH343</code></a> USB-serial bridge. A
-            program speaks only to the <code>CH343</code> serial port; the two chips share an internal
-            20 Mbaud link, separate from the 6 Mbaud control link.
-          </p>
+      <PageHeader id="ports">
+        <p>
+          Inside are two <a href="https://www.espressif.com/en/products/socs" target="_blank" rel="noreferrer">ESP32</a>-S3 microcontrollers and a <a href="https://www.wch-ic.com/products/CH343.html" target="_blank" rel="noreferrer"><code>CH343</code></a> USB-serial bridge. A
+          program speaks only to the <code>CH343</code> serial port; the two chips share an internal
+          20 Mbaud link, separate from the 6 Mbaud control link.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr>
@@ -43,32 +42,28 @@ const Hardware: Component = () => {
               </tr>
             </tbody>
           </table>
-        </Card>
-      </div>
+        </div>
+      </PageHeader>
 
-      <div id="hazard" data-search-target>
-        <Card>
-          <CardHeader title="USB3 power hazard" subtitle="The one pairing to avoid" />
-          <div class="callout callout--danger">
-            <p>
-              ⚠️ <code>USB1</code> and <code>USB3</code> must never both connect to the same machine.
-            </p>
-            <p>
-              The <code>USB3</code> 5V rail can't be pulled low in firmware, so the pair back-feeds
-              power, which can force a shutdown or drain the battery.
-            </p>
-          </div>
-        </Card>
-      </div>
-
-      <div id="disconnecting" data-search-target>
-        <Card>
-          <CardHeader title="Disconnecting" subtitle="Unplug any time" />
+      <DocSection id="hazard" title="USB3 power hazard" caption="The one pairing to avoid">
+        <div class="callout callout--danger">
           <p>
-            The box is USB bus-powered, with no battery or power button, and safe to unplug at any
-            moment. Injected input never outlives the program that sent it, so a button or move
-            can't stick.
+            ⚠️ <code>USB1</code> and <code>USB3</code> must never both connect to the same machine.
           </p>
+          <p>
+            The <code>USB3</code> 5V rail can't be pulled low in firmware, so the pair back-feeds
+            power, which can force a shutdown or drain the battery.
+          </p>
+        </div>
+      </DocSection>
+
+      <DocSection id="disconnecting" title="Disconnecting" caption="Unplug any time">
+        <p>
+          The box is USB bus-powered, with no battery or power button, and safe to unplug at any
+          moment. Injected input never outlives the program that sent it, so a button or move
+          can't stick.
+        </p>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Unplugged</th><th>Effect</th></tr>
@@ -88,23 +83,23 @@ const Hardware: Component = () => {
               </tr>
             </tbody>
           </table>
+        </div>
+        <p>
+          For instant passthrough without the{' '}
+          <A href="/native/injection#safety">silence timeout</A>, send{' '}
+          <A href="/native/commands/admin#reset"><code>RESET</code></A> before unplugging (library:{' '}
+          <A href="/library/admin#reset"><code>reset</code></A>). Dropping the{' '}
+          <A href="/library/guides/connection#release"><code>Device</code></A> stops its threads;
+          the same timeout then clears the box. Port order otherwise doesn't matter.
+        </p>
+        <div class="callout callout--warning">
           <p>
-            For instant passthrough without the{' '}
-            <A href="/native/injection#safety">silence timeout</A>, send{' '}
-            <A href="/native/commands/admin#reset"><code>RESET</code></A> before unplugging (library:{' '}
-            <A href="/library/admin#reset"><code>reset</code></A>). Dropping the{' '}
-            <A href="/library/guides/connection#release"><code>Device</code></A> stops its threads;
-            the same timeout then clears the box. Port order otherwise doesn't matter.
+            <code>USB1</code> and <code>USB3</code> must not share a machine at any point,
+            plugging in or unplugging. See the{' '}
+            <A href="/native/hardware#hazard">power hazard</A>.
           </p>
-          <div class="callout callout--warning">
-            <p>
-              <code>USB1</code> and <code>USB3</code> must not share a machine at any point,
-              plugging in or unplugging. See the{' '}
-              <A href="/native/hardware#hazard">power hazard</A>.
-            </p>
-          </div>
-        </Card>
-      </div>
+        </div>
+      </DocSection>
     </>
   );
 };

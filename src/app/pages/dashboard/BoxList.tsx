@@ -17,7 +17,7 @@ import {
 import type { IconTypes } from 'solid-icons';
 import { Menu, MenuItem } from '../../../components/navigation/Menu';
 import { Tabs, type TabOption } from '../../../components/navigation/Tabs';
-import { speaksCurrentWire } from '../../../dashboard/serial';
+import { speaksCurrentWire } from '../../../dashboard/serial/wire';
 import { type BoxEntry, type BoxSession, NEW_BOX, useBoxes } from './context';
 import { BOX_ICONS, type BoxIcon } from './store';
 

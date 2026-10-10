@@ -1,13 +1,13 @@
 import type { Component } from 'solid-js';
 import { A } from '@solidjs/router';
-import { Card, CardHeader } from '../../../../components/surfaces/Card';
-import '../../../../styles/docs.css';
+import { PageHeader } from '../../../shell/PageHeader';
+import { DocSection } from '../../../shell/DocSection';
+import { Anchor } from '../../../shell/Anchor';
 
 const Types: Component = () => {
   return (
     <>
-      <Card>
-        <CardHeader title="Types & errors" subtitle="Every enum, dataclass, and exception" />
+      <PageHeader>
         <p>
           The values the <A href="/bindings/python/api">API</A> takes and returns. Field meanings
           are on the <A href="/library/types">Library types</A> and <A href="/native">Native API</A>;
@@ -23,18 +23,16 @@ const Types: Component = () => {
             endpoint number, or interface number with no named member.
           </p>
         </div>
-      </Card>
+      </PageHeader>
 
-      <div id="enums" data-search-target>
-        <Card>
-          <CardHeader title="Injection enums" subtitle="Button · Action" />
-          <p>
-            See the <A href="/native/injection">injection model</A> for what each <code>Action</code>{' '}
-            means; button slots on <A href="/native/commands/usage#buttons">Usage IDs</A>.
-          </p>
+      <DocSection id="enums" title="Injection enums" caption="Button · Action">
+        <p>
+          See the <A href="/native/injection">injection model</A> for what each <code>Action</code>{' '}
+          means; button slots on <A href="/native/commands/usage#buttons">Usage IDs</A>.
+        </p>
 
-          <div id="button" data-search-target>
-            <div class="api-response-label">Button</div>
+        <Anchor id="button" label="Button">
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th></tr></thead>
               <tbody>
@@ -46,9 +44,10 @@ const Types: Component = () => {
               </tbody>
             </table>
           </div>
+        </Anchor>
 
-          <div id="action" data-search-target>
-            <div class="api-response-label">Action</div>
+        <Anchor id="action" label="Action">
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th><th>Meaning</th></tr></thead>
               <tbody>
@@ -58,24 +57,22 @@ const Types: Component = () => {
               </tbody>
             </table>
           </div>
-        </Card>
-      </div>
+        </Anchor>
+      </DocSection>
 
-      <div id="lock-enums" data-search-target>
-        <Card>
-          <CardHeader title="Lock & blanket enums" subtitle="Direction · BearingMode · LockTargetKind · Blanket" />
+      <DocSection id="lock-enums" title="Lock & blanket enums" caption="Direction · BearingMode · LockTargetKind · Blanket">
+        <p>
+          See <A href="/native/commands/lock">Lock</A> for directions and blanket classes, and{' '}
+          <A href="/library/catch">Catch</A> for a direction on a traffic subscription.
+        </p>
+
+        <Anchor id="direction" label="Direction">
           <p>
-            See <A href="/native/commands/lock">Lock</A> for directions and blanket classes, and{' '}
-            <A href="/library/catch">Catch</A> for a direction on a traffic subscription.
+            Read by what it is attached to: an axis, a usage, or a{' '}
+            <A href="/bindings/python/types#catchfilter"><code>CatchFilter</code></A> naming a
+            byte-oriented <A href="/bindings/python/types#catchclass">catch class</A>.
           </p>
-
-          <div id="direction" data-search-target>
-            <div class="api-response-label">Direction</div>
-            <p>
-              Read by what it is attached to: an axis, a usage, or a{' '}
-              <A href="/bindings/python/types#catchfilter"><code>CatchFilter</code></A> naming a
-              byte-oriented <A href="/bindings/python/types#catchclass">catch class</A>.
-            </p>
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th><th>Aliases</th><th>On an axis or wheel</th><th>On a button or key</th><th>On a traffic-class filter</th></tr></thead>
               <tbody>
@@ -86,27 +83,28 @@ const Types: Component = () => {
                 <tr><td><code>AGAINST</code></td><td><code>4</code></td><td>-</td><td>the sign opposing it</td><td>refused</td><td>no meaning</td></tr>
               </tbody>
             </table>
-            <p>
-              Aliases are the same values under call-site names:{' '}
-              <code>Direction.PRESS is Direction.POSITIVE</code>. <code>WITH</code> and{' '}
-              <code>AGAINST</code> are measured against the bearing, not a fixed sign;{' '}
-              <code>.is_relative</code> tells them apart.
-            </p>
-            <p>
-              Only an axis has a bearing, so <code>WITH</code> or <code>AGAINST</code> on a lock
-              anywhere else raises{' '}
-              <A href="/bindings/python/types#errors"><code>RelativeDirectionError</code></A>. A media
-              usage has no edges: an edge named on one goes out, and reads back in{' '}
-              <A href="/bindings/python/types#locks"><code>Locks</code></A>, as <code>BOTH</code>.
-            </p>
           </div>
+          <p>
+            Aliases are the same values under call-site names:{' '}
+            <code>Direction.PRESS is Direction.POSITIVE</code>. <code>WITH</code> and{' '}
+            <code>AGAINST</code> are measured against the bearing, not a fixed sign;{' '}
+            <code>.is_relative</code> tells them apart.
+          </p>
+          <p>
+            Only an axis has a bearing, so <code>WITH</code> or <code>AGAINST</code> on a lock
+            anywhere else raises{' '}
+            <A href="/bindings/python/types#errors"><code>RelativeDirectionError</code></A>. A media
+            usage has no edges: an edge named on one goes out, and reads back in{' '}
+            <A href="/bindings/python/types#locks"><code>Locks</code></A>, as <code>BOTH</code>.
+          </p>
+        </Anchor>
 
-          <div id="bearing-mode" data-search-target>
-            <div class="api-response-label">BearingMode</div>
-            <p>
-              How the box reads the direction it is injecting, which <code>WITH</code> and{' '}
-              <code>AGAINST</code> resolve by. Set with <code>dev.set_bearing(window_ms, mode)</code>.
-            </p>
+        <Anchor id="bearing-mode" label="BearingMode">
+          <p>
+            How the box reads the direction it is injecting, which <code>WITH</code> and{' '}
+            <code>AGAINST</code> resolve by. Set with <code>dev.set_bearing(window_ms, mode)</code>.
+          </p>
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th><th>Meaning</th></tr></thead>
               <tbody>
@@ -114,14 +112,15 @@ const Types: Component = () => {
                 <tr><td><code>VECTOR</code></td><td><code>1</code></td><td>the physical delta is projected onto the injected direction, and the relative scale weighs only the part along it; one relative scale, the lower of X's and Y's, governs X and Y as one vector, and the fixed-sign scales still reach what the projection leaves on each axis</td></tr>
               </tbody>
             </table>
-            <p>
-              Under <code>VECTOR</code>, <A href="/bindings/python/types#locks"><code>Locks</code></A>{' '}
-              reports that one scale.
-            </p>
           </div>
+          <p>
+            Under <code>VECTOR</code>, <A href="/bindings/python/types#locks"><code>Locks</code></A>{' '}
+            reports that one scale.
+          </p>
+        </Anchor>
 
-          <div id="locktargetkind" data-search-target>
-            <div class="api-response-label">LockTargetKind</div>
+        <Anchor id="locktargetkind" label="LockTargetKind">
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th></tr></thead>
               <tbody>
@@ -131,11 +130,12 @@ const Types: Component = () => {
                 <tr><td><code>USAGE</code></td><td><code>3</code></td></tr>
               </tbody>
             </table>
-            <p>Built by <A href="/bindings/python/types#locktarget"><code>LockTarget.x/y/wheel/usage</code></A> (and the <code>button</code>/<code>key</code>/<code>media</code> shortcuts).</p>
           </div>
+          <p>Built by <A href="/bindings/python/types#locktarget"><code>LockTarget.x/y/wheel/usage</code></A> (and the <code>button</code>/<code>key</code>/<code>media</code> shortcuts).</p>
+        </Anchor>
 
-          <div id="blanket" data-search-target>
-            <div class="api-response-label">Blanket</div>
+        <Anchor id="blanket" label="Blanket">
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th><th>Class</th><th>What direction picks</th></tr></thead>
               <tbody>
@@ -146,24 +146,22 @@ const Types: Component = () => {
                 <tr><td><code>MEDIA</code></td><td><code>4</code></td><td>every media usage</td><td>nothing; media has no edges</td></tr>
               </tbody>
             </table>
-            <p>These are ABI-local ordinals (matching the crate's Blanket order), not the clip auto-lock scope bits.</p>
           </div>
-        </Card>
-      </div>
+          <p>These are ABI-local ordinals (matching the crate's Blanket order), not the clip auto-lock scope bits.</p>
+        </Anchor>
+      </DocSection>
 
-      <div id="keycodes" data-search-target>
-        <Card>
-          <CardHeader title="Keycode enums" subtitle="Key · MediaKey" />
-          <p>
-            Named subsets of the{' '}
-            <a href="https://www.usb.org/document-library/hid-usage-tables-14" target="_blank" rel="noreferrer">HID usage tables</a>;
-            full lists on Usage IDs (<A href="/native/commands/usage#keycodes">keys</A>,{' '}
-            <A href="/native/commands/usage#consumer">media</A>). Any call taking a{' '}
-            <code>Key</code> or <code>MediaKey</code> also accepts a raw <code>int</code> usage.
-          </p>
+      <DocSection id="keycodes" title="Keycode enums" caption="Key · MediaKey">
+        <p>
+          Named subsets of the{' '}
+          <a href="https://www.usb.org/document-library/hid-usage-tables-14" target="_blank" rel="noreferrer">HID usage tables</a>;
+          full lists on Usage IDs (<A href="/native/commands/usage#keycodes">keys</A>,{' '}
+          <A href="/native/commands/usage#consumer">media</A>). Any call taking a{' '}
+          <code>Key</code> or <code>MediaKey</code> also accepts a raw <code>int</code> usage.
+        </p>
 
-          <div id="key" data-search-target>
-            <div class="api-response-label">Key</div>
+        <Anchor id="key" label="Key">
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Members</th><th>Values</th></tr></thead>
               <tbody>
@@ -179,9 +177,10 @@ const Types: Component = () => {
               </tbody>
             </table>
           </div>
+        </Anchor>
 
-          <div id="mediakey" data-search-target>
-            <div class="api-response-label">MediaKey</div>
+        <Anchor id="mediakey" label="MediaKey">
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th></tr></thead>
               <tbody>
@@ -197,16 +196,14 @@ const Types: Component = () => {
               </tbody>
             </table>
           </div>
-        </Card>
-      </div>
+        </Anchor>
+      </DocSection>
 
-      <div id="led-admin-enums" data-search-target>
-        <Card>
-          <CardHeader title="LED & admin enums" subtitle="LedTarget · LedMode · RebootTarget" />
-          <p>See <A href="/native/commands/led">LED</A> and <A href="/native/commands/admin">Admin</A>.</p>
+      <DocSection id="led-admin-enums" title="LED & admin enums" caption="LedTarget · LedMode · RebootTarget">
+        <p>See <A href="/native/commands/led">LED</A> and <A href="/native/commands/admin">Admin</A>.</p>
 
-          <div id="ledtarget" data-search-target>
-            <div class="api-response-label">LedTarget</div>
+        <Anchor id="ledtarget" label="LedTarget">
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th></tr></thead>
               <tbody>
@@ -216,9 +213,10 @@ const Types: Component = () => {
               </tbody>
             </table>
           </div>
+        </Anchor>
 
-          <div id="ledmode" data-search-target>
-            <div class="api-response-label">LedMode</div>
+        <Anchor id="ledmode" label="LedMode">
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th></tr></thead>
               <tbody>
@@ -229,9 +227,10 @@ const Types: Component = () => {
               </tbody>
             </table>
           </div>
+        </Anchor>
 
-          <div id="reboottarget" data-search-target>
-            <div class="api-response-label">RebootTarget</div>
+        <Anchor id="reboottarget" label="RebootTarget">
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th></tr></thead>
               <tbody>
@@ -242,18 +241,16 @@ const Types: Component = () => {
               </tbody>
             </table>
           </div>
-        </Card>
-      </div>
+        </Anchor>
+      </DocSection>
 
-      <div id="emit-pace" data-search-target>
-        <Card>
-          <CardHeader title="Emit pace" subtitle="EmitMode · EmitPace" />
-          <p>
-            Passed to <A href="/bindings/python/api#led-admin-options"><code>dev.set_emit_pace()</code></A>.
-            See <A href="/library/options">Options</A>.
-          </p>
-          <div id="emitmode" data-search-target>
-            <div class="api-response-label">EmitMode</div>
+      <DocSection id="emit-pace" title="Emit pace" caption="EmitMode · EmitPace">
+        <p>
+          Passed to <A href="/bindings/python/api#led-admin-options"><code>dev.set_emit_pace()</code></A>.
+          See <A href="/library/options">Options</A>.
+        </p>
+        <Anchor id="emitmode" label="EmitMode">
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th></tr></thead>
               <tbody>
@@ -263,26 +260,23 @@ const Types: Component = () => {
               </tbody>
             </table>
           </div>
-          <div id="emitpace" data-search-target>
-            <div class="api-response-label">EmitPace</div>
-            <p>
-              A frozen dataclass carrying <code>mode</code> and <code>hz</code>. Build it with{' '}
-              <code>EmitPace.learned()</code>, <code>EmitPace.interval()</code>, or{' '}
-              <code>EmitPace.fixed(hz)</code> (the rate snaps to <code>1000/n</code> and caps at 1 kHz).
-            </p>
-          </div>
-        </Card>
-      </div>
-
-      <div id="render" data-search-target>
-        <Card>
-          <CardHeader title="Render" subtitle="RenderMode" />
+        </Anchor>
+        <Anchor id="emitpace" label="EmitPace">
           <p>
-            Passed to <A href="/bindings/python/api#led-admin-options"><code>dev.set_render()</code></A>.
-            See <A href="/library/options">Options</A>.
+            A frozen dataclass carrying <code>mode</code> and <code>hz</code>. Build it with{' '}
+            <code>EmitPace.learned()</code>, <code>EmitPace.interval()</code>, or{' '}
+            <code>EmitPace.fixed(hz)</code> (the rate snaps to <code>1000/n</code> and caps at 1 kHz).
           </p>
-          <div id="rendermode" data-search-target>
-            <div class="api-response-label">RenderMode</div>
+        </Anchor>
+      </DocSection>
+
+      <DocSection id="render" title="Render" caption="RenderMode">
+        <p>
+          Passed to <A href="/bindings/python/api#led-admin-options"><code>dev.set_render()</code></A>.
+          See <A href="/library/options">Options</A>.
+        </p>
+        <Anchor id="rendermode" label="RenderMode">
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th></tr></thead>
               <tbody>
@@ -293,15 +287,13 @@ const Types: Component = () => {
               </tbody>
             </table>
           </div>
-        </Card>
-      </div>
+        </Anchor>
+      </DocSection>
 
-      <div id="clip-status" data-search-target>
-        <Card>
-          <CardHeader title="Clip" subtitle="ClipState · Edge · ClipAction · ClipTrigger · ClipPacketTrigger · ClipSettings · ClipStatus" />
-          <p>Buffered-clip types. See <A href="/library/clip">Clip</A>.</p>
-          <div id="clipstate" data-search-target>
-            <div class="api-response-label">ClipState</div>
+      <DocSection id="clip-status" title="Clip" caption="ClipState · Edge · ClipAction · ClipTrigger · ClipPacketTrigger · ClipSettings · ClipStatus">
+        <p>Buffered-clip types. See <A href="/library/clip">Clip</A>.</p>
+        <Anchor id="clipstate" label="ClipState">
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th><th>Meaning</th></tr></thead>
               <tbody>
@@ -312,8 +304,9 @@ const Types: Component = () => {
               </tbody>
             </table>
           </div>
-          <div id="updatetarget" data-search-target>
-            <div class="api-response-label">UpdateTarget</div>
+        </Anchor>
+        <Anchor id="updatetarget" label="UpdateTarget">
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th><th>Meaning</th></tr></thead>
               <tbody>
@@ -322,8 +315,9 @@ const Types: Component = () => {
               </tbody>
             </table>
           </div>
-          <div id="imagestate" data-search-target>
-            <div class="api-response-label">ImageState</div>
+        </Anchor>
+        <Anchor id="imagestate" label="ImageState">
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th><th>Meaning</th></tr></thead>
               <tbody>
@@ -336,8 +330,9 @@ const Types: Component = () => {
               </tbody>
             </table>
           </div>
-          <div id="edge" data-search-target>
-            <div class="api-response-label">Edge</div>
+        </Anchor>
+        <Anchor id="edge" label="Edge">
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th><th>Fires on</th></tr></thead>
               <tbody>
@@ -346,10 +341,11 @@ const Types: Component = () => {
                 <tr><td><code>RELEASE</code></td><td><code>2</code></td><td>the physical release edge</td></tr>
               </tbody>
             </table>
-            <p>Which edge of a <A href="/bindings/python/types#cliptrigger"><code>ClipTrigger</code></A> runs its action.</p>
           </div>
-          <div id="clipaction" data-search-target>
-            <div class="api-response-label">ClipAction</div>
+          <p>Which edge of a <A href="/bindings/python/types#cliptrigger"><code>ClipTrigger</code></A> runs its action.</p>
+        </Anchor>
+        <Anchor id="clipaction" label="ClipAction">
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th><th>Runs</th></tr></thead>
               <tbody>
@@ -361,11 +357,12 @@ const Types: Component = () => {
                 <tr><td><code>TOGGLE</code></td><td><code>5</code></td><td>play if idle/paused, stop if playing</td></tr>
               </tbody>
             </table>
-            <p>The action a bound trigger of either kind runs on the box, matching the <A href="/bindings/python/api#clip"><code>clip.start/stop/pause/resume/restart/toggle</code></A> methods.</p>
           </div>
-          <div id="cliptrigger" data-search-target>
-            <div class="api-response-label">ClipTrigger</div>
-            <p>A dataclass binding a physical usage's edge to a clip action, passed to <A href="/bindings/python/api#clip"><code>clip.bind()</code></A>. The box runs the action with no host round-trip.</p>
+          <p>The action a bound trigger of either kind runs on the box, matching the <A href="/bindings/python/api#clip"><code>clip.start/stop/pause/resume/restart/toggle</code></A> methods.</p>
+        </Anchor>
+        <Anchor id="cliptrigger" label="ClipTrigger">
+          <p>A dataclass binding a physical usage's edge to a clip action, passed to <A href="/bindings/python/api#clip"><code>clip.bind()</code></A>. The box runs the action with no host round-trip.</p>
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
@@ -375,11 +372,12 @@ const Types: Component = () => {
                 <tr><td><code>consume</code></td><td><code>bool</code></td><td>suppress the physical edge so it does not reach the PC (default <code>False</code>)</td></tr>
               </tbody>
             </table>
-            <p>Construct it directly, e.g. <code>ClipTrigger(Usage.button(Button.SIDE1), Edge.PRESS, ClipAction.TOGGLE, consume=True)</code>.</p>
           </div>
-          <div id="clippackettrigger" data-search-target>
-            <div class="api-response-label">ClipPacketTrigger</div>
-            <p>A dataclass binding a matched packet to a clip action, passed to <A href="/bindings/python/api#clip"><code>clip.bind_packet()</code></A> and read back by <code>clip.query_config()</code>, keyed by <code>(traffic_class, id, direction, match_bytes, mask)</code>. See <A href="/library/clip#packet-triggers">Clip</A>.</p>
+          <p>Construct it directly, e.g. <code>ClipTrigger(Usage.button(Button.SIDE1), Edge.PRESS, ClipAction.TOGGLE, consume=True)</code>.</p>
+        </Anchor>
+        <Anchor id="clippackettrigger" label="ClipPacketTrigger">
+          <p>A dataclass binding a matched packet to a clip action, passed to <A href="/bindings/python/api#clip"><code>clip.bind_packet()</code></A> and read back by <code>clip.query_config()</code>, keyed by <code>(traffic_class, id, direction, match_bytes, mask)</code>. See <A href="/library/clip#packet-triggers">Clip</A>.</p>
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
@@ -394,8 +392,9 @@ const Types: Component = () => {
                 <tr><td><code>hits</code></td><td><code>int</code></td><td>packets the trigger has matched as the top-ranked trigger since it was bound or overwritten, saturating; read back by <code>query_config()</code>; <code>bind_packet()</code> does not send it and range-checks it to 0..65535 (<code>ValueError</code>)</td></tr>
               </tbody>
             </table>
-            <div class="api-response-label">EXAMPLE</div>
-            <pre><code class="language-python">{`from medius import ClipAction, ClipPacketTrigger, ClipPacketTriggerError, Direction, TrafficClass
+          </div>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code class="language-python">{`from medius import ClipAction, ClipPacketTrigger, ClipPacketTriggerError, Direction, TrafficClass
 
 clip = dev.clip()
 
@@ -416,9 +415,9 @@ for t in clip.query_config().packet_triggers:
 
 clip.unbind_packet(held)          # by key
 clip.clear_triggers()             # both kinds`}</code></pre>
-          </div>
-          <div id="clipsettings" data-search-target>
-            <div class="api-response-label">ClipSettings (clip.query_config())</div>
+        </Anchor>
+        <Anchor id="clipsettings" label="ClipSettings (clip.query_config())">
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
@@ -432,8 +431,9 @@ clip.clear_triggers()             # both kinds`}</code></pre>
               </tbody>
             </table>
           </div>
-          <div id="clipstatus" data-search-target>
-            <div class="api-response-label">ClipStatus (clip.query_status())</div>
+        </Anchor>
+        <Anchor id="clipstatus" label="ClipStatus (clip.query_status())">
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Field / method</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
@@ -450,8 +450,9 @@ clip.clear_triggers()             # both kinds`}</code></pre>
               </tbody>
             </table>
           </div>
-          <div id="clip-constants" data-search-target>
-            <div class="api-response-label">CLIP CONSTANTS</div>
+        </Anchor>
+        <Anchor id="clip-constants" label="CLIP CONSTANTS">
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Module constant</th><th>Value</th><th>Meaning</th></tr></thead>
               <tbody>
@@ -464,22 +465,20 @@ clip.clear_triggers()             # both kinds`}</code></pre>
               </tbody>
             </table>
           </div>
-        </Card>
-      </div>
+        </Anchor>
+      </DocSection>
 
-      <div id="stream-enums" data-search-target>
-        <Card>
-          <CardHeader title="Stream enums" subtitle="CatchClass · TrafficClass · Axis · CatchFilter · Capture · CatchEventKind · ClockDomain · BusEventKind · LogLevel" />
-          <p>See <A href="/native/commands/catch">Catch</A> and <A href="/library/diagnostics">Logs &amp; counters</A>; consuming events is on <A href="/bindings/python/streams">Streams</A>.</p>
+      <DocSection id="stream-enums" title="Stream enums" caption="CatchClass · TrafficClass · Axis · CatchFilter · Capture · CatchEventKind · ClockDomain · BusEventKind · LogLevel">
+        <p>See <A href="/native/commands/catch">Catch</A> and <A href="/library/diagnostics">Logs &amp; counters</A>; consuming events is on <A href="/bindings/python/streams">Streams</A>.</p>
 
-          <div id="catchclass" data-search-target>
-            <div class="api-response-label">CatchClass</div>
-            <p>
-              The address class a <A href="/bindings/python/types#catchfilter"><code>CatchFilter</code></A>{' '}
-              names: members <code>0</code> to <code>3</code> are the{' '}
-              <A href="/bindings/python/api#lock"><code>lock</code></A> classes, unchanged; the rest are
-              the byte-oriented traffic the box carries. <code>id</code> is class-specific.
-            </p>
+        <Anchor id="catchclass" label="CatchClass">
+          <p>
+            The address class a <A href="/bindings/python/types#catchfilter"><code>CatchFilter</code></A>{' '}
+            names: members <code>0</code> to <code>3</code> are the{' '}
+            <A href="/bindings/python/api#lock"><code>lock</code></A> classes, unchanged; the rest are
+            the byte-oriented traffic the box carries. <code>id</code> is class-specific.
+          </p>
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th><th>id means</th><th>As a blanket</th></tr></thead>
               <tbody>
@@ -497,23 +496,24 @@ clip.clear_triggers()             # both kinds`}</code></pre>
                 <tr><td><code>CLIP_TRANSFER</code></td><td><code>11</code></td><td>the endpoint number (<code>0</code> = EP0) a <A href="/bindings/python/api#clip">clip</A>'s transfer ran on</td><td>every control endpoint</td></tr>
               </tbody>
             </table>
-            <p>
-              The every-class wildcard is <code>CatchFilter.everything()</code>, whose{' '}
-              <code>catch_class</code> reads <code>None</code>. <code>cls.is_input()</code> is
-              true for <code>0</code> to <code>3</code>, <code>cls.is_traffic()</code> for the rest.
-            </p>
-            <p>
-              Where each class is tapped, and why a locked input still reports, is on{' '}
-              <A href="/native/commands/catch#catch">Catch</A>.
-            </p>
           </div>
+          <p>
+            The every-class wildcard is <code>CatchFilter.everything()</code>, whose{' '}
+            <code>catch_class</code> reads <code>None</code>. <code>cls.is_input()</code> is
+            true for <code>0</code> to <code>3</code>, <code>cls.is_traffic()</code> for the rest.
+          </p>
+          <p>
+            Where each class is tapped, and why a locked input still reports, is on{' '}
+            <A href="/native/commands/catch#catch">Catch</A>.
+          </p>
+        </Anchor>
 
-          <div id="trafficclass" data-search-target>
-            <div class="api-response-label">TrafficClass</div>
-            <p>
-              The byte-oriented half of the address space, values <code>4</code> to <code>11</code>{' '}
-              under the same names as <A href="/bindings/python/types#catchclass"><code>CatchClass</code></A>.
-            </p>
+        <Anchor id="trafficclass" label="TrafficClass">
+          <p>
+            The byte-oriented half of the address space, values <code>4</code> to <code>11</code>{' '}
+            under the same names as <A href="/bindings/python/types#catchclass"><code>CatchClass</code></A>.
+          </p>
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Members</th><th>Values</th></tr></thead>
               <tbody>
@@ -523,14 +523,15 @@ clip.clear_triggers()             # both kinds`}</code></pre>
                 <tr><td><code>CLIP_TRANSFER</code></td><td><code>11</code></td></tr>
               </tbody>
             </table>
-            <p>
-              <code>CatchFilter.traffic</code> and <code>traffic_class</code> take it, so an input
-              class cannot reach a traffic constructor.
-            </p>
           </div>
+          <p>
+            <code>CatchFilter.traffic</code> and <code>traffic_class</code> take it, so an input
+            class cannot reach a traffic constructor.
+          </p>
+        </Anchor>
 
-          <div id="axis" data-search-target>
-            <div class="api-response-label">Axis</div>
+        <Anchor id="axis" label="Axis">
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th></tr></thead>
               <tbody>
@@ -539,19 +540,19 @@ clip.clear_triggers()             # both kinds`}</code></pre>
                 <tr><td><code>WHEEL</code></td><td><code>2</code></td></tr>
               </tbody>
             </table>
-            <p>One relative axis, for <code>CatchFilter.watch_axis(axis)</code>. The values are the wire axis ids a catch or lock entry carries.</p>
           </div>
+          <p>One relative axis, for <code>CatchFilter.watch_axis(axis)</code>. The values are the wire axis ids a catch or lock entry carries.</p>
+        </Anchor>
 
-          <div id="catchfilter" data-search-target>
-            <div class="api-response-label">CatchFilter</div>
-            <p>
-              One subscription entry: a class, an id inside it, a direction, and how many bytes to keep
-              per event. Pass one or an iterable to{' '}
-              <A href="/bindings/python/api#streams"><code>dev.catch_events()</code></A> or{' '}
-              <A href="/bindings/python/streams#input"><code>dev.input_events()</code></A>. Instance
-              methods return a new filter.
-            </p>
-            <pre class="api-signature">{`CatchFilter.watch(usage)               -> CatchFilter         # a Usage, or a Button/Key/MediaKey
+        <Anchor id="catchfilter" label="CatchFilter">
+          <p>
+            One subscription entry: a class, an id inside it, a direction, and how many bytes to keep
+            per event. Pass one or an iterable to{' '}
+            <A href="/bindings/python/api#streams"><code>dev.catch_events()</code></A> or{' '}
+            <A href="/bindings/python/streams#input"><code>dev.input_events()</code></A>. Instance
+            methods return a new filter.
+          </p>
+          <pre class="api-signature">{`CatchFilter.watch(usage)               -> CatchFilter         # a Usage, or a Button/Key/MediaKey
 CatchFilter.watch_axis(axis)           -> CatchFilter         # one Axis
 CatchFilter.watch_class(input_class)   -> CatchFilter         # every usage in one Class
 CatchFilter.watch_axes()               -> CatchFilter         # X, Y and the wheel
@@ -567,6 +568,7 @@ CatchFilter.everything()               -> CatchFilter         # every class, eve
   .same_address(other)                 -> bool          # same table entry, whatever the capture
 
 CatchFilter.traffic(TrafficClass.VENDOR_INTERRUPT, 0x83).with_capture(16)`}</pre>
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Property</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
@@ -576,50 +578,50 @@ CatchFilter.traffic(TrafficClass.VENDOR_INTERRUPT, 0x83).with_capture(16)`}</pre
                 <tr><td><code>capture</code></td><td><code>int</code></td><td>bytes captured per event; <code>0</code> = the whole packet</td></tr>
               </tbody>
             </table>
-            <p>
-              The top-ranked entry supplies the <code>capture</code>; the ranking is on{' '}
-              <A href="/native/commands/catch#matching">The table</A>.
-            </p>
-            <p>
-              <code>same_address</code> is true across two filters that differ only in{' '}
-              <code>capture</code>, and false once one is narrowed to a direction.
-            </p>
-            <p>
-              Arguments are checked before ctypes: <code>with_direction</code>,{' '}
-              <code>watch_axis</code>, <code>watch_class</code>, <code>traffic</code>, and{' '}
-              <code>traffic_class</code> take a member of their enum, <code>with_capture</code> a
-              byte; anything else raises a <code>ValueError</code> naming the argument.
-            </p>
-            <div class="callout callout--warning">
-              <p>
-                The box's table holds 32 entries;{' '}
-                <A href="/bindings/python/api#streams"><code>catch_events()</code></A> raises{' '}
-                <code>CatchTableFullError</code> when this process's subscriptions together exceed
-                it. A box-side refusal (a class this firmware does not know) raises nothing: compare{' '}
-                <A href="/bindings/python/types#catchstate"><code>CatchState.entries</code></A> from{' '}
-                <A href="/bindings/python/api#queries"><code>dev.query_catch()</code></A> with what
-                you sent.
-              </p>
-            </div>
           </div>
+          <p>
+            The top-ranked entry supplies the <code>capture</code>; the ranking is on{' '}
+            <A href="/native/commands/catch#matching">The table</A>.
+          </p>
+          <p>
+            <code>same_address</code> is true across two filters that differ only in{' '}
+            <code>capture</code>, and false once one is narrowed to a direction.
+          </p>
+          <p>
+            Arguments are checked before ctypes: <code>with_direction</code>,{' '}
+            <code>watch_axis</code>, <code>watch_class</code>, <code>traffic</code>, and{' '}
+            <code>traffic_class</code> take a member of their enum, <code>with_capture</code> a
+            byte; anything else raises a <code>ValueError</code> naming the argument.
+          </p>
+          <div class="callout callout--warning">
+            <p>
+              The box's table holds 32 entries;{' '}
+              <A href="/bindings/python/api#streams"><code>catch_events()</code></A> raises{' '}
+              <code>CatchTableFullError</code> when this process's subscriptions together exceed
+              it. A box-side refusal (a class this firmware does not know) raises nothing: compare{' '}
+              <A href="/bindings/python/types#catchstate"><code>CatchState.entries</code></A> from{' '}
+              <A href="/bindings/python/api#queries"><code>dev.query_catch()</code></A> with what
+              you sent.
+            </p>
+          </div>
+        </Anchor>
 
-          <div id="capture" data-search-target>
-            <div class="api-response-label">Capture</div>
-            <pre class="api-signature">{`Capture.WHOLE      # 0, keep the whole packet
+        <Anchor id="capture" label="Capture">
+          <pre class="api-signature">{`Capture.WHOLE      # 0, keep the whole packet
 Capture.first(n)   # keep the first n bytes; first(0) is WHOLE`}</pre>
-            <p>
-              What <code>with_capture</code> takes. Traffic classes only: an input class carries no
-              packet, so naming one with a capture raises{' '}
-              <code>CaptureNotApplicableError</code>.
-            </p>
-            <p>
-              A ceiling, not a guarantee: the box holds one entry per address and cuts once, so
-              another subscriber naming that address more widely raises yours too.
-            </p>
-          </div>
+          <p>
+            What <code>with_capture</code> takes. Traffic classes only: an input class carries no
+            packet, so naming one with a capture raises{' '}
+            <code>CaptureNotApplicableError</code>.
+          </p>
+          <p>
+            A ceiling, not a guarantee: the box holds one entry per address and cuts once, so
+            another subscriber naming that address more widely raises yours too.
+          </p>
+        </Anchor>
 
-          <div id="catcheventkind" data-search-target>
-            <div class="api-response-label">CatchEventKind</div>
+        <Anchor id="catcheventkind" label="CatchEventKind">
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th><th><A href="/bindings/python/types#catchevent"><code>CatchEvent.payload</code></A> type</th><th>Fed by</th></tr></thead>
               <tbody>
@@ -629,15 +631,16 @@ Capture.first(n)   # keep the first n bytes; first(0) is WHOLE`}</pre>
               </tbody>
             </table>
           </div>
+        </Anchor>
 
-          <div id="clockdomain" data-search-target>
-            <div class="api-response-label">ClockDomain</div>
-            <p>
-              Which of the box's two <A href="/native/architecture">chips</A> stamped an event's{' '}
-              <code>ts_us</code>. The two{' '}
-              <A href="/native/hardware">ESP32-S3s</A> boot independently, so nothing relates their
-              timers.
-            </p>
+        <Anchor id="clockdomain" label="ClockDomain">
+          <p>
+            Which of the box's two <A href="/native/architecture">chips</A> stamped an event's{' '}
+            <code>ts_us</code>. The two{' '}
+            <A href="/native/hardware">ESP32-S3s</A> boot independently, so nothing relates their
+            timers.
+          </p>
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th><th>Stamped</th><th>Covers</th></tr></thead>
               <tbody>
@@ -645,27 +648,28 @@ Capture.first(n)   # keep the first n bytes; first(0) is WHOLE`}</pre>
                 <tr><td><code>DEVICE_CHIP</code></td><td><code>1</code></td><td>at the tap on the clone side</td><td><code>HID_OUT</code>, every OUT transfer, a raw packet on a vendor IN endpoint, and <code>CONTROL / EMIT / BUS / CLIP_TRANSFER</code></td></tr>
               </tbody>
             </table>
-            <p>
-              Compare stamps only within one domain. Both clocks are box-local, wrap every ~71.6
-              minutes, and restart at zero when their chip reboots, so a value below the previous one
-              is a wrap, a reboot, or a domain change.
-            </p>
-            <p>
-              A <A href="/bindings/python/streams#timeline"><code>Timeline</code></A> puts stamps on
-              this machine's clock; to cross domains, apply the{' '}
-              <A href="/bindings/python/types#clockestimate"><code>ClockEstimate</code></A> offset
-              within its error bound.
-            </p>
           </div>
+          <p>
+            Compare stamps only within one domain. Both clocks are box-local, wrap every ~71.6
+            minutes, and restart at zero when their chip reboots, so a value below the previous one
+            is a wrap, a reboot, or a domain change.
+          </p>
+          <p>
+            A <A href="/bindings/python/streams#timeline"><code>Timeline</code></A> puts stamps on
+            this machine's clock; to cross domains, apply the{' '}
+            <A href="/bindings/python/types#clockestimate"><code>ClockEstimate</code></A> offset
+            within its error bound.
+          </p>
+        </Anchor>
 
-          <div id="busevent" data-search-target>
-            <div class="api-response-label">BusEventKind</div>
-            <p>
-              What a <code>CatchClass.BUS</code> event describes. These also drive{' '}
-              <A href="/bindings/python/types#health"><code>Health</code></A> bits and{' '}
-              <A href="/bindings/python/types#stats"><code>Stats</code></A> counters; catching them
-              adds a timestamped ordering.
-            </p>
+        <Anchor id="busevent" label="BusEventKind">
+          <p>
+            What a <code>CatchClass.BUS</code> event describes. These also drive{' '}
+            <A href="/bindings/python/types#health"><code>Health</code></A> bits and{' '}
+            <A href="/bindings/python/types#stats"><code>Stats</code></A> counters; catching them
+            adds a timestamped ordering.
+          </p>
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th><th>Payload fields</th></tr></thead>
               <tbody>
@@ -681,16 +685,17 @@ Capture.first(n)   # keep the first n bytes; first(0) is WHOLE`}</pre>
                 <tr><td><code>CLONE_DOWN</code></td><td><code>9</code></td><td>-</td></tr>
               </tbody>
             </table>
-            <p>
-              <code>BusEvent</code> is the decoded dataclass{' '}
-              <A href="/bindings/python/types#trafficevent"><code>TrafficEvent.bus_event()</code></A>{' '}
-              returns: a <code>kind</code> plus <code>configuration</code>, <code>interface</code> and{' '}
-              <code>alt</code>, each <code>0</code> for the kinds carrying none.
-            </p>
           </div>
+          <p>
+            <code>BusEvent</code> is the decoded dataclass{' '}
+            <A href="/bindings/python/types#trafficevent"><code>TrafficEvent.bus_event()</code></A>{' '}
+            returns: a <code>kind</code> plus <code>configuration</code>, <code>interface</code> and{' '}
+            <code>alt</code>, each <code>0</code> for the kinds carrying none.
+          </p>
+        </Anchor>
 
-          <div id="loglevel" data-search-target>
-            <div class="api-response-label">LogLevel</div>
+        <Anchor id="loglevel" label="LogLevel">
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th></tr></thead>
               <tbody>
@@ -702,22 +707,20 @@ Capture.first(n)   # keep the first n bytes; first(0) is WHOLE`}</pre>
               </tbody>
             </table>
           </div>
-        </Card>
-      </div>
+        </Anchor>
+      </DocSection>
 
-      <div id="wire-enums" data-search-target>
-        <Card>
-          <CardHeader title="Wire enums" subtitle="MotionKind · MoveTiming · PendingMotion · Class · FrameType" />
-          <p>
-            Mostly internal. <code>MotionKind</code> and <code>Class</code> tag the structs the{' '}
-            <A href="/bindings/python/types#input">Usage</A> and <A href="/bindings/python/types#motion">Motion</A> builders produce; <code>FrameType</code> names a wire
-            frame for <A href="/library/features/mock"><code>MockBox.saw()</code></A> and{' '}
-            <A href="/bindings/python/types#recordedframe"><code>RecordedFrame.type</code></A>. Frame semantics are on{' '}
-            <A href="/native/frame">Frames</A> and <A href="/library/types/frames">Library frames</A>.
-          </p>
+      <DocSection id="wire-enums" title="Wire enums" caption="MotionKind · MoveTiming · PendingMotion · Class · FrameType">
+        <p>
+          Mostly internal. <code>MotionKind</code> and <code>Class</code> tag the structs the{' '}
+          <A href="/bindings/python/types#input">Usage</A> and <A href="/bindings/python/types#motion">Motion</A> builders produce; <code>FrameType</code> names a wire
+          frame for <A href="/library/features/mock"><code>MockBox.saw()</code></A> and{' '}
+          <A href="/bindings/python/types#recordedframe"><code>RecordedFrame.type</code></A>. Frame semantics are on{' '}
+          <A href="/native/frame">Frames</A> and <A href="/library/types/frames">Library frames</A>.
+        </p>
 
-          <div id="motionkind" data-search-target>
-            <div class="api-response-label">MotionKind</div>
+        <Anchor id="motionkind" label="MotionKind">
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th></tr></thead>
               <tbody>
@@ -726,9 +729,10 @@ Capture.first(n)   # keep the first n bytes; first(0) is WHOLE`}</pre>
               </tbody>
             </table>
           </div>
+        </Anchor>
 
-          <div id="movetiming" data-search-target>
-            <div class="api-response-label">MoveTiming</div>
+        <Anchor id="movetiming" label="MoveTiming">
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th><th>Meaning</th></tr></thead>
               <tbody>
@@ -737,9 +741,10 @@ Capture.first(n)   # keep the first n bytes; first(0) is WHOLE`}</pre>
               </tbody>
             </table>
           </div>
+        </Anchor>
 
-          <div id="pendingmotion" data-search-target>
-            <div class="api-response-label">PendingMotion</div>
+        <Anchor id="pendingmotion" label="PendingMotion">
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th><th>Meaning</th></tr></thead>
               <tbody>
@@ -749,9 +754,10 @@ Capture.first(n)   # keep the first n bytes; first(0) is WHOLE`}</pre>
               </tbody>
             </table>
           </div>
+        </Anchor>
 
-          <div id="class" data-search-target>
-            <div class="api-response-label">Class</div>
+        <Anchor id="class" label="Class">
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th></tr></thead>
               <tbody>
@@ -761,9 +767,10 @@ Capture.first(n)   # keep the first n bytes; first(0) is WHOLE`}</pre>
               </tbody>
             </table>
           </div>
+        </Anchor>
 
-          <div id="frametype" data-search-target>
-            <div class="api-response-label">FrameType</div>
+        <Anchor id="frametype" label="FrameType">
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th><th>Member</th><th>Value</th></tr></thead>
               <tbody>
@@ -780,53 +787,48 @@ Capture.first(n)   # keep the first n bytes; first(0) is WHOLE`}</pre>
               </tbody>
             </table>
           </div>
-        </Card>
-      </div>
+        </Anchor>
+      </DocSection>
 
-      <div id="builders" data-search-target>
-        <Card>
-          <CardHeader title="Parameter builders" subtitle="Usage · Motion · LockTarget" />
-          <p>
-            Classes that wrap a C struct. Build them with their class methods, never field by field,
-            and pass the result to the matching call.
-          </p>
+      <DocSection id="builders" title="Parameter builders" caption="Usage · Motion · LockTarget">
+        <p>
+          Classes that wrap a C struct. Build them with their class methods, never field by field,
+          and pass the result to the matching call.
+        </p>
 
-          <div id="input" data-search-target>
-            <div class="api-response-label">Usage</div>
-            <pre class="api-signature">{`Usage.button(button) -> Usage      # build
+        <Anchor id="input" label="Usage">
+          <pre class="api-signature">{`Usage.button(button) -> Usage      # build
 Usage.key(key)       -> Usage
 Usage.media(media)   -> Usage
 
 usage.kind           -> Class      # read one back
 usage.id             -> int`}</pre>
-            <p>
-              An injection target for <A href="/bindings/python/api#inject"><code>dev.inject(input, action)</code></A>, and what a{' '}
-              <A href="/bindings/python/types#inputevent"><code>InputEvent</code></A> and a{' '}
-              <A href="/bindings/python/types#usagesnapshot"><code>UsageSnapshot</code></A> return. It
-              compares by value, hashes, and reprs as <code>Usage(kind=BUTTON, id=0)</code>.
-            </p>
-            <div class="api-response-label">EXAMPLE</div>
-            <pre><code class="language-python">{`# Naming a button off the stream: id is the Button value, kind says which class it is.
+          <p>
+            An injection target for <A href="/bindings/python/api#inject"><code>dev.inject(input, action)</code></A>, and what a{' '}
+            <A href="/bindings/python/types#inputevent"><code>InputEvent</code></A> and a{' '}
+            <A href="/bindings/python/types#usagesnapshot"><code>UsageSnapshot</code></A> return. It
+            compares by value, hashes, and reprs as <code>Usage(kind=BUTTON, id=0)</code>.
+          </p>
+          <div class="api-response-label">EXAMPLE</div>
+          <pre><code class="language-python">{`# Naming a button off the stream: id is the Button value, kind says which class it is.
 if ev.usage is not None and ev.usage.kind is Class.BUTTON:
     print(Button(ev.usage.id).name)
 
 # Or compare whole usages.
 if ev.usage == Usage.button(Button.SIDE1):
     print("side button")`}</code></pre>
-          </div>
+        </Anchor>
 
-          <div id="motion" data-search-target>
-            <div class="api-response-label">Motion</div>
-            <pre class="api-signature">{`Motion.cursor(dx, dy) -> Motion
+        <Anchor id="motion" label="Motion">
+          <pre class="api-signature">{`Motion.cursor(dx, dy) -> Motion
 Motion.wheel(delta)   -> Motion
 Motion.pan(delta)     -> Motion`}</pre>
-            <p>A relative axis drive for <A href="/bindings/python/api#move"><code>dev.move_axis(motion, timing, pending)</code></A>; <code>pan</code> is AC Pan (horizontal scroll), a full peer of the wheel. See <A href="/library/move">Move</A>.</p>
-          </div>
+          <p>A relative axis drive for <A href="/bindings/python/api#move"><code>dev.move_axis(motion, timing, pending)</code></A>; <code>pan</code> is AC Pan (horizontal scroll), a full peer of the wheel. See <A href="/library/move">Move</A>.</p>
+        </Anchor>
 
 
-          <div id="locktarget" data-search-target>
-            <div class="api-response-label">LockTarget</div>
-            <pre class="api-signature">{`LockTarget.x()            -> LockTarget
+        <Anchor id="locktarget" label="LockTarget">
+          <pre class="api-signature">{`LockTarget.x()            -> LockTarget
 LockTarget.y()            -> LockTarget
 LockTarget.wheel()        -> LockTarget
 LockTarget.pan()          -> LockTarget
@@ -834,21 +836,18 @@ LockTarget.usage(usage)   -> LockTarget
 LockTarget.button(button) -> LockTarget
 LockTarget.key(key)       -> LockTarget
 LockTarget.media(media)   -> LockTarget`}</pre>
-            <p>An axis or usage to lock for <A href="/bindings/python/api#lock"><code>dev.lock(target, direction)</code></A>; the <code>button</code>/<code>key</code>/<code>media</code> shortcuts wrap <code>usage()</code>. See <A href="/library/lock">Lock</A>.</p>
-          </div>
-        </Card>
-      </div>
+          <p>An axis or usage to lock for <A href="/bindings/python/api#lock"><code>dev.lock(target, direction)</code></A>; the <code>button</code>/<code>key</code>/<code>media</code> shortcuts wrap <code>usage()</code>. See <A href="/library/lock">Lock</A>.</p>
+        </Anchor>
+      </DocSection>
 
-      <div id="device-enums" data-search-target>
-        <Card>
-          <CardHeader title="Device enums" subtitle="DeviceKind" />
-          <p>
-            The cloned device's kind, on <A href="/bindings/python/types#deviceinfo"><code>DeviceInfo.kind</code></A>, and what{' '}
-            <A href="/bindings/python/api#discovery"><code>Device.find_mouse_box()</code></A> /{' '}
-            <code>find_keyboard_box()</code> select on. See <A href="/library/types/enums#device-kind">DeviceKind</A>.
-          </p>
-          <div id="devicekind" data-search-target>
-            <div class="api-response-label">DeviceKind</div>
+      <DocSection id="device-enums" title="Device enums" caption="DeviceKind">
+        <p>
+          The cloned device's kind, on <A href="/bindings/python/types#deviceinfo"><code>DeviceInfo.kind</code></A>, and what{' '}
+          <A href="/bindings/python/api#discovery"><code>Device.find_mouse_box()</code></A> /{' '}
+          <code>find_keyboard_box()</code> select on. See <A href="/library/types/enums#device-kind">DeviceKind</A>.
+        </p>
+        <Anchor id="devicekind" label="DeviceKind">
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th></tr></thead>
               <tbody>
@@ -858,16 +857,14 @@ LockTarget.media(media)   -> LockTarget`}</pre>
               </tbody>
             </table>
           </div>
-        </Card>
-      </div>
+        </Anchor>
+      </DocSection>
 
-      <div id="value-types" data-search-target>
-        <Card>
-          <CardHeader title="Identity & capability types" subtitle="Version · Health · DeviceInfo · Caps" />
-          <p><a href="https://docs.python.org/3/library/dataclasses.html" target="_blank" rel="noreferrer">Dataclasses</a> returned by the <A href="/bindings/python/api">queries</A>. Canonical field docs: <A href="/library/types/structs">Library structs</A>.</p>
+      <DocSection id="value-types" title="Identity & capability types" caption="Version · Health · DeviceInfo · Caps">
+        <p><a href="https://docs.python.org/3/library/dataclasses.html" target="_blank" rel="noreferrer">Dataclasses</a> returned by the <A href="/bindings/python/api">queries</A>. Canonical field docs: <A href="/library/types/structs">Library structs</A>.</p>
 
-          <div id="version" data-search-target>
-            <div class="api-response-label">Version (query_version())</div>
+        <Anchor id="version" label="Version (query_version())">
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Field / property</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
@@ -881,9 +878,10 @@ LockTarget.media(media)   -> LockTarget`}</pre>
               </tbody>
             </table>
           </div>
+        </Anchor>
 
-          <div id="health" data-search-target>
-            <div class="api-response-label">Health (query_health())</div>
+        <Anchor id="health" label="Health (query_health())">
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th></tr></thead>
               <tbody>
@@ -901,9 +899,10 @@ LockTarget.media(media)   -> LockTarget`}</pre>
               </tbody>
             </table>
           </div>
+        </Anchor>
 
-          <div id="deviceinfo" data-search-target>
-            <div class="api-response-label">DeviceInfo (device_info())</div>
+        <Anchor id="deviceinfo" label="DeviceInfo (device_info())">
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
@@ -919,9 +918,10 @@ LockTarget.media(media)   -> LockTarget`}</pre>
               </tbody>
             </table>
           </div>
+        </Anchor>
 
-          <div id="caps" data-search-target>
-            <div class="api-response-label">Caps (caps())</div>
+        <Anchor id="caps" label="Caps (caps())">
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Field / method</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
@@ -935,9 +935,10 @@ LockTarget.media(media)   -> LockTarget`}</pre>
               </tbody>
             </table>
           </div>
+        </Anchor>
 
-          <div id="mousecaps" data-search-target>
-            <div class="api-response-label">MouseCaps</div>
+        <Anchor id="mousecaps" label="MouseCaps">
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
@@ -951,9 +952,10 @@ LockTarget.media(media)   -> LockTarget`}</pre>
               </tbody>
             </table>
           </div>
+        </Anchor>
 
-          <div id="kbdcaps" data-search-target>
-            <div class="api-response-label">KbdCaps</div>
+        <Anchor id="kbdcaps" label="KbdCaps">
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
@@ -965,16 +967,14 @@ LockTarget.media(media)   -> LockTarget`}</pre>
               </tbody>
             </table>
           </div>
-        </Card>
-      </div>
+        </Anchor>
+      </DocSection>
 
-      <div id="state-types" data-search-target>
-        <Card>
-          <CardHeader title="State & telemetry types" subtitle="Rate · Stats · Locks · CatchState · CatchEntry · ClockEstimate · ImperfectStatus · Counters · PortInfo" />
-          <p>More query results, plus <A href="/bindings/python/types#portinfo"><code>PortInfo</code></A> from <A href="/bindings/python/api#connect"><code>find_ports()</code></A>. Canonical field docs: <A href="/library/types/structs">Library structs</A>.</p>
+      <DocSection id="state-types" title="State & telemetry types" caption="Rate · Stats · Locks · CatchState · CatchEntry · ClockEstimate · ImperfectStatus · Counters · PortInfo">
+        <p>More query results, plus <A href="/bindings/python/types#portinfo"><code>PortInfo</code></A> from <A href="/bindings/python/api#connect"><code>find_ports()</code></A>. Canonical field docs: <A href="/library/types/structs">Library structs</A>.</p>
 
-          <div id="chipfirmware" data-search-target>
-            <div class="api-response-label">ChipFirmware</div>
+        <Anchor id="chipfirmware" label="ChipFirmware">
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
@@ -984,9 +984,10 @@ LockTarget.media(media)   -> LockTarget`}</pre>
               </tbody>
             </table>
           </div>
+        </Anchor>
 
-          <div id="firmwareinfo" data-search-target>
-            <div class="api-response-label">FirmwareInfo (firmware_info())</div>
+        <Anchor id="firmwareinfo" label="FirmwareInfo (firmware_info())">
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
@@ -998,9 +999,10 @@ LockTarget.media(media)   -> LockTarget`}</pre>
               </tbody>
             </table>
           </div>
+        </Anchor>
 
-          <div id="rate" data-search-target>
-            <div class="api-response-label">Rate (query_rate())</div>
+        <Anchor id="rate" label="Rate (query_rate())">
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Field / method</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
@@ -1012,9 +1014,10 @@ LockTarget.media(media)   -> LockTarget`}</pre>
               </tbody>
             </table>
           </div>
+        </Anchor>
 
-          <div id="stats" data-search-target>
-            <div class="api-response-label">Stats (query_stats())</div>
+        <Anchor id="stats" label="Stats (query_stats())">
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
@@ -1033,9 +1036,10 @@ LockTarget.media(media)   -> LockTarget`}</pre>
               </tbody>
             </table>
           </div>
+        </Anchor>
 
-          <div id="locks" data-search-target>
-            <div class="api-response-label">Locks (query_locks())</div>
+        <Anchor id="locks" label="Locks (query_locks())">
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Field / method</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
@@ -1044,6 +1048,8 @@ LockTarget.media(media)   -> LockTarget`}</pre>
                 <tr><td><code>is_locked(target, direction)</code></td><td><code>bool</code></td><td>whether it is blocked outright; a direction merely weighed is not locked. Also true when a whole-class blanket covers it. <code>BOTH</code> asks about the two fixed signs only, so name <code>WITH</code> or <code>AGAINST</code> to ask about one of those</td></tr>
               </tbody>
             </table>
+          </div>
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Readback case</th><th>What <code>entries</code> holds</th></tr></thead>
               <tbody>
@@ -1054,9 +1060,10 @@ LockTarget.media(media)   -> LockTarget`}</pre>
               </tbody>
             </table>
           </div>
+        </Anchor>
 
-          <div id="scale-constants" data-search-target>
-            <div class="api-response-label">SCALE CONSTANTS</div>
+        <Anchor id="scale-constants" label="SCALE CONSTANTS">
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Module constant</th><th>Value</th><th>Meaning</th></tr></thead>
               <tbody>
@@ -1067,9 +1074,10 @@ LockTarget.media(media)   -> LockTarget`}</pre>
               </tbody>
             </table>
           </div>
+        </Anchor>
 
-          <div id="lockentry" data-search-target>
-            <div class="api-response-label">LockEntry</div>
+        <Anchor id="lockentry" label="LockEntry">
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
@@ -1081,13 +1089,14 @@ LockTarget.media(media)   -> LockTarget`}</pre>
               </tbody>
             </table>
           </div>
+        </Anchor>
 
-          <div id="bearing" data-search-target>
-            <div class="api-response-label">Bearing (query_bearing())</div>
-            <p>
-              What <code>Direction.WITH</code> and <code>Direction.AGAINST</code> are measured against;
-              see the native <A href="/native/commands/lock#bearing">bearing</A>.
-            </p>
+        <Anchor id="bearing" label="Bearing (query_bearing())">
+          <p>
+            What <code>Direction.WITH</code> and <code>Direction.AGAINST</code> are measured against;
+            see the native <A href="/native/commands/lock#bearing">bearing</A>.
+          </p>
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Field / property</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
@@ -1096,18 +1105,19 @@ LockTarget.media(media)   -> LockTarget`}</pre>
                 <tr><td><code>is_live</code></td><td><code>bool</code></td><td>whether a bearing is held at all</td></tr>
               </tbody>
             </table>
-            <p>
-              Module constant <code>BEARING_WINDOW_DEFAULT_MS</code> (20) is the factory window; a box
-              that has been set boots at its stored value.
-            </p>
           </div>
+          <p>
+            Module constant <code>BEARING_WINDOW_DEFAULT_MS</code> (20) is the factory window; a box
+            that has been set boots at its stored value.
+          </p>
+        </Anchor>
 
-          <div id="catchstate" data-search-target>
-            <div class="api-response-label">CatchState (query_catch())</div>
-            <p>
-              The live subscription table: the only view of which filters the box holds, since{' '}
-              <A href="/bindings/python/api#streams"><code>catch_events()</code></A> gets no reply.
-            </p>
+        <Anchor id="catchstate" label="CatchState (query_catch())">
+          <p>
+            The live subscription table: the only view of which filters the box holds, since{' '}
+            <A href="/bindings/python/api#streams"><code>catch_events()</code></A> gets no reply.
+          </p>
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
@@ -1118,13 +1128,14 @@ LockTarget.media(media)   -> LockTarget`}</pre>
               </tbody>
             </table>
           </div>
+        </Anchor>
 
-          <div id="catchentry" data-search-target>
-            <div class="api-response-label">CatchEntry</div>
-            <p>
-              One row of the box's table: the <A href="/bindings/python/types#catchfilter"><code>CatchFilter</code></A>{' '}
-              you sent, with its drop count.
-            </p>
+        <Anchor id="catchentry" label="CatchEntry">
+          <p>
+            One row of the box's table: the <A href="/bindings/python/types#catchfilter"><code>CatchFilter</code></A>{' '}
+            you sent, with its drop count.
+          </p>
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
@@ -1133,9 +1144,10 @@ LockTarget.media(media)   -> LockTarget`}</pre>
               </tbody>
             </table>
           </div>
+        </Anchor>
 
-          <div id="clockestimate" data-search-target>
-            <div class="api-response-label">ClockEstimate (CatchState.clock)</div>
+        <Anchor id="clockestimate" label="ClockEstimate (CatchState.clock)">
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Field / member</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
@@ -1147,21 +1159,22 @@ LockTarget.media(media)   -> LockTarget`}</pre>
                 <tr><td><code>to_host_domain(device_us)</code></td><td><code>Optional[int]</code></td><td>a device-chip stamp on the host chip's timeline, or <code>None</code> when there is no estimate to apply</td></tr>
               </tbody>
             </table>
-            <p>
-              Two independent crystals drift the offset by up to 20 µs per second; extrapolate with{' '}
-              <code>rate_ppb</code>.
-            </p>
-            <div class="callout callout--info">
-              <p>
-                Applying the offset is optional: each event's{' '}
-                <A href="/bindings/python/types#clockdomain"><code>clock</code></A> stays
-                authoritative.
-              </p>
-            </div>
           </div>
+          <p>
+            Two independent crystals drift the offset by up to 20 µs per second; extrapolate with{' '}
+            <code>rate_ppb</code>.
+          </p>
+          <div class="callout callout--info">
+            <p>
+              Applying the offset is optional: each event's{' '}
+              <A href="/bindings/python/types#clockdomain"><code>clock</code></A> stays
+              authoritative.
+            </p>
+          </div>
+        </Anchor>
 
-          <div id="imperfectstatus" data-search-target>
-            <div class="api-response-label">ImperfectStatus (query_imperfect())</div>
+        <Anchor id="imperfectstatus" label="ImperfectStatus (query_imperfect())">
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
@@ -1170,11 +1183,12 @@ LockTarget.media(media)   -> LockTarget`}</pre>
                 <tr><td><code>clone_imperfect</code></td><td><code>bool</code></td><td>the live clone is imperfect</td></tr>
               </tbody>
             </table>
-            <p>See <A href="/library/options">Options</A>.</p>
           </div>
+          <p>See <A href="/library/options">Options</A>.</p>
+        </Anchor>
 
-          <div id="emitpacestatus" data-search-target>
-            <div class="api-response-label">EmitPaceStatus (query_emit_pace())</div>
+        <Anchor id="emitpacestatus" label="EmitPaceStatus (query_emit_pace())">
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
@@ -1185,11 +1199,12 @@ LockTarget.media(media)   -> LockTarget`}</pre>
                 <tr><td><code>force_active</code></td><td><code>bool</code></td><td>whether a forced interval is written into the descriptor being served</td></tr>
               </tbody>
             </table>
-            <p>See <A href="/library/options">Options</A>.</p>
           </div>
+          <p>See <A href="/library/options">Options</A>.</p>
+        </Anchor>
 
-          <div id="renderstatus" data-search-target>
-            <div class="api-response-label">RenderStatus (query_render())</div>
+        <Anchor id="renderstatus" label="RenderStatus (query_render())">
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
@@ -1198,11 +1213,12 @@ LockTarget.media(media)   -> LockTarget`}</pre>
                 <tr><td><code>ready</code></td><td><code>bool</code></td><td>whether a profile has armed for the attached device; nothing is rendered until it has</td></tr>
               </tbody>
             </table>
-            <p>See <A href="/library/options">Options</A>.</p>
           </div>
+          <p>See <A href="/library/options">Options</A>.</p>
+        </Anchor>
 
-          <div id="spreadstatus" data-search-target>
-            <div class="api-response-label">SpreadStatus (query_spread())</div>
+        <Anchor id="spreadstatus" label="SpreadStatus (query_spread())">
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
@@ -1210,11 +1226,12 @@ LockTarget.media(media)   -> LockTarget`}</pre>
                 <tr><td><code>span_us</code></td><td><code>int</code></td><td>the interval in effect, in microseconds; 0 when nothing is released across an interval</td></tr>
               </tbody>
             </table>
-            <p>See <A href="/library/options">Options</A>.</p>
           </div>
+          <p>See <A href="/library/options">Options</A>.</p>
+        </Anchor>
 
-          <div id="counters" data-search-target>
-            <div class="api-response-label">Counters (counters())</div>
+        <Anchor id="counters" label="Counters (counters())">
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
@@ -1226,9 +1243,10 @@ LockTarget.media(media)   -> LockTarget`}</pre>
               </tbody>
             </table>
           </div>
+        </Anchor>
 
-          <div id="portinfo" data-search-target>
-            <div class="api-response-label">PortInfo (find_ports())</div>
+        <Anchor id="portinfo" label="PortInfo (find_ports())">
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
@@ -1238,11 +1256,12 @@ LockTarget.media(media)   -> LockTarget`}</pre>
                 <tr><td><code>serial</code></td><td><code>Optional[str]</code></td><td>the CH343 adapter's serial, when it serves one</td></tr>
               </tbody>
             </table>
-            <p>Pass <code>path</code> to <A href="/bindings/python/api#connect"><code>Device.open(path)</code></A>. Canonical: <A href="/library/types/structs#port-info">PortInfo</A>.</p>
           </div>
+          <p>Pass <code>path</code> to <A href="/bindings/python/api#connect"><code>Device.open(path)</code></A>. Canonical: <A href="/library/types/structs#port-info">PortInfo</A>.</p>
+        </Anchor>
 
-          <div id="boxinfo" data-search-target>
-            <div class="api-response-label">BoxInfo (list_boxes())</div>
+        <Anchor id="boxinfo" label="BoxInfo (list_boxes())">
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Field / property</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
@@ -1253,31 +1272,29 @@ LockTarget.media(media)   -> LockTarget`}</pre>
                 <tr><td><code>serial</code></td><td><code>Optional[str]</code></td><td>the CH343 serial</td></tr>
               </tbody>
             </table>
-            <p>Pass <code>id</code> or <code>serial</code> to <A href="/bindings/python/api#discovery"><code>Device.open_by_id(id)</code></A>. Canonical: <A href="/library/types/structs#box-info">BoxInfo</A>.</p>
-            <pre><code class="language-python">{`import medius
+          </div>
+          <p>Pass <code>id</code> or <code>serial</code> to <A href="/bindings/python/api#discovery"><code>Device.open_by_id(id)</code></A>. Canonical: <A href="/library/types/structs#box-info">BoxInfo</A>.</p>
+          <pre><code class="language-python">{`import medius
 
 for b in medius.list_boxes():
     if b.device is None:
         print(f"{b.id} speaks protocol {b.version.proto_ver}: update its firmware")
     else:
         print(b.id, b.device.kind.name, b.device.product)`}</code></pre>
-          </div>
-        </Card>
-      </div>
+        </Anchor>
+      </DocSection>
 
-      <div id="events" data-search-target>
-        <Card>
-          <CardHeader title="Event & log types" subtitle="Yielded by the streams" />
-          <p>
-            <A href="/bindings/python/streams">Stream</A> payloads:{' '}
-            <A href="/bindings/python/api#streams"><code>dev.catch_events()</code></A> yields <A href="/bindings/python/types#catchevent"><code>CatchEvent</code></A>,{' '}
-            <A href="/bindings/python/api#streams"><code>dev.input_events()</code></A> yields <A href="/bindings/python/types#inputevent"><code>InputEvent</code></A>, and{' '}
-            <A href="/bindings/python/api#streams"><code>dev.logs()</code></A> yields <A href="/bindings/python/types#logline"><code>LogLine</code></A>. What catch
-            reports is on <A href="/library/catch">Catch</A>.
-          </p>
+      <DocSection id="events" title="Event & log types" caption="Yielded by the streams">
+        <p>
+          <A href="/bindings/python/streams">Stream</A> payloads:{' '}
+          <A href="/bindings/python/api#streams"><code>dev.catch_events()</code></A> yields <A href="/bindings/python/types#catchevent"><code>CatchEvent</code></A>,{' '}
+          <A href="/bindings/python/api#streams"><code>dev.input_events()</code></A> yields <A href="/bindings/python/types#inputevent"><code>InputEvent</code></A>, and{' '}
+          <A href="/bindings/python/api#streams"><code>dev.logs()</code></A> yields <A href="/bindings/python/types#logline"><code>LogLine</code></A>. What catch
+          reports is on <A href="/library/catch">Catch</A>.
+        </p>
 
-          <div id="catchevent" data-search-target>
-            <div class="api-response-label">CatchEvent</div>
+        <Anchor id="catchevent" label="CatchEvent">
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Field / member</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
@@ -1291,9 +1308,10 @@ for b in medius.list_boxes():
               </tbody>
             </table>
           </div>
+        </Anchor>
 
-          <div id="motionevent" data-search-target>
-            <div class="api-response-label">MotionEvent</div>
+        <Anchor id="motionevent" label="MotionEvent">
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
@@ -1302,11 +1320,12 @@ for b in medius.list_boxes():
                 <tr><td><code>dz</code></td><td><code>int</code></td><td>wheel delta</td></tr>
               </tbody>
             </table>
-            <p>The enclosing <A href="/bindings/python/types#catchevent"><code>CatchEvent</code></A> carries the stamp and domain.</p>
           </div>
+          <p>The enclosing <A href="/bindings/python/types#catchevent"><code>CatchEvent</code></A> carries the stamp and domain.</p>
+        </Anchor>
 
-          <div id="usagesnapshot" data-search-target>
-            <div class="api-response-label">UsageSnapshot</div>
+        <Anchor id="usagesnapshot" label="UsageSnapshot">
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Field / method</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
@@ -1316,23 +1335,24 @@ for b in medius.list_boxes():
                 <tr><td><code>is_held(usage)</code></td><td><code>bool</code></td><td>test a <A href="/bindings/python/types#input"><code>Usage</code></A> in the snapshot</td></tr>
               </tbody>
             </table>
-            <p>
-              Only held usages matching your filters appear, and no event is emitted when none do, so
-              a one-button subscription stays sparse while the mouse reports at 1 kHz.
-            </p>
-            <p>
-              An empty snapshot still names its class: <code>cls</code> and <code>direction</code>{' '}
-              come from the frame header, not the entries.
-            </p>
           </div>
+          <p>
+            Only held usages matching your filters appear, and no event is emitted when none do, so
+            a one-button subscription stays sparse while the mouse reports at 1 kHz.
+          </p>
+          <p>
+            An empty snapshot still names its class: <code>cls</code> and <code>direction</code>{' '}
+            come from the frame header, not the entries.
+          </p>
+        </Anchor>
 
-          <div id="trafficevent" data-search-target>
-            <div class="api-response-label">TrafficEvent</div>
-            <p>
-              The payload for every byte-oriented <A href="/bindings/python/types#catchclass"><code>CatchClass</code></A>{' '}
-              from <code>HID_IN</code> to <code>CLIP_TRANSFER</code>: one packet, one control
-              transaction, or one bus event, with whatever the entry's <code>capture</code> let through.
-            </p>
+        <Anchor id="trafficevent" label="TrafficEvent">
+          <p>
+            The payload for every byte-oriented <A href="/bindings/python/types#catchclass"><code>CatchClass</code></A>{' '}
+            from <code>HID_IN</code> to <code>CLIP_TRANSFER</code>: one packet, one control
+            transaction, or one bus event, with whatever the entry's <code>capture</code> let through.
+          </p>
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Field / method</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
@@ -1353,7 +1373,9 @@ for b in medius.list_boxes():
                 <tr><td><code>bulk_end_of_transfer()</code></td><td><code>bool</code></td><td>whether a <code>VENDOR_BULK</code> event is the last of its transfer, <code>flags</code> bit 0</td></tr>
               </tbody>
             </table>
-            <div class="api-response-label">FLAGS, BY CLASS</div>
+          </div>
+          <div class="api-response-label">FLAGS, BY CLASS</div>
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Class</th><th>flags</th><th>Read it with</th></tr></thead>
               <tbody>
@@ -1366,12 +1388,14 @@ for b in medius.list_boxes():
                 <tr><td>everything else</td><td><code>0</code></td><td>-</td></tr>
               </tbody>
             </table>
-            <p>
-              A <code>CONTROL</code> or <code>CLIP_TRANSFER</code> event is one{' '}
-              <em>completed transaction</em>: <code>bytes</code> is <code>[setup 8][data...]</code>{' '}
-              (IN data only on <code>CLIP_TRANSFER</code>) and <code>direction</code> says which way
-              the data stage went.
-            </p>
+          </div>
+          <p>
+            A <code>CONTROL</code> or <code>CLIP_TRANSFER</code> event is one{' '}
+            <em>completed transaction</em>: <code>bytes</code> is <code>[setup 8][data...]</code>{' '}
+            (IN data only on <code>CLIP_TRANSFER</code>) and <code>direction</code> says which way
+            the data stage went.
+          </p>
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th><code>CONTROL</code> data</th><th>Holds</th></tr></thead>
               <tbody>
@@ -1379,14 +1403,15 @@ for b in medius.list_boxes():
                 <tr><td>OUT</td><td>the data stage the game PC sent, before a <code>PATCH</code> or <code>REPLACE</code> rule rewrote it for the device</td></tr>
               </tbody>
             </table>
-            <p>
-              A <code>CONTROL</code> event is the transaction the game PC received, on every control
-              endpoint. Requests the box serves from its value cache still produce one.
-            </p>
           </div>
+          <p>
+            A <code>CONTROL</code> event is the transaction the game PC received, on every control
+            endpoint. Requests the box serves from its value cache still produce one.
+          </p>
+        </Anchor>
 
-          <div id="controlstatus" data-search-target>
-            <div class="api-response-label">ControlStatus</div>
+        <Anchor id="controlstatus" label="ControlStatus">
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th><th>Meaning</th></tr></thead>
               <tbody>
@@ -1397,14 +1422,15 @@ for b in medius.list_boxes():
               </tbody>
             </table>
           </div>
+        </Anchor>
 
-          <div id="inputevent" data-search-target>
-            <div class="api-response-label">InputEvent</div>
-            <p>
-              One decoded input: a press edge, a release edge, or a motion report. Yielded by{' '}
-              <A href="/bindings/python/streams#input"><code>dev.input_events()</code></A>, diffed from
-              the box's held-usage snapshots.
-            </p>
+        <Anchor id="inputevent" label="InputEvent">
+          <p>
+            One decoded input: a press edge, a release edge, or a motion report. Yielded by{' '}
+            <A href="/bindings/python/streams#input"><code>dev.input_events()</code></A>, diffed from
+            the box's held-usage snapshots.
+          </p>
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Field / property</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
@@ -1417,9 +1443,10 @@ for b in medius.list_boxes():
               </tbody>
             </table>
           </div>
+        </Anchor>
 
-          <div id="inputkind" data-search-target>
-            <div class="api-response-label">InputKind</div>
+        <Anchor id="inputkind" label="InputKind">
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th><th>Populates</th></tr></thead>
               <tbody>
@@ -1429,13 +1456,14 @@ for b in medius.list_boxes():
               </tbody>
             </table>
           </div>
+        </Anchor>
 
-          <div id="stamped" data-search-target>
-            <div class="api-response-label">Stamped</div>
-            <p>
-              One event placed on this machine's clock by a{' '}
-              <A href="/bindings/python/streams#timeline"><code>Timeline</code></A>.
-            </p>
+        <Anchor id="stamped" label="Stamped">
+          <p>
+            One event placed on this machine's clock by a{' '}
+            <A href="/bindings/python/streams#timeline"><code>Timeline</code></A>.
+          </p>
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
@@ -1445,9 +1473,10 @@ for b in medius.list_boxes():
               </tbody>
             </table>
           </div>
+        </Anchor>
 
-          <div id="logline" data-search-target>
-            <div class="api-response-label">LogLine</div>
+        <Anchor id="logline" label="LogLine">
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
@@ -1456,9 +1485,10 @@ for b in medius.list_boxes():
               </tbody>
             </table>
           </div>
+        </Anchor>
 
-          <div id="recordedframe" data-search-target>
-            <div class="api-response-label">RecordedFrame (MockBox.recorded_frame(idx))</div>
+        <Anchor id="recordedframe" label="RecordedFrame (MockBox.recorded_frame(idx))">
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
@@ -1467,18 +1497,17 @@ for b in medius.list_boxes():
                 <tr><td><code>payload</code></td><td><code>bytes</code></td><td>raw frame payload</td></tr>
               </tbody>
             </table>
-            <p>Only meaningful with the <A href="/library/features/mock">mock</A> feature.</p>
           </div>
-        </Card>
-      </div>
+          <p>Only meaningful with the <A href="/library/features/mock">mock</A> feature.</p>
+        </Anchor>
+      </DocSection>
 
-      <div id="advanced-types" data-search-target>
-        <Card>
-          <CardHeader title="Advanced control layer types" subtitle="Setup · TransferOutcome · RewriteRule · Patch" />
-          <p>Value types for the imperfect-clone advanced control layer. See <A href="/library/advanced/raw">Raw injection</A>, <A href="/library/advanced/transfer">Control transfers</A>, <A href="/library/advanced/rewrite">Rewrite rules</A>, and <A href="/library/advanced/patch">Descriptor patches</A>.</p>
+      <DocSection id="advanced-types" title="Advanced control layer types" caption="Setup · TransferOutcome · RewriteRule · Patch">
+        <p>Value types for the imperfect-clone advanced control layer. See <A href="/library/advanced/raw">Raw injection</A>, <A href="/library/advanced/transfer">Control transfers</A>, <A href="/library/advanced/rewrite">Rewrite rules</A>, and <A href="/library/advanced/patch">Descriptor patches</A>.</p>
 
-          <div id="setup">
-            <div class="api-response-label">Setup</div>
+        <div id="setup">
+          <div class="api-response-label">Setup</div>
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
@@ -1490,9 +1519,11 @@ for b in medius.list_boxes():
               </tbody>
             </table>
           </div>
+        </div>
 
-          <div id="transfer-outcome">
-            <div class="api-response-label">TransferOutcome</div>
+        <div id="transfer-outcome">
+          <div class="api-response-label">TransferOutcome</div>
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
@@ -1502,10 +1533,12 @@ for b in medius.list_boxes():
               </tbody>
             </table>
           </div>
+        </div>
 
-          <div id="rewrite-rule">
-            <div class="api-response-label">RewriteRule / RewriteEntry / RewriteTable</div>
-            <p><code>RewriteRule</code> is what <A href="/bindings/python/api#advanced"><code>dev.set_rewrite</code></A> takes and <code>query_rewrite_entry</code> returns, keyed by <code>(rewrite_class, id, direction, match_bytes, mask)</code>. <code>query_rewrite</code> returns a <code>RewriteTable</code> (<code>table_full</code>, <code>generation</code>, <code>entries</code>) of <code>RewriteEntry</code> summaries. <code>table_full</code> says the box refused the last new rule or overwrite for room, 32 rules or the 2048-byte payload pool; the next change to the table, or a clear, resets it.</p>
+        <div id="rewrite-rule">
+          <div class="api-response-label">RewriteRule / RewriteEntry / RewriteTable</div>
+          <p><code>RewriteRule</code> is what <A href="/bindings/python/api#advanced"><code>dev.set_rewrite</code></A> takes and <code>query_rewrite_entry</code> returns, keyed by <code>(rewrite_class, id, direction, match_bytes, mask)</code>. <code>query_rewrite</code> returns a <code>RewriteTable</code> (<code>table_full</code>, <code>generation</code>, <code>entries</code>) of <code>RewriteEntry</code> summaries. <code>table_full</code> says the box refused the last new rule or overwrite for room, 32 rules or the 2048-byte payload pool; the next change to the table, or a clear, resets it.</p>
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
@@ -1518,10 +1551,12 @@ for b in medius.list_boxes():
               </tbody>
             </table>
           </div>
+        </div>
 
-          <div id="patch">
-            <div class="api-response-label">Patch / PatchEntry / PatchSet</div>
-            <p><code>Patch</code> is what <A href="/bindings/python/api#advanced"><code>dev.set_patch</code></A> takes, keyed by <code>(section, cfg, index, offset)</code>; empty <code>bytes</code> removes it. <code>query_patches</code> returns a <code>PatchSet</code> (<code>applied</code>, <code>pending</code>, <code>refused</code>, <code>table_full</code>, <code>entries</code>) of <code>PatchEntry</code> summaries; the four flags read as on <A href="/library/types/structs#patch-set"><code>PatchSet</code></A>.</p>
+        <div id="patch">
+          <div class="api-response-label">Patch / PatchEntry / PatchSet</div>
+          <p><code>Patch</code> is what <A href="/bindings/python/api#advanced"><code>dev.set_patch</code></A> takes, keyed by <code>(section, cfg, index, offset)</code>; empty <code>bytes</code> removes it. <code>query_patches</code> returns a <code>PatchSet</code> (<code>applied</code>, <code>pending</code>, <code>refused</code>, <code>table_full</code>, <code>entries</code>) of <code>PatchEntry</code> summaries; the four flags read as on <A href="/library/types/structs#patch-set"><code>PatchSet</code></A>.</p>
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
@@ -1533,17 +1568,16 @@ for b in medius.list_boxes():
               </tbody>
             </table>
           </div>
-        </Card>
-      </div>
+        </div>
+      </DocSection>
 
-      <div id="transform" data-search-target>
-        <Card>
-          <CardHeader title="Transform types" subtitle="Transform · Transforms" />
-          <p>Value types for <A href="/library/transform">field transforms</A>. Build a <code>Transform</code> with a classmethod or from parts; <A href="/bindings/python/api#transforms"><code>dev.query_transforms</code></A> returns a <code>Transforms</code> table. To weigh or reverse a field, use <A href="/bindings/python/api#lock"><code>dev.scale</code></A> (signed percent).</p>
-          <div id="transforms">
-            <pre class="api-signature">{`Transform.swap(a, b)              -> Transform
+      <DocSection id="transform" title="Transform types" caption="Transform · Transforms">
+        <p>Value types for <A href="/library/transform">field transforms</A>. Build a <code>Transform</code> with a classmethod or from parts; <A href="/bindings/python/api#transforms"><code>dev.query_transforms</code></A> returns a <code>Transforms</code> table. To weigh or reverse a field, use <A href="/bindings/python/api#lock"><code>dev.scale</code></A> (signed percent).</p>
+        <div id="transforms">
+          <pre class="api-signature">{`Transform.swap(a, b)              -> Transform
 Transform.remap(source, dest)     -> Transform
 Transform(op, source, dest)`}</pre>
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
@@ -1552,22 +1586,20 @@ Transform(op, source, dest)`}</pre>
                 <tr><td><code>dest</code></td><td><A href="/bindings/python/types#locktarget"><code>LockTarget</code></A></td><td>The field it writes. Naming the same field as <code>source</code> raises <code>TransformOpFieldsError</code>: both ops move a value.</td></tr>
               </tbody>
             </table>
-            <p><code>Transforms</code> carries <code>table_full</code> (bool) and <code>entries</code> (a list of <code>Transform</code>, in the order the box applies them).</p>
           </div>
-        </Card>
-      </div>
+          <p><code>Transforms</code> carries <code>table_full</code> (bool) and <code>entries</code> (a list of <code>Transform</code>, in the order the box applies them).</p>
+        </div>
+      </DocSection>
 
-      <div id="errors" data-search-target>
-        <Card>
-          <CardHeader title="Errors" subtitle="MediusError, its subclasses, and the Status codes" />
-          <p>
-            Every <span class="api-badge api-badge--responded">Blocks</span> call (and any that fails
-            on the wire) raises a <code>MediusError</code> or a subclass; catch the base class for
-            all of them. Canonical mapping: <A href="/library/types/errors">Library errors</A>.
-          </p>
+      <DocSection id="errors" title="Errors" caption="MediusError, its subclasses, and the Status codes">
+        <p>
+          Every <span class="api-badge api-badge--responded">Blocks</span> call (and any that fails
+          on the wire) raises a <code>MediusError</code> or a subclass; catch the base class for
+          all of them. Canonical mapping: <A href="/library/types/errors">Library errors</A>.
+        </p>
 
-          <div id="mediuserror" data-search-target>
-            <div class="api-response-label">MediusError (Exception)</div>
+        <Anchor id="mediuserror" label="MediusError (Exception)">
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Attribute</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
@@ -1576,7 +1608,8 @@ Transform(op, source, dest)`}</pre>
                 <tr><td><code>proto_ver</code></td><td><code>int</code></td><td>offending version byte (bad-proto-version only)</td></tr>
               </tbody>
             </table>
-            <pre><code class="language-python">{`from medius import Device, MediusError, NotFoundError
+          </div>
+          <pre><code class="language-python">{`from medius import Device, MediusError, NotFoundError
 
 try:
     dev = Device.find()
@@ -1584,10 +1617,10 @@ except NotFoundError:
     ...                      # no box plugged in
 except MediusError as e:     # any other failure
     print(e.status, e.message)`}</code></pre>
-          </div>
+        </Anchor>
 
-          <div id="subclasses" data-search-target>
-            <div class="api-response-label">Subclass per Status</div>
+        <Anchor id="subclasses" label="Subclass per Status">
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Exception</th><th>Raised on</th></tr></thead>
               <tbody>
@@ -1627,9 +1660,11 @@ except MediusError as e:     # any other failure
                 <tr><td><code>RewritePoolFullError</code></td><td><code>ERR_REWRITE_POOL_FULL</code></td></tr>
               </tbody>
             </table>
-            <p>
-              The last twenty-four are argument refusals, raised before a frame reaches the box.
-            </p>
+          </div>
+          <p>
+            The last twenty-four are argument refusals, raised before a frame reaches the box.
+          </p>
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Refusal</th><th>Raised on</th></tr></thead>
               <tbody>
@@ -1659,18 +1694,19 @@ except MediusError as e:     # any other failure
                 <tr><td><code>RewritePoolFullError</code></td><td>a rewrite payload past what the held rules leave of the box's 2048-byte payload pool; an overwrite gives back the bytes it replaces</td></tr>
               </tbody>
             </table>
-            <div class="callout callout--info">
-              <p>
-                <code>DisconnectedError</code> ends a <A href="/bindings/python/streams">stream</A>{' '}
-                iteration cleanly instead of propagating. <code>OK</code> and{' '}
-                <code>ERR_UNKNOWN</code> have no subclass; <code>ERR_UNKNOWN</code> raises
-                the base <code>MediusError</code>.
-              </p>
-            </div>
           </div>
+          <div class="callout callout--info">
+            <p>
+              <code>DisconnectedError</code> ends a <A href="/bindings/python/streams">stream</A>{' '}
+              iteration cleanly instead of propagating. <code>OK</code> and{' '}
+              <code>ERR_UNKNOWN</code> have no subclass; <code>ERR_UNKNOWN</code> raises
+              the base <code>MediusError</code>.
+            </p>
+          </div>
+        </Anchor>
 
-          <div id="status" data-search-target>
-            <div class="api-response-label">Status</div>
+        <Anchor id="status" label="Status">
+          <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th><th>Member</th><th>Value</th></tr></thead>
               <tbody>
@@ -1695,8 +1731,8 @@ except MediusError as e:     # any other failure
               </tbody>
             </table>
           </div>
-        </Card>
-      </div>
+        </Anchor>
+      </DocSection>
     </>
   );
 };

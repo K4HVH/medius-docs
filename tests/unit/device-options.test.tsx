@@ -35,6 +35,9 @@ vi.mock('../../src/app/pages/dashboard/context', () => {
         },
         setRender: async () => {},
         setSpread: async () => {},
+        setName: async () => {
+          throw new Error('The box refused that.');
+        },
       }),
       poll: (key: string) => () =>
         key === 'bearing' ? mock.bearing
@@ -66,13 +69,13 @@ describe('DeviceOptions', () => {
   // statement about the box you are looking at.
   it('describes only the selected bearing geometry', async () => {
     const { container, queryByText, findByText } = render(() => <DeviceOptions />);
-    await findByText('Each axis is weighed against its own bearing.');
+    await findByText('Each axis is weighed against its bearing.');
     expect(queryByText(/along the injected vector is weighed/)).toBeNull();
 
-    fireEvent.click(container.querySelector('input[value="1"]')!);
+    fireEvent.click(container.querySelector('[role="radio"][data-v="1"]')!);
     await settle();
     await findByText(/along the injected vector is weighed/);
-    expect(queryByText('Each axis is weighed against its own bearing.')).toBeNull();
+    expect(queryByText('Each axis is weighed against its bearing.')).toBeNull();
   });
 
   it('describes only the selected emit mode', async () => {
@@ -89,7 +92,7 @@ describe('DeviceOptions', () => {
     const { container, findAllByText } = render(() => <DeviceOptions />);
     expect(button(container, 'Revert')).toBeUndefined();
 
-    fireEvent.click(container.querySelector('input[value="1"]')!);   // bearing geometry
+    fireEvent.click(container.querySelector('[role="radio"][data-v="1"]')!);   // bearing geometry
     await settle();
     expect(button(container, 'Revert')).toBeTruthy();
     expect((await findAllByText('Not applied')).length).toBe(1);
@@ -212,7 +215,7 @@ describe('DeviceOptions whole-number fields', () => {
   };
   // The button beside a field, in the same row of controls.
   const beside = (el: HTMLElement, name: string) =>
-    [...(el.closest('[style*="flex"]')?.parentElement?.querySelectorAll('button') ?? [])].find(
+    [...(el.closest('.acts')?.querySelectorAll('button') ?? [])].find(
       (b) => b.textContent?.trim() === name,
     ) as HTMLElement;
 
@@ -221,7 +224,7 @@ describe('DeviceOptions whole-number fields', () => {
     ['bearing window', 1, 'Apply', 'bearing', 0],
   ] as const)('keeps the %s to a whole number, and sends what it shows', async (_what, nth, press, call, arg) => {
     const { container } = render(() => <DeviceOptions />);
-    const el = numberField(container, 'Window (ms)', nth);
+    const el = numberField(container, 'Window', nth);
     await typeFraction(el);
     expect(el.value).toBe('3');
     fireEvent.click(beside(el, press));
@@ -230,8 +233,8 @@ describe('DeviceOptions whole-number fields', () => {
   });
 
   it.each([
-    ['Emit rate (Hz)', 1, 3],
-    ['Wire rate (Hz)', 2, 4],
+    ['Emit rate', 1, 3],
+    ['Wire rate', 2, 4],
   ] as const)('keeps the %s to a whole number, and sends what it shows', async (field, arg, want) => {
     forced();
     const { container } = render(() => <DeviceOptions />);
@@ -244,5 +247,20 @@ describe('DeviceOptions whole-number fields', () => {
     fireEvent.click(beside(el, 'Apply'));
     await settle();
     expect(mock.sent.filter(([c]) => c === 'emit').map(([, a]) => a[arg])).toEqual([want]);
+  });
+});
+
+describe('DeviceOptions errors', () => {
+  it('shows a refused write in the panel whose button sent it, and nowhere else', async () => {
+    const { container } = render(() => <DeviceOptions />);
+    fireEvent.click(button(container.querySelector('#box-name') as HTMLElement, 'Set')!);
+    await settle();
+    const alerts = [...container.querySelectorAll('[role="alert"]')];
+    expect(alerts.map((a) => a.textContent)).toEqual(['The box refused that.']);
+    expect(alerts[0].closest('.pn')!.id).toBe('box-name');
+    // The next write elsewhere clears it.
+    fireEvent.click(button(container.querySelector('#bearing') as HTMLElement, 'Apply')!);
+    await settle();
+    expect(container.querySelectorAll('[role="alert"]')).toHaveLength(0);
   });
 });

@@ -1,13 +1,11 @@
-import { Match, Show, Switch, createEffect, createResource, createSignal } from 'solid-js';
-import { Card, CardHeader } from '../../../components/surfaces/Card';
+import { Match, Show, Switch, createEffect, createResource, createSignal, type JSX } from 'solid-js';
 import { Button } from '../../../components/inputs/Button';
-import { Combobox } from '../../../components/inputs/Combobox';
 import { FileUpload } from '../../../components/inputs/FileUpload';
-import { Progress } from '../../../components/feedback/Progress';
 import {
   FLASH_SIZE_BYTES,
   type FlashChip,
   type FlashKind,
+  type FlashPhase,
   looksLikeWrongKind,
   romRefusal,
   validateImage,
@@ -19,16 +17,26 @@ import { BoxScope, useBoxes, useNativeFlash } from './context';
 import { Usb2Flash } from './AdvancedUsb2';
 import { BAD_BROWSER, BAD_CONTEXT } from './ConnectPanel';
 import { InstallPorts, WiringPorts } from './PortDiagram';
-import { note, row, section } from './ui';
-import '../../../styles/docs.css';
+import { Panel, Panels } from '../../shell/Panel';
+import { Segmented } from '../../shell/Segmented';
+import { Select } from '../../shell/Select';
+
+// Over USB2 both chips may be written in turn; each count names its chip.
+const CHIP_CUE: Record<string, string> = { host: 'Flashing the mouse-side chip', device: 'Flashing the main chip' };
+
+const WAIT: Partial<Record<FlashPhase, string>> = {
+  rebooting: 'Rebooting',
+  connecting: 'Connecting',
+  restarting: 'Restarting',
+  verifying: 'Verifying',
+};
 
 const isUserCancel = (e: unknown) => e instanceof DOMException && e.name === 'NotFoundError';
 const fmtBytes = (n: number) => (n < 1024 ? `${n} B` : `${(n / 1024).toFixed(0)} KB`);
-const muted = { 'margin-top': 'var(--g-spacing-sm)', color: 'var(--g-text-secondary)' } as const;
 
 // Manual flash of the selected box over USB2, or of either chip in ROM download over USB1 or USB3,
-// which works on a dead box.
-const Advanced = () => {
+// which works on a dead box. Update's Manual tab.
+const ManualFlash = () => {
   const native = useNativeFlash();
   const boxes = useBoxes();
   // The selected box, read through the registry: inside BoxScope a box coming or going would remount the
@@ -86,10 +94,13 @@ const Advanced = () => {
     const img = image();
     return img ? looksLikeWrongKind(img, kind()) : false;
   };
+  const progress = () => (native.running() ? native.progress() : dash().updateProgress());
   const pct = () => {
-    const p = native.running() ? native.progress() : dash().updateProgress();
-    return p?.phase === 'writing' && p.total ? Math.round(((p.written ?? 0) / p.total) * 100) : undefined;
+    const p = progress();
+    return p?.phase === 'writing' && p.total ? Math.round(((p.written ?? 0) / p.total) * 100) : p?.phase === 'done' ? 100 : undefined;
   };
+  // A phase with no count shows its name over the running segment.
+  const wait = () => (pct() === undefined ? (WAIT[progress()?.phase ?? 'connecting'] ?? 'Connecting') : null);
   const updating = () => dash().status() === 'flashing';
 
   // Tags each read with its selection, so a slow earlier read can't arm its bytes under a newer
@@ -119,18 +130,19 @@ const Advanced = () => {
   };
 
   const viaField = () => (
-    <>
-      <div class="api-response-label">VIA</div>
-      <Combobox
+    <div class="labelled">
+      <span class="field-l">Via</span>
+      <Select
+        label="Via"
         options={[
-          { value: 'usb2', label: dash().name() ? `Control port, USB2 (${dash().name()})` : 'Control port, USB2' },
+          { value: 'usb2', label: 'Control port, USB2', note: dash().name() || undefined },
           { value: 'rom', label: 'ROM download, USB1 or USB3' },
         ]}
         value={via()}
         disabled={busy() || usb2Busy()}
         onChange={(v) => setVia(v as 'usb2' | 'rom')}
       />
-    </>
+    </div>
   );
 
   const canFlash = () =>
@@ -158,82 +170,74 @@ const Advanced = () => {
       if (ok) setDone(true);
       else setErr(native.error() ?? 'That did not finish.');
     } catch (e) {
-      setErr(isUserCancel(e) ? 'Nothing to flash.' : (e as Error).message);
+      setErr(isUserCancel(e) ? 'No port was picked. Press Flash, then pick the box in the list.' : (e as Error).message);
     } finally {
       setBusy(false);
     }
   };
 
+  // The form shows in any browser; Flash needs Web Serial on a secure page.
+  const blocked = () => (!boxes.supported ? BAD_BROWSER : !boxes.secure ? BAD_CONTEXT : null);
+
+  const choice = (label: string, el: JSX.Element) => (
+    <div class="labelled">
+      <span class="field-l">{label}</span>
+      {el}
+    </div>
+  );
+
   return (
-    <>
-      <Show when={!boxes.supported}>
-        <div id="unsupported" data-search-target>
-          <Card>
-            <CardHeader title="Browser not supported" subtitle="No box access from this browser" />
-            <p>{BAD_BROWSER}</p>
-          </Card>
-        </div>
-      </Show>
-      <Show when={boxes.supported && !boxes.secure}>
-        <div id="insecure" data-search-target>
-          <Card>
-            <CardHeader title="Page not secure" subtitle="No box access from this page" />
-            <p>{BAD_CONTEXT}</p>
-          </Card>
-        </div>
-      </Show>
-
+    <Panels>
       <Show when={native.running() || updating()}>
-        <div id="flashing" data-search-target>
-          <Card>
-            <CardHeader
-              title="Flashing"
-              subtitle={native.running() ? "Don't unplug or leave this page" : "Don't unplug or close this tab"}
-            />
-            <Progress type="linear" value={pct()} showLabel={pct() !== undefined} />
-          </Card>
-        </div>
+        <Panel id="flashing" wide>
+          <p class="cue">{CHIP_CUE[progress()?.phase === 'writing' ? (progress()?.chip ?? '') : ''] ?? 'Flashing'}</p>
+          <p class="sub2">Don't unplug or close this tab</p>
+          <div class="prog">
+            <div class="pct">
+              <Show when={wait()} fallback={<>{pct()}<small>%</small></>}>
+                {wait()}
+              </Show>
+            </div>
+            <div class="track" classList={{ wait: !!wait() }}>
+              <i style={{ '--p': (pct() ?? 0) / 100 }} />
+            </div>
+          </div>
+        </Panel>
       </Show>
 
-      <Show when={boxes.supported && boxes.secure && !native.running() && !updating()}>
-        <div id="advanced" data-search-target>
-          <Card>
-            <CardHeader title="Advanced" subtitle="Manual flash, any chip or image" />
-            <Show
-              when={via() === 'rom'}
-              fallback={
-                <BoxScope>
-                  <Usb2Flash via={viaField} onBusy={setUsb2Busy} />
-                </BoxScope>
-              }
-            >
-              <Show when={err() ?? fileErr()}>
-                {(msg) => <div class="callout callout--danger" role="alert">{msg()}</div>}
-              </Show>
+      <Show when={!native.running() && !updating()}>
+        <Panel id="manual-flash" wide>
+          <Show
+            when={via() === 'rom'}
+            fallback={
+              <BoxScope>
+                <Usb2Flash via={viaField} onBusy={setUsb2Busy} />
+              </BoxScope>
+            }
+          >
+            <Switch>
+              <Match when={done()}>
+                <p class="state">
+                  <span class="dot ok" />
+                  Done.
+                </p>
+                <WiringPorts />
+                <div class="acts">
+                  <Button variant="primary" onClick={() => navigate('/dashboard')}>
+                    Go to my box
+                  </Button>
+                  <Button variant="secondary" onClick={() => setDone(false)}>
+                    Flash another
+                  </Button>
+                </div>
+              </Match>
 
-              <Switch>
-                <Match when={done()}>
-                  <div class="callout callout--info">Done.</div>
-                  <WiringPorts />
-                  <div style={{ ...section, ...row }}>
-                    <Button variant="primary" onClick={() => navigate('/dashboard')}>
-                      Go to my box
-                    </Button>
-                    <Button
-                      variant="secondary"
-                      onClick={() => {
-                        setDone(false);
-                      }}
-                    >
-                      Flash another
-                    </Button>
-                  </div>
-                </Match>
-
-                <Match when={!done()}>
-                  {viaField()}
-                  <div class="api-response-label" style={section}>CHIP</div>
-                  <Combobox
+              <Match when={!done()}>
+                {viaField()}
+                {choice(
+                  'Chip',
+                  <Select
+                    label="Chip"
                     options={[
                       { value: 'device', label: 'Main chip (USB1 + USB2)' },
                       { value: 'host', label: 'Mouse-side chip (USB3)' },
@@ -241,10 +245,12 @@ const Advanced = () => {
                     value={chip()}
                     disabled={busy()}
                     onChange={(v) => setChip(v as FlashChip)}
-                  />
-
-                  <div class="api-response-label" style={section}>IMAGE</div>
-                  <Combobox
+                  />,
+                )}
+                {choice(
+                  'Image',
+                  <Select
+                    label="Image"
                     options={[
                       { value: 'factory', label: 'Factory (full image at 0x0)' },
                       { value: 'app', label: 'Application (app only at 0x10000)' },
@@ -252,10 +258,12 @@ const Advanced = () => {
                     value={kind()}
                     disabled={busy()}
                     onChange={(v) => setKind(v as FlashKind)}
-                  />
-
-                  <div class="api-response-label" style={section}>SOURCE</div>
-                  <Combobox
+                  />,
+                )}
+                {choice(
+                  'Source',
+                  <Segmented
+                    name="Source"
                     options={[
                       { value: 'release', label: 'Latest release' },
                       { value: 'upload', label: 'Upload a file' },
@@ -263,86 +271,100 @@ const Advanced = () => {
                     value={source()}
                     disabled={busy()}
                     onChange={(v) => setSource(v as 'release' | 'upload')}
+                  />,
+                )}
+
+                <Show when={source() === 'release'}>
+                  <Switch>
+                    <Match when={releases.loading}>
+                      <p class="mut" data-search-skip>Loading releases...</p>
+                    </Match>
+                    <Match when={releases.error}>
+                      <div class="callout callout--warning">Couldn't reach the firmware downloads. Choose Upload a file.</div>
+                    </Match>
+                    <Match when={asset()}>
+                      {(a) => (
+                        <p class="mut">
+                          <code>{a().name}</code> ({fmtBytes(a().size)}) from {latest()?.tag}
+                        </p>
+                      )}
+                    </Match>
+                    <Match when={!asset()}>
+                      <div class="callout callout--warning">
+                        No <code>{assetName()}</code> in the latest release. Upload one.
+                      </div>
+                    </Match>
+                  </Switch>
+                </Show>
+
+                <Show when={source() === 'upload'}>
+                  <FileUpload
+                    accept=".bin"
+                    maxSize={FLASH_SIZE_BYTES}
+                    value={files()}
+                    disabled={busy()}
+                    onChange={onFiles}
+                    onError={(m: string) => {
+                      rejectedThisPick = true;
+                      setFileErr(m);
+                    }}
+                    label="Firmware .bin"
                   />
+                  <Show when={fileErr()}>
+                    {(msg) => (
+                      <div class="callout callout--danger" role="alert">
+                        {msg()}
+                      </div>
+                    )}
+                  </Show>
+                  <Show when={kind() === 'app'}>
+                    <div class="callout callout--info">A box that never had the factory image needs it first.</div>
+                  </Show>
+                  <Show when={validationError()}>
+                    <div class="callout callout--danger" role="alert">
+                      {validationError()}
+                    </div>
+                  </Show>
+                  <Show when={mismatch()}>
+                    <div class="callout callout--warning">
+                      This file looks like {kind() === 'app' ? 'a factory' : 'an application'} image.
+                    </div>
+                  </Show>
+                </Show>
 
-                  <Show when={source() === 'release'}>
-                    <Switch>
-                      <Match when={releases.loading}>
-                        <p>Loading releases...</p>
-                      </Match>
-                      <Match when={releases.error}>
-                        <div class="callout callout--warning" style={note}>
-                          Couldn't reach the firmware downloads. Choose Upload a file.
-                        </div>
-                      </Match>
-                      <Match when={asset()}>
-                        {(a) => (
-                          <p style={muted}>
-                            <code>{a().name}</code> ({fmtBytes(a().size)}) from {latest()?.tag}
-                          </p>
+                <InstallPorts socket={chip() === 'host' ? 'usb3' : 'usb1'} />
+                <Show
+                  when={blocked()}
+                  fallback={
+                    <>
+                      <div class="acts">
+                        <Button variant="primary" disabled={busy() || !canFlash()} onClick={() => void flash()}>
+                          Flash
+                        </Button>
+                      </div>
+                      <Show when={err()}>
+                        {(msg) => (
+                          <div class="callout callout--danger" role="alert">
+                            {msg()}
+                          </div>
                         )}
-                      </Match>
-                      <Match when={!asset()}>
-                        <div class="callout callout--warning" style={note}>
-                          No <code>{assetName()}</code> in the latest release. Upload one.
-                        </div>
-                      </Match>
-                    </Switch>
-                  </Show>
-
-                  <Show when={source() === 'upload'}>
-                    <div style={section}>
-                      <FileUpload
-                        accept=".bin"
-                        maxSize={FLASH_SIZE_BYTES}
-                        value={files()}
-                        disabled={busy()}
-                        onChange={onFiles}
-                        onError={(m: string) => {
-                          rejectedThisPick = true;
-                          setFileErr(m);
-                        }}
-                        label="Firmware .bin"
-                      />
+                      </Show>
+                    </>
+                  }
+                >
+                  {(reason) => (
+                    <div class="callout callout--warning" role="alert">
+                      {reason()}
                     </div>
-                    <Show when={kind() === 'app'}>
-                      <div class="callout callout--info" style={note}>
-                        A box that never had the factory image needs it first.
-                      </div>
-                    </Show>
-                    <Show when={validationError()}>
-                      <div class="callout callout--danger" role="alert" style={note}>
-                        {validationError()}
-                      </div>
-                    </Show>
-                    <Show when={mismatch()}>
-                      <div class="callout callout--warning" style={note}>
-                        This file looks like {kind() === 'app' ? 'a factory' : 'an application'} image.
-                      </div>
-                    </Show>
-                  </Show>
-
-                  <div style={section}>
-                    <InstallPorts socket={chip() === 'host' ? 'usb3' : 'usb1'} />
-                  </div>
-                  <Show when={chip() === 'host'}>
-                    <div class="callout callout--danger" style={note}>
-                      Never plug USB1 and USB3 into the same computer.
-                    </div>
-                  </Show>
-                  <div style={{ ...section, ...row }}>
-                    <Button variant="primary" disabled={busy() || !canFlash()} onClick={() => void flash()}>
-                      Flash
-                    </Button>
-                  </div>
-                </Match>
-              </Switch>
-            </Show>
-          </Card>
-        </div>
+                  )}
+                </Show>
+              </Match>
+            </Switch>
+          </Show>
+        </Panel>
       </Show>
-    </>
+    </Panels>
   );
 };
 
-export default Advanced;
+export default ManualFlash;

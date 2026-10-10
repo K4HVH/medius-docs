@@ -1,17 +1,17 @@
 // A patch is stored with imperfect clones off too; only Apply waits for the opt-in. The clone serves
 // the set it last enumerated with, which the applied and pending flags compare against the store.
 
+import { A } from '@solidjs/router';
 import { For, Show, createSignal } from 'solid-js';
-import { Card, CardHeader } from '../../../components/surfaces/Card';
 import { Button } from '../../../components/inputs/Button';
 import { Chip } from '../../../components/display/Chip';
 import { NumberInput } from '../../../components/inputs/NumberInput';
-import { RadioGroup } from '../../../components/inputs/RadioGroup';
 import { TextField } from '../../../components/inputs/TextField';
 import { type PatchInfo, PATCH_POOL, PATCHES_MAX, PatchSection, patchSectionName } from '../../../dashboard/protocol';
 import { useDashboard } from './context';
 import { createCommand } from './action';
-import { chips, label, muted, row, section } from './ui';
+import { Panel } from '../../shell/Panel';
+import { Segmented } from '../../shell/Segmented';
 import { displayName, parseHex } from './hex';
 
 const SECTIONS = [
@@ -84,7 +84,7 @@ const DevicePatch = () => {
   // The box ignores an Apply of the set already served or of an unchanged refused set, so the button
   // says why.
   const applyWhy = (): string | null => {
-    if (!allowed()) return 'Applying needs imperfect clones, on the Device tab.';
+    if (!allowed()) return "Applying needs imperfect clones, on Device's Options tab.";
     if (refused()) return 'This set failed a check. Change it, then apply.';
     if (entries().length === 0 && !applied()) return 'Nothing stored to apply.';
     if (!pending()) return 'The clone already carries this set.';
@@ -94,7 +94,7 @@ const DevicePatch = () => {
   // Clear all stays live while anything is on the clone, stored or not.
   const clearable = () => entries().length > 0 || applied() || refused();
 
-  // Refused sets and sets waiting on the opt-in have their own callouts.
+  // Refused sets and sets waiting on the opt-in get a callout instead.
   const stateLine = (): string | null => {
     if (refused() || !allowed()) return null;
     if (applied() && !pending()) return 'The clone carries this set.';
@@ -109,124 +109,117 @@ const DevicePatch = () => {
 
   return (
     <Show when={dash.status() === 'connected'}>
-      <div id="descriptor-patches" data-search-target>
-        <Card>
-          <CardHeader title="Descriptor patches" subtitle="Change the clone's descriptors" />
-
-          <div style={label}>Descriptor</div>
-          <RadioGroup
+      <Panel id="descriptor-patches" title="Descriptor patches">
+        <div class="labelled">
+          <span class="field-l">Descriptor</span>
+          <Segmented
             name="patch-section"
+            label="Descriptor"
             value={pSection()}
             onChange={setPSection}
             options={SECTION_OPTIONS}
           />
-          <p style={{ ...muted, 'margin-top': '4px' }}>{SECTION_BLURB[psection()]}</p>
+        </div>
+        <p class="mut">{SECTION_BLURB[psection()]}</p>
 
-          <div style={{ ...section, ...row, 'align-items': 'flex-end' }}>
-            <Show when={usesCfg(psection())}>
-              <div style={{ 'max-width': '9rem' }}>
-                <NumberInput label="Configuration index" value={pCfg()} min={0} max={255} precision={0} onChange={(v) => setPCfg(v ?? 0)} />
-              </div>
-            </Show>
-            <Show when={usesIndex(psection())}>
-              <div style={{ 'max-width': '9rem' }}>
-                <NumberInput
-                  label={psection() === PatchSection.String ? 'String index' : 'Interface'}
-                  value={pIndex()}
-                  min={0}
-                  max={255}
-                  precision={0}
-                  onChange={(v) => setPIndex(v ?? 0)}
-                />
-              </div>
-            </Show>
-            <Show when={usesOffset(psection())}>
-              <div style={{ 'max-width': '9rem' }}>
-                <NumberInput label="Offset" value={pOff()} min={0} max={65534} precision={0} onChange={(v) => setPOff(v ?? 0)} />
-              </div>
-            </Show>
-          </div>
-
-          <div style={section}>
-            <TextField label="Bytes (hex)" value={pBytes()} onInput={setPBytes} placeholder="e.g. 00 03" />
-          </div>
-
-          <div style={{ ...section, ...row }}>
-            <Button variant="primary" disabled={cmd.busy()} onClick={setPatch}>
-              Set patch
-            </Button>
-            <Button
-              variant="secondary"
-              disabled={cmd.busy() || applyWhy() !== null}
-              title={applyWhy() ?? 'Re-clone with the stored set'}
-              onClick={applyPatches}
-            >
-              Apply
-            </Button>
-            <Button variant="secondary" disabled={cmd.busy() || !clearable()} onClick={clearAll}>
-              Clear all
-            </Button>
-          </div>
-          <Show when={!allowed()}>
-            <div class="callout callout--info" style={section}>
-              A patch is stored now and applied once imperfect clones are on, on the Device tab.
+        <div class="acts">
+          <Show when={usesCfg(psection())}>
+            <div class="fw-s">
+              <NumberInput label="Configuration index" value={pCfg()} min={0} max={255} precision={0} onChange={(v) => setPCfg(v ?? 0)} />
             </div>
           </Show>
-          <Show when={patches()?.tableFull}>
-            <div class="callout callout--warning" style={section}>
-              The box refused the last patch: it holds {PATCHES_MAX} patches and {PATCH_POOL} bytes of patch
-              data per device. Remove or shorten one, then set it again.
+          <Show when={usesIndex(psection())}>
+            <div class="fw-s">
+              <NumberInput
+                label={psection() === PatchSection.String ? 'String index' : 'Interface'}
+                value={pIndex()}
+                min={0}
+                max={255}
+                precision={0}
+                onChange={(v) => setPIndex(v ?? 0)}
+              />
             </div>
           </Show>
-          <Show when={cmd.error()}>
-            <div class="callout callout--danger" role="alert" style={section}>
-              {cmd.error()}
+          <Show when={usesOffset(psection())}>
+            <div class="fw-s">
+              <NumberInput label="Offset" value={pOff()} min={0} max={65534} precision={0} onChange={(v) => setPOff(v ?? 0)} />
             </div>
           </Show>
+        </div>
 
-          <div style={section}>
-            <div style={label}>State</div>
-            <div style={chips}>
-              <Chip variant={applied() ? 'success' : 'neutral'}>{applied() ? 'Applied' : 'Not applied'}</Chip>
-              <Show when={pending() && !refused()}>
-                <Chip variant="info">Changes not on the clone</Chip>
-              </Show>
-              <Show when={refused()}>
-                <Chip variant="warning">Refused</Chip>
-              </Show>
-            </div>
-            <Show when={stateLine()}>
-              <p style={{ ...muted, 'margin-top': '4px' }}>{stateLine()}</p>
-            </Show>
-            <Show when={refused()}>
-              <div class="callout callout--warning" style={section}>
-                This set failed a check, so the clone runs without it and the device log names the check.
-                Change the set and apply, or clear it.
-              </div>
-            </Show>
-          </div>
+        <TextField label="Bytes (hex)" value={pBytes()} onInput={setPBytes} placeholder="e.g. 00 03" />
 
-          <div style={section}>
-            <div style={label}>
-              Stored ({entries().length} of {PATCHES_MAX})
-            </div>
-            <Show
-              when={entries().length > 0}
-              fallback={<p>{applied() ? 'Nothing stored.' : 'Nothing patched.'}</p>}
-            >
-              <div style={chips}>
-                <For each={entries()}>
-                  {(e) => (
-                    <Chip variant="info" onRemove={() => removeOne(e)}>
-                      {describe(e)}
-                    </Chip>
-                  )}
-                </For>
-              </div>
-            </Show>
+        <div class="acts">
+          <Button variant="primary" disabled={cmd.busy()} onClick={setPatch}>
+            Set patch
+          </Button>
+          <Button
+            variant="secondary"
+            disabled={cmd.busy() || applyWhy() !== null}
+            title={applyWhy() ?? 'Re-clone with the stored set'}
+            onClick={applyPatches}
+          >
+            Apply
+          </Button>
+          <Button variant="secondary" disabled={cmd.busy() || !clearable()} onClick={clearAll}>
+            Clear all
+          </Button>
+        </div>
+        <Show when={!allowed()}>
+          <div class="callout callout--info">
+            A patch is stored now and applied once you allow <A href="/dashboard#imperfect-clone">imperfect clones</A> on Device's Options tab.
           </div>
-        </Card>
-      </div>
+        </Show>
+        <Show when={patches()?.tableFull}>
+          <div class="callout callout--warning">
+            The box refused the last patch: it holds {PATCHES_MAX} patches and {PATCH_POOL} bytes of patch
+            data per device. Remove or shorten one, then set it again.
+          </div>
+        </Show>
+        <Show when={cmd.error()}>
+          <div class="callout callout--danger" role="alert">
+            {cmd.error()}
+          </div>
+        </Show>
+
+        <p class="sublabel">State</p>
+        <div class="chips">
+          <Chip variant={applied() ? 'success' : 'neutral'}>{applied() ? 'Applied' : 'Not applied'}</Chip>
+          <Show when={pending() && !refused()}>
+            <Chip variant="info">Changes not on the clone</Chip>
+          </Show>
+          <Show when={refused()}>
+            <Chip variant="warning">Refused</Chip>
+          </Show>
+        </div>
+        <Show when={stateLine()}>
+          <p class="mut">{stateLine()}</p>
+        </Show>
+        <Show when={refused()}>
+          <div class="callout callout--warning">
+            This set failed a check, so the clone runs without it and the device log names the check.
+            Change the set and apply, or clear it.
+          </div>
+        </Show>
+
+        <p class="sublabel">
+          Stored <span data-search-skip>({entries().length} of {PATCHES_MAX})</span>
+        </p>
+        <Show
+          when={entries().length > 0}
+          fallback={<p>{applied() ? 'Nothing stored.' : 'Nothing patched.'}</p>}
+        >
+          <div class="chips">
+            <For each={entries()}>
+              {(e) => (
+                <Chip variant="info" onRemove={() => removeOne(e)}>
+                  {describe(e)}
+                </Chip>
+              )}
+            </For>
+          </div>
+        </Show>
+      </Panel>
     </Show>
   );
 };

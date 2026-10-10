@@ -1,0 +1,61 @@
+import { For, Show } from 'solid-js';
+import { A } from '@solidjs/router';
+import { Arrow, ArrowOut } from './Arrow';
+import { marks } from '../search/text';
+
+// A live filter over a table or a list, with the count of what it leaves. The page's Markdown twin
+// carries the list, not the filter.
+export function Filter(props: {
+  value: string;
+  onInput: (v: string) => void;
+  placeholder: string;
+  count: number;
+  noun: [one: string, many: string];
+}) {
+  return (
+    <div class="filter" data-agent-hide>
+      <label>
+        <svg viewBox="0 0 16 16" aria-hidden="true">
+          <circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" stroke-width="1.5" />
+          <path d="M11 11l3.5 3.5" stroke="currentColor" stroke-width="1.5" />
+        </svg>
+        <input
+          type="search"
+          placeholder={props.placeholder}
+          aria-label={props.placeholder}
+          autocomplete="off"
+          value={props.value}
+          onInput={(e) => props.onInput(e.currentTarget.value)}
+        />
+      </label>
+      <span class="n caps" aria-live="polite" data-search-skip>
+        <b>{props.count}</b> {props.noun[props.count === 1 ? 0 : 1]}
+      </span>
+    </div>
+  );
+}
+
+// Text with the words a filter matched marked, as the site search marks them.
+export function Marked(props: { text: string; query: string }) {
+  return <For each={marks(props.text, props.query)}>{(p) => (p.hit ? <mark>{p.text}</mark> : p.text)}</For>;
+}
+
+// A small link to the setting or page a row or an answer points at.
+export function FixLink(props: { href: string; children: string }) {
+  return (
+    <Show
+      when={props.href.startsWith('/')}
+      fallback={
+        <a class="fix" href={props.href} target="_blank" rel="noreferrer">
+          {props.children}
+          <ArrowOut size={11} />
+        </a>
+      }
+    >
+      <A class="fix" href={props.href} end activeClass="" inactiveClass="">
+        {props.children}
+        <Arrow size={11} />
+      </A>
+    </Show>
+  );
+}

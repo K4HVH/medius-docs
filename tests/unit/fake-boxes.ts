@@ -57,6 +57,8 @@ export class FakeBox {
   // A second link over a port this page holds: always a bug in the code under test.
   doubleOpens = 0;
   leds: [number, number, number][] = [];
+  // Refuses every LED command.
+  ledRefused = false;
   healthQueries = 0;
   versionQueries = 0;
   locksQueries = 0;
@@ -261,6 +263,7 @@ export class FakeLink {
 
   async led(target: number, mode: number, level: number): Promise<void> {
     if (!this.open_) throw new Error('link closed');
+    if (this.box.ledRefused) throw new Error('The box refused that.');
     this.box.leds.push([target, mode, level]);
   }
 

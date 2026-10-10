@@ -1,31 +1,29 @@
 import type { Component } from 'solid-js';
 import { A } from '@solidjs/router';
-import { Card, CardHeader } from '../../../../components/surfaces/Card';
-import '../../../../styles/docs.css';
+import { PageHeader } from '../../../shell/PageHeader';
 
 const Errors: Component = () => {
   return (
     <>
-      <div id="errors" data-search-target>
-        <Card>
-          <CardHeader title="Errors" subtitle="The Error enum and the Result alias" />
-          <p>
-            Every fallible call returns <code>Result&lt;T&gt;</code>, the crate's alias for{' '}
-            <code>core::result::Result&lt;T, Error&gt;</code>.
-          </p>
+      <PageHeader id="errors">
+        <p>
+          Every fallible call returns <code>Result&lt;T&gt;</code>, the crate's alias for{' '}
+          <code>core::result::Result&lt;T, Error&gt;</code>.
+        </p>
 
-          <p>
-            <code>Error</code> is{' '}
-            <a
-              href="https://doc.rust-lang.org/reference/attributes/type_system.html"
-              target="_blank"
-              rel="noreferrer"
-            >
-              <code>#[non_exhaustive]</code>
-            </a>
-            , so any <code>match</code> needs a wildcard arm.
-          </p>
+        <p>
+          <code>Error</code> is{' '}
+          <a
+            href="https://doc.rust-lang.org/reference/attributes/type_system.html"
+            target="_blank"
+            rel="noreferrer"
+          >
+            <code>#[non_exhaustive]</code>
+          </a>
+          , so any <code>match</code> needs a wildcard arm.
+        </p>
 
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr>
@@ -267,8 +265,8 @@ const Errors: Component = () => {
               </tr>
             </tbody>
           </table>
-        </Card>
-      </div>
+        </div>
+      </PageHeader>
     </>
   );
 };

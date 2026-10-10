@@ -1,13 +1,12 @@
 import type { Component } from 'solid-js';
 import { A } from '@solidjs/router';
-import { Card, CardHeader } from '../../../../components/surfaces/Card';
-import '../../../../styles/docs.css';
+import { PageHeader } from '../../../shell/PageHeader';
+import { DocSection } from '../../../shell/DocSection';
 
 const Quickstart: Component = () => {
   return (
     <>
-      <Card>
-        <CardHeader title="First program" subtitle="Connect, command, one event, free" />
+      <PageHeader>
         <p>
           One file: <A href="/library/connection">connect</A>, read the firmware version, move,
           click, wait for one physical motion event, free.
@@ -32,17 +31,15 @@ const Quickstart: Component = () => {
   catch_events()    ──▶  subscribe by filter   fire-and-forget
   recv()            ──▶  next physical event   blocks
   free()            ──▶  close, NULL-safe      local`}</pre>
-      </Card>
+      </PageHeader>
 
-      <div id="program" data-search-target>
-        <Card>
-          <CardHeader title="The program" subtitle="Every call, with error checks" />
-          <p>
-            <code>check()</code> compares against <code>MEDIUS_STATUS_OK</code> (<code>0</code>) and
-            on anything else reads <code>medius_last_error_message</code>. Results land through an
-            out-pointer (<code>&amp;dev</code>, <code>&amp;v</code>, <code>&amp;events</code>), never the return value.
-          </p>
-          <pre><code class="language-c">{`#include <stdio.h>
+      <DocSection id="program" title="The program" caption="Every call, with error checks">
+        <p>
+          <code>check()</code> compares against <code>MEDIUS_STATUS_OK</code> (<code>0</code>) and
+          on anything else reads <code>medius_last_error_message</code>. Results land through an
+          out-pointer (<code>&amp;dev</code>, <code>&amp;v</code>, <code>&amp;events</code>), never the return value.
+        </p>
+        <pre><code class="language-c">{`#include <stdio.h>
 #include <medius.h>
 
 /* 0 on success; 1 on failure, after printing the last error */
@@ -85,41 +82,39 @@ int main(void) {
     medius_device_free(dev);                                   /* close link, join threads */
     return 0;
 }`}</code></pre>
-          <div class="api-response-label">EXAMPLE OUTPUT</div>
-          <pre><code class="language-c">{`medius-capi 3.4.3 (abi 9)
+        <div class="api-response-label">EXAMPLE OUTPUT</div>
+        <pre><code class="language-c">{`medius-capi 3.4.3 (abi 9)
 firmware 3.4.5 (proto 9)
 motion: dx=12 dy=-4 dz=0`}</code></pre>
+        <p>
+          The subscription is an array of{' '}
+          <A href="/bindings/c/types#catch-filter"><code>MediusCatchFilter</code></A> entries; this
+          program passes one. Add <code>medius_catch_filter_watch_class</code> for keys, or{' '}
+          <code>medius_catch_filter_traffic</code> for a vendor endpoint's raw packets.
+        </p>
+        <p>
+          The call reads the array without retaining it, so a local is fine. All helpers:{' '}
+          <A href="/bindings/c/api#catch-filters">API index</A>.
+        </p>
+        <div class="callout callout--info">
           <p>
-            The subscription is an array of{' '}
-            <A href="/bindings/c/types#catch-filter"><code>MediusCatchFilter</code></A> entries; this
-            program passes one. Add <code>medius_catch_filter_watch_class</code> for keys, or{' '}
-            <code>medius_catch_filter_traffic</code> for a vendor endpoint's raw packets.
+            <A href="/bindings/c/api#streams"><code>medius_event_stream_recv</code></A> blocks until
+            the filters match an event; with this entry, a physical mouse motion. Polling, more
+            classes and event loops are on <A href="/bindings/c/streams">Streams</A>.
           </p>
-          <p>
-            The call reads the array without retaining it, so a local is fine. All helpers:{' '}
-            <A href="/bindings/c/api#catch-filters">API index</A>.
-          </p>
-          <div class="callout callout--info">
-            <p>
-              <A href="/bindings/c/api#streams"><code>medius_event_stream_recv</code></A> blocks until
-              the filters match an event; with this entry, a physical mouse motion. Polling, more
-              classes and event loops are on <A href="/bindings/c/streams">Streams</A>.
-            </p>
-          </div>
-        </Card>
-      </div>
+        </div>
+      </DocSection>
 
-      <div id="run" data-search-target>
-        <Card>
-          <CardHeader title="Run it" subtitle="gcc or clang, link libmedius_capi" />
-          <p>
-            Run from the unpacked release (<code>medius.h</code> under <code>include/</code>,{' '}
-            <A href="/bindings/c"><code>libmedius_capi.so</code></A> beside it). <code>cc</code>,{' '}
-            <a href="https://gcc.gnu.org/" target="_blank" rel="noreferrer"><code>gcc</code></a>, and{' '}
-            <a href="https://clang.llvm.org/" target="_blank" rel="noreferrer"><code>clang</code></a> all work.
-          </p>
-          <pre><code class="language-bash">{`cc first.c -Iinclude -L. -lmedius_capi -o first
+      <DocSection id="run" title="Run it" caption="gcc or clang, link libmedius_capi">
+        <p>
+          Run from the unpacked release (<code>medius.h</code> under <code>include/</code>,{' '}
+          <A href="/bindings/c"><code>libmedius_capi.so</code></A> beside it). <code>cc</code>,{' '}
+          <a href="https://gcc.gnu.org/" target="_blank" rel="noreferrer"><code>gcc</code></a>, and{' '}
+          <a href="https://clang.llvm.org/" target="_blank" rel="noreferrer"><code>clang</code></a> all work.
+        </p>
+        <pre><code class="language-bash">{`cc first.c -Iinclude -L. -lmedius_capi -o first
 LD_LIBRARY_PATH=. ./first      # so the loader finds libmedius_capi.so`}</code></pre>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Flag</th><th>What it does</th></tr>
@@ -130,18 +125,17 @@ LD_LIBRARY_PATH=. ./first      # so the loader finds libmedius_capi.so`}</code><
               <tr><td><code>-lmedius_capi</code></td><td>Link the library (file name is <code>libmedius_capi</code>).</td></tr>
             </tbody>
           </table>
-          <div class="callout callout--info">
-            <p>
-              Static linking (<code>libmedius_capi.a</code>), Windows, and the{' '}
-              <A href="/library/features/mock">mock</A> feature macro are on <A href="/bindings/c/build">Build &amp; features</A>.
-            </p>
-          </div>
-        </Card>
-      </div>
+        </div>
+        <div class="callout callout--info">
+          <p>
+            Static linking (<code>libmedius_capi.a</code>), Windows, and the{' '}
+            <A href="/library/features/mock">mock</A> feature macro are on <A href="/bindings/c/build">Build &amp; features</A>.
+          </p>
+        </div>
+      </DocSection>
 
-      <div id="mechanics" data-search-target>
-        <Card>
-          <CardHeader title="Walkthrough" subtitle="Errors, out-params, freeing, blocking" />
+      <DocSection id="mechanics" title="Walkthrough" caption="Errors, out-params, freeing, blocking">
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Mechanic</th><th>In C</th></tr>
@@ -201,21 +195,20 @@ LD_LIBRARY_PATH=. ./first      # so the loader finds libmedius_capi.so`}</code><
               </tr>
             </tbody>
           </table>
-          <pre class="api-signature">{`MediusStatus medius_device_find(MediusDevice **out);
+        </div>
+        <pre class="api-signature">{`MediusStatus medius_device_find(MediusDevice **out);
 uintptr_t    medius_last_error_message(char *buf, uintptr_t cap);  /* returns full length */`}</pre>
-          <div class="callout callout--warning">
-            <p>
-              <code>medius_last_error_message</code> holds the calling thread's latest failure; read it
-              before the next call overwrites it. It returns the full length (excluding the NUL);
-              retry with a larger buffer if it was truncated.
-            </p>
-          </div>
-        </Card>
-      </div>
+        <div class="callout callout--warning">
+          <p>
+            <code>medius_last_error_message</code> holds the calling thread's latest failure; read it
+            before the next call overwrites it. It returns the full length (excluding the NUL);
+            retry with a larger buffer if it was truncated.
+          </p>
+        </div>
+      </DocSection>
 
-      <div id="commands" data-search-target>
-        <Card>
-          <CardHeader title="Call reference" subtitle="Each call's Library and Native page" />
+      <DocSection id="commands" title="Call reference" caption="Each call's Library and Native page">
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Call</th><th>What it means</th></tr>
@@ -247,14 +240,14 @@ uintptr_t    medius_last_error_message(char *buf, uintptr_t cap);  /* returns fu
               </tr>
             </tbody>
           </table>
-          <p>
-            <A href="/bindings/c/api">API index</A> and{' '}
-            <A href="/bindings/c/types">Types &amp; errors</A> list every call and type; both mirror the{' '}
-            <a href="https://crates.io/crates/medius" target="_blank" rel="noreferrer">medius</a> crate
-            (<a href="https://github.com/K4HVH/medius" target="_blank" rel="noreferrer">source</a>).
-          </p>
-        </Card>
-      </div>
+        </div>
+        <p>
+          <A href="/bindings/c/api">API index</A> and{' '}
+          <A href="/bindings/c/types">Types &amp; errors</A> list every call and type; both mirror the{' '}
+          <a href="https://crates.io/crates/medius" target="_blank" rel="noreferrer">medius</a> crate
+          (<a href="https://github.com/K4HVH/medius" target="_blank" rel="noreferrer">source</a>).
+        </p>
+      </DocSection>
     </>
   );
 };

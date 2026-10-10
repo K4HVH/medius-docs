@@ -58,8 +58,8 @@ afterEach(() => {
 
 describe('DeviceLock', () => {
   it('locks the X axis by default', async () => {
-    const { findByText } = render(() => <DeviceLock />);
-    fireEvent.click(await findByText('Lock'));
+    const { container } = render(() => <DeviceLock />);
+    fireEvent.click(await findByTextIn(container, 'Lock'));
     await settle();
     expect(mock.sent).toEqual([
       { cls: LockClass.Axis, id: LockAxis.X, dir: 0, scale: LOCK_SCALE_BLOCK },
@@ -69,23 +69,20 @@ describe('DeviceLock', () => {
   it('picking a class selects a real usage, never the class wildcard', async () => {
     // Defaulting the picker to the wildcard made the Lock button act on every usage in the class,
     // and on firmware that predates the axis blanket it made the axis case do nothing at all.
-    const { findByText, getByText } = render(() => <DeviceLock />);
+    const { getByText, container } = render(() => <DeviceLock />);
     for (const cls of ['Button', 'Key', 'Media', 'Axis']) {
       mock.sent = [];
       fireEvent.click(getByText(cls));
-      fireEvent.click(await findByText('Lock'));
+      fireEvent.click(await findByTextIn(container, 'Lock'));
       await settle();
       expect(mock.sent).toHaveLength(1);
       expect(mock.sent[0].id).not.toBe(LOCK_ID_ALL);
     }
   });
 
-  // The list renders through a portal, so it is read off the document rather than the container,
-  // and it only exists once the combobox is open.
+  // The list is read off the document, and it only exists once the dropdown is open.
   const openOptions = async (container: HTMLElement): Promise<string[]> => {
-    const trigger = container.querySelector('[role="combobox"]') as HTMLElement;
-    fireEvent.click(trigger);
-    fireEvent.keyDown(trigger, { key: 'Enter' });
+    fireEvent.click(container.querySelector('.dd-b') as HTMLElement);
     await new Promise((r) => setTimeout(r, 20));
     return [...document.querySelectorAll('[role="option"]')].map((o) => o.textContent ?? '');
   };
@@ -127,22 +124,23 @@ describe('DeviceLock', () => {
     expect(options.join('|')).toMatch(/every button/i);
   });
 
-  it('the filter clear button empties the filter', async () => {
-    // TextField's clear calls onChange only, never onInput, so wiring the narrower callback let the
-    // controlled value snap straight back and the button looked dead.
+  it('the filter box narrows the list and empties again', async () => {
+    // The filter is controlled by the picker, so a callback wired to the wrong event let the value
+    // snap straight back and the box looked dead.
     const { container } = render(() => <DeviceLock />);
-    const input = container.querySelector('input[type=text]') as HTMLInputElement;
+    const all = await openOptions(container);
+    const input = container.querySelector('.dd-f') as HTMLInputElement;
     fireEvent.input(input, { target: { value: 'wheel' } });
     await settle();
     expect(input.value).toBe('wheel');
+    const narrowed = [...document.querySelectorAll('[role="option"]')].map((o) => o.textContent ?? '');
+    expect(narrowed).toContain('Wheel');
+    expect(narrowed).not.toContain('X (left/right)');
 
-    const clear = [...container.querySelectorAll('button')].find(
-      (b) => /clear/i.test(b.getAttribute('aria-label') ?? '') || b.classList.toString().includes('clear'),
-    );
-    expect(clear).toBeDefined();
-    fireEvent.click(clear!);
+    fireEvent.input(input, { target: { value: '' } });
     await settle();
     expect(input.value).toBe('');
+    expect([...document.querySelectorAll('[role="option"]')].map((o) => o.textContent ?? '')).toEqual(all);
   });
 
   it('unlocks the same target it would lock', async () => {
@@ -155,11 +153,12 @@ describe('DeviceLock', () => {
     ]);
   });
 
-  it('the slider sends its own percentage, between the two ends', async () => {
-    // The slider is a div with role=slider, driven by the arrow keys at its step.
+  it('the slider sends its percentage, between the two ends', async () => {
+    // The slider is a native range input at its step.
     const { container } = render(() => <DeviceLock />);
-    const thumb = container.querySelector('[role="slider"]') as HTMLElement;
+    const thumb = container.querySelector('input[type="range"]') as HTMLInputElement;
     expect(thumb).toBeTruthy();
+    expect(thumb.step).toBe('5');
     // Defaults to a full pass, so Apply on an untouched slider changes nothing about the input.
     fireEvent.click(await findByTextIn(container, `Apply ${LOCK_SCALE_PASS}%`));
     await settle();
@@ -169,7 +168,7 @@ describe('DeviceLock', () => {
 
     // One step down, and the button both relabels and sends the new value.
     mock.sent = [];
-    fireEvent.keyDown(thumb, { key: 'ArrowLeft' });
+    fireEvent.input(thumb, { target: { value: String(LOCK_SCALE_PASS - 5) } });
     await settle();
     fireEvent.click(await findByTextIn(container, `Apply ${LOCK_SCALE_PASS - 5}%`));
     await settle();
@@ -211,9 +210,21 @@ describe('DeviceLock', () => {
       { cls: LockClass.Media, id: 0xe9, direction: Direction.Both, scale: LOCK_SCALE_BLOCK },
     ] satisfies Entry[];
     const { findByText, queryByText } = render(() => <DeviceLock />);
-    expect(await findByText('All keys press')).toBeTruthy();
-    expect(await findByText('Volume Up')).toBeTruthy();
-    expect(queryByText('Volume Up both')).toBeNull();
+    expect(await findByText('All keys press blocked')).toBeTruthy();
+    expect(await findByText('Volume Up blocked')).toBeTruthy();
+    expect(queryByText('Volume Up both blocked')).toBeNull();
+  });
+
+  it('names a block in words and a reversal once', async () => {
+    mock.entries = [
+      { cls: LockClass.Button, id: 1, direction: Direction.Both, scale: LOCK_SCALE_BLOCK },
+      { cls: LockClass.Axis, id: LockAxis.X, direction: Direction.Both, scale: 40 },
+      { cls: LockClass.Axis, id: LockAxis.Y, direction: Direction.Negative, scale: -100 },
+    ] satisfies Entry[];
+    const { findByText } = render(() => <DeviceLock />);
+    expect(await findByText('Right blocked')).toBeTruthy();
+    expect(await findByText('X (left/right) at 40%')).toBeTruthy();
+    expect(await findByText('Y (up/down) negative reversed at 100%')).toBeTruthy();
   });
 
   it('offers the bearing-relative directions on an axis and not on a usage', async () => {
