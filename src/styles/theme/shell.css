@@ -145,9 +145,9 @@ html { scroll-padding-top: calc(var(--nav-h) + 24px); }
   position: absolute; top: 0; left: 0; width: 0; height: 100%; background: var(--line); opacity: 0; pointer-events: none;
   transition: left 0.45s var(--ease), width 0.45s var(--ease), opacity 0.2s;
 }
-.sections.langs { margin-top: -12px; }
+.sections.langs { margin-top: -12px; grid-template-columns: repeat(3, auto); }
 .sections a {
-  position: relative; padding: 9px 0; text-align: center; color: var(--muted); font: 500 10.5px/1 var(--mono);
+  position: relative; padding: 9px 0 9px 0.1em; text-align: center; color: var(--muted); font: 500 10.5px/1 var(--mono);
   letter-spacing: 0.1em; text-transform: uppercase; text-decoration: none;
   transition: color 0.25s, background 0.25s;
 }
@@ -291,3 +291,65 @@ html { scroll-padding-top: calc(var(--nav-h) + 24px); }
 .ai-actions__item:hover { color: var(--text); background: var(--line); text-decoration: none; }
 .ai-actions__sep { height: 1px; margin: 4px 0; background: var(--line); }
 
+
+/* Search: a ruled panel over the dimmed page. It rises in, its results cascade, and a blue edge moves
+   through them as the sidebar's moves through the pages. On a phone it fills the screen. */
+.srch {
+  position: fixed; inset: 0; z-index: 60; display: grid; justify-items: center; align-items: start;
+  padding: 12vh 16px 16px; background: color-mix(in srgb, var(--ground) 74%, transparent);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); animation: fade 0.2s ease both;
+}
+.srch.closing { opacity: 0; transition: opacity 0.15s ease; }
+.srch-p {
+  width: min(720px, 100%); max-height: min(640px, 76vh); display: grid; grid-template-rows: auto minmax(0, 1fr) auto;
+  background: var(--g-background); border: 1px solid var(--line-2); box-shadow: 0 30px 90px rgba(0, 0, 0, 0.65);
+  animation: srch-in 0.3s var(--ease) both;
+}
+@keyframes srch-in { from { opacity: 0; transform: translateY(-10px); } }
+.srch-q { display: flex; align-items: center; gap: 14px; height: 62px; padding: 0 18px; border-bottom: 1px solid var(--line-2); }
+.srch-q svg { flex: none; width: 16px; height: 16px; color: var(--dim); }
+.srch-q input {
+  flex: 1; min-width: 0; height: 100%; padding: 0; background: none; border: 0; outline: none;
+  color: var(--text); font: 400 17px/1 var(--sans); caret-color: var(--accent);
+}
+.srch-q input::placeholder { color: var(--dim); }
+.srch kbd {
+  display: inline-block; padding: 3px 6px; border: 1px solid var(--line-2); color: var(--muted);
+  font: 500 10.5px/1 var(--mono); letter-spacing: 0.08em;
+}
+.srch-x { display: none; padding: 8px 0; background: none; border: 0; color: var(--muted); cursor: pointer; }
+.srch-l { position: relative; overflow-y: auto; overscroll-behavior: contain; padding: 6px 0 12px; }
+.srch-l .mark {
+  position: absolute; left: 0; right: 0; top: 0; height: 0; opacity: 0; pointer-events: none;
+  border-left: 2px solid var(--accent); background: linear-gradient(90deg, rgba(0, 128, 255, 0.1), transparent 70%);
+  transition: top 0.22s var(--ease), height 0.22s var(--ease), opacity 0.2s;
+}
+.srch-g { margin: 0; padding: 14px 20px 6px; color: var(--dim); }
+.srch-o {
+  position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline;
+  gap: 3px 18px; padding: 10px 20px; cursor: pointer;
+}
+/* The results cascade as the panel opens; typing changes the list in place. */
+.srch.opening .srch-o { animation: rowin 0.4s var(--ease) calc(80ms + var(--i, 0) * 22ms) both; }
+.srch-o .t { min-width: 0; color: var(--text-2); font-size: 15px; transition: color 0.2s; }
+.srch-o[aria-selected="true"] .t { color: var(--text); }
+.srch-o .c { color: var(--dim); white-space: nowrap; font-size: 10.5px; }
+.srch-o .d {
+  grid-column: 1 / -1; min-width: 0; color: var(--muted); font-size: 13.5px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.srch mark { background: none; color: var(--accent); }
+.srch-none { margin: 0; padding: 26px 20px; color: var(--muted); }
+.srch-f { display: flex; flex-wrap: wrap; gap: 8px 22px; padding: 11px 20px; border-top: 1px solid var(--line-2); color: var(--dim); }
+.srch-f span { display: inline-flex; align-items: center; gap: 6px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+@media (max-width: 700px) {
+  .srch { padding: 0; align-items: stretch; }
+  .srch-p { width: 100%; max-height: none; height: 100%; border: 0; box-shadow: none; }
+  .srch .srch-esc, .srch-f { display: none; }
+  .srch-x { display: block; }
+  .srch-o .c { grid-column: 1 / -1; grid-row: 2; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .srch.closing { opacity: 0; }
+}

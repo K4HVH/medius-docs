@@ -1,7 +1,7 @@
 import { createEffect, createMemo, createSignal, For, on, onCleanup, onMount, Show, type JSX } from 'solid-js';
 import { A } from '@solidjs/router';
-import { lockPage, panelKeys } from './panel';
-import { arrive, inOrder } from './motion';
+import { lockPage, modKey, panelKeys } from './panel';
+import { arrive, fontsReady, inOrder } from './motion';
 import { LANG_LABEL, LANG_ROOT, SECTION_LABEL, routeFor, sectionLabel, sidebarGroups, type Lang, type Section } from '../routes';
 
 type CodeSection = 'native' | 'library' | 'bindings';
@@ -73,6 +73,9 @@ export function DocsSidebar(props: {
   // The page's edge travels to the page picked, and the section's fill to the section; a list that
   // changed whole takes the edge without travel. The links cascade in when the sidebar first shows and
   // when a section brings a new list.
+  // The page's edge spans the page's link by layout, which a rising link leaves alone. The section's
+  // fill spans its cell inside the rules, to the fraction of a pixel, so no zoom lets it run over one: the
+  // switch moves as one, so measuring against it holds mid-rise too.
   const place = (ind: HTMLElement | null | undefined, at: HTMLElement | null | undefined, instant: boolean) => {
     if (!ind) return;
     if (!at) {
@@ -81,10 +84,18 @@ export function DocsSidebar(props: {
     }
     if (instant) ind.style.transition = 'none';
     ind.style.opacity = '1';
-    ind.style.top = `${at.offsetTop}px`;
-    ind.style.left = `${at.offsetLeft}px`;
-    ind.style.width = `${at.offsetWidth}px`;
-    ind.style.height = `${at.offsetHeight}px`;
+    if (ind.classList.contains('mark')) {
+      ind.style.top = `${at.offsetTop}px`;
+      ind.style.height = `${at.offsetHeight}px`;
+      ind.style.width = `${at.offsetWidth}px`;
+    } else {
+      const host = ind.parentElement!;
+      const cs = getComputedStyle(at);
+      const edge = parseFloat(cs.borderLeftWidth);
+      const r = at.getBoundingClientRect();
+      ind.style.left = `${r.left - host.getBoundingClientRect().left - host.clientLeft + edge}px`;
+      ind.style.width = `${r.width - edge - parseFloat(cs.borderRightWidth)}px`;
+    }
     if (instant) {
       void ind.offsetWidth;
       ind.style.transition = '';
@@ -104,9 +115,16 @@ export function DocsSidebar(props: {
   onMount(() => {
     if (side) arrive(side, inOrder(side.querySelectorAll<HTMLElement>('.sections, .search, .group > *'), 80, 22, 24));
     placeAll(true);
+    // The language row's columns size to their labels, which move when the font arrives.
     const again = () => placeAll(true);
+    void fontsReady().then(again);
     window.addEventListener('resize', again);
-    onCleanup(() => window.removeEventListener('resize', again));
+    const ro = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(again);
+    side?.querySelectorAll('.sections a').forEach((a) => ro?.observe(a));
+    onCleanup(() => {
+      window.removeEventListener('resize', again);
+      ro?.disconnect();
+    });
   });
   createEffect(on([() => props.pathname, section, lang], () => placeAll(false), { defer: true }));
 
@@ -172,7 +190,7 @@ export function DocsSidebar(props: {
         </Show>
         <button class="search caps" type="button" onClick={() => props.onSearch()}>
           <span>Search</span>
-          <kbd>Ctrl K</kbd>
+          <kbd>{modKey()} K</kbd>
         </button>
         <Show when={section() === 'dashboard'}>
           {(() => {
