@@ -44,6 +44,16 @@ describe('fillPage', () => {
     expect(html.indexOf('Fixed')).toBeLessThan(html.indexOf('<details>'));
   });
 
+  it('fills the block as the prerender captures it, with the attributes the app gave it', async () => {
+    const snapshot = (key: string) =>
+      `<main><div data-fill="${key}" data-search-skip="" class="rb moving" style="--d: 200ms;"><p class="mut">Loading...</p></div></main>`;
+    const changelog = (await fillPage('/dashboard/changelog', snapshot('changelog'), SOURCES, new Map()))!;
+    expect(changelog).toContain('<section id="v3.4.5" class="rel">');
+    expect(changelog).not.toContain('Loading');
+    const stats = (await fillPage('/dashboard/stats', snapshot('stats'), SOURCES, new Map()))!;
+    expect(stats).not.toContain('Loading');
+  });
+
   it('renders the bold and code the notes are written in', async () => {
     const md: FillSources = { ...SOURCES, releases: async () => [release('v3.4.4', `## Notes\nthere is **almost **no difference, protocol \`8\`\n\n${COMMITS_MARKER}\n- c (1)`)] };
     const html = (await fillPage('/dashboard/changelog', CHANGELOG, md))!;

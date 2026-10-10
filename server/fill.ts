@@ -97,7 +97,7 @@ function statsHtml(s: StatsSummary): string {
 }
 
 const replaceFill = (html: string, key: string, inner: string) =>
-  html.replace(new RegExp(`<div data-fill="${key}">[\\s\\S]*?</div>`), () => `<div data-fill="${key}">${inner}</div>`);
+  html.replace(new RegExp(`(<div\\b[^>]*\\sdata-fill="${key}"[^>]*>)[\\s\\S]*?</div>`), (_m, open: string) => `${open}${inner}</div>`);
 
 // JSON inside <script>: "<" escaped so no value can close the tag.
 const embed = (id: string, data: unknown) =>
