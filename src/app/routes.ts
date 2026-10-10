@@ -295,8 +295,15 @@ export interface SidebarGroup {
   routes: RouteInfo[];
 }
 
+// One list per section and language, kept: the sidebar draws its links once, so a page change moves the
+// mark of the current page and keeps the link the reader pressed, and its focus.
+const kept = new Map<string, SidebarGroup[]>();
 export function sidebarGroups(section: Section, lang?: Lang): SidebarGroup[] {
+  const key = `${section}:${lang ?? ''}`;
+  const known = kept.get(key);
+  if (known) return known;
   const groups: SidebarGroup[] = [];
+  kept.set(key, groups);
   for (const r of ROUTES) {
     if (r.section !== section || r.lang !== lang || !r.group) continue;
     const last = groups[groups.length - 1];

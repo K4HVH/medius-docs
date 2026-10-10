@@ -8,11 +8,13 @@ import {
   createMemo,
   createSignal,
   onCleanup,
+  onMount,
   untrack,
   useContext,
 } from 'solid-js';
 import { isSecureContextOk, isWebSerialSupported } from '../../../dashboard/serial/support';
 import { createStatsSink } from '../../../dashboard/stats';
+import { carryArrival } from '../../shell/takeover';
 import type { Boxes, BoxesDeps, LocksLike } from './boxes';
 
 export { NEW_BOX } from './store';
@@ -120,12 +122,18 @@ export const DashboardProvider: ParentComponent = (props) => {
   );
 };
 
-// Keyed on the session, so a box switch remounts the pages and moves every poll.
+// Keyed on the session, so a box switch remounts the pages and moves every poll. A box found as the page
+// opens (one picked on an earlier visit) redraws it mid-arrival, and the arrival carries on, never twice.
 export const BoxScope: ParentComponent = (props) => {
   const boxes = useBoxes();
+  let drawn = false;
   return (
     <Show when={boxes.scope()} keyed>
-      {(s) => <DashboardContext.Provider value={s}>{props.children}</DashboardContext.Provider>}
+      {(s) => {
+        if (drawn) onMount(carryArrival(document.querySelector<HTMLElement>('main.docs-page')));
+        drawn = true;
+        return <DashboardContext.Provider value={s}>{props.children}</DashboardContext.Provider>;
+      }}
     </Show>
   );
 };

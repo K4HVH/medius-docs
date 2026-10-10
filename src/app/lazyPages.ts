@@ -2,6 +2,7 @@ import { lazy, type Component } from 'solid-js';
 import type { RouteSectionProps } from '@solidjs/router';
 import { loadRuntime } from './pages/dashboard/context';
 import { loadHighlighter } from './highlight';
+import { latestReleases } from '../dashboard/firmware/client';
 
 // Each page's code, fetched when the page is first wanted: a reader of one page downloads that page and
 // the shell, not the whole site. The router fetches a page's code when a link to it is pointed at,
@@ -41,6 +42,10 @@ const codePage = (load: () => Promise<PageModule>): LazyPage =>
 // A dashboard page comes with the box runtime, so it renders with its boxes in place.
 const dashboard = (load: () => Promise<PageModule>): LazyPage =>
   page(() => Promise.all([load(), loadRuntime()]).then(([m]) => m));
+// The changelog comes with its releases when they come within a moment, so it arrives with them in place;
+// a slow list arrives after the page.
+const withReleases = (load: () => Promise<PageModule>): LazyPage =>
+  dashboard(() => Promise.all([load(), Promise.race([latestReleases().catch(() => {}), new Promise((r) => setTimeout(r, 800))])]).then(([m]) => m));
 
 export const PAGES: Record<string, LazyPage> = {
   '/': page(() => import('./pages/Home')),
@@ -124,7 +129,7 @@ export const PAGES: Record<string, LazyPage> = {
   '/dashboard/control': dashboard(() => import('./pages/dashboard/Control')),
   '/dashboard/setup': dashboard(() => import('./pages/dashboard/Setup')),
   '/dashboard/update': dashboard(() => import('./pages/dashboard/Update')),
-  '/dashboard/changelog': dashboard(() => import('./pages/dashboard/Changelog')),
+  '/dashboard/changelog': withReleases(() => import('./pages/dashboard/Changelog')),
   '/dashboard/stats': dashboard(() => import('./pages/dashboard/Stats')),
 };
 

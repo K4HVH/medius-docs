@@ -2,8 +2,10 @@ import { describe, it, expect, afterEach } from 'vitest';
 import { render, cleanup, fireEvent } from '@solidjs/testing-library';
 import { MemoryRouter, Route, createMemoryHistory } from '@solidjs/router';
 import { SiteNav } from '../../src/app/shell/SiteNav';
+import { useLeaveFade } from '../../src/app/shell/leave';
+import { useScrollPlace } from '../../src/app/shell/scrollPlace';
 
-const mount = (at = '/native', props: { overHero?: boolean; disabled?: boolean } = {}) => {
+const mount = (at = '/native', props: { disabled?: boolean } = {}) => {
   const history = createMemoryHistory();
   history.set({ value: at });
   const r = render(() => (
@@ -18,6 +20,38 @@ const mount = (at = '/native', props: { overHero?: boolean; disabled?: boolean }
 };
 
 const settle = () => new Promise((res) => setTimeout(res, 0));
+const wait = (ms: number) => new Promise((res) => setTimeout(res, ms));
+const scrollTo = (y: number) => {
+  Object.defineProperty(window, 'scrollY', { value: y, configurable: true });
+  window.dispatchEvent(new Event('scroll'));
+};
+
+// As the app has it: one bar over every page, and links that fade the page out before the next arrives.
+const across = (at: string) => {
+  const history = createMemoryHistory();
+  history.set({ value: at });
+  const r = render(() => (
+    <MemoryRouter
+      history={history}
+      root={(p) => {
+        useLeaveFade(() => false);
+        useScrollPlace();
+        return (
+          <>
+            <SiteNav />
+            {p.children}
+          </>
+        );
+      }}
+    >
+      <Route path="/" component={() => <div class="landing">landing</div>} />
+      <Route path="/guide" component={() => <main class="docs-page">guide</main>} />
+    </MemoryRouter>
+  ));
+  const link = (label: string) => [...r.container.querySelectorAll('header.nav a')].find((a) => a.textContent?.trim().startsWith(label))!;
+  const nav = () => r.container.querySelector('header.nav')!;
+  return { ...r, history, link, nav };
+};
 
 afterEach(() => {
   cleanup();
@@ -53,12 +87,61 @@ describe('SiteNav', () => {
   it('is solid away from the landing hero, and clear over it until the page scrolls', () => {
     expect(mount('/native').nav().classList.contains('solid')).toBe(true);
     cleanup();
-    const r = mount('/', { overHero: true });
+    const r = mount('/');
     expect(r.nav().classList.contains('solid')).toBe(false);
-    Object.defineProperty(window, 'scrollY', { value: 40, configurable: true });
+    scrollTo(40);
+    expect(r.nav().classList.contains('solid')).toBe(true);
+    scrollTo(0);
+  });
+
+  it('stays one bar between the landing and the other pages, so its words never fade with a page', async () => {
+    const r = across('/');
+    const bar = r.nav();
+    fireEvent.click(r.link('Guide'));
+    await wait(200);
+    expect(r.history.get()).toBe('/guide');
+    expect(r.nav()).toBe(bar);
+    fireEvent.click(r.link('Medius'));
+    await wait(200);
+    expect(r.history.get()).toBe('/');
+    expect(r.nav()).toBe(bar);
+  });
+
+  it('turns solid as the landing fades out for another page, at the pace of that fade', () => {
+    const r = across('/');
+    expect(r.nav().classList.contains('solid')).toBe(false);
+    fireEvent.click(r.link('Guide'));
+    expect(r.history.get()).toBe('/');
+    expect(r.nav().classList.contains('solid')).toBe(true);
+    expect(r.nav().classList.contains('routed')).toBe(true);
+  });
+
+  it('clears as a page fades out for the landing, though the page it leaves is scrolled', () => {
+    scrollTo(400);
+    const r = across('/guide');
     window.dispatchEvent(new Event('scroll'));
     expect(r.nav().classList.contains('solid')).toBe(true);
-    Object.defineProperty(window, 'scrollY', { value: 0, configurable: true });
+    fireEvent.click(r.link('Medius'));
+    expect(r.nav().classList.contains('solid')).toBe(false);
+    scrollTo(0);
+  });
+
+  it('stays clear once the landing is in, though the page it came from was scrolled', async () => {
+    scrollTo(1000);
+    const r = across('/guide');
+    fireEvent.click(r.link('Medius'));
+    await wait(200);
+    expect(r.history.get()).toBe('/');
+    expect(r.nav().classList.contains('solid')).toBe(false);
+    scrollTo(0);
+  });
+
+  it('fades at the slower scroll pace when the landing scrolls under it', () => {
+    const r = across('/');
+    scrollTo(40);
+    expect(r.nav().classList.contains('solid')).toBe(true);
+    expect(r.nav().classList.contains('routed')).toBe(false);
+    scrollTo(0);
   });
 
   it('opens the phone menu over a locked page, and any link closes it', async () => {

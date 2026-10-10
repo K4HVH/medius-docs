@@ -1,10 +1,11 @@
-import { For, Match, Show, Switch, createEffect, createResource, createSignal, onCleanup } from 'solid-js';
+import { For, Match, Show, Switch, createEffect, createMemo, createResource, createSignal, onCleanup } from 'solid-js';
 import { Button } from '../../../components/inputs/Button';
 import { Chip } from '../../../components/display/Chip';
-import { type FirmwareRelease, fetchReleases } from '../../../dashboard/firmware';
+import { type FirmwareRelease, latestReleases, releasesInHand } from '../../../dashboard/firmware';
 import { type Block, type CommitGroup, groupCommits, inlineRuns, parseBlocks, splitRelease } from '../../../dashboard/firmware/notes';
 import { PageHeader } from '../../shell/PageHeader';
-import { arrive, armReveals, fontsReady, inOrder } from '../../shell/motion';
+import { arrive, armReveals, fontsReady, inOrder, turnIn } from '../../shell/motion';
+import { openingAt } from '../../shell/scrollPlace';
 
 const fmtDate = (iso: string) => {
   const d = new Date(iso);
@@ -78,7 +79,9 @@ const Chevron = () => (
 );
 
 const Release = (props: { release: FirmwareRelease; open: boolean }) => {
-  const parts = () => splitRelease(props.release.notes);
+  // Drawn again only when the notes change, not when a fetch brings the same release anew.
+  const notes = createMemo(() => props.release.notes);
+  const parts = createMemo(() => splitRelease(notes()));
   const grouped = () => groupCommits(parts().commits);
   // A release from before written notes is its commit list alone, shown as one.
   const old = () => (parts().commits ? null : groupCommits(parts().notes));
@@ -131,7 +134,8 @@ const Release = (props: { release: FirmwareRelease; open: boolean }) => {
   );
 };
 
-// The releases server/fill.ts embedded in the page, so the first render already has them.
+// The releases server/fill.ts embedded in the page, so the first render already has them; by a link, the
+// ones fetched beside the page's code.
 const embedded = (): FirmwareRelease[] | undefined => {
   try {
     const el = document.getElementById('releases-data');
@@ -142,8 +146,8 @@ const embedded = (): FirmwareRelease[] | undefined => {
 };
 
 const Changelog = () => {
-  const seed = embedded();
-  const [releases] = createResource(fetchReleases, { initialValue: seed });
+  const seed = embedded() ?? releasesInHand();
+  const [releases] = createResource(latestReleases, { initialValue: seed });
   // A failed resource throws on every read, so it is read through this; a failed refresh keeps what
   // the server embedded.
   const list = (): FirmwareRelease[] | undefined => {
@@ -153,6 +157,9 @@ const Changelog = () => {
       return seed;
     }
   };
+  // Each release drawn once, by its tag: a fetch that brings the list again redraws none of them.
+  const byTag = createMemo(() => new Map((list() ?? []).map((r) => [r.tag, r])));
+  const tags = createMemo(() => [...byTag().keys()], [], { equals: (a, b) => a.length === b.length && a.every((t, i) => t === b[i]) });
   // A link to one release (the Discord post's Commits link) lands on it with its commits open.
   const hashed = decodeURIComponent(window.location.hash.slice(1));
   let rels: HTMLDivElement | undefined;
@@ -165,12 +172,13 @@ const Changelog = () => {
     if (armed || !list()?.length) return;
     armed = true;
     if (rels && !rels.querySelector(':scope > .rb'))
-      arrive(rels, inOrder([...rels.children] as HTMLElement[], rels.closest('.arriving') ? 200 : 60, 55));
+      arrive(rels, inOrder([...rels.children] as HTMLElement[], turnIn(rels), 55));
     const land = (frames: number) =>
       requestAnimationFrame(() => {
         const section = hashed ? document.getElementById(hashed) : null;
         if (hashed && !section && frames > 0) return land(frames - 1);
-        section?.scrollIntoView({ block: 'start' });
+        // Unless Back or a reload put the page where it was.
+        if (openingAt() === null) section?.scrollIntoView({ block: 'start' });
         if (rels) void fontsReady().then(() => (dispose = armReveals(rels!, '.rel')));
       });
     land(30);
@@ -182,7 +190,7 @@ const Changelog = () => {
         <Switch fallback={<p class="mut">No releases yet.</p>}>
           <Match when={list()?.length}>
             <div class="rels" ref={rels}>
-              <For each={list()}>{(r) => <Release release={r} open={r.tag === hashed} />}</For>
+              <For each={tags()}>{(tag) => <Release release={byTag().get(tag)!} open={tag === hashed} />}</For>
             </div>
           </Match>
           <Match when={releases.error}>

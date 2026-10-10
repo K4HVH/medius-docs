@@ -5,8 +5,12 @@
 
 import { arrive, armReveals, blocksOf, inOrder, shown } from './motion';
 
+// A panel drawn again with a new box (takeover.ts `carryArrival`) holds still where it says the same, and
+// brings in only its contents where they changed.
 const parts = (p: HTMLElement): HTMLElement[] =>
-  [p.querySelector<HTMLElement>(':scope > .ph'), ...p.querySelectorAll<HTMLElement>(':scope > .pb > *')].filter(shown);
+  p.dataset.still === 'all'
+    ? []
+    : [p.dataset.still === 'frame' ? null : p.querySelector<HTMLElement>(':scope > .ph'), ...p.querySelectorAll<HTMLElement>(':scope > .pb > *')].filter(shown);
 
 // The panels in a tab's first row sit under the tab strip's rule and draw none.
 export function markTop(scope: ParentNode): void {

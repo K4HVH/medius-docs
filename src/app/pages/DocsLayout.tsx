@@ -1,13 +1,12 @@
 import { createSignal, createEffect, createMemo, on, onCleanup, onMount } from 'solid-js';
 import { type RouteSectionProps, useBeforeLeave, useLocation, useNavigate, usePreloadRoute } from '@solidjs/router';
-import { GridBackground } from '../../components/surfaces/GridBackground';
 import { Search } from '../shell/Search';
 import { highlighter, loadHighlighter } from '../highlight';
-import { SiteNav } from '../shell/SiteNav';
+import { openedByHistory, openingAt, settleAt } from '../shell/scrollPlace';
 import { DocsSidebar } from '../shell/DocsSidebar';
 import { OnThisPage } from '../shell/OnThisPage';
 import { SiteFooter } from '../shell/SiteFooter';
-import { arrive, armReveals, blocksOf, fontsReady, inOrder, watchChanges } from '../shell/motion';
+import { arrive, armReveals, blocksOf, fontsReady, pageArrival, retime, watchChanges } from '../shell/motion';
 import { routeFor } from '../routes';
 import { useBoxes, useNativeFlash } from './dashboard/context';
 import { BoxList } from './dashboard/BoxList';
@@ -119,8 +118,12 @@ const DocsLayout = (props: RouteSectionProps) => {
       () => [location.pathname, location.hash] as const,
       ([path, hash]) => {
         awaited();
+        const at = openingAt();
         if (path === shownPath) {
-          if (hash) scrollToTarget(hashId(), 'auto', hashId() === highlightNext);
+          // Back across hashes returns to the place; a link on the page glides, to its hash or its top.
+          if (at !== null && openedByHistory()) settleAt(at);
+          else if (at !== null) window.scrollTo({ top: at, left: 0, behavior: 'auto' });
+          else if (hash) scrollToTarget(hashId(), 'auto', hashId() === highlightNext);
           highlightNext = null;
           return;
         }
@@ -128,17 +131,21 @@ const DocsLayout = (props: RouteSectionProps) => {
         const run = ++settled;
         disposeReveals();
         disposeReveals = () => {};
+        // The page goes where it opens before it arrives, so its arrival starts at what is in view.
+        if (at !== null) settleAt(at);
         if (main) {
-          arrive(main, inOrder(blocksOf(main), 200, 55));
+          arrive(main, pageArrival(main));
           highlight(main, path, run);
         }
-        if (!hash) window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
         requestAnimationFrame(() => {
           if (run !== settled || !main) return;
           nextPages(run);
           void fontsReady().then(() => {
             if (run !== settled || !main) return;
-            if (hash) scrollToTarget(hashId(), 'instant', true);
+            if (at === null && hash) {
+              scrollToTarget(hashId(), 'instant', true);
+              retime(main);
+            }
             highlightNext = null;
             const page = armReveals(main, () => blocksOf(main!));
             const foot = footer ? armReveals(footer, () => [...footer!.children] as HTMLElement[]) : () => {};
@@ -213,8 +220,6 @@ const DocsLayout = (props: RouteSectionProps) => {
 
   return (
     <>
-      <GridBackground gridSize={10} />
-      <SiteNav disabled={flashing()} />
       <div class="docs" classList={{ tool: section() === 'dashboard' }}>
         <DocsSidebar
           pathname={location.pathname}

@@ -3,6 +3,9 @@ import { Router, Route } from '@solidjs/router';
 import { NotificationProvider } from '../components/feedback/Notification';
 import RouteMeta from './RouteMeta';
 import { useLeaveFade } from './shell/leave';
+import { SiteNav } from './shell/SiteNav';
+import { GridBackground } from '../components/surfaces/GridBackground';
+import { useScrollPlace } from './shell/scrollPlace';
 import { useNativeFlash } from './pages/dashboard/context';
 import DocsLayout from './pages/DocsLayout';
 import { NotFoundPage, PAGES, pageLoaded, preloadPage } from './lazyPages';
@@ -10,10 +13,13 @@ import { BoxScope, DashboardProvider } from './pages/dashboard/context';
 
 const RootLayout: Component<{ children?: JSX.Element }> = (props) => {
   const native = useNativeFlash();
+  useScrollPlace();
   useLeaveFade(native.running, { loaded: pageLoaded, load: preloadPage, whole: (href) => window.location.assign(href) });
   return (
     <>
       <RouteMeta />
+      <GridBackground gridSize={10} />
+      <SiteNav disabled={native.running()} />
       {props.children}
     </>
   );

@@ -52,12 +52,16 @@ html { scroll-padding-top: calc(var(--nav-h) + 24px); }
   .doc { padding: 36px var(--gutter) 24px; }
 }
 
-/* Nav: transparent over the landing hero, frosted once the page moves; a blue line tracks scroll. */
+/* Nav: transparent over the landing hero, frosted once the page moves; a blue line tracks scroll. The
+   frost fades with the tint. A page change moves it at the pace of the page's fade (`routed`). */
 .nav {
   position: fixed; top: env(safe-area-inset-top, 0px); left: 0; right: 0; z-index: 20;
   height: var(--nav-h); display: flex; align-items: center; gap: 40px; padding-inline: var(--gutter);
-  border-bottom: 1px solid transparent; transition: background 0.4s ease, border-color 0.4s ease;
+  border-bottom: 1px solid transparent;
+  backdrop-filter: blur(0) saturate(1); -webkit-backdrop-filter: blur(0) saturate(1);
+  transition: background-color 0.4s ease, border-color 0.4s ease, backdrop-filter 0.4s ease, -webkit-backdrop-filter 0.4s ease;
 }
+.nav.routed { transition-duration: 0.12s; }
 .nav::after {
   content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 1px; background: var(--accent);
   transform-origin: left; transform: scaleX(var(--prog, 0)); opacity: var(--prog-o, 0);
@@ -115,10 +119,14 @@ html { scroll-padding-top: calc(var(--nav-h) + 24px); }
     background: var(--ground); opacity: 0; visibility: hidden;
     transition: opacity 0.18s ease, visibility 0s linear 0.18s;
   }
-  .nav.open, .nav.closing {
+  /* The bar darkens with the panel opening under it and clears as the panel fades. No frost meanwhile: a
+     backdrop filter would hold the fixed panel inside the bar. */
+  .nav.open {
     background: var(--ground); border-bottom-color: var(--line);
-    backdrop-filter: none; -webkit-backdrop-filter: none; transition: none;
+    transition: background-color 0.25s ease, border-color 0.25s ease;
   }
+  .nav.closing { transition: background-color 0.18s ease, border-color 0.18s ease; }
+  .nav.open, .nav.closing { backdrop-filter: none; -webkit-backdrop-filter: none; }
   .nav.open .links { opacity: 1; visibility: visible; transition: opacity 0.25s ease; }
   .links a {
     font: 600 34px/1 var(--sans); letter-spacing: -0.03em; text-transform: none; color: var(--text);
@@ -178,7 +186,7 @@ html { scroll-padding-top: calc(var(--nav-h) + 24px); }
   background: linear-gradient(90deg, rgba(0, 128, 255, 0.08), transparent 70%); pointer-events: none;
   transition: top 0.45s var(--ease), height 0.45s var(--ease), opacity 0.2s;
 }
-.side.arriving .mark { animation: fade 0.6s ease 0.3s both; }
+.side.entering .mark { animation: fade 0.6s ease 0.3s both; }
 .side:focus-within { -webkit-mask: none; mask: none; }
 .docbar { display: none; }
 
@@ -195,6 +203,8 @@ html { scroll-padding-top: calc(var(--nav-h) + 24px); }
     top: var(--nav-h); z-index: 16; padding: 0 var(--gutter); height: 49px; width: 100%;
     border: 0; border-bottom: 1px solid var(--line); background: var(--ground); color: var(--muted);
     cursor: pointer; text-align: left;
+    /* It comes with the docs' layout, as the sidebar's links cascade in on a wide screen. */
+    animation: fade 0.45s ease 0.08s both;
   }
   .docbar b { color: var(--text); font-weight: 500; }
 }
@@ -299,7 +309,11 @@ html { scroll-padding-top: calc(var(--nav-h) + 24px); }
   padding: 12vh 16px 16px; background: color-mix(in srgb, var(--ground) 74%, transparent);
   -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); animation: fade 0.2s ease both;
 }
-.srch.closing { opacity: 0; transition: opacity 0.15s ease; }
+/* Closing plays the opening back: an animation's fill outranks a transition, so it needs keyframes. */
+.srch.closing { animation: fade-out 0.15s ease both; }
+.srch.closing .srch-p { animation: srch-out 0.15s ease both; }
+@keyframes fade-out { to { opacity: 0; } }
+@keyframes srch-out { to { opacity: 0; transform: translateY(-10px); } }
 .srch-p {
   width: min(720px, 100%); max-height: min(640px, 76vh); display: grid; grid-template-rows: auto minmax(0, 1fr) auto;
   background: var(--g-background); border: 1px solid var(--line-2); box-shadow: 0 30px 90px rgba(0, 0, 0, 0.65);

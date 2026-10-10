@@ -35,7 +35,8 @@ describe('Home', () => {
     expect(r.container.querySelector('.desc-src')!.textContent).toContain(DESCRIPTOR_SAMPLE.device);
     expect(r.container.querySelectorAll('.index a.go')).toHaveLength(4);
     expect(r.container.querySelector('.site-footer')).not.toBeNull();
-    expect(r.container.querySelector('.nav .brand')!.getAttribute('href')).toBe('/');
+    // The bar over every page is the app's, not the landing's, so a page change never fades it.
+    expect(r.container.querySelector('header.nav')).toBeNull();
   });
 
   it('takes the figures the server put in the page, and asks for nothing', async () => {

@@ -1,7 +1,7 @@
 import { createEffect, createMemo, createSignal, For, on, onCleanup, onMount, Show, type JSX } from 'solid-js';
 import { A } from '@solidjs/router';
 import { lockPage, modKey, panelKeys } from './panel';
-import { arrive, fontsReady, inOrder } from './motion';
+import { ARRIVAL_MS, arrive, fontsReady, inOrder } from './motion';
 import { prefetchIndex } from '../search/load';
 import { LANG_LABEL, LANG_ROOT, SECTION_LABEL, routeFor, sectionLabel, sidebarGroups, type Lang, type Section } from '../routes';
 
@@ -103,6 +103,7 @@ export function DocsSidebar(props: {
     }
   };
   let shownList = '';
+  let shownSwitch = '';
   const placeAll = (first: boolean) => {
     if (!side) return;
     const list = groups().map((g) => g.label).join('|');
@@ -110,11 +111,25 @@ export function DocsSidebar(props: {
     side.querySelectorAll<HTMLElement>('.sections').forEach((n) =>
       place(n.querySelector<HTMLElement>(':scope > .ind'), n.querySelector<HTMLElement>('a[aria-current]'), first),
     );
-    if (!first && list !== shownList) arrive(side, inOrder(side.querySelectorAll<HTMLElement>('.group > *'), 0, 22, 24));
+    // A switch that comes or goes moves the search under it, so both join the new list's cascade.
+    const switches = [...side.querySelectorAll('.sections')].map((n) => n.getAttribute('aria-label')).join('|');
+    const top = switches !== shownSwitch ? '.sections, .search, ' : '';
+    // Still marked from the last cascade, they would keep their place in it and jump: they go again.
+    if (top && !first) {
+      side.querySelectorAll<HTMLElement>('.sections, .search').forEach((el) => el.classList.remove('moving'));
+      void side.offsetWidth;
+    }
+    if (!first && list !== shownList) arrive(side, inOrder(side.querySelectorAll<HTMLElement>(`${top}.group > *`), 0, 22, 24));
     shownList = list;
+    shownSwitch = switches;
   };
   onMount(() => {
-    if (side) arrive(side, inOrder(side.querySelectorAll<HTMLElement>('.sections, .search, .group > *'), 80, 22, 24));
+    if (side) {
+      arrive(side, inOrder(side.querySelectorAll<HTMLElement>('.sections, .search, .group > *'), 80, 22, 24));
+      // The edge fades in with the sidebar's first arrival; later it travels, or moves without a fade.
+      side.classList.add('entering');
+      setTimeout(() => side?.classList.remove('entering'), ARRIVAL_MS);
+    }
     placeAll(true);
     // The language row's columns size to their labels, which move when the font arrives.
     const again = () => placeAll(true);
@@ -122,9 +137,18 @@ export function DocsSidebar(props: {
     window.addEventListener('resize', again);
     const ro = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(again);
     side?.querySelectorAll('.sections a').forEach((a) => ro?.observe(a));
+    // Rows that come late (a remembered box) push the list down under the edge, which follows.
+    let frame = 0;
+    const mo = typeof MutationObserver === 'undefined' ? null : new MutationObserver(() => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => place(mark, side?.querySelector<HTMLElement>('.group a[aria-current="page"]'), true));
+    });
+    if (side) mo?.observe(side, { childList: true, subtree: true });
     onCleanup(() => {
       window.removeEventListener('resize', again);
       ro?.disconnect();
+      mo?.disconnect();
+      cancelAnimationFrame(frame);
     });
   });
   createEffect(on([() => props.pathname, section, lang], () => placeAll(false), { defer: true }));

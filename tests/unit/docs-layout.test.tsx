@@ -4,6 +4,13 @@ import { PageHeader } from '../../src/app/shell/PageHeader';
 import { createSignal, For } from 'solid-js';
 import { MemoryRouter, Route, createMemoryHistory } from '@solidjs/router';
 import DocsLayout from '../../src/app/pages/DocsLayout';
+import { SiteNav } from '../../src/app/shell/SiteNav';
+import { useScrollPlace } from '../../src/app/shell/scrollPlace';
+
+const Chrome = (p: { running: () => boolean }) => {
+  useScrollPlace();
+  return <SiteNav disabled={p.running()} />;
+};
 import { BoxesContext, NativeFlashContext, type Boxes, type BoxSession, type NativeFlash } from '../../src/app/pages/dashboard/context';
 import { PROTO_VER } from '../../src/dashboard/protocol';
 
@@ -82,12 +89,16 @@ const Late = () => {
 const mount = (path: string, w = world()) => {
   const history = createMemoryHistory();
   history.set({ value: path });
+  // The bar over every page belongs to the app's root, as in App.tsx.
   const r = render(() => (
     <MemoryRouter
       history={history}
       root={(p) => (
         <NativeFlashContext.Provider value={w.native}>
-          <BoxesContext.Provider value={w.boxes}>{p.children}</BoxesContext.Provider>
+          <BoxesContext.Provider value={w.boxes}>
+            <Chrome running={w.native.running} />
+            {p.children}
+          </BoxesContext.Provider>
         </NativeFlashContext.Provider>
       )}
     >
@@ -321,6 +332,19 @@ describe('DocsLayout and the boxes', () => {
     expect(hrefs).toEqual(expect.arrayContaining(['/native', '/library', '/bindings', '/native/commands/inject', '/ai']));
     const nav = [...r.container.querySelectorAll('header.nav a')].map((a) => a.getAttribute('href'));
     expect(nav).toEqual(expect.arrayContaining(['/', '/guide', '/dashboard', '/dashboard/changelog']));
+    expect(r.container.querySelectorAll('header.nav')).toHaveLength(1);
+  });
+
+  it('keeps the sidebar links across a page change, so the one pressed keeps the focus', async () => {
+    const r = mount('/native/transport');
+    await waitFor(() => expect(r.container.querySelector('#frames')).not.toBeNull());
+    const link = r.container.querySelector<HTMLAnchorElement>('.side a[href="/native/connection"]')!;
+    link.focus();
+    r.history.set({ value: '/native/connection' });
+    await waitFor(() => expect(r.container.textContent).toContain('other page'));
+    expect(r.container.querySelector('.side a[href="/native/connection"]')).toBe(link);
+    expect(document.activeElement).toBe(link);
+    expect(link.getAttribute('aria-current')).toBe('page');
   });
 
   it('puts the page in main, its crumbs in the page header and the footer after the docs grid', async () => {

@@ -6,6 +6,8 @@
 //   no-port, needs-click, denied   Connect fails before a port is picked
 //   busy, silent, unreadable, old  the port answers that way
 //   unsupported, insecure          the page can't reach a port at all
+//   granted                        the port was picked on an earlier visit: a box remembered from it connects
+//                                  when the dashboard opens, without Connect
 //   newer, older                   the box speaks a newer or an older protocol
 //   nomouse, keyboard              nothing cloned, or a keyboard
 //   imperfect                      imperfect clones allowed (the Advanced tab's controls)
@@ -287,7 +289,7 @@ const chooseError = (): Error | null => {
 
 export function fakeBoxDeps(): Partial<BoxesDeps> {
   const port = new DevPort() as unknown as SerialPort;
-  let chosen = false;
+  let chosen = on.has('granted');
   const serial: SerialLike = {
     getPorts: async () => (chosen ? [port] : []),
     addEventListener() {},
@@ -303,7 +305,9 @@ export function fakeBoxDeps(): Partial<BoxesDeps> {
       chosen = true;
       return port;
     },
+    // A real port takes about this long to open and answer the probe's queries.
     probe: async () => {
+      await sleep(250);
       if (on.has('busy')) return { kind: 'busy' };
       if (on.has('silent') || (on.has('lost') && connectedAt > 0)) return { kind: 'silent' };
       if (on.has('unreadable')) return { kind: 'unreadable' };

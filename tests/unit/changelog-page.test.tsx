@@ -3,12 +3,13 @@ import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
 import { render, cleanup, fireEvent, waitFor } from '@solidjs/testing-library';
 import { COMMITS_MARKER } from '../../src/dashboard/firmware/notes';
 
-const fetchCalls = vi.hoisted(() => ({ n: 0, fail: false }));
+const fetchCalls = vi.hoisted(() => ({ n: 0, fail: false, inHand: false }));
 vi.mock('../../src/dashboard/firmware', () => ({
-  fetchReleases: async () => {
+  latestReleases: async () => {
     if (fetchCalls.fail) throw new Error('Could not list firmware (500).');
     return releasesList();
   },
+  releasesInHand: () => (fetchCalls.inHand ? releasesList() : undefined),
 }));
 const releasesList = () => (fetchCalls.n++, [
     {
@@ -19,12 +20,20 @@ const releasesList = () => (fetchCalls.n++, [
   ]);
 
 import Changelog from '../../src/app/pages/dashboard/Changelog';
+import { useScrollPlace } from '../../src/app/shell/scrollPlace';
 
+// As in the app: where the page opens is decided in the root, from the address and its hash.
 const InRoute = () => {
   const history = createMemoryHistory();
-  history.set({ value: '/dashboard/changelog' });
+  history.set({ value: `/dashboard/changelog${window.location.hash}` });
   return (
-    <MemoryRouter history={history}>
+    <MemoryRouter
+      history={history}
+      root={(p) => {
+        useScrollPlace();
+        return <>{p.children}</>;
+      }}
+    >
       <Route path="*" component={Changelog} />
     </MemoryRouter>
   );
@@ -33,6 +42,7 @@ const InRoute = () => {
 beforeEach(() => {
   fetchCalls.n = 0;
   fetchCalls.fail = false;
+  fetchCalls.inHand = false;
   Element.prototype.scrollIntoView = vi.fn();
 });
 
@@ -102,6 +112,26 @@ describe('Changelog', () => {
     const r = render(() => <InRoute />);
     expect(r.container.textContent).not.toContain('Loading');
     expect(r.container.querySelector('section#v9\\.0\\.0')).not.toBeNull();
+  });
+
+  it('keeps each release in place when the live fetch brings the list it already shows', async () => {
+    const data = document.createElement('script');
+    data.id = 'releases-data';
+    data.type = 'application/json';
+    data.textContent = JSON.stringify(releasesList().slice(0, 1));
+    document.body.appendChild(data);
+    const r = render(() => <InRoute />);
+    const first = r.container.querySelector('section#v3\\.4\\.5');
+    expect(first).not.toBeNull();
+    await waitFor(() => expect(r.container.querySelector('section#v2\\.2\\.0')).not.toBeNull());
+    expect(r.container.querySelector('section#v3\\.4\\.5')).toBe(first);
+  });
+
+  it('arrives by a link with the releases fetched beside its code, with no Loading in between', () => {
+    fetchCalls.inHand = true;
+    const r = render(() => <InRoute />);
+    expect(r.container.textContent).not.toContain('Loading');
+    expect(r.container.querySelector('section#v3\\.4\\.5')).not.toBeNull();
   });
 
   it('keeps the releases the server embedded when the live fetch fails', async () => {

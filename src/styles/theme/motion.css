@@ -28,10 +28,12 @@
 /* A block a state change brings (a refusal, a step, a connected box's panel contents) rises in. */
 .st-in { animation: rise 0.45s var(--ease) both; }
 
-/* Leaving for another page, the page fades out before the next arrives. */
-.leaving :is(.docs-page, .toc, .landing) { opacity: 0; transition: opacity 0.12s ease; }
-/* A page whose code is still coming: the one shown dims rather than goes, under a progress pointer. */
-.waiting :is(.docs-page, .toc, .landing) { opacity: 0.4; transition: opacity 0.12s ease; }
+/* Leaving for another page, the page fades out before the next arrives; between the landing and the rest,
+   whatever the next page lays out differently (the docs' sidebar, rail and footer) goes with it. The grid
+   and the bar over every page stay, and the grid fades in once, as the site first draws it. */
+.leaving :is(.docs-page, .toc, .landing), .leaving.away :is(.docs, .site-footer) { opacity: 0; transition: opacity 0.12s ease; }
+#root > canvas { animation: fade 1.6s ease both; }
+/* A page whose code is still coming stays faded, under a progress pointer, until it can arrive whole. */
 .waiting, .waiting * { cursor: progress; }
 
 .rv-wait { opacity: 0; }
