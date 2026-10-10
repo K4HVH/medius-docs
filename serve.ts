@@ -7,6 +7,8 @@ import { handleHomeApi } from "./server/home";
 import { handleMcp } from "./server/mcp";
 import { handleSearchIndex } from "./server/searchIndex";
 import { planRedirect } from "./server/routing";
+import { handleOg } from "./server/og";
+import { cardFor, itemPage } from "./server/items";
 
 const PORT = parseInt(process.env.PORT || "3000");
 const PUBLIC_DIR = process.env.PUBLIC_DIR || "./dist";
@@ -16,6 +18,12 @@ const ROUTES_FILE = join(PUBLIC_DIR, "routes.json");
 const ROUTES: ReadonlySet<string> = new Set(
   existsSync(ROUTES_FILE) ? (JSON.parse(readFileSync(ROUTES_FILE, "utf8")) as string[]) : [],
 );
+
+// A prerendered page by its path, "/404" for the 404 page.
+async function snapshot(path: string): Promise<string | null> {
+  const file = Bun.file(join(PUBLIC_DIR, `${path}.html`));
+  return (await file.exists()) ? file.text() : null;
+}
 
 function notFound(): Response {
   const page = Bun.file(join(PUBLIC_DIR, "404.html"));
@@ -53,9 +61,24 @@ Bun.serve({
     const search = await handleSearchIndex(req, PUBLIC_DIR);
     if (search) return search;
 
+    const card = await handleOg(req, cardFor);
+    if (card) return card;
+
     const url = new URL(req.url);
     const location = planRedirect(url.pathname, url.search, ROUTES);
     if (location) return new Response(null, { status: 301, headers: { location } });
+
+    // One Help answer, release or device: its parent page under the item's head.
+    const item = req.method === "GET" || req.method === "HEAD" ? await itemPage(url.pathname, snapshot) : null;
+    if (item) {
+      const cache: Record<string, string> =
+        item.status === 200
+          ? { "cache-control": LIVE_CACHE }
+          : item.status === 503
+            ? { "retry-after": "120", "cache-control": "no-store" }
+            : {};
+      return new Response(item.html, { status: item.status, headers: { "content-type": "text/html; charset=utf-8", ...cache } });
+    }
 
     const agentDocs = await handleAgentDocs(req, ROUTES.size ? ROUTES : undefined);
     if (agentDocs) return agentDocs;

@@ -57,6 +57,7 @@ function draw(c: CardContent, hash: string): Promise<Uint8Array<ArrayBuffer>> {
 }
 
 export async function handleOg(req: Request, lookup: (path: string) => Promise<CardContent | null>): Promise<Response | null> {
+  if (req.method !== 'GET' && req.method !== 'HEAD') return null;
   const url = new URL(req.url);
   if (!url.pathname.startsWith('/og/') || !url.pathname.endsWith('.png')) return null;
   const stem = url.pathname.slice('/og'.length, -'.png'.length);
