@@ -198,15 +198,12 @@ describe('Control page', () => {
     expect(go.disabled).toBe(false);
   });
 
-  it('names the safety clear by everything it drops, not just injection', async () => {
-    // It is the box-wide clear: locks, the catch table and the loaded clip go with it. A button
-    // labelled "release the keys" would be a trap next to a live event stream.
+  it('says in one short line what the safety clear resets, and the one thing it keeps', async () => {
+    // It is the box-wide clear: locks, the catch table and the loaded clip go with it, so a button
+    // labelled "release the keys" would be a trap next to a live event stream. RESET keeps the stored
+    // descriptor patches, which sit on this page too.
     const { findByText } = mount();
-    // The line under the button says it.
-    const body = (await findByText(/Clears injection/)).textContent ?? '';
-    expect(body).toMatch(/lock/i);
-    expect(body).toMatch(/subscription/i);
-    expect(body).toMatch(/clip/i);
+    expect(await findByText('Resets every control here but patches')).toBeTruthy();
   });
 
   it('says what Clear everything did on the line under it, so the header never grows', async () => {
