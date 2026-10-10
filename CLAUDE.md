@@ -54,6 +54,7 @@ src/
                                       # fitted by the fonts' measures), svg.ts (the card as an SVG)
     AiActions.tsx                     # The "use this page with an AI" menu beside the crumbs
     shell/                            # The site shell: SiteNav, SiteFooter, DocsSidebar, PageHeader, DocSection,
+                                      # Anchor, CopyLink (the link icon beside each place a link names),
                                       # OnThisPage, IndexRow, ByteStrip, Arrow, Filter (a live filter, Marked,
                                       # FixLink), motion.ts (scroll reveals), Count (a figure counting up), and the
                                       # dashboard's: PageTabs/Pane, Panels/Stack/Panel, panelMotion.ts, Segmented,
@@ -209,6 +210,22 @@ Every section is a `DocSection` with an id. It renders `section.doc-section` wit
   ...
 </DocSection>
 ```
+
+A marked block inside a section is an `Anchor` (`shell/Anchor.tsx`): its id, a label and what it holds.
+
+```tsx
+<Anchor id="scale" label="SCALE">
+  ...
+</Anchor>
+```
+
+Every place a link can name carries a link icon (`shell/CopyLink.tsx`) that copies its full address:
+- `DocSection`, `Panel` (titled, not transient) and `Anchor` place it themselves;
+- Help answers, device rows and releases copy their item address (`/guide/help/bsod`);
+- the tab strip's icon copies the open tab.
+
+Anything else marked `data-search-target` places one by hand. The build's search pass fails on a marked
+place with a search entry and no icon.
 
 ### Sidebar
 
