@@ -24,7 +24,7 @@ A static documentation site for Medius: replacement firmware for MAKCU-class mou
 | Vite | Build tool (root set to `src/`) |
 | Bun | Runtime and package manager |
 | TypeScript | Language |
-| MidnightUI | Component library (the CommandPalette, and the dashboard's buttons, chips and inputs), restyled by the site theme |
+| MidnightUI | Component library (the dashboard's buttons, chips and inputs), restyled by the site theme |
 | solid-icons (`solid-icons/bs`) | Bootstrap icons |
 
 ## Commands
@@ -44,7 +44,8 @@ src/
   index.html                          # HTML entry point
   index.tsx                           # App bootstrap
   app/
-    App.tsx                           # Router setup (all routes defined here)
+    App.tsx                           # Router setup: a <Route> per path, its page taken from lazyPages.ts
+    lazyPages.ts                      # Each page's code, fetched when the page is wanted (codePage, dashboard)
     routes.ts                         # Route registry: every page's title, description, sidebar entry
     site.ts                           # Site URL, outside links (Discord, GitHub, crates.io, PyPI)
     RouteMeta.tsx                     # Per-route <head> from the registry, with structuredData.ts
@@ -57,8 +58,10 @@ src/
     data/                             # Help answers, compatibility reports and their merge with the stats, the
                                       # landing's figures, and the bench captures the landing draws (never edited
                                       # by hand)
-    prism.ts                          # Syntax highlighting for code blocks
-    searchIndex.ts                    # Curated search index for Ctrl+K search
+    prism.ts                          # Prism and its languages; highlight.ts fetches it, once
+    search/                           # Ctrl+K search: extract.ts (a rendered page to entries), rank.ts and
+                                      # text.ts (the ranker), load.ts (the index, fetched on use), extra.ts
+                                      # (the hand-kept synonyms and keywords)
     pages/
       Home.tsx                        # Landing page: hero and report feed, vitals, descriptor panel, index
       home/                           # The landing's blocks
@@ -176,13 +179,17 @@ src/
 
 ### Routing
 
-`App.tsx` maps every path to its component; `src/app/routes.ts` holds each page's metadata, and a test keeps the two path lists equal. `DocsLayout` wraps each page with the nav, the sidebar, search, the on-this-page rail and the footer; the page renders the `PageHeader` (crumbs, h1, an optional `aside`, the intro body). A page that moved is in `MOVED` (`src/app/site.ts`): the server 301s it and `NotFound` forwards it, both keeping the anchor. The landing page (`Home.tsx`) sits outside it. The catch-all renders `NotFound.tsx` inside `DocsLayout`.
+`App.tsx` routes every path to its page in `src/app/lazyPages.ts`; `src/app/routes.ts` holds each page's metadata, and tests keep the path lists equal. `DocsLayout` wraps each page with the nav, the sidebar, search, the on-this-page rail and the footer; the page renders the `PageHeader` (crumbs, h1, an optional `aside`, the intro body). A page that moved is in `MOVED` (`src/app/site.ts`): the server 301s it and `NotFound` forwards it, both keeping the anchor. The landing page (`Home.tsx`) sits outside it. The catch-all renders `NotFound.tsx` inside `DocsLayout`.
 
 The prerender (`scripts/prerender.ts`, run by `build:full` and the Docker build) snapshots every registry page, the 404 page and Home, and writes `dist/routes.json`. `serve.ts` answers a registry path with its snapshot, 301s a trailing slash, a `.html` suffix or the wrong case to the registry path, and anything else with `dist/404.html` and status 404. The changelog and stats snapshots hold a `data-fill` block the server fills per request (`server/fill.ts`), so crawlers without JavaScript read the releases and totals. The landing's vitals and the compatibility table are filled the same way, but those pages (`SOFT_FILL_PATHS`) answer 200 as prerendered while a source is down, never 503.
 
+### Loading
+
+Every page is a separate chunk. A link, Back or Forward waits for the page's code before the page changes (`shell/leave.ts`), so a page never shows empty; the router fetches a page's code when a link to it is pointed at, focused or touched, and `DocsLayout` fetches the sidebar neighbours' at idle. A page whose code fails loads whole. In `lazyPages.ts`, a page that shows highlighted code is a `codePage` (it brings the highlighter, so its code never shows plain) and a dashboard page a `dashboard` (it brings the box runtime); a test fails when a page's source and its wrapper disagree. Docs pages never load the dashboard's box runtime.
+
 ### Search
 
-Ctrl+K search is MidnightUI's `CommandPalette` over the curated list in `src/app/searchIndex.ts`. **Update the index when adding or changing pages.** Each entry has `label`, `description`, `path` (optionally with a `#hash` anchor), `group`, `keywords`, and an optional `icon`.
+Ctrl+K search reads an index the build makes from the rendered site (`scripts/searchindex.ts`), so a new page, section or panel is found with no list to keep. Mark a place with `data-search-target` (DocSection, Panel and PageHeader do it), keep live values out with `data-search-skip`, and give a panel shown in one box state the `transient` prop. `src/app/search/extra.ts` holds the few synonyms and keywords no page says. The build fails when a page marks a place search cannot reach or a known query stops finding its answer.
 
 ### Scroll targets
 
@@ -298,10 +305,28 @@ existing internal `<A>` alone; never wrap an external `<a>` around or inside it.
 
 ## Favicon and social embeds
 
-The favicon lives in `public/favicon.svg` (served at `/favicon.svg`). A PNG copy at `public/favicon.png` is the Open Graph / Twitter Card preview. `src/index.html` carries Home's head; `RouteMeta.tsx` rewrites title, description, canonical, Open Graph, Twitter and JSON-LD per route from the registry.
+The favicon lives in `public/favicon.svg` (served at `/favicon.svg`), and three PNGs are made from it:
+
+| File | Size | Use |
+|---|---|---|
+| `public/og-image.png` | 1024 px, full colour | Open Graph and Twitter Card preview (Facebook's large card wants 600 px or more) |
+| `public/favicon.png` | 512 px, 256-colour palette | Tab icon where SVG isn't taken; every page view may fetch it, so it stays small |
+| `public/apple-touch-icon.png` | 180 px, opaque | iOS home screen and Safari |
+
+`src/index.html` carries Home's head; `RouteMeta.tsx` rewrites title, description, canonical, Open Graph, Twitter and JSON-LD per route from the registry.
 
 ```bash
-magick -background none -density 2048 public/favicon.svg -resize 1024x1024 public/favicon.png
+magick -background none -density 2048 public/favicon.svg -resize 1024x1024 -depth 8 -strip public/og-image.png
+python3 - <<'PY'
+from PIL import Image  # Pillow built with libimagequant
+src = Image.open('public/og-image.png').convert('RGBA')
+src.save('public/og-image.png', optimize=True)
+src.resize((512, 512), Image.LANCZOS).quantize(colors=256, method=Image.Quantize.LIBIMAGEQUANT,
+    dither=Image.Dither.FLOYDSTEINBERG).save('public/favicon.png', optimize=True)
+touch = Image.new('RGBA', (180, 180), src.getpixel((512, 80))[:3] + (255,))
+touch.alpha_composite(src.resize((180, 180), Image.LANCZOS))
+touch.convert('RGB').save('public/apple-touch-icon.png', optimize=True)
+PY
 ```
 
 ## Content rules
@@ -332,9 +357,9 @@ Unit tests never count: the provider builds no sink under vitest. A dev server w
 ## Adding a page
 
 1. Create the component under `src/app/pages/`: a `PageHeader` (with the intro body), then a `DocSection id="..."` per section.
-2. Add a route in `App.tsx`.
+2. Add it to `PAGES` in `src/app/lazyPages.ts` (`codePage` if it shows highlighted code) and a `<Route>` in `App.tsx`.
 3. Add its entry to `src/app/routes.ts` in sidebar order: section, group, nav label, icon, title, and a description of 50 to 155 characters that no other page uses.
-4. Add search entries to `searchIndex.ts` (page-level plus key section anchors).
+4. Search finds it once built; add keywords to `src/app/search/extra.ts` only for names the page never uses.
 5. Follow the command/method template and the consistency rules above. Link to canonical tables; never duplicate them.
 
 ## Conformance gate

@@ -1,6 +1,6 @@
 import { SITE, LINKS } from './site';
 import { breadcrumbTrail, documentTitle, routeFor, type RouteInfo } from './routes';
-import { HELP_ITEMS } from './data/help';
+import type { HelpItem } from './data/help';
 
 const WEBSITE_ID = `${SITE}/#website`;
 const MEDIUS_ID = `${SITE}/#medius`;
@@ -9,7 +9,8 @@ const abs = (path: string) => SITE + (path === '/' ? '/' : path);
 
 // schema.org graph for one page. Medius is a plain Thing: a SoftwareApplication item is a rich-result
 // candidate Google wants a rating for, and Medius has none to give.
-export function buildJsonLd(route: RouteInfo, lastmod?: string): object {
+// `faq`: the Help answers, which the Help page lists in its markup and fetches only there.
+export function buildJsonLd(route: RouteInfo, lastmod?: string, faq?: readonly HelpItem[]): object {
   const url = abs(route.path);
   const graph: object[] = [
     {
@@ -53,11 +54,11 @@ export function buildJsonLd(route: RouteInfo, lastmod?: string): object {
     });
   }
 
-  if (route.path === '/guide/help') {
+  if (route.path === '/guide/help' && faq) {
     graph.push({
       '@type': 'FAQPage',
       url,
-      mainEntity: HELP_ITEMS.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
+      mainEntity: faq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
     });
   }
 

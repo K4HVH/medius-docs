@@ -30,6 +30,9 @@
 
 /* Leaving for another page, the page fades out before the next arrives. */
 .leaving :is(.docs-page, .toc, .landing) { opacity: 0; transition: opacity 0.12s ease; }
+/* A page whose code is still coming: the one shown dims rather than goes, under a progress pointer. */
+.waiting :is(.docs-page, .toc, .landing) { opacity: 0.4; transition: opacity 0.12s ease; }
+.waiting, .waiting * { cursor: progress; }
 
 .rv-wait { opacity: 0; }
 .rv-wait, .rv-wait * { animation: none !important; }

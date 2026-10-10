@@ -63,7 +63,7 @@ describe('NotFound', () => {
 
   it('is the catch-all inside the docs layout, not a redirect home', () => {
     const app = readFileSync(join(__dirname, '../../src/app/App.tsx'), 'utf8');
-    expect(app).toContain('<Route path="*" component={NotFound} />');
+    expect(app).toContain('<Route path="*" component={NotFoundPage} />');
     expect(app).not.toContain('Navigate');
     expect(app.indexOf('<Route path="*"')).toBeLessThan(app.lastIndexOf('</Route>'));
   });

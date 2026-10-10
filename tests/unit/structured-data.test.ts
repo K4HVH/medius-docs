@@ -5,7 +5,8 @@ import { SITE, LINKS } from '../../src/app/site';
 import { HELP_ITEMS } from '../../src/app/data/help';
 
 type Node = Record<string, unknown> & { '@type': string | string[] };
-const graph = (r: RouteInfo, lastmod?: string) => (buildJsonLd(r, lastmod) as { '@graph': Node[] })['@graph'];
+// The Help answers are passed for every page, as RouteMeta passes them on Help: only Help marks them up.
+const graph = (r: RouteInfo, lastmod?: string) => (buildJsonLd(r, lastmod, HELP_ITEMS) as { '@graph': Node[] })['@graph'];
 const node = (g: Node[], type: string) => g.find((n) => n['@type'] === type);
 const at = (p: string) => routeFor(p)!;
 

@@ -19,6 +19,9 @@ export interface BoxStore {
 
 export const STORE_KEY = 'medius.dashboard.boxes';
 
+// The selection for a box not listed yet: its card connects one through the chooser.
+export const NEW_BOX = 'new';
+
 interface Saved {
   selected: string | null;
   held: HeldBox[];

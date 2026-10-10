@@ -34,6 +34,8 @@ export async function buildSearchIndex(base: string): Promise<{ index: SearchInd
     const page = await browser.newPage({ reducedMotion: 'reduce', viewport: { width: 1440, height: 900 } });
     const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(e.message));
+    // A page whose code did not come is loaded afresh by the app, which ends the pass as a dev reload does.
+    page.on('console', (m) => m.type() === 'warning' && /did not come/.test(m.text()) && errors.push(m.text()));
     // The stats answer empty; the rest go unanswered, as in the prerender, so a page holds its loading
     // state, which it marks as not for search.
     await page.route('**/api/**', (route) =>
@@ -41,14 +43,24 @@ export async function buildSearchIndex(base: string): Promise<{ index: SearchInd
         ? route.fulfill({ json: NO_STATS })
         : undefined,
     );
-    let pass: Pass;
-    try {
-      await page.goto(`${base}/guide?fakebox=imperfect&searchindex`, { waitUntil: 'load', timeout: 60000 });
-      await page.waitForFunction(() => '__searchEntries' in globalThis, null, { timeout: 60000 });
-      pass = (await page.evaluate(() => (globalThis as { __searchEntries?: Promise<Pass> }).__searchEntries)) as Pass;
-    } catch (e) {
-      // What the page threw is the likelier cause of a pass that stopped.
-      throw new Error(`${(e as Error).message}${errors.length ? `\nthe page threw:\n${errors.join('\n')}` : ''}`);
+    // A dev server with a cold cache (CI, Docker) reloads the page when it bundles a dependency it found
+    // late, which ends the pass under way; the pass then starts again on the fresh page.
+    let pass: Pass | undefined;
+    for (let attempt = 1; !pass; attempt++) {
+      errors.length = 0;
+      try {
+        await page.goto(`${base}/guide?fakebox=imperfect&searchindex`, { waitUntil: 'load', timeout: 60000 });
+        await page.waitForFunction(() => '__searchEntries' in globalThis, null, { timeout: 60000 });
+        pass = (await page.evaluate(() => (globalThis as { __searchEntries?: Promise<Pass> }).__searchEntries)) as Pass;
+      } catch (e) {
+        const message = (e as Error).message;
+        if (/Execution context was destroyed/.test(message) && !errors.length && attempt < 3) {
+          console.warn('search pass: the dev server reloaded the page; starting again');
+          continue;
+        }
+        // What the page threw is the likelier cause of a pass that stopped.
+        throw new Error(`${message}${errors.length ? `\nthe page threw:\n${errors.join('\n')}` : ''}`);
+      }
     }
     if (errors.length) throw new Error(`search pass: the page threw:\n${errors.join('\n')}`);
     return { index: { version: 1, built: new Date().toISOString(), entries: withExtra(pass.entries) }, rendered: pass.rendered };

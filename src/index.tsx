@@ -3,6 +3,8 @@ import { render } from 'solid-js/web';
 import 'solid-devtools';
 
 import App from './app/App';
+import { pageLoaded, preloadPage } from './app/lazyPages';
+import { holdHistory } from './app/shell/leave';
 import { introElapsed, resumeIntro } from './app/shell/takeover';
 import './styles/global.css';
 import './styles/theme/index.css';
@@ -15,18 +17,24 @@ if (import.meta.env.DEV && !(root instanceof HTMLElement)) {
   );
 }
 
-// Prerendered SSG pages ship a static snapshot inside #root; clear it before the
-// client renders a fresh tree (this is a client render(), not a hydrate()).
-const elapsed = introElapsed();
-if (root) root.textContent = '';
-
 const dev = import.meta.env.DEV ? new URLSearchParams(location.search) : null;
 // `?searchindex` on the dev server: the site read into search entries, which a headless browser collects.
 const pass = !!dev?.has('searchindex');
 if (pass) (globalThis as { __mediusSearchPass?: boolean }).__mediusSearchPass = true;
 
-const start = () => {
+let up = false;
+holdHistory({ loaded: pageLoaded, load: preloadPage, reload: () => window.location.reload(), live: () => up });
+
+// Prerendered pages ship a static snapshot inside #root. The app replaces it once the page's code is in,
+// so it does so in one step (a client render, not a hydrate), and picks the snapshot's intro up where it
+// is then. Without the page's code (offline), the snapshot stays: it reads, and its links load pages. Back
+// or forward while the code comes changes the page asked for, whose code is then fetched in turn.
+const start = async () => {
+  while (!pageLoaded(location.pathname)) if (!(await preloadPage(location.pathname).then(() => true, () => false))) return;
+  const elapsed = introElapsed();
+  if (root) root.textContent = '';
   render(() => <App />, root!);
+  up = true;
   resumeIntro(elapsed);
   if (pass)
     void import('./dev/searchPass').then((m) => {
@@ -38,6 +46,6 @@ const start = () => {
 if (dev?.has('fakebox')) {
   void import('./dev/fakeBox').then((m) => {
     (globalThis as { __mediusDevBox?: unknown }).__mediusDevBox = m.fakeBoxDeps();
-    start();
+    void start();
   });
-} else start();
+} else void start();

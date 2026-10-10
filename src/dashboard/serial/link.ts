@@ -139,6 +139,7 @@ import {
   UPD_BUSY,
 } from '../protocol';
 import { isWebSerialSupported } from './support';
+import { canUpdate } from './wire';
 
 export const CTRL_BAUD = 6_000_000;
 // Firmware before 3.4.0 runs the control link at 4 Mbaud, and has to stay reachable to be updated.
@@ -253,15 +254,7 @@ export class BadProtoVerError extends Error {
   }
 }
 
-/** Whether this page can reach a box at all: from MIN_PROTO_VER on, the update path is fixed (§2.3). */
-export function canUpdate(version: Version): boolean {
-  return version.protoVer >= MIN_PROTO_VER;
-}
-
-/** Whether a box speaks the current wire, or only enough of it to be updated. */
-export function speaksCurrentWire(version: Version): boolean {
-  return version.protoVer === PROTO_VER;
-}
+export { canUpdate, speaksCurrentWire } from './wire';
 
 export interface SerialLinkEvents {
   onLog?: (line: LogLine) => void;

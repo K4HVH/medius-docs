@@ -15,10 +15,9 @@ import {
 } from '../../../dashboard/serial';
 import type { StatsSink } from '../../../dashboard/stats';
 import { type BoxSession, type SessionControl, boxId, createBoxSession } from './session';
-import { type BoxIcon, type BoxStore, STORE_KEY } from './store';
+import { type BoxIcon, type BoxStore, NEW_BOX, STORE_KEY } from './store';
 
-// The selection for a box not listed yet: its card connects one through the chooser.
-export const NEW_BOX = 'new';
+export { NEW_BOX } from './store';
 
 export interface BoxEntry {
   readonly key: string;

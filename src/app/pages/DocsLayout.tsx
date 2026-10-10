@@ -1,8 +1,8 @@
 import { createSignal, createEffect, createMemo, on, onCleanup, onMount } from 'solid-js';
-import { type RouteSectionProps, useBeforeLeave, useLocation, useNavigate } from '@solidjs/router';
+import { type RouteSectionProps, useBeforeLeave, useLocation, useNavigate, usePreloadRoute } from '@solidjs/router';
 import { GridBackground } from '../../components/surfaces/GridBackground';
 import { Search } from '../shell/Search';
-import { prefetchIndex } from '../search/load';
+import { highlighter, loadHighlighter } from '../highlight';
 import { SiteNav } from '../shell/SiteNav';
 import { DocsSidebar } from '../shell/DocsSidebar';
 import { OnThisPage } from '../shell/OnThisPage';
@@ -11,7 +11,6 @@ import { arrive, armReveals, blocksOf, fontsReady, inOrder, watchChanges } from 
 import { routeFor } from '../routes';
 import { useBoxes, useNativeFlash } from './dashboard/context';
 import { BoxList } from './dashboard/BoxList';
-import Prism from '../prism';
 
 const BOX_ROUTES = new Set([
   '/dashboard',
@@ -98,10 +97,6 @@ const DocsLayout = (props: RouteSectionProps) => {
     };
     window.addEventListener('keydown', onKey);
     onCleanup(() => window.removeEventListener('keydown', onKey));
-    // The index is fetched once the page is idle, so the first search rarely waits for it.
-    const idle = window.requestIdleCallback?.(prefetchIndex, { timeout: 5000 });
-    const late = idle === undefined ? setTimeout(prefetchIndex, 3000) : undefined;
-    onCleanup(() => (idle === undefined ? clearTimeout(late) : window.cancelIdleCallback(idle)));
   });
 
   const section = () => routeFor(location.pathname)?.section;
@@ -133,11 +128,14 @@ const DocsLayout = (props: RouteSectionProps) => {
         const run = ++settled;
         disposeReveals();
         disposeReveals = () => {};
-        if (main) arrive(main, inOrder(blocksOf(main), 200, 55));
+        if (main) {
+          arrive(main, inOrder(blocksOf(main), 200, 55));
+          highlight(main, path, run);
+        }
         if (!hash) window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
         requestAnimationFrame(() => {
           if (run !== settled || !main) return;
-          Prism.highlightAllUnder(main);
+          nextPages(run);
           void fontsReady().then(() => {
             if (run !== settled || !main) return;
             if (hash) scrollToTarget(hashId(), 'instant', true);
@@ -157,6 +155,51 @@ const DocsLayout = (props: RouteSectionProps) => {
   onMount(() => {
     if (main) onCleanup(watchChanges(main));
   });
+
+  // `data-highlighted` names the page whose code is highlighted, which the prerender and the search pass
+  // wait for. Every navigation brings the page's code before the page shows (shell/leave.ts), and a page
+  // that shows code brings the highlighter (lazyPages.ts), so its code is highlighted as it first shows.
+  const highlight = (el: HTMLElement, path: string, run: number) => {
+    const done = (Prism?: ReturnType<typeof highlighter>) => {
+      Prism?.highlightAllUnder(el);
+      el.dataset.highlighted = path;
+    };
+    if (!el.querySelector('code[class*="language-"]')) return done();
+    const now = highlighter();
+    if (now) return done(now);
+    loadHighlighter().then(
+      (Prism) => run === settled && done(Prism),
+      () => {},
+    );
+  };
+
+  // Once the page is in and the browser idle, the code of the pages before and after it in its section of
+  // the sidebar, where a reader most often goes next (a browser without idle callbacks waits a second);
+  // never when the browser asks to save data, and none for a page the sidebar does not list. Any other
+  // link's page comes when the link is pointed at, focused or touched.
+  const preloadRoute = usePreloadRoute();
+  let stopIdle = () => {};
+  const whenIdle = (f: () => void) => {
+    if (typeof window.requestIdleCallback === 'function') {
+      const id = window.requestIdleCallback(f, { timeout: 4000 });
+      return () => window.cancelIdleCallback?.(id);
+    }
+    const id = setTimeout(f, 1000);
+    return () => clearTimeout(id);
+  };
+  const nextPages = (run: number) => {
+    stopIdle();
+    if ((navigator as { connection?: { saveData?: boolean } }).connection?.saveData) return;
+    stopIdle = whenIdle(() => {
+      if (run !== settled) return;
+      const links = [...document.querySelectorAll<HTMLAnchorElement>('.side nav.group a[href^="/"]')]
+        .map((a) => a.getAttribute('href')!)
+        .filter((href) => routeFor(href)?.section === section());
+      const at = links.indexOf(location.pathname);
+      for (const href of [links[at - 1], links[at + 1]]) if (at >= 0 && href) preloadRoute(href, { preloadData: false });
+    });
+  };
+  onCleanup(() => stopIdle());
 
   const handleBoxPick = () => {
     setCloseKey((k) => k + 1);

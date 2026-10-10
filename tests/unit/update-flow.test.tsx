@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, afterEach } from 'vitest';
+import { describe, it, expect, vi, afterEach, beforeAll } from 'vitest';
 import { render, cleanup, waitFor } from '@solidjs/testing-library';
 import { PROTO_VER } from '../../src/dashboard/protocol';
 
@@ -55,6 +55,9 @@ const mock = vi.hoisted(() => {
     holdStage: null as Promise<void> | null,
   };
 });
+
+// The provider asks these of support.ts directly, so the page counts Web Serial as there.
+vi.mock('../../src/dashboard/serial/support', () => ({ isWebSerialSupported: () => true, isSecureContextOk: () => true }));
 
 vi.mock('../../src/dashboard/serial', async () => {
   const link =
@@ -200,7 +203,10 @@ Object.defineProperty(navigator, 'serial', {
   value: { getPorts: async () => [], addEventListener: () => {}, removeEventListener: () => {} },
 });
 
-import { BoxScope, DashboardProvider, useDashboard } from '../../src/app/pages/dashboard/context';
+import { BoxScope, DashboardProvider, loadRuntime, useDashboard } from '../../src/app/pages/dashboard/context';
+
+// The box runtime is fetched with the dashboard; here it is in before each provider mounts.
+beforeAll(() => loadRuntime());
 
 type Api = ReturnType<typeof useDashboard>;
 let api: Api;

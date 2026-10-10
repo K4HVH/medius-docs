@@ -103,6 +103,7 @@ const mount = (path: string, w = world()) => {
             </>
           )}
         />
+        <Route path="/native/code" component={() => <pre><code class="language-rust">{'fn main() { let x = 1; }'}</code></pre>} />
         <Route path="/guide/compatibility" component={Late} />
         <Route path="/dashboard" component={() => <p>device page</p>} />
         <Route path="/dashboard/setup" component={() => <p>setup page</p>} />
@@ -117,12 +118,55 @@ const mount = (path: string, w = world()) => {
 
 afterEach(cleanup);
 
+// The search index the tests serve; the loader keeps the first one fetched for the whole file.
+const INDEX = { version: 1, built: 'now', entries: [{ path: '/native/commands/inject', title: 'INJECT', kind: 'page', section: 'Native API', crumb: 'Commands', text: '' }] };
+
 const row = (r: ReturnType<typeof render>) =>
   [...r.container.querySelectorAll('button.tabs__tab')].find((b) => /Desk/.test(b.textContent ?? '')) as HTMLElement;
 
 const bar = (r: ReturnType<typeof render>) => r.container.querySelector('button.docbar')!.textContent ?? '';
 
 describe('DocsLayout and the boxes', () => {
+  it('fetches the search index when a reader points at search, never for every page view, a Ctrl press or a focus', async () => {
+    const fetches = vi.fn(async () => new Response(JSON.stringify(INDEX), { status: 200 }));
+    vi.stubGlobal('fetch', fetches);
+    onTestFinished(() => {
+      vi.unstubAllGlobals();
+    });
+    vi.stubGlobal('requestIdleCallback', (f: () => void) => (setTimeout(f, 0), 1));
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    onTestFinished(() => {
+      vi.useRealTimers();
+    });
+    const r = mount('/native');
+    await waitFor(() => expect(r.container.textContent).toContain('native'));
+    await vi.advanceTimersByTimeAsync(10_000);
+    fireEvent.keyDown(window, { key: 'Control' });
+    fireEvent.focus(r.container.querySelector('button.search')!);
+    await vi.advanceTimersByTimeAsync(100);
+    expect(fetches).not.toHaveBeenCalled();
+    fireEvent.pointerEnter(r.container.querySelector('button.search')!);
+    await waitFor(() => expect(fetches).toHaveBeenCalledWith('/search-index.json'));
+    // The loader keeps this fetch for the file: its searcher is built here, on this test's clock.
+    await vi.advanceTimersByTimeAsync(100);
+  });
+
+  it('opens the search panel in the same moment, so the first keys typed land in it', async () => {
+    const r = mount('/native');
+    await waitFor(() => expect(r.container.textContent).toContain('native'));
+    fireEvent.keyDown(window, { key: '/' });
+    expect(document.querySelector('.srch input')).not.toBeNull();
+  });
+
+  it('marks a page with no code done at once, and a page with code once it is highlighted', async () => {
+    const r = mount('/native');
+    const main = () => r.container.querySelector<HTMLElement>('main.docs-page')!;
+    await waitFor(() => expect(main().dataset.highlighted).toBe('/native'));
+    r.history.set({ value: '/native/code' });
+    await waitFor(() => expect(main().dataset.highlighted).toBe('/native/code'));
+    expect(main().querySelector('code.language-rust .token')).not.toBeNull();
+  });
+
   it('names the selected box in the page bar on a box route, and not on Setup', async () => {
     const r = mount('/dashboard');
     await waitFor(() => expect(bar(r)).toContain('Device - Desk'));
@@ -230,8 +274,7 @@ describe('DocsLayout and the boxes', () => {
   });
 
   it('closes the phone page panel when a search result is chosen', async () => {
-    const index = { version: 1, built: 'now', entries: [{ path: '/native/commands/inject', title: 'INJECT', kind: 'page', section: 'Native API', crumb: 'Commands', text: '' }] };
-    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify(index), { status: 200 })));
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify(INDEX), { status: 200 })));
     onTestFinished(() => {
       vi.unstubAllGlobals();
     });
@@ -295,6 +338,97 @@ describe('DocsLayout and the boxes', () => {
     await waitFor(() => expect(r.container.textContent).toContain('device page'));
     expect(r.container.textContent).not.toContain('Boxes');
     expect(row(r)).toBeUndefined();
+  });
+});
+
+describe('DocsLayout fetching ahead', () => {
+  it('fetches, when idle, the code of the pages before and after this one in the sidebar, and no others', async () => {
+    const fetched: string[] = [];
+    const page = (path: string) => Object.assign(() => <p>{path}</p>, { preload: () => (fetched.push(path), Promise.resolve()) });
+    vi.stubGlobal('requestIdleCallback', (f: () => void) => (setTimeout(f, 0), 1));
+    onTestFinished(() => {
+      vi.unstubAllGlobals();
+    });
+    const history = createMemoryHistory();
+    history.set({ value: '/native/transport' });
+    const w = world();
+    render(() => (
+      <MemoryRouter
+        history={history}
+        root={(p) => (
+          <NativeFlashContext.Provider value={w.native}>
+            <BoxesContext.Provider value={w.boxes}>{p.children}</BoxesContext.Provider>
+          </NativeFlashContext.Provider>
+        )}
+      >
+        <Route path="/" component={DocsLayout}>
+          <Route path="/native/transport" component={Sections} />
+          {['/native/hardware', '/native/connection', '/native/frame'].map((path) => <Route path={path} component={page(path)} />)}
+        </Route>
+      </MemoryRouter>
+    ));
+    await waitFor(() => expect(fetched.sort()).toEqual(['/native/connection', '/native/hardware']));
+    await new Promise((r) => setTimeout(r, 50));
+    expect(fetched).not.toContain('/native/frame');
+  });
+});
+
+describe('DocsLayout fetching ahead at a section root', () => {
+  const at = (path: string) => {
+    const fetched: string[] = [];
+    const page = (p: string) => Object.assign(() => <p>{p}</p>, { preload: () => (fetched.push(p), Promise.resolve()) });
+    const history = createMemoryHistory();
+    history.set({ value: path });
+    const w = world();
+    render(() => (
+      <MemoryRouter
+        history={history}
+        root={(p) => (
+          <NativeFlashContext.Provider value={w.native}>
+            <BoxesContext.Provider value={w.boxes}>{p.children}</BoxesContext.Provider>
+          </NativeFlashContext.Provider>
+        )}
+      >
+        <Route path="/" component={DocsLayout}>
+          <Route path={path} component={() => <p>{path}</p>} />
+          {['/native', '/native/quickstart', '/native/flashing', '/native/troubleshooting', '/ai', '/library', '/bindings', '/bindings/c', '/bindings/python', '/bindings/python/quickstart']
+            .filter((p) => p !== path)
+            .map((p) => <Route path={p} component={page(p)} />)}
+        </Route>
+      </MemoryRouter>
+    ));
+    return fetched;
+  };
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('takes the pages beside this one in its group, never the section or language switches', async () => {
+    vi.stubGlobal('requestIdleCallback', (f: () => void) => (setTimeout(f, 0), 1));
+    const fetched = at('/native');
+    await waitFor(() => expect(fetched).toEqual(['/native/quickstart']));
+    await new Promise((r) => setTimeout(r, 50));
+    expect(fetched).toEqual(['/native/quickstart']);
+  });
+
+  it('stays in the section, so the last page of one never takes the AI page listed after it', async () => {
+    vi.stubGlobal('requestIdleCallback', (f: () => void) => (setTimeout(f, 0), 1));
+    const fetched = at('/native/troubleshooting');
+    await waitFor(() => expect(fetched).toEqual(['/native/flashing']));
+    await new Promise((r) => setTimeout(r, 50));
+    expect(fetched).toEqual(['/native/flashing']);
+  });
+
+  it('takes none on a page the sidebar does not list', async () => {
+    vi.stubGlobal('requestIdleCallback', (f: () => void) => (setTimeout(f, 0), 1));
+    const fetched = at('/zzz');
+    await new Promise((r) => setTimeout(r, 80));
+    expect(fetched).toEqual([]);
+  });
+
+  it('still fetches them where the browser has no idle callback', async () => {
+    vi.stubGlobal('requestIdleCallback', undefined);
+    vi.stubGlobal('cancelIdleCallback', undefined);
+    const fetched = at('/bindings/python');
+    await waitFor(() => expect(fetched).toEqual(['/bindings/python/quickstart']), { timeout: 3000 });
   });
 });
 

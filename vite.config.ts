@@ -171,6 +171,9 @@ export default defineConfig(({ mode }) => {
     plugins: [firmwareApi(), statsApi(), homeApi(), searchIndex(), agentDocs(), devtools(), solidPlugin()],
     root: 'src',
     publicDir: '../public',
+    // The devtools plugin adds this import itself, past the dependency scan, and a dev server with a cold
+    // cache would otherwise reload the page to bundle it.
+    optimizeDeps: { include: ['solid-devtools/setup'] },
     server: {
       port: 3000,
       // Vite's own list, and the stats database: /@fs/ serves any file in the checkout otherwise.

@@ -68,6 +68,15 @@ export default function RouteMeta() {
     upsertMeta('name', 'twitter:title', title);
     upsertMeta('name', 'twitter:description', route.description);
     setJsonLd(buildJsonLd(route, LASTMOD[route.path]));
+    // Help marks its answers up; their text comes with the Help page, so it is fetched only there. Without
+    // them the page keeps the graph above.
+    if (route.path === '/guide/help')
+      void import('./data/help').then(
+        ({ HELP_ITEMS }) => {
+          if (location.pathname === route.path) setJsonLd(buildJsonLd(route, LASTMOD[route.path], HELP_ITEMS));
+        },
+        () => {},
+      );
   });
   return null;
 }

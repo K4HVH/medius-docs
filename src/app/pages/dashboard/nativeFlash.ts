@@ -2,7 +2,7 @@
 import { type Accessor, createSignal } from 'solid-js';
 import { type FlashChip, type FlashKind, type FlashProgress, imageVersion } from '../../../dashboard/flash';
 import type { FlashPage, FlashSource, StatsSink } from '../../../dashboard/stats';
-import { flashErrorText } from './session';
+import { flashErrorText } from './flashText';
 
 export interface RomFlashMeta {
   page: Exclude<FlashPage, 'update'>;
