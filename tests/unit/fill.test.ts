@@ -39,6 +39,7 @@ describe('fillPage', () => {
     expect(html).not.toContain('Loading...');
     expect(html).toContain('id="v3.4.5"');
     expect(html).toContain('<section id="v3.4.5" class="rel"><div class="rel-l"><h2>v3.4.5</h2>');
+    expect(html).toContain('<time class="caps" datetime="2026-10-05T12:00:00Z">5 Oct 2026</time>');
     // Folded where no script runs, grouped by repo as the page groups them.
     expect(html).toContain('<details><summary>Show commits</summary><div class="cmts"><p class="sublabel">Firmware</p><ol><li>firmware: answered from RAM<code>bf6e62f</code></li></ol></div></details>');
     expect(html.indexOf('Fixed')).toBeLessThan(html.indexOf('<details>'));
