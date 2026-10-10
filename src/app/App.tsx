@@ -2,6 +2,8 @@ import type { Component, JSX } from 'solid-js';
 import { Router, Route } from '@solidjs/router';
 import { NotificationProvider } from '../components/feedback/Notification';
 import RouteMeta from './RouteMeta';
+import { useLeaveFade } from './shell/leave';
+import { useNativeFlash } from './pages/dashboard/context';
 import Home from './pages/Home';
 import NotFound from './pages/NotFound';
 import GuideStart from './pages/guide/Start';
@@ -89,12 +91,16 @@ import DashboardChangelog from './pages/dashboard/Changelog';
 import DashboardStats from './pages/dashboard/Stats';
 import { BoxScope, DashboardProvider } from './pages/dashboard/context';
 
-const RootLayout: Component<{ children?: JSX.Element }> = (props) => (
-  <>
-    <RouteMeta />
-    {props.children}
-  </>
-);
+const RootLayout: Component<{ children?: JSX.Element }> = (props) => {
+  const native = useNativeFlash();
+  useLeaveFade(native.running);
+  return (
+    <>
+      <RouteMeta />
+      {props.children}
+    </>
+  );
+};
 
 const App: Component = () => {
   return (

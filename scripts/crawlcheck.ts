@@ -56,8 +56,7 @@ async function checkPage(path: string, titles: Map<string, string>): Promise<voi
   }
   if (/Browser not supported|Page not secure/.test(html)) fail(`${path}: unsupported-browser card in the snapshot`);
   if (!html.includes('class="site-footer"')) fail(`${path}: no footer`);
-  if (/class="[^"]*\brv\b[^"]*\bpre\b/.test(html)) fail(`${path}: a block hidden for a scroll reveal in the snapshot`);
-  if (/class="[^"]*\bpn\b[^"]*\bpre\b/.test(html)) fail(`${path}: a panel hidden for its arrival in the snapshot`);
+  if (/class="[^"]*\brv-wait\b/.test(html)) fail(`${path}: a block held back for a scroll reveal in the snapshot`);
   const h1s = [...html.matchAll(/<h1\b[^>]*>([\s\S]*?)<\/h1>/g)].map((m) => decode(m[1].replace(/<[^>]+>/g, '')).replace(/\s+/g, ' ').trim());
   const heading = path === '/' ? HERO : route.title;
   if (h1s.length !== 1) fail(`${path}: ${h1s.length} h1 elements, want 1`);

@@ -43,8 +43,8 @@ const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
   },
 ];
 
-export const SiteFooter = () => (
-  <footer class="site-footer">
+export const SiteFooter = (props: { ref?: (el: HTMLElement) => void }) => (
+  <footer class="site-footer" ref={props.ref}>
     <div>
       <A class="brand" href="/" end activeClass="" inactiveClass="">Medius</A>
       <p>Firmware for the MAKCU box.</p>

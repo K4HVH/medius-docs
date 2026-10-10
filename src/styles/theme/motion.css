@@ -1,25 +1,38 @@
-/* Motion shared by every page. Component motion sits with the component's rules. */
+/* Motion shared by every page. Component motion sits with the component's rules.
 
-.rv {
-  transition: opacity 0.8s var(--ease), transform 0.8s var(--ease);
-}
+   A page arrives in reading order: the crumbs fade, the title rises out of its line, the header's right
+   side follows, then each block motion.ts stamps rises after the one before it, a table row by row and a
+   chart growing from its axis. A block below the first screen waits and plays the same rise when it
+   comes into view. `moving` is on a block only while it moves. */
 
-.rv.pre {
-  opacity: 0;
-  transform: translateY(18px);
-}
+@keyframes draw { from { transform: scaleX(0); } }
+@keyframes rise { from { opacity: 0; transform: translateY(12px); } }
+@keyframes fade { from { opacity: 0; } }
+@keyframes rowin { from { opacity: 0; transform: translateY(6px); } }
+@keyframes up { from { transform: translateY(105%); } }
+@keyframes grow-y { from { transform: scaleY(0); } }
+@keyframes grow-x { from { transform: scaleX(0); } }
 
-@keyframes draw {
-  from { transform: scaleX(0); }
-}
+.arriving .page-header .crumbs, .arriving .page-header__bar > :not(.crumbs) { animation: fade 0.5s ease both; }
+.arriving .page-header h1 .mask > span { animation: up 0.9s var(--ease) both; }
+.arriving .page-header__aside { animation: rise 0.7s var(--ease) 0.12s both; }
+.arriving .ptabs { animation: fade 0.6s ease 0.18s both; }
 
-@keyframes rise {
-  from { opacity: 0; transform: translateY(12px); }
-}
+.rb.moving { animation: rise 0.7s var(--ease) var(--d, 0ms) both; }
+/* A table's frame and rules come with it; its rows follow one by one. */
+.rt.moving { animation: fade 0.4s ease var(--d, 0ms) both; }
+.rt.moving tr { animation: rowin 0.45s var(--ease) calc(var(--d, 0ms) + var(--r, 0) * 35ms) both; }
+.rb.moving .cols i, .rb.moving.cols i { animation: grow-y 0.7s var(--ease) calc(var(--d, 0ms) + 0.15s) both; }
+.rb.moving .bars .t i, .rb.moving.bars .t i { animation: grow-x 0.8s var(--ease) calc(var(--d, 0ms) + 0.15s) both; }
 
-@keyframes fade {
-  from { opacity: 0; }
-}
+/* A block a state change brings (a refusal, a step, a connected box's panel contents) rises in. */
+.st-in { animation: rise 0.45s var(--ease) both; }
+
+/* Leaving for another page, the page fades out before the next arrives. */
+.leaving :is(.docs-page, .toc, .landing) { opacity: 0; transition: opacity 0.12s ease; }
+
+.rv-wait { opacity: 0; }
+.rv-wait, .rv-wait * { animation: none !important; }
 
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -29,15 +42,9 @@
     transition: none !important;
   }
 
-  .rv.pre {
-    opacity: 1;
-    transform: none;
-  }
+  .rv-wait { opacity: 1; }
 }
 
 @media print {
-  .rv.pre {
-    opacity: 1;
-    transform: none;
-  }
+  .rv-wait { opacity: 1; }
 }

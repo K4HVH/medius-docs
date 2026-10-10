@@ -11,7 +11,7 @@ describe('SiteFooter', () => {
   const mount = () =>
     render(() => (
       <MemoryRouter>
-        <Route path="*" component={SiteFooter} />
+        <Route path="*" component={() => <SiteFooter />} />
       </MemoryRouter>
     ));
 

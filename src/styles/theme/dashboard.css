@@ -76,8 +76,6 @@
 .pn > .pb:first-child { margin-top: 28px; }
 .pb > p { margin: 0; font-size: 14.5px; color: var(--text-2); }
 .pb .mut, .pb > p.mut { color: var(--muted); font-size: 14.5px; }
-/* Hidden only until the panel is brought in. */
-.pn.pre > .ph, .pn.pre > .pb > *:not(.vals, .table-scroll), .pn.pre :is(.vals, .table-scroll) tr { opacity: 0; }
 
 /* Controls. A choice of a few slides its fill; fields, steppers, dropdowns and sliders share one edge,
    one height and one focus colour. */
@@ -456,7 +454,7 @@
 .pb pre.reply { max-height: 10rem; overflow: auto; margin: 0; }
 
 /* Stats. A chart's figure is what it stands at, or the column or row under the pointer; columns and bars
-   draw in when their panel arrives. Each part's colour is 3:1 or more against the ground. */
+   grow in when their panel arrives (motion.css) and ease to new values. Each part's colour is 3:1 or more against the ground. */
 .readout { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px 14px; }
 .readout b { font: 600 34px/1 var(--sans); letter-spacing: -0.025em; font-variant-numeric: tabular-nums; color: var(--text); }
 .readout span { color: var(--muted); }
@@ -465,7 +463,6 @@
 .cols i { display: block; flex: none; background: var(--c, var(--accent)); opacity: 0.75; transform-origin: bottom; transition: transform 0.7s var(--ease), opacity 0.2s; }
 .cols > span.now i { opacity: 0.45; }
 .cols > span:hover i { opacity: 1; }
-.chart:not(.on) .cols i, .cols.chart:not(.on) i { transform: scaleY(0); }
 .axis { display: flex; justify-content: space-between; gap: 12px; color: var(--dim); }
 .legend { display: flex; flex-wrap: wrap; gap: 8px 18px; color: var(--muted); }
 .legend span { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
@@ -481,7 +478,6 @@
 .bars .br > span:first-child { color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: color 0.2s; cursor: crosshair; }
 .bars .t { height: 8px; background: var(--line); }
 .bars .t i { display: block; height: 100%; background: var(--c, var(--accent)); opacity: 0.75; transform-origin: left; transition: transform 0.8s var(--ease), opacity 0.2s; }
-.bars.chart:not(.on) .t i { transform: scaleX(0); }
 .bars .br:hover > span:first-child { color: var(--text); }
 .bars .br:hover .t i { opacity: 1; }
 .bars b { font: 500 13px/1 var(--mono); color: var(--text); text-align: right; font-variant-numeric: tabular-nums; }

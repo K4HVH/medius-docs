@@ -102,6 +102,20 @@ describe('OnThisPage', () => {
     expect(r.container.querySelector('#payload h2')!.classList.contains('act')).toBe(true);
   });
 
+  it('lists the page and stamps its arrival in the same render, so a snapshot carries it on', () => {
+    const r = mount('/native/commands/inject', () => (
+      <>
+        <main class="docs-page">
+          <DocSection id="payload" title="Payload">x</DocSection>
+        </main>
+        <OnThisPage pathname="/native/commands/inject" />
+      </>
+    ));
+    const link = r.container.querySelector('.toc a');
+    expect(link?.textContent).toBe('Payload');
+    expect(link?.classList.contains('moving')).toBe(true);
+  });
+
   it('moves to a section through the router, so a later link back to the first hash still works', async () => {
     const history = createMemoryHistory();
     history.set({ value: '/native/commands/inject#payload' });

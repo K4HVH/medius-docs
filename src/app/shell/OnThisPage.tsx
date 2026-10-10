@@ -1,4 +1,5 @@
 import { createEffect, createSignal, For, on, onCleanup, onMount, Show } from 'solid-js';
+import { arrive, inOrder } from './motion';
 
 interface Item {
   id: string;
@@ -14,6 +15,7 @@ export function OnThisPage(props: { pathname: string }) {
   const [active, setActive] = createSignal('');
   let mark: HTMLSpanElement | undefined;
   let rail: HTMLElement | undefined;
+  const [box, setBox] = createSignal<HTMLElement>();
 
   const place = () => {
     const a = rail?.querySelector<HTMLAnchorElement>('a.act');
@@ -37,17 +39,36 @@ export function OnThisPage(props: { pathname: string }) {
     requestAnimationFrame(place);
   };
 
+  // The list changes only when the sections do, so a rescan never redraws the same links.
   const scan = () => {
-    setItems(
-      sections().map((s) => ({
-        id: s.id,
-        title: (s.querySelector('h2')?.firstChild?.textContent ?? s.id).trim(),
-      })),
-    );
+    const next = sections().map((s) => ({
+      id: s.id,
+      title: (s.querySelector('h2')?.firstChild?.textContent ?? s.id).trim(),
+    }));
+    const cur = items();
+    if (next.length !== cur.length || next.some((n, i) => n.id !== cur[i].id || n.title !== cur[i].title)) setItems(next);
     spy();
   };
 
-  createEffect(on(() => props.pathname, () => requestAnimationFrame(() => requestAnimationFrame(scan))));
+  // Read with the page, so the list arrives with it; read again once its layout has settled.
+  createEffect(
+    on(
+      () => props.pathname,
+      () => {
+        scan();
+        requestAnimationFrame(() => requestAnimationFrame(scan));
+      },
+    ),
+  );
+  // A page's list cascades in with the page; a filter changing it later does not.
+  let arrivedFor = '';
+  createEffect(
+    on([items, box], ([list, el]) => {
+      if (!el || !list.length || arrivedFor === props.pathname) return;
+      arrivedFor = props.pathname;
+      arrive(el, inOrder(el.querySelectorAll<HTMLElement>('.label, nav > a'), 120, 30, 16));
+    }),
+  );
   onMount(() => window.addEventListener('scroll', spy, { passive: true }));
   onCleanup(() => window.removeEventListener('scroll', spy));
   // A section a filter hides leaves the list, and comes back with it.
@@ -63,7 +84,7 @@ export function OnThisPage(props: { pathname: string }) {
 
   return (
     <Show when={items().length > 0}>
-      <aside class="toc" aria-label="On this page">
+      <aside ref={setBox} class="toc" aria-label="On this page">
         <p class="label">On this page</p>
         <nav ref={rail}>
           <span class="ind" ref={mark} aria-hidden="true" />
