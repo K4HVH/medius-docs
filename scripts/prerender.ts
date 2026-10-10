@@ -55,15 +55,38 @@ async function main(): Promise<void> {
   // Reduced motion: the snapshot is served before the app runs, so it must hold no reveal-hidden block
   // and no animation's first frame.
   const page = await browser.newPage({ reducedMotion: 'reduce' });
+  // Nothing waits for idle time here: the app's idle work (the next pages' code) would leave its
+  // modulepreload links in every snapshot, and a reader's browser would fetch it all at once. A snapshot
+  // keeps the links to the code of the page it shows, which the browser then fetches beside the shell.
+  await page.addInitScript(() => {
+    window.requestIdleCallback = () => 0;
+  });
   // Unanswered API calls hold the changelog and stats on the "Loading..." block the server fills.
   await page.route('**/api/**', () => {});
+  // What a page said went wrong, for a page that never renders.
+  const said: string[] = [];
+  page.on('pageerror', (e) => said.push(`threw: ${e.message}`));
+  page.on('console', (m) => m.type() === 'error' && said.push(`console: ${m.text()}`));
+  page.on('requestfailed', (r) => said.push(`request failed: ${r.url()} (${r.failure()?.errorText})`));
   const records: PageRecord[] = [];
 
   try {
     for (const route of routes) {
       const url = `http://localhost:${PORT}${route.path}`;
+      said.length = 0;
       await page.goto(url, { waitUntil: 'load', timeout: 30000 });
-      await page.waitForSelector(`${CONTENT} .page-header h1`, { timeout: 20000 });
+      const failed = (e: Error) => {
+        throw new Error(`${route.path}: ${e.message}${said.length ? `\n${said.join('\n')}` : ''}`);
+      };
+      await page.waitForSelector(`${CONTENT} .page-header h1`, { timeout: 20000 }).catch(failed);
+      // The highlighter loads with the first page that has code; the layout names the page once it is done.
+      await page
+        .waitForFunction(
+          (path) => document.querySelector<HTMLElement>('main.docs-page')?.dataset.highlighted === path,
+          route.path,
+          { timeout: 20000 },
+        )
+        .catch(failed);
       // Let the route's post-render effects (incl. Prism) settle a couple of frames.
       await page.evaluate(
         () => new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r()))),

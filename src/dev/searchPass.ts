@@ -6,6 +6,7 @@
 import { ROUTES, documentTitle, sectionLabel } from '../app/routes';
 import { extractPage, type Fate } from '../app/search/extract';
 import type { IndexEntry } from '../app/search/types';
+import Prism from '../app/prism';
 
 const frame = () => new Promise<void>((r) => requestAnimationFrame(() => r()));
 
@@ -35,6 +36,18 @@ const settled = (quiet = 250, most = 6000) =>
     watch.observe(document.body, { childList: true, subtree: true, characterData: true });
   });
 
+// Code the highlighter would still change: a page marked done before its code was in place, which would
+// put comments and strings into the index and show readers plain code.
+const unhighlighted = (root: Element) =>
+  [...root.querySelectorAll<HTMLElement>('code[class*="language-"]')].filter((c) => {
+    const lang = /language-(\w+)/.exec(c.className)?.[1] ?? '';
+    const grammar = Prism.languages[lang];
+    if (!grammar) return false;
+    const fresh = document.createElement('code');
+    fresh.innerHTML = Prism.highlight(c.textContent ?? '', grammar, lang);
+    return fresh.innerHTML !== c.innerHTML;
+  }).length;
+
 const button = (label: RegExp) => [...document.querySelectorAll('button')].find((b) => label.test(b.textContent?.trim() ?? ''));
 
 const connect = async () => {
@@ -61,11 +74,15 @@ export async function runSearchPass(): Promise<Pass> {
     history.pushState(null, '', r.path);
     dispatchEvent(new PopStateEvent('popstate'));
     await until(`${r.path} rendering`, () => document.title === documentTitle(r) && !!document.querySelector('.docs-page .page-header h1'));
+    // Code read for its names needs the highlighter's marks, to leave comments and strings out.
+    await until(`${r.path} highlighting`, () => document.querySelector<HTMLElement>('main.docs-page')?.dataset.highlighted === r.path);
     if (r.kind === 'app') await connect();
     await settled();
     if (r.kind === 'app') await until(`${r.path} answering`, () => !reading(), 5000).catch(() => {});
     const root = document.querySelector('.docs-page');
     if (!root) throw new Error(`search pass: ${r.path} has no content`);
+    const plain = unhighlighted(root);
+    if (plain) throw new Error(`search pass: ${r.path} was marked highlighted with ${plain} code blocks left plain`);
     out.push(
       ...extractPage(root, {
         path: r.path,

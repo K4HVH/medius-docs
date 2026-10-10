@@ -5,6 +5,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { documentTitle, routeFor, NOT_FOUND } from '../src/app/routes';
 import { SITE } from '../src/app/site';
+import { HELP_ITEMS } from '../src/app/data/help';
 
 const PORT = Number(process.env.CRAWL_PORT || 4390);
 const HERO = 'Replacement firmware for the MAKCU box.';
@@ -49,7 +50,10 @@ async function checkPage(path: string, titles: Map<string, string>): Promise<voi
   if (!ld) fail(`${path}: no JSON-LD`);
   else {
     try {
-      JSON.parse(ld);
+      const graph = (JSON.parse(ld)['@graph'] ?? []) as { '@type': string; mainEntity?: unknown[] }[];
+      const asked = graph.find((n) => n['@type'] === 'FAQPage')?.mainEntity?.length ?? 0;
+      const want = path === '/guide/help' ? HELP_ITEMS.length : 0;
+      if (asked !== want) fail(`${path}: FAQPage holds ${asked} questions, want ${want}`);
     } catch {
       fail(`${path}: JSON-LD does not parse`);
     }

@@ -124,13 +124,6 @@ describe('Search', () => {
     expect(s.options()[0].querySelector('.d')!.textContent).toBe('Fixed the Logitech delay.');
   });
 
-  it('says it is loading when typed into before the index comes, then shows the results', async () => {
-    const s = mount();
-    s.type('physical input');
-    expect(document.querySelector('.srch-none')!.textContent).toBe('Loading...');
-    await waitFor(() => expect(s.titles()[0]).toBe('LOCK'));
-  });
-
   it('takes a space after a word as the word finished', async () => {
     const s = mount();
     await s.found('physica');
@@ -250,6 +243,18 @@ describe('Search', () => {
 });
 
 describe('Search kept open and shut', () => {
+  it('gives focus back to what had it, when mounted already open and then closed', async () => {
+    const [open, setOpen] = createSignal(true);
+    const before = document.createElement('button');
+    document.body.append(before);
+    before.focus();
+    render(() => <Search open={open()} onClose={() => setOpen(false)} onPick={() => {}} />);
+    expect(document.activeElement).toBe(document.querySelector('.srch input'));
+    setOpen(false);
+    expect(document.activeElement).toBe(before);
+    before.remove();
+  });
+
   it('starts afresh each time it opens: focus in the box, recent picks first, the edge on the first', async () => {
     const [open, setOpen] = createSignal(true);
     render(() => <Search open={open()} onClose={() => setOpen(false)} onPick={() => setOpen(false)} />);

@@ -4,96 +4,13 @@ import { NotificationProvider } from '../components/feedback/Notification';
 import RouteMeta from './RouteMeta';
 import { useLeaveFade } from './shell/leave';
 import { useNativeFlash } from './pages/dashboard/context';
-import Home from './pages/Home';
-import NotFound from './pages/NotFound';
-import GuideStart from './pages/guide/Start';
-import GuideDevices from './pages/guide/Devices';
-import GuideHelp from './pages/guide/Help';
 import DocsLayout from './pages/DocsLayout';
-import NativeIntroduction from './pages/native/Introduction';
-import NativeQuickstart from './pages/native/Quickstart';
-import NativeArchitecture from './pages/native/Architecture';
-import NativeHardware from './pages/native/Hardware';
-import NativeTransport from './pages/native/Transport';
-import NativeConnection from './pages/native/Connection';
-import NativeFrame from './pages/native/Frame';
-import NativeInjection from './pages/native/Injection';
-import CmdInject from './pages/native/commands/Inject';
-import CmdMove from './pages/native/commands/Move';
-import CmdUsage from './pages/native/commands/Usage';
-import CmdRequests from './pages/native/commands/Requests';
-import CmdAdmin from './pages/native/commands/Admin';
-import CmdLed from './pages/native/commands/Led';
-import CmdLock from './pages/native/commands/Lock';
-import CmdCatch from './pages/native/commands/Catch';
-import CmdTransform from './pages/native/commands/Transform';
-import CmdOption from './pages/native/commands/Option';
-import CmdClip from './pages/native/commands/Clip';
-import CmdUpdate from './pages/native/commands/Update';
-import CmdRaw from './pages/native/commands/Raw';
-import CmdTransfer from './pages/native/commands/Transfer';
-import CmdRewrite from './pages/native/commands/Rewrite';
-import CmdPatch from './pages/native/commands/Patch';
-import NativeFlashing from './pages/native/Flashing';
-import NativeTroubleshooting from './pages/native/Troubleshooting';
-import AiAccess from './pages/AiAccess';
-import LibIntroduction from './pages/library/Introduction';
-import LibConnection from './pages/library/Connection';
-import LibDiscovery from './pages/library/Discovery';
-import LibInject from './pages/library/Inject';
-import LibMove from './pages/library/Move';
-import LibRequests from './pages/library/Requests';
-import LibAdmin from './pages/library/Admin';
-import LibUpdate from './pages/library/Update';
-import LibLed from './pages/library/Led';
-import LibLock from './pages/library/Lock';
-import LibCatch from './pages/library/Catch';
-import LibTransform from './pages/library/Transform';
-import LibOptions from './pages/library/Options';
-import LibClip from './pages/library/Clip';
-import LibLifecycle from './pages/library/Lifecycle';
-import LibDiagnostics from './pages/library/Diagnostics';
-import FeatAsync from './pages/library/features/Async';
-import FeatMock from './pages/library/features/Mock';
-import FeatTracing from './pages/library/features/Tracing';
-import DevRaw from './pages/library/advanced/Raw';
-import DevTransfer from './pages/library/advanced/Transfer';
-import DevRewrite from './pages/library/advanced/Rewrite';
-import DevPatch from './pages/library/advanced/Patch';
-import GuideCalls from './pages/library/GuideCalls';
-import GuideConnection from './pages/library/GuideConnection';
-import GuideTesting from './pages/library/GuideTesting';
-import LibTypes from './pages/library/TypesAndErrors';
-import LibTypesEnums from './pages/library/types/Enums';
-import LibTypesStructs from './pages/library/types/Structs';
-import LibTypesFrames from './pages/library/types/Frames';
-import LibTypesErrors from './pages/library/types/Errors';
-import BindingsOverview from './pages/bindings/Overview';
-import CInstall from './pages/bindings/c/Install';
-import CQuickstart from './pages/bindings/c/Quickstart';
-import CUsage from './pages/bindings/c/Usage';
-import CStreams from './pages/bindings/c/Streams';
-import CApi from './pages/bindings/c/Api';
-import CTypes from './pages/bindings/c/Types';
-import CBuild from './pages/bindings/c/Build';
-import PyInstall from './pages/bindings/python/Install';
-import PyQuickstart from './pages/bindings/python/Quickstart';
-import PyUsage from './pages/bindings/python/Usage';
-import PyStreams from './pages/bindings/python/Streams';
-import PyApi from './pages/bindings/python/Api';
-import PyTypes from './pages/bindings/python/Types';
-import PyBuild from './pages/bindings/python/Build';
-import DashboardDevice from './pages/dashboard/Device';
-import DashboardSetup from './pages/dashboard/Setup';
-import DashboardControl from './pages/dashboard/Control';
-import DashboardUpdate from './pages/dashboard/Update';
-import DashboardChangelog from './pages/dashboard/Changelog';
-import DashboardStats from './pages/dashboard/Stats';
+import { NotFoundPage, PAGES, pageLoaded, preloadPage } from './lazyPages';
 import { BoxScope, DashboardProvider } from './pages/dashboard/context';
 
 const RootLayout: Component<{ children?: JSX.Element }> = (props) => {
   const native = useNativeFlash();
-  useLeaveFade(native.running);
+  useLeaveFade(native.running, { loaded: pageLoaded, load: preloadPage, whole: (href) => window.location.assign(href) });
   return (
     <>
       <RouteMeta />
@@ -107,93 +24,93 @@ const App: Component = () => {
       <NotificationProvider>
       <DashboardProvider>
         <Router root={RootLayout}>
-        <Route path="/" component={Home} />
+        <Route path="/" component={PAGES['/']} />
         <Route path="/" component={DocsLayout}>
-          <Route path="/guide" component={GuideStart} />
-          <Route path="/guide/compatibility" component={GuideDevices} />
-          <Route path="/guide/help" component={GuideHelp} />
-          <Route path="/native" component={NativeIntroduction} />
-          <Route path="/native/quickstart" component={NativeQuickstart} />
-          <Route path="/native/architecture" component={NativeArchitecture} />
-          <Route path="/native/hardware" component={NativeHardware} />
-          <Route path="/native/transport" component={NativeTransport} />
-          <Route path="/native/connection" component={NativeConnection} />
-          <Route path="/native/frame" component={NativeFrame} />
-          <Route path="/native/injection" component={NativeInjection} />
-          <Route path="/native/commands/inject" component={CmdInject} />
-          <Route path="/native/commands/move" component={CmdMove} />
-          <Route path="/native/commands/requests" component={CmdRequests} />
-          <Route path="/native/commands/admin" component={CmdAdmin} />
-          <Route path="/native/commands/update" component={CmdUpdate} />
-          <Route path="/native/commands/led" component={CmdLed} />
-          <Route path="/native/commands/lock" component={CmdLock} />
-          <Route path="/native/commands/catch" component={CmdCatch} />
-          <Route path="/native/commands/transform" component={CmdTransform} />
-          <Route path="/native/commands/option" component={CmdOption} />
-          <Route path="/native/commands/clip" component={CmdClip} />
-          <Route path="/native/commands/raw" component={CmdRaw} />
-          <Route path="/native/commands/transfer" component={CmdTransfer} />
-          <Route path="/native/commands/rewrite" component={CmdRewrite} />
-          <Route path="/native/commands/patch" component={CmdPatch} />
-          <Route path="/native/commands/usage" component={CmdUsage} />
-          <Route path="/native/flashing" component={NativeFlashing} />
-          <Route path="/native/troubleshooting" component={NativeTroubleshooting} />
-          <Route path="/ai" component={AiAccess} />
-          <Route path="/library" component={LibIntroduction} />
-          <Route path="/library/connection" component={LibConnection} />
-          <Route path="/library/discovery" component={LibDiscovery} />
-          <Route path="/library/inject" component={LibInject} />
-          <Route path="/library/move" component={LibMove} />
-          <Route path="/library/requests" component={LibRequests} />
-          <Route path="/library/admin" component={LibAdmin} />
-          <Route path="/library/update" component={LibUpdate} />
-          <Route path="/library/led" component={LibLed} />
-          <Route path="/library/lock" component={LibLock} />
-          <Route path="/library/catch" component={LibCatch} />
-          <Route path="/library/transform" component={LibTransform} />
-          <Route path="/library/options" component={LibOptions} />
-          <Route path="/library/clip" component={LibClip} />
-          <Route path="/library/lifecycle" component={LibLifecycle} />
-          <Route path="/library/diagnostics" component={LibDiagnostics} />
-          <Route path="/library/features/async" component={FeatAsync} />
-          <Route path="/library/features/mock" component={FeatMock} />
-          <Route path="/library/features/tracing" component={FeatTracing} />
-          <Route path="/library/advanced/raw" component={DevRaw} />
-          <Route path="/library/advanced/transfer" component={DevTransfer} />
-          <Route path="/library/advanced/rewrite" component={DevRewrite} />
-          <Route path="/library/advanced/patch" component={DevPatch} />
-          <Route path="/library/guides/calls" component={GuideCalls} />
-          <Route path="/library/guides/connection" component={GuideConnection} />
-          <Route path="/library/guides/testing" component={GuideTesting} />
-          <Route path="/library/types" component={LibTypes} />
-          <Route path="/library/types/enums" component={LibTypesEnums} />
-          <Route path="/library/types/structs" component={LibTypesStructs} />
-          <Route path="/library/types/frames" component={LibTypesFrames} />
-          <Route path="/library/types/errors" component={LibTypesErrors} />
-          <Route path="/bindings" component={BindingsOverview} />
-          <Route path="/bindings/c" component={CInstall} />
-          <Route path="/bindings/c/quickstart" component={CQuickstart} />
-          <Route path="/bindings/c/usage" component={CUsage} />
-          <Route path="/bindings/c/streams" component={CStreams} />
-          <Route path="/bindings/c/api" component={CApi} />
-          <Route path="/bindings/c/types" component={CTypes} />
-          <Route path="/bindings/c/build" component={CBuild} />
-          <Route path="/bindings/python" component={PyInstall} />
-          <Route path="/bindings/python/quickstart" component={PyQuickstart} />
-          <Route path="/bindings/python/usage" component={PyUsage} />
-          <Route path="/bindings/python/streams" component={PyStreams} />
-          <Route path="/bindings/python/api" component={PyApi} />
-          <Route path="/bindings/python/types" component={PyTypes} />
-          <Route path="/bindings/python/build" component={PyBuild} />
+          <Route path="/guide" component={PAGES['/guide']} />
+          <Route path="/guide/compatibility" component={PAGES['/guide/compatibility']} />
+          <Route path="/guide/help" component={PAGES['/guide/help']} />
+          <Route path="/native" component={PAGES['/native']} />
+          <Route path="/native/quickstart" component={PAGES['/native/quickstart']} />
+          <Route path="/native/architecture" component={PAGES['/native/architecture']} />
+          <Route path="/native/hardware" component={PAGES['/native/hardware']} />
+          <Route path="/native/transport" component={PAGES['/native/transport']} />
+          <Route path="/native/connection" component={PAGES['/native/connection']} />
+          <Route path="/native/frame" component={PAGES['/native/frame']} />
+          <Route path="/native/injection" component={PAGES['/native/injection']} />
+          <Route path="/native/commands/inject" component={PAGES['/native/commands/inject']} />
+          <Route path="/native/commands/move" component={PAGES['/native/commands/move']} />
+          <Route path="/native/commands/requests" component={PAGES['/native/commands/requests']} />
+          <Route path="/native/commands/admin" component={PAGES['/native/commands/admin']} />
+          <Route path="/native/commands/update" component={PAGES['/native/commands/update']} />
+          <Route path="/native/commands/led" component={PAGES['/native/commands/led']} />
+          <Route path="/native/commands/lock" component={PAGES['/native/commands/lock']} />
+          <Route path="/native/commands/catch" component={PAGES['/native/commands/catch']} />
+          <Route path="/native/commands/transform" component={PAGES['/native/commands/transform']} />
+          <Route path="/native/commands/option" component={PAGES['/native/commands/option']} />
+          <Route path="/native/commands/clip" component={PAGES['/native/commands/clip']} />
+          <Route path="/native/commands/raw" component={PAGES['/native/commands/raw']} />
+          <Route path="/native/commands/transfer" component={PAGES['/native/commands/transfer']} />
+          <Route path="/native/commands/rewrite" component={PAGES['/native/commands/rewrite']} />
+          <Route path="/native/commands/patch" component={PAGES['/native/commands/patch']} />
+          <Route path="/native/commands/usage" component={PAGES['/native/commands/usage']} />
+          <Route path="/native/flashing" component={PAGES['/native/flashing']} />
+          <Route path="/native/troubleshooting" component={PAGES['/native/troubleshooting']} />
+          <Route path="/ai" component={PAGES['/ai']} />
+          <Route path="/library" component={PAGES['/library']} />
+          <Route path="/library/connection" component={PAGES['/library/connection']} />
+          <Route path="/library/discovery" component={PAGES['/library/discovery']} />
+          <Route path="/library/inject" component={PAGES['/library/inject']} />
+          <Route path="/library/move" component={PAGES['/library/move']} />
+          <Route path="/library/requests" component={PAGES['/library/requests']} />
+          <Route path="/library/admin" component={PAGES['/library/admin']} />
+          <Route path="/library/update" component={PAGES['/library/update']} />
+          <Route path="/library/led" component={PAGES['/library/led']} />
+          <Route path="/library/lock" component={PAGES['/library/lock']} />
+          <Route path="/library/catch" component={PAGES['/library/catch']} />
+          <Route path="/library/transform" component={PAGES['/library/transform']} />
+          <Route path="/library/options" component={PAGES['/library/options']} />
+          <Route path="/library/clip" component={PAGES['/library/clip']} />
+          <Route path="/library/lifecycle" component={PAGES['/library/lifecycle']} />
+          <Route path="/library/diagnostics" component={PAGES['/library/diagnostics']} />
+          <Route path="/library/features/async" component={PAGES['/library/features/async']} />
+          <Route path="/library/features/mock" component={PAGES['/library/features/mock']} />
+          <Route path="/library/features/tracing" component={PAGES['/library/features/tracing']} />
+          <Route path="/library/advanced/raw" component={PAGES['/library/advanced/raw']} />
+          <Route path="/library/advanced/transfer" component={PAGES['/library/advanced/transfer']} />
+          <Route path="/library/advanced/rewrite" component={PAGES['/library/advanced/rewrite']} />
+          <Route path="/library/advanced/patch" component={PAGES['/library/advanced/patch']} />
+          <Route path="/library/guides/calls" component={PAGES['/library/guides/calls']} />
+          <Route path="/library/guides/connection" component={PAGES['/library/guides/connection']} />
+          <Route path="/library/guides/testing" component={PAGES['/library/guides/testing']} />
+          <Route path="/library/types" component={PAGES['/library/types']} />
+          <Route path="/library/types/enums" component={PAGES['/library/types/enums']} />
+          <Route path="/library/types/structs" component={PAGES['/library/types/structs']} />
+          <Route path="/library/types/frames" component={PAGES['/library/types/frames']} />
+          <Route path="/library/types/errors" component={PAGES['/library/types/errors']} />
+          <Route path="/bindings" component={PAGES['/bindings']} />
+          <Route path="/bindings/c" component={PAGES['/bindings/c']} />
+          <Route path="/bindings/c/quickstart" component={PAGES['/bindings/c/quickstart']} />
+          <Route path="/bindings/c/usage" component={PAGES['/bindings/c/usage']} />
+          <Route path="/bindings/c/streams" component={PAGES['/bindings/c/streams']} />
+          <Route path="/bindings/c/api" component={PAGES['/bindings/c/api']} />
+          <Route path="/bindings/c/types" component={PAGES['/bindings/c/types']} />
+          <Route path="/bindings/c/build" component={PAGES['/bindings/c/build']} />
+          <Route path="/bindings/python" component={PAGES['/bindings/python']} />
+          <Route path="/bindings/python/quickstart" component={PAGES['/bindings/python/quickstart']} />
+          <Route path="/bindings/python/usage" component={PAGES['/bindings/python/usage']} />
+          <Route path="/bindings/python/streams" component={PAGES['/bindings/python/streams']} />
+          <Route path="/bindings/python/api" component={PAGES['/bindings/python/api']} />
+          <Route path="/bindings/python/types" component={PAGES['/bindings/python/types']} />
+          <Route path="/bindings/python/build" component={PAGES['/bindings/python/build']} />
           <Route path="/" component={BoxScope}>
-            <Route path="/dashboard" component={DashboardDevice} />
-            <Route path="/dashboard/control" component={DashboardControl} />
+            <Route path="/dashboard" component={PAGES['/dashboard']} />
+            <Route path="/dashboard/control" component={PAGES['/dashboard/control']} />
           </Route>
-          <Route path="/dashboard/setup" component={DashboardSetup} />
-          <Route path="/dashboard/update" component={DashboardUpdate} />
-          <Route path="/dashboard/changelog" component={DashboardChangelog} />
-          <Route path="/dashboard/stats" component={DashboardStats} />
-          <Route path="*" component={NotFound} />
+          <Route path="/dashboard/setup" component={PAGES['/dashboard/setup']} />
+          <Route path="/dashboard/update" component={PAGES['/dashboard/update']} />
+          <Route path="/dashboard/changelog" component={PAGES['/dashboard/changelog']} />
+          <Route path="/dashboard/stats" component={PAGES['/dashboard/stats']} />
+          <Route path="*" component={NotFoundPage} />
         </Route>
         </Router>
       </DashboardProvider>

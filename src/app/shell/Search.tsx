@@ -1,7 +1,7 @@
 import { createEffect, createMemo, createSignal, For, on, onCleanup, onMount, Show } from 'solid-js';
 import { Portal } from 'solid-js/web';
 import { Button } from '../../components/inputs/Button';
-import { loadIndex, type Loaded } from '../search/load';
+import { indexLoaded as index, loadIndex, type Loaded } from '../search/load';
 import { marks, snippet } from '../search/text';
 import type { IndexEntry } from '../search/types';
 import { routeFor, sectionLabel, type RouteInfo } from '../routes';
@@ -89,11 +89,12 @@ const Marked = (p: { text: string; terms: string[] }) => (
 export function Search(props: { open: boolean; onClose: () => void; onPick: (path: string) => void }) {
   const [query, setQuery] = createSignal('');
   const [at, setAt] = createSignal(0);
-  const [shown, setShown] = createSignal(props.open);
+  // Shut until the open effect runs, which notes where focus goes back to: the panel may mount opened.
+  const [shown, setShown] = createSignal(false);
   const [closing, setClosing] = createSignal(false);
   const [opening, setOpening] = createSignal(false);
-  const [index, setIndex] = createSignal<Loaded | null>(null);
-  const [failed, setFailed] = createSignal(false);
+  const [fetchFailed, setFailed] = createSignal(false);
+  const failed = () => fetchFailed() && !index();
   // Counts the openings, so the empty list is read afresh each time.
   const [round, setRound] = createSignal(0);
   let input: HTMLInputElement | undefined;
@@ -107,10 +108,7 @@ export function Search(props: { open: boolean; onClose: () => void; onPick: (pat
 
   const load = () => {
     setFailed(false);
-    loadIndex().then(
-      (i) => alive && setIndex(i),
-      () => alive && setFailed(true),
-    );
+    loadIndex().catch(() => alive && setFailed(true));
   };
 
   const view = createMemo((): List => {

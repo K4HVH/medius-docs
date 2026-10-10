@@ -189,7 +189,7 @@ export function DocsSidebar(props: {
             </For>
           </nav>
         </Show>
-        <button class="search caps" type="button" onClick={() => props.onSearch()} onPointerEnter={prefetchIndex} onFocus={prefetchIndex}>
+        <button class="search caps" type="button" onClick={() => props.onSearch()} onPointerEnter={prefetchIndex}>
           <span>Search</span>
           <kbd>{modKey()} K</kbd>
         </button>

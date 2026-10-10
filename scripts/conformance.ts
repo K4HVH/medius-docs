@@ -342,8 +342,9 @@ for (const f of files) {
 // ---- anchors, following component composition ----
 // A route's page often renders children that own the ids (/dashboard -> Device -> DeviceOptions), so an
 // id check that reads only the route's own file reports anchors that resolve fine in the browser.
-const appFile = join(ROOT, 'src/app/App.tsx');
-const app = readFileSync(appFile, 'utf8');
+// Each route's page, from the table of lazily loaded pages: `'/path': page(() => import('./pages/X'))`.
+const tableFile = join(ROOT, 'src/app/lazyPages.ts');
+const table = readFileSync(tableFile, 'utf8');
 const importsOf = (src: string, file: string) => {
   const map = new Map<string, string>();
   for (const m of src.matchAll(/import\s+(\w+)[^'";]*from\s+'(\.[^']+)'/g))
@@ -381,12 +382,9 @@ function idsWithChildren(file: string, seen = new Set<string>()): Set<string> {
       for (const id of idsWithChildren(path, seen)) out.add(id);
   return out;
 }
-const appImports = importsOf(app, appFile);
 const routeIds = new Map<string, Set<string>>();
-for (const m of app.matchAll(/path="([^"]+)"\s+component=\{(\w+)\}/g)) {
-  const file = appImports.get(m[2]);
-  if (file) routeIds.set(m[1], idsWithChildren(file));
-}
+for (const m of table.matchAll(/'([^']+)': \w+\(\(\) => import\('(\.[^']+)'\)\)/g))
+  routeIds.set(m[1], idsWithChildren(resolve(dirname(tableFile), m[2]) + '.tsx'));
 const checkAnchor = (from: string, line: number, href: string) => {
   const [route, anchor] = href.split('#');
   if (!anchor) return;
