@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { render, cleanup, waitFor } from '@solidjs/testing-library';
+import { render, cleanup, fireEvent, waitFor } from '@solidjs/testing-library';
 import { createSignal } from 'solid-js';
 import type { ConnectVerdict } from '../../src/dashboard/serial';
 
@@ -22,6 +22,7 @@ const mock = vi.hoisted(() => ({
   flashError: 'That port is still held by an earlier session.',
   chooserEmpty: false,
   releasesThrow: false,
+  releasesNone: false,
   flashed: [] as string[],
   metas: [] as unknown[],
   romCalls: 0,
@@ -76,6 +77,7 @@ vi.mock('../../src/app/pages/dashboard/context', () => ({
 vi.mock('../../src/dashboard/firmware', () => ({
   fetchReleases: async () => {
     if (mock.releasesThrow) throw new Error('firmware fetch is not set up on this server');
+    if (mock.releasesNone) return [];
     return [{ tag: 'v3.2.0', assets: mock.assets }];
   },
   // The stand-in returns the asset's own name, so the image identifies where it came from.
@@ -112,6 +114,7 @@ afterEach(() => {
   mock.flashOk = true;
   mock.chooserEmpty = false;
   mock.releasesThrow = false;
+  mock.releasesNone = false;
   mock.answering = ['aaaaaaaaaaaa'];
   mock.befores = [];
   mock.disconnects = 0;
@@ -205,13 +208,23 @@ describe('Setup', () => {
     expect(mock.romCalls).toBe(0);
   });
 
-  it('a release fetch that failed leaves a message, not a button that does nothing', async () => {
+  it('a release fetch that failed says so where Install was, and Retry fetches again', async () => {
     mock.releasesThrow = true;
     const r = mount();
+    await waitFor(() => expect(r.container.textContent).toMatch(/release list didn't load/i));
+    expect(r.queryByRole('button', { name: /^install$/i })).toBeNull();
+    mock.releasesThrow = false;
+    fireEvent.click(r.getByRole('button', { name: /^retry$/i }));
     await waitFor(() => r.getByRole('button', { name: /^install$/i }));
-    install(r);
-    await waitFor(() => expect(r.container.textContent).toMatch(/isn't ready/i));
-    expect(mock.romCalls).toBe(0);
+    expect(r.container.textContent).not.toMatch(/didn't load/i);
+  });
+
+  it('an empty release list says none is published, not that the list failed', async () => {
+    mock.releasesNone = true;
+    const r = mount();
+    await waitFor(() => expect(r.container.textContent).toMatch(/no release is published yet/i));
+    expect(r.container.textContent).not.toMatch(/didn't load/i);
+    expect(r.queryByRole('button', { name: /^install$/i })).toBeNull();
   });
 
   it('writes the main chip image first and the mouse-side image second, never the other way', async () => {

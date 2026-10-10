@@ -7,6 +7,7 @@ const settle = () => new Promise((r) => setTimeout(r, 20));
 const mock = vi.hoisted(() => ({
   setHealth: (_v: unknown) => {},
   sent: [] as { kind: string; args: number[] }[],
+  refuse: false,
 }));
 
 vi.mock('../../src/app/pages/dashboard/context', async () => {
@@ -20,9 +21,11 @@ vi.mock('../../src/app/pages/dashboard/context', async () => {
       mock.sent.push({ kind: 'inject', args: [cls, id, action] });
     },
     moveRel: async (dx: number, dy: number) => {
+      if (mock.refuse) throw new Error('The box refused that.');
       mock.sent.push({ kind: 'move', args: [dx, dy] });
     },
     wheel: async (dz: number) => {
+      if (mock.refuse) throw new Error('The box refused that.');
       mock.sent.push({ kind: 'wheel', args: [dz] });
     },
     moveRelNow: async (dx: number, dy: number) => {
@@ -195,7 +198,58 @@ describe('DeviceInject', () => {
     fireEvent.click(await findByLabelText('Move right'));
     fireEvent.click(await findByLabelText('Move up'));
     fireEvent.click(await findByLabelText('Move up'));
+    await new Promise((r) => setTimeout(r, 20));
     expect(total()).toBe('20, -40');
+  });
+
+  it('counts only the moves the box took in the running total', async () => {
+    mock.setHealth(health());
+    const { container, findByLabelText } = render(() => <DeviceInject />);
+    const total = () => container.querySelector('.dpad .dpad-c')!.textContent;
+    mock.refuse = true;
+    fireEvent.click(await findByLabelText('Move right'));
+    await new Promise((r) => setTimeout(r, 20));
+    mock.refuse = false;
+    expect(total()).toBe('0, 0');
+    fireEvent.click(await findByLabelText('Move down'));
+    await new Promise((r) => setTimeout(r, 20));
+    expect(total()).toBe('0, 20');
+  });
+
+  it('shows a refused command in the panel it came from', async () => {
+    mock.setHealth(health());
+    mock.refuse = true;
+    const { container, findByText } = render(() => <DeviceInject />);
+    const up = await findByText('Scroll up');
+    fireEvent.pointerDown(up);
+    fireEvent.click(up);
+    await new Promise((r) => setTimeout(r, 20));
+    mock.refuse = false;
+    const alerts = [...container.querySelectorAll('[role="alert"]')];
+    expect(alerts.map((a) => a.textContent?.trim())).toEqual(['The box refused that.']);
+    expect(alerts[0].closest('.pn')!.id).toBe('inject-wheel');
+  });
+
+  it('keeps a refusal where it showed through later clicks, and clears it when a send lands', async () => {
+    mock.setHealth(health());
+    mock.refuse = true;
+    const { container, findByText } = render(() => <DeviceInject />);
+    const up = await findByText('Scroll up');
+    fireEvent.pointerDown(up);
+    fireEvent.click(up);
+    await new Promise((r) => setTimeout(r, 20));
+    mock.refuse = false;
+    const pad = container.querySelector('#cursor .pb')!;
+    fireEvent.pointerDown(pad);
+    fireEvent.click(pad);
+    await new Promise((r) => setTimeout(r, 20));
+    const alerts = [...container.querySelectorAll('[role="alert"]')];
+    expect(alerts.map((a) => a.closest('.pn')!.id)).toEqual(['inject-wheel']);
+    const down = await findByText('Scroll down');
+    fireEvent.pointerDown(down);
+    fireEvent.click(down);
+    await new Promise((r) => setTimeout(r, 20));
+    expect(container.querySelector('[role="alert"]')).toBeNull();
   });
 
   it('hides the cursor and button controls when no mouse is cloned', async () => {

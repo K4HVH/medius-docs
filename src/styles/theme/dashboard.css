@@ -70,6 +70,8 @@
 /* The tab strip's rule heads the first row, so those panels draw no rule. */
 .pn.top > .ph { margin-top: 32px; padding-top: 0; border-top: 0; }
 .pn.top > .ph::before { display: none; }
+/* With no tab strip, the first panel's rule takes its place and spaces its heading as the strip does. */
+.page-header + .panels > .pn:first-child > .ph { margin-top: 42px; padding-top: 32px; }
 .pb { display: grid; gap: 16px; align-content: start; margin-top: 18px; }
 .pn > .pb:first-child { margin-top: 28px; }
 .pb > p { margin: 0; font-size: 14.5px; color: var(--text-2); }
@@ -191,7 +193,8 @@
   display: grid; grid-template-columns: var(--cols, 56px minmax(0, 1fr)); gap: 12px; padding: 0 12px; color: var(--muted);
   transition: color 0.4s, background 0.4s, box-shadow 0.4s;
 }
-.lg > div > span:last-child { overflow-wrap: anywhere; }
+.lg > div > span:last-child { overflow-wrap: anywhere; text-wrap: pretty; }
+.lg .grp { display: inline-block; max-width: 100%; }
 .lg > div.now { color: var(--text); background: color-mix(in srgb, var(--accent) 10%, transparent); box-shadow: inset 2px 0 var(--accent); }
 .lg > div.in { animation: rowin 0.3s var(--ease) both; }
 .lg .lv-info { color: var(--accent); }
@@ -204,7 +207,8 @@
 
 /* The board: lines over the black field. Lit parts take the port's colour: green to a computer, blue to
    a mouse or keyboard, amber for the button to hold. Drawn from the left, limited by height. */
-.board { margin: 20px 0 0; }
+.board { margin: 0; }
+.doc-section > .board { margin-top: 20px; }
 .board figcaption { margin: 0 0 6px; color: var(--dim); }
 .boxd { display: block; width: 100%; height: auto; max-height: min(38svh, 440px); }
 .boxd text { font-family: var(--mono); }
@@ -299,8 +303,16 @@
 .conn.on { color: var(--text); }
 .dot { display: inline-block; flex: none; width: 7px; height: 7px; background: var(--line-2); transition: background 0.3s; }
 .dot.ok { background: var(--ok); }
+.dot.warn { background: var(--warn); }
 .state { display: flex; align-items: center; gap: 10px; margin: 0; color: var(--text); }
-.boxstate { display: grid; gap: 16px; }
+/* A box's state, and the connect panel inside it: one block under another, 16 px apart. */
+.boxstate, .cv { display: grid; gap: 16px; }
+.boxstate > p, .cv > p { margin: 0; }
+.cv .board { width: 100%; }
+/* Inside the dashboard's grids the grid spaces a callout; the docs' margin and label stay in the docs. */
+:is(.pb, .boxstate, .cv, .flow, .step, .page-header__aside) .callout { margin-top: 0; }
+.page-header__aside .callout { min-height: 0; padding: 13px 18px; border-left: 2px solid var(--callout); text-align: left; }
+.page-header__aside .callout::before { content: none; }
 .boxstate .board { margin: 0; width: 100%; }
 .logw .copy { min-width: 7.5rem; }
 .flags { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
@@ -319,7 +331,10 @@
 .vals td { height: 46px; padding: 0; border-bottom: 1px solid var(--line); vertical-align: middle; line-height: 22px; }
 .vals tr:first-child td { border-top: 1px solid var(--line); }
 .vals td:first-child { width: 36%; padding-right: 12px; color: var(--dim); font: 500 10.5px/22px var(--mono); letter-spacing: 0.14em; text-transform: uppercase; }
-.vals td + td { padding-block: 8px; font: 500 14px/22px var(--mono); color: var(--text); }
+.vals td + td { padding-block: 8px; font: 500 14px/22px var(--mono); color: var(--text); text-wrap: pretty; }
+@container doc (max-width: 480px) {
+  .vals td:first-child { width: 40%; }
+}
 .vals code { font: inherit; color: inherit; background: none; border: 0; padding: 0; }
 .vals .mut { color: var(--muted); }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
@@ -330,6 +345,7 @@
 .page-header__aside p { margin: 0; }
 .safety { display: grid; justify-items: end; gap: 6px; }
 .safety .sub2 { text-align: right; color: var(--muted); font-size: 14.5px; }
+.safety .sub2.bad { color: color-mix(in srgb, var(--bad) 45%, var(--text)); }
 @media (max-width: 900px) {
   .safety { justify-items: start; }
   .safety .sub2 { text-align: left; }
@@ -409,6 +425,11 @@
 .doc .sub2 { margin: 0; color: var(--muted); font-size: 14.5px; }
 .checks { display: flex; flex-wrap: wrap; gap: 10px 22px; }
 .checks.col { flex-direction: column; align-items: flex-start; }
+/* Below 768 px each checkbox is a 44 px touch target around a 24 px box: the rows need no gap besides,
+   and the list gives back the 10 px of target above its first box and below its last. */
+@media (max-width: 768px) {
+  .checks.col { row-gap: 0; margin-block: -10px; }
+}
 
 /* Injection: a drag pad on a 20 px grid, and a d-pad of four steps. */
 .pad {

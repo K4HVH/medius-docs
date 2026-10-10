@@ -210,9 +210,21 @@ describe('DeviceLock', () => {
       { cls: LockClass.Media, id: 0xe9, direction: Direction.Both, scale: LOCK_SCALE_BLOCK },
     ] satisfies Entry[];
     const { findByText, queryByText } = render(() => <DeviceLock />);
-    expect(await findByText('All keys press')).toBeTruthy();
-    expect(await findByText('Volume Up')).toBeTruthy();
-    expect(queryByText('Volume Up both')).toBeNull();
+    expect(await findByText('All keys press blocked')).toBeTruthy();
+    expect(await findByText('Volume Up blocked')).toBeTruthy();
+    expect(queryByText('Volume Up both blocked')).toBeNull();
+  });
+
+  it('names a block in words and a reversal once', async () => {
+    mock.entries = [
+      { cls: LockClass.Button, id: 1, direction: Direction.Both, scale: LOCK_SCALE_BLOCK },
+      { cls: LockClass.Axis, id: LockAxis.X, direction: Direction.Both, scale: 40 },
+      { cls: LockClass.Axis, id: LockAxis.Y, direction: Direction.Negative, scale: -100 },
+    ] satisfies Entry[];
+    const { findByText } = render(() => <DeviceLock />);
+    expect(await findByText('Right blocked')).toBeTruthy();
+    expect(await findByText('X (left/right) at 40%')).toBeTruthy();
+    expect(await findByText('Y (up/down) negative reversed at 100%')).toBeTruthy();
   });
 
   it('offers the bearing-relative directions on an axis and not on a usage', async () => {

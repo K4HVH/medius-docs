@@ -27,6 +27,7 @@ const mock = vi.hoisted(() => ({
   appended: [] as unknown[][],
   // Every CLIP_TRIGGER call the card made, in order.
   triggerCalls: [] as { call: string; trigger?: unknown }[],
+  refuse: false,
 }));
 
 vi.mock('../../src/app/pages/dashboard/context', async () => {
@@ -53,7 +54,9 @@ vi.mock('../../src/app/pages/dashboard/context', async () => {
     clipSet: async (id: number, value: number) => {
       mock.sets.push({ id, value });
     },
-    clipCtrl: async () => {},
+    clipCtrl: async () => {
+      if (mock.refuse) throw new Error('The box refused that.');
+    },
     clipAppend: async (entries: unknown[]) => {
       mock.appended.push(entries);
     },
@@ -159,6 +162,21 @@ const radio = (container: HTMLElement, label: string): HTMLButtonElement => {
 const on = (r: HTMLElement): boolean => r.getAttribute('aria-checked') === 'true';
 
 describe('DeviceClip trigger edge and consume', () => {
+  it('shows a refused command in the panel whose button sent it', async () => {
+    mock.setClip(status());
+    mock.refuse = true;
+    const { container } = render(() => <DeviceClip />);
+    await settle();
+    const clear = [...container.querySelectorAll('#clip-playback button')].find((b) => b.textContent?.trim() === 'Clear')!;
+    fireEvent.pointerDown(clear);
+    fireEvent.click(clear);
+    await settle();
+    mock.refuse = false;
+    const alerts = [...container.querySelectorAll('[role="alert"]')];
+    expect(alerts.map((a) => a.textContent?.trim())).toEqual(['The box refused that.']);
+    expect(alerts[0].closest('.pn')!.id).toBe('clip-playback');
+  });
+
   it('opens on the first class in the list, like every other picker', async () => {
     // The trigger picker opened on Key while Button sat at the top of the class radio, so the
     // selection did not match the option the list led with.

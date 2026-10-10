@@ -1,9 +1,10 @@
-import { For, Match, Show, Switch, createSignal } from 'solid-js';
+import { For, Match, Show, Switch, createEffect, createSignal, on } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
 import { Button } from '../../../components/inputs/Button';
 import { Chip } from '../../../components/display/Chip';
 import { type Health, PROTO_VER, versionString } from '../../../dashboard/protocol';
 import { useDashboard } from './context';
+import { createCommand } from './action';
 import { CapabilitiesPanel, PerformancePanel } from './DeviceInfo';
 import DeviceFactoryReset from './DeviceFactoryReset';
 import DeviceOptions from './DeviceOptions';
@@ -49,10 +50,18 @@ const Device = () => {
   const dash = useDashboard();
   const navigate = useNavigate();
   const connected = () => dash.status() === 'connected';
+  const blink = createCommand();
+  // A refusal belongs to the link it came over.
+  createEffect(on(dash.link, () => blink.clear(), { defer: true }));
   const full = () => connected() && !dash.updateOnly();
   const logRows = () => dash.deviceLog().map(logCells);
   const empty = () => dash.deviceLog().length === 0;
   const [copied, setCopied] = createSignal(false);
+  const named = (state: string) => (dash.version()?.name ? `${state} · ${dash.version()!.name}` : state);
+  const connLine = () =>
+    ({ connected: named('Connected'), flashing: named('Updating'), lost: 'Not answering', connecting: 'Connecting' })[
+      dash.status() as string
+    ] ?? 'Not connected';
   let copiedTimer: ReturnType<typeof setTimeout> | undefined;
 
   // Where the clipboard is refused, the log's text is selected for the reader to copy.
@@ -70,9 +79,9 @@ const Device = () => {
     <>
       <PageHeader
         aside={
-          <p class="conn" classList={{ on: connected() }}>
-            <span class="dot" classList={{ ok: connected() }} />
-            <span>{connected() ? `Connected · ${dash.version()?.name ?? ''}` : 'Not connected'}</span>
+          <p class="conn" classList={{ on: connected() || dash.status() === 'flashing' }}>
+            <span class="dot" classList={{ ok: connected(), warn: dash.status() === 'flashing' || dash.status() === 'lost' }} />
+            <span>{connLine()}</span>
           </p>
         }
       />
@@ -101,7 +110,7 @@ const Device = () => {
                       <div class="acts">
                         {/* LED isn't on the stable update path, so a newer box isn't sent it. */}
                         <Show when={(dash.version()?.protoVer ?? 0) <= PROTO_VER}>
-                          <Button variant="secondary" loading={dash.identifying()} onClick={() => void dash.identify()}>
+                          <Button variant="secondary" loading={dash.identifying()} onClick={() => blink.run(dash.identify)}>
                             {dash.identifying() ? 'Identifying...' : 'Identify'}
                           </Button>
                         </Show>
@@ -109,6 +118,13 @@ const Device = () => {
                           Disconnect
                         </Button>
                       </div>
+                      <Show when={blink.error()}>
+                        {(msg) => (
+                          <div class="callout callout--danger" role="alert">
+                            {msg()}
+                          </div>
+                        )}
+                      </Show>
                     </Match>
 
                     <Match when={dash.status() === 'connecting'}>

@@ -27,7 +27,7 @@ const DeviceFactoryReset = () => {
             Erase and restart
           </Button>
         </div>
-        <div aria-live="polite">
+        <div aria-live="polite" class="step">
           <Show when={done()}>
             <p class="mut">Sent.</p>
           </Show>

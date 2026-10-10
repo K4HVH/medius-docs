@@ -170,7 +170,7 @@ const ManualFlash = () => {
       if (ok) setDone(true);
       else setErr(native.error() ?? 'That did not finish.');
     } catch (e) {
-      setErr(isUserCancel(e) ? 'Nothing to flash.' : (e as Error).message);
+      setErr(isUserCancel(e) ? 'No port was picked. Press Flash, then pick the box in the list.' : (e as Error).message);
     } finally {
       setBusy(false);
     }
@@ -215,10 +215,6 @@ const ManualFlash = () => {
               </BoxScope>
             }
           >
-            <Show when={err() ?? fileErr()}>
-              {(msg) => <div class="callout callout--danger" role="alert">{msg()}</div>}
-            </Show>
-
             <Switch>
               <Match when={done()}>
                 <p class="state">
@@ -314,6 +310,13 @@ const ManualFlash = () => {
                     }}
                     label="Firmware .bin"
                   />
+                  <Show when={fileErr()}>
+                    {(msg) => (
+                      <div class="callout callout--danger" role="alert">
+                        {msg()}
+                      </div>
+                    )}
+                  </Show>
                   <Show when={kind() === 'app'}>
                     <div class="callout callout--info">A box that never had the factory image needs it first.</div>
                   </Show>
@@ -333,11 +336,20 @@ const ManualFlash = () => {
                 <Show
                   when={blocked()}
                   fallback={
-                    <div class="acts">
-                      <Button variant="primary" disabled={busy() || !canFlash()} onClick={() => void flash()}>
-                        Flash
-                      </Button>
-                    </div>
+                    <>
+                      <div class="acts">
+                        <Button variant="primary" disabled={busy() || !canFlash()} onClick={() => void flash()}>
+                          Flash
+                        </Button>
+                      </div>
+                      <Show when={err()}>
+                        {(msg) => (
+                          <div class="callout callout--danger" role="alert">
+                            {msg()}
+                          </div>
+                        )}
+                      </Show>
+                    </>
                   }
                 >
                   {(reason) => (

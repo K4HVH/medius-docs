@@ -101,7 +101,7 @@ const Progress = (props: { stages: Stage[] }) => {
 export const Latest = () => {
   const dash = useDashboard();
   const navigate = useNavigate();
-  const [releases] = createResource(fetchReleases);
+  const [releases, { refetch }] = createResource(fetchReleases);
   const [step, setStep] = createSignal<Step>('choose');
   const [which, setWhich] = createSignal<Which>('both');
   const [busy, setBusy] = createSignal(false);
@@ -260,17 +260,35 @@ export const Latest = () => {
 
           <Match when={view() === 'choose'}>
             <Show when={dash.status() === 'connected'} fallback={<div class="boxstate"><ConnectPanel /></div>}>
-              <div class="acts">
-                <Button variant="primary" disabled={busy()} onClick={() => choose('both')}>
-                  Update both chips
-                </Button>
-                <Button variant="secondary" disabled={busy()} onClick={() => choose('main')}>
-                  Main only
-                </Button>
-                <Button variant="secondary" disabled={busy()} onClick={() => choose('mouse')}>
-                  Mouse-side only
-                </Button>
-              </div>
+              <Show
+                when={latest() || releases.loading}
+                fallback={
+                  <>
+                    <div class="callout callout--warning" role="alert">
+                      {releases.error ? "The release list didn't load. Try again in a few minutes." : 'No release is published yet.'}
+                    </div>
+                    <Show when={releases.error}>
+                      <div class="acts">
+                        <Button variant="secondary" onClick={() => void refetch()}>
+                          Retry
+                        </Button>
+                      </div>
+                    </Show>
+                  </>
+                }
+              >
+                <div class="acts">
+                  <Button variant="primary" disabled={busy()} onClick={() => choose('both')}>
+                    Update both chips
+                  </Button>
+                  <Button variant="secondary" disabled={busy()} onClick={() => choose('main')}>
+                    Main only
+                  </Button>
+                  <Button variant="secondary" disabled={busy()} onClick={() => choose('mouse')}>
+                    Mouse-side only
+                  </Button>
+                </div>
+              </Show>
             </Show>
           </Match>
 

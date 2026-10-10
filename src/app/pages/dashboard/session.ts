@@ -518,12 +518,12 @@ export function createBoxSession(
       const l = link();
       if (identifyRun || !l || status() !== 'connected') return identifyRun ?? Promise.resolve();
       setIdentifying(true);
+      // A refused blink rejects for the caller to show; the restore can fail on a box already gone.
       const run = (async () => {
         await l.led(LedTarget.Both, LedMode.Blink, 255);
         await sleep(IDENTIFY_MS);
-        if (link() === l) await l.led(LedTarget.Both, LedMode.Auto, 0);
+        if (link() === l) await l.led(LedTarget.Both, LedMode.Auto, 0).catch(() => undefined);
       })()
-        .catch(() => undefined)
         .finally(() => {
           identifyRun = null;
           setIdentifying(false);

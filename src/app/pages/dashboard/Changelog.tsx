@@ -142,24 +142,34 @@ const embedded = (): FirmwareRelease[] | undefined => {
 };
 
 const Changelog = () => {
-  const [releases] = createResource(fetchReleases, { initialValue: embedded() });
+  const seed = embedded();
+  const [releases] = createResource(fetchReleases, { initialValue: seed });
+  // A failed resource throws on every read, so it is read through this; a failed refresh keeps what
+  // the server embedded.
+  const list = (): FirmwareRelease[] | undefined => {
+    try {
+      return releases();
+    } catch {
+      return seed;
+    }
+  };
   // A link to one release (the Discord post's Commits link) lands on it with its commits open.
   const hashed = decodeURIComponent(window.location.hash.slice(1));
-  let list: HTMLDivElement | undefined;
+  let rels: HTMLDivElement | undefined;
   let armed = false;
   let dispose = () => {};
   onCleanup(() => dispose());
   // The sections below the screen rise as they come into view, armed after any jump to a release so
   // the one landed on is never hidden.
   createEffect(() => {
-    if (armed || !releases()?.length) return;
+    if (armed || !list()?.length) return;
     armed = true;
     const land = (frames: number) =>
       requestAnimationFrame(() => {
         const section = hashed ? document.getElementById(hashed) : null;
         if (hashed && !section && frames > 0) return land(frames - 1);
         section?.scrollIntoView({ block: 'start' });
-        if (list) void fontsReady().then(() => (dispose = armReveals(list!, '.rel')));
+        if (rels) void fontsReady().then(() => (dispose = armReveals(rels!, '.rel')));
       });
     land(30);
   });
@@ -167,20 +177,17 @@ const Changelog = () => {
     <>
       <PageHeader />
       <div id="changelog" data-search-target>
-        <Switch>
-          <Match when={releases()?.length}>
-            <div class="rels" ref={list}>
-              <For each={releases()}>{(r) => <Release release={r} open={r.tag === hashed} />}</For>
+        <Switch fallback={<p class="mut">No releases yet.</p>}>
+          <Match when={list()?.length}>
+            <div class="rels" ref={rels}>
+              <For each={list()}>{(r) => <Release release={r} open={r.tag === hashed} />}</For>
             </div>
-          </Match>
-          <Match when={releases.loading}>
-            <div data-fill="changelog"><p class="mut">Loading...</p></div>
           </Match>
           <Match when={releases.error}>
             <div class="callout callout--warning">Could not load the changelog.</div>
           </Match>
-          <Match when={releases()?.length === 0}>
-            <p class="mut">No releases yet.</p>
+          <Match when={releases.loading}>
+            <div data-fill="changelog"><p class="mut">Loading...</p></div>
           </Match>
         </Switch>
       </div>

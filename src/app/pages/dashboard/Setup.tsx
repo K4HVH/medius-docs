@@ -1,5 +1,5 @@
 /// <reference types="w3c-web-serial" />
-import { For, Match, Show, Switch, createResource, createSignal } from 'solid-js';
+import { For, Match, Show, Switch, createResource, createSignal, type JSX } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
 import { Button } from '../../../components/inputs/Button';
 import { type FirmwareAsset, downloadAsset, fetchReleases } from '../../../dashboard/firmware';
@@ -20,7 +20,7 @@ const Setup = () => {
   const native = useNativeFlash();
   const boxes = useBoxes();
   const navigate = useNavigate();
-  const [releases] = createResource(fetchReleases);
+  const [releases, { refetch }] = createResource(fetchReleases);
   const [step, setStep] = createSignal<Step>('main');
   const [busy, setBusy] = createSignal(false);
   const [err, setErr] = createSignal<string | null>(null);
@@ -92,6 +92,38 @@ const Setup = () => {
 
   // The first step shows in any browser; Install needs Web Serial on a secure page.
   const blocked = () => (!boxes.supported ? BAD_BROWSER : !boxes.secure ? BAD_CONTEXT : null);
+  const unlisted = () => !latest() && !releases.loading;
+
+  // Install, or why there is nothing to install yet.
+  const installOr = (chip: FlashChip, next: Step, back?: JSX.Element) => (
+    <Show
+      when={!unlisted()}
+      fallback={
+        <>
+          <div class="callout callout--warning" role="alert">
+            {releases.error ? "The release list didn't load. Try again in a few minutes." : 'No release is published yet.'}
+          </div>
+          <Show when={releases.error || back}>
+            <div class="acts">
+              <Show when={releases.error}>
+                <Button variant="secondary" onClick={() => void refetch()}>
+                  Retry
+                </Button>
+              </Show>
+              {back}
+            </div>
+          </Show>
+        </>
+      }
+    >
+      <div class="acts">
+        <Button variant="primary" disabled={busy() || releases.loading} onClick={() => void install(chip, next)}>
+          {busy() ? 'Installing...' : 'Install'}
+        </Button>
+        {back}
+      </div>
+    </Show>
+  );
 
   const LABELS: Record<Step, string> = {
     main: 'Main chip',
@@ -148,16 +180,7 @@ const Setup = () => {
             <Match when={step() === 'main'}>
               <div class="step">
                 <InstallPorts socket="usb1" />
-                <Show
-                  when={blocked()}
-                  fallback={
-                    <div class="acts">
-                      <Button variant="primary" disabled={busy() || releases.loading} onClick={() => void install('device', 'unplug')}>
-                        {busy() ? 'Installing...' : 'Install'}
-                      </Button>
-                    </div>
-                  }
-                >
+                <Show when={blocked()} fallback={installOr('device', 'unplug')}>
                   {(reason) => (
                     <div class="callout callout--warning" role="alert">
                       {reason()}
@@ -184,14 +207,13 @@ const Setup = () => {
             <Match when={step() === 'mouse'}>
               <div class="step">
                 <InstallPorts socket="usb3" />
-                <div class="acts">
-                  <Button variant="primary" disabled={busy() || releases.loading} onClick={() => void install('host', 'unplug3')}>
-                    {busy() ? 'Installing...' : 'Install'}
-                  </Button>
+                {installOr(
+                  'host',
+                  'unplug3',
                   <Button variant="secondary" disabled={busy()} onClick={go('unplug')}>
                     Back
-                  </Button>
-                </div>
+                  </Button>,
+                )}
               </div>
             </Match>
 

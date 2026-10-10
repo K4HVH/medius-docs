@@ -35,6 +35,9 @@ vi.mock('../../src/app/pages/dashboard/context', () => {
         },
         setRender: async () => {},
         setSpread: async () => {},
+        setName: async () => {
+          throw new Error('The box refused that.');
+        },
       }),
       poll: (key: string) => () =>
         key === 'bearing' ? mock.bearing
@@ -244,5 +247,20 @@ describe('DeviceOptions whole-number fields', () => {
     fireEvent.click(beside(el, 'Apply'));
     await settle();
     expect(mock.sent.filter(([c]) => c === 'emit').map(([, a]) => a[arg])).toEqual([want]);
+  });
+});
+
+describe('DeviceOptions errors', () => {
+  it('shows a refused write in the panel whose button sent it, and nowhere else', async () => {
+    const { container } = render(() => <DeviceOptions />);
+    fireEvent.click(button(container.querySelector('#box-name') as HTMLElement, 'Set')!);
+    await settle();
+    const alerts = [...container.querySelectorAll('[role="alert"]')];
+    expect(alerts.map((a) => a.textContent)).toEqual(['The box refused that.']);
+    expect(alerts[0].closest('.pn')!.id).toBe('box-name');
+    // The next write elsewhere clears it.
+    fireEvent.click(button(container.querySelector('#bearing') as HTMLElement, 'Apply')!);
+    await settle();
+    expect(container.querySelectorAll('[role="alert"]')).toHaveLength(0);
   });
 });

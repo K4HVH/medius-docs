@@ -8,6 +8,8 @@ import { PROTO_VER } from '../../src/dashboard/protocol';
 const mock = vi.hoisted(() => ({
   identifies: 0,
   identifying: false,
+  identifyRefused: false,
+  setLink: (_l: object | null) => {},
   supported: true,
   secure: true,
   status: 'disconnected' as string,
@@ -20,8 +22,13 @@ const mock = vi.hoisted(() => ({
   error: null as string | null,
 }));
 
-vi.mock('../../src/app/pages/dashboard/context', () => ({
+vi.mock('../../src/app/pages/dashboard/context', async () => {
+  const { createSignal } = await import('solid-js');
+  const [link, setLink] = createSignal<object | null>({});
+  mock.setLink = setLink;
+  return {
   useDashboard: () => ({
+    link,
     supported: mock.supported,
     secure: mock.secure,
     status: () => mock.status,
@@ -41,6 +48,7 @@ vi.mock('../../src/app/pages/dashboard/context', () => ({
     disconnect: async () => {},
     identify: async () => {
       mock.identifies += 1;
+      if (mock.identifyRefused) throw new Error('The box refused that.');
     },
     identifying: () => mock.identifying,
     update: () => ({ device: true, host: true, page: mock.runPage, outcome: 'running' }),
@@ -50,7 +58,8 @@ vi.mock('../../src/app/pages/dashboard/context', () => ({
     poll: () => () => null,
     refreshPoll: () => {},
   }),
-}));
+  };
+});
 
 const navigate = vi.hoisted(() => vi.fn());
 vi.mock('@solidjs/router', () => ({
@@ -213,6 +222,16 @@ describe('Device', () => {
     expect(navigate).toHaveBeenCalledWith('/dashboard/update');
   });
 
+  it('names the box as updating in the header, not as disconnected, while it updates', async () => {
+    mock.status = 'flashing';
+    const { container } = render(() => <Device />);
+    expect(container.querySelector('.conn')!.textContent).toMatch(/^Updating/);
+    mock.status = 'lost';
+    cleanup();
+    const lost = render(() => <Device />);
+    expect(lost.container.querySelector('.conn')!.textContent).toMatch(/^Not answering/);
+  });
+
   it('while the manual flash runs on this box, the card takes you to it', async () => {
     mock.status = 'flashing';
     mock.runPage = 'advanced';
@@ -245,6 +264,26 @@ describe('Device', () => {
     expect(names.indexOf('Identify')).toBe(names.indexOf('Disconnect') - 1);
     getByRole('button', { name: 'Identify' }).click();
     expect(mock.identifies).toBe(1);
+  });
+
+  it('a refused identify says so under the buttons that sent it', async () => {
+    mock.status = 'connected';
+    mock.identifyRefused = true;
+    const { getByRole, findByRole } = render(() => <Device />);
+    getByRole('button', { name: 'Identify' }).click();
+    expect((await findByRole('alert')).textContent).toBe('The box refused that.');
+    mock.identifyRefused = false;
+  });
+
+  it('drops a refused identify once the box is reached over a new link', async () => {
+    mock.status = 'connected';
+    mock.identifyRefused = true;
+    const { getByRole, findByRole, queryByRole } = render(() => <Device />);
+    getByRole('button', { name: 'Identify' }).click();
+    await findByRole('alert');
+    mock.identifyRefused = false;
+    mock.setLink({});
+    await waitFor(() => expect(queryByRole('alert')).toBeNull());
   });
 
   it('says it is identifying while the light blinks', () => {

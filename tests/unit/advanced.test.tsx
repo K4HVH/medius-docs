@@ -247,6 +247,19 @@ describe('Advanced', () => {
   });
 
 
+  it('a file that is no firmware image is refused, not also called an image of the other kind', async () => {
+    const r = render(() => <Advanced />);
+    await openGate(r);
+    const input = await openUpload(r);
+    const bytes = new Uint8Array(3000).fill(0x5a);
+    const junk = new File([bytes], 'junk.bin');
+    Object.defineProperty(junk, 'arrayBuffer', { value: () => Promise.resolve(bytes.buffer as ArrayBuffer) });
+    Object.defineProperty(input, 'files', { value: [junk], configurable: true });
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    await waitFor(() => expect(r.getByRole('alert').textContent).toMatch(/not an esp32-s3 firmware image/i));
+    expect(r.container.textContent).not.toMatch(/looks like/i);
+  });
+
   it('a disabled chip picker cannot be selected from, not merely styled', async () => {
     // The class was the only thing `disabled` did; a list already open could still be picked from.
     mock.holdFlash = true;
@@ -287,6 +300,15 @@ describe('Advanced', () => {
     await waitFor(() => expect(r.getByRole('button', { name: /^flash$/i })).not.toBeDisabled());
     r.getByRole('button', { name: /^flash$/i }).click();
     await waitFor(() => expect(mock.metas).toEqual([{ page: 'advanced', chip: 'device', source: 'file' }]));
+  });
+
+  it('says why a flash failed under the Flash button, where the reader is looking', async () => {
+    mock.flashOk = false;
+    const r = render(() => <Advanced />);
+    await openGate(r);
+    r.getByRole('button', { name: /^flash$/i }).click();
+    const alert = await r.findByRole('alert');
+    expect(alert.previousElementSibling?.querySelector('button')?.textContent).toBe('Flash');
   });
 
   it('a failed flash says the reason, and leaves the instruction to the badge', async () => {

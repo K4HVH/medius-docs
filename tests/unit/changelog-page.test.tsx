@@ -3,16 +3,20 @@ import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
 import { render, cleanup, fireEvent, waitFor } from '@solidjs/testing-library';
 import { COMMITS_MARKER } from '../../src/dashboard/firmware/notes';
 
-const fetchCalls = vi.hoisted(() => ({ n: 0 }));
+const fetchCalls = vi.hoisted(() => ({ n: 0, fail: false }));
 vi.mock('../../src/dashboard/firmware', () => ({
-  fetchReleases: async () => (fetchCalls.n++, [
+  fetchReleases: async () => {
+    if (fetchCalls.fail) throw new Error('Could not list firmware (500).');
+    return releasesList();
+  },
+}));
+const releasesList = () => (fetchCalls.n++, [
     {
       tag: 'v3.4.5', name: 'v3.4.5', publishedAt: '2026-10-05T12:00:00Z', prerelease: false, assets: [],
       notes: `## Changes\n- Update here: https://medius.k4tech.net/dashboard/update.\n\n${COMMITS_MARKER}\n## Commits\n**Firmware**\n- firmware: answered from RAM (bf6e62f)`,
     },
     { tag: 'v2.2.0', name: 'v2.2.0', publishedAt: '2026-06-30T12:00:00Z', prerelease: false, assets: [], notes: '**Firmware**\n- fw: older (1234567)' },
-  ]),
-}));
+  ]);
 
 import Changelog from '../../src/app/pages/dashboard/Changelog';
 
@@ -28,6 +32,7 @@ const InRoute = () => {
 
 beforeEach(() => {
   fetchCalls.n = 0;
+  fetchCalls.fail = false;
   Element.prototype.scrollIntoView = vi.fn();
 });
 
@@ -77,6 +82,17 @@ describe('Changelog', () => {
     expect(old.querySelector('li > code')?.textContent).toBe('1234567');
   });
 
+  it('says it could not load the changelog when the fetch fails, and throws nothing', async () => {
+    fetchCalls.fail = true;
+    const thrown: unknown[] = [];
+    const onError = (e: ErrorEvent) => thrown.push(e.error);
+    window.addEventListener('error', onError);
+    const r = render(() => <InRoute />);
+    await waitFor(() => expect(r.container.textContent).toContain('Could not load the changelog.'));
+    window.removeEventListener('error', onError);
+    expect(thrown).toEqual([]);
+  });
+
   it('starts from the releases the server embedded, with no Loading in between', () => {
     const data = document.createElement('script');
     data.id = 'releases-data';
@@ -86,6 +102,19 @@ describe('Changelog', () => {
     const r = render(() => <InRoute />);
     expect(r.container.textContent).not.toContain('Loading');
     expect(r.container.querySelector('section#v9\\.0\\.0')).not.toBeNull();
+  });
+
+  it('keeps the releases the server embedded when the live fetch fails', async () => {
+    fetchCalls.fail = true;
+    const data = document.createElement('script');
+    data.id = 'releases-data';
+    data.type = 'application/json';
+    data.textContent = JSON.stringify([{ tag: 'v9.0.0', name: 'v9.0.0', publishedAt: '2026-10-01T00:00:00Z', prerelease: false, assets: [], notes: '## Changes\n- embedded' }]);
+    document.body.appendChild(data);
+    const r = render(() => <InRoute />);
+    await new Promise((res) => setTimeout(res, 30));
+    expect(r.container.querySelector('section#v9\\.0\\.0')).not.toBeNull();
+    expect(r.container.textContent).not.toContain('Could not load');
   });
 
   it('opens the release a link names and scrolls to it', async () => {

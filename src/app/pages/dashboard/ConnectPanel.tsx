@@ -1,6 +1,5 @@
 import { Match, Show, Switch } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
-import { Card, CardHeader } from '../../../components/surfaces/Card';
 import { Button } from '../../../components/inputs/Button';
 import { versionString } from '../../../dashboard/protocol';
 import type { ConnectVerdict } from '../../../dashboard/serial';
@@ -44,18 +43,18 @@ export const ConnectView = (props: ConnectViewProps) => {
     </Button>
   );
 
-  // Callers mount this inside a Card. Without a usable port the wiring stays and the reason stands
-  // where Connect would.
+  // Callers mount this inside a panel. Without a usable port the reason leads, as every other failure's
+  // does, and the wiring stays under it with no Connect.
   if (!props.supported || !props.secure)
     return (
-      <>
-        <WiringPorts />
+      <div class="cv">
         <div class="callout callout--warning" role="alert">{props.supported ? BAD_CONTEXT : BAD_BROWSER}</div>
-      </>
+        <WiringPorts />
+      </div>
     );
 
   return (
-    <div aria-live="polite">
+    <div aria-live="polite" class="cv">
       {/* Above the switch: a flash or update failure has no verdict, and a stale verdict would hide
           it. Ungated on status: an update whose box never came back leaves 'disconnected'. */}
       <Show when={props.error}>
@@ -68,17 +67,23 @@ export const ConnectView = (props: ConnectViewProps) => {
       <Switch>
         <Match when={!verdict()}>
           <WiringPorts />
-          <Connect />
+          <div class="acts">
+            <Connect />
+          </div>
         </Match>
 
         <Match when={verdict()?.kind === 'unsupported'}>
           <div class="callout callout--warning" role="alert">{BAD_BROWSER}</div>
-          <Connect label="Try again" />
+          <div class="acts">
+            <Connect label="Try again" />
+          </div>
         </Match>
 
         <Match when={verdict()?.kind === 'insecure'}>
           <div class="callout callout--warning" role="alert">{BAD_CONTEXT}</div>
-          <Connect label="Try again" />
+          <div class="acts">
+            <Connect label="Try again" />
+          </div>
         </Match>
 
         <Match when={verdict()?.kind === 'no-port'}>
@@ -96,21 +101,27 @@ export const ConnectView = (props: ConnectViewProps) => {
           <div class="callout callout--danger" role="alert">
             The browser needs one more click before it asks.
           </div>
-          <Connect label="Try again" />
+          <div class="acts">
+            <Connect label="Try again" />
+          </div>
         </Match>
 
         <Match when={verdict()?.kind === 'busy'}>
           <div class="callout callout--danger" role="alert">
             Another tab or program has this box open. Close it.
           </div>
-          <Connect label="Try again" />
+          <div class="acts">
+            <Connect label="Try again" />
+          </div>
         </Match>
 
         <Match when={verdict()?.kind === 'unreadable'}>
           <div class="callout callout--danger" role="alert">
             This computer can't read from the box. Unplug USB2 and plug it back in.
           </div>
-          <Connect label="Try again" />
+          <div class="acts">
+            <Connect label="Try again" />
+          </div>
         </Match>
 
         <Match when={verdict()?.kind === 'silent'}>
@@ -136,9 +147,11 @@ export const ConnectView = (props: ConnectViewProps) => {
                   </Show>{' '}
                   Set it up once over USB; after that it updates in one click.
                 </div>
-                <Button variant="primary" onClick={setup}>
-                  Set up
-                </Button>
+                <div class="acts">
+                  <Button variant="primary" onClick={setup}>
+                    Set up
+                  </Button>
+                </div>
               </>
             );
           })()}
@@ -156,7 +169,9 @@ export const ConnectView = (props: ConnectViewProps) => {
               </div>
             );
           })()}
-          <Connect label="Try again" />
+          <div class="acts">
+            <Connect label="Try again" />
+          </div>
         </Match>
       </Switch>
     </div>
@@ -183,9 +198,11 @@ export const ConnectPanel = (props: { onSetup?: () => void }) => {
         <div class="callout callout--danger" role="alert">
           This computer can't see your box. Plug USB2 into it.
         </div>
-        <Button variant="secondary" onClick={() => void dash.forget()}>
-          Forget
-        </Button>
+        <div class="acts">
+          <Button variant="secondary" onClick={() => void dash.forget()}>
+            Forget
+          </Button>
+        </div>
       </Match>
       <Match when={dash.status() === 'lost'}>
         <div class="callout callout--danger" role="alert">

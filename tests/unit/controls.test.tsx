@@ -105,6 +105,14 @@ describe('LogBox', () => {
     expect(container.querySelector('.lg > div:last-child')!.classList.contains('now')).toBe(true);
   });
 
+  it('keeps each bracketed byte group in one piece, its text unchanged', () => {
+    const rows = () => [['#1', 'hid-in in 0x81 [00 0b 00] [aa bb]']];
+    const { container } = render(() => <LogBox rows={rows} added={() => 1} empty="" label="Recent events" />);
+    const cell = container.querySelector('.lg > div > span:last-child')!;
+    expect(cell.textContent).toBe('hid-in in 0x81 [00 0b 00] [aa bb]');
+    expect([...cell.querySelectorAll('.grp')].map((g) => g.textContent)).toEqual(['[00 0b 00]', '[aa bb]']);
+  });
+
   it('lights the newest line of a log drawn whole, as when its tab opens on lines already there', () => {
     const rows = () => [['a'], ['b'], ['c']];
     const { container } = render(() => <LogBox rows={rows} added={() => 3} empty="(no messages)" label="Device log" />);

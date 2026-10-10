@@ -358,7 +358,7 @@ describe('Advanced over USB2', () => {
     await waitFor(() => expect(flashButton(r)).not.toBeDisabled());
     flashButton(r).click();
     await waitFor(() =>
-      expect(r.container.textContent).toContain('Flashed and verified. The main chip runs v3.4.5 and the mouse-side chip v3.4.5.'),
+      expect(r.container.textContent).toContain('Flashed and verified.The main chip runs v3.4.5 and the mouse-side chip v3.4.5.'),
     );
     expect(r.container.textContent).not.toMatch(/protocol/);
   });

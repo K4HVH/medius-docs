@@ -130,11 +130,14 @@ export const CapabilitiesPanel = () => {
                           when={imp().overCapacity || imp().cloneImperfect}
                           fallback={<Chip variant="success">Yes</Chip>}
                         >
-                          <Chip variant="warning">
-                            {imp().overCapacity ? 'No · over box capacity, or high speed' : 'No · not an exact copy'}
-                          </Chip>
+                          <Chip variant="warning">No</Chip>
                         </Show>
                       </Row>
+                      <Show when={imp().overCapacity || imp().cloneImperfect}>
+                        <Row label="Reason">
+                          {imp().overCapacity ? 'Over box capacity, or high speed' : 'Not an exact copy'}
+                        </Row>
+                      </Show>
                       <Show when={device() && isCloned(device()!)}>
                         <Row label="Serial number">
                           <Chip variant={device()?.hasSerial ? 'success' : 'neutral'}>
