@@ -41,6 +41,9 @@
 .ptabs [role="tab"]:disabled { color: var(--line-2); cursor: not-allowed; }
 .ptabs [role="tab"]:focus-visible { outline: 1px solid var(--primary); outline-offset: -4px; }
 .ptabs > .cl { flex: none; top: 0; margin-left: 8px; opacity: 1; transform: none; }
+/* At the right edge, Copied opens to the icon's left, over the tabs. */
+.ptabs > .cl::after { left: auto; right: calc(100% + 2px); padding-left: 10px; background: var(--ground); transform: translate(4px, -50%); }
+.ptabs > .cl[data-state]::after { transform: translate(0, -50%); }
 .ptabs .ind {
   position: absolute; bottom: -1px; left: 0; height: 2px; width: 0; background: var(--accent);
   transition: left 0.45s var(--ease), width 0.45s var(--ease);

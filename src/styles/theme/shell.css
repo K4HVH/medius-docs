@@ -264,7 +264,7 @@ html { scroll-padding-top: calc(var(--nav-h) + 24px); }
 @media (prefers-reduced-motion: reduce) {
   .cl, .cl::after { transition: opacity 0.3s; }
   .cl, :hover > .cl, tr:hover .cl { transform: none; }
-  .cl::after, .cl[data-state]::after { transform: translateY(-50%); }
+  .cl::after, .cl[data-state]::after, .ptabs > .cl::after { transform: translateY(-50%); }
 }
 :is(.page-header, .doc-section):has(> p:last-child) + .doc-section > .doc-h2 { margin-top: 37px; }
 .doc-h2 + p { margin-top: 13px; }
