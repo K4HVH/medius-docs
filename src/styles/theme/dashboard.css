@@ -342,6 +342,7 @@
 /* Control: Clear everything at the title's right, with what it clears under it. */
 .page-header__aside p { margin: 0; }
 .safety { display: grid; justify-items: end; gap: 6px; }
+.safety-row { display: inline-flex; align-items: center; }
 .safety .sub2 { text-align: right; color: var(--muted); font-size: 14.5px; }
 .safety .sub2.bad { color: color-mix(in srgb, var(--bad) 45%, var(--text)); }
 @media (max-width: 900px) {

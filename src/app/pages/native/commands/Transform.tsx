@@ -3,6 +3,7 @@ import { A } from '@solidjs/router';
 import { PageHeader } from '../../../shell/PageHeader';
 import { DocSection } from '../../../shell/DocSection';
 import { ByteStrip } from '../../../shell/ByteStrip';
+import { Anchor } from '../../../shell/Anchor';
 
 const Transform: Component = () => {
   return (
@@ -75,8 +76,7 @@ const Transform: Component = () => {
           </table>
         </div>
 
-        <div id="weighing" data-search-target>
-          <div class="api-response-label">WITH A SCALE</div>
+        <Anchor id="weighing" label="WITH A SCALE">
           <p>
             The <A href="/native/commands/lock#scale">weigh</A> runs first and the transform moves
             what it kept. The rounding remainder is banked once, per axis and sign, by the lock.
@@ -85,7 +85,7 @@ const Transform: Component = () => {
   TRANSFORM(swap, X, Y)   and put what is left on Y
 
   physical X = +10  ->  weighed -5  ->  emitted on Y`}</pre>
-        </div>
+        </Anchor>
 
         <div class="api-response-label">REFUSALS</div>
         <div class="table-scroll">

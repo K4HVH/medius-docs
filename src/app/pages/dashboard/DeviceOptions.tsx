@@ -18,6 +18,7 @@ import { useDashboard } from './context';
 import { createCommand } from './action';
 import { Panel } from '../../shell/Panel';
 import { Segmented } from '../../shell/Segmented';
+import { CopyLink } from '../../shell/CopyLink';
 
 const EMIT_MODES: Record<string, EmitMode> = {
   learned: EmitMode.Learned,
@@ -419,7 +420,10 @@ const DeviceOptions = () => {
         />
         <p class="mut">{RENDER_BLURB[renderKey()]}</p>
         <div id="render-full" class="labelled" data-search-target>
-          <span class="field-l">Rendered motion</span>
+          <span class="field-l">
+            Rendered motion
+            <CopyLink id="render-full" label="Rendered motion" />
+          </span>
           <Segmented
             name="render-full"
             label="Rendered motion"
@@ -537,7 +541,10 @@ const DeviceOptions = () => {
         />
         <p class="mut">{MODE_BLURB[mode()]}</p>
         <div id="wire-rate" class="labelled" data-search-target>
-          <span class="field-l">Wire rate</span>
+          <span class="field-l">
+            Wire rate
+            <CopyLink id="wire-rate" label="Wire rate" />
+          </span>
           <Segmented
             name="wire-rate"
             label="Wire rate"

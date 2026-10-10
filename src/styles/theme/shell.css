@@ -237,6 +237,35 @@ html { scroll-padding-top: calc(var(--nav-h) + 24px); }
 }
 .doc-h2.act::before { transform: scaleX(1); }
 .doc-caption { color: var(--dim); font-weight: 400; text-wrap: balance; }
+
+/* The link icon beside a place the site links to (shell/CopyLink.tsx): shown while its heading, label or
+   row is under the pointer, or while it has focus, and always where nothing hovers. It comes in as the
+   arrows in links move; Copied comes in beside it the same way. */
+.cl {
+  all: unset; box-sizing: border-box; position: relative; top: -2px; display: inline-grid; place-items: center;
+  width: 24px; height: 24px; margin-left: 6px; vertical-align: middle; line-height: 0; cursor: pointer;
+  color: var(--dim); transition: opacity 0.3s, transform 0.45s var(--ease), color 0.3s;
+}
+.cl:hover { color: var(--text); }
+.cl:focus-visible { outline: 1px solid var(--primary); outline-offset: 2px; }
+.cl::after {
+  content: attr(data-said); position: absolute; left: calc(100% + 2px); top: 50%; pointer-events: none;
+  font: 500 11px/1 var(--mono); letter-spacing: 0.16em; text-transform: uppercase; white-space: nowrap; color: var(--muted);
+  opacity: 0; transform: translate(-4px, -50%); transition: opacity 0.3s, transform 0.45s var(--ease);
+}
+.cl[data-state]::after { opacity: 1; transform: translate(0, -50%); }
+@media (hover: hover) {
+  .cl { opacity: 0; transform: translateX(-4px); }
+  :hover > .cl, tr:hover .cl, .cl:focus-visible, .cl[data-state] { opacity: 1; transform: none; }
+}
+/* In a heading laid out as a row, the icon keeps to the text and the caption to the right. */
+.doc-h2 > .cl { margin: 0 auto 0 -10px; }
+.cl-said { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+@media (prefers-reduced-motion: reduce) {
+  .cl, .cl::after { transition: opacity 0.3s; }
+  .cl, :hover > .cl, tr:hover .cl { transform: none; }
+  .cl::after, .cl[data-state]::after { transform: translateY(-50%); }
+}
 :is(.page-header, .doc-section):has(> p:last-child) + .doc-section > .doc-h2 { margin-top: 37px; }
 .doc-h2 + p { margin-top: 13px; }
 .doc-h2 + :is(.table-scroll, pre, .callout, .bytes, .api-response-label, ul, ol) { margin-top: 18px; }
