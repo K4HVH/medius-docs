@@ -1,8 +1,7 @@
 import { createSignal, createEffect, createMemo, on, onCleanup, onMount } from 'solid-js';
 import { type RouteSectionProps, useBeforeLeave, useLocation, useNavigate } from '@solidjs/router';
 import { GridBackground } from '../../components/surfaces/GridBackground';
-import { CommandPalette } from '../../components/navigation/CommandPalette';
-import { buildSearchItems } from '../searchIndex';
+import { Search } from '../shell/Search';
 import { SiteNav } from '../shell/SiteNav';
 import { DocsSidebar } from '../shell/DocsSidebar';
 import { OnThisPage } from '../shell/OnThisPage';
@@ -60,7 +59,22 @@ const DocsLayout = (props: RouteSectionProps) => {
     else navigate(fullPath, { scroll: path !== location.pathname });
   };
 
-  const searchItems = buildSearchItems(handleSearchNavigate);
+  // Ctrl or Cmd with K opens and closes the search; / opens it from anywhere but a field.
+  onMount(() => {
+    // During a flash the keys open nothing, and the browser's Ctrl K stays blocked as ever.
+    const onKey = (e: KeyboardEvent) => {
+      const typing = e.target instanceof Element && !!e.target.closest('input, textarea, select, [contenteditable="true"]');
+      if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        if (!flashing()) setSearchOpen((v) => !v);
+      } else if (e.key === '/' && !typing && !e.ctrlKey && !e.metaKey && !e.altKey && !flashing()) {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    onCleanup(() => window.removeEventListener('keydown', onKey));
+  });
 
   const section = () => routeFor(location.pathname)?.section;
 
@@ -147,17 +161,7 @@ const DocsLayout = (props: RouteSectionProps) => {
       </div>
       <SiteFooter ref={(el) => (footer = el)} />
 
-      <CommandPalette
-        open={searchOpen()}
-        onClose={() => setSearchOpen(false)}
-        items={searchItems}
-        keybinding
-        onKeybinding={() => {
-          if (!flashing()) setSearchOpen((prev) => !prev);
-        }}
-        placeholder="Search docs..."
-        emptyMessage="No results"
-      />
+      <Search open={searchOpen()} onClose={() => setSearchOpen(false)} onPick={handleSearchNavigate} />
     </>
   );
 };

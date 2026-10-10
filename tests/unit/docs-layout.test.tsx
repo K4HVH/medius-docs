@@ -182,18 +182,18 @@ describe('DocsLayout and the boxes', () => {
     fireEvent.click(r.container.querySelector('.side button.search')!);
     fireEvent.keyDown(document, { key: 'k', ctrlKey: true });
     await new Promise((res) => setTimeout(res, 0));
-    expect(document.querySelector('.command-palette')).toBeNull();
+    expect(document.querySelector('.srch')).toBeNull();
   });
 
   it('opens search from the sidebar and on Ctrl K', async () => {
     const r = mount('/native');
     await waitFor(() => expect(r.container.textContent).toContain('native'));
     fireEvent.click(r.container.querySelector('.side button.search')!);
-    await waitFor(() => expect(document.querySelector('.command-palette')).not.toBeNull());
+    await waitFor(() => expect(document.querySelector('.srch')).not.toBeNull());
     fireEvent.keyDown(document, { key: 'k', ctrlKey: true });
-    await waitFor(() => expect(document.querySelector('.command-palette')).toBeNull());
+    await waitFor(() => expect(document.querySelector('.srch')).toBeNull());
     fireEvent.keyDown(document, { key: 'k', ctrlKey: true });
-    await waitFor(() => expect(document.querySelector('.command-palette')).not.toBeNull());
+    await waitFor(() => expect(document.querySelector('.srch')).not.toBeNull());
   });
 
   it('closes the phone page panel when a box is picked, and unlocks the page', async () => {
@@ -215,10 +215,10 @@ describe('DocsLayout and the boxes', () => {
     await waitFor(() => expect(r.container.textContent).toContain('native'));
     fireEvent.click(r.container.querySelector('button.docbar')!);
     fireEvent.click(r.container.querySelector('.side button.search')!);
-    const input = await waitFor(() => document.querySelector<HTMLInputElement>('.command-palette__input')!);
+    const input = await waitFor(() => document.querySelector<HTMLInputElement>('.srch input')!);
     fireEvent.input(input, { target: { value: 'Inject' } });
     fireEvent.keyDown(input, { key: 'Enter' });
-    await waitFor(() => expect(document.querySelector('.command-palette')).toBeNull());
+    await waitFor(() => expect(document.querySelector('.srch')).toBeNull());
     expect(r.container.querySelector('aside.side')!.classList.contains('open')).toBe(false);
     expect(document.documentElement.classList.contains('locked')).toBe(false);
   });

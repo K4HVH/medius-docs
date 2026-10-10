@@ -46,3 +46,7 @@ export function panelKeys(o: {
     }),
   );
 }
+
+// The key held with another for a shortcut: Cmd on Apple devices, Ctrl elsewhere.
+export const modKey = (): string =>
+  typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘' : 'Ctrl';
