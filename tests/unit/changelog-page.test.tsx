@@ -159,6 +159,15 @@ describe('Changelog', () => {
     expect(r.container.textContent).not.toContain('Could not load');
   });
 
+  it("gives each release a link icon that copies the release's address", async () => {
+    const written: string[] = [];
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText: async (s: string) => void written.push(s) }, configurable: true });
+    const r = render(() => <InRoute />);
+    await waitFor(() => expect(r.container.querySelector('section#v2\\.2\\.0 h2 button.cl[data-for="v2.2.0"]')).not.toBeNull());
+    fireEvent.click(r.container.querySelector('section#v3\\.4\\.5 h2 button.cl')!);
+    await waitFor(() => expect(written).toEqual(['https://medius.k4tech.net/dashboard/changelog/v3.4.5']));
+  });
+
   it('opens the release a link names and scrolls to it', async () => {
     window.location.hash = '#v3.4.5';
     const r = render(() => <InRoute />);

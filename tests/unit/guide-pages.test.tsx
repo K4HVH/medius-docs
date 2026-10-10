@@ -66,6 +66,26 @@ describe('Guide pages', () => {
     ]);
   });
 
+  it("gives each Help answer a link icon that copies the answer's address", async () => {
+    const written: string[] = [];
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText: async (s: string) => void written.push(s) }, configurable: true });
+    const r = mount('/guide/help', Help);
+    for (const f of HELP_ITEMS) expect(r.container.querySelector(`#${f.id} h3 button.cl[data-for="${f.id}"]`), f.id).not.toBeNull();
+    fireEvent.click(r.container.querySelector('#bsod h3 button.cl')!);
+    await waitFor(() => expect(written).toEqual(['https://medius.k4tech.net/guide/help/bsod']));
+  });
+
+  it("gives each device row a link icon in its first cell that copies the device's address", async () => {
+    const written: string[] = [];
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText: async (s: string) => void written.push(s) }, configurable: true });
+    const r = mount('/guide/compatibility', Devices);
+    const rows = [...r.container.querySelectorAll('tbody tr[id]')];
+    expect(rows.length).toBe(COMPAT.length);
+    for (const row of rows) expect(row.querySelector(`td:first-child button.cl[data-for="${row.id}"]`), row.id).not.toBeNull();
+    fireEvent.click(r.container.querySelector('#device-glorious-model-o3 button.cl')!);
+    await waitFor(() => expect(written).toEqual(['https://medius.k4tech.net/guide/compatibility/glorious-model-o3']));
+  });
+
   it('gives each Help answer a row in its group, reachable by its id', () => {
     const r = mount('/guide/help', Help);
     for (const g of HELP) {

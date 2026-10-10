@@ -8,6 +8,8 @@ import { mergeCompat, withIds } from '../../data/compatMerge';
 import { LINKS } from '../../site';
 import { fetchStats } from '../../../dashboard/stats';
 import { matches } from '../../search/text';
+import { CopyLink } from '../../shell/CopyLink';
+import { itemPath } from '../../items';
 
 // A note naming a setting links to where it is set.
 const SETTING = /imperfect clone|forced to 1000 Hz/;
@@ -58,6 +60,7 @@ const Devices: Component = () => {
                 <tr id={r.id}>
                   <td>
                     {r.name}
+                    <CopyLink id={r.id} label={r.name} to={itemPath('device', r.id.replace(/^device-/, ''))} />
                     <Show when={r.vidpid !== r.name && r.vidpid}>{(vp) => <span class="vp">{vp()}</span>}</Show>
                   </td>
                   <td>{KIND_LABEL[r.kind]}</td>
