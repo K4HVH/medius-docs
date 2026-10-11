@@ -13,6 +13,8 @@ const mock = vi.hoisted(() => ({
   spread: { percent: 100, spanUs: 8000 } as { percent: number; spanUs: number },
   // Every option write the card made, as [call, args].
   sent: [] as [string, unknown[]][],
+  // Every value the card asked the box for.
+  asked: new Set<string>(),
 }));
 
 vi.mock('../../src/app/pages/dashboard/context', () => {
@@ -41,12 +43,12 @@ vi.mock('../../src/app/pages/dashboard/context', () => {
           throw new Error('The box refused that.');
         },
       }),
-      poll: (key: string) => () =>
+      poll: (key: string) => (mock.asked.add(key), () =>
         key === 'bearing' ? mock.bearing
           : key === 'emit' ? mock.emit
           : key === 'render' ? mock.render
           : key === 'spread' ? mock.spread
-          : (values[key] ?? null),
+          : (values[key] ?? null)),
       refreshPoll: () => {},
     }),
   };
@@ -79,6 +81,41 @@ afterEach(() => {
 });
 
 describe('DeviceOptions', () => {
+  it('shows a box on older firmware the options it has, and never asks it for the rest', async () => {
+    const panels = (c: HTMLElement) => [...c.querySelectorAll('.pn[id]')].map((p) => p.id);
+    mock.asked.clear();
+    const five = render(() => <DeviceOptions proto={5} />);
+    await settle();
+    expect(panels(five.container)).toEqual(['box-name', 'imperfect-clone', 'movement-riding', 'bearing', 'emit-rate']);
+    expect([...mock.asked]).not.toContain('render');
+    expect([...mock.asked]).not.toContain('spread');
+    expect(five.container.querySelector('#imperfect-clone')!.textContent).not.toContain('Advanced tab');
+    cleanup();
+    for (const proto of [6, 7, 8]) {
+      const r = render(() => <DeviceOptions proto={proto} />);
+      await settle();
+      expect(panels(r.container), String(proto)).toEqual(['box-name', 'imperfect-clone', 'movement-riding', 'bearing', 'render', 'spread', 'emit-rate']);
+      expect(r.container.querySelector('#imperfect-clone')!.textContent, String(proto)).not.toContain('Advanced tab');
+      cleanup();
+    }
+    const now = render(() => <DeviceOptions proto={9} />);
+    await settle();
+    expect(now.container.querySelector('#imperfect-clone')!.textContent).toContain('Advanced tab');
+  });
+
+  it("keeps v3.3.0's rendered emit mode unless another is picked", async () => {
+    mock.emit = { mode: 3, fixedHz: 0, resolvedHz: 1000 };
+    const r = render(() => <DeviceOptions proto={5} />);
+    await settle();
+    const picked = r.container.querySelector('#emit-rate [role="radio"][aria-checked="true"]');
+    expect(picked?.textContent).toBe('Rendered');
+    const fixed = [...r.container.querySelectorAll<HTMLElement>('#emit-rate [role="radio"]')].find((b) => b.textContent === 'Fixed')!;
+    fireEvent.click(fixed);
+    fireEvent.click([...r.container.querySelectorAll<HTMLElement>('#emit-rate [role="radio"]')].find((b) => b.textContent === 'Rendered')!);
+    await settle();
+    expect(r.container.querySelector('#emit-rate')!.textContent).not.toContain('Unknown');
+  });
+
   it('links each option to its section of the Guide', async () => {
     const { container, findByText } = render(() => <DeviceOptions />);
     await findByText('Each axis is weighed against its bearing.');

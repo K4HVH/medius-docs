@@ -8,7 +8,8 @@
 //   unsupported, insecure          the page can't reach a port at all
 //   granted                        the port was picked on an earlier visit: a box remembered from it connects
 //                                  when the dashboard opens, without Connect
-//   newer, older                   the box speaks a newer or an older protocol
+//   newer, older                   the box speaks a newer or an older protocol (v3.4.1, protocol 8)
+//   oldest                         v3.2.0 on protocol 5, with no Render or Spread to answer
 //   nomouse, keyboard              nothing cloned, or a keyboard
 //   imperfect                      imperfect clones allowed (the Advanced tab's controls)
 //   fail                           every command the box is sent is refused
@@ -49,10 +50,10 @@ const on = new Set(
 );
 
 const VERSION: Version = {
-  protoVer: on.has('newer') ? PROTO_VER + 1 : on.has('older') ? PROTO_VER - 1 : PROTO_VER,
+  protoVer: on.has('newer') ? PROTO_VER + 1 : on.has('older') ? PROTO_VER - 1 : on.has('oldest') ? 5 : PROTO_VER,
   fwMajor: 3,
-  fwMinor: 4,
-  fwPatch: 5,
+  fwMinor: on.has('oldest') ? 2 : 4,
+  fwPatch: on.has('oldest') ? 0 : on.has('older') ? 1 : 5,
   mac: [0x58, 0x8c, 0x81, 0xdf, 0x1e, 0x28],
   name: 'Desk',
 };
@@ -261,6 +262,8 @@ function devLink(port: SerialPort, events: SerialLinkEvents): SerialLink {
       if (key === 'then') return undefined;
       if (typeof key !== 'string') return undefined;
       if (!silent()) target.lastRxAt = Date.now();
+      // Protocol 5 has no Render or Spread: such a query goes unanswered.
+      if (on.has('oldest') && (key === 'queryRender' || key === 'querySpread')) return () => new Promise(() => {});
       if (key in ANSWERS) return async () => (silent() ? Promise.reject(new Error('No reply')) : structuredClone(ANSWERS[key]));
       if (key.startsWith('query')) return async () => (silent() ? Promise.reject(new Error('No reply')) : undefined);
       return async () => (on.has('fail') ? refused() : undefined);
