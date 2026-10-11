@@ -4,6 +4,7 @@ import { handleDevicesApi } from '../../server/devices';
 import { handleStatsApi, resetStatsForTests } from '../../server/stats';
 import { COMPAT } from '../../src/app/data/compatibility';
 import { addressFor } from '../../src/app/routes';
+import { type CompatRow, withIds } from '../../src/app/data/compatMerge';
 
 const SITE = 'https://medius.k4tech.net';
 
@@ -49,8 +50,9 @@ it('answers only its own path', async () => {
 it("gives each device the address of its card on the Devices page", async () => {
   const { devices } = await read();
   const first = devices.find((d) => d.name === COMPAT[0]!.name)!;
-  const path = new URL(first.url).pathname;
   expect(first.url.startsWith('https://medius.k4tech.net/guide/compatibility/')).toBe(true);
-  expect(addressFor(path)?.parent).toBe('/guide/compatibility');
+  // Each address is its own row's card, not some section of the page.
+  const rows = withIds(devices.map(({ url: _, ...d }) => d as CompatRow));
+  devices.forEach((d, i) => expect(addressFor(new URL(d.url).pathname)).toMatchObject({ kind: 'device', target: rows[i]!.id }));
   expect(new Set(devices.map((d) => d.url)).size).toBe(devices.length);
 });
