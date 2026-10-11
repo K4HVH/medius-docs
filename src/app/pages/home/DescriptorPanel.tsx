@@ -146,6 +146,7 @@ export function DescriptorPanel(props: { sample: DescriptorSample }) {
   // One tab stop: the arrows, Home and End move along the tabs and pick as they go.
   let strip: HTMLDivElement | undefined;
   const onKey = (e: KeyboardEvent) => {
+    if (e.ctrlKey || e.altKey || e.shiftKey || e.metaKey) return;
     const last = TABS.length - 1;
     const at = selected();
     const to = { ArrowRight: at === last ? 0 : at + 1, ArrowLeft: at === 0 ? last : at - 1, Home: 0, End: last }[e.key];

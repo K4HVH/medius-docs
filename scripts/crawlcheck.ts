@@ -8,7 +8,8 @@ import { SITE } from '../src/app/site';
 import { HELP_ITEMS } from '../src/app/data/help';
 import { COMPAT } from '../src/app/data/compatibility';
 import { withIds } from '../src/app/data/compatMerge';
-import { cardUrl, deviceCard, helpCard, pageCard, type CardContent } from '../src/app/card/content';
+import { cardUrl, deviceCard, helpCard, pageCard, releaseCard, type CardContent } from '../src/app/card/content';
+import type { FirmwareRelease } from '../src/dashboard/firmware/client';
 import { itemFor } from '../src/app/items';
 import { cardHeadProblems } from './lib/cardHead';
 
@@ -195,12 +196,11 @@ async function main(): Promise<void> {
       if (!/^## v\d+\.\d+\.\d+$/m.test(clmd)) fail('/dashboard/changelog.md: no release heading');
       const tag = changelog.match(/<section id="(v\d+\.\d+\.\d+)" class="rel">/)?.[1];
       if (tag) {
-        const res = await get(`/dashboard/changelog/${tag}`);
-        const html = await res.text();
-        if (res.status !== 200 || meta(html, 'name', 'medius-item') !== `/dashboard/changelog/${tag}`) fail(`/dashboard/changelog/${tag}: status ${res.status}, no item head`);
-        const image = meta(html, 'property', 'og:image');
-        if (image) await checkImage(image, `/dashboard/changelog/${tag}`);
-        else fail(`/dashboard/changelog/${tag}: no og:image`);
+        // The release's address is the one the Discord post links: its card and head are what unfurl.
+        const { releases } = (await (await get('/api/firmware/releases', 'application/json')).json()) as { releases: FirmwareRelease[] };
+        const release = releases.find((r) => r.tag === tag);
+        if (release) await checkItem(`/dashboard/changelog/${tag}`, releaseCard(release), '/dashboard/changelog');
+        else fail(`/api/firmware/releases: no ${tag}`);
       }
       if ((await get('/dashboard/changelog/v0.0.0')).status !== 404) fail('/dashboard/changelog/v0.0.0: not 404');
     } else {

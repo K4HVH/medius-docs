@@ -162,8 +162,12 @@ export function createPoller(
     }
     try {
       const v = await RUN[key](l);
-      // A reset or link change during the round trip makes this value stale.
-      if (s.gen !== gen || link() !== l) return;
+      // A reset or link change during the round trip makes this value stale. With no link now, the slot
+      // waits for one, as a tick that found none does.
+      if (s.gen !== gen || link() !== l) {
+        if (s.gen === gen && !link()) s.parked = true;
+        return;
+      }
       s.write(v);
       s.setUnreadable(false);
       if (key === keepalive()) opts.onKeepalive?.(true);

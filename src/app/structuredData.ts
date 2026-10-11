@@ -31,7 +31,7 @@ function siteNodes(): object[] {
   ];
 }
 
-// An item's address is out of search and names no page of its own, so it carries the site's nodes alone.
+// An item's address is out of search and is no page but its parent's, so it carries the site's nodes alone.
 export const itemJsonLd = (): object => ({ '@context': 'https://schema.org', '@graph': siteNodes() });
 
 // schema.org graph for one page. `faq`: the Help answers, which the Help page lists in its markup and

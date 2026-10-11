@@ -27,12 +27,14 @@
 .row { grid-template-columns: var(--frame) minmax(0, 1fr); }
 .row .tag { display: none; color: var(--accent); }
 /* The report's bytes a full space apart where it has room, closer down to 0.3ch, then smaller type: worked
-   out from the column's width, so the prerendered page is right at any width. 1px spare for rounding. */
+   out from the column's width, so the prerendered page is right at any width. 1px a byte is spare for a
+   browser that rounds each character to whole pixels. */
 .tape-body { container-type: inline-size; }
-.row .b + .b { margin-left: clamp(0.3ch, calc((100% - var(--bytes) * 2ch - 1px) / (var(--bytes) - 1)), 1ch); }
-/* With the room, each row that carries injected bytes says so. */
-@container (min-width: 392px) {
-  .row { grid-template-columns: var(--frame) minmax(0, 1fr) auto; }
+.row .b + .b { margin-left: clamp(0.3ch, calc((100% - var(--bytes) * (2ch + 1px)) / (var(--bytes) - 1)), 1ch); }
+/* With the room, each row that carries injected bytes says so; the column is as wide on every row, so the
+   bytes line up. */
+@container (min-width: 405px) {
+  .row { grid-template-columns: var(--frame) minmax(0, 1fr) 4ch; }
   .row .tag { display: inline; }
 }
 .tape-head { position: relative; padding-bottom: 12px; color: var(--dim); }
@@ -51,7 +53,7 @@
 .tape-body { position: relative; overflow: hidden; -webkit-mask: linear-gradient(transparent, #000 45%); mask: linear-gradient(transparent, #000 45%); }
 .rows {
   position: absolute; left: 0; right: 0; bottom: 0; font: 400 12.5px/26px var(--mono); color: #474747;
-  font-size: min(var(--fs), calc((100cqw - 2 * var(--row-pad) - var(--frame) - var(--col-gap) - 1px) / (var(--bytes) * 1.2 + (var(--bytes) - 1) * 0.18)));
+  font-size: min(var(--fs), calc((100cqw - 2 * var(--row-pad) - var(--frame) - var(--col-gap) - var(--bytes) * 1px) / (var(--bytes) * 1.2 + (var(--bytes) - 1) * 0.18)));
 }
 .row { white-space: nowrap; transition: color 0.2s ease, background 0.2s ease; }
 .row .api { color: var(--accent); }

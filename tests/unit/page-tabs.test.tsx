@@ -123,6 +123,25 @@ describe('PageTabs', () => {
     expect(selected(container)).toBe('Overview');
   });
 
+  it('leaves a key held with Ctrl, Alt, Shift or Meta to the browser', () => {
+    const { container } = page();
+    const first = container.querySelector<HTMLButtonElement>('[data-tab="overview"]')!;
+    first.focus();
+    for (const mod of ['ctrlKey', 'altKey', 'shiftKey', 'metaKey']) {
+      const ev = new KeyboardEvent('keydown', { key: 'End', bubbles: true, cancelable: true, [mod]: true });
+      first.dispatchEvent(ev);
+      expect(ev.defaultPrevented, mod).toBe(false);
+      expect(selected(container), mod).toBe('Overview');
+    }
+  });
+
+  it("tells the stylesheet its tabs' count and letters, which set their spacing", () => {
+    const { container } = page();
+    const bar = container.querySelector<HTMLElement>('.ptabs')!;
+    expect(bar.style.getPropertyValue('--tab-n')).toBe('3');
+    expect(bar.style.getPropertyValue('--tab-chars')).toBe(String('OverviewOptionsLog'.length));
+  });
+
   it('opens a tab on click and on End and Home', async () => {
     const { container } = page();
     fireEvent.click(container.querySelector('[data-tab="log"]')!);

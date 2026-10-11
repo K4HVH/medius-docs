@@ -4,7 +4,7 @@ import type { FirmwareRelease } from '../src/dashboard/firmware/client';
 import { groupCommits, inlineRuns, parseBlocks, releaseDay, splitRelease, type Block, type CommitGroup } from '../src/dashboard/firmware/notes';
 import { SITE } from '../src/app/site';
 import { COMPAT, KIND_LABEL, VERDICT_LABEL, VERDICT_TONE } from '../src/app/data/compatibility';
-import { mergeCompat, withIds } from '../src/app/data/compatMerge';
+import { fixHref, mergeCompat, withIds } from '../src/app/data/compatMerge';
 import type { StatsSummary } from './stats/types';
 import { getStatsSummary } from './stats';
 import { figureText, type HomeFigures } from '../src/app/data/homeFigures';
@@ -137,26 +137,37 @@ function homeHtml(html: string, figures: HomeFigures): string {
   return out.replace('</body>', () => `${embed('home-data', figures)}</body>`);
 }
 
+// The Options link a note naming a setting carries, as the page draws it.
+const ARROW =
+  '<svg class="arr" viewBox="0 0 16 16" aria-hidden="true" width="11" height="11"><path d="M2 8h11M9 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.6"></path></svg>';
+const noteHtml = (note?: string) => {
+  const href = fixHref(note);
+  return href ? `<div class="ni"><span>${esc(note!)}</span> <a href="${href}" class="fix">Options${ARROW}</a></div>` : esc(note ?? '');
+};
+
 function compatHtml(html: string, stats: StatsSummary): string {
   const rows = withIds(mergeCompat(COMPAT, stats.devices.top))
     .map(
       (r) =>
-        `<tr id="${r.id}"><td>${esc(r.name)}${r.vidpid && r.vidpid !== r.name ? `<span class="vp">${esc(r.vidpid)}</span>` : ''}</td>` +
+        `<tr id="${r.id}"><td>${esc(r.name)}${r.vidpid && r.vidpid !== r.name ? ` <span class="vp">${esc(r.vidpid)}</span>` : ''}</td>` +
         `<td>${KIND_LABEL[r.kind]}</td><td><span class="status ${VERDICT_TONE[r.verdict]}">${VERDICT_LABEL[r.verdict]}</span></td>` +
-        `<td>${esc(r.note ?? '')}</td><td class="v">${esc(r.reported ?? '')}</td><td class="num">${r.boxes ?? ''}</td></tr>`,
+        `<td>${noteHtml(r.note)}</td><td class="v">${esc(r.reported ?? '')}</td><td class="num">${r.boxes ?? ''}</td></tr>`,
     )
     .join('');
   return html.replace(/(<tbody[^>]*\sdata-fill="compat"[^>]*>)[\s\S]*?(<\/tbody>)/, (_m, open: string, close: string) => open + rows + close);
 }
 
-const cell = (s: string) => s.replace(/\|/g, '\\|');
+// Text in a table cell, read as text: a name from the stats can hold Markdown or HTML.
+const text = (s: string) => s.replace(/[\\`*_[\]<>|]/g, (c) => (c === '<' ? '&lt;' : c === '>' ? '&gt;' : `\\${c}`));
 
-// The built twin's device table, rewritten with the merged rows.
+// The built twin's device table, rewritten with the merged rows in the shape the build writes.
 function compatMarkdown(md: string, stats: StatsSummary): string {
   const rows = withIds(mergeCompat(COMPAT, stats.devices.top)).map((r) => {
-    const name = r.vidpid && r.vidpid !== r.name ? `${r.name} (${r.vidpid})` : r.name;
-    const cells = [name, KIND_LABEL[r.kind], VERDICT_LABEL[r.verdict], r.note ?? '', r.reported ?? '', r.boxes?.toString() ?? ''];
-    return `| ${cells.map(cell).join(' | ')} |`;
+    const name = text(r.name) + (r.vidpid && r.vidpid !== r.name ? ` ${r.vidpid}` : '');
+    const href = fixHref(r.note);
+    const note = text(r.note ?? '') + (href ? ` [Options](${href.replace('#', '.md#')})` : '');
+    const cells = [name, KIND_LABEL[r.kind], VERDICT_LABEL[r.verdict], note, r.reported ?? '', r.boxes?.toString() ?? ''];
+    return `| ${cells.join(' | ')} |`;
   });
   return md.replace(/^(\| Device \|.*\n\|[- |]+\|\n)(?:\|.*\n?)*/m, (_m, head: string) => head + rows.join('\n') + '\n');
 }

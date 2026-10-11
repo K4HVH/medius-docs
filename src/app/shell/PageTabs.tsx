@@ -124,6 +124,7 @@ export function PageTabs(props: { id: string; tabs: Tab[]; children: JSX.Element
   });
 
   const onKey = (e: KeyboardEvent) => {
+    if (e.ctrlKey || e.altKey || e.shiftKey || e.metaKey) return;
     const bs = [...(strip?.querySelectorAll<HTMLButtonElement>('button:not([disabled])') ?? [])];
     const i = bs.indexOf(document.activeElement as HTMLButtonElement);
     if (i < 0) return;
@@ -136,7 +137,12 @@ export function PageTabs(props: { id: string; tabs: Tab[]; children: JSX.Element
 
   return (
     <>
-      <div class="ptabs" ref={bar}>
+      {/* The tabs' count and letters let the stylesheet space them to fit the bar before it scrolls. */}
+      <div
+        class="ptabs"
+        ref={bar}
+        style={{ '--tab-n': props.tabs.length, '--tab-chars': props.tabs.reduce((n, t) => n + t.label.length, 0) }}
+      >
         <div class="ptabs-list" role="tablist" aria-label={routeFor(pagePath(location.pathname))?.title} ref={strip} onScroll={atEnd} onKeyDown={onKey}>
           <span class="ind" ref={mark} aria-hidden="true" />
           <For each={props.tabs}>

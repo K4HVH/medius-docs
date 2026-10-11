@@ -19,38 +19,50 @@ function ready(): Faces {
   return (faces ??= { regular: face('inter-400'), bold: face('inter-700'), mono: face('plex-mono-500') });
 }
 
+interface Pending {
+  resolve: (png: Uint8Array<ArrayBuffer>) => void;
+  reject: (e: Error) => void;
+}
+
 interface Renderer {
   worker?: Worker;
+  // The current thread's drawings; each thread's listeners keep their own.
+  pending?: Map<number, Pending>;
   next: number;
-  pending: Map<number, { resolve: (png: Uint8Array<ArrayBuffer>) => void; reject: (e: Error) => void }>;
 }
 
 // One renderer thread a process, kept on globalThis so a copy of this module loaded again (the dev server
-// reloads its config) uses it too. A thread that stops fails what it held; the next drawing starts another.
-const renderer: Renderer = ((globalThis as Record<symbol, Renderer>)[Symbol.for('medius.og.renderer')] ??= { next: 0, pending: new Map() });
+// reloads its config) uses it too. A thread that stops fails the drawings sent to it, and the next drawing
+// starts another.
+const renderer: Renderer = ((globalThis as Record<symbol, Renderer>)[Symbol.for('medius.og.renderer')] ??= { next: 0 });
+
+function start(): void {
+  const w = new Worker(new URL('./og-render.mjs', import.meta.url));
+  const pending = new Map<number, Pending>();
+  const fail = (e: Error) => {
+    if (renderer.worker === w) renderer.worker = undefined;
+    for (const p of pending.values()) p.reject(e);
+    pending.clear();
+  };
+  w.on('message', (m: { id: number; png?: Uint8Array<ArrayBuffer>; error?: string }) => {
+    const p = pending.get(m.id);
+    pending.delete(m.id);
+    if (m.png) p?.resolve(m.png);
+    else p?.reject(new Error(m.error));
+  });
+  w.on('error', fail);
+  w.on('exit', (code) => fail(new Error(`card renderer stopped (${code})`)));
+  // After the listeners: Node takes a reference again when one is added.
+  w.unref();
+  renderer.worker = w;
+  renderer.pending = pending;
+}
 
 function rasterise(svg: string): Promise<Uint8Array<ArrayBuffer>> {
-  if (!renderer.worker) {
-    const w = new Worker(new URL('./og-render.mjs', import.meta.url));
-    w.unref();
-    const fail = (e: Error) => {
-      if (renderer.worker === w) renderer.worker = undefined;
-      for (const p of renderer.pending.values()) p.reject(e);
-      renderer.pending.clear();
-    };
-    w.on('message', (m: { id: number; png?: Uint8Array<ArrayBuffer>; error?: string }) => {
-      const p = renderer.pending.get(m.id);
-      renderer.pending.delete(m.id);
-      if (m.png) p?.resolve(m.png);
-      else p?.reject(new Error(m.error));
-    });
-    w.on('error', fail);
-    w.on('exit', (code) => fail(new Error(`card renderer stopped (${code})`)));
-    renderer.worker = w;
-  }
+  if (!renderer.worker || !renderer.pending) start();
   const id = renderer.next++;
-  const out = new Promise<Uint8Array<ArrayBuffer>>((resolve, reject) => renderer.pending.set(id, { resolve, reject }));
-  renderer.worker.postMessage({ id, svg });
+  const out = new Promise<Uint8Array<ArrayBuffer>>((resolve, reject) => renderer.pending!.set(id, { resolve, reject }));
+  renderer.worker!.postMessage({ id, svg });
   return out;
 }
 
