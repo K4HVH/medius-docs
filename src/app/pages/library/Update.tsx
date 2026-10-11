@@ -195,7 +195,7 @@ device.update_firmware(UpdateTarget::Device, &image, &mut |p| {
 })?;`}</code></pre>
       </DocSection>
 
-      <DocSection id="async" title="On AsyncDevice" caption="The same calls, awaitable">
+      <DocSection id="async" title="On AsyncDevice" caption="Same calls, awaitable">
         <pre class="api-signature">async fn stage_firmware(&self, target: UpdateTarget, image: &amp;[u8], progress: &amp;mut dyn FnMut(UpdateProgress)) -&gt; Result&lt;u32&gt;</pre>
         <pre class="api-signature">async fn activate_firmware(&self) -&gt; Result&lt;()&gt;</pre>
         <pre class="api-signature">async fn abort_update(&self, target: UpdateTarget) -&gt; Result&lt;()&gt;</pre>

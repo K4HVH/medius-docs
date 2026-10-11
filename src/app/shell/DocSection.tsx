@@ -5,7 +5,7 @@ import { CopyLink } from './CopyLink';
 const words = (title: string) => (/\s/.test(title) ? [title] : title.split(/(?<=[a-z0-9])(?=[A-Z])/));
 
 // One section of a docs page: a ruled h2 with an optional caption. The rule lights while it is read.
-export function DocSection(props: { id?: string; title: string; caption?: string; hidden?: boolean; children?: JSX.Element }) {
+export function DocSection(props: { id?: string; title: string; caption?: string; aside?: JSX.Element; hidden?: boolean; children?: JSX.Element }) {
   return (
     <section class="doc-section" id={props.id} data-search-target={props.id ? '' : undefined} hidden={props.hidden}>
       <h2 class="doc-h2" aria-label={props.title}>
@@ -16,6 +16,7 @@ export function DocSection(props: { id?: string; title: string; caption?: string
         <Show when={props.caption}>
           <span class="doc-caption caps">{props.caption}</span>
         </Show>
+        {props.aside}
       </h2>
       {props.children}
     </section>

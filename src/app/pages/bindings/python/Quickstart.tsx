@@ -25,7 +25,7 @@ const Quickstart: Component = () => {
         </div>
       </PageHeader>
 
-      <DocSection id="program" title="The program" caption="The full listing">
+      <DocSection id="program" title="Program" caption="Full listing">
         <pre><code class="language-python">{`import time
 from medius import Device, Usage, Button, CatchFilter, NotFoundError
 
@@ -192,7 +192,7 @@ except NotFoundError:
         </p>
       </DocSection>
 
-      <DocSection id="cleanup" title="Closing" caption="A with-block, close(), or garbage collection">
+      <DocSection id="cleanup" title="Closing" caption="With-block, close(), or garbage collection">
         <p>
           A <code>Device</code> and each stream hold a live connection. Three ways close it, safe
           to combine:

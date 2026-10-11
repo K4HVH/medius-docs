@@ -217,7 +217,7 @@ const Device = () => {
               <Show when={older()}>
                 <Panel id="older-firmware" title="Older firmware" wide transient>
                   <p>
-                    This box runs v{versionString(dash.version()!)}, with the options below. Update it for{' '}
+                    This box runs v{versionString(dash.version()!)}. Update it for{' '}
                     {proto() < 6 ? 'Render, Spread, factory reset' : 'factory reset'} and the Control page.
                   </p>
                   <div class="acts">

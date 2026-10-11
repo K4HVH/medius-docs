@@ -217,7 +217,7 @@ const Transfer: Component = () => {
         />
       </DocSection>
 
-      <DocSection id="in-flight" title="One at a time" caption="A TRANSFER holds the control port until its reply">
+      <DocSection id="in-flight" title="One at a time" caption="TRANSFER holds the control port until its reply">
         <p>
           The box runs a <code>TRANSFER</code> to completion before reading the next control
           frame, so replies arrive in command order.

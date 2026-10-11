@@ -261,7 +261,7 @@ describe('The Advanced tab of Control', () => {
     withPatches({ pending: true, entries: ONE_PATCH });
     const { container, getByText, queryByText } = render(() => <Cards />);
     expect(getByText('Not applied')).toBeTruthy();
-    expect(getByText('Changes not on the clone')).toBeTruthy();
+    expect(getByText('Pending')).toBeTruthy();
     expect(getByText('Not on the clone yet. Apply to put it on.')).toBeTruthy();
     expect(queryByText('Refused')).toBeNull();
     fireEvent.click(cardButton(patchCard(container), 'Apply'));
@@ -275,7 +275,7 @@ describe('The Advanced tab of Control', () => {
     const { container, getByText, queryByText } = render(() => <Cards />);
     expect(getByText('Applied')).toBeTruthy();
     expect(getByText('The clone carries this set.')).toBeTruthy();
-    expect(queryByText('Changes not on the clone')).toBeNull();
+    expect(queryByText('Pending')).toBeNull();
     const apply = cardButton(patchCard(container), 'Apply');
     expect(apply.disabled).toBe(true);
     expect(apply.title).toBe('The clone already carries this set.');
@@ -285,7 +285,7 @@ describe('The Advanced tab of Control', () => {
     withPatches({ applied: true, pending: true, entries: ONE_PATCH });
     const { container, getByText } = render(() => <Cards />);
     expect(getByText('Applied')).toBeTruthy();
-    expect(getByText('Changes not on the clone')).toBeTruthy();
+    expect(getByText('Pending')).toBeTruthy();
     expect(getByText('The clone carries an earlier version of this set. Apply to update it.')).toBeTruthy();
     expect(cardButton(patchCard(container), 'Apply').disabled).toBe(false);
   });
@@ -306,7 +306,7 @@ describe('The Advanced tab of Control', () => {
     const { container, getByText, queryByText } = render(() => <Cards />);
     expect(getByText('Refused')).toBeTruthy();
     expect(getByText(/This set failed a check, so the clone runs without it/)).toBeTruthy();
-    expect(queryByText('Changes not on the clone')).toBeNull();
+    expect(queryByText('Pending')).toBeNull();
     expect(queryByText(/Apply to put it on/)).toBeNull();
     const card = patchCard(container);
     expect(cardButton(card, 'Apply').title).toBe('This set failed a check. Change it, then apply.');

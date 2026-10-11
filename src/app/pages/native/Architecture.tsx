@@ -91,7 +91,7 @@ const Architecture: Component = () => {
         </p>
       </PageHeader>
 
-      <DocSection id="transparency" title="What reaches the PC" caption="Real mouse plus injected input">
+      <DocSection id="transparency" title="PC output" caption="Real mouse plus injected input">
         <p>
           The PC enumerates the same model of mouse, with the same buttons and capabilities.
           Injected input adds to native input (<A href="/native/injection">Injection Model</A>).

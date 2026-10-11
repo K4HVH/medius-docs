@@ -85,7 +85,7 @@ const Lock: Component = () => {
           <div class="table-scroll">
             <table class="api-params">
               <thead>
-                <tr><th>Name</th><th>What the box does</th></tr>
+                <tr><th>Name</th><th>Box action</th></tr>
               </thead>
               <tbody>
                 <tr><td>combine</td><td>A delta picks up one fixed-sign scale and one relative scale, multiplied. A <code>0</code> in either blocks.</td></tr>

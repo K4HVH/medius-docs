@@ -71,7 +71,7 @@ const keepRecent = (e: IndexEntry) => {
   try {
     save([e, ...readRecent(null).filter((r) => r.path !== e.path)]);
   } catch {
-    // A browser that keeps nothing simply offers no recent results.
+    // A browser that keeps nothing offers no recent results.
   }
 };
 

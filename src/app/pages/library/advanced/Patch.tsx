@@ -108,7 +108,7 @@ device.apply_patch()?;`}</code></pre>
         <div class="table-scroll">
           <table class="api-params">
             <thead>
-              <tr><th>Stored set</th><th>What the box does</th></tr>
+              <tr><th>Stored set</th><th>Box action</th></tr>
             </thead>
             <tbody>
               <tr><td>Differs from the set the clone serves (<A href="/library/types/structs#patch-set"><code>pending</code></A>)</td><td>Re-presents the clone with it, a re-clone that releases the session. An emptied set serves the device unpatched, and one that fails a check is served unpatched with <code>refused</code> set.</td></tr>
@@ -135,7 +135,7 @@ device.apply_patch()?; // the clone replugs and re-presents patched`}</code></pr
         <div class="table-scroll">
           <table class="api-params">
             <thead>
-              <tr><th>The clone</th><th>What the box does</th></tr>
+              <tr><th>Clone</th><th>Box action</th></tr>
             </thead>
             <tbody>
               <tr><td>Serves patches</td><td>Erases the set and re-presents the clone unpatched: one unplug/replug to the game PC, and a re-clone that releases the session.</td></tr>

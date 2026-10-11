@@ -57,7 +57,7 @@ const Tracing: Component = () => {
         </div>
       </DocSection>
 
-      <DocSection id="spans" title="connect span" caption="A span wraps related events">
+      <DocSection id="spans" title="connect span" caption="Spans wrap related events">
         <p>
           The <code>connect</code> span wraps the handshake; retry and <code>connected</code> events
           nest inside it. Its fields are the numbers{' '}
@@ -116,7 +116,7 @@ device.move_rel(10, 0)?;
 //   INFO  connect: medius::device: connected proto_ver=9 fw_major=3 fw_minor=4 fw_patch=2`}</code></pre>
       </DocSection>
 
-      <DocSection id="filtering" title="Filter by level and target" caption="EnvFilter and RUST_LOG">
+      <DocSection id="filtering" title="Filtering" caption="EnvFilter and RUST_LOG">
         <p>
           Transport events sit below the default <code>INFO</code> floor. Lower it with a per-target{' '}
           <a href="https://docs.rs/tracing-subscriber/latest/tracing_subscriber/filter/struct.EnvFilter.html" target="_blank" rel="noreferrer"><code>EnvFilter</code></a>{' '}

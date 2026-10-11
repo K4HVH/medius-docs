@@ -81,9 +81,9 @@
 .ph .caps { color: var(--dim); }
 .ph .pr { display: flex; align-items: center; gap: 12px; }
 /* A Guide link stays at the heading's right; a long title wraps beside it. */
-.ph:has(> .guide) { flex-wrap: nowrap; }
-.ph:has(> .guide) > h2 { min-width: 0; }
-.ph > .guide { flex: none; }
+.ph:has(> .cross) { flex-wrap: nowrap; }
+.ph:has(> .cross) > h2 { min-width: 0; }
+.ph > .cross { flex: none; }
 /* The tab strip's rule heads the first row, so those panels draw no rule. */
 .pn.top > .ph { margin-top: 32px; padding-top: 0; border-top: 0; }
 .pn.top > .ph::before { display: none; }

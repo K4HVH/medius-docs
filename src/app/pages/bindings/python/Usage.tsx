@@ -14,10 +14,10 @@ const Usage: Component = () => {
         </p>
       </PageHeader>
 
-      <DocSection id="calls" title="Fire-and-forget vs blocking" caption="The two call-kind badges">
+      <DocSection id="calls" title="Fire-and-forget vs blocking" caption="Call-kind badges">
         <div class="table-scroll">
           <table class="api-params">
-            <thead><tr><th>Badge</th><th>Means</th><th>Which calls</th></tr></thead>
+            <thead><tr><th>Badge</th><th>Meaning</th><th>Calls</th></tr></thead>
             <tbody>
               <tr>
                 <td><span class="api-badge api-badge--executed">Fire-and-forget</span></td>
@@ -108,7 +108,7 @@ dev.clone() ────┘
         <div class="api-response-label">RELEASE ROUTES</div>
         <div class="table-scroll">
           <table class="api-params">
-            <thead><tr><th>Route</th><th>When the handle frees</th></tr></thead>
+            <thead><tr><th>Route</th><th>Freed</th></tr></thead>
             <tbody>
               <tr><td><code>with Device.find() as dev:</code></td><td>When the <a href="https://docs.python.org/3/reference/datamodel.html#context-managers" target="_blank" rel="noreferrer">context manager</a> block exits (<code>__exit__</code>). Preferred.</td></tr>
               <tr><td><code>dev.close()</code></td><td>Immediately; a second call is a no-op.</td></tr>
@@ -143,7 +143,7 @@ dev.close()`}</code></pre>
         </p>
         <div class="table-scroll">
           <table class="api-params">
-            <thead><tr><th>Builder</th><th>Feeds</th><th>What it makes</th></tr></thead>
+            <thead><tr><th>Builder</th><th>Feeds</th><th>Result</th></tr></thead>
             <tbody>
               <tr><td><A href="/bindings/python/types#input"><code>Usage.button(button)</code></A></td><td rowspan="3"><code>dev.inject(input, action)</code>, <code>dev.press(input)</code><br />see <A href="/library/inject">Inject</A></td><td>a mouse-button usage</td></tr>
               <tr><td><code>Usage.key(key)</code></td><td>a keyboard-key usage (<A href="/native/commands/usage#keycodes">keycodes</A>)</td></tr>

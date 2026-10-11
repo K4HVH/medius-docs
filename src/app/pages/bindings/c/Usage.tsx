@@ -14,7 +14,7 @@ const Usage: Component = () => {
         </p>
       </PageHeader>
 
-      <DocSection id="calls" title="Fire-and-forget vs blocking" caption="The two call-kind badges">
+      <DocSection id="calls" title="Fire-and-forget vs blocking" caption="Call-kind badges">
         <p>
           Both return a <A href="/bindings/c/types#errors"><code>MediusStatus</code></A>; the{' '}
           <A href="/bindings/c/api">API index</A> badges each call.

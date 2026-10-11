@@ -33,7 +33,7 @@ const Quickstart: Component = () => {
   free()            ──▶  close, NULL-safe      local`}</pre>
       </PageHeader>
 
-      <DocSection id="program" title="The program" caption="Every call, with error checks">
+      <DocSection id="program" title="Program" caption="Every call, with error checks">
         <p>
           <code>check()</code> compares against <code>MEDIUS_STATUS_OK</code> (<code>0</code>) and
           on anything else reads <code>medius_last_error_message</code>. Results land through an
@@ -117,7 +117,7 @@ LD_LIBRARY_PATH=. ./first      # so the loader finds libmedius_capi.so`}</code><
         <div class="table-scroll">
           <table class="api-params">
             <thead>
-              <tr><th>Flag</th><th>What it does</th></tr>
+              <tr><th>Flag</th><th>Effect</th></tr>
             </thead>
             <tbody>
               <tr><td><code>-Iinclude</code></td><td>Where <code>medius.h</code> lives.</td></tr>
@@ -211,7 +211,7 @@ uintptr_t    medius_last_error_message(char *buf, uintptr_t cap);  /* returns fu
         <div class="table-scroll">
           <table class="api-params">
             <thead>
-              <tr><th>Call</th><th>What it means</th></tr>
+              <tr><th>Call</th><th>Meaning</th></tr>
             </thead>
             <tbody>
               <tr>

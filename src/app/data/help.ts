@@ -83,7 +83,7 @@ export const HELP: readonly HelpGroup[] = [
       {
         id: 'mouse-still',
         q: "My mouse doesn't move",
-        a: 'If Options shows Device over box capacity, or high speed, press Allow imperfect.',
+        a: 'Connect the box on the dashboard: Overview offers Allow imperfect when the device needs it.',
         links: [OPTIONS],
       },
       {
@@ -98,13 +98,13 @@ export const HELP: readonly HelpGroup[] = [
       {
         id: 'logitech',
         q: 'My Logitech mouse feels delayed, or runs at 125 Hz',
-        a: 'Press Allow imperfect, then under Emit rate set Wire rate to Forced, enter 1000 Hz and press Apply. The box restarts to apply a wire rate, so the option reads off for up to 10 seconds.',
+        a: 'Connect the box on the dashboard: Overview offers the Logitech fix. Press Force 1000 Hz and give the box up to a minute to restart.',
         links: [{ label: 'Options', href: '/dashboard#wire-rate' }],
       },
       {
         id: 'no-options',
         q: 'My box has no Options',
-        a: 'The Options tab opens for v3.2.0 and later, with the options that firmware has; Update adds the rest. A box older than v3.2.0 needs setting up once with the installer.',
+        a: 'Options shows on v3.2.0 and later, with what that firmware has. Update for the rest. A box older than v3.2.0 needs setting up once with the installer.',
         links: [{ label: 'Update', href: '/dashboard/update' }, SET_UP],
       },
       {
@@ -149,7 +149,7 @@ export const HELP: readonly HelpGroup[] = [
       {
         id: 'too-old',
         q: 'Too old to update from here',
-        a: 'One-click update needs v3.2.0 (protocol 5) or later. Set the box up once with the installer; then it updates in one click.',
+        a: 'One-click update needs v3.2.0 or later. Set the box up once with the installer; then it updates in one click.',
         links: [SET_UP],
       },
       {
@@ -178,7 +178,7 @@ export const HELP: readonly HelpGroup[] = [
       {
         id: 'stock-firmware',
         q: 'How do I go back to the stock firmware?',
-        a: "On Update's Manual tab, choose ROM download and MAKCU stock: it flashes MAKCU's official build from MAKCU's signed catalog, one chip at a time. Set up puts Medius back.",
+        a: "On Update's Manual tab, pick ROM download, then MAKCU stock. It flashes MAKCU's official build, one chip at a time. Set up puts Medius back.",
         links: [MANUAL, SET_UP],
       },
     ],

@@ -26,7 +26,7 @@ const Build: Component = () => {
         <div class="table-scroll">
           <table class="api-params">
             <thead>
-              <tr><th>Cargo feature</th><th>Header macro</th><th>Declares</th><th>What it does</th></tr>
+              <tr><th>Cargo feature</th><th>Header macro</th><th>Declares</th><th>Effect</th></tr>
             </thead>
             <tbody>
               <tr>

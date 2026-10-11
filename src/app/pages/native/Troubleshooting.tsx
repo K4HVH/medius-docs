@@ -100,13 +100,6 @@ const Troubleshooting: Component = () => {
             </tbody>
           </table>
         </div>
-        <div class="callout callout--danger">
-          <p>
-            ⚠️ <A href="/native/hardware"><code>USB1</code></A> and{' '}
-            <A href="/native/hardware"><code>USB3</code></A> must never both connect to the same
-            machine. See <A href="/native/hardware">Hardware</A>.
-          </p>
-        </div>
       </DocSection>
 
       <DocSection id="port-gone" title="Serial port gone after REBOOT" caption="Chip in ROM download mode">
