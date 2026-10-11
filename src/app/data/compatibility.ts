@@ -15,7 +15,7 @@ export const VERDICT_LABEL: Record<Verdict, string> = { works: 'Supported', part
 export const VERDICT_TONE: Record<Verdict, string> = { works: 'ok', partial: 'warn', doesnt: 'bad' };
 export const KIND_LABEL: Record<CompatEntry['kind'], string> = { mouse: 'Mouse', keyboard: 'Keyboard', other: 'Other' };
 
-// Owners' reports from the Discord #compatibility channel, newest report first where two disagree, and a
+// Owners' reports from the Discord #✅-device-reports channel, newest report first where two disagree, and a
 // release that names a device over a report that predates it. Names follow the maker's spelling.
 export const COMPAT: readonly CompatEntry[] = [
   { name: 'Ace 68 Pro', kind: 'keyboard', verdict: 'doesnt', reported: 'v3.0.1' },

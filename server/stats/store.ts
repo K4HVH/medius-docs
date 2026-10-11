@@ -59,6 +59,9 @@ const fill = (keys: string[], counts: Count[]): Count[] => {
 const WEEK_SQL = (col: string) => `date(${col}, 'unixepoch', '-6 days', 'weekday 1')`;
 const RANKED = 'ORDER BY n DESC, key ASC';
 
+// A box's id: the first 16 hex digits of an HMAC-SHA256 of its MAC, keyed by the database's key.
+export const boxId = (key: string, mac: string) => createHmac('sha256', Buffer.from(key, 'hex')).update(mac).digest('hex').slice(0, 16);
+
 export function createStore(db: Db, now: () => number = () => Date.now()): Store {
   db.exec(SCHEMA);
   let key = db.get<{ v: string }>("SELECT v FROM meta WHERE k = 'key'")?.v;
@@ -66,8 +69,7 @@ export function createStore(db: Db, now: () => number = () => Date.now()): Store
     key = randomBytes(32).toString('hex');
     db.run("INSERT INTO meta (k, v) VALUES ('key', ?)", key);
   }
-  const secret = Buffer.from(key, 'hex');
-  const idOf = (mac: string) => createHmac('sha256', secret).update(mac).digest('hex').slice(0, 16);
+  const idOf = (mac: string) => boxId(key, mac);
 
   const markDay = (id: string, ms: number) =>
     db.run('INSERT OR IGNORE INTO box_days (id, day) VALUES (?, ?)', id, dayOf(ms));

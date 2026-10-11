@@ -76,6 +76,9 @@ const ENTRIES: Entry[] = [
   guide('/guide/help', 'Help', 'Help',
     'Troubleshooting and FAQ for MAKCU owners on Medius: install and connection messages, mice and keyboards, updates and rollback, software and Windows.',
     'Medius help: MAKCU troubleshooting and FAQ'),
+  guide('/guide/privacy', 'Privacy', 'Privacy',
+    'What the Medius site, the dashboard and the Discord bot keep, for how long, and how to have it deleted.',
+    'Medius privacy: the site, usage stats and the Discord bot'),
 
   native('/native', 'Overview', 'Introduction', 'Native API',
     'The Medius control protocol for the MAKCU box: the frames and commands a program sends over the USB-serial port to inject input.',

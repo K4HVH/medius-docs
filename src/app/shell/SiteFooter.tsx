@@ -71,7 +71,10 @@ export const SiteFooter = (props: { ref?: (el: HTMLElement) => void }) => (
       )}
     </For>
     <div class="legal caps">
-      <span>© 2026 K4TECH</span>
+      <span>
+        © 2026 K4TECH
+        <A href="/guide/privacy" end activeClass="" inactiveClass="">Privacy</A>
+      </span>
       <span class="nc">medius.k4tech.net</span>
     </div>
   </footer>
