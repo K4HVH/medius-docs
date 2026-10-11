@@ -625,7 +625,7 @@ MediusCatchFilter filters[2] = { blanket, whole };
 MediusEventStream *events = NULL;
 medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
         <p>
-          A malformed entry fails the whole call with its own{' '}
+          A malformed entry fails the whole call with a distinct{' '}
           <A href="/bindings/c/types#errors"><code>MediusStatus</code></A>.{' '}
           <A href="/bindings/c/api#inspectors"><code>medius_catch_filter_same_address</code></A> tests
           whether two filters name the same table entry, whatever their captures.
@@ -737,7 +737,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
             <thead><tr><th>Enumerator</th><th>Value</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>MEDIUS_MOVE_TIMING_RIDE</code></td><td><code>0</code></td><td>Wait for a real cursor move to carry the delta.</td></tr>
-              <tr><td><code>MEDIUS_MOVE_TIMING_NOW</code></td><td><code>1</code></td><td>Leave on the box's next mouse report, native or its own, whatever movement riding is set to.</td></tr>
+              <tr><td><code>MEDIUS_MOVE_TIMING_NOW</code></td><td><code>1</code></td><td>Leave on the next mouse report the box sends, native or not, whatever movement riding is set to.</td></tr>
             </tbody>
           </table>
         </div>
@@ -1087,7 +1087,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
           <table class="api-params">
             <thead><tr><th>Enumerator</th><th>Value</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>MEDIUS_BEARING_MODE_PER_AXIS</code></td><td><code>0</code></td><td>Each axis compares its own sign against its own bearing, independently. The default.</td></tr>
+              <tr><td><code>MEDIUS_BEARING_MODE_PER_AXIS</code></td><td><code>0</code></td><td>Each axis compares its sign against its bearing, independently. The default.</td></tr>
               <tr><td><code>MEDIUS_BEARING_MODE_VECTOR</code></td><td><code>1</code></td><td>The physical delta is projected onto the injected XY vector, and the relative scale weighs only the part along it; the fixed-sign scales still reach what the projection leaves on each axis. One relative scale, the lower of X's and Y's, governs X and Y as one vector, and <A href="/bindings/c/types#locks"><code>MediusLocks</code></A> reports it.</td></tr>
             </tbody>
           </table>
@@ -1547,7 +1547,7 @@ for (uintptr_t i = 0; i < n; i++) {
 
       <DocSection id="stamped" title="MediusStamped" caption="One event placed on this machine's clock">
         <pre class="api-signature">{`struct MediusStamped {
-    uint64_t host_ns;     /* on the caller's own monotonic scale */
+    uint64_t host_ns;     /* on the caller's monotonic scale     */
     uint64_t box_us;      /* unwrapped past the 32-bit rollover  */
     uint64_t excess_ns;   /* jitter above the measured floor     */
 };`}</pre>
@@ -1561,7 +1561,7 @@ for (uintptr_t i = 0; i < n; i++) {
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>host_ns</code></td><td><code>uint64_t</code></td><td>When the event happened, on the caller's monotonic clock.</td></tr>
-              <tr><td><code>box_us</code></td><td><code>uint64_t</code></td><td>The event's own stamp, unwrapped: a raw <code>ts_us</code> wraps every ~71.6 minutes.</td></tr>
+              <tr><td><code>box_us</code></td><td><code>uint64_t</code></td><td>The event's stamp, unwrapped: a raw <code>ts_us</code> wraps every ~71.6 minutes.</td></tr>
               <tr><td><code>excess_ns</code></td><td><code>uint64_t</code></td><td>How much later than the measured floor this event reached you. Jitter, not latency.</td></tr>
             </tbody>
           </table>

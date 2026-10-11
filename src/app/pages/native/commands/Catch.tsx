@@ -229,7 +229,7 @@ const Catch: Component = () => {
         <p>
           The library holds an open table past the silence timeout with its injection keepalive,
           re-asserting the whole table after a device-side blip and across a control-link reconnect;
-          its own <code>RESET</code> ends the event stream.
+          the library's <code>RESET</code> ends the event stream.
         </p>
         <p>
           The HEALTH <A href="/native/commands/requests#health"><code>CATCH_ON</code></A> bit means
@@ -477,7 +477,7 @@ const Catch: Component = () => {
             <tbody>
               <tr><td>a report it ends with a zero-length packet</td><td>one event carrying the report's bytes, b1 set: the PC's read ends only at the packet</td></tr>
               <tr><td>a zero-length packet alone, its answer to a poll it had nothing for</td><td>one event of no bytes, b1 set, in <code>HID_IN</code> as it came and in <code>EMIT</code> as the PC took it</td></tr>
-              <tr><td>a zero-length packet whose poll went to a report of the box's own</td><td>its <code>HID_IN</code> event, and no <code>EMIT</code> event</td></tr>
+              <tr><td>a zero-length packet whose poll went to a report from the box</td><td>its <code>HID_IN</code> event, and no <code>EMIT</code> event</td></tr>
               <tr><td>a zero-length packet answering a poll the PC missed: what the device sent before it still waits for the PC</td><td>its <code>HID_IN</code> event, and no <code>EMIT</code> event</td></tr>
             </tbody>
           </table>
@@ -643,7 +643,7 @@ const Catch: Component = () => {
       <DocSection id="rules" title="Rules and taps" caption="Tap positions around the rewrite table">
         <p>
           Flags bit 7, <code>RULE</code>, marks a packet a{' '}
-          <A href="/native/commands/rewrite">rewrite rule</A> acted on at the event's own class:
+          <A href="/native/commands/rewrite">rewrite rule</A> acted on at the event's class:
           changed its bytes, dropped it, answered it or refused it. A <code>PASS</code>, or a{' '}
           <code>PATCH</code> that changed no byte, leaves it clear.
         </p>

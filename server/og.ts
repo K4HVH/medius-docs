@@ -26,7 +26,7 @@ interface Pending {
 
 interface Renderer {
   worker?: Worker;
-  // The current thread's drawings; each thread's listeners keep their own.
+  // Drawings waiting on this thread; each thread's listeners settle only the ones it asked for.
   pending?: Map<number, Pending>;
   next: number;
 }

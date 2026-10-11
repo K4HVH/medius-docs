@@ -13,7 +13,7 @@ const Transfer: Component = () => {
           <A href="/library/types/structs#transfer-outcome"><code>TransferOutcome</code></A>.
         </p>
         <p>
-          It crosses the inter-chip link on its own messages, one at a time, past every{' '}
+          It crosses the inter-chip link on dedicated messages, one at a time, past every{' '}
           <A href="/library/advanced/rewrite">rewrite rule</A>, and waits in the host chip's{' '}
           <A href="/native/commands/transfer#proxy">control queue</A> beside the game PC's requests.
         </p>

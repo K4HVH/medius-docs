@@ -52,7 +52,7 @@ function names(code: Element, into: Set<string>) {
   for (const m of text(code).matchAll(NAME)) if (!SYNTAX.has(m[0])) into.add(m[0]);
 }
 
-// Text of `el` up to the elements in `stops` (entries of their own, or the title already taken).
+// Text of `el` up to the elements in `stops` (separate entries, or the title already taken).
 function read(el: Element, stops: Set<Element>, labels: boolean): Read {
   const out: Read = { lines: [], code: new Set() };
   let line = '';

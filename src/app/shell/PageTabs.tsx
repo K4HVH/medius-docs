@@ -159,7 +159,7 @@ export function PageTabs(props: { id: string; tabs: Tab[]; children: JSX.Element
                 onClick={() => {
                   if (!open(t.key, true)) return;
                   // From further down the page, the open tab starts at the top of its pane, under the stuck bar. The
-                  // bar's own position can't say where that is: while stuck, it is always at its top.
+                  // bar's position can't say where that is: while stuck, it is always at its top.
                   const pane = document.getElementById(`pane-${props.id}-${t.key}`);
                   if (!pane || !bar) return;
                   const top = pane.getBoundingClientRect().top + window.scrollY - bar.offsetHeight - parseFloat(getComputedStyle(bar).top || '0');

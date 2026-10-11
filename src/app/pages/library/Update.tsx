@@ -203,7 +203,7 @@ device.update_firmware(UpdateTarget::Device, &image, &mut |p| {
         <p><span class="api-badge api-badge--responded">Blocks</span></p>
         <pre><code class="language-bash">cargo add medius --features async</code></pre>
         <p>
-          Each runs the synchronous transfer on its own thread and resolves when it finishes, keeping
+          Each runs the synchronous transfer on a separate thread and resolves when it finishes, keeping
           the crate runtime-agnostic. Dropping the future does not stop a transfer the box has begun.
         </p>
         <div class="api-response-label">EXAMPLE</div>

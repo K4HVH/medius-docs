@@ -6,7 +6,7 @@
 set -uo pipefail
 cd "$(dirname "$0")/.."
 # Proved first, because a pipeline into grep swallows the status: a missing toolchain otherwise
-# reports "clean" and satisfies the whole gate. tsc's own exit code cannot stand in for this, since
+# reports "clean" and satisfies the whole gate. tsc's exit code cannot stand in for this, since
 # it is non-zero whenever the vendored type packages disagree, which is always.
 if ! npx tsc --version >/dev/null 2>&1; then
     echo "typecheck: tsc will not run; is node_modules installed?"

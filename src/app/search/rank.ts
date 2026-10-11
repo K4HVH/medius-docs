@@ -344,7 +344,7 @@ export function createSearcher(entries: readonly IndexEntry[], extra: { synonyms
         const p = prepared[i];
         const inSection = sections.get(p.entry.section) ?? 0;
         const onPage = pages.get(p.page) ?? 0;
-        // Releases and device rows share one page each, and are each a place of their own.
+        // Releases and device rows share one page each, and each counts as a separate place.
         const listed = p.entry.kind === 'release' || p.entry.kind === 'device';
         if (spread && (inSection >= PER_SECTION || (onPage >= PER_PAGE && !listed))) continue;
         sections.set(p.entry.section, inSection + 1);

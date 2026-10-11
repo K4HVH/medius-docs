@@ -86,7 +86,7 @@ const SPREAD_BLURB: Record<string, string> = {
   full: 'Injected motion over the whole command interval.',
 };
 
-// A percent outside the three, set by another client, keeps its own entry.
+// A percent outside the three, set by another client, gets an extra entry.
 const spreadKeyFor = (percent: number): string =>
   percent === 0 ? 'off' : percent === 50 ? 'half' : percent === 100 ? 'full' : 'custom';
 

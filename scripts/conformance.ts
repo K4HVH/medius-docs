@@ -303,7 +303,7 @@ for (const cs of cellsByPage.values()) {
       );
     }
 }
-rates.set('cell-punctuation', `${punctChecked} cells measured against their own page, ${punctDrift} against it`);
+rates.set('cell-punctuation', `${punctChecked} cells measured against their page, ${punctDrift} against it`);
 
 // ---- subtitles: no trailing period ----
 derived(
@@ -341,7 +341,7 @@ for (const f of files) {
 
 // ---- anchors, following component composition ----
 // A route's page often renders children that own the ids (/dashboard -> Device -> DeviceOptions), so an
-// id check that reads only the route's own file reports anchors that resolve fine in the browser.
+// id check that reads only the route's file reports anchors that resolve fine in the browser.
 // Each route's page, from the table of lazily loaded pages: `'/path': page(() => import('./pages/X'))`.
 const tableFile = join(ROOT, 'src/app/lazyPages.ts');
 const table = readFileSync(tableFile, 'utf8');

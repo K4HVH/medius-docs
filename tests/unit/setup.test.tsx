@@ -80,7 +80,7 @@ vi.mock('../../src/dashboard/firmware', () => ({
     if (mock.releasesNone) return [];
     return [{ tag: 'v3.2.0', assets: mock.assets }];
   },
-  // The stand-in returns the asset's own name, so the image identifies where it came from.
+  // The stand-in returns the asset's name, so the image identifies where it came from.
   downloadAsset: async (a: { name: string }) => new TextEncoder().encode(a.name),
 }));
 

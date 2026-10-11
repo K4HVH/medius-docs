@@ -221,7 +221,7 @@ export default defineConfig(({ mode }) => {
     optimizeDeps: { include: ['solid-devtools/setup'] },
     server: {
       port: 3000,
-      // Vite's own list, and the stats database: /@fs/ serves any file in the checkout otherwise.
+      // Vite's default list, and the stats database: /@fs/ serves any file in the checkout otherwise.
       fs: { deny: ['.env', '.env.*', '*.{crt,pem}', '**/.git/**', '**/stats.db*'] },
     },
     build: {

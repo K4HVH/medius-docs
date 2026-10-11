@@ -41,9 +41,9 @@ export const Q_OPTIONS = 9; // persistent box options: QUERY [Q_OPTIONS][id] -> 
 export const Q_CLIP = 10; // buffered clip status (§4.15): engine state, ring accounting, held usages, config
 export const Q_FIRMWARE = 11; // both chips' versions + which app slot each booted (§4.16)
 export const Q_REWRITE = 12; // rewrite-rule table summary (RESP(REWRITE): flags + gen + list, §4.17)
-export const Q_REWRITE_ENTRY = 13; // one rewrite rule in full, in the REWRITE command's own shape (§4.17)
+export const Q_REWRITE_ENTRY = 13; // one rewrite rule in full, in the REWRITE command's shape (§4.17)
 export const Q_PATCHES = 14; // descriptor-patch set summary (RESP(PATCHES): flags + list, §4.17)
-export const Q_PATCH_ENTRY = 15; // one descriptor patch in full, in the PATCH command's own shape (§4.17)
+export const Q_PATCH_ENTRY = 15; // one descriptor patch in full, in the PATCH command's shape (§4.17)
 export const Q_TRANSFORMS = 16; // field-transform table (RESP(TRANSFORMS): flags + list, §4.18)
 
 // CLIP_CTRL engine verbs (§3.11); ops 0..5 double as a trigger binding's `action`.
@@ -62,7 +62,7 @@ export enum ClipOp {
 export const CLIP_SET_AUTOLOCK = 0; // value = CLIP_LOCK_* scope bits
 export const CLIP_SET_LOOP = 1; // value != 0
 export const CLIP_SET_RETAIN = 2; // value != 0 (0 = streaming, the default)
-export const CLIP_SET_RIDE = 3; // value != 0 = clip motion waits to ride a native report (0 = the box's own clock, the default)
+export const CLIP_SET_RIDE = 3; // value != 0 = clip motion waits to ride a native report (0 = the box's clock, the default)
 // CLIP_TRIGGER binding set (§3.11), shaped like LOCK. Keyed by (class, id, edge).
 export const CLIP_TRIG_MAX = 8;
 export const CLIP_TRIG_F_PRESENT = 0x01; // set = add/overwrite, clear = remove
@@ -364,7 +364,7 @@ export enum FrameType {
   // v3.4.0 advanced control layer (§3.14), gated on OPTION(IMPERFECT).
   Raw = 0x19, // [ep_num u8][dir u8][bytes...] put a raw report on a cloned endpoint
   Transfer = 0x1a, // [ep u8][setup 8][OUT data..] run a control request on the device
-  TransferResp = 0x1b, // [ep u8][status u8][IN data..] the device's answer (its own opcode, SEQ-correlated)
+  TransferResp = 0x1b, // [ep u8][status u8][IN data..] the device's answer (a separate opcode, SEQ-correlated)
   Rewrite = 0x1c, // [cls][id u16][dir][state][action][off u16][mlen][match][mask][payload] a rewrite rule
   Patch = 0x1d, // [section][cfg][index][offset u16][bytes..] a descriptor patch
   Transform = 0x1e, // [op][sclass][sid u16][dclass][did u16][state] a field transform

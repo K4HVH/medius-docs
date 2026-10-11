@@ -269,7 +269,7 @@ export enum LedMode {
 }
 
 // LOCK class (§3.8): which input class a lock addresses. A momentary usage shares INJECT's (class, id)
-// space (button / key / media); a relative axis is its own class. Wire values match ctrl_proto.h.
+// space (button / key / media); a relative axis is a separate class. Wire values match ctrl_proto.h.
 export enum LockClass {
   Button = 0,
   Key = 1,
@@ -968,7 +968,7 @@ export interface ClipStatus {
   loop: boolean;
   retain: boolean;
   finalized: boolean;
-  // Clip motion rides a native report (CLIP_SET ride); off = the box's own clock.
+  // Clip motion rides a native report (CLIP_SET ride); off = the box's clock.
   ride: boolean;
   triggers: ClipTrigger[];
   packetTriggers: ClipPacketTriggerEntry[];

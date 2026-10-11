@@ -15,9 +15,9 @@ const Update: Component = () => {
           <A href="/native/commands/update#data">chunks</A>, and one{' '}
           <A href="/native/commands/update#activate">commit</A> at the end.
         </p>
-        <pre class="diagram">{`   PC --CH343, framed 6 Mbaud--> DEVICE chip --> its own spare slot
+        <pre class="diagram">{`   PC --CH343, framed 6 Mbaud--> DEVICE chip --> its spare slot
                                      |
-                                     +--UART1, 20 Mbaud-> HOST chip --> its own spare slot`}</pre>
+                                     +--UART1, 20 Mbaud-> HOST chip --> its spare slot`}</pre>
         <p>
           The host chip has no serial port; only GPIO1 and GPIO2 connect the two chips. Its image is
           relayed chunk for chunk, never buffered.
@@ -76,7 +76,7 @@ const Update: Component = () => {
           A target can be staged and activated later; both chips may be staged before one{' '}
           <A href="/native/commands/update#activate"><code>ACTIVATE</code></A> commits them
           together. <A href="/native/commands/requests#firmware"><code>QUERY(FIRMWARE)</code></A>{' '}
-          reads what each chip runs. Each op below carries its own example. Library binding:{' '}
+          reads what each chip runs. Each op below has an example. Library binding:{' '}
           <A href="/library/update#update-firmware"><code>update_firmware</code></A>.
         </p>
       </DocSection>
@@ -441,7 +441,7 @@ const Update: Component = () => {
         </div>
         <p>
           The host chip's image arrives over the link, its only way back, so one that runs but can't
-          talk must revert on its own.
+          talk must revert by itself.
         </p>
         <p>
           Measured on hardware: an image that panics in its entry point is back on the old slot in

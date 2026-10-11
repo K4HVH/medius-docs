@@ -40,7 +40,7 @@ describe('every card the site draws', () => {
 // layout, the SVG, the renderer's options or the fonts)
 // under the same hash, it would never reach anyone. Raise STYLE in src/app/card/content.ts when this
 // fails, then record the new digest here.
-const DRAWN = { style: 2, digest: '3ee9711bf8afe964' };
+const DRAWN = { style: 2, digest: 'd25be6f528dd934d' };
 
 it('raises STYLE when the card is drawn differently', () => {
   const files = ['src/app/card/layout.ts', 'src/app/card/svg.ts', 'server/og.ts', 'server/og-render.mjs', ...['inter-400', 'inter-700', 'plex-mono-500'].map((f) => `server/og/fonts/${f}.ttf`)];

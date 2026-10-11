@@ -306,7 +306,7 @@ describe('SerialLink', () => {
     await link.close();
   });
 
-  it('gives each movement verb its own MOVE flags byte', async () => {
+  it('gives each movement verb a distinct MOVE flags byte', async () => {
     // One level above the payload builders: this is where a verb wired to the wrong flag hides, since
     // every one of these produces a well-formed MOVE frame either way.
     const mock = new MockSerialPort();
@@ -586,7 +586,7 @@ describe('SerialLink', () => {
     await link.close();
   });
 
-  it('transfer() correlates TRANSFER_RESP by SEQ on its own opcode', async () => {
+  it('transfer() correlates TRANSFER_RESP by SEQ on a separate opcode', async () => {
     const mock = new MockSerialPort();
     mock.responder = (f) => {
       if (f.ty === FrameType.Transfer) {

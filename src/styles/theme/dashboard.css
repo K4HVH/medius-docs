@@ -307,7 +307,7 @@
 }
 
 /* A step: the line to act on, big; a button to hold has an amber square before it. */
-/* The same size in a panel as on its own: a panel's paragraph rule must not shrink it. */
+/* The same size in a panel as outside one: a panel's paragraph rule must not shrink it. */
 .cue, .pb > p.cue { margin: 0; font: 600 26px/1.3 var(--sans); letter-spacing: -0.015em; text-wrap: balance; color: var(--text); }
 .cue.hold { display: flex; align-items: baseline; gap: 14px; }
 .cue.hold::before { content: ""; flex: none; width: 10px; height: 10px; background: var(--warn); transform: translateY(-2px); }

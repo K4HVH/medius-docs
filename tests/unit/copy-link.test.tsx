@@ -88,7 +88,7 @@ describe('CopyLink', () => {
     expect(document.querySelectorAll('[role="status"].cl-said')).toHaveLength(1);
   });
 
-  it("finds a place's own icon, never one a nested place holds", () => {
+  it("finds a place's icon, never one a nested place holds", () => {
     const root = document.createElement('div');
     root.innerHTML =
       '<section id="v3.4.5"><h2>v3.4.5<button class="cl" data-for="v3.4.5"></button></h2></section>' +

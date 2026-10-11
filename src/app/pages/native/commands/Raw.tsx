@@ -191,7 +191,7 @@ const Raw: Component = () => {
           </table>
         </div>
         <p>
-          The device's own reports take at most one place in an interrupt IN queue: the box polls the device
+          Native reports take at most one place in an interrupt IN queue: the box polls the device
           only as the PC takes what the last poll brought, so the rest of the queue is room for{' '}
           <code>RAW</code> reports. They take two where the next report is fetched before the PC has the last
           one whole, and for a few seconds after one reaches the clone too late for its poll.
@@ -210,7 +210,7 @@ const Raw: Component = () => {
           the next native report replaces it.
         </p>
         <p>
-          A <code>RAW</code> report takes a poll of its own; no native report carries it. On an
+          A <code>RAW</code> report takes a separate poll; no native report carries it. On an
           endpoint the device reports on every poll, it goes after at most two native reports.
         </p>
         <pre class="diagram">{`  native report   [ btn 0 ]                            [ btn 0 ]
@@ -240,7 +240,7 @@ const Raw: Component = () => {
         </div>
         <p>
           A <A href="/native/commands/clip#items">clip raw item</A> is the same packet on a
-          clip tick, with its own release rule.
+          clip tick, with a different release rule.
         </p>
       </DocSection>
 

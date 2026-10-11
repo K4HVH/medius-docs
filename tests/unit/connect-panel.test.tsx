@@ -133,7 +133,7 @@ describe('ConnectPanel', () => {
     expect(container.textContent).toMatch(/USB1/);
   });
 
-  it('an unrecognised failure still shows its own message and a retry', () => {
+  it('an unrecognised failure still shows its message and a retry', () => {
     mock.s!.setVerdict({ kind: 'other', message: 'the port fell over' });
     const { container, getByRole } = render(() => <ConnectPanel />);
     expect(container.textContent).toContain('the port fell over');

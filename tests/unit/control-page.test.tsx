@@ -5,7 +5,7 @@ import { DashboardContext, type DashboardContextValue } from '../../src/app/page
 import Control from '../../src/app/pages/dashboard/Control';
 import { ClipOp, ClipState, Direction, EmitMode, PROTO_VER, RenderMode } from '../../src/dashboard/protocol';
 
-// The Control page mounts five cards against one context. Each card has its own unit tests; this
+// The Control page mounts five cards against one context. Each card has separate unit tests; this
 // covers what those cannot: that the whole page composes, that every card reaches the connected
 // branch, and that a card cannot throw during mount and take the page down with it.
 
@@ -272,7 +272,7 @@ describe('Control page', () => {
     expect((await set.findByText(/Movement riding is on/)).textContent).not.toMatch(/rendering/);
     cleanup();
 
-    // An armed profile makes the rendered cursor motion ride whatever the clip's own setting says.
+    // An armed profile makes the rendered cursor motion ride whatever the clip's setting says.
     const armed = { mode: RenderMode.Despiked, full: false, ready: true };
     const rendered = mount(stub({ moveRide: 20, render: armed }));
     expect((await rendered.findByText(/Movement riding is on/)).textContent).toMatch(/rendering motion/);

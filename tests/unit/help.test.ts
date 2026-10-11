@@ -3,7 +3,7 @@ import { HELP, HELP_ITEMS } from '../../src/app/data/help';
 import { routeFor } from '../../src/app/routes';
 
 describe('Help', () => {
-  it('gives every group and every answer its own id', () => {
+  it('gives every group and every answer a distinct id', () => {
     const ids = [...HELP.map((g) => g.id), ...HELP_ITEMS.map((f) => f.id)];
     expect(new Set(ids).size).toBe(ids.length);
     for (const id of ids) expect(id).toMatch(/^[a-z][a-z0-9-]*$/);
