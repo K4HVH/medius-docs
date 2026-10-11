@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { beforeEach, expect, it } from 'vitest';
 import { type Db, openDb } from '../../server/stats/db';
-import { forgetBox } from '../../server/stats/forget';
+import { copyBox, forgetBox } from '../../server/stats/requests';
 import { createStore, type Store } from '../../server/stats/store';
 import type { StatsEvent } from '../../server/stats/types';
 
@@ -46,4 +46,19 @@ it('takes the Box ID as the dashboard shows it, or with separators and capitals'
 
 it('refuses something that is not a Box ID', () => {
   expect(() => forgetBox(db, '588c81e0824')).toThrow('not a Box ID');
+});
+
+it("copies one box's records and none of another's", () => {
+  const copy = copyBox(db, '58:8C:81:E0:82:44');
+  expect(copy.box).toMatchObject({ firmware: '3.4.4', hostFirmware: '3.4.4', protocol: 9, os: 'linux', browser: 'chrome', country: 'AU' });
+  expect(copy.box?.firstSeen).toBe(new Date(T0).toISOString());
+  expect(copy.daysConnected).toEqual(['2026-10-07', '2026-10-08']);
+  expect(copy.devices).toEqual([{ vid: '046d', pid: 'c08b', kind: 2, product: 'G502 HERO', firstSeen: new Date(T0).toISOString(), lastSeen: new Date(T0).toISOString() }]);
+  expect(copy.flashes).toHaveLength(1);
+  expect(JSON.stringify(copy)).not.toContain(MAC_B);
+  expect(copyBox(db, MAC_B).flashes).toHaveLength(1);
+});
+
+it('copies nothing for a box it never saw', () => {
+  expect(copyBox(db, '000000000001')).toEqual({ box: null, daysConnected: [], devices: [], flashes: [] });
 });
