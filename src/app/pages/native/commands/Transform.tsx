@@ -269,7 +269,7 @@ const Transform: Component = () => {
         <p>
           <A href="/native/commands/catch#catch"><code>CATCH</code></A> input classes tap the
           physical report before either pass, so they report the value the device sent;{' '}
-          <code>EMIT</code> carries what the clone put on the wire.
+          <code>EMIT</code> carries what the clone emitted.
         </p>
       </DocSection>
 

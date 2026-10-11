@@ -178,7 +178,7 @@ const Option: Component = () => {
           <table class="api-params">
             <thead><tr><th>Value</th><th>Effect</th></tr></thead>
             <tbody>
-              <tr><td><code>0</code></td><td>Off: injected motion goes out on native reports and the box's reports alike <em>(default)</em></td></tr>
+              <tr><td><code>0</code></td><td>Off: injected motion is emitted on native reports and the box's reports alike <em>(default)</em></td></tr>
               <tr><td><code>N</code> ms</td><td>Injected cursor and wheel motion only rides a native move seen within <code>N</code> ms; no synthetic motion frame, and motion left unridden is dropped (never dumped on the next move)</td></tr>
             </tbody>
           </table>
@@ -506,7 +506,7 @@ const Option: Component = () => {
           <table class="api-params">
             <thead><tr><th>Value</th><th>Effect</th></tr></thead>
             <tbody>
-              <tr><td><code>0</code></td><td>The whole delta goes out on the next report the box emits.</td></tr>
+              <tr><td><code>0</code></td><td>The whole delta is emitted on the next report.</td></tr>
               <tr><td><code>1..99</code></td><td>Released across that share of the interval, with the rounding remainder at the end of the share.</td></tr>
               <tr><td><code>100</code> <em>(default)</em></td><td>Released evenly across one whole command interval.</td></tr>
               <tr><td><code>101..65535</code></td><td>Released across longer than the interval, so each command arrives on a remainder and the box carries a standing backlog.</td></tr>
@@ -522,7 +522,7 @@ const Option: Component = () => {
           The box learns the interval as the most common gap between{' '}
           <A href="/native/commands/move"><code>MOVE</code></A> arrivals, so a burst doesn't move it
           and a rate change is followed. Until it has one, and for commands more than about 32 ms
-          apart, the whole delta goes out on the next report regardless of percent.
+          apart, the whole delta is emitted on the next report regardless of percent.
         </p>
         <div class="table-scroll">
           <table class="api-params">
@@ -539,7 +539,7 @@ const Option: Component = () => {
           A loop at the native report rate keeps each command whole: it waits in a short queue and
           leaves alone on one report, no later than the first report after its interval ends. A
           delta smaller than its interval's report count can't be split one count per report; it
-          goes out once, part way through.
+          is emitted once, part way through.
         </p>
         <div class="callout callout--info">
           <p>

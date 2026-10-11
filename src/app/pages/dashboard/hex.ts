@@ -118,7 +118,7 @@ export const TRAFFIC_CLASS_BLURB: Record<number, string> = {
   [CatchClass.VendorInterrupt]: 'Interrupt traffic on a vendor interface.',
   [CatchClass.VendorBulk]: 'Bulk traffic on a vendor interface.',
   [CatchClass.Control]: 'Class and vendor requests on EP0, and every request on higher control endpoints.',
-  [CatchClass.Emit]: 'What the clone sends the game PC, injection included.',
+  [CatchClass.Emit]: 'What the clone emits to the game PC, injection included.',
 };
 
 // HID_IN keys on the interface; every other class, HID_OUT included, on the endpoint number.

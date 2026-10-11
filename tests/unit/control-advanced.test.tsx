@@ -363,7 +363,7 @@ describe('The Advanced tab of Control', () => {
     fireEvent.click(radio(card, 'HID in'));
     await findByText(/before the box changes them\. Rewrite mouse motion at Emit/);
     fireEvent.click(radio(card, 'Emit'));
-    await findByText('What the clone sends the game PC, injection included.');
+    await findByText('What the clone emits to the game PC, injection included.');
     expect(queryByText(/Rewrite mouse motion at Emit/)).toBeNull();
   });
 

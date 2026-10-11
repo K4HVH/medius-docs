@@ -107,7 +107,7 @@ const Architecture: Component = () => {
             <tbody>
               <tr>
                 <td>Sends input</td>
-                <td>Layers injected movement, scroll, and button state onto native input.</td>
+                <td>Layers injected motion, scroll, and button state onto native input.</td>
               </tr>
               <tr>
                 <td>Goes quiet</td>

@@ -452,7 +452,7 @@ if !status.ready {
           Returns a <A href="/library/types/structs#spread-status"><code>SpreadStatus</code></A>.{' '}
           <code>span_us</code> is <code>0</code> while <code>percent</code> is <code>0</code>, until
           the box has learned the host's command period, and while the box's two chips have not yet
-          agreed which holds the motion; in each case the whole delta goes out on the next report.
+          agreed which holds the motion; in each case the whole delta is emitted on the next report.
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`use medius::Device;

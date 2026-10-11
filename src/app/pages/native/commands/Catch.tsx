@@ -124,7 +124,7 @@ const Catch: Component = () => {
           its full physical value.
         </p>
         <p>
-          <code>EMIT</code> is what the clone put on the wire <em>after</em> injection, locks, and
+          <code>EMIT</code> is what the clone emitted <em>after</em> injection, locks, and
           the suppression gate.
         </p>
         <div class="api-response-label">EXAMPLE</div>
@@ -296,7 +296,7 @@ const Catch: Component = () => {
           <A href="/native/frame#seq"><code>SEQ</code></A> is a rolling per-event counter shared
           with <A href="/native/commands/catch#usage-event"><code>USAGE_EVENT</code></A> and{' '}
           <A href="/native/commands/catch#traffic-event"><code>TRAFFIC_EVENT</code></A>, stamped as
-          each event leaves the box, so it orders a mixed stream.
+          each event is sent, so it orders a mixed stream.
         </p>
         <p>
           <code>SEQ</code> doesn't detect drops: events drop before the stamp, so it runs gapless;

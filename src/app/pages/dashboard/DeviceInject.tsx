@@ -59,8 +59,8 @@ const DeviceInject = () => {
   const [step, setStep] = createSignal(20);
   const [detents, setDetents] = createSignal(1);
   const [pans, setPans] = createSignal(1);
-  // With riding on, a move waits for physical motion to carry it. Bypass sends it on the box's next
-  // mouse report, unspread and unrendered.
+  // With riding on, a move waits to ride native motion. Bypass emits it on the box's next mouse report,
+  // unspread and unrendered.
   const [bypass, setBypass] = createSignal(false);
   const [pick, setPick] = createSignal<Usage>({ cls: INJ_BTN, id: 0 });
   const [holds, setHolds] = createSignal<Hold[]>([]);
