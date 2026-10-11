@@ -33,7 +33,7 @@ describe('planRedirect', () => {
     ['/guide/update', '', '/guide/help#q-update'],
     ['/guide/faq', '', '/guide/help'],
     ['/guide/troubleshooting', '', '/guide/help'],
-    ['/guide/device-fixes', '', '/guide/compatibility#device-fixes'],
+    ['/guide/device-fixes', '', '/guide/compatibility#fixes'],
     ['/Dashboard/Advanced/', '', '/dashboard/update#manual'],
     // A moved page's Markdown twin follows it; the twin has no anchors.
     ['/guide/faq.md', '', '/guide/help.md'],

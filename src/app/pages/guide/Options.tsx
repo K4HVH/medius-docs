@@ -49,7 +49,7 @@ const Dashboard = (props: { id: string }) => (
   </span>
 );
 
-const Fixes = () => <A href="/guide/compatibility#device-fixes">Device fixes</A>;
+const Fixes = () => <A href="/guide/compatibility#fixes">Device fixes</A>;
 
 const SPREAD = `8 counts every 8 ms,
 on a 1000 Hz mouse

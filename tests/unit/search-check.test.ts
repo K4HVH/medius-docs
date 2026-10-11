@@ -29,6 +29,34 @@ const good = [
 ];
 
 describe('checkIndex', () => {
+  it('names a place whose address a page holds, a Devices section named like a listed device, and an id no address spells', () => {
+    const at = checkIndex(
+      index([...good, e('/bindings/c#build', 'Build'), e('/guide/compatibility#zowie-ec2', 'Zowie'), e('/native/transport#USB', 'USB')]),
+      { ...ctx, golden: [], expect: [], deviceSlugs: ['zowie-ec2'] },
+    );
+    expect(at).toContain('/bindings/c#build: the page /bindings/c/build is at the address the place would have');
+    expect(at).toContain('/guide/compatibility#zowie-ec2: a listed device has the address the place would have');
+    expect(at).toContain("/native/transport#USB: a place's id is lowercase letters, digits and hyphens");
+  });
+
+  it('names a place whose address leads to another place, and one at a moved page', () => {
+    const at = checkIndex(index([...good, e('/guide/compatibility#device-fixes', 'Device fixes'), e('/guide#update', 'Update')]), { ...ctx, golden: [], expect: [] });
+    expect(at).toContain('/guide/compatibility#device-fixes: its address /guide/compatibility/fixes leads elsewhere');
+    expect(at).toContain('/guide#update: a moved page is at the address the place would have');
+  });
+
+  it('names a link icon on an element search does not list', () => {
+    const rendered = {
+      '/native/commands/lock': [
+        { id: 'lock', fate: 'folded' as const, panel: false, link: true },
+        { id: 'bearing', fate: 'entry' as const, panel: false, link: true },
+        { id: 'values', fate: 'untitled' as const, panel: true, link: true },
+      ],
+      '/guide/help': [{ id: 'bsod', fate: 'entry' as const, panel: false, link: true }],
+    };
+    expect(checkIndex(index(good), { ...ctx, rendered })).toEqual(['/native/commands/lock#values has a link icon but no entry']);
+  });
+
   it('passes an index that holds every page, section and answer and answers its queries', () => {
     expect(checkIndex(index(good), ctx)).toEqual([]);
   });

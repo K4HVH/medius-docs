@@ -7,8 +7,8 @@ import { DocsSidebar } from '../shell/DocsSidebar';
 import { OnThisPage } from '../shell/OnThisPage';
 import { SiteFooter } from '../shell/SiteFooter';
 import { arrive, armReveals, blocksOf, fontsReady, pageArrival, retime, watchChanges } from '../shell/motion';
-import { pagePath, routeFor } from '../routes';
-import { itemFor } from '../items';
+import { landingId, pagePath, routeFor } from '../routes';
+import { shareAddress } from '../shell/share';
 import { useBoxes, useNativeFlash } from './dashboard/context';
 import { BoxList } from './dashboard/BoxList';
 
@@ -63,6 +63,7 @@ const DocsLayout = (props: RouteSectionProps) => {
       watch.observe(main, { childList: true, subtree: true });
     }
     if (!el) return;
+    showAddress(id, el);
     el.scrollIntoView({ behavior, block: 'start' });
     if (!highlight) return;
     // The block the reader asked for shows at once, with its ring rather than an arrival.
@@ -70,7 +71,16 @@ const DocsLayout = (props: RouteSectionProps) => {
     el.classList.add('search-highlight');
     setTimeout(() => el.classList.remove('search-highlight'), 2000);
   };
-  const hashId = () => decodeURIComponent(location.hash.replace('#', ''));
+  const has = (id: string) => !!document.getElementById(id);
+  // A hash that lands on a place or an item: the address bar shows its address instead (shell/share.ts), in
+  // the same history entry, so the address the reader copies from it has a card naming it. A section that
+  // opens the page keeps the hash, which is where it already is.
+  const showAddress = (id: string, el: HTMLElement) => {
+    if (landingId('', location.hash) !== id) return;
+    const to = shareAddress(el, id, location.pathname);
+    if (to.includes('#') || to === pagePath(location.pathname)) return;
+    queueMicrotask(() => navigate(to + location.search, { replace: true, scroll: false }));
+  };
 
   const handleSearchNavigate = (fullPath: string) => {
     if (flashing()) return;
@@ -78,8 +88,9 @@ const DocsLayout = (props: RouteSectionProps) => {
     setCloseKey((k) => k + 1);
     const [path, hash] = fullPath.split('#');
     highlightNext = hash ?? null;
-    if (path === location.pathname && hash && hash === hashId()) scrollToTarget(hash, 'auto', true);
-    else navigate(fullPath, { scroll: path !== location.pathname });
+    const same = pagePath(path) === pagePath(location.pathname);
+    if (same && hash && hash === landingId(location.pathname, location.hash, has)) scrollToTarget(hash, 'auto', true);
+    else navigate(fullPath, { scroll: !same });
   };
 
   // Ctrl or Cmd with K opens and closes the search; / opens it from anywhere but a field.
@@ -99,7 +110,7 @@ const DocsLayout = (props: RouteSectionProps) => {
     onCleanup(() => window.removeEventListener('keydown', onKey));
   });
 
-  // An item's address shows its parent page.
+  // An address inside a page shows that page.
   const page = () => pagePath(location.pathname);
   const section = () => routeFor(page())?.section;
 
@@ -109,28 +120,42 @@ const DocsLayout = (props: RouteSectionProps) => {
     return box ? `${label} - ${box}` : label;
   });
 
-  // A new page arrives block by block, and starts at the top, or at its hash once the fonts have set the
-  // layout; the reveals are armed after that jump, so the section it lands on is never held back. A hash
-  // change on the same page scrolls there. The arrival is stamped at once, so a prerendered snapshot's
-  // arrival carries on into the app's (takeover.ts).
-  let shownPath = '';
+  // A new page arrives block by block, and starts at the top, or at its place (routes.ts landingId) once the
+  // fonts have set the layout; the reveals are armed after that jump, so the section it lands on is never
+  // held back. A change of place on the same page scrolls there; a change of the address's spelling alone
+  // (#id written as /page/id) leaves the page where it is. The arrival is stamped at once, so a prerendered
+  // snapshot's arrival carries on into the app's (takeover.ts).
+  let shownPage = '';
+  let shownTarget = '';
   let settled = 0;
   let disposeReveals = () => {};
   createEffect(
     on(
       () => [location.pathname, location.hash] as const,
       ([path, hash]) => {
-        awaited();
         const at = openingAt();
-        if (path === shownPath) {
-          // Back across hashes returns to the place; a link on the page glides, to its hash or its top.
+        const shows = pagePath(path);
+        if (shows === shownPage) {
+          const target = landingId(path, hash, has);
+          const moved = target !== shownTarget;
+          shownTarget = target;
+          // Only the spelling changed: the landing under way (a target still to arrive) carries on.
+          if (!moved && at === null) {
+            highlightNext = null;
+            return;
+          }
+          awaited();
+          // Back across places returns to where the reader was; a link on the page glides, to its place or
+          // its top.
           if (at !== null && openedByHistory()) settleAt(at);
           else if (at !== null) window.scrollTo({ top: at, left: 0, behavior: 'auto' });
-          else if (hash) scrollToTarget(hashId(), 'auto', hashId() === highlightNext);
+          else if (target && moved) scrollToTarget(target, 'auto', target === highlightNext);
           highlightNext = null;
           return;
         }
-        shownPath = path;
+        awaited();
+        shownPage = shows;
+        shownTarget = '';
         const run = ++settled;
         disposeReveals();
         disposeReveals = () => {};
@@ -138,14 +163,15 @@ const DocsLayout = (props: RouteSectionProps) => {
         if (at !== null) settleAt(at);
         if (main) {
           arrive(main, pageArrival(main));
-          highlight(main, path, run);
+          highlight(main, shows, run);
         }
         requestAnimationFrame(() => {
           if (run !== settled || !main) return;
           nextPages(run);
           void fontsReady().then(() => {
             if (run !== settled || !main) return;
-            const aim = itemFor(path)?.target ?? (hash ? hashId() : '');
+            const aim = landingId(path, hash, has);
+            shownTarget = aim;
             if (at === null && aim) {
               scrollToTarget(aim, 'instant', true);
               retime(main);

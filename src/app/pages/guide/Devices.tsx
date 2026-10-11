@@ -120,7 +120,7 @@ const Devices: Component = () => {
         </div>
       </DocSection>
 
-      <DocSection id="device-fixes" title="Device fixes">
+      <DocSection id="fixes" title="Device fixes">
         <div class="table-scroll">
           <table class="api-params names fixed">
             <colgroup>

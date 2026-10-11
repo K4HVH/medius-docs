@@ -41,7 +41,7 @@ const Install: Component = () => {
     └── libmedius_capi      (.so Linux · .dylib macOS · .dll + .lib Windows · .a static)`}</pre>
       </DocSection>
 
-      <DocSection id="build" title="Build & run" caption="Compiler and linker flags">
+      <DocSection id="build-run" title="Build & run" caption="Compiler and linker flags">
 
         <div class="api-response-label">WINDOWS · VISUAL STUDIO</div>
         <p>

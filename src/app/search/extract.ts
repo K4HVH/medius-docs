@@ -1,4 +1,5 @@
 import type { IndexEntry } from './types';
+import { type Fate, clean, sortMarked } from './places';
 
 // A rendered page as search entries: the page, each element marked `data-search-target` that carries a
 // title (sections, dashboard panels, anchors such as a Help answer), and on the dashboard each tab. An
@@ -20,13 +21,10 @@ export interface PageInfo {
   app: boolean;
 }
 
-const TARGET = '[data-search-target][id]';
 // The page header's crumbs and title are the page entry's already; what a page puts under them is read.
 // A number input's step buttons say the same on every panel.
 const SKIP = 'svg, script, style, template, [aria-hidden="true"], [data-search-skip], .page-header__bar, .page-header__row h1, [role="tablist"], .number-input__stepper';
 const BLOCK = /^(P|DIV|SECTION|ARTICLE|ASIDE|NAV|HEADER|FOOTER|UL|OL|LI|DL|DT|DD|TABLE|THEAD|TBODY|TFOOT|CAPTION|H[1-6]|BLOCKQUOTE|FIGURE|FIGCAPTION|DETAILS|SUMMARY|LABEL|FIELDSET|LEGEND|FORM|BUTTON|SELECT|OPTION|PRE)$/;
-const HEADING = 'h2, h3, h4';
-const LABEL = '.api-response-label, .field-l, dt, strong';
 // What a dashboard page is read by: its headings, labels and controls, and the names of its controls.
 const LABELS = 'h2, h3, h4, label, .field-l, button, option, legend, summary, th, dt, p';
 const NAMED = 'input, select, textarea, button, [role="radiogroup"], [role="group"], [role="slider"], [role="switch"]';
@@ -117,7 +115,6 @@ function read(el: Element, stops: Set<Element>, labels: boolean): Read {
   return out;
 }
 
-const clean = (s: string) => s.replace(/\s+/g, ' ').trim();
 
 // Whether an element stands apart from its neighbours though its tag runs inline: a link in a row of
 // links laid out by flex or grid.
@@ -130,35 +127,16 @@ function laidApart(e: Element): boolean {
   return apart;
 }
 
-// A target's title: its `data-search-title`, its first heading, its first label, or, when it is a label
-// itself, its text.
-function heading(target: Element, all: Element[]): { el: Element | null; title: string; caption?: string } {
-  const named = target.getAttribute('data-search-title');
-  if (target.matches(LABEL)) return { el: null, title: clean(named ?? target.textContent ?? '') };
-  const inner = (sel: string) =>
-    [...target.querySelectorAll(sel)].find((h) => !all.some((t) => t !== target && t.contains(h) && target.contains(t))) ?? null;
-  // A dashboard panel is titled by its heading alone; its labels name fields, not the panel.
-  const h = inner(HEADING) ?? (target.matches('.pn') ? null : inner(LABEL));
-  const cap = h?.querySelector('.doc-caption') ?? null;
-  const title = h ? [...h.childNodes].filter((n) => n !== cap).map((n) => n.textContent).join('') : '';
-  return { el: h, title: clean(named ?? title), caption: cap?.textContent ? clean(cap.textContent) : undefined };
-}
 
 const crumb = (page: PageInfo, ...more: (string | undefined)[]) =>
   [page.group !== page.section ? page.group : undefined, ...more].filter((x, i, all) => x && all.indexOf(x) === i).join(' / ');
 
-// What became of an element marked for search: an entry, folded into the page as its opening,
-// or read into the entry around it for want of a title.
-export type Fate = 'entry' | 'folded' | 'untitled';
+export type { Fate };
 
 export function extractPage(root: Element, page: PageInfo, record?: (id: string, fate: Fate, panel: boolean) => void): IndexEntry[] {
-  const marked = [...root.querySelectorAll(TARGET)].filter((t) => !t.matches('.page-header'));
-  const heads = new Map(marked.map((t) => [t, heading(t, marked)]));
   // The first titled section, when it is titled as its page, opens the page, and is read as part of it.
-  const first = marked.find((t) => heads.get(t)!.title);
-  const opening = first && heads.get(first)!.title.toLowerCase() === page.title.toLowerCase() ? [first] : [];
-  const targets = marked.filter((t) => heads.get(t)!.title && !opening.includes(t));
-  for (const t of marked) record?.(t.id, targets.includes(t) ? 'entry' : opening.includes(t) ? 'folded' : 'untitled', t.matches('.pn'));
+  const { marked, heads, opening, targets, fate } = sortMarked(root, page.title);
+  for (const t of marked) record?.(t.id, fate(t), t.matches('.pn'));
   const panes = [...root.querySelectorAll('[data-pane]')];
   const tabs = new Map([...root.querySelectorAll('[role="tab"][data-tab]')].map((t) => [t.getAttribute('data-tab')!, clean(t.textContent ?? '')]));
   const tabOf = (el: Element) => tabs.get(el.closest('[data-pane]')?.getAttribute('data-pane') ?? '');

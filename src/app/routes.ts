@@ -1,4 +1,5 @@
-import { itemFor } from './items';
+import { ITEM_ID, type Item, itemFor } from './items';
+import { MOVED } from './site';
 import { lostPath } from './served';
 
 // Every page's metadata, in sidebar order. Plain data, so the prerender and server can load it too.
@@ -271,9 +272,62 @@ export function routeFor(path: string): RouteInfo | undefined {
   return BY_PATH.get(path);
 }
 
-// The page a path shows: an item's address shows its parent, unless the server answered it with the 404 page.
+// An address inside a page: an item (items.ts), or a place on the page, `/page/id`. Home has no places.
+// `alt`: on Devices, a section's id, landed on where the page has it before a device row of that name.
+export interface Address extends Omit<Item, 'kind'> {
+  kind: Item['kind'] | 'place';
+  alt?: string;
+}
+
+// A place's id: lowercase letters, digits and hyphens, as the server's redirects spell an address. No dot,
+// so a Markdown twin (/guide/compatibility.md) is never read as a place on the page above it.
+export const PLACE_ID = /^[a-z0-9][a-z0-9-]*$/;
+// A page that moved is answered by its redirect, never as a place on the page above it.
+const MOVED_FROM = new Set(Object.keys(MOVED));
+
+export function addressFor(pathname: string): Address | null {
+  const path = pathname.length > 1 && pathname.endsWith('/') ? pathname.slice(0, -1) : pathname;
+  if (BY_PATH.has(path) || MOVED_FROM.has(path.toLowerCase())) return null;
+  const item = itemFor(path);
+  if (item) return item.kind === 'device' ? { ...item, alt: item.id } : item;
+  const cut = path.lastIndexOf('/');
+  const parent = path.slice(0, cut);
+  const id = path.slice(cut + 1);
+  if (cut <= 0 || !BY_PATH.has(parent) || !PLACE_ID.test(id)) return null;
+  return { kind: 'place', parent, id, target: id };
+}
+
+// The id an address lands on: its hash (a link on the page), else the place or item its path names.
+// `has`: whether the page holds an id, so a Devices section lands on its id before a device row's.
+export function landingId(pathname: string, hash: string, has: (id: string) => boolean = () => false): string {
+  if (hash.length > 1) {
+    try {
+      return decodeURIComponent(hash.slice(1));
+    } catch {
+      return '';
+    }
+  }
+  const at = addressFor(pathname);
+  if (!at) return '';
+  return at.alt && has(at.alt) ? at.alt : at.target;
+}
+
+// A place's address, as copy link and the address bar write it; a device row or release as its item's
+// address (items.ts). Null on Home, which has no places, where a page is at that address or moved from it,
+// and for an id no address can spell.
+export function placeAddress(page: string, id: string): string | null {
+  if (page === '/' || !BY_PATH.has(page)) return null;
+  const device = page === '/guide/compatibility' && id.startsWith('device-');
+  // A release's tag carries dots (v3.4.4).
+  if (!(device || page === '/dashboard/changelog' ? ITEM_ID : PLACE_ID).test(id)) return null;
+  const at = `${page}/${device ? id.slice('device-'.length) : id}`;
+  return BY_PATH.has(at) || MOVED_FROM.has(at) ? null : at;
+}
+
+// The page a path shows: an address inside a page shows that page, unless the server answered it with the
+// 404 page.
 export function pagePath(pathname: string): string {
-  return pathname === lostPath ? pathname : (itemFor(pathname)?.parent ?? pathname);
+  return pathname === lostPath ? pathname : (addressFor(pathname)?.parent ?? pathname);
 }
 
 export function sectionLabel(r: RouteInfo): string {

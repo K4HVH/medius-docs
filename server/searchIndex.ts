@@ -25,14 +25,19 @@ export interface SearchSources {
 const stats = cached(getStatsSummary, { freshMs: 60_000, budgetMs: 1_000 });
 const LIVE: SearchSources = { releases: () => liveReleases(0), stats: () => stats() };
 
-// The built index, read again when its file changes.
+// The built index, read again when its file changes. A file that can't be read (one being written, say)
+// leaves the last one read in use.
 let built: { file: string; mtime: number; index: SearchIndex } | null = null;
-function builtIndex(dir: string): SearchIndex | null {
+export function builtIndex(dir: string): SearchIndex | null {
   const file = join(dir, 'search-index.json');
-  if (!existsSync(file)) return null;
-  const mtime = statSync(file).mtimeMs;
-  if (built?.file !== file || built.mtime !== mtime) built = { file, mtime, index: JSON.parse(readFileSync(file, 'utf8')) as SearchIndex };
-  return built.index;
+  try {
+    if (!existsSync(file)) return built?.file === file ? built.index : null;
+    const mtime = statSync(file).mtimeMs;
+    if (built?.file !== file || built.mtime !== mtime) built = { file, mtime, index: JSON.parse(readFileSync(file, 'utf8')) as SearchIndex };
+  } catch {
+    // Kept as it was.
+  }
+  return built?.file === file ? built.index : null;
 }
 
 // What the live sources hold now, and a key that changes only when that does: each source answers with a

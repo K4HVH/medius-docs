@@ -22,7 +22,7 @@ const ENTRIES: IndexEntry[] = [
   e('/native/commands/lock', 'LOCK', { caption: 'Block, pass, or amplify', text: 'LOCK weighs physical input before it reaches the PC.' }),
   e('/native/commands/lock#bearing', 'Bearing', { kind: 'section', crumb: 'Commands / LOCK', text: 'A lock can follow the bearing. The lock holds while the lock is set, lock after lock.' }),
   e('/native/commands/lock#blanket', 'BLANKET', { kind: 'anchor', crumb: 'Commands / LOCK', text: 'An id of 0xFFFF addresses the whole class in one command.' }),
-  e('/guide/compatibility#device-fixes', 'Device fixes', { section: 'Guide', crumb: 'Guide / Devices', text: 'Settings some devices need. The Superstrike needs its report rate set to 1000 Hz.' }),
+  e('/guide/compatibility#fixes', 'Device fixes', { section: 'Guide', crumb: 'Guide / Devices', text: 'Settings some devices need. The Superstrike needs its report rate set to 1000 Hz.' }),
   e('/native/frame#crc', 'Checksums', { crumb: 'Overview / Frame', text: 'crc crc crc box over the payload, then the frame ends.' }),
   e('/native/frame#layout', 'Layout', { crumb: 'Overview / Frame', text: 'crc box box box at the end of every frame.' }),
   e('/native/injection#near', 'Pacing', { crumb: 'Overview / Injection', text: 'The report rate follows the mouse.' }),
@@ -46,7 +46,7 @@ describe('createSearcher', () => {
   });
 
   it('finds a word only the body text holds', () => {
-    expect(top('superstrike', 1)).toEqual(['/guide/compatibility#device-fixes']);
+    expect(top('superstrike', 1)).toEqual(['/guide/compatibility#fixes']);
   });
 
   it('counts a rare word for more than a common one', () => {
@@ -67,7 +67,7 @@ describe('createSearcher', () => {
 
   it('matches the last word as a prefix while it is typed', () => {
     expect(top('query_pat', 1)).toEqual(['/library/patch#query']);
-    expect(top('superstr', 1)).toEqual(['/guide/compatibility#device-fixes']);
+    expect(top('superstr', 1)).toEqual(['/guide/compatibility#fixes']);
   });
 
   it('takes words that run together into a code name as all of it', () => {

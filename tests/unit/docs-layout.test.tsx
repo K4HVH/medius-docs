@@ -62,9 +62,10 @@ const world = (opts: { supported?: boolean } = {}) => {
 
 const Sections = () => (
   <>
+    <section class="doc-section" id="transport" data-search-target><h2 class="doc-h2">Transport</h2><p>opening</p></section>
     <section class="doc-section" id="intro"><h2 class="doc-h2">Intro</h2><p>first</p></section>
-    <section class="doc-section" id="frames"><h2 class="doc-h2">Frames</h2><p>target</p></section>
-    <section class="doc-section" id="later"><h2 class="doc-h2">Later</h2><p>below</p></section>
+    <section class="doc-section" id="frames" data-search-target><h2 class="doc-h2">Frames</h2><p>target</p></section>
+    <section class="doc-section" id="later" data-search-target><h2 class="doc-h2">Later</h2><p>below</p></section>
   </>
 );
 
@@ -104,7 +105,7 @@ const mount = (path: string, w = world()) => {
     >
       <Route path="/" component={DocsLayout}>
         <Route path="/native" component={() => <p>native</p>} />
-        <Route path="/native/transport" component={Sections} />
+        <Route path="/native/transport/:place?" component={Sections} />
         <Route
           path="/native/commands/inject"
           component={() => (
@@ -114,10 +115,9 @@ const mount = (path: string, w = world()) => {
             </>
           )}
         />
-        <Route path="/native/code" component={() => <pre><code class="language-rust">{'fn main() { let x = 1; }'}</code></pre>} />
-        <Route path="/guide/compatibility" component={Late} />
-        <Route path="/guide/compatibility/:item" component={Late} />
-        <Route path="/guide/help/:item" component={Sections} />
+        <Route path="/native/quickstart" component={() => <pre><code class="language-rust">{'fn main() { let x = 1; }'}</code></pre>} />
+        <Route path="/guide/compatibility/:place?" component={Late} />
+        <Route path="/guide/help/:place?" component={Sections} />
         <Route path="/dashboard" component={() => <p>device page</p>} />
         <Route path="/dashboard/setup" component={() => <p>setup page</p>} />
         <Route path="/dashboard/changelog" component={() => <p>changelog page</p>} />
@@ -175,8 +175,8 @@ describe('DocsLayout and the boxes', () => {
     const r = mount('/native');
     const main = () => r.container.querySelector<HTMLElement>('main.docs-page')!;
     await waitFor(() => expect(main().dataset.highlighted).toBe('/native'));
-    r.history.set({ value: '/native/code' });
-    await waitFor(() => expect(main().dataset.highlighted).toBe('/native/code'));
+    r.history.set({ value: '/native/quickstart' });
+    await waitFor(() => expect(main().dataset.highlighted).toBe('/native/quickstart'));
     expect(main().querySelector('code.language-rust .token')).not.toBeNull();
   });
 
@@ -540,6 +540,43 @@ describe('DocsLayout scrolling', () => {
     await waitFor(() => expect(r.container.querySelector('#device-g502')).not.toBeNull());
     await waitFor(() => expect(jumped).toBe(r.container.querySelector('#device-g502')));
     expect(r.container.querySelector('#device-g502')!.classList.contains('search-highlight')).toBe(true);
+  });
+
+  it("writes a hash that lands on a place as the place's address", async () => {
+    const r = mount('/native/transport#frames');
+    await waitFor(() => expect(jumped).toBe(r.container.querySelector('#frames')));
+    await waitFor(() => expect(r.history.get()).toBe('/native/transport/frames'));
+  });
+
+  it('leaves the hash on the section that opens the page, which search reads as the page', async () => {
+    const r = mount('/native/transport#transport');
+    await waitFor(() => expect(jumped).toBe(r.container.querySelector('#transport')));
+    await new Promise((res) => setTimeout(res, 30));
+    expect(r.history.get()).toBe('/native/transport#transport');
+  });
+
+  it('leaves the hash on an element that is no place', async () => {
+    const r = mount('/native/transport#intro');
+    await waitFor(() => expect(jumped).toBe(r.container.querySelector('#intro')));
+    await new Promise((res) => setTimeout(res, 30));
+    expect(r.history.get()).toBe('/native/transport#intro');
+  });
+
+  it("writes a device row's hash as the device's address once the row arrives, and lands on it again when it is drawn anew", async () => {
+    const r = mount('/guide/compatibility#device-g502');
+    await waitFor(() => expect(r.history.get()).toBe('/guide/compatibility/g502'));
+    await waitFor(() => expect(r.container.querySelector('#device-g502')!.getAttribute('data-draw')).toBe('2'));
+    await waitFor(() => expect(jumped).toBe(r.container.querySelector('#device-g502')));
+  });
+
+  it('moves between places of a page without the page arriving again', async () => {
+    const r = mount('/native/transport/frames');
+    await waitFor(() => expect(jumped).toBe(r.container.querySelector('#frames')));
+    const section = r.container.querySelector('#intro');
+    r.history.set({ value: '/native/transport/later' });
+    await waitFor(() => expect(jumped).toBe(r.container.querySelector('#later')));
+    expect(how).toEqual({ behavior: 'auto', block: 'start' });
+    expect(r.container.querySelector('#intro')).toBe(section);
   });
 
   it("names an item's parent in the page bar and marks it in the sidebar", async () => {

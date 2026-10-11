@@ -2,16 +2,28 @@ import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, cleanup, fireEvent } from '@solidjs/testing-library';
 import { Show, createSignal } from 'solid-js';
 
-const loc = vi.hoisted(() => ({ hash: null as null | (() => string), set: null as null | ((h: string) => void) }));
+const loc = vi.hoisted(() => ({
+  path: null as null | (() => string),
+  hash: null as null | (() => string),
+  set: null as null | ((h: string) => void),
+  go: null as null | ((to: string) => void),
+}));
 vi.mock('@solidjs/router', async () => {
   const { createSignal } = await import('solid-js');
+  const [path, setPath] = createSignal('/dashboard');
   const [hash, setHash] = createSignal('');
+  loc.path = path;
   loc.hash = hash;
+  // A hash on the page as it is.
   loc.set = setHash;
+  loc.go = (to: string) => {
+    const at = to.indexOf('#');
+    setPath(at < 0 ? to : to.slice(0, at));
+    setHash(at < 0 ? '' : to.slice(at));
+  };
   return {
-    useLocation: () => ({ pathname: '/dashboard', get hash() { return hash(); } }),
-    // As the router does: a navigation to the same page moves its hash.
-    useNavigate: () => (to: string) => setHash(to.slice(to.indexOf('#'))),
+    useLocation: () => ({ get pathname() { return path(); }, get hash() { return hash(); } }),
+    useNavigate: () => (to: string) => loc.go!(to),
   };
 });
 
@@ -24,7 +36,7 @@ const visible = (c: HTMLElement) => [...c.querySelectorAll<HTMLElement>('[role="
 
 afterEach(() => {
   cleanup();
-  loc.set!('');
+  loc.go!('/dashboard');
 });
 
 function page(opts: { optionsOff?: () => boolean } = {}) {
@@ -83,7 +95,7 @@ describe('PageTabs', () => {
     fireEvent.click(icon);
     await settle();
     await settle();
-    expect(written).toEqual(['https://medius.k4tech.net/dashboard#log']);
+    expect(written).toEqual(['https://medius.k4tech.net/dashboard/log']);
   });
 
   it('opens a tab picked from further down at the top of its pane, under the stuck bar', () => {
@@ -171,11 +183,41 @@ describe('PageTabs', () => {
     expect(visible(first.container)).toEqual(['options']);
     fireEvent.click(first.container.querySelector('[data-tab="log"]')!);
     await settle();
-    expect(loc.hash!()).toBe('#log');
+    expect([loc.path!(), loc.hash!()]).toEqual(['/dashboard/log', '']);
     first.unmount();
     const again = page();
     await settle();
     expect(visible(again.container)).toEqual(['log']);
+  });
+
+  it('writes a hash that names a tab as the tab\'s address', async () => {
+    page();
+    loc.set!('#log');
+    await settle();
+    await settle();
+    expect([loc.path!(), loc.hash!()]).toEqual(['/dashboard/log', '']);
+  });
+
+  it('writes a hash naming a disabled tab as the tab\'s address once the tab opens', async () => {
+    const [off, setOff] = createSignal(true);
+    page({ optionsOff: off });
+    loc.set!('#options');
+    await settle();
+    expect(loc.path!()).toBe('/dashboard');
+    setOff(false);
+    await settle();
+    await settle();
+    expect([loc.path!(), loc.hash!()]).toEqual(['/dashboard/options', '']);
+  });
+
+  it('opens the tab the address names, and the tab holding a place the address names', async () => {
+    const { container } = page();
+    loc.go!('/dashboard/log');
+    await settle();
+    expect(visible(container)).toEqual(['log']);
+    loc.go!('/dashboard/o-emit');
+    await settle();
+    expect(visible(container)).toEqual(['options']);
   });
 
   it('opens nothing on a hash it cannot decode, and does not throw', async () => {

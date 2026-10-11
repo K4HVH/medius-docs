@@ -57,6 +57,45 @@ export function pageCard(r: RouteInfo): CardContent {
   };
 }
 
+// What a place says first: its caption, else its first sentence of prose, to 200 characters on a word.
+// Prose is a line of three words or more ending a sentence: a table's rows and a button's label are not.
+// Null for a place with neither, such as a tab.
+export function placeLine(place: { caption?: string; text: string }): string | null {
+  if (place.caption) return stop(place.caption);
+  const prose = place.text
+    .split('\n')
+    .map((l) => l.trim())
+    .find((l) => !l.includes(' · ') && /[.!?]["')\]]*$/.test(l) && l.split(/\s+/).length >= 3);
+  if (!prose) return null;
+  const line = firstSentence(prose);
+  if (line.length <= 200) return line;
+  const cut = line.slice(0, 199);
+  return `${cut.slice(0, cut.lastIndexOf(' '))}…`;
+}
+
+const listed = (names: readonly string[]) =>
+  names.length > 1 ? `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}.` : stop(names[0]);
+
+// The card fonts draw no arrow; a caption's `box → PC` reads as `box to PC`.
+const spelled = (s: string) => s.replace(/\s*→\s*/g, ' to ');
+
+// A place's card. A tab with no prose is described by the panels it holds; any other place with
+// none, by its page.
+export function placeCard(
+  r: RouteInfo,
+  id: string,
+  place: { title: string; caption?: string; text: string; members?: readonly string[] },
+): CardContent {
+  return {
+    crumb: parentCrumb(r.path),
+    title: spelled(place.title),
+    description: spelled(placeLine(place) ?? (place.members?.length ? listed(place.members) : r.description)),
+    address: `${HOST}${r.path}/${id}`,
+    fact: FIRMWARE,
+    colour: BLUE,
+  };
+}
+
 export function helpCard(item: HelpItem): CardContent {
   return {
     crumb: parentCrumb('/guide/help'),

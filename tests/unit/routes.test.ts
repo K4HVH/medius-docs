@@ -45,3 +45,69 @@ describe('pagePath', () => {
     }
   });
 });
+
+describe('addressFor', () => {
+  it('reads a place on a page as the page and the place', async () => {
+    const { addressFor } = await import('../../src/app/routes');
+    expect(addressFor('/native/transport/usb-identity')).toEqual({ kind: 'place', parent: '/native/transport', id: 'usb-identity', target: 'usb-identity' });
+    expect(addressFor('/dashboard/options')).toEqual({ kind: 'place', parent: '/dashboard', id: 'options', target: 'options' });
+    expect(addressFor('/native/commands/lock/scale/')?.target).toBe('scale');
+  });
+
+  it('reads a page as a page, and a page under a page too', async () => {
+    const { addressFor } = await import('../../src/app/routes');
+    expect(addressFor('/native/transport')).toBeNull();
+    expect(addressFor('/bindings/c/build')).toBeNull();
+    expect(addressFor('/dashboard/update')).toBeNull();
+  });
+
+  it("keeps the three kinds of item, and lands a Devices section by the section's id", async () => {
+    const { addressFor } = await import('../../src/app/routes');
+    expect(addressFor('/guide/help/bsod')?.kind).toBe('help');
+    expect(addressFor('/dashboard/changelog/v3.4.5')?.kind).toBe('release');
+    expect(addressFor('/guide/compatibility/limits')).toMatchObject({ kind: 'device', target: 'device-limits', alt: 'limits' });
+  });
+
+  it('finds no place on Home, under a place, under no page, or with a malformed id', async () => {
+    const { addressFor } = await import('../../src/app/routes');
+    for (const p of ['/x', '/native/transport/a/b', '/nope/x', '/native/transport/%20x', '/native/transport/-x', '/404/x', '/guide/compatibility.md', '/native/transport/usb-identity.md'])
+      expect(addressFor(p), p).toBeNull();
+  });
+
+  it('shows a place as its page', async () => {
+    const { pagePath } = await import('../../src/app/routes');
+    expect(pagePath('/native/transport/usb-identity')).toBe('/native/transport');
+    expect(pagePath('/dashboard/options')).toBe('/dashboard');
+    expect(pagePath('/bindings/c/build')).toBe('/bindings/c/build');
+  });
+});
+
+describe('landingId and placeAddress', () => {
+  it('lands on the hash first, then the place or item the path names', async () => {
+    const { landingId } = await import('../../src/app/routes');
+    expect(landingId('/native/transport/usb-identity', '')).toBe('usb-identity');
+    expect(landingId('/native/transport/usb-identity', '#flow')).toBe('flow');
+    expect(landingId('/native/transport', '#usb%2Didentity')).toBe('usb-identity');
+    expect(landingId('/native/transport', '')).toBe('');
+    expect(landingId('/native/transport', '#%E0%A4%A')).toBe('');
+  });
+
+  it('lands a Devices section on its id where the page has it, else on the device row', async () => {
+    const { landingId } = await import('../../src/app/routes');
+    expect(landingId('/guide/compatibility/limits', '', (id) => id === 'limits')).toBe('limits');
+    expect(landingId('/guide/compatibility/zowie-ec2', '', () => false)).toBe('device-zowie-ec2');
+  });
+
+  it('writes a place as the page and its id, a device row as its item address, and nothing for Home or a page', async () => {
+    const { placeAddress } = await import('../../src/app/routes');
+    expect(placeAddress('/native/transport', 'usb-identity')).toBe('/native/transport/usb-identity');
+    expect(placeAddress('/dashboard', 'options')).toBe('/dashboard/options');
+    expect(placeAddress('/guide/compatibility', 'device-zowie-ec2')).toBe('/guide/compatibility/zowie-ec2');
+    expect(placeAddress('/guide/compatibility', 'limits')).toBe('/guide/compatibility/limits');
+    expect(placeAddress('/', 'hero')).toBeNull();
+    expect(placeAddress('/bindings/c', 'build')).toBeNull();
+    expect(placeAddress('/nope', 'x')).toBeNull();
+    expect(placeAddress('/native/transport', 'usb.identity')).toBeNull();
+  });
+});
+

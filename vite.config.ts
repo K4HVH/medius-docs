@@ -73,15 +73,23 @@ function homeApi(): Plugin {
   };
 }
 
-// Link cards under the dev server, drawn by the code serve.ts runs. An item's address needs no help here:
-// with no snapshot to answer it from, the app draws its parent at the item.
+// The index the dev server builds (searchIndex below), which names the places a card can be drawn for, and
+// the build itself, run for a place's card asked for before anything asked for the index.
+let devIndex: SearchIndex | null = null;
+let buildDevIndex: (() => Promise<void>) | null = null;
+
+// Link cards under the dev server, drawn by the code serve.ts runs. An address inside a page needs no help
+// here: with no snapshot to answer it from, the app draws its page at the item or place.
 function linkCards(): Plugin {
   return {
     name: 'link-cards',
     configureServer(server) {
       server.middlewares.use((req, res, next) => {
         if (!req.url?.startsWith('/og/')) return next();
-        handleOg(new Request(`http://localhost${req.url}`, { method: req.method }), cardFor)
+        handleOg(new Request(`http://localhost${req.url}`, { method: req.method }), async (path) => {
+          if (!devIndex) await buildDevIndex?.();
+          return cardFor(path, { index: () => devIndex });
+        })
           .then(async (response) => {
             if (!response) return next();
             res.statusCode = response.status;
@@ -149,7 +157,7 @@ function searchIndex(): Plugin {
           const base = server.resolvedUrls?.local[0]?.replace(/\/$/, '');
           if (!base) return;
           const { buildSearchIndex } = await import('./scripts/lib/searchBuild');
-          current = (await buildSearchIndex(base)).index;
+          current = devIndex = (await buildSearchIndex(base)).index;
           server.config.logger.info(`[search] index of ${current.entries.length} entries in ${Date.now() - started} ms`);
         })()
           .catch((e) => server.config.logger.warn(`[search] ${(e as Error).message}`))
@@ -162,6 +170,7 @@ function searchIndex(): Plugin {
           });
         return building;
       };
+      buildDevIndex = build;
       server.watcher.on('change', (file) => {
         if (!current || !file.replace(/\\/g, '/').includes('/src/')) return;
         clearTimeout(timer);

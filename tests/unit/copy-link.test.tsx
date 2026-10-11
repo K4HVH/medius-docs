@@ -22,10 +22,21 @@ afterEach(() => {
 });
 
 const button = (r: ReturnType<typeof render>) => r.container.querySelector<HTMLButtonElement>('button.cl')!;
+// A section as a page draws it: marked for search, titled, its link icon in the heading.
+const Place = (props: { id: string; title: string }) => (
+  <main class="docs-page">
+    <section id={props.id} data-search-target>
+      <h2>
+        {props.title}
+        <CopyLink id={props.id} label={props.title} />
+      </h2>
+    </section>
+  </main>
+);
 
 describe('CopyLink', () => {
   it('is a labelled button holding no text, out of search and the Markdown twins', () => {
-    const b = button(render(() => <CopyLink id="scale" label="Scale" />));
+    const b = button(render(() => <Place id="scale" title="Scale" />));
     expect(b.getAttribute('type')).toBe('button');
     expect(b.getAttribute('aria-label')).toBe('Copy link to Scale');
     expect(b.dataset.for).toBe('scale');
@@ -34,11 +45,28 @@ describe('CopyLink', () => {
     expect(b.textContent).toBe('');
   });
 
-  it("copies the page's full address with the place's id", async () => {
-    const b = button(render(() => <CopyLink id="scale" label="Scale" />));
+  it("copies the place's address: the page and the place's id", async () => {
+    const b = button(render(() => <Place id="scale" title="Scale" />));
     fireEvent.click(b);
     await waitFor(() => expect(b.dataset.state).toBe('copied'));
-    expect(written).toEqual([`${SITE}/native/commands/lock#scale`]);
+    expect(written).toEqual([`${SITE}/native/commands/lock/scale`]);
+  });
+
+  it('copies a place on a place address as a place of the same page', async () => {
+    history.replaceState(null, '', '/native/commands/lock/direction');
+    fireEvent.click(button(render(() => <Place id="scale" title="Scale" />)));
+    await waitFor(() => expect(written).toEqual([`${SITE}/native/commands/lock/scale`]));
+  });
+
+  it("copies the page's address for the section that opens the page", async () => {
+    fireEvent.click(button(render(() => <Place id="lock" title="LOCK" />)));
+    await waitFor(() => expect(written).toEqual([`${SITE}/native/commands/lock`]));
+  });
+
+  it('keeps the hash where a page is at the address a place would have', async () => {
+    history.replaceState(null, '', '/bindings/c');
+    fireEvent.click(button(render(() => <Place id="build" title="Build" />)));
+    await waitFor(() => expect(written).toEqual([`${SITE}/bindings/c#build`]));
   });
 
   it('copies the address it is given', async () => {
@@ -48,8 +76,8 @@ describe('CopyLink', () => {
 
   it("names the parent page on an item's address", async () => {
     history.replaceState(null, '', '/guide/help/bsod');
-    fireEvent.click(button(render(() => <CopyLink id="q-install" label="Install" />)));
-    await waitFor(() => expect(written).toEqual([`${SITE}/guide/help#q-install`]));
+    fireEvent.click(button(render(() => <Place id="q-install" title="Install" />)));
+    await waitFor(() => expect(written).toEqual([`${SITE}/guide/help/q-install`]));
   });
 
   it("falls back to the browser's copy command where the clipboard is refused", async () => {
@@ -59,11 +87,11 @@ describe('CopyLink', () => {
     let copied = '';
     const exec = vi.fn(() => ((copied = document.querySelector('textarea')?.value ?? ''), true));
     Object.defineProperty(document, 'execCommand', { value: exec, configurable: true });
-    const b = button(render(() => <CopyLink id="scale" label="Scale" />));
+    const b = button(render(() => <Place id="scale" title="Scale" />));
     fireEvent.click(b);
     await waitFor(() => expect(b.dataset.state).toBe('copied'));
     expect(exec).toHaveBeenCalledWith('copy');
-    expect(copied).toBe(`${SITE}/native/commands/lock#scale`);
+    expect(copied).toBe(`${SITE}/native/commands/lock/scale`);
     expect(document.querySelector('textarea')).toBeNull();
   });
 
@@ -73,7 +101,7 @@ describe('CopyLink', () => {
     });
     // As a browser does, the copy command copies what has focus.
     Object.defineProperty(document, 'execCommand', { value: () => document.activeElement instanceof HTMLTextAreaElement, configurable: true });
-    const b = button(render(() => <CopyLink id="scale" label="Scale" />));
+    const b = button(render(() => <Place id="scale" title="Scale" />));
     b.focus();
     fireEvent.click(b);
     await waitFor(() => expect(b.dataset.state).toBe('copied'));
@@ -103,14 +131,14 @@ describe('CopyLink', () => {
   it('says it did not copy when both are refused', async () => {
     Object.defineProperty(navigator, 'clipboard', { value: undefined, configurable: true });
     Object.defineProperty(document, 'execCommand', { value: () => false, configurable: true });
-    const b = button(render(() => <CopyLink id="scale" label="Scale" />));
+    const b = button(render(() => <Place id="scale" title="Scale" />));
     fireEvent.click(b);
     await waitFor(() => expect(b.dataset.state).toBe('failed'));
   });
 
   it('shows the result for 1.5 s, counted again from a second click', async () => {
     vi.useFakeTimers();
-    const b = button(render(() => <CopyLink id="scale" label="Scale" />));
+    const b = button(render(() => <Place id="scale" title="Scale" />));
     fireEvent.click(b);
     await vi.advanceTimersByTimeAsync(1000);
     expect(b.dataset.state).toBe('copied');
