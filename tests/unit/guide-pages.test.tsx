@@ -79,16 +79,19 @@ describe('Guide pages', () => {
     expect(answer('stock-firmware').links?.map((l) => l.href)).toContain('/dashboard/update#manual');
   });
 
-  it('explains every place on the Options tab a link can name, under the same id', () => {
+  it('explains every place on the Options tab a link can name, under the same id, and links back to it', () => {
     const r = mount('/guide/options', Options);
     for (const [id, title] of Object.entries(OPTION_PLACES)) {
       if (id === 'options') continue;
       const el = r.container.querySelector(`[id="${id}"]`);
       expect(el, id).not.toBeNull();
-      const named = el!.querySelector('h2')?.getAttribute('aria-label') ?? el!.querySelector('.api-response-label')?.textContent;
+      const named = el!.querySelector('h2')?.getAttribute('aria-label') ?? el!.querySelector('.api-response-label > span')?.textContent;
       expect(named, id).toBe(title);
-      const facts = [...el!.querySelectorAll(':scope > div > table > tbody > tr > td:first-child, :scope > .table-scroll > table > tbody > tr > td:first-child')].map((td) => td.textContent);
-      expect(facts, id).toEqual(expect.arrayContaining(['Default', 'Change it when', 'Costs']));
+      const back = el!.querySelector('h2 a.fix, .api-response-label a.fix');
+      expect(back?.getAttribute('href'), id).toBe(`/dashboard#${id}`);
+      expect(back?.textContent, id).toBe('Dashboard');
+      expect(el!.querySelector('thead')?.textContent, id).toMatch(/^(Value|Setting)Effect$/);
+      expect(el!.textContent, id).toContain('(default');
     }
   });
 
@@ -100,7 +103,8 @@ describe('Guide pages', () => {
     for (const id of ['imperfect-clone', 'wire-rate', 'render-full', 'spread']) expect(entries.some((e) => e.path === `/guide/options#${id}`), id).toBe(true);
     const md = htmlToMarkdown(page.innerHTML);
     expect(md).toContain('## Imperfect clone');
-    expect(md).toMatch(/\| Costs \| Needs Imperfect clone on/);
+    expect(md).toContain('Forcing needs Imperfect clone on');
+    expect(md).not.toMatch(/\[Dashboard\]/);
   });
 
   it("gives each Help answer a link icon that copies the answer's address", async () => {

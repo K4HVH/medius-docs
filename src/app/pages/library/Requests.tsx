@@ -336,7 +336,7 @@ match fw.host {
 }`}</code></pre>
       </DocSection>
 
-      <DocSection id="async" title="Async queries" caption="The same queries on AsyncDevice">
+      <DocSection id="async" title="Async queries" caption="Same queries on AsyncDevice">
         <pre class="api-signature">async fn query_version(&self) -&gt; Result&lt;Version&gt;</pre>
         <pre class="api-signature">async fn query_health(&self) -&gt; Result&lt;Health&gt;</pre>
         <pre class="api-signature">async fn device_info(&self) -&gt; Result&lt;DeviceInfo&gt;</pre>

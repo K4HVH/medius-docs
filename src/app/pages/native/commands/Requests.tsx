@@ -120,7 +120,7 @@ const Requests: Component = () => {
         />
       </DocSection>
 
-      <DocSection id="resp" title="RESP" caption="The box's reply">
+      <DocSection id="resp" title="RESP" caption="Reply from the box">
         <p>
           <code>RESP</code> is the box's reply to a{' '}
           <A href="/native/commands/requests#requests"><code>QUERY</code></A>.{' '}

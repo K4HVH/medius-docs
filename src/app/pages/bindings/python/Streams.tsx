@@ -123,7 +123,7 @@ CatchFilter.everything()                # every class, every id, one table entry
         <p><code>InputStream</code> has no <code>clone()</code>; open a second one instead.</p>
       </DocSection>
 
-      <DocSection id="events" title="Event objects" caption="The dataclasses recv() returns">
+      <DocSection id="events" title="Event objects" caption="Dataclasses recv() returns">
         <p>
           Every object here is a{' '}
           <a href="https://docs.python.org/3/library/dataclasses.html" target="_blank" rel="noreferrer">dataclass</a>.
@@ -310,7 +310,7 @@ with Device.find() as dev:
         </p>
       </DocSection>
 
-      <DocSection id="async" title="No async" caption="Build it on the non-blocking reads">
+      <DocSection id="async" title="No async" caption="Build async on the non-blocking reads">
         <div class="callout callout--warning">
           <p>
             The streams are synchronous, with no <code>async def</code> or <code>await</code>{' '}

@@ -96,7 +96,7 @@ const Types: Component = () => {
         </p>
       </DocSection>
 
-      <DocSection id="device-kind" title="MediusDeviceKind" caption="The cloned device's primary kind">
+      <DocSection id="device-kind" title="MediusDeviceKind" caption="Cloned device's primary kind">
         <pre class="api-signature">{`enum MediusDeviceKind : uint8_t`}</pre>
         <p>
           The <code>kind</code> field of a{' '}
@@ -119,7 +119,7 @@ const Types: Component = () => {
         </div>
       </DocSection>
 
-      <DocSection id="button" title="MediusButton" caption="A mouse button id">
+      <DocSection id="button" title="MediusButton" caption="Mouse button id">
         <pre class="api-signature">{`enum MediusButton : uint8_t   /* values match the firmware button id */`}</pre>
         <p>
           The button an <A href="/library/inject">inject</A> call drives. Ids on{' '}
@@ -139,7 +139,7 @@ const Types: Component = () => {
         </div>
       </DocSection>
 
-      <DocSection id="axis" title="MediusAxis" caption="A relative axis id">
+      <DocSection id="axis" title="MediusAxis" caption="Relative axis id">
         <pre class="api-signature">{`enum MediusAxis : uint8_t   /* values match the wire axis id */`}</pre>
         <p>
           The axis a{' '}
@@ -159,7 +159,7 @@ const Types: Component = () => {
         </div>
       </DocSection>
 
-      <DocSection id="action" title="MediusAction" caption="The press / release tri-state">
+      <DocSection id="action" title="MediusAction" caption="Press / release tri-state">
         <pre class="api-signature">{`enum MediusAction : uint8_t`}</pre>
         <p>
           The override action of <A href="/library/inject">inject</A> calls on a button, key, or
@@ -233,7 +233,7 @@ const Types: Component = () => {
         </div>
       </DocSection>
 
-      <DocSection id="direction" title="MediusDirection" caption="An axis sign, a usage edge, or a transfer direction">
+      <DocSection id="direction" title="MediusDirection" caption="Axis sign, usage edge, or transfer direction">
         <pre class="api-signature">{`enum MediusDirection : uint8_t`}</pre>
         <p>
           Read by what it is attached to. The transfer direction applies on a{' '}
@@ -243,7 +243,7 @@ const Types: Component = () => {
         </p>
         <div class="table-scroll">
           <table class="api-params">
-            <thead><tr><th>Enumerator</th><th>Value</th><th>On an axis or wheel</th><th>On a button or key</th><th>On a traffic-class filter</th></tr></thead>
+            <thead><tr><th>Enumerator</th><th>Value</th><th>Axis or wheel</th><th>Button or key</th><th>Traffic-class filter</th></tr></thead>
             <tbody>
               <tr><td><code>MEDIUS_DIRECTION_BOTH</code></td><td><code>0</code></td><td>Both signs; on a scale, a full pass to the relative pair.</td><td>Press and release.</td><td>Both directions.</td></tr>
               <tr><td><code>MEDIUS_DIRECTION_POSITIVE</code></td><td><code>1</code></td><td>Positive (<code>+</code>).</td><td>The press edge.</td><td>IN, device to PC.</td></tr>
@@ -297,7 +297,7 @@ const Types: Component = () => {
         </div>
       </DocSection>
 
-      <DocSection id="clip-action" title="MediusClipAction" caption="The engine action a clip trigger drives">
+      <DocSection id="clip-action" title="MediusClipAction" caption="Engine action a clip trigger drives">
         <pre class="api-signature">{`enum MediusClipAction : uint8_t`}</pre>
         <p>
           What a bound <A href="/bindings/c/types#clip-trigger"><code>MediusClipTrigger</code></A> or{' '}
@@ -319,13 +319,13 @@ const Types: Component = () => {
         </div>
       </DocSection>
 
-      <DocSection id="blanket" title="MediusBlanket" caption="A whole-group lock selector">
+      <DocSection id="blanket" title="MediusBlanket" caption="Whole-group lock selector">
         <pre class="api-signature">{`enum MediusBlanket : uint8_t`}</pre>
         <p>A whole input group: what <A href="/bindings/c/api#lock"><code>medius_device_lock_all/_unlock_all</code></A> block in one call, and the scope <A href="/bindings/c/api#clip"><code>medius_clip_set_autolock</code></A> locks while a clip plays. See <A href="/library/lock">Lock</A>.</p>
         <p>The values are ABI-local ordinals (matching the crate's <A href="/library/types/enums#blanket"><code>Blanket</code></A> order), not the <code>CLIP_LOCK_*</code> wire bits.</p>
         <div class="table-scroll">
           <table class="api-params">
-            <thead><tr><th>Enumerator</th><th>Value</th><th>Meaning</th><th>What dir picks</th></tr></thead>
+            <thead><tr><th>Enumerator</th><th>Value</th><th>Meaning</th><th>Direction</th></tr></thead>
             <tbody>
               <tr><td><code>MEDIUS_BLANKET_AIM</code></td><td><code>0</code></td><td>The X and Y cursor axes.</td><td>A sign, on each axis.</td></tr>
               <tr><td><code>MEDIUS_BLANKET_WHEEL</code></td><td><code>1</code></td><td>The wheel.</td><td>A sign.</td></tr>
@@ -399,7 +399,7 @@ const Types: Component = () => {
         </div>
       </DocSection>
 
-      <DocSection id="render-mode" title="MediusRenderMode" caption="The texture the box renders motion with">
+      <DocSection id="render-mode" title="MediusRenderMode" caption="Texture the box renders motion with">
         <pre class="api-signature">{`enum MediusRenderMode : uint8_t`}</pre>
         <p>
           Passed to <A href="/bindings/c/api#led-admin-options"><code>medius_device_set_render</code></A>{' '}
@@ -632,7 +632,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
         </p>
       </DocSection>
 
-      <DocSection id="key" title="MediusKey" caption="A HID keyboard/keypad usage">
+      <DocSection id="key" title="MediusKey" caption="HID keyboard/keypad usage">
         <pre class="api-signature">{`typedef uint8_t MediusKey;   /* modifiers are 0xE0 to 0xE7 */`}</pre>
         <p>
           A raw{' '}
@@ -655,7 +655,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
         </div>
       </DocSection>
 
-      <DocSection id="media-key" title="MediusMediaKey" caption="A 16-bit HID Consumer usage">
+      <DocSection id="media-key" title="MediusMediaKey" caption="16-bit HID Consumer usage">
         <pre class="api-signature">{`typedef uint16_t MediusMediaKey;`}</pre>
         <p>
           A raw Consumer usage for the <A href="/library/inject">media</A> calls: any 16-bit usage,
@@ -676,7 +676,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
         </div>
       </DocSection>
 
-      <DocSection id="frame-type" title="MediusFrameType" caption="A wire frame TYPE byte (mock only)">
+      <DocSection id="frame-type" title="MediusFrameType" caption="Wire frame TYPE byte (mock only)">
         <pre class="api-signature">{`enum MediusFrameType : uint8_t   /* always defined; read only by the mock recorder */`}</pre>
         <p>
           The TYPE byte of a wire <A href="/native/frame">frame</A>, used with the mock recorder
@@ -708,7 +708,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
         </p>
       </DocSection>
 
-      <DocSection id="input" title="MediusUsage" caption="A momentary usage for inject">
+      <DocSection id="input" title="MediusUsage" caption="Momentary usage for inject">
         <p>
           What <A href="/bindings/c/api#inject"><code>medius_device_inject</code></A> drives. Build with{' '}
           <A href="/bindings/c/api#builders"><code>medius_usage_button(...)</code></A>, <code>_key(...)</code>, or <code>_media(...)</code>;{' '}
@@ -761,7 +761,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
         </div>
       </DocSection>
 
-      <DocSection id="motion" title="MediusMotion" caption="A relative axis for move_axis">
+      <DocSection id="motion" title="MediusMotion" caption="Relative axis for move_axis">
         <p>
           What <A href="/bindings/c/api#move"><code>medius_device_move_axis</code></A> drives. Build with{' '}
           <A href="/bindings/c/api#builders"><code>medius_motion_cursor(dx, dy)</code></A>, <code>medius_motion_wheel(delta)</code>, or <code>medius_motion_pan(delta)</code>. See{' '}
@@ -846,7 +846,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
         </div>
       </DocSection>
 
-      <DocSection id="device-info" title="MediusDeviceInfo" caption="The cloned device's USB identity, kind, and product">
+      <DocSection id="device-info" title="MediusDeviceInfo" caption="Cloned device's USB identity, kind, and product">
         <p>From <A href="/bindings/c/api#queries"><code>medius_device_device_info</code></A>; all-zero/empty when nothing is cloned, which <A href="/bindings/c/api#inspectors"><code>medius_device_info_is_cloned</code></A> reads: a clone with no HID interface (<code>n_hid</code> 0) has its identity filled in. <code>product</code> is a NUL-terminated ASCII string, with <code>?</code> for each character outside ASCII.</p>
         <div class="table-scroll">
           <table class="api-params">
@@ -865,7 +865,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
         </div>
       </DocSection>
 
-      <DocSection id="caps" title="MediusCaps" caption="The whole cloned device's capabilities">
+      <DocSection id="caps" title="MediusCaps" caption="Whole cloned device's capabilities">
         <p>
           From <A href="/bindings/c/api#queries"><code>medius_device_caps</code></A>: a mouse half and a keyboard half plus the per-class
           change-driven flags. Test it with <A href="/bindings/c/api#inspectors"><code>medius_caps_has_mouse</code></A>,{' '}
@@ -921,7 +921,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
         </div>
       </DocSection>
 
-      <DocSection id="rate" title="MediusRate" caption="The native report rate and clone poll period">
+      <DocSection id="rate" title="MediusRate" caption="Native report rate and clone poll period">
         <p>
           From <A href="/bindings/c/api#queries"><code>medius_device_query_rate</code></A>. Convert to Hz with{' '}
           <A href="/bindings/c/api#inspectors"><code>medius_rate_native_hz(rate, &amp;hz)</code></A> (returns false when there's no
@@ -999,7 +999,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
         </div>
       </DocSection>
 
-      <DocSection id="locks" title="MediusLocks & MediusLockEntry" caption="The active scales, as an entry list">
+      <DocSection id="locks" title="MediusLocks & MediusLockEntry" caption="Active scales, as an entry list">
         <p>
           From <A href="/bindings/c/api#queries"><code>medius_device_query_locks</code></A>: <code>entries[0..n]</code>, one per weighed direction. Read one with{' '}
           <A href="/bindings/c/api#inspectors"><code>medius_locks_scale_of(&amp;locks, target, dir)</code></A>, or test for an outright block with <code>medius_locks_is_locked</code>; both count a covering whole-class <code>is_blanket</code> entry. Wire layout on the native{' '}
@@ -1050,7 +1050,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
         <div class="api-response-label">READBACK</div>
         <div class="table-scroll">
           <table class="api-params">
-            <thead><tr><th>Case</th><th>What the array holds</th></tr></thead>
+            <thead><tr><th>Case</th><th>Contents</th></tr></thead>
             <tbody>
               <tr><td>A blanket key lock</td><td>One entry per blocked edge, never <code>MEDIUS_DIRECTION_BOTH</code>.</td></tr>
               <tr><td>A media lock, blanket or specific</td><td><code>MEDIUS_DIRECTION_BOTH</code>, always.</td></tr>
@@ -1103,7 +1103,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
         </div>
       </DocSection>
 
-      <DocSection id="catch-state" title="MediusCatchState & MediusCatchEntry" caption="The live subscription table, plus the inter-chip clock estimate">
+      <DocSection id="catch-state" title="MediusCatchState & MediusCatchEntry" caption="Live subscription table, plus the inter-chip clock estimate">
         <p>
           From <A href="/bindings/c/api#queries"><code>medius_device_query_catch</code></A>: a header,
           then <code>entries[0..n]</code>, one per accepted{' '}
@@ -1161,7 +1161,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
         </div>
       </DocSection>
 
-      <DocSection id="imperfect-status" title="MediusImperfectStatus" caption="The imperfect-clone state (each 0 or 1)">
+      <DocSection id="imperfect-status" title="MediusImperfectStatus" caption="Imperfect-clone state (each 0 or 1)">
         <p>From <A href="/bindings/c/api#queries"><code>medius_device_query_imperfect</code></A>. See <A href="/library/options">Options</A>.</p>
         <div class="table-scroll">
           <table class="api-params">
@@ -1175,7 +1175,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
         </div>
       </DocSection>
 
-      <DocSection id="emit-pace-status" title="MediusEmitPaceStatus" caption="The emit-rate pacing state">
+      <DocSection id="emit-pace-status" title="MediusEmitPaceStatus" caption="Emit-rate pacing state">
         <p>From <A href="/bindings/c/api#queries"><code>medius_device_query_emit_pace</code></A>. See <A href="/library/options">Options</A>.</p>
         <div class="table-scroll">
           <table class="api-params">
@@ -1192,7 +1192,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
         </div>
       </DocSection>
 
-      <DocSection id="render-status" title="MediusRenderStatus" caption="The texture motion is rendered with">
+      <DocSection id="render-status" title="MediusRenderStatus" caption="Rendering texture">
         <p>From <A href="/bindings/c/api#queries"><code>medius_device_query_render</code></A>. See <A href="/library/options">Options</A>.</p>
         <div class="table-scroll">
           <table class="api-params">
@@ -1235,7 +1235,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
         </div>
       </DocSection>
 
-      <DocSection id="portinfo" title="MediusPortInfo" caption="A discovered medius serial port">
+      <DocSection id="portinfo" title="MediusPortInfo" caption="Discovered medius serial port">
         <p>
           Filled by <A href="/bindings/c/api#connect"><code>medius_find_ports</code></A>. Canonical
           docs on <A href="/library/types/structs#port-info"><code>PortInfo</code></A>.
@@ -1416,7 +1416,7 @@ for (uintptr_t i = 0; i < n; i++) {
         </p>
         <div class="table-scroll">
           <table class="api-params">
-            <thead><tr><th><code>MediusControlStatus</code></th><th>Bits 0-1</th><th>The game PC got</th></tr></thead>
+            <thead><tr><th><code>MediusControlStatus</code></th><th>Bits 0-1</th><th>PC received</th></tr></thead>
             <tbody>
               <tr><td><code>MEDIUS_CONTROL_STATUS_OK</code></td><td><code>0</code></td><td>A completed transaction.</td></tr>
               <tr><td><code>MEDIUS_CONTROL_STATUS_STALLED</code></td><td><code>1</code></td><td>A STALL: from the device, from a rule that refused the request, or, above endpoint 0, for a request that failed.</td></tr>
@@ -1634,7 +1634,7 @@ for (uint8_t i = 0; i < cfg.packet_n; i++)
 medius_clip_unbind_packet(clip, &held);   /* by key */`}</code></pre>
       </DocSection>
 
-      <DocSection id="clip-settings" title="MediusClipSettings" caption="The clip configuration read back from the box">
+      <DocSection id="clip-settings" title="MediusClipSettings" caption="Clip configuration read back from the box">
         <p>From <A href="/bindings/c/api#clip"><code>medius_clip_query_config</code></A>. See <A href="/library/clip">Clip</A>.</p>
         <div class="table-scroll">
           <table class="api-params">
@@ -1691,7 +1691,7 @@ medius_clip_unbind_packet(clip, &held);   /* by key */`}</code></pre>
         </div>
       </DocSection>
 
-      <DocSection id="setup" title="MediusSetup" caption="A USB control-transfer setup packet">
+      <DocSection id="setup" title="MediusSetup" caption="USB control-transfer setup packet">
         <p>Passed by value to <A href="/bindings/c/api#advanced"><code>medius_device_transfer</code></A> and <A href="/bindings/c/api#clip"><code>medius_clip_frame_transfer</code></A>. The eight bytes of a USB §9.3 setup packet, little-endian on the wire. See <A href="/library/advanced/transfer">Control transfers</A>.</p>
         <div class="table-scroll">
           <table class="api-params">
@@ -1707,7 +1707,7 @@ medius_clip_unbind_packet(clip, &held);   /* by key */`}</code></pre>
         </div>
       </DocSection>
 
-      <DocSection id="transfer-outcome" title="MediusTransferOutcome" caption="The device's answer to a control transfer">
+      <DocSection id="transfer-outcome" title="MediusTransferOutcome" caption="Device answer to a control transfer">
         <p>Filled by <A href="/bindings/c/api#advanced"><code>medius_device_transfer</code></A>. <code>MEDIUS_STATUS_OK</code> means the box answered at all; <code>status</code> is the protocol result.</p>
         <div class="table-scroll">
           <table class="api-params">
@@ -1765,7 +1765,7 @@ medius_clip_unbind_packet(clip, &held);   /* by key */`}</code></pre>
         </div>
       </DocSection>
 
-      <DocSection id="rewrite-table" title="MediusRewriteTable & MediusRewriteEntry" caption="The rewrite-table summary">
+      <DocSection id="rewrite-table" title="MediusRewriteTable & MediusRewriteEntry" caption="Rewrite-table summary">
         <p>Filled by <A href="/bindings/c/api#advanced"><code>medius_device_query_rewrite</code></A>: a full flag, a generation counter, and one <code>MediusRewriteEntry</code> per rule (address, action, <code>match_len</code>, <code>offset</code>, <code>payload_len</code>, and saturating <code>hits</code>) without the bytes.</p>
         <div class="table-scroll">
           <table class="api-params">
@@ -1797,7 +1797,7 @@ medius_clip_unbind_packet(clip, &held);   /* by key */`}</code></pre>
         </div>
       </DocSection>
 
-      <DocSection id="patch-set" title="MediusPatchSet & MediusPatchEntry" caption="The stored patch set and its apply state">
+      <DocSection id="patch-set" title="MediusPatchSet & MediusPatchEntry" caption="Stored patch set and its apply state">
         <p>Filled by <A href="/bindings/c/api#advanced"><code>medius_device_query_patches</code></A>: the four apply-state flags and one <code>MediusPatchEntry</code> per patch (section, cfg, index, offset, len) without the bytes.</p>
         <div class="table-scroll">
           <table class="api-params">
@@ -1827,7 +1827,7 @@ medius_clip_unbind_packet(clip, &held);   /* by key */`}</code></pre>
         </div>
       </DocSection>
 
-      <DocSection id="transforms" title="MediusTransforms" caption="The transform-table summary">
+      <DocSection id="transforms" title="MediusTransforms" caption="Transform-table summary">
         <p>Filled by <A href="/bindings/c/api#transforms"><code>medius_device_query_transforms</code></A>: a full flag and one <A href="/bindings/c/types#transform"><code>MediusTransform</code></A> per entry, up to <code>MEDIUS_MAX_TRANSFORM_ENTRIES</code> (8).</p>
         <div class="table-scroll">
           <table class="api-params">

@@ -186,7 +186,7 @@ const DevicePatch = () => {
         <div class="chips">
           <Chip variant={applied() ? 'success' : 'neutral'}>{applied() ? 'Applied' : 'Not applied'}</Chip>
           <Show when={pending() && !refused()}>
-            <Chip variant="info">Changes not on the clone</Chip>
+            <Chip variant="info">Pending</Chip>
           </Show>
           <Show when={refused()}>
             <Chip variant="warning">Refused</Chip>

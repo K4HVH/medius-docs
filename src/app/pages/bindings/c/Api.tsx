@@ -445,7 +445,7 @@ medius_clip_frame_free(f);`}</code></pre>
         </div>
       </DocSection>
 
-      <DocSection id="builders" title="Usage, motion & lock-target builders" caption="Make the value structs the calls take">
+      <DocSection id="builders" title="Builders" caption="Make the value structs the calls take">
         <p>Pure constructors: no device, no wire traffic. See <A href="/library/inject">Inject</A>, <A href="/library/move">Move</A>, and <A href="/library/lock">Lock</A>.</p>
         <div class="table-scroll">
           <table class="api-params">

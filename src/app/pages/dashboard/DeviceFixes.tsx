@@ -66,11 +66,11 @@ const said = (o: Outcome): string =>
     native: `This mouse can't go faster through the box, so it stays at ${'hz' in o ? o.hz : 0} Hz.`,
     replug: `Saved, but the box reports ${'hz' in o ? o.hz : 0} Hz. Unplug the mouse from the box and plug it back in.`,
     gone: "Saved, but the mouse hasn't come back. Unplug it from the box and plug it back in.",
-    allowed: 'Done. Imperfect clone is on, and the box clones the device.',
+    allowed: 'Done. Imperfect clone is on and the device is cloned.',
     checking: 'The box is still checking its new firmware. Try again in a minute.',
     refused: "The box didn't take the setting. Try again.",
     silent: "The box isn't answering.",
-    changed: 'The device changed. Look again before setting anything.',
+    changed: 'A different device is plugged in now, so nothing was changed.',
   })[o.kind];
 
 const GOOD: ReadonlySet<Outcome['kind']> = new Set(['fast', 'capped', 'native', 'allowed']);
@@ -177,9 +177,8 @@ export default function DeviceFixes() {
             </Match>
             <Match when={o().kind === 'imperfect' && (o() as { update: boolean }).update}>
               <p>
-                This device needs imperfect clone. On firmware before v3.4.4 a device with more than four IN endpoints
-                goes unanswered on one of them, and Windows then resets it: update first. A device that needs it for
-                another reason works now.
+                This device needs Imperfect clone. Update the box first: on this firmware, Windows keeps resetting some
+                of these devices.
               </p>
               <div class="acts">
                 <Button variant="primary" onClick={() => navigate('/dashboard/update')}>
@@ -196,21 +195,20 @@ export default function DeviceFixes() {
               </div>
             </Match>
             <Match when={o().kind === 'imperfect'}>
-              <p>This device is past what the box copies exactly, so it does nothing through the box until imperfect clone is on.</p>
+              <p>This device does nothing through the box until Imperfect clone is on.</p>
               <Actions label="Allow imperfect" running={run().running()} onApply={() => apply(o())} onKeep={() => keepAsItIs(o())} />
             </Match>
             <Match when={o().kind === 'logitech'}>
               <p>
-                Many Logitech mice report faster than the rate they declare through the box. The Logitech fix turns
-                imperfect clone on, forces the wire rate to 1000 Hz and paces injected motion at 1000 Hz; a mouse that
-                can't go faster keeps its rate.
+                Logitech mice often declare 125 Hz but can run at 1000 Hz. This turns Imperfect clone on and sets the
+                Wire rate and Emit rate to 1000 Hz. A mouse that can't go faster is put back as it was.
               </p>
               <Actions label="Force 1000 Hz" running={run().running()} onApply={() => apply(o())} onKeep={() => keepAsItIs(o())} />
             </Match>
             <Match when={o().kind === 'razer'}>
               <p>
-                If it's one of Razer's 8K mice: plug it into the PC, set it to 8000 Hz in Razer Synapse, then plug it back
-                into the box, where it runs at 1000 Hz. A Razer mouse set to 125 Hz on purpose needs nothing.
+                If this is one of Razer's 8K mice, plug it into the PC, set it to 8000 Hz in Razer Synapse, then plug it
+                back into the box. It runs at 1000 Hz through the box. If you set 125 Hz on purpose, ignore this.
               </p>
               <div class="acts">
                 <Button variant="secondary" onClick={() => keepAsItIs(o())}>
@@ -221,7 +219,7 @@ export default function DeviceFixes() {
           </Switch>
           {/* There before it speaks, so a screen reader hears what it says. */}
           <p role="status" tabindex="-1" ref={status} classList={{ mut: run().running() }}>
-            {run().result() ? said(run().result()!) : run().running() ? 'The box restarts to clone the device again. This takes up to a minute.' : ''}
+            {run().result() ? said(run().result()!) : run().running() ? 'Restarting the box. This takes up to a minute.' : ''}
           </p>
         </Panel>
       )}

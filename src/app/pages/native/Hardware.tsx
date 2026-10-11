@@ -45,10 +45,10 @@ const Hardware: Component = () => {
         </div>
       </PageHeader>
 
-      <DocSection id="hazard" title="USB3 power hazard" caption="The one pairing to avoid">
+      <DocSection id="hazard" title="USB3 power hazard" caption="USB1 and USB3 on one machine">
         <div class="callout callout--danger">
           <p>
-            ⚠️ <code>USB1</code> and <code>USB3</code> must never both connect to the same machine.
+            <code>USB1</code> and <code>USB3</code> must never both connect to the same machine.
           </p>
           <p>
             The <code>USB3</code> 5V rail can't be pulled low in firmware, so the pair back-feeds

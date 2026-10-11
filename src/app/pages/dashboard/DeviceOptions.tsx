@@ -24,7 +24,7 @@ import { FixLink } from '../../shell/Filter';
 
 // An option's section on the Guide's Options page.
 const GuideLink = (props: { id: string }) => (
-  <span class="guide" data-search-skip data-agent-hide>
+  <span class="cross" data-search-skip data-agent-hide>
     <FixLink href={`/guide/options#${props.id}`}>Guide</FixLink>
   </span>
 );
@@ -37,10 +37,10 @@ const EMIT_MODES: Record<string, EmitMode> = {
 };
 
 const MODE_BLURB: Record<string, string> = {
-  learned: "Matches native report rate.",
-  interval: 'Follows the declared poll rate.',
-  fixed: 'Pins the rate to the number you pick.',
-  rendered: 'Paced by the renderer, as v3.3.0 does.',
+  learned: "Your mouse's report rate, measured as you move it.",
+  interval: 'The rate the clone declares.',
+  fixed: 'The rate you pick.',
+  rendered: 'Paced by the renderer, as on v3.3.0.',
 };
 
 const MODE_NAMES: Record<number, string> = {
@@ -58,10 +58,10 @@ const RENDER_MODES: Record<string, RenderMode> = {
 };
 
 const RENDER_BLURB: Record<string, string> = {
-  off: 'Even fill at the paced rate.',
-  stock: 'Native texture, upstream smoother.',
-  despiked: 'Native texture, ramped onset.',
-  unsmoothed: 'Native texture, no smoother.',
+  off: 'An even stream at the Emit rate.',
+  stock: "The model's original smoother.",
+  despiked: 'The original smoother, with the first report flattened.',
+  unsmoothed: 'No smoother.',
 };
 
 const RENDER_NAMES: Record<number, string> = {
@@ -81,9 +81,9 @@ const RENDER_LABEL: Record<number, string> = {
 const SPREAD_PERCENTS: Record<string, number> = { off: 0, half: 50, full: 100 };
 
 const SPREAD_BLURB: Record<string, string> = {
-  off: 'Injected motion on one report.',
-  half: 'Injected motion over half the command interval.',
-  full: 'Injected motion over the whole command interval.',
+  off: 'Each command whole, on the next report.',
+  half: 'Over half the time until the next command.',
+  full: 'Over the whole time until the next command.',
 };
 
 // A percent outside the three, set by another client, gets an extra entry.
@@ -313,7 +313,7 @@ const DeviceOptions = (props: { proto?: number }) => {
                 {s().allowed ? 'Allowed' : 'Faithful only'}
               </Chip>
               <Show when={s().overCapacity}>
-                <Chip variant="warning">Device over box capacity, or high speed</Chip>
+                <Chip variant="warning">Over capacity or high speed</Chip>
               </Show>
             </div>
           )}
@@ -323,8 +323,8 @@ const DeviceOptions = (props: { proto?: number }) => {
 
       <Panel id="movement-riding" title="Movement riding" aside={<GuideLink id="movement-riding" />}>
         <p>
-          Injected motion waits up to the window to ride a physical report, and is dropped if none
-          arrives, so reports keep native timing.
+          Injected movement waits up to the window for your mouse's next report and goes out in it.
+          Anything still waiting is dropped.
         </p>
         <div class="acts">
           <div class="fw-s">
@@ -365,8 +365,8 @@ const DeviceOptions = (props: { proto?: number }) => {
 
       <Panel id="bearing" title="Bearing" aside={<GuideLink id="bearing" />}>
         <p>
-          What With injection and Against injection mean for a lock: the injected direction on each
-          axis, held for the window.
+          The way the last injected movement went, kept for the window. Lock's With injection and
+          Against injection scales compare your movement with it.
         </p>
         <Segmented
           name="bearing-mode"
@@ -380,8 +380,8 @@ const DeviceOptions = (props: { proto?: number }) => {
         />
         <p class="mut">
           {bearGeometry() === BearingMode.Vector
-            ? 'Only the part of the physical delta along the injected vector is weighed.'
-            : 'Each axis is weighed against its bearing.'}
+            ? 'Only your movement along the injected direction is scaled.'
+            : 'X and Y are compared with the injected direction separately.'}
         </p>
         <div class="acts">
           <div class="fw-s">
@@ -425,7 +425,7 @@ const DeviceOptions = (props: { proto?: number }) => {
       <Show when={has(6)}>
       <Panel id="render" title="Render" aside={<GuideLink id="render" />}>
         <p>
-          Emits injected motion with native report texture, and picks which motion is rendered.
+          Sends injected movement with your mouse's report timing and sizes, learned from your mouse.
         </p>
         <Segmented
           name="render-mode"
@@ -460,10 +460,10 @@ const DeviceOptions = (props: { proto?: number }) => {
           />
           <p class="mut">
             {!fullOn()
-              ? "Native motion is relayed untouched."
+              ? "Your mouse's movement passes through untouched."
               : renderKey() === 'off'
-                ? 'Renders nothing while the mode is off.'
-                : 'Both go through the model as one stream.'}
+                ? 'Nothing is rendered while Render is off.'
+                : "Your mouse's movement and injected movement go through the model as one stream."}
           </p>
         </div>
         <div class="acts">
@@ -506,8 +506,8 @@ const DeviceOptions = (props: { proto?: number }) => {
 
       <Panel id="spread" title="Spread" aside={<GuideLink id="spread" />}>
         <p>
-          Releases injected motion across the interval between host commands, so injected reports
-          carry native per-report magnitude.
+          Splits each command's movement across the time until the next command, so no single report
+          carries all of it.
         </p>
         <Segmented
           name="spread-percent"
@@ -520,7 +520,7 @@ const DeviceOptions = (props: { proto?: number }) => {
             { value: 'full', label: 'Full' },
           ]}
         />
-        <p class="mut">{SPREAD_BLURB[spreadKey()] ?? 'Injected motion over its share of the command interval.'}</p>
+        <p class="mut">{SPREAD_BLURB[spreadKey()] ?? 'Over part of the time until the next command.'}</p>
         <div class="acts">
           <Button variant="primary" disabled={cmd.busy()} onClick={applySpread}>
             Apply
@@ -551,7 +551,7 @@ const DeviceOptions = (props: { proto?: number }) => {
 
       <Panel id="emit-rate" title="Emit rate" aside={<GuideLink id="emit-rate" />}>
         <p>
-          Caps how often injected motion is sent, and sets the clone's wire rate.
+          The fastest the box sends injected movement, and the polling rate the clone declares.
         </p>
         <Segmented
           name="emit-mode"
@@ -586,8 +586,8 @@ const DeviceOptions = (props: { proto?: number }) => {
           />
           <p class="mut">
             {forceOn()
-              ? 'Advertises the interval you pick.'
-              : 'Advertises the interval the device declares.'}
+              ? 'The clone declares the rate you pick.'
+              : "The clone declares your device's rate."}
           </p>
         </div>
         <div class="acts">

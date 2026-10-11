@@ -53,7 +53,7 @@ const Frame: Component = () => {
         </div>
       </DocSection>
 
-      <DocSection id="opcodes" title="Opcodes" caption="The TYPE byte">
+      <DocSection id="opcodes" title="Opcodes" caption="TYPE byte">
         <p>
           Opcodes run <code>0x01</code> to <code>0x1E</code>. An unrecognised opcode is ignored.
         </p>

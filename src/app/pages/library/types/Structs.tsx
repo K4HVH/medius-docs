@@ -113,7 +113,7 @@ assert_eq!(d.to_string(), "046D:C08B G502"); // Display is VVVV:PPPP product
 assert!(d.is_cloned());
 assert!(!DeviceInfo::default().is_cloned()); // nothing cloned`}</code></pre>
       </DocSection>
-      <DocSection id="caps" title="Caps" caption="The whole device, mouse and keyboard">
+      <DocSection id="caps" title="Caps" caption="Whole device, mouse and keyboard">
         <p>
           Everything one <A href="/library/requests#caps"><code>caps()</code></A> query returns.{' '}
           <code>has_mouse()</code> / <code>has_keyboard()</code> report which are bound;{' '}
@@ -164,7 +164,7 @@ println!("{} mouse buttons", caps.mouse.n_buttons);`}</code></pre>
 let c = MouseCaps { n_buttons: 5, has_x: true, has_y: true, has_wheel: true, has_pan: false, has_report_id: false, n_hid: 1 };
 assert!(!c.is_composite()); // single HID interface`}</code></pre>
       </DocSection>
-      <DocSection id="rate" title="Rate" caption="The native report rate the box tracks">
+      <DocSection id="rate" title="Rate" caption="Native report rate the box tracks">
         <p>
           Live rate from <A href="/library/requests#query-rate"><code>query_rate()</code></A>.{' '}
           <code>native_hz()</code> converts the period to hertz, <code>None</code> while{' '}
@@ -220,7 +220,7 @@ assert_eq!(r.native_hz(), Some(1000.0));`}</code></pre>
           </table>
         </div>
       </DocSection>
-      <DocSection id="locks" title="Locks" caption="The active input scales">
+      <DocSection id="locks" title="Locks" caption="Active input scales">
         <p>
           The active set from <A href="/library/requests#query-locks"><code>query_locks()</code></A>,
           a list of <A href="/library/types/structs#lock-entry"><code>LockEntry</code></A> across
@@ -240,7 +240,7 @@ assert_eq!(r.native_hz(), Some(1000.0));`}</code></pre>
         </div>
         <div class="table-scroll">
           <table class="api-params">
-            <thead><tr><th>Case</th><th>What the list holds</th></tr></thead>
+            <thead><tr><th>Case</th><th>Contents</th></tr></thead>
             <tbody>
               <tr><td>A blanket key lock</td><td>One entry per blocked edge, never <code>Both</code>.</td></tr>
               <tr><td>A media lock, blanket or specific</td><td>Direction <code>Both</code>, always. Media has no edges.</td></tr>
@@ -545,7 +545,7 @@ if let CatchEvent::Traffic(t) = stream.recv()? {
 }`}</code></pre>
       </DocSection>
 
-      <DocSection id="button" title="Button" caption="The button a command acts on">
+      <DocSection id="button" title="Button" caption="Button a command acts on">
         <pre class="api-signature">struct Button(pub u8)</pre>
         <p>
           The button an <A href="/native/commands/inject#inject"><code>INJECT</code></A> or{' '}
@@ -584,7 +584,7 @@ if let CatchEvent::Traffic(t) = stream.recv()? {
           box drives the full declared count, and one past it is a no-op.
         </p>
       </DocSection>
-      <DocSection id="usage" title="Usage" caption="A momentary input: (class, id)">
+      <DocSection id="usage" title="Usage" caption="Momentary input: (class, id)">
         <pre class="api-signature">struct Usage {'{'} class: Class, id: u16 {'}'}</pre>
         <p>
           What <A href="/library/inject#inject"><code>inject</code></A> drives and{' '}
@@ -613,7 +613,7 @@ let by_hand = Usage::new(Class::Media, 0x00E9);    // volume up
 device.press(from_button)?;                         // press takes any impl Into<Usage>`}</code></pre>
       </DocSection>
 
-      <DocSection id="key" title="Key" caption="A HID keyboard keycode">
+      <DocSection id="key" title="Key" caption="HID keyboard keycode">
         <p>
           A newtype over a HID keyboard/keypad usage. It converts{' '}
           <code>Into&lt;<A href="/library/types/structs#usage">Usage</A>&gt;</code>, so{' '}
@@ -640,7 +640,7 @@ let custom = Key::new(0x04);
 assert_eq!(a.usage(), custom.usage());`}</code></pre>
       </DocSection>
 
-      <DocSection id="media-key" title="MediaKey" caption="A 16-bit Consumer usage">
+      <DocSection id="media-key" title="MediaKey" caption="16-bit Consumer usage">
         <p>
           A newtype over a 16-bit Consumer usage. It converts{' '}
           <code>Into&lt;<A href="/library/types/structs#usage">Usage</A>&gt;</code>, so{' '}
@@ -685,7 +685,7 @@ assert_eq!(vol_up.usage(), custom.usage());`}</code></pre>
           </table>
         </div>
       </DocSection>
-      <DocSection id="catch-state" title="CatchState" caption="The live subscription table, read back">
+      <DocSection id="catch-state" title="CatchState" caption="Live subscription table, read back">
         <pre class="api-signature">struct CatchState {'{'} table_full: bool, dropped: u32, clock: ClockEstimate, entries: Vec&lt;CatchEntry&gt; {'}'}</pre>
         <p>
           What <A href="/library/requests#query-catch"><code>query_catch()</code></A> returns.
@@ -889,7 +889,7 @@ assert_eq!(swap.op, TransformOp::Swap);
 let wheel_drives_y = Transform::remap(Axis::Wheel, Axis::Y); // the wheel drives Y
 let side_key = Transform::remap(Button::new(4), Key::A);     // the fifth button types 'A'`}</code></pre>
       </DocSection>
-      <DocSection id="transform-key" title="TransformKey" caption="The (source, dest) pair an entry is filed under">
+      <DocSection id="transform-key" title="TransformKey" caption="(source, dest) pair an entry is filed under">
         <pre class="api-signature">struct TransformKey {'{'} source: LockTarget, dest: LockTarget {'}'}</pre>
         <p>
           What <A href="/library/types/structs#transform"><code>Transform::key</code></A> returns, and
@@ -898,7 +898,7 @@ let side_key = Transform::remap(Button::new(4), Key::A);     // the fifth button
           place, keeping its position in the table.
         </p>
       </DocSection>
-      <DocSection id="transforms" title="Transforms" caption="The transform table, read back">
+      <DocSection id="transforms" title="Transforms" caption="Transform table, read back">
         <pre class="api-signature">struct Transforms {'{'} table_full: bool, entries: Vec&lt;Transform&gt; {'}'}</pre>
         <p>
           What <A href="/library/transform#query-transforms"><code>query_transforms</code></A>{' '}
@@ -923,7 +923,7 @@ for t in &table.entries {
     println!("  {:?} {:?} -> {:?}", t.op, t.source, t.dest);
 }`}</code></pre>
       </DocSection>
-      <DocSection id="imperfect-status" title="ImperfectStatus" caption="The imperfect-clone state">
+      <DocSection id="imperfect-status" title="ImperfectStatus" caption="Imperfect-clone state">
         <p>
           The imperfect-clone state from{' '}
           <A href="/library/options#query-imperfect"><code>query_imperfect()</code></A>.
@@ -1003,7 +1003,7 @@ for t in &table.entries {
           </table>
         </div>
       </DocSection>
-      <DocSection id="port-info" title="PortInfo" caption="A discovered serial port">
+      <DocSection id="port-info" title="PortInfo" caption="Discovered serial port">
         <p>
           A serial port that looks like a Medius box, from{' '}
           <A href="/library/connection#open"><code>find_medius()</code></A>.{' '}
@@ -1078,7 +1078,7 @@ for t in &table.entries {
         </p>
       </DocSection>
 
-      <DocSection id="clip-settings" title="ClipSettings" caption="A clip's persistent config, read back">
+      <DocSection id="clip-settings" title="ClipSettings" caption="Persistent clip config, read back">
         <p>
           A clip's configuration from{' '}
           <A href="/library/requests#clip-config"><code>ClipHandle::query_config()</code></A>: the
@@ -1284,7 +1284,7 @@ handle.bind_packet(&held)?;`}</code></pre>
           </table>
         </div>
       </DocSection>
-      <DocSection id="setup" title="Setup" caption="The eight-byte USB setup packet">
+      <DocSection id="setup" title="Setup" caption="Eight-byte USB setup packet">
         <pre class="api-signature">struct Setup {'{'} request_type: u8, request: u8, value: u16, index: u16, length: u16 {'}'}</pre>
         <p>
           What a <A href="/library/advanced/transfer#transfer"><code>transfer</code></A> carries. It
@@ -1323,7 +1323,7 @@ let setup = Setup::new(0x80, 0x06, 0x0100, 0x0000, 18);
 assert!(setup.is_in());
 assert_eq!(setup.to_bytes(), [0x80, 0x06, 0x00, 0x01, 0x00, 0x00, 0x12, 0x00]);`}</code></pre>
       </DocSection>
-      <DocSection id="transfer-outcome" title="TransferOutcome" caption="The device's reply: status and any IN data">
+      <DocSection id="transfer-outcome" title="TransferOutcome" caption="Device reply: status and any IN data">
         <pre class="api-signature">struct TransferOutcome {'{'} status: TransferStatus, data: Vec&lt;u8&gt; {'}'}</pre>
         <p>
           What <A href="/library/advanced/transfer#transfer"><code>transfer</code></A> returns. A
@@ -1350,7 +1350,7 @@ assert_eq!(setup.to_bytes(), [0x80, 0x06, 0x00, 0x01, 0x00, 0x00, 0x12, 0x00]);`
           </table>
         </div>
       </DocSection>
-      <DocSection id="rewrite-rule" title="RewriteRule" caption="The rule set_rewrite installs">
+      <DocSection id="rewrite-rule" title="RewriteRule" caption="Rule set_rewrite installs">
         <pre class="api-signature">fn new(class: RewriteClass, id: u16, direction: Direction, action: RewriteAction) -&gt; RewriteRule</pre>
         <pre class="api-signature">fn matching(self, match_bytes: impl Into&lt;Vec&lt;u8&gt;&gt;, mask: impl Into&lt;Vec&lt;u8&gt;&gt;) -&gt; RewriteRule</pre>
         <pre class="api-signature">fn at_offset(self, offset: u16) -&gt; RewriteRule</pre>
@@ -1377,7 +1377,7 @@ assert_eq!(setup.to_bytes(), [0x80, 0x06, 0x00, 0x01, 0x00, 0x00, 0x12, 0x00]);`
           </table>
         </div>
       </DocSection>
-      <DocSection id="rewrite-table" title="RewriteTable" caption="The rewrite table, read back">
+      <DocSection id="rewrite-table" title="RewriteTable" caption="Rewrite table, read back">
         <pre class="api-signature">struct RewriteTable {'{'} table_full: bool, generation: u8, entries: Vec&lt;RewriteEntry&gt; {'}'}</pre>
         <p>
           What <A href="/library/advanced/rewrite#query-rewrite"><code>query_rewrite</code></A>{' '}
@@ -1425,7 +1425,7 @@ assert_eq!(setup.to_bytes(), [0x80, 0x06, 0x00, 0x01, 0x00, 0x00, 0x12, 0x00]);`
           </table>
         </div>
       </DocSection>
-      <DocSection id="patch" title="Patch" caption="The descriptor overwrite set_patch stores">
+      <DocSection id="patch" title="Patch" caption="Descriptor overwrite set_patch stores">
         <pre class="api-signature">fn new(section: PatchSection, offset: u16, bytes: impl Into&lt;Vec&lt;u8&gt;&gt;) -&gt; Patch</pre>
         <pre class="api-signature">fn in_config(cfg: u8, offset: u16, bytes: impl Into&lt;Vec&lt;u8&gt;&gt;) -&gt; Patch</pre>
         <pre class="api-signature">fn in_interface(cfg: u8, interface: u8, offset: u16, bytes: impl Into&lt;Vec&lt;u8&gt;&gt;) -&gt; Patch</pre>
@@ -1450,7 +1450,7 @@ assert_eq!(setup.to_bytes(), [0x80, 0x06, 0x00, 0x01, 0x00, 0x00, 0x12, 0x00]);`
           </table>
         </div>
       </DocSection>
-      <DocSection id="patch-set" title="PatchSet" caption="The stored patch set and its apply state">
+      <DocSection id="patch-set" title="PatchSet" caption="Stored patch set and its apply state">
         <pre class="api-signature">struct PatchSet {'{'} applied: bool, pending: bool, refused: bool, table_full: bool, entries: Vec&lt;PatchEntry&gt; {'}'}</pre>
         <p>
           What <A href="/library/advanced/patch#query-patches"><code>query_patches</code></A>{' '}

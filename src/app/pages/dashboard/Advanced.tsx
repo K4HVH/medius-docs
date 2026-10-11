@@ -274,8 +274,8 @@ const ManualFlash = () => {
                     <>
                       <p class="state">
                         <span class="dot ok" />
-                        The {CHIP_NAME[chip()]} runs MAKCU's firmware. Now the {CHIP_NAME[OTHER[chip()]]}: the box passes nothing until both
-                        match.
+                        The {CHIP_NAME[chip()]} runs MAKCU's firmware. Flash the {CHIP_NAME[OTHER[chip()]]} next: the box does nothing until
+                        both chips match.
                       </p>
                       <div class="acts">
                         <Button
@@ -386,11 +386,11 @@ const ManualFlash = () => {
                       {(c) => (
                         <>
                           <p class="mut">
-                            MAKCU {c().build.id}, the official build, with the {CHIP_NAME[chip()]}'s bootloader, from MAKCU's signed catalog.
+                            MAKCU {c().build.id}, the official build.
                           </p>
                           <div class="callout callout--info">
-                            This erases the whole chip, settings included. Once both chips have it, the box runs MAKCU's firmware, which this
-                            dashboard can't talk to. Set up puts Medius back.
+                            This erases the chip, settings included. With MAKCU's firmware on both chips, this dashboard can't talk to the
+                            box. Set up puts Medius back.
                           </div>
                         </>
                       )}
@@ -474,7 +474,7 @@ const ManualFlash = () => {
                         )}
                       </Show>
                       <Show when={source() === 'stock' && native.wrongChip()?.sure === false}>
-                        <p>An earlier stock flash of the wrong chip leaves that mark. If this is the {CHIP_NAME[chip()]}, flash it as one.</p>
+                        <p>That happens when this chip got the other chip's stock firmware before. If this is the {CHIP_NAME[chip()]}, flash it anyway.</p>
                         <div class="acts">
                           <Button
                             variant="secondary"

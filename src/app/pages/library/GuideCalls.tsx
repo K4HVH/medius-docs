@@ -14,7 +14,7 @@ const GuideCalls: Component = () => {
 
         <div class="table-scroll">
           <table class="api-params">
-            <thead><tr><th>Badge</th><th>What the call does</th></tr></thead>
+            <thead><tr><th>Badge</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><span class="api-badge api-badge--executed">Fire-and-forget</span></td><td>Writes one frame, returns once the bytes are out, no reply.</td></tr>
               <tr><td><span class="api-badge api-badge--responded">Blocks</span></td><td>Sends a <A href="/native/commands/requests#requests"><code>QUERY</code></A> and waits for the correlated <A href="/native/commands/requests#resp"><code>RESP</code></A>.</td></tr>

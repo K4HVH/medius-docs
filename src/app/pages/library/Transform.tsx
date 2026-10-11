@@ -70,7 +70,7 @@ device.transform(&Transform::swap(Axis::X, Axis::Y))?;      // X and Y exchanged
 device.transform(&Transform::remap(Axis::Wheel, Axis::Y))?; // the wheel drives vertical motion`}</code></pre>
       </DocSection>
 
-      <DocSection id="helpers" title="transform_swap / transform_remap" caption="The two transforms, one call each">
+      <DocSection id="helpers" title="transform_swap / transform_remap" caption="Two transforms, one call each">
         <pre class="api-signature">fn transform_swap(&self, a: Axis, b: Axis) -&gt; Result&lt;()&gt;</pre>
         <pre class="api-signature">fn transform_remap(&self, source: impl Into&lt;LockTarget&gt;, dest: impl Into&lt;LockTarget&gt;) -&gt; Result&lt;()&gt;</pre>
         <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
@@ -123,7 +123,7 @@ for t in &table.entries {
       </DocSection>
 
 
-      <DocSection id="async" title="On AsyncDevice" caption="the transforms fire, query_transforms awaits">
+      <DocSection id="async" title="On AsyncDevice" caption="Transforms fire; query_transforms awaits">
         <p>
           Transforms carry no opt-in check, so <A href="/library/features/async"><code>AsyncDevice</code></A>{' '}
           keeps every setter synchronous; only <code>query_transforms</code> is a future.

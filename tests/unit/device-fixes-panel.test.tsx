@@ -98,7 +98,7 @@ describe('DeviceFixes', () => {
   it('sends a device over capacity on firmware before v3.4.4 to Update, with nothing to allow', () => {
     setup({ fw: '3.4.3' });
     const { container, getByRole, queryByRole } = render(() => <DeviceFixes />);
-    expect(container.textContent).toContain('On firmware before v3.4.4');
+    expect(container.textContent).toContain('Update the box first');
     expect(queryByRole('button', { name: 'Allow imperfect' })).toBeNull();
     expect(getByRole('button', { name: 'Allow imperfect anyway' })).toBeTruthy();
     fireEvent.click(getByRole('button', { name: 'Update' }));
@@ -248,7 +248,7 @@ describe('DeviceFixes', () => {
     link.queryImperfect = async () => ({ allowed: false, overCapacity: false, cloneImperfect: false });
     const { container, getByRole } = render(() => <DeviceFixes />);
     fireEvent.click(getByRole('button', { name: 'Allow imperfect' }));
-    await waitFor(() => expect(container.textContent).toContain('The device changed'), { timeout: 3000 });
+    await waitFor(() => expect(container.textContent).toContain('A different device is plugged in now'), { timeout: 3000 });
     expect(box.writes).toEqual([]);
   });
 

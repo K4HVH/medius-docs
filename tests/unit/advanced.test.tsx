@@ -550,7 +550,7 @@ describe("MAKCU's stock firmware on the Manual tab", () => {
     await pickStock(r);
     await waitFor(() => expect(r.container.textContent).toContain('MAKCU v4.094'));
     expect(() => field(r, 'Image')).toThrow();
-    expect(r.container.textContent).toMatch(/erases the whole chip/i);
+    expect(r.container.textContent).toMatch(/erases the chip, settings included/i);
   });
 
   it("flashes MAKCU's package with the picked chip's bootloader, then asks for the other chip", async () => {

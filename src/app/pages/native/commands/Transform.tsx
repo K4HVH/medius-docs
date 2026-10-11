@@ -76,7 +76,7 @@ const Transform: Component = () => {
           </table>
         </div>
 
-        <Anchor id="weighing" label="WITH A SCALE">
+        <Anchor id="weighing" label="SCALED">
           <p>
             The <A href="/native/commands/lock#scale">weigh</A> runs first and the transform moves
             what it kept. The rounding remainder is banked once, per axis and sign, by the lock.
@@ -182,7 +182,7 @@ const Transform: Component = () => {
         </div>
       </DocSection>
 
-      <DocSection id="cross" title="Button to key or media" caption="The one remap that crosses collections">
+      <DocSection id="cross" title="Button to key or media" caption="Remap across collections">
         <p>
           A button source can drive a keyboard or Consumer destination, emitted through that
           collection's interface as <A href="/native/commands/inject#key"><code>INJECT</code></A>{' '}

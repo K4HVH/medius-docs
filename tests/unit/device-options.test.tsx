@@ -118,7 +118,7 @@ describe('DeviceOptions', () => {
 
   it('links each option to its section of the Guide', async () => {
     const { container, findByText } = render(() => <DeviceOptions />);
-    await findByText('Each axis is weighed against its bearing.');
+    await findByText('X and Y are compared with the injected direction separately.');
     for (const id of ['box-name', 'imperfect-clone', 'movement-riding', 'bearing', 'render', 'spread', 'emit-rate']) {
       const link = container.querySelector(`[id="${id}"] > .ph a.fix`);
       expect(link?.getAttribute('href'), id).toBe(`/guide/options#${id}`);
@@ -131,7 +131,7 @@ describe('DeviceOptions', () => {
 
   it('has every place a link names, under the title the link names it by', async () => {
     const { container, findByText } = render(() => <DeviceOptions />);
-    await findByText('Each axis is weighed against its bearing.');
+    await findByText('X and Y are compared with the injected direction separately.');
     for (const [id, title] of Object.entries(OPTION_PLACES)) {
       if (id === 'options') continue;
       const el = container.querySelector(`[id="${id}"]`);
@@ -145,21 +145,21 @@ describe('DeviceOptions', () => {
   // statement about the box you are looking at.
   it('describes only the selected bearing geometry', async () => {
     const { container, queryByText, findByText } = render(() => <DeviceOptions />);
-    await findByText('Each axis is weighed against its bearing.');
+    await findByText('X and Y are compared with the injected direction separately.');
     expect(queryByText(/along the injected vector is weighed/)).toBeNull();
 
     fireEvent.click(container.querySelector('[role="radio"][data-v="1"]')!);
     await settle();
-    await findByText(/along the injected vector is weighed/);
-    expect(queryByText('Each axis is weighed against its bearing.')).toBeNull();
+    await findByText('Only your movement along the injected direction is scaled.');
+    expect(queryByText('X and Y are compared with the injected direction separately.')).toBeNull();
   });
 
   it('describes only the selected emit mode', async () => {
     mock.emit = { mode: EmitMode.Fixed, fixedHz: 500, resolvedHz: 500 };
     const { queryByText, findByText } = render(() => <DeviceOptions />);
-    await findByText('Pins the rate to the number you pick.');
-    expect(queryByText("Matches native report rate.")).toBeNull();
-    expect(queryByText('Follows the declared poll rate.')).toBeNull();
+    await findByText('The rate you pick.');
+    expect(queryByText("Your mouse's report rate, measured as you move it.")).toBeNull();
+    expect(queryByText('The rate the clone declares.')).toBeNull();
   });
 
   // Emit rate was the only control that offered Revert, so a pending bearing or riding edit looked
@@ -181,9 +181,9 @@ describe('DeviceOptions', () => {
   it('describes only the selected texture, and only the setting in force', async () => {
     mock.render = { mode: RenderMode.Despiked, full: true, ready: true };
     const { queryByText, findByText } = render(() => <DeviceOptions />);
-    await findByText('Native texture, ramped onset.');
-    expect(queryByText('Even fill at the paced rate.')).toBeNull();
-    await findByText('Both go through the model as one stream.');
+    await findByText('The original smoother, with the first report flattened.');
+    expect(queryByText('An even stream at the Emit rate.')).toBeNull();
+    await findByText("Your mouse's movement and injected movement go through the model as one stream.");
     expect(queryByText("Native motion is relayed untouched.")).toBeNull();
   });
 
@@ -192,7 +192,7 @@ describe('DeviceOptions', () => {
   it('does not claim the mouse own motion is rendered while the mode is off', async () => {
     mock.render = { mode: RenderMode.Off, full: true, ready: true };
     const { queryByText, findByText } = render(() => <DeviceOptions />);
-    await findByText('Renders nothing while the mode is off.');
+    await findByText('Nothing is rendered while Render is off.');
     await findByText('Native motion relayed');
     expect(queryByText('Native motion rendered')).toBeNull();
   });
@@ -210,8 +210,8 @@ describe('DeviceOptions', () => {
   it('describes only the selected spread, and shows the interval in force', async () => {
     mock.spread = { percent: 50, spanUs: 4000 };
     const { queryByText, findByText } = render(() => <DeviceOptions />);
-    await findByText('Injected motion over half the command interval.');
-    expect(queryByText('Injected motion on one report.')).toBeNull();
+    await findByText('Over half the time until the next command.');
+    expect(queryByText('Each command whole, on the next report.')).toBeNull();
     await findByText('Half · 4.0 ms');
   });
 
@@ -236,7 +236,7 @@ describe('DeviceOptions', () => {
   it('shows no interval chip at all with spreading off', async () => {
     mock.spread = { percent: 0, spanUs: 0 };
     const { container, queryByText, findByText } = render(() => <DeviceOptions />);
-    await findByText('Injected motion on one report.');
+    await findByText('Each command whole, on the next report.');
     expect(queryByText('Waiting for injection')).toBeNull();
     // Scoped to this section: the riding and bearing chips carry the same "Name . N ms" shape.
     expect(container.querySelector('#spread')!.textContent).not.toMatch(/ ms/);
@@ -254,7 +254,7 @@ describe('DeviceOptions', () => {
 
     mock.render = { mode: RenderMode.Despiked, full: false, ready: true };
     const armed = render(() => <DeviceOptions />);
-    await armed.findByText('Native texture, ramped onset.');
+    await armed.findByText('The original smoother, with the first report flattened.');
     expect(armed.queryByText('Move the mouse to start')).toBeNull();
   });
 
@@ -262,7 +262,7 @@ describe('DeviceOptions', () => {
   it('does not ask for a profile while the renderer is off', async () => {
     mock.render = { mode: RenderMode.Off, full: false, ready: false };
     const { queryByText, findByText } = render(() => <DeviceOptions />);
-    await findByText('Even fill at the paced rate.');
+    await findByText('An even stream at the Emit rate.');
     expect(queryByText('Move the mouse to start')).toBeNull();
   });
 

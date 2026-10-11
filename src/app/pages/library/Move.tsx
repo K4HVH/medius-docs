@@ -223,7 +223,7 @@ device.move_rel_now(100, 0)?;  // emits either way`}</code></pre>
         <div class="api-response-label">EFFECT</div>
         <div class="table-scroll">
           <table class="api-params">
-            <thead><tr><th>Accumulator</th><th>What flush does</th></tr></thead>
+            <thead><tr><th>Accumulator</th><th>After flush</th></tr></thead>
             <tbody>
               <tr><td>Riding</td><td>Emptied into the immediate accumulator, regardless of the ride window. Sends no motion itself.</td></tr>
               <tr><td>Immediate</td><td>Gains that amount, sent on the box's next mouse report.</td></tr>
@@ -243,7 +243,7 @@ device.flush_motion()?;       // 40 counts, now`}</code></pre>
         <div class="api-response-label">EFFECT</div>
         <div class="table-scroll">
           <table class="api-params">
-            <thead><tr><th>State</th><th>What discard does</th></tr></thead>
+            <thead><tr><th>State</th><th>After discard</th></tr></thead>
             <tbody>
               <tr><td>Riding accumulator</td><td>Zeroed; never reaches the game PC.</td></tr>
               <tr><td>Immediate accumulator</td><td>Untouched, so a move sent with <code>MoveTiming::Now</code> still lands.</td></tr>

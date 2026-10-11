@@ -74,7 +74,7 @@ const Types: Component = () => {
           </p>
           <div class="table-scroll">
             <table class="api-params">
-              <thead><tr><th>Member</th><th>Value</th><th>Aliases</th><th>On an axis or wheel</th><th>On a button or key</th><th>On a traffic-class filter</th></tr></thead>
+              <thead><tr><th>Member</th><th>Value</th><th>Aliases</th><th>Axis or wheel</th><th>Button or key</th><th>Traffic-class filter</th></tr></thead>
               <tbody>
                 <tr><td><code>BOTH</code></td><td><code>0</code></td><td>-</td><td>both signs; on a scale, a full pass to the relative pair</td><td>press and release</td><td>both directions</td></tr>
                 <tr><td><code>POSITIVE</code></td><td><code>1</code></td><td><code>PRESS</code> · <code>IN</code></td><td>+x / +y / wheel-up only</td><td>the press edge</td><td>IN, device to PC</td></tr>
@@ -137,7 +137,7 @@ const Types: Component = () => {
         <Anchor id="blanket" label="Blanket">
           <div class="table-scroll">
             <table class="api-params">
-              <thead><tr><th>Member</th><th>Value</th><th>Class</th><th>What direction picks</th></tr></thead>
+              <thead><tr><th>Member</th><th>Value</th><th>Class</th><th>Direction</th></tr></thead>
               <tbody>
                 <tr><td><code>AIM</code></td><td><code>0</code></td><td>the X and Y cursor axes</td><td>a sign, on each axis</td></tr>
                 <tr><td><code>WHEEL</code></td><td><code>1</code></td><td>the wheel</td><td>a sign</td></tr>

@@ -108,7 +108,7 @@ device.reset()?;`}</code></pre>
         </p>
       </DocSection>
 
-      <DocSection id="release" title="Releasing the device" caption="Drop it; no close() call">
+      <DocSection id="release" title="Releasing the device" caption="Drop the handle; no close() call">
         <p>
           Dropping the last{' '}
           <A href="/library/guides/connection#threading"><code>Arc</code>-backed handle</A> runs its{' '}
@@ -118,7 +118,7 @@ device.reset()?;`}</code></pre>
         <div class="table-scroll">
           <table class="api-params">
             <thead>
-              <tr><th>Step</th><th>What drop does</th></tr>
+              <tr><th>Step</th><th>Effect</th></tr>
             </thead>
             <tbody>
               <tr><td>Signal</td><td>Sets the stop flag the reader and keepalive threads watch.</td></tr>

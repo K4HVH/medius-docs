@@ -34,7 +34,7 @@ device.reset()?;                // back to passthrough`}</code></pre>
         <div class="table-scroll">
           <table class="api-params">
             <thead>
-              <tr><th>State</th><th>What reset does</th></tr>
+              <tr><th>State</th><th>After reset</th></tr>
             </thead>
             <tbody>
               <tr>

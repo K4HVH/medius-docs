@@ -113,7 +113,7 @@ kbd_box.press(Key::A)?;`}</code></pre>
 let device = Device::find_where(|b| b.device.as_ref().is_some_and(|d| d.vid == 0x046D))?;`}</code></pre>
       </DocSection>
 
-      <DocSection id="identity" title="Identity & reconnect" caption="The same physical box, across replugs">
+      <DocSection id="identity" title="Identity & reconnect" caption="Same physical box across replugs">
         <p>
           A box's identity is its device chip's base MAC (
           <A href="/library/types/structs#version"><code>Version::mac_hex</code></A>) plus the CH343{' '}
@@ -127,7 +127,7 @@ let device = Device::find_where(|b| b.device.as_ref().is_some_and(|d| d.vid == 0
         </p>
       </DocSection>
 
-      <DocSection id="async" title="On AsyncDevice" caption="The same discovery, awaitable device_info">
+      <DocSection id="async" title="On AsyncDevice" caption="Same discovery, awaitable device_info">
         <pre class="api-signature">fn AsyncDevice::list() -&gt; Vec&lt;BoxInfo&gt;</pre>
         <pre class="api-signature">fn AsyncDevice::open_by_id(id: &amp;str) -&gt; Result&lt;AsyncDevice&gt;</pre>
         <pre class="api-signature">fn AsyncDevice::find_mouse_box() -&gt; Result&lt;AsyncDevice&gt;</pre>

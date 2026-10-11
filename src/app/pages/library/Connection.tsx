@@ -107,7 +107,7 @@ println!("keepalive cadence: {:?}", DEFAULT_KEEPALIVE_CADENCE); // 500ms
 println!("speaks protocol:   {}", PROTO_VER);                   // 9`}</code></pre>
       </DocSection>
 
-      <DocSection id="async" title="Async device" caption="The same link, with awaitable queries">
+      <DocSection id="async" title="Async device" caption="Same link, awaitable queries">
         <pre class="api-signature">fn AsyncDevice::open(path: impl AsRef&lt;Path&gt;) -&gt; Result&lt;AsyncDevice&gt;</pre>
         <p><span class="api-badge api-badge--responded">Blocks</span></p>
         <pre class="api-signature">fn AsyncDevice::find() -&gt; Result&lt;AsyncDevice&gt;</pre>

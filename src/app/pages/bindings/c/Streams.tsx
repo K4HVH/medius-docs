@@ -354,7 +354,7 @@ while (medius_event_stream_recv(events, &ev) == MEDIUS_STATUS_OK) {
 medius_timeline_free(tl);`}</code></pre>
       </DocSection>
 
-      <DocSection id="async" title="No async" caption="Build it on the non-blocking reads">
+      <DocSection id="async" title="No async" caption="Build async on the non-blocking reads">
         <div class="callout callout--warning">
           <p>
             The <A href="/bindings/c">C ABI</A> is synchronous, with no <A href="/library/features/async">async</A> API.

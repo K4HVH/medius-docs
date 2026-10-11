@@ -36,7 +36,7 @@ let device = Device::with_mock(mock.clone());
 // \`device\` drives the fake; \`mock\` still scripts and observes it.`}</code></pre>
       </DocSection>
 
-      <DocSection id="wrap" title="Wrapping it in a Device" caption="with_mock and open_mock">
+      <DocSection id="wrap" title="Device wrapper" caption="with_mock and open_mock">
         <pre class="api-signature">fn with_mock(mock: MockBox) -&gt; Device</pre>
         <p><span class="api-badge api-badge--executed">No round-trip</span></p>
         <pre class="api-signature">fn open_mock(mock: MockBox) -&gt; Result&lt;Device&gt;</pre>

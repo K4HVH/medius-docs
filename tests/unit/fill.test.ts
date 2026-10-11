@@ -161,9 +161,9 @@ describe('fillPage on the soft pages', () => {
     const html = (await fillPage('/guide/compatibility', COMPAT, { ...SOURCES, stats }, new Map()))!;
     expect(html).not.toContain('Seed row');
     expect(html).toMatch(
-      /<tr id="device-wooting-60he"><td>Wooting 60HE\+ <span class="vp">31e3:1322<\/span><\/td><td>Keyboard<\/td><td><span class="status ok">Supported<\/span><\/td><td><div class="ni"><span>Needs imperfect clone<\/span> <a href="\/dashboard#imperfect-clone" class="fix">Options<svg[^]*?<\/svg><\/a><\/div><\/td><td class="v">v3\.4\.4<\/td><td class="num">45<\/td><\/tr>/,
+      /<tr id="device-wooting-60he"><td>Wooting 60HE\+ <span class="vp">31e3:1322<\/span><\/td><td>Keyboard<\/td><td><span class="status ok">Supported<\/span><\/td><td><div class="ni"><span>Needs Imperfect clone<\/span> <a href="\/dashboard#imperfect-clone" class="fix">Options<svg[^]*?<\/svg><\/a><\/div><\/td><td class="v">v3\.4\.4<\/td><td class="num">45<\/td><\/tr>/,
     );
-    expect(html).toContain('<td><div class="ni"><span>Needs imperfect clone</span> <a href="/dashboard#imperfect-clone" class="fix">Options<svg');
+    expect(html).toContain('<td><div class="ni"><span>Needs Imperfect clone</span> <a href="/dashboard#imperfect-clone" class="fix">Options<svg');
     expect(await fillPage('/guide/compatibility', COMPAT, { ...SOURCES, stats: async () => null }, new Map())).toBe(COMPAT);
     const unnamed = async () => ({ ...(await SOURCES.stats())!, devices: { unique: 1, byKind: [], top: [{ vid: 0x3837, pid: 0x100a, kind: 2, product: null, boxes: 3 }] } });
     const once = (await fillPage('/guide/compatibility', COMPAT, { ...SOURCES, stats: unnamed }, new Map()))!;
@@ -191,7 +191,7 @@ describe('the Devices page in Markdown', () => {
     const stats = async () => ({ ...(await SOURCES.stats())!, devices: { unique: 2, byKind: [], top } });
     const md = (await fillMarkdown('/guide/compatibility', { ...SOURCES, stats }, new Map(), BUILT))!;
     expect(md).not.toContain('Seed row');
-    expect(md).toContain('| Wooting 60HE+ 31e3:1322 | Keyboard | Supported | Needs imperfect clone [Options](/dashboard.md#imperfect-clone) | v3.4.4 | 45 |');
+    expect(md).toContain('| Wooting 60HE+ 31e3:1322 | Keyboard | Supported | Needs Imperfect clone [Options](/dashboard.md#imperfect-clone) | v3.4.4 | 45 |');
     expect(md).toContain('| 3837:100a |');
     expect(md).toContain('## Limits\n\nKept.');
     expect(md.startsWith('<!-- Source: https://medius.k4tech.net/guide/compatibility -->\n# Devices\n\n| Device | Kind |')).toBe(true);

@@ -59,7 +59,7 @@ fn logs_reach_the_stream() {
 }`}</code></pre>
       </DocSection>
 
-      <DocSection id="mock-async" title="Testing async code" caption="A MockBox behind an AsyncDevice">
+      <DocSection id="mock-async" title="Testing async code" caption="MockBox behind an AsyncDevice">
         <p>
           Mock an <code>AsyncDevice</code> with <code>Device::with_mock</code> then{' '}
           <A href="/library/features/async"><code>into_async</code></A>;{' '}

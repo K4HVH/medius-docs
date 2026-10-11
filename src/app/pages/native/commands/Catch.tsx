@@ -473,7 +473,7 @@ const Catch: Component = () => {
         </p>
         <div class="table-scroll">
           <table class="api-params">
-            <thead><tr><th>A HID endpoint's device sends</th><th>Events</th></tr></thead>
+            <thead><tr><th>Device sends</th><th>Events</th></tr></thead>
             <tbody>
               <tr><td>a report it ends with a zero-length packet</td><td>one event carrying the report's bytes, b1 set: the PC's read ends only at the packet</td></tr>
               <tr><td>a zero-length packet alone, its answer to a poll it had nothing for</td><td>one event of no bytes, b1 set, in <code>HID_IN</code> as it came and in <code>EMIT</code> as the PC took it</td></tr>

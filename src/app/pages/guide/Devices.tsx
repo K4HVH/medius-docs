@@ -111,7 +111,7 @@ const Devices: Component = () => {
               <tr>
                 <td>Box capacity</td>
                 <td class="v">4 IN endpoints in use at once, 6 HID interfaces</td>
-                <td>A device over either limit, or with a vendor bulk or isochronous endpoint, needs imperfect clone</td>
+                <td>A device over either limit, or with a vendor bulk or isochronous endpoint, needs Imperfect clone</td>
               </tr>
               <tr><td>Devices</td><td class="v">1 per box</td><td>A receiver carrying a mouse and a keyboard counts as 1</td></tr>
               <tr><td>USB speed</td><td class="v">Full speed</td><td>High-speed devices run at full speed through the box</td></tr>
@@ -132,7 +132,7 @@ const Devices: Component = () => {
             <tbody>
               <tr>
                 <td>Logitech G PRO X2 SUPERSTRIKE, and Logitech devices stuck at 125 Hz</td>
-                <td>Imperfect clone on, wire rate forced to 1000 Hz</td>
+                <td>Imperfect clone on, Wire rate forced to 1000 Hz</td>
                 <td>
                   <div class="ni">
                     <FixLink href="/dashboard#imperfect-clone">Imperfect clone</FixLink>

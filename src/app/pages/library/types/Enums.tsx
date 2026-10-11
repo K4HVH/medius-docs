@@ -11,7 +11,7 @@ const Enums: Component = () => {
           Each is tied to a wire byte; conversion helpers are listed with the type.
         </p>
       </PageHeader>
-      <DocSection id="device-kind" title="DeviceKind" caption="The cloned device's primary kind">
+      <DocSection id="device-kind" title="DeviceKind" caption="Cloned device's primary kind">
         <pre class="api-signature">enum DeviceKind {'{'} Unknown, Keyboard, Mouse {'}'}</pre>
         <p>
           The <code>kind</code> field of a{' '}
@@ -65,7 +65,7 @@ const Enums: Component = () => {
           </table>
         </div>
       </DocSection>
-      <DocSection id="class" title="Class" caption="The class of a momentary usage">
+      <DocSection id="class" title="Class" caption="Class of a momentary usage">
         <pre class="api-signature">enum Class {'{'} Button, Key, Media {'}'}</pre>
         <p>
           The class byte of a <A href="/library/types/structs#usage"><code>Usage</code></A>, shared by{' '}
@@ -156,7 +156,7 @@ let trace = device.catch_events([
 ])?;`}</code></pre>
       </DocSection>
 
-      <DocSection id="traffic-class" title="TrafficClass" caption="The byte-oriented half of the address space">
+      <DocSection id="traffic-class" title="TrafficClass" caption="Byte-oriented half of the address space">
         <pre class="api-signature">enum TrafficClass {'{'} HidIn, HidOut, VendorInterrupt, VendorBulk, Control, Emit, Bus, ClipTransfer {'}'}</pre>
         <p>
           The eight packet-carrying classes, at their{' '}
@@ -190,7 +190,7 @@ let trace = device.catch_events([
         </p>
       </DocSection>
 
-      <DocSection id="motion" title="Motion" caption="A relative axis for move_axis">
+      <DocSection id="motion" title="Motion" caption="Relative axis for move_axis">
         <pre class="api-signature">enum Motion {'{'} Cursor {'{'} dx: i16, dy: i16 {'}'}, Wheel(i16), Pan(i16) {'}'}</pre>
         <p>
           What <A href="/library/move#move"><code>move_axis</code></A> drives. Both span the full{' '}
@@ -242,7 +242,7 @@ let trace = device.catch_events([
           </table>
         </div>
       </DocSection>
-      <DocSection id="axis" title="Axis" caption="A single relative axis">
+      <DocSection id="axis" title="Axis" caption="Single relative axis">
         <pre class="api-signature">enum Axis {'{'} X, Y, Wheel, Pan {'}'}</pre>
         <p>
           A <A href="/library/lock#lock-axis"><code>lock_axis</code></A> or{' '}
@@ -300,7 +300,7 @@ let trace = device.catch_events([
           </table>
         </div>
       </DocSection>
-      <DocSection id="render-mode" title="RenderMode" caption="The texture the box renders motion with">
+      <DocSection id="render-mode" title="RenderMode" caption="Texture the box renders motion with">
         <pre class="api-signature">enum RenderMode {'{'} Off, Stock, Despiked, Unsmoothed {'}'}</pre>
         <p>
           Passed to <A href="/library/options#set-render"><code>set_render</code></A> and returned in{' '}
@@ -416,7 +416,7 @@ let trace = device.catch_events([
         </p>
         <div class="table-scroll">
           <table class="api-params">
-            <thead><tr><th>Variant</th><th>Byte</th><th>On an axis</th><th>On a button or key</th><th>On a traffic class</th></tr></thead>
+            <thead><tr><th>Variant</th><th>Byte</th><th>Axis</th><th>Button or key</th><th>Traffic class</th></tr></thead>
             <tbody>
               <tr><td><code>Both</code></td><td><code>0</code></td><td>both signs; on a scale, a full pass to the relative pair</td><td>press and release</td><td>IN and OUT</td></tr>
               <tr><td><code>Positive</code></td><td><code>1</code></td><td><code>+</code></td><td>press</td><td>IN: device to PC</td></tr>
@@ -475,7 +475,7 @@ let trace = device.catch_events([
           <A href="/library/options#set-bearing"><code>set_bearing</code></A>.
         </p>
       </DocSection>
-      <DocSection id="blanket" title="Blanket" caption="A whole-group lock selector">
+      <DocSection id="blanket" title="Blanket" caption="Whole-group lock selector">
         <pre class="api-signature">enum Blanket {'{'} Aim, Wheel, Buttons, Keys, Media {'}'}</pre>
         <p>
           A whole input group: which one <A href="/library/lock#lock-all"><code>scale_all</code></A> /{' '}
@@ -484,7 +484,7 @@ let trace = device.catch_events([
         </p>
         <div class="table-scroll">
           <table class="api-params">
-            <thead><tr><th>Variant</th><th>Meaning</th><th>What direction picks</th></tr></thead>
+            <thead><tr><th>Variant</th><th>Meaning</th><th>Direction</th></tr></thead>
             <tbody>
               <tr><td><code>Aim</code></td><td>The X and Y cursor axes.</td><td>A sign on each axis, or the relative pair, which is how <code>Vector</code> mode is addressed.</td></tr>
               <tr><td><code>Wheel</code></td><td>The wheel.</td><td>A sign.</td></tr>

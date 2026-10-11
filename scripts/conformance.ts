@@ -265,7 +265,7 @@ for (const f of files) {
       const last = cs[cs.length - 1];
       const head = heads[cs.length - 1] ?? '';
       if (!last || last.length < 25) continue;
-      if (!/^(Description|Meaning|Effect|Notes?|What the box does|Reports as|Why)$/i.test(head))
+      if (!/^(Description|Meaning|Effect|Notes?|Box action|Reports as|Why)$/i.test(head))
         continue;
       const key = `${f}::${t[1]}`;
       cellsByPage.set(key, [
