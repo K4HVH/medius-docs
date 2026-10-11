@@ -11,9 +11,15 @@ export const MAKCU_KEY = '2fc038fdabd2a997cbb80c056da05edf81ea49ddde247d5a8b8fa0
 // The newest repair flash this page performs: the one the toolkit had at 1.13.4.
 const TOOLKIT = [1, 13, 4];
 const CATALOG_MAX = 2 * 1024 * 1024;
-const CATALOG_MS = 10_000;
-const FILE_MS = 30_000;
+// Inside Bun's 10 s for a request: both addresses for the catalog, then a file.
+const CATALOG_MS = 4_000;
+const FILE_MS = 8_000;
+// The catalog and each file checked, kept in memory this long: requests that come together share a read.
 const FRESH_MS = 60_000;
+const FAILED_MS = 10_000;
+// Requests an address may make in a window, so the relay can't be turned on makcu.com.
+const SHARE = 30;
+const SHARE_MS = 10 * 60_000;
 const AGENT = 'medius-dashboard (+https://medius.k4tech.net)';
 
 export interface StockFile {
@@ -22,9 +28,10 @@ export interface StockFile {
   sha256: string;
 }
 
-// MAKCU's notes aren't passed on: they are MAKCU's words about MAKCU's firmware.
+// Nothing but the build's id is passed on from the catalog's text, and only in its "v4.094" shape: the
+// rest (notes, labels) are MAKCU's words about MAKCU's firmware.
 export interface StockOffer {
-  build: StockFile & { id: string; label: string };
+  build: StockFile & { id: string };
   usb1: StockFile;
   usb3: StockFile;
 }
@@ -48,8 +55,7 @@ const newer = (a: number[], b: number[]) => {
   for (let i = 0; i < Math.max(a.length, b.length); i++) if ((a[i] ?? 0) !== (b[i] ?? 0)) return (a[i] ?? 0) > (b[i] ?? 0);
   return false;
 };
-// A build id as the catalog numbers builds: "v4.094" is 4094.
-const buildNumber = (id: string) => Number(id.replace(/^v/, '').replace('.', ''));
+const BUILD_ID = /^v\d+\.\d{3}$/;
 
 export function checkCatalog(text: string, key = MAKCU_KEY): StockOffer | { error: string } {
   let body: Uint8Array;
@@ -71,24 +77,22 @@ export function checkCatalog(text: string, key = MAKCU_KEY): StockOffer | { erro
   if (!official) return { error: "MAKCU's catalog marks no build official" };
   if (official.withdrawn) return { error: "MAKCU's official build is withdrawn" };
   const file = entry(official, 1000, 1048576);
-  if (!file || typeof official.id !== 'string') return { error: "MAKCU's official build has a malformed entry" };
+  if (!file || typeof official.id !== 'string' || !BUILD_ID.test(official.id)) return { error: "MAKCU's official build has a malformed entry" };
 
   const rom = doc.repair_rom;
   if (!isDoc(rom)) return { error: "MAKCU's catalog has no repair flash" };
   if (typeof rom.min_toolkit === 'string' && newer(dotted(rom.min_toolkit), TOOLKIT))
-    return { error: `MAKCU's repair flash needs toolkit ${rom.min_toolkit}, newer than the one this page follows` };
+    return { error: "MAKCU's repair flash needs a newer toolkit than the one this page follows" };
   const usb1 = entry(rom.usb1, 24, 16384);
   const usb3 = entry(rom.usb3, 24, 16384);
   if (!usb1 || !usb3) return { error: "MAKCU's repair bootloaders have malformed entries" };
+  // As the toolkit reads it: the listed builds, and every signed build numbered pair_min or later.
   const listed = Array.isArray(rom.pairs) && rom.pairs.includes(official.id);
-  const fromMin = typeof rom.pair_min === 'string' && buildNumber(official.id) >= buildNumber(rom.pair_min);
+  const fromMin =
+    typeof rom.pair_min === 'number' && typeof official.version === 'number' && official.version >= rom.pair_min && typeof official.signature === 'string';
   if (!listed && !fromMin) return { error: `MAKCU's repair bootloaders don't pair with the official build ${official.id}` };
 
-  return {
-    build: { ...file, id: official.id, label: typeof official.label === 'string' ? official.label : official.id },
-    usb1,
-    usb3,
-  };
+  return { build: { ...file, id: official.id }, usb1, usb3 };
 }
 
 const u32 = (b: Uint8Array, o: number) => (b[o] | (b[o + 1] << 8) | (b[o + 2] << 16) | (b[o + 3] << 24)) >>> 0;
@@ -206,17 +210,26 @@ async function capped(res: Response, max: number): Promise<Uint8Array<ArrayBuffe
 }
 
 type Read = { offer: StockOffer; root: string } | { error: string };
+type Got = { bytes: Uint8Array<ArrayBuffer> } | { error: string };
 
 const json = (status: number, body: unknown) =>
   new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json', 'cache-control': 'no-store' } });
 
+// `ip`: the address a request came from, which the server gives; without one nothing is limited.
 export function createStock(deps: StockDeps = { fetch: (u, i) => fetch(u, i), now: Date.now, key: MAKCU_KEY }) {
-  let kept: { at: number; read: Read } | null = null;
-  let inflight: Promise<Read> | null = null;
-  const get = (url: string, ms: number) => deps.fetch(url, { headers: { 'user-agent': AGENT, 'cache-control': 'no-cache' }, signal: AbortSignal.timeout(ms), redirect: 'error' });
+  let kept: { at: number; read: Promise<Read> } | null = null;
+  const files = new Map<string, { at: number; got: Promise<Got> }>();
+  const shares = new Map<string, { from: number; n: number }>();
+
+  // An https answer only, redirects included.
+  const get = async (url: string, ms: number) => {
+    const res = await deps.fetch(url, { headers: { 'user-agent': AGENT, 'cache-control': 'no-cache' }, signal: AbortSignal.timeout(ms), redirect: 'follow' });
+    if (res.url && !res.url.startsWith('https://')) throw new Error('left https');
+    return res;
+  };
 
   const readCatalog = async (): Promise<Read> => {
-    let reason = "MAKCU's catalog couldn't be reached";
+    let failed: Read = { error: "MAKCU's catalog couldn't be reached" };
     for (const root of ROOTS) {
       try {
         const res = await get(`${root}/firmware/catalog.json`, CATALOG_MS);
@@ -226,37 +239,34 @@ export function createStock(deps: StockDeps = { fetch: (u, i) => fetch(u, i), no
         }
         const bytes = await capped(res, CATALOG_MAX);
         if (!bytes) {
-          reason = "MAKCU's catalog is larger than this page reads";
+          failed = { error: "MAKCU's catalog is larger than this page reads" };
           continue;
         }
         const offer = checkCatalog(new TextDecoder().decode(bytes), deps.key);
-        return 'error' in offer ? offer : { offer, root };
+        if (!('error' in offer)) return { offer, root };
+        // The other address may hold a good one: the toolkit tries it too.
+        failed = offer;
       } catch {
         // the next address
       }
     }
-    return { error: reason };
+    return failed;
   };
 
+  // A failed read is kept 10 s, not the minute a good one is.
   const catalog = (): Promise<Read> => {
-    if (kept && deps.now() - kept.at < FRESH_MS) return Promise.resolve(kept.read);
-    return (inflight ??= readCatalog()
-      .then((read) => {
-        kept = { at: deps.now(), read };
-        return read;
-      })
-      .finally(() => {
-        inflight = null;
-      }));
+    if (!kept || deps.now() - kept.at >= FRESH_MS) {
+      const k = { at: deps.now(), read: readCatalog() };
+      void k.read.then((r) => {
+        if ('error' in r) k.at -= FRESH_MS - FAILED_MS;
+      });
+      kept = k;
+    }
+    return kept.read;
   };
 
-  const file = async (name: string): Promise<Response> => {
-    const read = await catalog();
-    if ('error' in read) return json(502, { error: read.error });
-    const { offer, root } = read;
-    const which = name === offer.build.file ? 'package' : name === offer.usb1.file ? 'usb1' : name === offer.usb3.file ? 'usb3' : null;
-    if (!which) return json(404, { error: 'Not a file the catalog lists' });
-    const want = which === 'package' ? offer.build : offer[which];
+  const readFile = async (root: string, want: StockFile, check: (b: Uint8Array) => string | null): Promise<Got> => {
+    const name = want.file;
     let bytes: Uint8Array<ArrayBuffer> | null;
     try {
       const res = await get(`${root}/firmware/${name}`, FILE_MS);
@@ -264,29 +274,60 @@ export function createStock(deps: StockDeps = { fetch: (u, i) => fetch(u, i), no
     } catch {
       bytes = null;
     }
-    if (!bytes) return json(502, { error: `${name} couldn't be read from MAKCU` });
+    if (!bytes) return { error: `${name} couldn't be read from MAKCU` };
     if (bytes.length !== want.size || createHash('sha256').update(bytes).digest('hex') !== want.sha256)
-      return json(502, { error: `${name} doesn't match MAKCU's signed catalog` });
-    const why = which === 'package' ? checkPackage(bytes) : checkBoot(bytes, which === 'usb1' ? 1 : 2);
-    if (why) return json(502, { error: `${name}: ${why}` });
-    return new Response(bytes, {
-      headers: { 'content-type': 'application/octet-stream', 'content-length': String(bytes.length), 'cache-control': 'no-store' },
-    });
+      return { error: `${name} doesn't match MAKCU's signed catalog` };
+    const why = check(bytes);
+    return why ? { error: `${name}: ${why}` } : { bytes };
   };
 
-  return async (req: Request): Promise<Response | null> => {
+  const file = async (name: string, head: boolean): Promise<Response> => {
+    const read = await catalog();
+    if ('error' in read) return json(502, { error: read.error });
+    const { offer, root } = read;
+    const which = name === offer.build.file ? 'package' : name === offer.usb1.file ? 'usb1' : name === offer.usb3.file ? 'usb3' : null;
+    if (!which) return json(404, { error: 'Not a file the catalog lists' });
+    const want = which === 'package' ? offer.build : offer[which];
+    const headers = { 'content-type': 'application/octet-stream', 'content-length': String(want.size), 'cache-control': 'no-store' };
+    if (head) return new Response(null, { headers });
+    const key = `${root}/${want.sha256}`;
+    let f = files.get(key);
+    if (!f || deps.now() - f.at >= FRESH_MS) {
+      for (const [k, v] of files) if (deps.now() - v.at >= FRESH_MS) files.delete(k);
+      f = { at: deps.now(), got: readFile(root, want, (b) => (which === 'package' ? checkPackage(b) : checkBoot(b, which === 'usb1' ? 1 : 2))) };
+      files.set(key, f);
+    }
+    const got = await f.got;
+    if ('error' in got) {
+      files.delete(key);
+      return json(502, { error: got.error });
+    }
+    return new Response(got.bytes, { headers });
+  };
+
+  const allowed = (ip: string | undefined) => {
+    if (!ip) return true;
+    const now = deps.now();
+    let s = shares.get(ip);
+    if (!s || now - s.from >= SHARE_MS) {
+      if (shares.size > 10_000) for (const [k, v] of shares) if (now - v.from >= SHARE_MS) shares.delete(k);
+      s = { from: now, n: 0 };
+      shares.set(ip, s);
+    }
+    return ++s.n <= SHARE;
+  };
+
+  return async (req: Request, ip?: string): Promise<Response | null> => {
     const path = new URL(req.url).pathname;
     if (path !== '/api/stock/catalog' && !path.startsWith('/api/stock/file/')) return null;
-    if (req.method !== 'GET' && req.method !== 'HEAD') return new Response('Use GET.', { status: 405 });
+    if (req.method !== 'GET' && req.method !== 'HEAD') return new Response('Use GET.', { status: 405, headers: { 'cache-control': 'no-store' } });
+    if (!allowed(ip)) return json(429, { error: 'Too many requests. Try again in a few minutes.' });
     if (path === '/api/stock/catalog') {
       const read = await catalog();
       if ('error' in read) return json(502, { error: read.error });
       const { build, usb1, usb3 } = read.offer;
-      return json(200, {
-        build: { id: build.id, label: build.label, size: build.size },
-        files: { package: build.file, usb1: usb1.file, usb3: usb3.file },
-      });
+      return json(200, { build: { id: build.id, size: build.size }, files: { package: build.file, usb1: usb1.file, usb3: usb3.file } });
     }
-    return file(path.slice('/api/stock/file/'.length));
+    return file(path.slice('/api/stock/file/'.length), req.method === 'HEAD');
   };
 }

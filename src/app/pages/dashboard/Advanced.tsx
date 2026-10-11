@@ -59,7 +59,7 @@ const ManualFlash = () => {
   const [kind, setKind] = createSignal<FlashKind>('factory');
   const [source, setSource] = createSignal<'release' | 'upload' | 'stock'>('release');
   // MAKCU's catalog, read once MAKCU stock is picked; the chips flashed with it on this visit.
-  const [stock] = createResource(() => source() === 'stock' || null, fetchStockCatalog);
+  const [stock, { refetch: readStock }] = createResource(() => source() === 'stock' || null, fetchStockCatalog);
   const stockBuild = () => {
     try {
       return stock() ?? null;
@@ -167,12 +167,17 @@ const ManualFlash = () => {
         ? !!image() && validationError() === null
         : !!asset() && !releases.loading;
 
+  // `anyway`: the chip the owner said to flash though MAKCU's bootloader on it names the other.
+  let anyway: FlashChip | null = null;
   const flash = async () => {
     setErr(null);
     setFileErr(null);
     native.clear();
     // Captured before the awaits so the image and its offset come from one reading.
     const target = { chip: chip(), kind: kind(), source: source() };
+    // The owner's say-so is for this attempt alone.
+    const told = anyway === target.chip;
+    anyway = null;
     setBusy(true);
     try {
       // ROM download over each chip's native USB: device chip on USB1, host chip on USB3, entered by
@@ -180,8 +185,17 @@ const ManualFlash = () => {
       const port = await requestRomPort();
       const cat = target.source === 'stock' ? stockBuild() : null;
       if (cat) {
-        const [pkg, boot] = await Promise.all([fetchStockFile(cat.files.package), fetchStockFile(cat.files[target.chip === 'device' ? 'usb1' : 'usb3'])]);
-        if (await native.flashStock(port, target.chip, pkg, boot, 'advanced')) {
+        let files: [Uint8Array, Uint8Array];
+        try {
+          files = await Promise.all([fetchStockFile(cat.files.package), fetchStockFile(cat.files[target.chip === 'device' ? 'usb1' : 'usb3'])]);
+        } catch (e) {
+          // MAKCU's official build may have changed since the catalog was read: show the one in force.
+          void readStock();
+          throw e;
+        }
+        const [pkg, boot] = files;
+        const knownMain = (mac: string) => boxes.entries().some((e) => e.key === mac);
+        if (await native.flashStock(port, target.chip, pkg, boot, 'advanced', { anyway: told, knownMain })) {
           setStocked((s) => new Set([...s, target.chip]));
           setDone(true);
           return;
@@ -200,7 +214,11 @@ const ManualFlash = () => {
         chip: target.chip,
         source: target.source === 'upload' ? 'file' : 'release',
       });
-      if (ok) setDone(true);
+      if (ok) {
+        // That chip runs Medius again.
+        setStocked((s) => new Set([...s].filter((c) => c !== target.chip)));
+        setDone(true);
+      }
       else setErr(native.error() ?? 'That did not finish.');
     } catch (e) {
       setErr(isUserCancel(e) ? 'No port was picked. Press Flash, then pick the box in the list.' : (e as Error).message);
@@ -275,8 +293,8 @@ const ManualFlash = () => {
                 >
                   <p class="state">
                     <span class="dot ok" />
-                    Both chips run MAKCU's firmware. Unplug the box for 10 s, then plug in USB1 and USB2. This dashboard can't talk to MAKCU's
-                    firmware; Set up puts Medius back.
+                    Both chips run MAKCU's firmware. Unplug the box for 10 s, then plug in USB1 and USB2, without the button. This dashboard
+                    can't talk to MAKCU's firmware; Set up puts Medius back.
                   </p>
                   <div class="acts">
                     <Button variant="primary" onClick={() => navigate('/dashboard/setup')}>
@@ -368,7 +386,7 @@ const ManualFlash = () => {
                       {(c) => (
                         <>
                           <p class="mut">
-                            MAKCU {c().build.label}, the official build, with the {CHIP_NAME[chip()]}'s bootloader, from MAKCU's signed catalog.
+                            MAKCU {c().build.id}, the official build, with the {CHIP_NAME[chip()]}'s bootloader, from MAKCU's signed catalog.
                           </p>
                           <div class="callout callout--info">
                             This erases the whole chip, settings included. Once both chips have it, the box runs MAKCU's firmware, which this
@@ -454,6 +472,21 @@ const ManualFlash = () => {
                             {msg()}
                           </div>
                         )}
+                      </Show>
+                      <Show when={source() === 'stock' && native.wrongChip()?.sure === false}>
+                        <p>An earlier stock flash of the wrong chip leaves that mark. If this is the {CHIP_NAME[chip()]}, flash it as one.</p>
+                        <div class="acts">
+                          <Button
+                            variant="secondary"
+                            disabled={busy()}
+                            onClick={() => {
+                              anyway = chip();
+                              void flash();
+                            }}
+                          >
+                            Flash it as the {CHIP_NAME[chip()]}
+                          </Button>
+                        </div>
                       </Show>
                     </>
                   }

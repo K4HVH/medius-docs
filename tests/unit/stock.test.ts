@@ -103,7 +103,7 @@ describe('checkCatalog', () => {
   it('names the official build and both bootloaders from a catalog signed with the key', () => {
     const offer = checkCatalog(signed(catalogDoc()), PUB);
     expect(offer).toMatchObject({
-      build: { id: 'v4.094', label: 'Release', file: 'makcu-update-v4.094.bin' },
+      build: { id: 'v4.094', file: 'makcu-update-v4.094.bin' },
       usb1: { file: 'boot-usb1-v4.041-r1118.bin' },
       usb3: { file: 'boot-usb3-v4.041-r1118.bin' },
     });
@@ -123,9 +123,23 @@ describe('checkCatalog', () => {
     expect(checkCatalog(signed(catalogDoc({}, { pairs: ['v4.085'] })), PUB)).toEqual({ error: expect.stringMatching(/pair/) });
   });
 
-  it('pairs the official build by pair_min when the list leaves it out', () => {
-    expect(checkCatalog(signed(catalogDoc({}, { pairs: [], pair_min: 'v4.090' })), PUB)).not.toHaveProperty('error');
-    expect(checkCatalog(signed(catalogDoc({}, { pairs: [], pair_min: 'v4.095' })), PUB)).toEqual({ error: expect.stringMatching(/pair/) });
+  it('pairs a signed official build from pair_min on, a number as MAKCU writes it, when the list leaves it out', () => {
+    const signedBuild = (version: number, sig = true): Doc[] => [
+      { id: 'v4.096', version, label: 'x', file: 'makcu-update-v4.096.bin', size: PKG.length, sha256: sha(PKG), official: true, ...(sig ? { signature: 'ab'.repeat(32) } : {}) },
+    ];
+    expect(checkCatalog(signed(catalogDoc({ builds: signedBuild(4096) }, { pairs: [], pair_min: 4090 })), PUB)).not.toHaveProperty('error');
+    expect(checkCatalog(signed(catalogDoc({ builds: signedBuild(4096) }, { pairs: [], pair_min: 4097 })), PUB)).toEqual({ error: expect.stringMatching(/pair/) });
+    expect(checkCatalog(signed(catalogDoc({ builds: signedBuild(4096, false) }, { pairs: [], pair_min: 4090 })), PUB)).toEqual({ error: expect.stringMatching(/pair/) });
+    expect(checkCatalog(signed(catalogDoc({ builds: signedBuild(4096) }, { pairs: [], pair_min: 'v4.090' })), PUB)).toEqual({ error: expect.stringMatching(/pair/) });
+  });
+
+  it('puts none of the catalog\'s free text in what it says', () => {
+    const odd = 'Visit example.com for a better build';
+    expect(checkCatalog(signed(catalogDoc({}, { min_toolkit: '9.0.0 ' + odd })), PUB)).toEqual({ error: expect.not.stringContaining('example') });
+    const named = (id: string) => [{ id, version: 4094, label: odd, file: 'makcu-update-v4.094.bin', size: PKG.length, sha256: sha(PKG), official: true }];
+    expect(checkCatalog(signed(catalogDoc({ builds: named(odd) })), PUB)).toEqual({ error: expect.not.stringContaining('example') });
+    const ok = checkCatalog(signed(catalogDoc({ builds: named('v4.094') })), PUB);
+    expect(JSON.stringify(ok)).not.toContain('example');
   });
 
   it('refuses a repair flash newer than the one this page knows', () => {
@@ -201,7 +215,7 @@ describe('the stock routes', () => {
     const stock = createStock(makcu(FILES()).deps);
     const cat = (await get(stock, '/api/stock/catalog'))!;
     expect(cat.status).toBe(200);
-    expect(await cat.json()).toMatchObject({ build: { id: 'v4.094' }, files: { package: 'makcu-update-v4.094.bin', usb1: 'boot-usb1-v4.041-r1118.bin' } });
+    expect(await cat.json()).toEqual({ build: { id: 'v4.094', size: PKG.length }, files: { package: 'makcu-update-v4.094.bin', usb1: 'boot-usb1-v4.041-r1118.bin', usb3: 'boot-usb3-v4.041-r1118.bin' } });
     for (const [name, bytes] of [['makcu-update-v4.094.bin', PKG], ['boot-usb3-v4.041-r1118.bin', USB3]] as const) {
       const res = (await get(stock, `/api/stock/file/${name}`))!;
       expect(res.status, name).toBe(200);
@@ -229,6 +243,57 @@ describe('the stock routes', () => {
     expect((await get(stock, '/api/stock/catalog'))!.status).toBe(200);
     expect(m.asked.some((u) => u.includes('sslip.io'))).toBe(true);
     expect((await get(stock, '/api/stock/file/boot-usb1-v4.041-r1118.bin'))!.status).toBe(200);
+  });
+
+  it('reads the fallback address when makcu.com answers with a catalog that fails its check', async () => {
+    const good = signed(catalogDoc());
+    const m = makcu({ ...FILES(), 'catalog.json': good });
+    const deps = { ...m.deps, fetch: async (url: string) => (url.startsWith('https://makcu.com/') && url.endsWith('catalog.json') ? new Response('<html>maintenance</html>') : m.deps.fetch(url)) };
+    expect((await get(createStock(deps), '/api/stock/catalog'))!.status).toBe(200);
+  });
+
+  it('reads each file from MAKCU once for the requests that come together, and keeps it a minute in memory', async () => {
+    const m = makcu(FILES());
+    const stock = createStock(m.deps);
+    const name = '/api/stock/file/makcu-update-v4.094.bin';
+    const all = await Promise.all(Array.from({ length: 20 }, () => get(stock, name)));
+    expect(all.every((r) => r!.status === 200)).toBe(true);
+    await get(stock, name);
+    expect(m.asked.filter((u) => u.endsWith('makcu-update-v4.094.bin'))).toHaveLength(1);
+    m.later(61_000);
+    await get(stock, name);
+    expect(m.asked.filter((u) => u.endsWith('makcu-update-v4.094.bin'))).toHaveLength(2);
+  });
+
+  it('tries the catalog again ten seconds after it failed, not a minute', async () => {
+    let up = false;
+    const m = makcu(FILES());
+    const deps = { ...m.deps, fetch: async (url: string) => (up ? m.deps.fetch(url) : Promise.reject(new TypeError('fetch failed'))) };
+    const stock = createStock(deps);
+    expect((await get(stock, '/api/stock/catalog'))!.status).toBe(502);
+    up = true;
+    m.later(5_000);
+    expect((await get(stock, '/api/stock/catalog'))!.status).toBe(502);
+    m.later(6_000);
+    expect((await get(stock, '/api/stock/catalog'))!.status).toBe(200);
+  });
+
+  it('answers HEAD from the catalog, reading no file', async () => {
+    const m = makcu(FILES());
+    const res = (await createStock(m.deps)(new Request('https://medius.k4tech.net/api/stock/file/makcu-update-v4.094.bin', { method: 'HEAD' })))!;
+    expect(res.status).toBe(200);
+    expect(res.headers.get('content-length')).toBe(String(PKG.length));
+    expect(m.asked.some((u) => u.endsWith('.bin'))).toBe(false);
+  });
+
+  it('answers 429 to an address past its share, and others as before', async () => {
+    const stock = createStock(makcu(FILES()).deps);
+    const from = (ip: string) => stock(new Request('https://medius.k4tech.net/api/stock/file/boot-usb1-v4.041-r1118.bin'), ip);
+    const answers = [];
+    for (let i = 0; i < 40; i++) answers.push((await from('203.0.113.7'))!.status);
+    expect(answers.slice(0, 30).every((s) => s === 200)).toBe(true);
+    expect(answers.at(-1)).toBe(429);
+    expect((await from('198.51.100.1'))!.status).toBe(200);
   });
 
   it('answers 502 with the reason for a catalog that fails its check, and for a file that does', async () => {

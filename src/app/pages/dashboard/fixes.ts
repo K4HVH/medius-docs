@@ -35,7 +35,7 @@ const before = (v: Version, major: number, minor: number, patch: number) =>
 export function offerFor(s: Signals): Offer | null {
   const { version, device, imperfect, emit, rate } = s;
   if (!version || !imperfect) return null;
-  // A device the box refused reads no ids, so this one rests on the box's own flags.
+  // A device the box refused reads no ids, so this one rests on the flags the box sets.
   if (!imperfect.allowed && (imperfect.overCapacity || imperfect.cloneImperfect))
     return { kind: 'imperfect', update: imperfect.overCapacity && before(version, 3, 4, 4) };
   if (!device || device.kind !== DEVICE_KIND_MOUSE) return null;
@@ -77,7 +77,8 @@ export type Outcome =
   | { kind: 'allowed' }
   | { kind: 'checking' }
   | { kind: 'refused' }
-  | { kind: 'silent' };
+  | { kind: 'silent' }
+  | { kind: 'changed' };
 
 const POLL_MS = 200;
 

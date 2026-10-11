@@ -4,24 +4,29 @@ import { PageHeader } from '../../shell/PageHeader';
 import { DocSection } from '../../shell/DocSection';
 import { Anchor } from '../../shell/Anchor';
 
-const PATH = `                                               control PC
-                                                    |  USB2: the software's commands
-                                                    v
-  mouse --USB3-->  mouse-side chip  <--link-->  main chip  --USB1-->  game PC
-
-                   shapes the motion            presents the clone
-                   Movement riding              Imperfect clone
-                   Bearing                      Wire rate
-                   Render                       Box name
-                   Spread
-                   Emit rate`;
+const PATH = `mouse
+  | USB3
+  v
+mouse-side chip
+  | shapes the motion:
+  | Movement riding, Bearing,
+  | Render, Spread, Emit rate
+  | link
+  v
+main chip <-USB2- control PC
+  | presents the clone:
+  | Imperfect clone,
+  | Wire rate, Box name
+  | USB1
+  v
+game PC`;
 
 // Each value of an option and what it does.
 const Values = (props: { rows: [string, JSX.Element][] }) => (
   <div class="table-scroll">
-    <table class="api-params names fixed">
+    <table class="api-params names fixed opts">
       <colgroup>
-        <col style={{ width: '26%' }} />
+        <col class="k" />
         <col />
       </colgroup>
       <thead><tr><th>Value</th><th>What it does</th></tr></thead>
@@ -30,18 +35,20 @@ const Values = (props: { rows: [string, JSX.Element][] }) => (
   </div>
 );
 
-// The default, when an owner changes it, and what it costs.
-const Facts = (props: { default: JSX.Element; when: JSX.Element; costs: JSX.Element }) => (
+// The default, when an owner changes it, what it costs, and anything else an owner meets.
+const Facts = (props: { default: JSX.Element; when: JSX.Element; costs: JSX.Element; more?: [string, JSX.Element][] }) => (
   <div class="table-scroll">
-    <table class="api-params names fixed">
+    <table class="api-params names fixed opts">
       <colgroup>
-        <col style={{ width: '26%' }} />
+        <col class="k" />
         <col />
       </colgroup>
+      <thead><tr><th>Item</th><th>Detail</th></tr></thead>
       <tbody>
         <tr><td>Default</td><td>{props.default}</td></tr>
         <tr><td>Change it when</td><td>{props.when}</td></tr>
         <tr><td>Costs</td><td>{props.costs}</td></tr>
+        {(props.more ?? []).map(([k, v]) => <tr><td>{k}</td><td>{v}</td></tr>)}
       </tbody>
     </table>
   </div>
@@ -59,13 +66,14 @@ const Options: Component = () => (
         clone's settings act on the main chip, which the game PC sees.
       </p>
       <pre class="diagram">{PATH}</pre>
+      <p>Before v3.4.2 the main chip shaped the motion too. Render and Spread came with v3.3.1.</p>
     </DocSection>
 
     <DocSection id="box-name" title="Box name">
       <p>The name the dashboard lists the box under, kept on the box.</p>
       <Values
         rows={[
-          ['A name', 'Up to 32 letters, numbers and symbols.'],
+          ['A name', 'Up to 32 plain letters, numbers and symbols. Accents and emoji are dropped.'],
           ['Clear', <>Back to <code>Medius-XXXX</code>, made from the box's MAC.</>],
         ]}
       />
@@ -80,18 +88,23 @@ const Options: Component = () => (
       <p>
         Lets the box clone a device it can't copy exactly. The box copies up to 4 IN endpoints in use at once and 6
         HID interfaces; a device past either, with a vendor bulk or isochronous endpoint, or a high-speed one,
-        needs this.
+        needs this. An endpoint numbered 7 or above is refused either way.
       </p>
       <Values
         rows={[
           ['Faithful only', 'A device past the box\'s limits is refused: no clone appears, and the device does nothing through the box.'],
-          ['Allow imperfect', 'Such a device is cloned with every IN endpoint live. Also needed for a forced Wire rate and for Control\'s Advanced tab.'],
+          ['Allow imperfect', 'Such a device is cloned with every IN endpoint live. A forced Wire rate needs it too, as does Control\'s Advanced tab.'],
         ]}
       />
       <Facts
         default="Faithful only"
         when={<>The dashboard offers it for the device you plug in, or <Fixes /> names the device.</>}
-        costs="The clone no longer matches the device byte for byte. Endpoints beyond the mouse's, keyboard's and media's share the box's remaining buffers, so a packet on one can go a poll late. Changing it with such a device plugged in restarts the box, which clones it again."
+        costs="For a device that needs it, the clone no longer matches the device byte for byte, and an endpoint past the mouse's, keyboard's and media's can go a poll late. A device that needs none is unaffected."
+        more={[
+          ['Restarts', 'Changing it with a device that needs it plugged in, or with a Wire rate forced, restarts the box, which clones the device again.'],
+          ['Turned off', 'Control\'s Advanced rewrites are cleared.'],
+          ['Firmware', 'v3.4.4 or later for a device with more than 4 IN endpoints in use. Before it, one of them goes unanswered, and Windows resets the clone.'],
+        ]}
       />
     </DocSection>
 
@@ -99,14 +112,15 @@ const Options: Component = () => (
       <p>Holds the software's motion until your mouse moves, and sends it on that report.</p>
       <Values
         rows={[
-          ['Off', 'Injected motion goes out on reports the box adds while your mouse is still.'],
+          ['Off', 'Injected motion joins your mouse\'s reports while it moves, and goes out on reports the box adds while it is still.'],
           ['On, with a window', 'Injected motion waits up to the window, 1 to 65535 ms, for a report from your mouse and rides it. Motion still waiting after the window is dropped.'],
         ]}
       />
       <Facts
         default="Off"
         when="Injected motion should add no reports, so the clone sends only as many as your mouse."
-        costs="Injected motion while your mouse is still does nothing, and motion past the window is lost. Rendered motion set to Injected and native leaves riding out."
+        costs="Injected motion while your mouse is still does nothing, and motion past the window is lost. A change drops motion waiting to ride, and the bearing."
+        more={[['With Rendered motion', 'Set to Injected and native, Rendered motion takes over and riding does not apply.']]}
       />
     </DocSection>
 
@@ -119,7 +133,7 @@ const Options: Component = () => (
         rows={[
           ['Window', 'How long, 1 to 65535 ms, the last injected direction stays the bearing. Off leaves With and Against doing nothing.'],
           ['Per axis', 'Each axis is weighed against the bearing on that axis.'],
-          ['Vector', 'Your motion along the injected direction is weighed, the rest left as it is.'],
+          ['Vector', 'Your motion along the injected direction is weighed, by the lower of the X and Y scales; the rest is left as it is.'],
         ]}
       />
       <Facts
@@ -136,16 +150,16 @@ const Options: Component = () => (
       </p>
       <Values
         rows={[
-          ['Off', 'An even fill: one report a frame while motion is waiting.'],
-          ['Stock', 'The model with the smoother it comes with, centred four samples back.'],
+          ['Off', 'An even fill at the paced rate (Emit rate) while motion is waiting.'],
+          ['Stock', 'The model with the smoother it comes with, centred four of your mouse\'s reports back.'],
           ['De-spiked', 'The model with the same smoother weighted towards the newest sample.'],
           ['Unsmoothed', 'The model fed the motion as it comes.'],
         ]}
       />
       <Facts
         default="De-spiked"
-        when="Rarely."
-        costs="The smoother's delay: Stock about four samples, De-spiked a third less, Unsmoothed none. After every restart the model needs your mouse to move before it renders; until then the even fill is used."
+        when="Rarely. Stock's first report of a movement carries more than the ones after it; De-spiked flattens it."
+        costs="The smoother's delay: Stock about four of your mouse's reports (4 ms at 1000 Hz), De-spiked a third less, Unsmoothed none. After every restart the model needs your mouse to move before it renders; until then the even fill is used."
       />
       <Anchor id="render-full" label="Rendered motion">
         <p>Whose motion goes through the model.</p>
@@ -157,8 +171,8 @@ const Options: Component = () => (
         />
         <Facts
           default="Injected only"
-          when="Rarely: both streams then share one pattern."
-          costs="Your mouse's motion gets the smoother's delay plus one frame, and Movement riding no longer applies."
+          when="Rarely: when your mouse's motion and the software's should go out as one pattern of reports."
+          costs="Your mouse's motion gets the smoother's delay plus 1 ms, and Movement riding no longer applies."
         />
       </Anchor>
     </DocSection>
@@ -177,31 +191,32 @@ const Options: Component = () => (
       />
       <Facts
         default="Full"
-        when="The delay matters more than the size of each report: lower it."
+        when="The delay matters more to you than how much motion one report carries."
         costs="Delay, half the time between commands on average: about 4 ms for commands 8 ms apart. The total is never changed, the wheel is never spread, and commands more than about 32 ms apart aren't."
       />
     </DocSection>
 
     <DocSection id="emit-rate" title="Emit rate">
-      <p>The most often the box sends the software's motion. It only sets a ceiling: nothing goes out unless motion is waiting.</p>
+      <p>Sets how often, at most, the box sends the software's motion. Nothing goes out unless motion is waiting.</p>
       <Values
         rows={[
-          ['Learned', 'Your mouse\'s report rate, learned as it moves.'],
-          ['Interval', 'The rate your mouse declares.'],
+          ['Learned', 'Your mouse\'s report rate, learned as it moves, so injected motion goes out no faster than your mouse reports.'],
+          ['Interval', 'The rate the clone declares: your mouse\'s, or a forced Wire rate.'],
           ['Fixed', 'A rate you pick, up to 1000 Hz, rounded to 1000 divided by a whole number.'],
+          ['Rendered', 'v3.3.0 alone: paced by the renderer, a mode withdrawn after that release.'],
         ]}
       />
       <Facts
         default="Learned"
         when="The software you run expects a set rate."
-        costs="Nothing on the clone. The box keeps running."
+        costs="Set above your mouse's rate, the box adds reports your mouse wouldn't send; set below it, injected motion goes out in fewer, larger reports."
       />
       <Anchor id="wire-rate" label="Wire rate">
         <p>The rate the clone declares to the game PC, and the rate the box polls your mouse at.</p>
         <Values
           rows={[
             ['Native', 'What your mouse declares.'],
-            ['Forced', 'A rate you pick, rounded up to one a PC keeps exactly: 1000, 500, 250, 125, 62, 31, 15 or 7 Hz. A low-speed device can\'t go above 62 Hz.'],
+            ['Forced', 'A rate you pick, set to one a PC keeps exactly: 1000, 500, 250, 125, 62, 31, 15 or 7 Hz (600 Hz becomes 500). A low-speed device can\'t go above 62 Hz.'],
           ]}
         />
         <Facts
