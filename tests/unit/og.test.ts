@@ -57,6 +57,18 @@ describe('drawCard', () => {
     expect((await handleOg(new Request('https://medius.k4tech.net/og/y.png'), one))!.status).toBe(200);
   });
 
+  it("never fails a new renderer's drawing when the one before it stops late", async () => {
+    await drawCard(lock);
+    const shared = (globalThis as Record<symbol, { worker?: { emit(e: string, v: unknown): boolean; terminate(): Promise<number> } }>)[
+      Symbol.for('medius.og.renderer')
+    ];
+    const old = shared.worker!;
+    old.emit('error', new Error('renderer crashed'));
+    const next = drawCard({ ...lock, title: 'After a crash' });
+    await old.terminate();
+    expect(size(await next)).toEqual({ w: 1200, h: 630 });
+  });
+
   it('draws a title holding characters the fonts lack', async () => {
     const png = await drawCard({ ...lock, title: 'Mouse 中文 Ж' });
     expect(size(png)).toEqual({ w: 1200, h: 630 });

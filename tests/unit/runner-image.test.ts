@@ -12,7 +12,8 @@ function runnerCopies(): string[] {
   return [...runner.matchAll(/^COPY --from=builder\S*(?:\s+--\S+)*\s+\/app\/(\S+)\s+\S+$/gm)].map((m) => m[1]);
 }
 
-// Every file and package serve.ts loads at run time. `import type` is erased by Bun, so it is skipped.
+// Every file and package serve.ts loads at run time: imports, and a file loaded by its address
+// (`new URL('./x.mjs', import.meta.url)`, a worker). `import type` is erased by Bun, so it is skipped.
 function runtimeGraph(): { files: string[]; packages: string[] } {
   const files = new Set<string>();
   const packages = new Set<string>();
@@ -20,8 +21,10 @@ function runtimeGraph(): { files: string[]; packages: string[] } {
     if (files.has(file)) return;
     files.add(file);
     const src = readFileSync(file, 'utf8');
-    for (const m of src.matchAll(/^\s*(?:import|export)\s+(?!type\b)[^'"]*?from\s+['"]([^'"]+)['"]|^\s*import\s+['"]([^'"]+)['"]|import\(\s*['"]([^'"]+)['"]\s*\)/gm)) {
-      const spec = m[1] ?? m[2] ?? m[3];
+    for (const m of src.matchAll(
+      /^\s*(?:import|export)\s+(?!type\b)[^'"]*?from\s+['"]([^'"]+)['"]|^\s*import\s+['"]([^'"]+)['"]|import\(\s*['"]([^'"]+)['"]\s*\)|new URL\(\s*['"](\.[^'"]+\.m?[jt]s)['"]\s*,\s*import\.meta\.url\s*\)/gm,
+    )) {
+      const spec = m[1] ?? m[2] ?? m[3] ?? m[4];
       if (spec.startsWith('.')) {
         const base = resolve(dirname(file), spec);
         const hit = [`${base}.ts`, `${base}.tsx`, base, join(base, 'index.ts')].find((p) => existsSync(p) && statSync(p).isFile());
@@ -40,6 +43,11 @@ describe('the production image', () => {
   const copies = runnerCopies();
   const covered = (path: string) => copies.some((c) => path === c || path.startsWith(c + '/'));
   const graph = runtimeGraph();
+
+  it('follows a file a module loads by its address, as the card renderer is', () => {
+    expect(graph.files).toContain('server/og-render.mjs');
+    expect(graph.packages).toContain('@resvg/resvg-wasm');
+  });
 
   it('copies every file serve.ts loads', () => {
     expect(graph.files.filter((f) => !covered(f))).toEqual([]);

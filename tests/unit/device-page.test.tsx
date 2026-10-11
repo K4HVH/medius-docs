@@ -95,6 +95,11 @@ describe('Device', () => {
     cleanup();
     mock.hash = '#log';
     expect(render(() => <Device />).container.textContent).not.toContain('Connect your box to reach');
+    for (const hash of ['#valueOf', '#toString', '#constructor', '#__proto__', '#hasOwnProperty']) {
+      cleanup();
+      mock.hash = hash;
+      expect(render(() => <Device />).container.textContent, hash).not.toContain('Connect your box to reach');
+    }
   });
 
   it('keeps the page in a browser without Web Serial, with the reason where Connect was', async () => {

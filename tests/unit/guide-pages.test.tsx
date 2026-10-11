@@ -167,7 +167,7 @@ describe('Guide pages', () => {
     const r = mount('/guide/compatibility', Devices);
     const row = () => [...r.container.querySelectorAll('.compat tbody tr')].find((t) => t.textContent!.includes('Razer Viper V3 Pro'))!;
     await waitFor(() => expect(row().lastElementChild!.textContent).toBe('5'));
-    expect(row().querySelector('td')!.textContent).toBe('Razer Viper V3 Pro1532:00c1');
+    expect(row().querySelector('td')!.textContent).toBe('Razer Viper V3 Pro 1532:00c1');
   });
 
   it('names a device the stats know only by its ids once', async () => {

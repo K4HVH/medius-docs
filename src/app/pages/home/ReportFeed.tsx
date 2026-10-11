@@ -22,6 +22,33 @@ export function ReportFeed(props: { frames: readonly FeedFrame[] }) {
   let tape: HTMLDivElement | undefined;
   let rows: HTMLDivElement | undefined;
 
+  // The stylesheet's spacing takes each character as wide as the font says. A browser that rounds
+  // characters up to whole pixels can still run the report past its column: there the type steps down
+  // until it fits.
+  const fit = () => {
+    if (!rows) return;
+    rows.style.removeProperty('font-size');
+    const report = rows.querySelector('.b')?.parentElement;
+    if (!report?.lastElementChild) return;
+    // At least a quarter pixel a step: rounding moves in whole pixels, so a smaller step can change nothing.
+    for (let i = 0; i < 12; i++) {
+      const column = report.getBoundingClientRect();
+      const over = report.lastElementChild.getBoundingClientRect().right - column.right;
+      if (over <= 0.5 || column.width <= 0) return;
+      const size = parseFloat(getComputedStyle(rows).fontSize);
+      rows.style.fontSize = `${Math.floor(Math.min(size - 0.25, size * (column.width / (column.width + over))) * 100) / 100}px`;
+    }
+  };
+
+  onMount(() => {
+    fit();
+    void document.fonts?.ready.then(fit);
+    if (typeof ResizeObserver === 'undefined' || !tape) return;
+    const ro = new ResizeObserver(fit);
+    ro.observe(tape);
+    onCleanup(() => ro.disconnect());
+  });
+
   onMount(() => {
     if (!n() || prefersReducedMotion() || !tape) return;
     let last = performance.now();

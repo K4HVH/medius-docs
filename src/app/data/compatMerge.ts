@@ -6,6 +6,11 @@ export interface CompatRow extends CompatEntry {
 }
 
 const KIND: Record<number, CompatEntry['kind']> = { 1: 'keyboard', 2: 'mouse' };
+
+const SETTING = /imperfect clone|forced to 1000 Hz/;
+// Where a note naming a setting links: the Options tab for the wire rate, else Imperfect clone.
+export const fixHref = (note?: string): string | null =>
+  note && SETTING.test(note) ? (/wire rate/.test(note) ? '/dashboard#options' : '/dashboard#imperfect-clone') : null;
 const hex = (n: number) => n.toString(16).padStart(4, '0');
 
 // The reports, plus every mouse and keyboard the stats saw cloned on at least minBoxes boxes. The stats

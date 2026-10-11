@@ -521,4 +521,29 @@ describe('dashboard poller', () => {
       dispose();
     });
   });
+
+  it('keeps reading after a reply lands once the link has gone, when the link comes back', async () => {
+    let release = () => {};
+    let reads = 0;
+    const link = {
+      queryHealth: () => {
+        reads++;
+        return new Promise((r) => (release = () => r({ linkUp: true })));
+      },
+    } as unknown as SerialLink;
+    await createRoot(async (dispose) => {
+      const [current, setCurrent] = createSignal<SerialLink | null>(link);
+      createPoller(current);
+      await settle();
+      expect(reads).toBe(1);
+      setCurrent(null);
+      release();
+      await settle();
+      setCurrent(link);
+      await settle();
+      await vi.advanceTimersByTimeAsync(KEEPALIVE_MS * 2);
+      expect(reads).toBeGreaterThan(1);
+      dispose();
+    });
+  });
 });

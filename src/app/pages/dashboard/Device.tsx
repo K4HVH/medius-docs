@@ -59,7 +59,8 @@ const Device = () => {
   // An option a link named (from the Guide or Help), which only a connected box shows.
   const asked = () => {
     try {
-      return OPTION_PLACES[decodeURIComponent(location.hash.slice(1))] ?? null;
+      const id = decodeURIComponent(location.hash.slice(1));
+      return Object.hasOwn(OPTION_PLACES, id) ? OPTION_PLACES[id] : null;
     } catch {
       return null;
     }

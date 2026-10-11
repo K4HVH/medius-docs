@@ -121,6 +121,31 @@ describe('ReportFeed', () => {
     expect((r.container.querySelector('.rows') as HTMLElement).getAttribute('style') ?? '').not.toMatch(/byte-gap|font-size/);
   });
 
+  it('steps its type down where a browser rounding characters up runs the report past its column', async () => {
+    const sheet = document.createElement('style');
+    sheet.textContent = '.rows { font-size: 12px; }';
+    document.head.appendChild(sheet);
+    onTestFinished(() => sheet.remove());
+    // Each character 8px at 12px type and in proportion below; the column 200px wide.
+    vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(function (this: Element) {
+      const size = parseFloat(getComputedStyle(this.closest('.rows') ?? this).fontSize) || 12;
+      if (this.querySelector(':scope > .b')) return { left: 0, right: 200, width: 200 } as DOMRect;
+      if (this.matches('.b')) {
+        const i = [...this.parentElement!.children].indexOf(this);
+        const right = (i + 1) * 2 * Math.ceil((8 * size) / 12);
+        return { left: right - 16, right, width: 16 } as DOMRect;
+      }
+      return { left: 0, right: 0, width: 0 } as DOMRect;
+    });
+    const wide = FRAMES.map((f) => (f.report ? { ...f, report: f.report.repeat(3), api: [...f.api, ...f.api, ...f.api] } : f));
+    const r = render(() => <ReportFeed frames={wide} />);
+    await new Promise((ok) => setTimeout(ok, 0));
+    const size = parseFloat((r.container.querySelector('.rows') as HTMLElement).style.fontSize);
+    vi.restoreAllMocks();
+    expect(size).toBeLessThan(12);
+    expect(15 * 2 * Math.ceil((8 * size) / 12)).toBeLessThanOrEqual(200.5);
+  });
+
   it('holds still while the pointer is over it', () => {
     vi.useFakeTimers({ toFake: ['requestAnimationFrame', 'cancelAnimationFrame', 'performance'] });
     vi.stubGlobal('matchMedia', (q: string) => ({ matches: false, media: q, addEventListener() {}, removeEventListener() {} }));
@@ -270,6 +295,18 @@ describe('DescriptorPanel', () => {
     expect(document.activeElement).toBe(tabs[4]);
     fireEvent.keyDown(tabs[4], { key: 'Home' });
     expect(document.activeElement).toBe(tabs[0]);
+  });
+
+  it('leaves a key held with Ctrl, Alt, Shift or Meta to the browser', () => {
+    const r = panel();
+    const first = r.container.querySelector<HTMLButtonElement>('[role="tab"]')!;
+    first.focus();
+    for (const mod of ['ctrlKey', 'altKey', 'shiftKey', 'metaKey']) {
+      const ev = new KeyboardEvent('keydown', { key: 'End', bubbles: true, cancelable: true, [mod]: true });
+      first.dispatchEvent(ev);
+      expect(ev.defaultPrevented, mod).toBe(false);
+      expect(first.getAttribute('aria-selected'), mod).toBe('true');
+    }
   });
 
   it('holds the panel on its tab while keyboard focus is inside it', () => {

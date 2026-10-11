@@ -44,11 +44,12 @@
 /* Copied opens under the bar, never over a tab. */
 .ptabs > .cl::after, .ptabs > .cl[data-side]::after { left: auto; right: 0; top: calc(100% + 18px); transform: translateY(-4px); }
 .ptabs > .cl[data-state]::after { transform: none; }
-/* A bar narrower than its tabs at full spacing sets them closer before it scrolls. */
+/* The tabs sit closer as the bar narrows, from 20px down to 10px a side, before it scrolls: the room left
+   by their letters (11px mono, 0.12em tracking, 0.04em spare for rounding) and the 32px icon, over the
+   sides that have padding. */
 .ptabs { container-type: inline-size; }
-@container (max-width: 760px) {
-  .ptabs [role="tab"] { padding-inline: 13px; }
-  .ptabs [role="tab"]:first-of-type { padding-left: 0; }
+.ptabs [role="tab"] {
+  padding-inline: clamp(10px, calc((100cqw - 33px - var(--tab-chars) * 0.76em) / (2 * var(--tab-n) - 1)), 20px);
 }
 .ptabs .ind {
   position: absolute; bottom: -1px; left: 0; height: 2px; width: 0; background: var(--accent);

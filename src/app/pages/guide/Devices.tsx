@@ -4,7 +4,7 @@ import { DocSection } from '../../shell/DocSection';
 import { Filter, FixLink } from '../../shell/Filter';
 import { prefersReducedMotion } from '../../shell/motion';
 import { COMPAT, KIND_LABEL, VERDICT_LABEL, VERDICT_TONE } from '../../data/compatibility';
-import { mergeCompat, withIds } from '../../data/compatMerge';
+import { fixHref, mergeCompat, withIds } from '../../data/compatMerge';
 import { LINKS } from '../../site';
 import { fetchStats } from '../../../dashboard/stats';
 import { matches } from '../../search/text';
@@ -12,7 +12,6 @@ import { CopyLink } from '../../shell/CopyLink';
 import { itemPath } from '../../items';
 
 // A note naming a setting links to where it is set.
-const SETTING = /imperfect clone|forced to 1000 Hz/;
 
 const Devices: Component = () => {
   // A failed load shows the reports alone.
@@ -61,16 +60,25 @@ const Devices: Component = () => {
                   <td>
                     {r.name}
                     <CopyLink id={r.id} label={r.name} to={itemPath('device', r.id.replace(/^device-/, ''))} />
-                    <Show when={r.vidpid !== r.name && r.vidpid}>{(vp) => <span class="vp">{vp()}</span>}</Show>
+                    <Show when={r.vidpid !== r.name && r.vidpid}>
+                      {(vp) => (
+                        <>
+                          {' '}
+                          <span class="vp">{vp()}</span>
+                        </>
+                      )}
+                    </Show>
                   </td>
                   <td>{KIND_LABEL[r.kind]}</td>
                   <td><span class={`status ${VERDICT_TONE[r.verdict]}`}>{VERDICT_LABEL[r.verdict]}</span></td>
                   <td>
-                    <Show when={r.note && SETTING.test(r.note)} fallback={r.note ?? ''}>
-                      <div class="ni">
-                        <span>{r.note}</span>
-                        <FixLink href={/wire rate/.test(r.note!) ? '/dashboard#options' : '/dashboard#imperfect-clone'}>Options</FixLink>
-                      </div>
+                    <Show when={fixHref(r.note)} fallback={r.note ?? ''}>
+                      {(href) => (
+                        <div class="ni">
+                          <span>{r.note}</span>{' '}
+                          <FixLink href={href()}>Options</FixLink>
+                        </div>
+                      )}
                     </Show>
                   </td>
                   <td class="v">{r.reported ?? ''}</td>
