@@ -3,6 +3,7 @@ import { beforeEach, expect, it } from 'vitest';
 import { handleDevicesApi } from '../../server/devices';
 import { handleStatsApi, resetStatsForTests } from '../../server/stats';
 import { COMPAT } from '../../src/app/data/compatibility';
+import { addressFor } from '../../src/app/routes';
 
 const SITE = 'https://medius.k4tech.net';
 
@@ -19,7 +20,7 @@ const device = (mac: string) =>
 const read = async () => {
   const r = await handleDevicesApi(new Request(`${SITE}/api/devices`));
   expect(r!.status).toBe(200);
-  return (await r!.json()) as { devices: { name: string; verdict: string; vidpid?: string; boxes?: number; reported?: string }[] };
+  return (await r!.json()) as { devices: { name: string; verdict: string; vidpid?: string; boxes?: number; reported?: string; url: string }[] };
 };
 
 beforeEach(() => resetStatsForTests({ path: ':memory:', now: () => Date.UTC(2026, 9, 7, 12) }));
@@ -43,4 +44,13 @@ it('leaves out a device only one box has', async () => {
 
 it('answers only its own path', async () => {
   expect(await handleDevicesApi(new Request(`${SITE}/api/other`))).toBeNull();
+});
+
+it("gives each device the address of its card on the Devices page", async () => {
+  const { devices } = await read();
+  const first = devices.find((d) => d.name === COMPAT[0]!.name)!;
+  const path = new URL(first.url).pathname;
+  expect(first.url.startsWith('https://medius.k4tech.net/guide/compatibility/')).toBe(true);
+  expect(addressFor(path)?.parent).toBe('/guide/compatibility');
+  expect(new Set(devices.map((d) => d.url)).size).toBe(devices.length);
 });
