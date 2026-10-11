@@ -3,13 +3,14 @@ import { crc32 } from 'node:zlib';
 import { canonical } from './stock/canon';
 
 // MAKCU's stock firmware for the Manual tab: read from MAKCU's signed catalog on request (makcu.com lets no
-// other site's page read it), checked as makcu-toolkit 1.13.4 checks it, and passed on unstored.
+// other site's page read it), checked as makcu-toolkit 1.15.20 checks it, and passed on unstored.
 
 const ROOTS = ['https://makcu.com/devinfo', 'https://makcu.15-204-2-173.sslip.io/devinfo'];
 // The catalog's signing key, as makcu-toolkit carries it.
 export const MAKCU_KEY = '2fc038fdabd2a997cbb80c056da05edf81ea49ddde247d5a8b8fa099871812ca';
-// The newest repair flash this page performs: the one the toolkit had at 1.13.4.
-const TOOLKIT = [1, 13, 4];
+// The newest repair flash this page performs: the one the toolkit has at 1.15.20 (as at 1.13.4: erase, the
+// pair package at 0x4000, the port's bootloader at 0x0, the same image checks).
+const TOOLKIT = [1, 15, 20];
 const CATALOG_MAX = 2 * 1024 * 1024;
 // Inside Bun's 10 s for a request: both addresses for the catalog, then a file.
 const CATALOG_MS = 4_000;

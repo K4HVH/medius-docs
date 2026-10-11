@@ -142,8 +142,9 @@ describe('checkCatalog', () => {
     expect(JSON.stringify(ok)).not.toContain('example');
   });
 
-  it('refuses a repair flash newer than the one this page knows', () => {
+  it('refuses a repair flash newer than the one this page knows, and takes toolkit 1.15.20', () => {
     expect(checkCatalog(signed(catalogDoc({}, { min_toolkit: '1.16.0' })), PUB)).toEqual({ error: expect.stringMatching(/toolkit|flash/) });
+    expect(checkCatalog(signed(catalogDoc({}, { min_toolkit: '1.15.20' })), PUB)).not.toHaveProperty('error');
   });
 
   it('refuses a file name, size or hash that is not one', () => {
