@@ -970,7 +970,7 @@ const Requests: Component = () => {
         <p>
           <code>span_us</code> reads <code>0</code> while <code>percent</code> is <code>0</code>,
           while no command period has been learned, and while the box's two chips have not yet
-          agreed which holds the motion. In each case the whole delta goes out on the next report
+          agreed which holds the motion. In each case the whole delta is emitted on the next report
           the box emits.
         </p>
         <p>

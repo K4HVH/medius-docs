@@ -500,7 +500,7 @@ export class SerialLink {
     return this.send(encode(FrameType.Move, this.nextSeq(), movePanPayload(dpan, flags)));
   }
 
-  // Movement riding bypassed (§3.1, MV_F_NOW): the delta leaves on the next report.
+  // Movement riding bypassed (§3.1, MV_F_NOW): the delta is emitted on the next report.
   moveRelNow(dx: number, dy: number): Promise<void> {
     return this.moveRel(dx, dy, MV_F_NOW);
   }
@@ -1151,7 +1151,7 @@ export class SerialLink {
     try {
       await this.send(encode(FrameType.Update, this.nextSeq(), frame));
     } catch (e) {
-      // Nothing will answer a frame that never went out: end the wait now, or it times out unheard.
+      // Nothing will answer a frame that was never sent: end the wait now, or it times out unheard.
       wait.catch(() => undefined);
       this.updateWaiters.get(op)?.(null, e as Error);
       throw e;

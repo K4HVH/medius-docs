@@ -94,7 +94,7 @@ const Types: Component = () => {
             Only an axis has a bearing, so <code>WITH</code> or <code>AGAINST</code> on a lock
             anywhere else raises{' '}
             <A href="/bindings/python/types#errors"><code>RelativeDirectionError</code></A>. A media
-            usage has no edges: an edge named on one goes out, and reads back in{' '}
+            usage has no edges: an edge named on one is sent, and reads back in{' '}
             <A href="/bindings/python/types#locks"><code>Locks</code></A>, as <code>BOTH</code>.
           </p>
         </Anchor>
@@ -737,7 +737,7 @@ Capture.first(n)   # keep the first n bytes; first(0) is WHOLE`}</pre>
               <thead><tr><th>Member</th><th>Value</th><th>Meaning</th></tr></thead>
               <tbody>
                 <tr><td><code>RIDE</code></td><td><code>0</code></td><td>wait for a real cursor move to carry the delta (the default)</td></tr>
-                <tr><td><code>NOW</code></td><td><code>1</code></td><td>leave on the next mouse report the box sends, native or not, whatever <A href="/library/options#set-movement-riding">movement riding</A> is set to</td></tr>
+                <tr><td><code>NOW</code></td><td><code>1</code></td><td>emit on the next mouse report, native or not, whatever <A href="/library/options#set-movement-riding">movement riding</A> is set to</td></tr>
               </tbody>
             </table>
           </div>

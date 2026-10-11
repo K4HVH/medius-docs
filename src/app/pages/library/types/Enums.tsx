@@ -130,7 +130,7 @@ const Enums: Component = () => {
           The input classes are captured at the emission merge point, <em>before</em>{' '}
           <A href="/library/lock#lock">lock</A> suppression and{' '}
           <A href="/library/inject#inject">injection</A>, so a locked input still reports.{' '}
-          <code>Emit</code> is the far end of the same path: what the clone put on the wire.
+          <code>Emit</code> is the far end of the same path: what the clone emitted.
         </p>
         <pre class="diagram">{`real device --> [ merge point ] --> locks --> injection --> [ clone emits ] --> game PC
                        |                                           |
@@ -220,7 +220,7 @@ let trace = device.catch_events([
             <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>Ride</code></td><td><code>0x00</code></td><td>Wait for a real cursor move to carry this delta, as movement riding asks.</td></tr>
-              <tr><td><code>Now</code></td><td><code>0x01</code></td><td>Leave on the next mouse report the box sends, native or not, whatever movement riding is set to.</td></tr>
+              <tr><td><code>Now</code></td><td><code>0x01</code></td><td>Emit on the next mouse report, native or not, whatever movement riding is set to.</td></tr>
             </tbody>
           </table>
         </div>
@@ -427,7 +427,7 @@ let trace = device.catch_events([
           </table>
         </div>
         <p>
-          A media usage has no edges: an edge on one goes out, and reads back in{' '}
+          A media usage has no edges: an edge on one is sent, and reads back in{' '}
           <A href="/library/requests#query-locks"><code>query_locks</code></A>, as <code>Both</code>.
         </p>
         <p>

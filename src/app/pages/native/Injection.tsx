@@ -100,9 +100,9 @@ const Injection: Component = () => {
                 <td>
                   Sent motion and scroll not yet delivered to the PC. An ordinary{' '}
                   <A href="/native/commands/move#move"><code>MOVE</code></A>, cursor or wheel, adds in.
-                  Drains into outgoing reports, except with{' '}
+                  Drains into emitted reports, except with{' '}
                   <A href="/native/commands/option#move-ride">movement riding</A> on, where it waits
-                  for a native move to carry it.
+                  to ride a native move.
                 </td>
               </tr>
               <tr>
@@ -145,11 +145,11 @@ const Injection: Component = () => {
             <tbody>
               <tr>
                 <td>the mouse reported</td>
-                <td>Native movement plus the drained accumulator; buttons combine physical state and overrides.</td>
+                <td>Native motion plus the drained accumulator; buttons combine physical state and overrides.</td>
               </tr>
               <tr>
                 <td>the mouse was still, with motion pending</td>
-                <td>Only the drained accumulator, paced to native report rate (not every millisecond). With <A href="/native/commands/option#move-ride">movement riding</A> on, only motion that <A href="/native/commands/move#flags">bypassed riding</A> goes out this way.</td>
+                <td>Only the drained accumulator, paced to native report rate (not every millisecond). With <A href="/native/commands/option#move-ride">movement riding</A> on, only motion that <A href="/native/commands/move#flags">bypassed riding</A> is emitted this way.</td>
               </tr>
               <tr>
                 <td>an <A href="/native/commands/inject#inject"><code>INJECT</code></A> or <A href="/native/commands/admin#reset"><code>RESET</code></A> changed a usage</td>
@@ -159,11 +159,11 @@ const Injection: Component = () => {
           </table>
         </div>
         <p>
-          Otherwise the box sends nothing. A held usage is a single report (the edge), then
+          Otherwise the box emits nothing. A held usage is a single report (the edge), then
           silence until it changes.
         </p>
         <p>
-          The box's report goes on the first poll no native report can be ready for, so no native
+          The box's report is emitted on the first poll no native report can be ready for, so no native
           report moves to a later poll. A native report reaching the box first carries the box's motion
           and button changes.
         </p>

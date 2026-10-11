@@ -127,7 +127,7 @@ medius_device_free(dev);`}</code></pre>
       </DocSection>
 
       <DocSection id="lock" title="Locks" caption="Weigh physical input">
-        <p>See <A href="/library/lock">Lock</A>. A <A href="/bindings/c/types#lock-target"><code>MediusLockTarget</code></A> picks an axis or usage, <code>dir</code> takes a <A href="/bindings/c/types#direction"><code>MediusDirection</code></A> constant and <code>what</code> a <A href="/bindings/c/types#blanket"><code>MediusBlanket</code></A> one; anything else is <code>MEDIUS_STATUS_ERR_INVALID_ARG</code> and no frame goes out. Read the entries back with <A href="/bindings/c/api#inspectors"><code>medius_locks_scale_of</code></A> and <code>medius_locks_is_locked</code>.</p>
+        <p>See <A href="/library/lock">Lock</A>. A <A href="/bindings/c/types#lock-target"><code>MediusLockTarget</code></A> picks an axis or usage, <code>dir</code> takes a <A href="/bindings/c/types#direction"><code>MediusDirection</code></A> constant and <code>what</code> a <A href="/bindings/c/types#blanket"><code>MediusBlanket</code></A> one; anything else is <code>MEDIUS_STATUS_ERR_INVALID_ARG</code> and no frame is sent. Read the entries back with <A href="/bindings/c/api#inspectors"><code>medius_locks_scale_of</code></A> and <code>medius_locks_is_locked</code>.</p>
         <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Function</th><th>Does</th></tr></thead>

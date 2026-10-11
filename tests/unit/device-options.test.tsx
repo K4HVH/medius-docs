@@ -150,7 +150,7 @@ describe('DeviceOptions', () => {
 
     fireEvent.click(container.querySelector('[role="radio"][data-v="1"]')!);
     await settle();
-    await findByText('Only your movement along the injected direction is scaled.');
+    await findByText('Only native motion along the injected direction is scaled.');
     expect(queryByText('X and Y are compared with the injected direction separately.')).toBeNull();
   });
 
@@ -158,7 +158,7 @@ describe('DeviceOptions', () => {
     mock.emit = { mode: EmitMode.Fixed, fixedHz: 500, resolvedHz: 500 };
     const { queryByText, findByText } = render(() => <DeviceOptions />);
     await findByText('The rate you pick.');
-    expect(queryByText("Your mouse's report rate, measured as you move it.")).toBeNull();
+    expect(queryByText('The native report rate, measured as the mouse moves.')).toBeNull();
     expect(queryByText('The rate the clone declares.')).toBeNull();
   });
 
@@ -183,7 +183,7 @@ describe('DeviceOptions', () => {
     const { queryByText, findByText } = render(() => <DeviceOptions />);
     await findByText('The original smoother, ramped up over 8 ms.');
     expect(queryByText('An even stream at the Emit rate.')).toBeNull();
-    await findByText("Your mouse's movement and injected movement go through the model as one stream.");
+    await findByText('Native and injected motion are rendered as one stream.');
     expect(queryByText("Native motion is relayed untouched.")).toBeNull();
   });
 
@@ -210,8 +210,8 @@ describe('DeviceOptions', () => {
   it('describes only the selected spread, and shows the interval in force', async () => {
     mock.spread = { percent: 50, spanUs: 4000 };
     const { queryByText, findByText } = render(() => <DeviceOptions />);
-    await findByText('Over half the time until the next command.');
-    expect(queryByText('Each command whole, on the next report.')).toBeNull();
+    await findByText('Over half the command interval.');
+    expect(queryByText('The whole delta, emitted on the next report.')).toBeNull();
     await findByText('Half · 4.0 ms');
   });
 
@@ -236,7 +236,7 @@ describe('DeviceOptions', () => {
   it('shows no interval chip at all with spreading off', async () => {
     mock.spread = { percent: 0, spanUs: 0 };
     const { container, queryByText, findByText } = render(() => <DeviceOptions />);
-    await findByText('Each command whole, on the next report.');
+    await findByText('The whole delta, emitted on the next report.');
     expect(queryByText('Waiting for injection')).toBeNull();
     // Scoped to this section: the riding and bearing chips carry the same "Name . N ms" shape.
     expect(container.querySelector('#spread')!.textContent).not.toMatch(/ ms/);

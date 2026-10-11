@@ -256,7 +256,7 @@ const Types: Component = () => {
         <p>
           Only an axis has a bearing, so <code>WITH</code> or <code>AGAINST</code> on a lock
           anywhere else is <code>MEDIUS_STATUS_ERR_RELATIVE_DIRECTION</code>. A media usage has no
-          edges: an edge named on one goes out, and reads back in{' '}
+          edges: an edge named on one is sent, and reads back in{' '}
           <A href="/bindings/c/types#locks"><code>MediusLocks</code></A>, as{' '}
           <code>MEDIUS_DIRECTION_BOTH</code>.
         </p>
@@ -269,7 +269,7 @@ const Types: Component = () => {
           <table class="api-params">
             <thead><tr><th>Call</th><th>Comes back as</th></tr></thead>
             <tbody>
-              <tr><td>Any call returning a <A href="/bindings/c/types#errors"><code>MediusStatus</code></A></td><td><code>MEDIUS_STATUS_ERR_INVALID_ARG</code>; no frame goes out.</td></tr>
+              <tr><td>Any call returning a <A href="/bindings/c/types#errors"><code>MediusStatus</code></A></td><td><code>MEDIUS_STATUS_ERR_INVALID_ARG</code>; no frame is sent.</td></tr>
               <tr><td><code>medius_locks_scale_of</code></td><td>It names no entry, so <code>MEDIUS_LOCK_SCALE_PASS</code>.</td></tr>
               <tr><td><code>medius_locks_is_locked</code></td><td>Unlocked, for the same reason.</td></tr>
               <tr><td><code>medius_catch_filter_with_direction</code></td><td>Stored, then refused at subscribe time, where there is a status to carry it.</td></tr>
@@ -737,7 +737,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
             <thead><tr><th>Enumerator</th><th>Value</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>MEDIUS_MOVE_TIMING_RIDE</code></td><td><code>0</code></td><td>Wait for a real cursor move to carry the delta.</td></tr>
-              <tr><td><code>MEDIUS_MOVE_TIMING_NOW</code></td><td><code>1</code></td><td>Leave on the next mouse report the box sends, native or not, whatever movement riding is set to.</td></tr>
+              <tr><td><code>MEDIUS_MOVE_TIMING_NOW</code></td><td><code>1</code></td><td>Emit on the next mouse report, native or not, whatever movement riding is set to.</td></tr>
             </tbody>
           </table>
         </div>

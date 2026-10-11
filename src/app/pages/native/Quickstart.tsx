@@ -8,8 +8,8 @@ const Quickstart: Component = () => {
     <>
       <PageHeader>
         <p>
-          The box sits between a USB device and a PC. The device passes through while a program
-          injects over a USB-serial link: cursor and buttons for a mouse, keys and media for a
+          The box sits between a USB device and a PC. It clones the device and relays its reports while
+          a program injects over a USB-serial link: cursor and buttons for a mouse, keys and media for a
           keyboard.
         </p>
         <p>

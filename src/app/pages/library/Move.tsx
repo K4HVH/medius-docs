@@ -44,7 +44,7 @@ const Move: Component = () => {
             </thead>
             <tbody>
               <tr><td><code>motion</code></td><td><A href="/library/types/enums#motion"><code>Motion</code></A></td><td>Axis and delta: <code>Cursor {'{'} dx, dy {'}'}</code>, <code>Wheel(dz)</code>, or <code>Pan(dz)</code>.</td></tr>
-              <tr><td><code>timing</code></td><td><A href="/library/types/enums#move-timing"><code>MoveTiming</code></A></td><td>Wait for a real move, or leave on the next report.</td></tr>
+              <tr><td><code>timing</code></td><td><A href="/library/types/enums#move-timing"><code>MoveTiming</code></A></td><td>Wait for a real move, or emit on the next report.</td></tr>
               <tr><td><code>pending</code></td><td><A href="/library/types/enums#pending-motion"><code>PendingMotion</code></A></td><td>What happens to motion already held for a real move.</td></tr>
             </tbody>
           </table>
@@ -163,11 +163,11 @@ device.pan(-1)?;  // pan left`}</code></pre>
         </div>
         <p>
           <A href="/library/move#move-rel"><code>move_rel</code></A> with{' '}
-          <code>MoveTiming::Now</code>: the delta leaves on the box's next mouse report instead of
+          <code>MoveTiming::Now</code>: the delta is emitted on the box's next mouse report instead of
           waiting for a real move, and held motion stays held.
         </p>
         <p>
-          The box sends a report for it on the first poll no native report can be ready for. A
+          The box emits a report for it on the first poll no native report can be ready for. A
           native report that reaches the box first carries the delta instead, unless it already carries injected
           motion while the mouse leaves polls free; then the delta takes a separate poll.
         </p>
@@ -225,7 +225,7 @@ device.move_rel_now(100, 0)?;  // emits either way`}</code></pre>
           <table class="api-params">
             <thead><tr><th>Accumulator</th><th>After flush</th></tr></thead>
             <tbody>
-              <tr><td>Riding</td><td>Emptied into the immediate accumulator, regardless of the ride window. Sends no motion itself.</td></tr>
+              <tr><td>Riding</td><td>Emptied into the immediate accumulator, regardless of the ride window. Emits no motion itself.</td></tr>
               <tr><td>Immediate</td><td>Gains that amount, sent on the box's next mouse report.</td></tr>
             </tbody>
           </table>

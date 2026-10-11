@@ -45,7 +45,7 @@ const Lock: Component = () => {
             </thead>
             <tbody>
               <tr><td><code>target</code></td><td><code>impl Into&lt;<A href="/library/types/enums#lock-target">LockTarget</A>&gt;</code></td><td>An <A href="/library/types/enums#axis"><code>Axis</code></A> (X, Y, wheel, or pan) or any <A href="/library/types/structs#usage"><code>Usage</code></A> (button, key, or media).</td></tr>
-              <tr><td><code>direction</code></td><td><A href="/library/types/enums#direction"><code>Direction</code></A></td><td>A fixed sign or edge, or <code>With</code> / <code>Against</code> relative to the bearing. A relative direction on anything but an axis is <A href="/library/types/errors#errors"><code>Error::RelativeDirection</code></A>. Media has no edges, so an edge on it goes out as <code>Both</code>.</td></tr>
+              <tr><td><code>direction</code></td><td><A href="/library/types/enums#direction"><code>Direction</code></A></td><td>A fixed sign or edge, or <code>With</code> / <code>Against</code> relative to the bearing. A relative direction on anything but an axis is <A href="/library/types/errors#errors"><code>Error::RelativeDirection</code></A>. Media has no edges, so an edge on it is sent as <code>Both</code>.</td></tr>
               <tr><td><code>scale</code></td><td><code>i16</code></td><td>Percent of the physical value kept. <code>LOCK_SCALE_BLOCK</code> (0) blocks, <code>LOCK_SCALE_PASS</code> (100) passes untouched, up to <code>LOCK_SCALE_MAX</code> (255) amplifies, and down to <code>LOCK_SCALE_MIN</code> (-255) reverses. Outside that is <A href="/library/types/errors#errors"><code>Error::LockScaleRange</code></A>.</td></tr>
             </tbody>
           </table>
