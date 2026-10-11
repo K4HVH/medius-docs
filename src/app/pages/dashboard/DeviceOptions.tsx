@@ -19,6 +19,14 @@ import { createCommand } from './action';
 import { Panel } from '../../shell/Panel';
 import { Segmented } from '../../shell/Segmented';
 import { CopyLink } from '../../shell/CopyLink';
+import { FixLink } from '../../shell/Filter';
+
+// An option's section on the Guide's Options page.
+const GuideLink = (props: { id: string }) => (
+  <span data-search-skip data-agent-hide>
+    <FixLink href={`/guide/options#${props.id}`}>Guide</FixLink>
+  </span>
+);
 
 const EMIT_MODES: Record<string, EmitMode> = {
   learned: EmitMode.Learned,
@@ -245,7 +253,7 @@ const DeviceOptions = () => {
 
   return (
     <Show when={dash.status() === 'connected'}>
-      <Panel id="box-name" title="Box name">
+      <Panel id="box-name" title="Box name" aside={<GuideLink id="box-name" />}>
         <p>
           Up to {NAME_MAX} letters, numbers and symbols.
         </p>
@@ -274,7 +282,7 @@ const DeviceOptions = () => {
         <Refused panel="box-name" />
       </Panel>
 
-      <Panel id="imperfect-clone" title="Imperfect clone">
+      <Panel id="imperfect-clone" title="Imperfect clone" aside={<GuideLink id="imperfect-clone" />}>
         <p>
           Clones a device the box can't copy exactly, and unlocks the Advanced tab on Control.
         </p>
@@ -301,7 +309,7 @@ const DeviceOptions = () => {
         <Refused panel="imperfect-clone" />
       </Panel>
 
-      <Panel id="movement-riding" title="Movement riding">
+      <Panel id="movement-riding" title="Movement riding" aside={<GuideLink id="movement-riding" />}>
         <p>
           Injected motion waits up to the window to ride a physical report, and is dropped if none
           arrives, so reports keep native timing.
@@ -343,7 +351,7 @@ const DeviceOptions = () => {
         <Refused panel="movement-riding" />
       </Panel>
 
-      <Panel id="bearing" title="Bearing">
+      <Panel id="bearing" title="Bearing" aside={<GuideLink id="bearing" />}>
         <p>
           What With injection and Against injection mean for a lock: the injected direction on each
           axis, held for the window.
@@ -402,7 +410,7 @@ const DeviceOptions = () => {
         <Refused panel="bearing" />
       </Panel>
 
-      <Panel id="render" title="Render">
+      <Panel id="render" title="Render" aside={<GuideLink id="render" />}>
         <p>
           Emits injected motion with native report texture, and picks which motion is rendered.
         </p>
@@ -480,7 +488,7 @@ const DeviceOptions = () => {
         <Refused panel="render" />
       </Panel>
 
-      <Panel id="spread" title="Spread">
+      <Panel id="spread" title="Spread" aside={<GuideLink id="spread" />}>
         <p>
           Releases injected motion across the interval between host commands, so injected reports
           carry native per-report magnitude.
@@ -524,7 +532,7 @@ const DeviceOptions = () => {
         <Refused panel="spread" />
       </Panel>
 
-      <Panel id="emit-rate" title="Emit rate">
+      <Panel id="emit-rate" title="Emit rate" aside={<GuideLink id="emit-rate" />}>
         <p>
           Caps how often injected motion is sent, and sets the clone's wire rate.
         </p>

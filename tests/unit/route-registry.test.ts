@@ -143,8 +143,8 @@ describe('route registry', () => {
   it('lists the guide in reading order, as one group', () => {
     const groups = sidebarGroups('guide');
     expect(groups.map((g) => g.label)).toEqual(['Guide']);
-    expect(groups[0].routes.map((r) => r.path)).toEqual(['/guide', '/guide/compatibility', '/guide/help']);
-    expect(groups[0].routes.map((r) => r.title)).toEqual(['Start here', 'Devices', 'Help']);
+    expect(groups[0].routes.map((r) => r.path)).toEqual(['/guide', '/guide/compatibility', '/guide/options', '/guide/help']);
+    expect(groups[0].routes.map((r) => r.title)).toEqual(['Start here', 'Devices', 'Options', 'Help']);
   });
 
   it('gives the guide the titles written for a search, and the dashboard tools plain ones', () => {

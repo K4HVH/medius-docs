@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { render, cleanup, fireEvent } from '@solidjs/testing-library';
+import { render as rtlRender, cleanup, fireEvent } from '@solidjs/testing-library';
+import { MemoryRouter, Route, createMemoryHistory } from '@solidjs/router';
+import type { JSX } from 'solid-js';
 import { BearingMode, EmitMode, RenderMode } from '../../src/dashboard/protocol';
 
 const settle = () => new Promise((r) => setTimeout(r, 20));
@@ -51,6 +53,17 @@ vi.mock('../../src/app/pages/dashboard/context', () => {
 });
 
 import DeviceOptions from '../../src/app/pages/dashboard/DeviceOptions';
+
+// The options link to the Guide through the router.
+const render = (view: () => JSX.Element) => {
+  const history = createMemoryHistory();
+  history.set({ value: '/dashboard#options' });
+  return rtlRender(() => (
+    <MemoryRouter history={history}>
+      <Route path="*" component={view} />
+    </MemoryRouter>
+  ));
+};
 import { OPTION_PLACES } from '../../src/app/pages/dashboard/optionPlaces';
 
 const button = (root: HTMLElement, text: string) =>
@@ -66,6 +79,16 @@ afterEach(() => {
 });
 
 describe('DeviceOptions', () => {
+  it('links each option to its section of the Guide', async () => {
+    const { container, findByText } = render(() => <DeviceOptions />);
+    await findByText('Each axis is weighed against its bearing.');
+    for (const id of ['box-name', 'imperfect-clone', 'movement-riding', 'bearing', 'render', 'spread', 'emit-rate']) {
+      const link = container.querySelector(`[id="${id}"] > .ph a.fix`);
+      expect(link?.getAttribute('href'), id).toBe(`/guide/options#${id}`);
+      expect(link?.textContent, id).toBe('Guide');
+    }
+  });
+
   it('has every place a link names, under the title the link names it by', async () => {
     const { container, findByText } = render(() => <DeviceOptions />);
     await findByText('Each axis is weighed against its bearing.');

@@ -15,11 +15,16 @@ vi.mock('../../src/dashboard/stats', async (orig) => ({
 import Start from '../../src/app/pages/guide/Start';
 import Devices from '../../src/app/pages/guide/Devices';
 import Help from '../../src/app/pages/guide/Help';
+import Options from '../../src/app/pages/guide/Options';
+import { OPTION_PLACES } from '../../src/app/pages/dashboard/optionPlaces';
+import { extractPage } from '../../src/app/search/extract';
+import { htmlToMarkdown } from '../../scripts/lib/htmlToMarkdown';
 
 const PAGES: [string, Component][] = [
   ['/guide', Start],
   ['/guide/compatibility', Devices],
   ['/guide/help', Help],
+  ['/guide/options', Options],
 ];
 
 const mount = (path: string, page: Component) => {
@@ -64,6 +69,30 @@ describe('Guide pages', () => {
       '/guide/compatibility',
       '/guide/help',
     ]);
+  });
+
+  it('explains every place on the Options tab a link can name, under the same id', () => {
+    const r = mount('/guide/options', Options);
+    for (const [id, title] of Object.entries(OPTION_PLACES)) {
+      if (id === 'options') continue;
+      const el = r.container.querySelector(`[id="${id}"]`);
+      expect(el, id).not.toBeNull();
+      const named = el!.querySelector('h2')?.getAttribute('aria-label') ?? el!.querySelector('.api-response-label')?.textContent;
+      expect(named, id).toBe(title);
+      const facts = [...el!.querySelectorAll(':scope > div > table > tbody > tr > td:first-child, :scope > .table-scroll > table > tbody > tr > td:first-child')].map((td) => td.textContent);
+      expect(facts, id).toEqual(expect.arrayContaining(['Default', 'Change it when', 'Costs']));
+    }
+  });
+
+  it('gives search and the Markdown twin every option, with its facts', () => {
+    const r = mount('/guide/options', Options);
+    const page = r.container.firstElementChild!.parentElement!;
+    const route = routeFor('/guide/options')!;
+    const entries = extractPage(page, { path: route.path, title: route.title, description: route.description, section: 'Guide', group: 'Guide', nav: route.nav, app: false });
+    for (const id of ['imperfect-clone', 'wire-rate', 'render-full', 'spread']) expect(entries.some((e) => e.path === `/guide/options#${id}`), id).toBe(true);
+    const md = htmlToMarkdown(page.innerHTML);
+    expect(md).toContain('## Imperfect clone');
+    expect(md).toMatch(/\| Costs \| Needs Imperfect clone on/);
   });
 
   it("gives each Help answer a link icon that copies the answer's address", async () => {

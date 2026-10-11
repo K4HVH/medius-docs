@@ -39,6 +39,7 @@ const App: Component = () => {
           <Route path="/guide" component={PAGES['/guide']} />
           <Route path="/guide/compatibility" component={PAGES['/guide/compatibility']} />
           <Route path="/guide/compatibility/:item" component={ItemPage} />
+          <Route path="/guide/options" component={PAGES['/guide/options']} />
           <Route path="/guide/help" component={PAGES['/guide/help']} />
           <Route path="/guide/help/:item" component={ItemPage} />
           <Route path="/native" component={PAGES['/native']} />
