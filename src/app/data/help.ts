@@ -178,7 +178,7 @@ export const HELP: readonly HelpGroup[] = [
       {
         id: 'stock-firmware',
         q: 'How do I go back to the stock firmware?',
-        a: "On Update's Manual tab, pick ROM download, then MAKCU stock. It flashes MAKCU's official build, one chip at a time. Set up puts Medius back.",
+        a: "On Update's Manual tab, pick ROM download, then MAKCU stock, and flash each chip.",
         links: [MANUAL, SET_UP],
       },
     ],

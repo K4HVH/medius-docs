@@ -41,6 +41,7 @@ const Privacy: Component = () => (
           ['Cloudflare', 'Carries every request, so it sees your IP address'],
           ['Cookies', 'None'],
           ['Analytics', <>None, apart from the <A href="/guide/privacy#usage-stats">usage stats</A></>],
+          ['Stock firmware', "Downloading MAKCU's firmware through the site holds your IP address in memory for 10 minutes, to limit each address to 30 requests; never stored"],
         ]}
       />
       <p>Kept in your browser, and never sent anywhere:</p>
@@ -65,7 +66,7 @@ const Privacy: Component = () => (
           ['Box', "A keyed hash of the Box ID (the box's MAC); the Box ID itself is never stored"],
           ['Firmware', "Both chips' versions and the protocol version"],
           ['System', 'Operating system and browser'],
-          ['Activity', 'Each day the box connected'],
+          ['Activity', 'Each day the box connected, and when it was first and last seen'],
           ['Device', "The cloned device's VID:PID, kind and product name"],
           ['Flash', 'What was flashed, from and to which versions, the result and how long it took'],
           ['Country', 'As Cloudflare reports it'],
@@ -85,7 +86,7 @@ const Privacy: Component = () => (
         rows={[
           ['Warns, notes, bans and timeouts, with reasons', '1 year'],
           ['Tickets: subject and transcript', '1 year after closing'],
-          ['Ticket check results', 'Until the pass expires, and a day after the last failure'],
+          ['Ticket check results', 'A pass until it expires; a failure for a day'],
           ['Captcha challenges', 'Until they expire'],
           ["A temp-ban's end", 'Until it lifts the ban'],
           ['Mod-log posts naming members', '1 year'],

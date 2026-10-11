@@ -187,7 +187,7 @@ const ManualFlash = () => {
       if (cat) {
         let files: [Uint8Array, Uint8Array];
         try {
-          files = await Promise.all([fetchStockFile(cat.files.package), fetchStockFile(cat.files[target.chip === 'device' ? 'usb1' : 'usb3'])]);
+          files = await Promise.all([fetchStockFile(cat.files.package.name), fetchStockFile(cat.files[target.chip === 'device' ? 'usb1' : 'usb3'].name)]);
         } catch (e) {
           // MAKCU's official build may have changed since the catalog was read: show the one in force.
           void readStock();
@@ -274,8 +274,7 @@ const ManualFlash = () => {
                     <>
                       <p class="state">
                         <span class="dot ok" />
-                        The {CHIP_NAME[chip()]} runs MAKCU's firmware. Flash the {CHIP_NAME[OTHER[chip()]]} next: the box does nothing until
-                        both chips match.
+                        The {CHIP_NAME[chip()]} runs MAKCU's firmware. The box works once the {CHIP_NAME[OTHER[chip()]]} does too.
                       </p>
                       <div class="acts">
                         <Button
@@ -293,12 +292,11 @@ const ManualFlash = () => {
                 >
                   <p class="state">
                     <span class="dot ok" />
-                    Both chips run MAKCU's firmware. Unplug the box for 10 s, then plug in USB1 and USB2, without the button. This dashboard
-                    can't talk to MAKCU's firmware; Set up puts Medius back.
+                    Both chips run MAKCU's firmware. Unplug the box for 10 s, then plug in USB1 and USB2, without the button.
                   </p>
                   <div class="acts">
                     <Button variant="primary" onClick={() => navigate('/dashboard/setup')}>
-                      Set up
+                      Put Medius back
                     </Button>
                     <Button
                       variant="secondary"
@@ -384,15 +382,9 @@ const ManualFlash = () => {
                     </Match>
                     <Match when={stockBuild()}>
                       {(c) => (
-                        <>
-                          <p class="mut">
-                            MAKCU {c().build.id}, the official build.
-                          </p>
-                          <div class="callout callout--info">
-                            This erases the chip, settings included. With MAKCU's firmware on both chips, this dashboard can't talk to the
-                            box. Set up puts Medius back.
-                          </div>
-                        </>
+                        <p class="mut">
+                          <code>{c().files.package.name}</code> ({fmtBytes(c().files.package.size)}) from {c().id}
+                        </p>
                       )}
                     </Match>
                   </Switch>
@@ -474,7 +466,6 @@ const ManualFlash = () => {
                         )}
                       </Show>
                       <Show when={source() === 'stock' && native.wrongChip()?.sure === false}>
-                        <p>That happens when this chip got the other chip's stock firmware before. If this is the {CHIP_NAME[chip()]}, flash it anyway.</p>
                         <div class="acts">
                           <Button
                             variant="secondary"

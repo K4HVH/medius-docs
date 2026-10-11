@@ -104,6 +104,37 @@ async function flashNames(loader: ESPLoader): Promise<{ chip: FlashChip; sure: b
   return null;
 }
 
+// The flash erased whole, as MAKCU's toolkit does it (1.11.10 on): in 64 KiB regions, one command and answer each,
+// since one whole-chip erase left the chip's USB silent for 10 to 20 s and Windows dropped the port ("Serial data
+// stream stopped"). A region that fails is tried again; a flash of unknown size is erased in one command.
+const REGION = 0x10000;
+const REGION_TRIES = 3;
+
+async function eraseChip(loader: ESPLoader, onProgress?: (p: FlashProgress) => void): Promise<void> {
+  const named = loader.DETECTED_FLASH_SIZES[((await loader.readFlashId()) >> 16) & 0xff];
+  const size = /^(\d+)(KB|MB)$/.exec(named ?? '');
+  if (!size) {
+    await loader.eraseFlash();
+    return;
+  }
+  const total = Number(size[1]) * (size[2] === 'MB' ? 0x100000 : 0x400);
+  const region = new Uint8Array(8);
+  const view = new DataView(region.buffer);
+  view.setUint32(4, REGION, true);
+  for (let at = 0; at < total; at += REGION) {
+    view.setUint32(0, at, true);
+    for (let tries = 1; ; tries++) {
+      try {
+        await loader.checkCommand('erase region', loader.ESP_ERASE_REGION, region, 0, 0, loader.timeoutPerMb(loader.ERASE_REGION_TIMEOUT_PER_MB, REGION));
+        break;
+      } catch (e) {
+        if (tries === REGION_TRIES) throw e;
+      }
+    }
+    onProgress?.({ phase: 'erasing', written: at + REGION, total });
+  }
+}
+
 export async function flashStock(params: FlashStockParams): Promise<void> {
   const { port, chip, pkg, boot, onProgress, onLog, onMac, anyway, knownMain } = params;
   const terminal: IEspLoaderTerminal = { clean: () => {}, write: (d) => onLog?.(d), writeLine: (d) => onLog?.(d) };
@@ -119,6 +150,7 @@ export async function flashStock(params: FlashStockParams): Promise<void> {
     if (named && named.chip !== chip && (named.sure || !anyway)) throw new WrongChipError(named.chip, named.sure);
     onMac?.(mac);
     onProgress?.({ phase: 'erasing' });
+    await eraseChip(loader, onProgress);
     const total = pkg.length + boot.length;
     await loader.writeFlash({
       fileArray: [
@@ -128,7 +160,7 @@ export async function flashStock(params: FlashStockParams): Promise<void> {
       flashMode: 'keep',
       flashFreq: 'keep',
       flashSize: 'keep',
-      eraseAll: true,
+      eraseAll: false,
       compress: true,
       // esptool-js counts what it sends, compressed: each file's share of it, in bytes written.
       reportProgress: (i, sent, of) =>

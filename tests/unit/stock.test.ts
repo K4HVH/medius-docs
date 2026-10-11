@@ -215,7 +215,14 @@ describe('the stock routes', () => {
     const stock = createStock(makcu(FILES()).deps);
     const cat = (await get(stock, '/api/stock/catalog'))!;
     expect(cat.status).toBe(200);
-    expect(await cat.json()).toEqual({ build: { id: 'v4.094', size: PKG.length }, files: { package: 'makcu-update-v4.094.bin', usb1: 'boot-usb1-v4.041-r1118.bin', usb3: 'boot-usb3-v4.041-r1118.bin' } });
+    expect(await cat.json()).toEqual({
+      id: 'v4.094',
+      files: {
+        package: { name: 'makcu-update-v4.094.bin', size: PKG.length },
+        usb1: { name: 'boot-usb1-v4.041-r1118.bin', size: USB1.length },
+        usb3: { name: 'boot-usb3-v4.041-r1118.bin', size: USB3.length },
+      },
+    });
     for (const [name, bytes] of [['makcu-update-v4.094.bin', PKG], ['boot-usb3-v4.041-r1118.bin', USB3]] as const) {
       const res = (await get(stock, `/api/stock/file/${name}`))!;
       expect(res.status, name).toBe(200);

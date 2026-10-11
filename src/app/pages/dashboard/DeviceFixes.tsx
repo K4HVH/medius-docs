@@ -57,7 +57,7 @@ const runFor = (box: string): Run => {
 };
 
 const title = (o: Offer): string =>
-  o.kind === 'imperfect' ? 'Imperfect clone needed' : o.kind === 'logitech' ? `Logitech mouse at ${o.hz} Hz` : 'Razer mouse at 125 Hz';
+  o.kind === 'imperfect' ? 'Device not cloned' : o.kind === 'logitech' ? `Logitech mouse at ${o.hz} Hz` : 'Razer mouse at 125 Hz';
 
 const said = (o: Outcome): string =>
   ({
@@ -66,7 +66,7 @@ const said = (o: Outcome): string =>
     native: `This mouse can't go faster through the box, so it stays at ${'hz' in o ? o.hz : 0} Hz.`,
     replug: `Saved, but the box reports ${'hz' in o ? o.hz : 0} Hz. Unplug the mouse from the box and plug it back in.`,
     gone: "Saved, but the mouse hasn't come back. Unplug it from the box and plug it back in.",
-    allowed: 'Done. Imperfect clone is on and the device is cloned.',
+    allowed: 'Done. The device is cloned.',
     checking: 'The box is still checking its new firmware. Try again in a minute.',
     refused: "The box didn't take the setting. Try again.",
     silent: "The box isn't answering.",
@@ -177,8 +177,7 @@ export default function DeviceFixes() {
             </Match>
             <Match when={o().kind === 'imperfect' && (o() as { update: boolean }).update}>
               <p>
-                This device needs Imperfect clone. Update the box first: on this firmware, Windows keeps resetting some
-                of these devices.
+                It needs Imperfect clone. Update first: on this firmware Windows can keep resetting it.
               </p>
               <div class="acts">
                 <Button variant="primary" onClick={() => navigate('/dashboard/update')}>
@@ -195,20 +194,18 @@ export default function DeviceFixes() {
               </div>
             </Match>
             <Match when={o().kind === 'imperfect'}>
-              <p>This device does nothing through the box until Imperfect clone is on.</p>
+              <p>It needs Imperfect clone.</p>
               <Actions label="Allow imperfect" running={run().running()} onApply={() => apply(o())} onKeep={() => keepAsItIs(o())} />
             </Match>
             <Match when={o().kind === 'logitech'}>
               <p>
-                Logitech mice often declare 125 Hz but can run at 1000 Hz. This turns Imperfect clone on and sets the
-                Wire rate and Emit rate to 1000 Hz. A mouse that can't go faster is put back as it was.
+                It can report at 1000 Hz through the box.
               </p>
               <Actions label="Force 1000 Hz" running={run().running()} onApply={() => apply(o())} onKeep={() => keepAsItIs(o())} />
             </Match>
             <Match when={o().kind === 'razer'}>
               <p>
-                If this is one of Razer's 8K mice, plug it into the PC, set it to 8000 Hz in Razer Synapse, then plug it
-                back into the box. It runs at 1000 Hz through the box. If you set 125 Hz on purpose, ignore this.
+                Set its highest polling rate in Razer Synapse with it plugged into the PC, then plug it back into the box.
               </p>
               <div class="acts">
                 <Button variant="secondary" onClick={() => keepAsItIs(o())}>
