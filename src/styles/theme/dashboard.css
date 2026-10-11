@@ -41,6 +41,15 @@
 .ptabs [role="tab"]:disabled { color: var(--line-2); cursor: not-allowed; }
 .ptabs [role="tab"]:focus-visible { outline: 1px solid var(--primary); outline-offset: -4px; }
 .ptabs > .cl { flex: none; top: 0; margin: 0 0 0 8px; opacity: 1; transform: none; }
+/* Copied opens under the bar, never over a tab. */
+.ptabs > .cl::after, .ptabs > .cl[data-side]::after { left: auto; right: 0; top: calc(100% + 18px); transform: translateY(-4px); }
+.ptabs > .cl[data-state]::after { transform: none; }
+/* A bar narrower than its tabs at full spacing sets them closer before it scrolls. */
+.ptabs { container-type: inline-size; }
+@container (max-width: 760px) {
+  .ptabs [role="tab"] { padding-inline: 13px; }
+  .ptabs [role="tab"]:first-of-type { padding-left: 0; }
+}
 .ptabs .ind {
   position: absolute; bottom: -1px; left: 0; height: 2px; width: 0; background: var(--accent);
   transition: left 0.45s var(--ease), width 0.45s var(--ease);

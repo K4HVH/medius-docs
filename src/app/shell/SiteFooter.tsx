@@ -52,7 +52,7 @@ export const SiteFooter = (props: { ref?: (el: HTMLElement) => void }) => (
     <For each={COLUMNS}>
       {(col) => (
         <div>
-          <h4 class="label">{col.title}</h4>
+          <h2 class="label">{col.title}</h2>
           <ul>
             <For each={col.links}>
               {(link) => (
