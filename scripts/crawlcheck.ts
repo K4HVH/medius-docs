@@ -10,6 +10,7 @@ import { COMPAT } from '../src/app/data/compatibility';
 import { withIds } from '../src/app/data/compatMerge';
 import { cardUrl, deviceCard, helpCard, pageCard, type CardContent } from '../src/app/card/content';
 import { itemFor } from '../src/app/items';
+import { cardHeadProblems } from './lib/cardHead';
 
 const PORT = Number(process.env.CRAWL_PORT || 4390);
 const HERO = 'Replacement firmware for the MAKCU box.';
@@ -32,22 +33,11 @@ const meta = (html: string, attr: string, key: string) => {
 // Every card a page names, fetched once each after the pages.
 const images = new Map<string, string>();
 
-// The head an unfurler reads: the card, its size and alt, and the stripe colour in theme-color with the
-// script that turns the address bar black right after it.
-function checkCard(path: string, html: string, card: CardContent, cardPath = path): void {
-  const want = cardUrl(cardPath, card);
-  for (const [attr, key] of [['property', 'og:image'], ['name', 'twitter:image']]) {
-    const got = meta(html, attr, key);
-    if (got !== want) fail(`${path}: ${key} ${got}, want ${want}`);
-  }
-  if (meta(html, 'property', 'og:image:width') !== '1200' || meta(html, 'property', 'og:image:height') !== '630') fail(`${path}: card size not 1200 x 630`);
-  if (meta(html, 'property', 'og:image:alt') !== card.title) fail(`${path}: og:image:alt is not the card's title`);
-  const theme = `<meta name="theme-color" content="${card.colour}" data-embed="${card.colour}">`;
-  const black = `<script>document.querySelector('meta[name="theme-color"]').content = '#000000';</script>`;
-  const at = html.indexOf(theme);
-  if (at < 0 || html.slice(at + theme.length).trimStart().indexOf(black) !== 0)
-    fail(`${path}: theme-color is not ${card.colour} ahead of the script that blacks it out`);
-  images.set(want, path);
+// The head an unfurler reads, for a page at `url` (null: out of search) titled `title`.
+function checkCard(path: string, html: string, card: CardContent, url: string | null, title: string, cardPath = path): void {
+  const image = cardUrl(cardPath, card);
+  for (const p of cardHeadProblems(html, { image, alt: card.title, url, title, colour: card.colour })) fail(`${path}: ${p}`);
+  images.set(image, path);
 }
 
 async function checkImage(url: string, page: string): Promise<void> {
@@ -69,11 +59,13 @@ async function checkItem(path: string, card: CardContent, parent: string): Promi
   if (title !== want) fail(`${path}: title "${title}", want "${want}"`);
   if (meta(html, 'name', 'robots') !== 'noindex') fail(`${path}: not noindex`);
   if (html.includes('rel="canonical"')) fail(`${path}: has a canonical tag`);
-  if (meta(html, 'property', 'og:url') !== SITE + path) fail(`${path}: og:url ${meta(html, 'property', 'og:url')}`);
   if (meta(html, 'name', 'medius-item') !== path) fail(`${path}: no medius-item`);
+  const ld = html.match(/<script id="ld-json" type="application\/ld\+json">([\s\S]*?)<\/script>/)?.[1];
+  const types = ld ? (JSON.parse(ld)['@graph'] as { '@type': string }[]).map((n) => n['@type']).join(',') : '';
+  if (types !== 'WebSite,Thing') fail(`${path}: JSON-LD ${types}, want the site's alone`);
   const h1 = html.match(/<h1\b[^>]*>([\s\S]*?)<\/h1>/)?.[1].replace(/<[^>]+>/g, '').trim();
   if (h1 !== routeFor(parent)!.title) fail(`${path}: page "${h1}", want its parent ${parent}`);
-  checkCard(path, html, card);
+  checkCard(path, html, card, SITE + path, want);
 }
 
 async function waitUp(): Promise<void> {
@@ -116,7 +108,7 @@ async function checkPage(path: string, titles: Map<string, string>): Promise<voi
   }
   if (/Browser not supported|Page not secure/.test(html)) fail(`${path}: unsupported-browser card in the snapshot`);
   if (!html.includes('class="site-footer"')) fail(`${path}: no footer`);
-  checkCard(path, html, pageCard(route));
+  checkCard(path, html, pageCard(route), route.index ? want : null, documentTitle(route));
   if (/class="[^"]*\brv-wait\b/.test(html)) fail(`${path}: a block held back for a scroll reveal in the snapshot`);
   const h1s = [...html.matchAll(/<h1\b[^>]*>([\s\S]*?)<\/h1>/g)].map((m) => decode(m[1].replace(/<[^>]+>/g, '')).replace(/\s+/g, ' ').trim());
   const heading = path === '/' ? HERO : route.title;
@@ -148,18 +140,25 @@ async function main(): Promise<void> {
     if (junk.status !== 404) fail(`/zzz-no-such-page: status ${junk.status}, want 404`);
     if (!junkHtml.includes(`<title>${documentTitle(NOT_FOUND)}</title>`)) fail('404 page: wrong title');
     if (!/<meta name="robots" content="noindex">/.test(junkHtml)) fail('404 page: not noindex');
-    checkCard('/zzz-no-such-page', junkHtml, pageCard(routeFor('/')!), '/');
+    checkCard('/zzz-no-such-page', junkHtml, pageCard(routeFor('/')!), null, documentTitle(NOT_FOUND), '/');
     if (!junkHtml.includes('data-not-found')) fail('404 page: not marked for the app');
+    for (const path of ['/og/.png', '/og//.png']) {
+      const res = await get(path);
+      if (res.status !== 404) fail(`${path}: status ${res.status}, want 404`);
+    }
+    const gone = await get('/guide/compatibility/zzz-no-such-device');
+    if (gone.status !== 302 || gone.headers.get('location') !== '/guide/compatibility')
+      fail(`a device address naming no device: ${gone.status} to ${gone.headers.get('location')}, want 302 to /guide/compatibility`);
+    const devicesMd = await get('/guide/compatibility.md');
+    if (devicesMd.status !== 200 || !(await devicesMd.text()).includes('| Device | Kind | Status |')) fail('/guide/compatibility.md: no device table');
 
     const bsod = HELP_ITEMS.find((i) => i.id === 'bsod')!;
     await checkItem('/guide/help/bsod', helpCard(bsod), '/guide/help');
     const device = withIds(COMPAT).find((d) => d.verdict === 'partial')!;
     await checkItem(`/guide/compatibility/${device.id.replace(/^device-/, '')}`, deviceCard(device), '/guide/compatibility');
-    for (const lost of ['/guide/help/nope', '/guide/compatibility/nope']) {
-      const res = await get(lost);
-      if (res.status !== 404) fail(`${lost}: status ${res.status}, want 404`);
-      else if (!(await res.text()).includes(`<title>${documentTitle(NOT_FOUND)}</title>`)) fail(`${lost}: not the 404 page`);
-    }
+    const lost = await get('/guide/help/nope');
+    if (lost.status !== 404) fail(`/guide/help/nope: status ${lost.status}, want 404`);
+    else if (!(await lost.text()).includes(`<title>${documentTitle(NOT_FOUND)}</title>`)) fail('/guide/help/nope: not the 404 page');
     for (const [from, to] of [['/Guide/Help/BSOD/', '/guide/help/bsod'], ['/guide/help/bsod/', '/guide/help/bsod']]) {
       const res = await get(from);
       if (res.status !== 301 || res.headers.get('location') !== to) fail(`${from}: ${res.status} -> ${res.headers.get('location')}, want 301 -> ${to}`);
