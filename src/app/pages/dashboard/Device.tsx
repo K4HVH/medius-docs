@@ -16,6 +16,7 @@ import { PageHeader } from '../../shell/PageHeader';
 import { PageTabs, Pane } from '../../shell/PageTabs';
 import { Panel, Panels, Stack } from '../../shell/Panel';
 import { LogBox, logText } from '../../shell/LogBox';
+import { landingId } from '../../routes';
 
 const healthItems = (h: Health) => [
   { label: 'Host link', value: h.linkUp },
@@ -63,7 +64,7 @@ const Device = () => {
   // An option a link named (from the Guide or Help), which only a connected box shows.
   const asked = () => {
     try {
-      const id = decodeURIComponent(location.hash.slice(1));
+      const id = landingId(location.pathname, location.hash);
       return Object.hasOwn(OPTION_PLACES, id) ? OPTION_PLACES[id] : null;
     } catch {
       return null;

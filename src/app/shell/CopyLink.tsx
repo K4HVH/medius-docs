@@ -1,5 +1,5 @@
 import { createSignal, onCleanup, onMount } from 'solid-js';
-import { pagePath } from '../routes';
+import { shareAddress } from './share';
 import { SITE } from '../site';
 
 // Copies are announced from one live region outside every heading: one inside would join its text. It is
@@ -60,8 +60,8 @@ async function copy(text: string): Promise<boolean> {
   }
 }
 
-// The link icon beside a place the site links to. It copies the full address: `to`, or the page (the
-// parent, on an item's address) and the place's id. Copied or Not copied shows for 1.5 s (data-state),
+// The link icon beside a place the site links to. It copies the full address: `to`, or the address the
+// place shares (shell/share.ts). Copied or Not copied shows for 1.5 s (data-state),
 // drawn by the CSS from data-said, which stays while the word fades out: the button holds no text for
 // search, the rail or a Markdown twin to read. Near the right edge of the screen the word opens to the
 // icon's left (data-side), so it never widens the page.
@@ -78,7 +78,7 @@ export function CopyLink(props: { id: string; label: string; to?: string }) {
   });
   const click = async (e: MouseEvent) => {
     const at = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    const path = props.to ?? `${pagePath(window.location.pathname)}#${props.id}`;
+    const path = props.to ?? shareAddress(document.getElementById(props.id), props.id, window.location.pathname);
     const ok = await copy(SITE + path);
     clearTimeout(timer);
     clearTimeout(fade);

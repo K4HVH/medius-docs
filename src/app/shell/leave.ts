@@ -1,6 +1,7 @@
 import { type Accessor, createEffect, createSignal, on, onCleanup } from 'solid-js';
 import { useBeforeLeave, useLocation } from '@solidjs/router';
 import { prefersReducedMotion } from './motion';
+import { pagePath } from '../routes';
 
 const FADE_MS = 120;
 // A page's code not in after a minute is not coming (a stalled request): the page is loaded whole.
@@ -67,7 +68,7 @@ export function useLeaveFade(isBlocked: Accessor<boolean>, pages?: PageCode & { 
       setHeading(null);
       return;
     }
-    const fades = !e.options?.replace && !prefersReducedMotion() && to.pathname !== location.pathname;
+    const fades = !e.options?.replace && !prefersReducedMotion() && pagePath(to.pathname) !== pagePath(location.pathname);
     const code = pages && !pages.loaded(to.pathname) ? within(pages.load(to.pathname), CODE_MS) : null;
     if (!fades) root.classList.remove('leaving');
     if (!fades && !code) {

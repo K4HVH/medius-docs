@@ -1,6 +1,6 @@
 import { createComputed, createSignal, on } from 'solid-js';
 import { useLocation } from '@solidjs/router';
-import { itemFor } from '../items';
+import { landingId } from '../routes';
 
 // Where the reader was on each page of this tab's history. Back and Forward return there, a reload too; a
 // new page opens at its top, or at its hash, which the page lands on itself. The app restores within the
@@ -55,7 +55,7 @@ export const openedByHistory = back;
 export const pageY = y;
 
 // A page change, decided before the page draws: Back or Forward to a place, else the top or the hash, or the
-// item an item's address names.
+// item or place an address inside a page names.
 export function decideOpening(hash: string): number | null {
   stopSettling();
   const traversed = fromHistory;
@@ -111,7 +111,7 @@ export function keepPlaces(): () => void {
   manual();
   const nav = performance.getEntriesByType?.('navigation')[0] as PerformanceNavigationTiming | undefined;
   fromHistory = nav?.type === 'reload' || nav?.type === 'back_forward';
-  decideOpening(location.hash || (itemFor(location.pathname)?.target ?? ''));
+  decideOpening(landingId(location.pathname, location.hash));
   booted = true;
   const onPop = () => {
     fromHistory = true;
@@ -138,7 +138,7 @@ export function useScrollPlace(): void {
     on(
       () => [location.pathname, location.hash] as const,
       ([path, hash], before) => {
-        if (before || !booted) decideOpening(hash || (itemFor(path)?.target ?? ''));
+        if (before || !booted) decideOpening(landingId(path, hash));
       },
     ),
   );

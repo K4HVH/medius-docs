@@ -16,7 +16,7 @@ const PARENT: Record<ItemKind, string> = {
   device: '/guide/compatibility',
 };
 
-const ID = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
+export const ITEM_ID = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
 
 export function itemFor(pathname: string): Item | null {
   const path = pathname.length > 1 && pathname.endsWith('/') ? pathname.slice(0, -1) : pathname;
@@ -24,7 +24,7 @@ export function itemFor(pathname: string): Item | null {
     const parent = PARENT[kind];
     if (!path.startsWith(`${parent}/`)) continue;
     const id = path.slice(parent.length + 1);
-    if (!ID.test(id)) return null;
+    if (!ITEM_ID.test(id)) return null;
     return { kind, parent, id, target: kind === 'device' ? `device-${id}` : id };
   }
   return null;

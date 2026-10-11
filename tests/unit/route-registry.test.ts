@@ -9,14 +9,13 @@ import {
   breadcrumbTrail,
   sidebarGroups,
 } from '../../src/app/routes';
-import { type ItemKind, itemFor, itemPath } from '../../src/app/items';
 
 const appRoutes = () => {
   const src = readFileSync(join(__dirname, '../../src/app/App.tsx'), 'utf8');
   return [...src.matchAll(/path="([^"]+)"/g)].map((m) => m[1]);
 };
-const ITEM = '/:item';
-const appPaths = () => new Set(appRoutes().filter((p) => p !== '/' && p !== '*' && !p.endsWith(ITEM)));
+const PLACE = '/:place?';
+const appPaths = () => new Set(appRoutes().filter((p) => p !== '/' && p !== '*').map((p) => (p.endsWith(PLACE) ? p.slice(0, -PLACE.length) : p)));
 
 const at = (path: string) => {
   const r = routeFor(path);
@@ -32,10 +31,10 @@ describe('route registry', () => {
     expect([...registry].sort()).toEqual([...appPaths()].sort());
   });
 
-  it('renders the address of each kind of item under its parent page', () => {
-    const items = appRoutes().filter((p) => p.endsWith(ITEM)).map((p) => p.slice(0, -ITEM.length));
-    const kinds: ItemKind[] = ['help', 'release', 'device'];
-    expect(items.sort()).toEqual(kinds.map((k) => itemFor(itemPath(k, 'x'))!.parent).sort());
+  it('gives every page but Home one route for the page and the places on it', () => {
+    const pages = appRoutes().filter((p) => p !== '/' && p !== '*');
+    expect(pages.filter((p) => !p.endsWith(PLACE))).toEqual([]);
+    expect(new Set(pages).size).toBe(pages.length);
   });
 
   it('gives every page a title no other page has', () => {

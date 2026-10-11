@@ -2,12 +2,13 @@ import { existsSync, readFileSync } from "fs";
 import { join } from "path";
 import { handleFirmwareApi } from "./server/firmware";
 import { handleStatsApi } from "./server/stats";
-import { handleAgentDocs, livePage, DOC_CACHE, LIVE_CACHE, LLMS_LINK, NOINDEX_ARTIFACTS } from "./server/agent";
+import { acceptsMarkdown, handleAgentDocs, livePage, DOC_CACHE, LIVE_CACHE, LLMS_LINK, NOINDEX_ARTIFACTS } from "./server/agent";
 import { handleHomeApi } from "./server/home";
 import { handleMcp } from "./server/mcp";
 import { handleSearchIndex } from "./server/searchIndex";
 import { planRedirect } from "./server/routing";
 import { handleOg } from "./server/og";
+import { addressFor } from "./src/app/routes";
 import { cardFor, itemPage } from "./server/items";
 import { createStock } from "./server/stock";
 
@@ -74,7 +75,14 @@ Bun.serve({
     const location = planRedirect(url.pathname, url.search, ROUTES);
     if (location) return new Response(null, { status: 301, headers: { location } });
 
-    // One Help answer, release or device: its parent page under the item's head.
+    // An address inside a page asked for as Markdown: its page's twin, as the page answers.
+    const inside = addressFor(url.pathname);
+    if (inside && acceptsMarkdown(req.headers.get("accept") || "")) {
+      const twin = await handleAgentDocs(new Request(new URL(inside.parent + url.search, req.url), { method: req.method, headers: req.headers }), ROUTES.size ? ROUTES : undefined);
+      if (twin) return twin;
+    }
+
+    // One Help answer, release, device or place: its page under a head naming it.
     const item = req.method === "GET" || req.method === "HEAD" ? await itemPage(url.pathname, snapshot) : null;
     if (item?.location) return new Response(null, { status: item.status, headers: { location: item.location, "cache-control": "no-store" } });
     if (item) {

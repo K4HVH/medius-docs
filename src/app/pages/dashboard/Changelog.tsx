@@ -5,10 +5,11 @@ import { Chip } from '../../../components/display/Chip';
 import { type FirmwareRelease, latestReleases, releasesInHand } from '../../../dashboard/firmware';
 import { type Block, type CommitGroup, groupCommits, inlineRuns, parseBlocks, releaseDay, splitRelease } from '../../../dashboard/firmware/notes';
 import { PageHeader } from '../../shell/PageHeader';
-import { itemFor, itemPath } from '../../items';
+import { itemPath } from '../../items';
 import { arrive, armReveals, fontsReady, inOrder, turnIn } from '../../shell/motion';
 import { openingAt } from '../../shell/scrollPlace';
 import { CopyLink } from '../../shell/CopyLink';
+import { landingId } from '../../routes';
 
 const Text = (props: { text: string }) => (
   <For each={inlineRuns(props.text)}>
@@ -161,7 +162,7 @@ const Changelog = () => {
   const tags = createMemo(() => [...byTag().keys()], [], { equals: (a, b) => a.length === b.length && a.every((t, i) => t === b[i]) });
   // A link to one release (its address, or the changelog's #tag) lands on it with its commits open.
   const location = useLocation();
-  const hashed = itemFor(location.pathname)?.target ?? decodeURIComponent(location.hash.slice(1));
+  const hashed = landingId(location.pathname, location.hash);
   let rels: HTMLDivElement | undefined;
   let armed = false;
   let dispose = () => {};

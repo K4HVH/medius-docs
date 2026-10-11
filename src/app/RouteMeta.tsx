@@ -1,8 +1,7 @@
 import { createEffect } from 'solid-js';
 import { useLocation } from '@solidjs/router';
-import { NOT_FOUND, type RouteInfo, documentTitle, routeFor } from './routes';
+import { addressFor, NOT_FOUND, type RouteInfo, documentTitle, routeFor } from './routes';
 import { cardUrl, pageCard } from './card/content';
-import { itemFor } from './items';
 import { lostPath } from './served';
 import { SITE } from './site';
 import { buildJsonLd, itemJsonLd } from './structuredData';
@@ -97,7 +96,7 @@ function putBack(kept: Kept): void {
   }
 }
 
-// An item's address with no head from the server (reached in the app) takes its parent's, out of search.
+// An address inside a page with no head from the server (reached in the app) takes its page's, out of search.
 function write(route: RouteInfo, item: string | null): void {
   const title = documentTitle(route);
   const indexed = route.index && !item;
@@ -127,14 +126,14 @@ function write(route: RouteInfo, item: string | null): void {
 }
 
 // Per-route <head> from the route registry, for the SPA and the prerendered snapshots alike. The head the
-// server wrote for an item's address (meta medius-item names it) is left as it is, and put back when the
-// reader returns to that address.
+// server wrote for an address inside a page (meta medius-item names it) is left as it is, and put back when
+// the reader returns to that address.
 export default function RouteMeta() {
   const location = useLocation();
   const served = new Map<string, Kept>();
   createEffect(() => {
     const path = location.pathname;
-    const item = path === lostPath ? null : itemFor(path);
+    const item = path === lostPath ? null : addressFor(path);
     const mark = document.head.querySelector('meta[name="medius-item"]');
     if (item && mark?.getAttribute('content') === path) served.set(path, keep());
     mark?.remove();

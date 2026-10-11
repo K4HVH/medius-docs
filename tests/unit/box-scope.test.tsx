@@ -53,8 +53,8 @@ describe('Advanced and BoxScope', () => {
     const app = readFileSync('src/app/App.tsx', 'utf8');
     const scope = app.slice(app.indexOf('component={BoxScope}>'));
     const inside = scope.slice(0, scope.indexOf('</Route>'));
-    expect(inside).not.toContain('/dashboard/update"');
-    expect(app).toMatch(/<Route path="\/dashboard\/update" component=\{[^}]+\} \/>/);
+    expect(inside).not.toContain('/dashboard/update/');
+    expect(app).toMatch(/<Route path="\/dashboard\/update\/:place\?" component=\{[^}]+\} \/>/);
     const update = readFileSync('src/app/pages/dashboard/Update.tsx', 'utf8');
     const manual = update.slice(update.indexOf('<Pane key="manual">'));
     expect(manual.slice(0, manual.indexOf('</Pane>'))).not.toContain('BoxScope');

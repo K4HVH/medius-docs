@@ -1,6 +1,9 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
-import { ROUTES } from '../../src/app/routes';
+import { PLACE_ID, ROUTES, addressFor, placeAddress } from '../../src/app/routes';
+import { MOVED } from '../../src/app/site';
+import { COMPAT } from '../../src/app/data/compatibility';
+import { withIds } from '../../src/app/data/compatMerge';
 import { HELP_ITEMS } from '../../src/app/data/help';
 import { KEYWORDS, SYNONYMS } from '../../src/app/search/extra';
 import { createSearcher } from '../../src/app/search/rank';
@@ -27,6 +30,9 @@ export interface CheckContext {
   golden: { q: string; first: string; why?: string }[];
   expect: { q: string; path: string; within: number }[];
   keywordPaths: string[];
+  // The listed devices' addresses on Devices (/guide/compatibility/{slug}), which a section there must not
+  // take.
+  deviceSlugs?: string[];
   // From the pass, when there was one: each page is held to what it rendered.
   rendered?: Rendered;
 }
@@ -87,8 +93,10 @@ export function checkIndex(index: SearchIndex, ctx: CheckContext): string[] {
       for (const t of list) {
         if (t.fate === 'entry' && !paths.has(`${path}#${t.id}`)) out.push(`${path}#${t.id} is in no entry`);
         if (t.fate === 'untitled' && !t.panel) out.push(`${path}#${t.id} is marked for search but has no title`);
-        // A place search can land on is a place a reader can link to.
+        // A place search can land on is a place a reader can link to, and a link icon names a place (or the
+        // section that opens the page, whose link is the page's).
         if (t.fate === 'entry' && !t.link) out.push(`${path}#${t.id} has no link icon`);
+        if (t.fate === 'untitled' && t.link) out.push(`${path}#${t.id} has a link icon but no entry`);
       }
     for (const id of ctx.sectionIds) if (!seen.has(id)) out.push(`section #${id} was never rendered`);
   } else for (const id of ctx.sectionIds) if (!anchors.has(id) && !slugs.has(id)) out.push(`section #${id} is in no entry`);
@@ -104,6 +112,22 @@ export function checkIndex(index: SearchIndex, ctx: CheckContext): string[] {
     if (FAKE_MAC.test(all) || (e.path.startsWith('/dashboard') && FAKE_NAME.test(all))) out.push(`${e.path} holds the fake box's name or address`);
   }
   for (const p of ctx.keywordPaths) if (!paths.has(p)) out.push(`keywords for ${p}, which is in no entry`);
+
+  // Each place has an address (routes.ts placeAddress) that leads back to it: no page, moved page or, on
+  // Devices, listed device may be at it.
+  const devices = new Set(ctx.deviceSlugs ?? []);
+  const moved = new Set(Object.keys(MOVED));
+  for (const e of index.entries) {
+    if (!['section', 'anchor', 'panel'].includes(e.kind) || !e.path.includes('#')) continue;
+    const [page, id] = e.path.split('#');
+    if (page === '/') continue;
+    const at = placeAddress(page, id);
+    if (!PLACE_ID.test(id) && !id.startsWith('device-')) out.push(`${e.path}: a place's id is lowercase letters, digits and hyphens`);
+    else if (moved.has(`${page}/${id}`)) out.push(`${e.path}: a moved page is at the address the place would have`);
+    else if (!at) out.push(`${e.path}: the page ${page}/${id} is at the address the place would have`);
+    else if (addressFor(at)?.id !== id) out.push(`${e.path}: its address ${at} leads elsewhere`);
+    else if (page === '/guide/compatibility' && devices.has(id)) out.push(`${e.path}: a listed device has the address the place would have`);
+  }
 
   const search = createSearcher(index.entries, { synonyms: SYNONYMS });
   const top = (q: string, n: number) => search.search(q).slice(0, n).map((h) => h.entry.path);
@@ -137,6 +161,7 @@ export function siteContext(root = '.'): CheckContext {
   ]);
   return {
     routes: ROUTES.filter((r) => r.kind !== 'home' && r.section !== 'notfound').map((r) => r.path),
+    deviceSlugs: withIds(COMPAT).map((r) => r.id.replace(/^device-/, '')),
     sectionIds: [...new Set(sectionIds)],
     helpIds: HELP_ITEMS.map((h) => h.id),
     golden: JSON.parse(readFileSync(join(root, 'tests/fixtures/search-golden.json'), 'utf8')),

@@ -1,8 +1,7 @@
-import { type Item, itemFor } from '../src/app/items';
-import { type RouteInfo, routeFor } from '../src/app/routes';
+import { type Address, type RouteInfo, addressFor, routeFor } from '../src/app/routes';
 import { SITE } from '../src/app/site';
 import { itemJsonLd } from '../src/app/structuredData';
-import { type CardContent, cardUrl, deviceCard, helpCard, pageCard, releaseCard } from '../src/app/card/content';
+import { type CardContent, cardUrl, deviceCard, helpCard, pageCard, placeCard, releaseCard } from '../src/app/card/content';
 import { HELP_ITEMS } from '../src/app/data/help';
 import { COMPAT } from '../src/app/data/compatibility';
 import { mergeCompat, withIds } from '../src/app/data/compatMerge';
@@ -12,10 +11,16 @@ import { getStatsSummary } from './stats';
 import { getReleases, refreshReleases } from './firmware';
 import { livePage } from './agent';
 import { FILL_SOURCES, fillPage } from './fill';
+import { builtIndex } from './searchIndex';
+import { placeFor } from './places';
+import type { SearchIndex } from '../src/app/search/types';
 
-// An item's address (src/app/items.ts) is answered with its parent page, filled as the parent is, under a
-// head naming the item: its title, description and card, noindex and no canonical, and its stripe colour.
+// An address inside a page (src/app/routes.ts addressFor), an item or a place, is answered with its page,
+// filled as the page is, under a head naming it: its title, description and card, noindex and no canonical,
+// and its stripe colour.
 export interface ItemSources {
+  // The search index the build wrote, which names each place.
+  index: () => SearchIndex | null;
   releases: () => Promise<FirmwareRelease[] | null>;
   // The list read again, for a release published since it was read.
   refresh: () => Promise<FirmwareRelease[] | null>;
@@ -24,7 +29,12 @@ export interface ItemSources {
   budgetMs?: number;
 }
 
-const LIVE: ItemSources = { releases: getReleases, refresh: refreshReleases, stats: getStatsSummary };
+const LIVE: ItemSources = {
+  index: () => builtIndex(process.env.PUBLIC_DIR || './dist'),
+  releases: getReleases,
+  refresh: refreshReleases,
+  stats: getStatsSummary,
+};
 
 // down: the source that would know the item can't be read, so the reader is asked to come back.
 // `releases`: the list a release was found in, which its page is filled from.
@@ -52,10 +62,23 @@ function timer(budgetMs: number) {
   };
 }
 
-async function find(item: Item, sources: ItemSources): Promise<Found> {
+// Help's answers come before a place of the same id; on Devices and Changelog a place, read from the index
+// in hand, comes before a device or release, which may wait on the stats or GitHub.
+async function find(item: Address, sources: ItemSources): Promise<Found> {
+  const place = (): Found | null => {
+    const at = placeFor(sources.index(), item.parent, item.id);
+    if (!at) return null;
+    const card = placeCard(routeFor(item.parent)!, item.id, at);
+    return { card, description: card.description ?? '' };
+  };
+  if (item.kind === 'place') return place() ?? 'unknown';
   if (item.kind === 'help') {
     const help = HELP_ITEMS.find((i) => i.id === item.id);
-    return help ? { card: helpCard(help), description: help.a } : 'unknown';
+    return help ? { card: helpCard(help), description: help.a } : (place() ?? 'unknown');
+  }
+  if (item.kind === 'device' || item.kind === 'release') {
+    const section = place();
+    if (section) return section;
   }
   if (item.kind === 'release') {
     const named = (list: FirmwareRelease[] | null) => list?.find((r) => r.tag.toLowerCase() === item.id.toLowerCase());
@@ -86,9 +109,10 @@ async function find(item: Item, sources: ItemSources): Promise<Found> {
   return { card, description: card.description ?? '' };
 }
 
-// The card for /og: a page's, or an item's; 'down' while the item's source can't be read.
-export async function cardFor(path: string, sources: ItemSources = LIVE): Promise<CardContent | null | 'down'> {
-  const item = itemFor(path);
+// The card for /og: a page's, an item's or a place's; 'down' while the item's source can't be read.
+export async function cardFor(path: string, given: Partial<ItemSources> = {}): Promise<CardContent | null | 'down'> {
+  const sources = { ...LIVE, ...given };
+  const item = addressFor(path);
   if (item) {
     const found = await find(item, sources);
     return found === 'unknown' ? null : found === 'down' ? 'down' : found.card;
@@ -141,16 +165,17 @@ function writeHead(html: string, path: string, parent: RouteInfo, found: { card:
   return head + html.slice(end);
 }
 
-// Null for a path that is no item's address. `snapshot` reads a prerendered page by its path ('/404' for
-// the 404 page).
+// Null for a path that is no address inside a page. `snapshot` reads a prerendered page by its path ('/404'
+// for the 404 page).
 export async function itemPage(
   path: string,
   snapshot: (path: string) => Promise<string | null>,
-  sources: ItemSources = LIVE,
+  given: Partial<ItemSources> = {},
   fill: (path: string, html: string, releases?: FirmwareRelease[]) => Promise<string | null> = (path, html, releases) =>
     fillPage(path, html, releases ? { ...FILL_SOURCES, releases: async () => releases } : FILL_SOURCES),
 ): Promise<{ status: number; html: string; location?: string } | null> {
-  const item = itemFor(path);
+  const sources = { ...LIVE, ...given };
+  const item = addressFor(path);
   if (!item) return null;
   const found = await find(item, sources);
   // A device leaves the list when the stats drop it or its name changes; the list is where it was.

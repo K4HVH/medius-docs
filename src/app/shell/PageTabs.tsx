@@ -1,7 +1,8 @@
-import { createContext, createEffect, createSignal, For, on, onCleanup, onMount, useContext, type JSX } from 'solid-js';
+import { createContext, createEffect, createMemo, createSignal, For, on, onCleanup, onMount, useContext, type JSX } from 'solid-js';
 import { useLocation, useNavigate } from '@solidjs/router';
-import { pagePath, routeFor } from '../routes';
+import { landingId, pagePath, placeAddress, routeFor } from '../routes';
 import { fontsReady } from './motion';
+import { openedByHistory } from './scrollPlace';
 import { closePanels, openPanels } from './panelMotion';
 import { CopyLink } from './CopyLink';
 
@@ -14,7 +15,7 @@ export interface Tab {
 interface TabsContext {
   active: () => string;
   id: string;
-  // Content arrived: an element the hash named before it existed may be here now.
+  // Content arrived: an element the address named before it existed may be here now.
   arrived: () => void;
 }
 
@@ -25,9 +26,9 @@ const paneOf = (id: string): string | null =>
   document.getElementById(id)?.closest<HTMLElement>('[data-pane]')?.dataset.pane ?? null;
 
 // A page's tabs: a sticky bar holding the strip, with a sliding mark and one tab stop (arrows, Home and End
-// move along it), and a link icon at its right end that copies the open tab's address. The hash names the
-// open tab (#options); an id inside a closed tab opens that tab (#o-emit), and one that names a tab still
-// disabled opens it once it is enabled.
+// move along it), and a link icon at its right end that copies the open tab's address. The address names the
+// open tab (/dashboard/options, or #options); a place inside a closed tab opens that tab
+// (/dashboard/emit-rate), and one that names a tab still disabled opens it once it is enabled.
 export function PageTabs(props: { id: string; tabs: Tab[]; children: JSX.Element }) {
   const location = useLocation();
   const navigate = useNavigate();
@@ -39,7 +40,8 @@ export function PageTabs(props: { id: string; tabs: Tab[]; children: JSX.Element
   let strip: HTMLDivElement | undefined;
   let mark: HTMLSpanElement | undefined;
 
-  // An element the hash named, brought into view once its tab is open: the layout's jump finds it
+  let writePending = false;
+  // An element the address named, brought into view once its tab is open: the layout's jump finds it
   // hidden, or not there yet on a page that fetches its content.
   let target: string | null = null;
   // An id not on the page yet (a tab whose content waits for a box or a fetch) is looked for again as
@@ -51,9 +53,12 @@ export function PageTabs(props: { id: string; tabs: Tab[]; children: JSX.Element
     if (!enabled(key)) return false;
     setActive(key);
     setPending(null);
-    // Through the router, so a remount (a box change) and a later link to the same hash both see it.
+    // Through the router, so a remount (a box change) and a later link to the same tab both see it.
     if (write) {
-      navigate(`${location.pathname}#${key}`, { replace: true, scroll: false });
+      const page = pagePath(location.pathname);
+      const at = placeAddress(page, key);
+      const search = location.search ?? '';
+      navigate(at ? at + search : `${page}${search}#${key}`, { replace: true, scroll: false });
       unfound = null;
     }
     const id = target;
@@ -62,29 +67,28 @@ export function PageTabs(props: { id: string; tabs: Tab[]; children: JSX.Element
     return true;
   };
 
-  const fromHash = (hash: string) => {
-    let id: string;
-    try {
-      id = decodeURIComponent(hash.replace(/^#/, ''));
-    } catch {
-      return;
-    }
+  const fromId = (id: string) => {
     if (!id) return;
     const named = props.tabs.some((t) => t.key === id);
     const key = named ? id : paneOf(id);
     target = named ? null : id;
     unfound = key ? null : id;
-    if (key && !open(key)) setPending(key);
+    // A hash naming a tab is written as the tab's address, as a click writes it, now or once the tab opens.
+    writePending = named && location.hash.length > 1;
+    if (key && !open(key, writePending)) setPending(key);
   };
   const arrived = () => {
-    if (unfound && document.getElementById(unfound)) fromHash(`#${unfound}`);
+    if (unfound && document.getElementById(unfound)) fromId(unfound);
   };
 
-  createEffect(on(() => location.hash, (h) => queueMicrotask(() => fromHash(h))));
+  // The address's place, kept while only its spelling changes (#id written as /page/id).
+  const wanted = createMemo(() => landingId(location.pathname, location.hash));
+  createEffect(on(wanted, (id) => queueMicrotask(() => fromId(id))));
   // A tab named before it was enabled opens when it is; a tab disabled while open gives way to the first.
   createEffect(() => {
     const p = pending();
-    if (p && enabled(p)) open(p);
+    // Not on Back or Forward: the write would cut short the return to where the reader was.
+    if (p && enabled(p)) open(p, writePending && !openedByHistory());
     else if (!enabled(active())) setActive(first());
   });
 
@@ -174,7 +178,7 @@ export function PageTabs(props: { id: string; tabs: Tab[]; children: JSX.Element
         <CopyLink
           id={active()}
           label={props.tabs.find((t) => t.key === active())?.label ?? active()}
-          to={`${pagePath(location.pathname)}#${active()}`}
+          to={placeAddress(pagePath(location.pathname), active()) ?? `${pagePath(location.pathname)}#${active()}`}
         />
       </div>
       <Ctx.Provider value={{ active, id: props.id, arrived }}>{props.children}</Ctx.Provider>

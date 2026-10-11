@@ -91,7 +91,7 @@ export const HELP: readonly HelpGroup[] = [
         q: "A device doesn't clone, or misbehaves",
         a: 'Check Devices for a setting it needs. If none helps, send its USB Device Tree Viewer text in a support ticket on Discord.',
         links: [
-          { label: 'Device fixes', href: '/guide/compatibility#device-fixes' },
+          { label: 'Device fixes', href: '/guide/compatibility#fixes' },
           { label: 'Reporting a device', href: '/guide/compatibility#reporting' },
         ],
       },

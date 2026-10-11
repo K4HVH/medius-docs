@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, rmSync, utimesSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { handleSearchIndex, liveSearcher, type SearchSources } from '../../server/searchIndex';
+import { builtIndex, handleSearchIndex, liveSearcher, type SearchSources } from '../../server/searchIndex';
 import type { SearchIndex } from '../../src/app/search/types';
 import type { FirmwareRelease } from '../../src/dashboard/firmware/client';
 import type { StatsSummary } from '../../server/stats/types';
@@ -93,5 +93,16 @@ describe('liveSearcher', () => {
   it('has nothing to search before the site is built', async () => {
     rmSync(join(dir, 'search-index.json'));
     expect(await liveSearcher(dir, sources())).toBeNull();
+  });
+});
+
+describe('builtIndex', () => {
+  it('keeps the last index read while the file is half written or gone', () => {
+    expect(builtIndex(dir)?.entries[0].title).toBe('Start here');
+    writeFileSync(join(dir, 'search-index.json'), '{"version":1,"entr');
+    utimesSync(join(dir, 'search-index.json'), new Date(), new Date(Date.now() + 5_000));
+    expect(builtIndex(dir)?.entries[0].title).toBe('Start here');
+    rmSync(join(dir, 'search-index.json'));
+    expect(builtIndex(dir)?.entries[0].title).toBe('Start here');
   });
 });

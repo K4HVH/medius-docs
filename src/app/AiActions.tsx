@@ -3,6 +3,7 @@ import { Portal } from 'solid-js/web';
 import { useLocation, useNavigate } from '@solidjs/router';
 import { BsStars } from 'solid-icons/bs';
 import { Button } from '../components/inputs/Button';
+import { pagePath } from './routes';
 
 const SITE = 'https://medius.k4tech.net';
 
@@ -12,7 +13,8 @@ export default function AiActions() {
   const location = useLocation();
   const navigate = useNavigate();
   const isDoc = () => /^\/(native|library|bindings|ai)(\/|$)/.test(location.pathname);
-  const mdPath = () => location.pathname.replace(/\/+$/, '') + '.md';
+  // The page's twin: a place on a page has no twin.
+  const mdPath = () => pagePath(location.pathname.replace(/\/+$/, '') || '/') + '.md';
   const mdUrl = () => SITE + mdPath();
 
   const [open, setOpen] = createSignal(false);

@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { ROUTES, NOT_FOUND, routeFor } from '../../src/app/routes';
 import { HELP_ITEMS } from '../../src/app/data/help';
 import { CLAIM } from '../../src/app/site';
-import { pageCard, helpCard, releaseCard, deviceCard, cardHash, cardUrl, BLUE } from '../../src/app/card/content';
+import { pageCard, helpCard, releaseCard, deviceCard, cardHash, cardUrl, BLUE, placeCard, placeLine } from '../../src/app/card/content';
 import { itemFor, itemPath } from '../../src/app/items';
 import { COMMITS_MARKER } from '../../src/dashboard/firmware/notes';
 import type { FirmwareRelease } from '../../src/dashboard/firmware';
@@ -212,5 +212,18 @@ describe('itemFor', () => {
     expect(itemPath('release', 'v3.4.5')).toBe('/dashboard/changelog/v3.4.5');
     expect(itemPath('device', 'glorious-model-o3')).toBe('/guide/compatibility/glorious-model-o3');
     expect(itemFor(itemPath('device', 'glorious-model-o3'))?.kind).toBe('device');
+  });
+});
+
+describe('placeLine and placeCard', () => {
+  it('reads a sentence that ends inside brackets or quotes as prose, and skips labels and table rows', () => {
+    expect(placeLine({ text: 'Name · Value\nIdentify\nSends the frame (once per command.)' })).toBe('Sends the frame (once per command.)');
+    expect(placeLine({ text: 'It says "done."' })).toBe('It says "done."');
+    expect(placeLine({ text: 'Identify\nDisconnect' })).toBeNull();
+  });
+
+  it('spells an arrow out, since the card fonts draw none', () => {
+    const card = placeCard(routeFor('/native/commands/catch')!, 'motion-event', { title: 'MOTION_EVENT', caption: 'box → PC', text: '' });
+    expect(card.description).toBe('box to PC.');
   });
 });

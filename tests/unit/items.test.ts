@@ -1,8 +1,10 @@
 // @vitest-environment node
 import { describe, it, expect, vi } from 'vitest';
 import { cardFor, itemPage, type ItemSources } from '../../server/items';
+import { placeFor } from '../../server/places';
+import type { SearchIndex } from '../../src/app/search/types';
 import { planRedirect } from '../../server/routing';
-import { BLUE, cardUrl, helpCard, pageCard, releaseCard } from '../../src/app/card/content';
+import { BLUE, cardUrl, helpCard, pageCard, placeCard, releaseCard } from '../../src/app/card/content';
 import { HELP_ITEMS } from '../../src/app/data/help';
 import { routeFor } from '../../src/app/routes';
 import { SITE } from '../../src/app/site';
@@ -35,7 +37,29 @@ const release = (tag: string): FirmwareRelease => ({
 
 const stats = (top: StatsSummary['devices']['top']) => ({ devices: { unique: top.length, byKind: [], top } }) as unknown as StatsSummary;
 
+// The places a build's search index holds: a section, a marked block opening on a table, a tab with no
+// text, Help's answer and topic, and a Devices section.
+const INDEX: SearchIndex = {
+  version: 1,
+  built: 'now',
+  entries: [
+    { path: '/native/transport', title: 'Transport', kind: 'page', section: 'Native API', crumb: 'Protocol', text: '' },
+    { path: '/native/transport#usb-identity', title: 'USB identity', kind: 'section', section: 'Native API', crumb: 'Protocol / Transport', text: 'A WCH CH343 does the USB-to-serial conversion. Match its VID and PID to find the box.' },
+    { path: '/native/transport#framing', title: 'Framing', kind: 'section', section: 'Native API', crumb: 'Protocol / Transport', caption: 'One frame per command', text: 'Every frame opens with SOF.' },
+    { path: '/native/commands/lock#scale', title: 'SCALE', kind: 'anchor', section: 'Native API', crumb: 'Commands / Lock', text: 'Name · Value · Effect\nmin · -255 · 2.55x, reversed' },
+    { path: '/dashboard#options', title: 'Options', kind: 'section', section: 'Dashboard', crumb: 'Device', text: '' },
+    { path: '/dashboard#box-name', title: 'Box name', kind: 'panel', section: 'Dashboard', crumb: 'Device / Options', text: 'Up to 32 letters, numbers and symbols.\nName' },
+    { path: '/dashboard#bearing', title: 'Bearing', kind: 'panel', section: 'Dashboard', crumb: 'Device / Options', text: 'The direction of the last injected motion, kept for the window.' },
+    { path: '/dashboard#your-box', title: 'Your box', kind: 'panel', section: 'Dashboard', crumb: 'Device / Overview', text: 'Identify\nDisconnect' },
+    { path: '/guide/help#bsod', title: 'My PC blue-screens', kind: 'anchor', section: 'Guide', crumb: 'Help', text: 'Placeholder.' },
+    { path: '/guide/help#q-windows', title: 'Windows', kind: 'section', section: 'Guide', crumb: 'Help', text: '' },
+    { path: '/guide/compatibility#limits', title: 'Limits', kind: 'section', section: 'Guide', crumb: 'Devices', text: 'Limit · Value · Note' },
+    { path: '/native/injection#long', title: 'Long', kind: 'section', section: 'Native API', crumb: 'Protocol / Injection', text: `${'word '.repeat(60)}end.` },
+  ],
+};
+
 const sources = (over: Partial<ItemSources> = {}): ItemSources => ({
+  index: () => INDEX,
   releases: async () => [release('v3.4.4')],
   refresh: vi.fn(async () => [release('v3.4.5'), release('v3.4.4')]),
   stats: async () => stats([{ vid: 0x1234, pid: 0x5678, kind: 2, product: 'Stats Only Mouse', boxes: 3 }]),
@@ -153,6 +177,73 @@ describe('itemPage', () => {
     const s = sources({ releases: async () => [{ ...release('v1.0.0'), notes: '## Changes\n- A "quoted" <b>change</b> & more' }] });
     const { html } = (await itemPage('/dashboard/changelog/v1.0.0', read, s, fill))!;
     expect(tag(html, 'name', 'description')).toBe('A &quot;quoted&quot; &lt;b&gt;change&lt;/b&gt; &amp; more.');
+  });
+});
+
+describe('itemPage for places', () => {
+  it("answers a place's address with its page, filled, under the place's head and card", async () => {
+    const page = (await itemPage('/native/transport/usb-identity', read, sources(), fill))!;
+    expect(page.status).toBe(200);
+    const { html } = page;
+    expect(html).toContain('/native/transport page</main>');
+    expect(html).toContain('<title>USB identity · Transport · Medius</title>');
+    expect(tag(html, 'name', 'description')).toBe('A WCH CH343 does the USB-to-serial conversion.');
+    expect(tag(html, 'property', 'og:url')).toBe(`${SITE}/native/transport/usb-identity`);
+    const card = placeCard(routeFor('/native/transport')!, 'usb-identity', placeFor(INDEX, '/native/transport', 'usb-identity')!);
+    expect(tag(html, 'property', 'og:image')).toBe(cardUrl('/native/transport/usb-identity', card));
+    expect(tag(html, 'name', 'robots')).toBe('noindex');
+    expect(tag(html, 'name', 'medius-item')).toBe('/native/transport/usb-identity');
+    expect(html).not.toContain('rel="canonical"');
+  });
+
+  it("says a place's caption first, and its page's description where it has no prose", async () => {
+    const say = async (path: string) => tag((await itemPage(path, read, sources(), fill))!.html, 'name', 'description');
+    expect(await say('/native/transport/framing')).toBe('One frame per command.');
+    expect(await say('/native/commands/lock/scale')).toBe(routeFor('/native/commands/lock')!.description);
+    expect(await say('/dashboard/options')).toBe('Box name and Bearing.');
+    expect(await say('/dashboard/your-box')).toBe(routeFor('/dashboard')!.description);
+    expect(await say('/dashboard/box-name')).toBe('Up to 32 letters, numbers and symbols.');
+    expect((await say('/native/injection/long'))!.length).toBeLessThanOrEqual(200);
+    expect(await say('/native/injection/long')).toMatch(/word…$/);
+  });
+
+  it('names a dashboard tab after the tab and its page', async () => {
+    const { html } = (await itemPage('/dashboard/options', read, sources(), fill))!;
+    expect(html).toContain('<title>Options · Device · Medius</title>');
+  });
+
+  it("keeps a Help answer's card, and answers Help's topics as places", async () => {
+    const { html } = (await itemPage('/guide/help/q-windows', read, sources(), fill))!;
+    expect(html).toContain('<title>Windows · Help · Medius</title>');
+    expect(await cardFor('/guide/help/bsod', sources())).toEqual(helpCard(HELP_ITEMS.find((i) => i.id === 'bsod')!));
+  });
+
+  it("answers a Devices section without the stats, before any device of that name", async () => {
+    const page = (await itemPage('/guide/compatibility/limits', read, sources({ stats: async () => null }), fill))!;
+    expect(page.status).toBe(200);
+    expect(page.html).toContain('<title>Limits · Devices · Medius</title>');
+  });
+
+  it('answers a Changelog place without reading the releases', async () => {
+    const index: SearchIndex = { ...INDEX, entries: [...INDEX.entries, { path: '/dashboard/changelog#older', title: 'Older', kind: 'section', section: 'Dashboard', crumb: 'Changelog', text: 'Releases before v3.' }] };
+    const refresh = vi.fn(async () => null);
+    const page = (await itemPage('/dashboard/changelog/older', read, sources({ index: () => index, releases: async () => null, refresh }), fill))!;
+    expect(page.status).toBe(200);
+    expect(refresh).not.toHaveBeenCalled();
+  });
+
+  it('answers a place no index holds with the 404 page', async () => {
+    for (const path of ['/native/transport/nope', '/dashboard/nope']) {
+      const page = (await itemPage(path, read, sources(), fill))!;
+      expect(page.status, path).toBe(404);
+    }
+  });
+
+  it("draws a place's card", async () => {
+    expect(await cardFor('/native/transport/usb-identity', sources())).toEqual(
+      placeCard(routeFor('/native/transport')!, 'usb-identity', placeFor(INDEX, '/native/transport', 'usb-identity')!),
+    );
+    expect(await cardFor('/native/transport/nope', sources())).toBeNull();
   });
 });
 

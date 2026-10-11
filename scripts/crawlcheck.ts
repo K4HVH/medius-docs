@@ -3,15 +3,16 @@
 import { spawn } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { documentTitle, routeFor, NOT_FOUND } from '../src/app/routes';
+import { addressFor, documentTitle, routeFor, NOT_FOUND } from '../src/app/routes';
 import { SITE } from '../src/app/site';
 import { HELP_ITEMS } from '../src/app/data/help';
 import { COMPAT } from '../src/app/data/compatibility';
 import { withIds } from '../src/app/data/compatMerge';
-import { cardUrl, deviceCard, helpCard, pageCard, releaseCard, type CardContent } from '../src/app/card/content';
+import { cardUrl, deviceCard, helpCard, pageCard, placeCard, releaseCard, type CardContent } from '../src/app/card/content';
 import type { FirmwareRelease } from '../src/dashboard/firmware/client';
-import { itemFor } from '../src/app/items';
+import type { SearchIndex } from '../src/app/search/types';
 import { cardHeadProblems } from './lib/cardHead';
+import { placeFor } from '../server/places';
 
 const PORT = Number(process.env.CRAWL_PORT || 4390);
 const HERO = 'Replacement firmware for the MAKCU box.';
@@ -166,12 +167,33 @@ async function main(): Promise<void> {
     }
     if ((await get('/og/guide/help/nope.png')).status !== 404) fail('/og/guide/help/nope.png: not 404');
 
+    // A place of each kind: a docs section, a marked block, a dashboard tab and panel, a Help topic.
+    const search = JSON.parse(readFileSync(join('dist', 'search-index.json'), 'utf8')) as SearchIndex;
+    const places: [string, string][] = [
+      ['/native/transport', 'usb-identity'],
+      ['/native/commands/lock', 'scale'],
+      ['/dashboard', 'options'],
+      ['/dashboard/control', 'input-locks'],
+      ['/guide/help', 'q-windows'],
+    ];
+    for (const [page, id] of places) {
+      const at = placeFor(search, page, id);
+      if (at) await checkItem(`${page}/${id}`, placeCard(routeFor(page)!, id, at), page);
+      else fail(`search index: no ${page}#${id}`);
+    }
+    const placeMd = await get('/native/transport/usb-identity', 'text/markdown');
+    if (!placeMd.headers.get('content-type')?.startsWith('text/markdown') || !(await placeMd.text()).includes('USB identity'))
+      fail('/native/transport/usb-identity as Markdown: not the page\'s twin');
+    for (const path of ['/native/transport/zzz-no-such-place', '/og/native/transport/zzz-no-such-place.png']) {
+      const res = await get(path);
+      if (res.status !== 404) fail(`${path}: status ${res.status}, want 404`);
+    }
+
     for (const [url, page] of images) await checkImage(url, page);
 
-    const search = JSON.parse(readFileSync(join('dist', 'search-index.json'), 'utf8')) as { entries: { path: string }[] };
-    for (const e of search.entries) if (itemFor(e.path.split('#')[0])) fail(`search index: holds the item address ${e.path}`);
+    for (const e of search.entries) if (addressFor(e.path.split('#')[0])) fail(`search index: holds the address ${e.path}`);
 
-    for (const odd of ['/404', '//native', '/%6Eative', '/native/commands']) {
+    for (const odd of ['/404', '//native', '/%6Eative', '/native/commands/zzz']) {
       const res = await get(odd);
       if (res.status !== 404) fail(`${odd}: status ${res.status}, want 404`);
     }
@@ -187,7 +209,7 @@ async function main(): Promise<void> {
     for (const p of ['/dashboard/setup', '/dashboard/changelog']) if (!sitemap.includes(`<loc>${SITE}${p}</loc>`)) fail(`sitemap: no ${p}`);
     for (const p of routes.filter((r) => !routeFor(r)!.index)) if (sitemap.includes(`<loc>${SITE}${p}</loc>`)) fail(`sitemap: lists noindex ${p}`);
     for (const p of ['/dashboard/changelog', '/dashboard/stats']) if (sitemap.includes(`<loc>${SITE}${p}</loc><lastmod>`)) fail(`sitemap: dates live page ${p}`);
-    for (const loc of sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)) if (itemFor(loc[1].slice(SITE.length))) fail(`sitemap: lists the item address ${loc[1]}`);
+    for (const loc of sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)) if (addressFor(loc[1].slice(SITE.length))) fail(`sitemap: lists the address ${loc[1]}`);
 
     const changelog = await (await get('/dashboard/changelog')).text();
     if (process.env.GITHUB_TOKEN) {
