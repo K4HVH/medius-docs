@@ -79,15 +79,15 @@ describe('Guide pages', () => {
     expect(answer('stock-firmware').links?.map((l) => l.href)).toContain('/dashboard/update#manual');
   });
 
-  it('explains every place on the Options tab a link can name, under the same id, and links back to it', () => {
+  it('gives every place on the Options tab a link can name a section under the same id, with a link back', () => {
     const r = mount('/guide/options', Options);
     for (const [id, title] of Object.entries(OPTION_PLACES)) {
       if (id === 'options') continue;
       const el = r.container.querySelector(`[id="${id}"]`);
       expect(el, id).not.toBeNull();
-      const named = el!.querySelector('h2')?.getAttribute('aria-label') ?? el!.querySelector('.api-response-label > span')?.textContent;
-      expect(named, id).toBe(title);
-      const back = el!.querySelector('h2 a.fix, .api-response-label a.fix');
+      expect(el!.tagName, id).toBe('SECTION');
+      expect(el!.querySelector('h2')?.getAttribute('aria-label'), id).toBe(title);
+      const back = el!.querySelector('h2 a.fix');
       expect(back?.getAttribute('href'), id).toBe(`/dashboard#${id}`);
       expect(back?.textContent, id).toBe('Dashboard');
       expect(el!.querySelector('thead')?.textContent, id).toMatch(/^(Value|Setting)Effect$/);

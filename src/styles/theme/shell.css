@@ -241,8 +241,7 @@ html { scroll-padding-top: calc(var(--nav-h) + 24px); }
    beside it. */
 .doc-h2:has(> .cross) { flex-wrap: nowrap; align-items: center; }
 .doc-h2:has(> .cross) > .doc-t { min-width: 0; }
-.api-response-label:has(> .cross) { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-:is(.doc-h2, .api-response-label) > .cross { flex: none; text-transform: none; letter-spacing: normal; }
+.doc-h2 > .cross { flex: none; }
 
 /* The link icon beside a place the site links to (shell/CopyLink.tsx): shown while its heading, label or
    row is under the pointer, or while it has focus, and always where nothing hovers. It comes in as the
