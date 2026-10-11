@@ -503,4 +503,22 @@ describe('dashboard poller', () => {
       dispose();
     });
   });
+
+  it('runs no timer without a link, and reads as soon as one comes', async () => {
+    const { calls, link } = makeLink();
+    await createRoot(async (dispose) => {
+      const [current, setCurrent] = createSignal<SerialLink | null>(null);
+      const poller = createPoller(current);
+      poller.subscribe('locks', 500);
+      await settle();
+      expect(vi.getTimerCount()).toBe(0);
+      await vi.advanceTimersByTimeAsync(10_000);
+      expect(vi.getTimerCount()).toBe(0);
+      setCurrent(link);
+      await settle();
+      expect(calls.health).toBe(1);
+      expect(calls.locks).toBe(1);
+      dispose();
+    });
+  });
 });

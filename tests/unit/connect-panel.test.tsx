@@ -190,7 +190,8 @@ describe('ConnectPanel', () => {
     const { getByRole, queryByRole } = render(() => <ConnectPanel />);
     expect(getByRole('alert').textContent?.trim()).toBe("The box isn't answering. Check USB1 is plugged in too.");
     expect(queryByRole('button', { name: /^connect$/i })).toBeNull();
-    expect((getByRole('button', { name: /reconnecting/i }) as HTMLButtonElement).disabled).toBe(true);
+    expect(queryByRole('button', { name: /reconnecting/i })).toBeNull();
+    expect(getByRole('status').textContent?.trim()).toBe('Reconnecting...');
     getByRole('button', { name: /disconnect/i }).click();
     await waitFor(() => expect(getByRole('button', { name: /^connect$/i })).toBeTruthy());
     expect(mock.disconnects).toBe(1);
