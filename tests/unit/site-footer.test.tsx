@@ -26,7 +26,7 @@ describe('SiteFooter', () => {
 
   it('groups its links under Guide, Docs, Dashboard and Community', () => {
     const r = mount();
-    const titles = [...r.container.querySelectorAll('footer h4')].map((h) => h.textContent);
+    const titles = [...r.container.querySelectorAll('footer h2')].map((h) => h.textContent);
     expect(titles).toEqual(['Guide', 'Docs', 'Dashboard', 'Community']);
     expect(r.container.querySelector('footer')!.textContent).toContain('Firmware for the MAKCU box.');
     expect(r.container.querySelector('footer')!.textContent).toContain('© 2026 K4TECH');

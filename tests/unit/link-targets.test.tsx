@@ -26,6 +26,14 @@ describe('the places a link can name', () => {
     expect(b.parentElement!.nextElementSibling?.classList.contains('doc-caption')).toBe(true);
   });
 
+  it("lets an identifier's title break between its words, and reads as before", () => {
+    const r = render(() => <DocSection id="snap" title="MediusCountersSnapshot">x</DocSection>);
+    const t = r.container.querySelector('.doc-t')!;
+    expect(t.querySelectorAll('wbr').length).toBeGreaterThanOrEqual(2);
+    expect(t.textContent).toBe('MediusCountersSnapshot');
+    expect(htmlToMarkdown(r.container.innerHTML)).toBe('## MediusCountersSnapshot\n\nx');
+  });
+
   it('gives a section with no id none', () => {
     const r = render(() => <DocSection title="Loose">x</DocSection>);
     expect(r.container.querySelector('button.cl')).toBeNull();

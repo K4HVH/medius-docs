@@ -109,7 +109,8 @@
 .command-palette__backdrop { background: rgba(0, 0, 0, 0.7); backdrop-filter: none; -webkit-backdrop-filter: none; }
 .command-palette { border-radius: 0; background: #0a0a0a; border-color: var(--line-2); box-shadow: none; }
 
-/* The box list in the sidebar reads like the page links beside it: a blue edge on the selected box. */
+/* The box list in the sidebar reads like the page links beside it, its selected box marked by a white edge:
+   blue marks the page you are on. */
 .side .box-tabs { gap: 0; }
 .side .box-tabs .tabs__tab {
   padding: 6px 24px 6px 22px;
@@ -125,8 +126,7 @@
 }
 .side .box-tabs .tabs__tab--active {
   color: var(--text);
-  border-left-color: var(--accent);
-  background: linear-gradient(90deg, rgba(0, 128, 255, 0.08), transparent 70%);
+  border-left-color: var(--text);
 }
 
 /* Box names run to 32 characters; the sidebar tabs were sized for short labels. */

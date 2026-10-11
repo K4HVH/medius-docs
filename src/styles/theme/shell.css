@@ -100,7 +100,7 @@ html { scroll-padding-top: calc(var(--nav-h) + 24px); }
 .site-footer > div:first-child { grid-column: span 4; }
 .site-footer .brand { display: block; margin-bottom: 16px; }
 .site-footer p { margin: 0; color: var(--muted); font-size: 14px; }
-.site-footer h4.label { margin: 0 0 16px; }
+.site-footer h2.label { margin: 0 0 16px; }
 .site-footer ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; font-size: 14px; }
 .site-footer li { margin: 0; line-height: 1.4; }
 .site-footer ul a { color: var(--muted); text-decoration: none; transition: color 0.25s; }
@@ -218,7 +218,7 @@ html { scroll-padding-top: calc(var(--nav-h) + 24px); }
 .crumbs a { color: var(--dim); text-decoration: none; transition: color 0.25s; }
 .crumbs a:hover { color: var(--text); text-decoration: none; }
 .page-header h1 {
-  margin: 20px 0 0; font: 700 clamp(44px, 5vw, 72px)/1 var(--sans); letter-spacing: -0.035em; color: var(--text);
+  margin: 20px 0 0; font: 700 clamp(min(44px, 11vw), 5vw, 72px)/1 var(--sans); letter-spacing: -0.035em; color: var(--text);
 }
 /* The title's line clips it, so on arrival it rises out of the line. */
 .page-header h1 .mask { display: block; overflow: hidden; padding-bottom: 0.1em; margin-bottom: -0.1em; }
@@ -258,9 +258,12 @@ html { scroll-padding-top: calc(var(--nav-h) + 24px); }
 .cl:not([data-said])::after { display: none; }
 .cl[data-side="left"]::after { left: auto; right: calc(100% + 2px); transform: translate(4px, -50%); }
 .cl[data-state]::after { opacity: 1; transform: translate(0, -50%); }
-@media (hover: hover) {
+/* A window as narrow as a phone shows it as a phone does, so a hidden icon never reaches past the page's
+   edge. In a table row it sits closer to its text, nearer that than the next column's. */
+@media (hover: hover) and (min-width: 601px) {
   .cl { margin-right: -30px; opacity: 0; transform: translateX(-4px); }
   :hover > .cl, .doc-h2:hover .cl, tr:hover .cl, .cl:focus-visible, .cl[data-state] { opacity: 1; transform: none; }
+  td > .cl { margin-left: 2px; margin-right: -26px; }
 }
 .cl-said { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 :is(.page-header, .doc-section):has(> p:last-child) + .doc-section > .doc-h2 { margin-top: 37px; }
