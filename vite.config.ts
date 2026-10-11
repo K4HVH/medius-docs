@@ -37,7 +37,7 @@ function homeApi(): Plugin {
     name: 'home-api',
     configureServer(server) {
       server.middlewares.use((req, res, next) => {
-        if (req.url !== '/api/home') return next();
+        if (!req.url?.startsWith('/api/home')) return next();
         handleHomeApi(new Request(`http://localhost${req.url}`, { method: req.method }))
           .then(async (response) => {
             if (!response) return next();

@@ -1,5 +1,5 @@
 import { For, Match, Show, Switch, createEffect, createSignal, on } from 'solid-js';
-import { useNavigate } from '@solidjs/router';
+import { useLocation, useNavigate } from '@solidjs/router';
 import { Button } from '../../../components/inputs/Button';
 import { Chip } from '../../../components/display/Chip';
 import { type Health, PROTO_VER, versionString } from '../../../dashboard/protocol';
@@ -8,6 +8,7 @@ import { createCommand } from './action';
 import { CapabilitiesPanel, PerformancePanel } from './DeviceInfo';
 import DeviceFactoryReset from './DeviceFactoryReset';
 import DeviceOptions from './DeviceOptions';
+import { OPTION_PLACES } from './optionPlaces';
 import { ConnectPanel } from './ConnectPanel';
 import UpdateOnlyCard from './UpdateOnlyCard';
 import { PageHeader } from '../../shell/PageHeader';
@@ -54,6 +55,15 @@ const Device = () => {
   // A refusal belongs to the link it came over.
   createEffect(on(dash.link, () => blink.clear(), { defer: true }));
   const full = () => connected() && !dash.updateOnly();
+  const location = useLocation();
+  // An option a link named (from the Guide or Help), which only a connected box shows.
+  const asked = () => {
+    try {
+      return OPTION_PLACES[decodeURIComponent(location.hash.slice(1))] ?? null;
+    } catch {
+      return null;
+    }
+  };
   const logRows = () => dash.deviceLog().map(logCells);
   const empty = () => dash.deviceLog().length === 0;
   const [copied, setCopied] = createSignal(false);
@@ -154,6 +164,7 @@ const Device = () => {
                     </Match>
 
                     <Match when={dash.status() === 'error' || dash.status() === 'disconnected' || dash.status() === 'lost'}>
+                      <Show when={asked()}>{(title) => <p data-search-skip>Connect your box to reach {title()}.</p>}</Show>
                       <ConnectPanel />
                     </Match>
                   </Switch>
