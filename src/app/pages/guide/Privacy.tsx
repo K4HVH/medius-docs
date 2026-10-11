@@ -68,7 +68,7 @@ const Privacy: Component = () => (
           ['System', 'Operating system and browser'],
           ['Activity', 'Each day the box connected, and when it was first and last seen'],
           ['Device', "The cloned device's VID:PID, kind and product name"],
-          ['Flash', 'What was flashed, from and to which versions, the result and how long it took'],
+          ['Flash', 'When, from which page and route, which chips, what was flashed, from and to which versions, the result and how long it took'],
           ['Country', 'As Cloudflare reports it'],
           ['IP address', 'Held in memory for 1 minute to limit each address to 60 reports; never stored'],
           ['Kept', 'Until deleted on request'],
@@ -89,8 +89,10 @@ const Privacy: Component = () => (
           ['Ticket check results', 'A pass until it expires; a failure for a day'],
           ['Captcha challenges', 'Until they expire'],
           ["A temp-ban's end", 'Until it lifts the ban'],
+          ['Scam signatures: links and image hashes from scam posts', '30 days'],
           ['Mod-log posts naming members', '1 year'],
-          ['Member-log posts: edited and deleted messages, joins, leaves, role and name changes', '90 days'],
+          ['Member-log posts: edited and deleted messages, joins, leaves, verifications, role and name changes', '90 days'],
+          ["A ticket's transcript, DMed to its opener when it closes", 'In their DMs until deleted'],
         ]}
       />
     </DocSection>
@@ -99,10 +101,17 @@ const Privacy: Component = () => (
       <Details
         head={['Request', 'Detail']}
         rows={[
-          ['A copy of your data', 'Open a ticket in the Discord server'],
+          ['Bot data copied', 'Open a ticket. Staff post a file of everything the bot holds on you in it.'],
           [
             'Bot data deleted',
             "Open a ticket. Moderation history, tickets and transcripts, check results, captchas, the bot's log posts naming you and its DMs to you are deleted. Bans and timeouts stay in force: Discord holds those.",
+          ],
+          [
+            'Usage stats copied',
+            <>
+              Open a ticket with the Box ID from the dashboard's <A href="/dashboard">Device</A> tab. You get every
+              record of that box.
+            </>,
           ],
           [
             'Usage stats deleted',
