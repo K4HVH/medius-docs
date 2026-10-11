@@ -10,6 +10,8 @@ const mock = vi.hoisted(() => ({
   identifying: false,
   identifyRefused: false,
   setLink: (_l: object | null) => {},
+  // Tells the page the box changed (an update finished), so what it reads is read again.
+  changed: () => {},
   supported: true,
   secure: true,
   status: 'disconnected' as string,
@@ -27,21 +29,23 @@ vi.mock('../../src/app/pages/dashboard/context', async () => {
   const { createSignal } = await import('solid-js');
   const [link, setLink] = createSignal<object | null>({});
   mock.setLink = setLink;
+  const [tick, setTick] = createSignal(0);
+  mock.changed = () => setTick((n) => n + 1);
   return {
   useDashboard: () => ({
     link,
     supported: mock.supported,
     secure: mock.secure,
-    status: () => mock.status,
+    status: () => (tick(), mock.status),
     held: () => mock.status === 'lost',
     present: () => true,
-    updateOnly: () => mock.updateOnly,
+    updateOnly: () => (tick(), mock.updateOnly),
     verdict: () => mock.verdict,
     error: () => mock.error,
     // Update-only is a 3.2.0 box on protocol 5 unless a test says otherwise; the full page is a 3.4.2
     // box on the current wire.
     version: () =>
-      mock.updateOnly
+      (tick(), mock.updateOnly)
         ? { protoVer: mock.protoVer, fwMajor: 3, fwMinor: 2, fwPatch: 0, mac: [], name: '' }
         : { protoVer: PROTO_VER, fwMajor: 3, fwMinor: 4, fwPatch: 2, mac: [], name: '' },
     health: () => null,
@@ -175,6 +179,22 @@ describe('Device', () => {
     mock.protoVer = PROTO_VER + 1;
     const newer = render(() => <Device />);
     expect(newer.container.querySelector<HTMLButtonElement>('[data-tab="options"]')!.disabled).toBe(true);
+  });
+
+  it('swaps the older layout for the whole page when the box is updated while its Options are open', async () => {
+    mock.status = 'connected';
+    mock.updateOnly = true;
+    mock.protoVer = 5;
+    mock.hash = '#options';
+    const { container } = render(() => <Device />);
+    await waitFor(() => expect(container.querySelector('#older-firmware')).not.toBeNull());
+    expect(container.querySelector('#render')).toBeNull();
+    mock.updateOnly = false;
+    mock.changed();
+    await waitFor(() => expect(container.querySelector('#older-firmware')).toBeNull());
+    expect(container.querySelector('#render')).not.toBeNull();
+    expect(container.querySelector('#factory-reset')).not.toBeNull();
+    expect(container.querySelector('#imperfect-clone')!.textContent).toContain('Advanced tab');
   });
 
   it('a box newer than the page is called newer and pointed at Reload and the manual flash, never told to update', async () => {
