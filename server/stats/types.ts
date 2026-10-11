@@ -6,7 +6,7 @@ export const BROWSERS = ['chrome', 'edge', 'opera', 'brave', 'chromium'] as cons
 export const PAGES = ['setup', 'update', 'advanced'] as const;
 export const ROUTES = ['usb2', 'rom'] as const;
 export const CHIPS = ['device', 'host', 'both'] as const;
-export const SOURCES = ['release', 'file'] as const;
+export const SOURCES = ['release', 'file', 'stock'] as const;
 export const KINDS = ['app', 'factory'] as const;
 // verified, reverted, sent and failed are runs over USB2; written is ROM download.
 export const RESULTS = ['verified', 'reverted', 'sent', 'failed', 'written'] as const;

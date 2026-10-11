@@ -11,6 +11,7 @@ import {
   validateImage,
 } from '../../../dashboard/flash';
 import { downloadAsset, fetchReleases } from '../../../dashboard/firmware';
+import { fetchStockCatalog, fetchStockFile } from '../../../dashboard/flash/stock';
 import { requestRomPort } from '../../../dashboard/serial';
 import { useNavigate } from '@solidjs/router';
 import { BoxScope, useBoxes, useNativeFlash } from './context';
@@ -24,9 +25,13 @@ import { Select } from '../../shell/Select';
 // Over USB2 both chips may be written in turn; each count names its chip.
 const CHIP_CUE: Record<string, string> = { host: 'Flashing the mouse-side chip', device: 'Flashing the main chip' };
 
+const CHIP_NAME: Record<FlashChip, string> = { device: 'main chip', host: 'mouse-side chip' };
+const OTHER: Record<FlashChip, FlashChip> = { device: 'host', host: 'device' };
+
 const WAIT: Partial<Record<FlashPhase, string>> = {
   rebooting: 'Rebooting',
   connecting: 'Connecting',
+  erasing: 'Erasing',
   restarting: 'Restarting',
   verifying: 'Verifying',
 };
@@ -52,7 +57,17 @@ const ManualFlash = () => {
   const [releases] = createResource(fetchReleases);
   const [chip, setChip] = createSignal<FlashChip>('device');
   const [kind, setKind] = createSignal<FlashKind>('factory');
-  const [source, setSource] = createSignal<'release' | 'upload'>('release');
+  const [source, setSource] = createSignal<'release' | 'upload' | 'stock'>('release');
+  // MAKCU's catalog, read once MAKCU stock is picked; the chips flashed with it on this visit.
+  const [stock] = createResource(() => source() === 'stock' || null, fetchStockCatalog);
+  const stockBuild = () => {
+    try {
+      return stock() ?? null;
+    } catch {
+      return null;
+    }
+  };
+  const [stocked, setStocked] = createSignal<ReadonlySet<FlashChip>>(new Set());
   const [files, setFiles] = createSignal<File[]>([]);
   const [image, setImage] = createSignal<Uint8Array | null>(null);
   const [done, setDone] = createSignal(false);
@@ -146,7 +161,11 @@ const ManualFlash = () => {
   );
 
   const canFlash = () =>
-    source() === 'upload' ? !!image() && validationError() === null : !!asset() && !releases.loading;
+    source() === 'stock'
+      ? !!stockBuild()
+      : source() === 'upload'
+        ? !!image() && validationError() === null
+        : !!asset() && !releases.loading;
 
   const flash = async () => {
     setErr(null);
@@ -159,6 +178,20 @@ const ManualFlash = () => {
       // ROM download over each chip's native USB: device chip on USB1, host chip on USB3, entered by
       // holding the button beside that socket while plugging in.
       const port = await requestRomPort();
+      const cat = target.source === 'stock' ? stockBuild() : null;
+      if (cat) {
+        const [pkg, boot] = await Promise.all([fetchStockFile(cat.files.package), fetchStockFile(cat.files[target.chip === 'device' ? 'usb1' : 'usb3'])]);
+        if (await native.flashStock(port, target.chip, pkg, boot, 'advanced')) {
+          setStocked((s) => new Set([...s, target.chip]));
+          setDone(true);
+          return;
+        }
+        // Past the erase, the chip may hold nothing that boots: it can't be bricked, and either firmware puts it right.
+        const erased = ['erasing', 'writing'].includes(native.progress()?.phase ?? '');
+        return setErr(
+          `${native.error() ?? 'That did not finish.'}${erased ? ` The ${CHIP_NAME[target.chip]} may be erased. Flash it again, or put Medius back with Set up.` : ''}`,
+        );
+      }
       const a = latest()?.assets.find((x) => x.name === nameFor(target.chip, target.kind)) ?? null;
       const img = target.source === 'upload' ? image() : a ? await downloadAsset(a) : null;
       if (!img) return setErr('No image selected.');
@@ -216,6 +249,52 @@ const ManualFlash = () => {
             }
           >
             <Switch>
+              <Match when={done() && source() === 'stock'}>
+                <Show
+                  when={stocked().size === 2}
+                  fallback={
+                    <>
+                      <p class="state">
+                        <span class="dot ok" />
+                        The {CHIP_NAME[chip()]} runs MAKCU's firmware. Now the {CHIP_NAME[OTHER[chip()]]}: the box passes nothing until both
+                        match.
+                      </p>
+                      <div class="acts">
+                        <Button
+                          variant="primary"
+                          onClick={() => {
+                            setChip(OTHER[chip()]);
+                            setDone(false);
+                          }}
+                        >
+                          Flash the {CHIP_NAME[OTHER[chip()]]}
+                        </Button>
+                      </div>
+                    </>
+                  }
+                >
+                  <p class="state">
+                    <span class="dot ok" />
+                    Both chips run MAKCU's firmware. Unplug the box for 10 s, then plug in USB1 and USB2. This dashboard can't talk to MAKCU's
+                    firmware; Set up puts Medius back.
+                  </p>
+                  <div class="acts">
+                    <Button variant="primary" onClick={() => navigate('/dashboard/setup')}>
+                      Set up
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      onClick={() => {
+                        setStocked(new Set<FlashChip>());
+                        setDone(false);
+                      }}
+                    >
+                      Flash another
+                    </Button>
+                  </div>
+                </Show>
+              </Match>
+
               <Match when={done()}>
                 <p class="state">
                   <span class="dot ok" />
@@ -247,19 +326,21 @@ const ManualFlash = () => {
                     onChange={(v) => setChip(v as FlashChip)}
                   />,
                 )}
-                {choice(
-                  'Image',
-                  <Select
-                    label="Image"
-                    options={[
-                      { value: 'factory', label: 'Factory (full image at 0x0)' },
-                      { value: 'app', label: 'Application (app only at 0x10000)' },
-                    ]}
-                    value={kind()}
-                    disabled={busy()}
-                    onChange={(v) => setKind(v as FlashKind)}
-                  />,
-                )}
+                <Show when={source() !== 'stock'}>
+                  {choice(
+                    'Image',
+                    <Select
+                      label="Image"
+                      options={[
+                        { value: 'factory', label: 'Factory (full image at 0x0)' },
+                        { value: 'app', label: 'Application (app only at 0x10000)' },
+                      ]}
+                      value={kind()}
+                      disabled={busy()}
+                      onChange={(v) => setKind(v as FlashKind)}
+                    />,
+                  )}
+                </Show>
                 {choice(
                   'Source',
                   <Segmented
@@ -267,12 +348,37 @@ const ManualFlash = () => {
                     options={[
                       { value: 'release', label: 'Latest release' },
                       { value: 'upload', label: 'Upload a file' },
+                      { value: 'stock', label: 'MAKCU stock' },
                     ]}
                     value={source()}
                     disabled={busy()}
-                    onChange={(v) => setSource(v as 'release' | 'upload')}
+                    onChange={(v) => setSource(v as 'release' | 'upload' | 'stock')}
                   />,
                 )}
+
+                <Show when={source() === 'stock'}>
+                  <Switch>
+                    <Match when={stock.loading}>
+                      <p class="mut" data-search-skip>Reading MAKCU's catalog...</p>
+                    </Match>
+                    <Match when={stock.error as Error | undefined}>
+                      {(e) => <div class="callout callout--warning">{e().message}</div>}
+                    </Match>
+                    <Match when={stockBuild()}>
+                      {(c) => (
+                        <>
+                          <p class="mut">
+                            MAKCU {c().build.label}, the official build, with the {CHIP_NAME[chip()]}'s bootloader, from MAKCU's signed catalog.
+                          </p>
+                          <div class="callout callout--info">
+                            This erases the whole chip, settings included. Once both chips have it, the box runs MAKCU's firmware, which this
+                            dashboard can't talk to. Set up puts Medius back.
+                          </div>
+                        </>
+                      )}
+                    </Match>
+                  </Switch>
+                </Show>
 
                 <Show when={source() === 'release'}>
                   <Switch>
