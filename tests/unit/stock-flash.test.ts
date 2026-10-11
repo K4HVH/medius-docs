@@ -45,9 +45,12 @@ vi.mock('esptool-js', () => {
     }) {
       if (rom.fail) throw rom.fail;
       rom.writes.push({ fileArray: o.fileArray, eraseAll: o.eraseAll, flashMode: o.flashMode, flashFreq: o.flashFreq, flashSize: o.flashSize, compress: o.compress, md5: !!o.calculateMD5Hash?.(o.fileArray[0].data) });
+      // esptool-js counts what it sends, compressed.
       o.fileArray.forEach((f, i) => {
-        o.reportProgress?.(i, 0, f.data.length);
-        o.reportProgress?.(i, f.data.length, f.data.length);
+        const sent = Math.round(f.data.length * 0.6);
+        o.reportProgress?.(i, 0, sent);
+        o.reportProgress?.(i, Math.round(sent / 2), sent);
+        o.reportProgress?.(i, sent, sent);
       });
     }
   }
@@ -81,9 +84,10 @@ function stockBoot(role: number): Uint8Array {
   return b;
 }
 
-const run = (chip: 'device' | 'host') => {
+const run = (chip: 'device' | 'host', over: { anyway?: boolean; knownMain?: (mac: string) => boolean } = {}) => {
   const seen: FlashProgress[] = [];
-  return { seen, done: flashStock({ port, chip, pkg: PKG, boot: BOOT, onProgress: (p) => seen.push(p) }) };
+  const macs: (string | null)[] = [];
+  return { seen, macs, done: flashStock({ port, chip, pkg: PKG, boot: BOOT, onProgress: (p) => seen.push(p), onMac: (m) => macs.push(m), ...over }) };
 };
 
 beforeEach(() => {
@@ -116,6 +120,10 @@ describe('flashStock', () => {
     expect(written).toEqual([...written].sort((a, b) => a - b));
     expect(seen.find((p) => p.phase === 'writing')!.total).toBe(PKG.length + BOOT.length);
     expect(written.at(-1)).toBe(PKG.length + BOOT.length);
+    // The package's last report and the bootloader's first meet: no jump between the files.
+    expect(written).toContain(PKG.length);
+    const steps = written.slice(1).map((w, i) => w - written[i]);
+    expect(Math.max(...steps)).toBeLessThanOrEqual(PKG.length / 2 + 1);
   });
 
   it('refuses a chip that is not an ESP32-S3 before writing anything', async () => {
@@ -124,14 +132,29 @@ describe('flashStock', () => {
     expect(rom.writes).toEqual([]);
   });
 
-  it('refuses the other chip when its flash names it, Medius or MAKCU', async () => {
+  it('refuses the other chip when Medius names it, and sends no MAC for a chip it refused', async () => {
     rom.flash.set(0x10000, mediusApp('medius_host'));
-    await expect(run('device').done).rejects.toBeInstanceOf(WrongChipError);
+    const r = run('device');
+    await expect(r.done).rejects.toBeInstanceOf(WrongChipError);
+    await expect(r.done).rejects.toMatchObject({ found: 'host', sure: true });
+    expect(r.macs).toEqual([]);
     rom.flash = new Map([[0x100000, mediusApp('medius_device')]]);
-    await expect(run('host').done).rejects.toThrow(/main chip/);
-    rom.flash = new Map([[0, stockBoot(2)]]);
-    await expect(run('device').done).rejects.toThrow(/mouse-side chip/);
+    await expect(run('host', { anyway: true }).done).rejects.toThrow(/main chip/);
     expect(rom.writes).toEqual([]);
+  });
+
+  it("asks before flashing a chip MAKCU's bootloader names as the other, since an earlier flash may have put it there", async () => {
+    rom.flash = new Map([[0, stockBoot(2)]]);
+    await expect(run('device').done).rejects.toMatchObject({ found: 'host', sure: false });
+    expect(rom.writes).toEqual([]);
+    await run('device', { anyway: true }).done;
+    expect(rom.writes).toHaveLength(1);
+  });
+
+  it("refuses a blank chip picked as the mouse-side chip when its MAC is a box's main chip", async () => {
+    await expect(run('host', { knownMain: (m) => m === '588c81df1e28' }).done).rejects.toMatchObject({ found: 'device', sure: true });
+    await run('device', { knownMain: (m) => m === '588c81df1e28' }).done;
+    expect(rom.writes).toHaveLength(1);
   });
 
   it('flashes the chip its flash names, and one whose flash names nothing', async () => {

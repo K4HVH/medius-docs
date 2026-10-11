@@ -220,6 +220,15 @@ a.fix .arr { width: 11px; height: 11px; margin: 0; }
 .api-params .ni { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
 .api-params.fixed { table-layout: fixed; }
 .api-params.fixed td { overflow-wrap: anywhere; }
+/* The Options page's tables: a name column wide enough for its words, which never break inside. */
+.api-params.opts .k { width: 26%; }
+.api-params.opts td:first-child { overflow-wrap: normal; }
+@media (max-width: 480px) {
+  .api-params.opts .k { width: 38%; }
+}
+@media (max-width: 360px) {
+  .api-params.opts .k { width: 44%; }
+}
 /* Tables of things rather than code: names in the text face, and on the device list the kind and the
    release muted beside the name. */
 :is(.api-params).names td:first-child { font-family: var(--sans); font-size: 14px; }

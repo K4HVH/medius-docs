@@ -55,7 +55,7 @@ Bun.serve({
     const stats = await handleStatsApi(req, server.requestIP(req)?.address);
     if (stats) return stats;
 
-    const stocked = await stock(req);
+    const stocked = await stock(req, server.requestIP(req)?.address);
     if (stocked) return stocked;
 
     const home = await handleHomeApi(req);

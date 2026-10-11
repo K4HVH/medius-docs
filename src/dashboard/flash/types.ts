@@ -23,6 +23,10 @@ export interface FlashStockParams {
   chip: FlashChip;
   pkg: Uint8Array;
   boot: Uint8Array;
+  // Flash a chip MAKCU's bootloader names as the other one: the owner said so.
+  anyway?: boolean;
+  // Whether a MAC is a known box's main chip.
+  knownMain?: (mac: string) => boolean;
   onProgress?: (p: FlashProgress) => void;
   onLog?: (line: string) => void;
   onMac?: (mac: string | null) => void;
@@ -82,4 +86,22 @@ export function looksLikeWrongKind(image: Uint8Array, kind: FlashKind): boolean 
   if (kind === 'app' && factoryShaped) return true;
   if (kind === 'factory' && !factoryShaped) return true;
   return false;
+}
+
+const CHIP_NAME: Record<FlashChip, string> = { device: 'main chip', host: 'mouse-side chip' };
+const CHIP_PORT: Record<FlashChip, string> = { device: 'USB1', host: 'USB3' };
+
+// `sure`: Medius's image or the box's MAC named the chip. MAKCU's bootloader names it less surely: a stock
+// flash of the wrong chip puts the other port's there, so the owner is asked rather than refused.
+export class WrongChipError extends Error {
+  constructor(
+    readonly found: FlashChip,
+    readonly sure: boolean,
+  ) {
+    super(
+      sure
+        ? `This is the ${CHIP_NAME[found]}. Pick it above, or plug in ${CHIP_PORT[found === 'device' ? 'host' : 'device']} with the button beside it held.`
+        : `MAKCU's bootloader on this chip is the ${CHIP_NAME[found]}'s.`,
+    );
+  }
 }

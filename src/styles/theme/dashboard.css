@@ -80,6 +80,10 @@
 .ph h2 { margin: 0; font: 600 26px/1.2 var(--sans); letter-spacing: -0.02em; color: var(--text); }
 .ph .caps { color: var(--dim); }
 .ph .pr { display: flex; align-items: center; gap: 12px; }
+/* A Guide link stays at the heading's right; a long title wraps beside it. */
+.ph:has(> .guide) { flex-wrap: nowrap; }
+.ph:has(> .guide) > h2 { min-width: 0; }
+.ph > .guide { flex: none; }
 /* The tab strip's rule heads the first row, so those panels draw no rule. */
 .pn.top > .ph { margin-top: 32px; padding-top: 0; border-top: 0; }
 .pn.top > .ph::before { display: none; }
@@ -97,6 +101,8 @@
 .acts.mid { align-items: center; }
 .reconnect { display: inline-flex; align-items: center; gap: 10px; min-height: 36px; color: var(--muted); }
 .labelled { display: grid; gap: 8px; justify-items: start; min-width: 0; }
+/* A row's label with its Guide link at the right. */
+.field-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; justify-self: stretch; }
 .labelled > p { margin: 0; font-size: 14.5px; }
 /* Field widths in a row: a number, an id, a name; a free text field takes what the row leaves. */
 .fw-s { width: 9rem; max-width: 100%; }

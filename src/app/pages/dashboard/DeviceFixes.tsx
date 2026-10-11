@@ -1,15 +1,17 @@
-import { Match, Show, Switch, createMemo, createSignal } from 'solid-js';
+import { type Accessor, Match, type Setter, Show, Switch, createMemo, createSignal } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
 import { Button } from '../../../components/inputs/Button';
 import { anyPending } from '../../../dashboard/protocol';
 import { useDashboard } from './context';
+import { boxId } from './session';
 import { Panel } from '../../shell/Panel';
-import { type FixIO, type Offer, type Outcome, allowImperfect, logitechFix, offerFor, offerKey } from './fixes';
+import { type FixIO, type Offer, type Outcome, type Signals, allowImperfect, logitechFix, offerFor, offerKey } from './fixes';
 
 const KEPT = 'medius.fixes.kept';
 
-// Offers put away with "Keep as it is", by device and fix. Storage that throws (a private window) keeps
-// them for this page alone.
+// Offers put away with "Keep as it is", by device and fix, and Logitech mice the fix showed can't go
+// faster. Storage that throws (a private window) keeps them for this page alone; a device the box reads no
+// ids for is kept for this page alone too, since every such device reads the same.
 const remembered = new Set<string>();
 const kept = (): Set<string> => {
   try {
@@ -21,11 +23,37 @@ const kept = (): Set<string> => {
 };
 const keep = (k: string) => {
   remembered.add(k);
+  if (k.startsWith('unread/')) return;
   try {
-    localStorage.setItem(KEPT, JSON.stringify([...kept()]));
+    localStorage.setItem(KEPT, JSON.stringify([...kept()].filter((x) => !x.startsWith('unread/'))));
   } catch {
     // remembered alone
   }
+};
+const offerSlot = (s: Signals, o: Offer) => `${offerKey(s)}/${o.kind}${o.kind === 'imperfect' && o.update ? '-update' : ''}`;
+const tried = (s: Signals) => `${offerKey(s)}/logitech-tried`;
+
+// A fix under way or just done, kept per box so the panel going away (another page, the box answering
+// late) neither loses it nor lets a second one start beside it.
+interface Run {
+  shown: Accessor<Offer | null>;
+  setShown: Setter<Offer | null>;
+  running: Accessor<boolean>;
+  setRunning: Setter<boolean>;
+  result: Accessor<Outcome | null>;
+  setResult: Setter<Outcome | null>;
+}
+const runs = new Map<string, Run>();
+const runFor = (box: string): Run => {
+  let r = runs.get(box);
+  if (!r) {
+    const [shown, setShown] = createSignal<Offer | null>(null);
+    const [running, setRunning] = createSignal(false);
+    const [result, setResult] = createSignal<Outcome | null>(null);
+    r = { shown, setShown, running, setRunning, result, setResult };
+    runs.set(box, r);
+  }
+  return r;
 };
 
 const title = (o: Offer): string =>
@@ -42,6 +70,7 @@ const said = (o: Outcome): string =>
     checking: 'The box is still checking its new firmware. Try again in a minute.',
     refused: "The box didn't take the setting. Try again.",
     silent: "The box isn't answering.",
+    changed: 'The device changed. Look again before setting anything.',
   })[o.kind];
 
 const GOOD: ReadonlySet<Outcome['kind']> = new Set(['fast', 'capped', 'native', 'allowed']);
@@ -54,19 +83,18 @@ export default function DeviceFixes() {
   const emit = dash.poll('emit');
   const device = dash.poll('deviceInfo');
   const rate = dash.poll('rate');
-  const signals = () => ({ version: dash.version(), device: device(), imperfect: imperfect(), emit: emit(), rate: rate() });
+  const signals = (): Signals => ({ version: dash.version(), device: device(), imperfect: imperfect(), emit: emit(), rate: rate() });
+  const run = () => runFor(boxId(dash.version()) ?? 'none');
   const [put, setPut] = createSignal(0);
   const offer = createMemo(() => {
     put();
     const s = signals();
     const o = offerFor(s);
-    return o && !kept().has(`${offerKey(s)}/${o.kind}`) ? o : null;
+    if (!o || kept().has(offerSlot(s, o))) return null;
+    return o.kind === 'logitech' && kept().has(tried(s)) ? null : o;
   });
-  const [running, setRunning] = createSignal(false);
-  const [result, setResult] = createSignal<Outcome | null>(null);
-  // The offer a result answers, held while the box restarts and the offer itself goes.
-  const [shown, setShown] = createSignal<Offer | null>(null);
-  const current = () => (running() || result() ? shown() : offer());
+  const current = () => (run().running() || run().result() ? run().shown() : offer());
+  let status: HTMLParagraphElement | undefined;
 
   const io: FixIO = {
     now: () => Date.now(),
@@ -85,26 +113,52 @@ export default function DeviceFixes() {
     },
   };
 
+  // What the box says now, read fresh: the polls run seconds behind, and the device may have changed.
+  const fresh = async (): Promise<Signals> => {
+    const l = dash.link();
+    const read = <T,>(p: Promise<T> | undefined) => (p ?? Promise.resolve(null)).catch(() => null);
+    const [d, i, e] = await Promise.all([read(l?.queryDeviceInfo(1000)), read(l?.queryImperfect(1000)), read(l?.queryEmitPace(1000))]);
+    return { ...signals(), device: d, imperfect: i, emit: e };
+  };
+
   const apply = (o: Offer) => {
-    setShown(o);
-    setResult(null);
-    setRunning(true);
-    void (o.kind === 'logitech' ? logitechFix(io) : allowImperfect(io))
+    const r = run();
+    if (r.running()) return;
+    const at = signals();
+    r.setShown(o);
+    r.setResult(null);
+    r.setRunning(true);
+    status?.focus();
+    void (async (): Promise<Outcome> => {
+      const now = await fresh();
+      if (!now.imperfect && !now.emit) return { kind: 'silent' };
+      const still = offerFor(now);
+      if (!still || still.kind !== o.kind || offerKey(now) !== offerKey(at)) return { kind: 'changed' };
+      return o.kind === 'logitech' ? logitechFix(io) : allowImperfect(io);
+    })()
       .catch((): Outcome => ({ kind: 'silent' }))
-      .then((r) => {
-        setResult(r);
-        setRunning(false);
+      .then((out) => {
+        if (out.kind === 'native') {
+          keep(tried(at));
+          setPut((n) => n + 1);
+        }
+        r.setResult(out);
+        r.setRunning(false);
         dash.refreshPoll('imperfect');
         dash.refreshPoll('emit');
       });
   };
+  // The panel goes with the offer: focus moves to the Overview tab, which stays.
+  const leave = () => queueMicrotask(() => document.querySelector<HTMLElement>('[data-tab="overview"]')?.focus());
   const keepAsItIs = (o: Offer) => {
-    keep(`${offerKey(signals())}/${o.kind}`);
+    keep(offerSlot(signals(), o));
     setPut((n) => n + 1);
+    leave();
   };
   const close = () => {
-    setResult(null);
-    setShown(null);
+    run().setResult(null);
+    run().setShown(null);
+    leave();
   };
 
   return (
@@ -112,47 +166,51 @@ export default function DeviceFixes() {
       {(o) => (
         <Panel id="device-fix" title={title(o())} wide transient>
           <Switch>
-            <Match when={result()}>
+            <Match when={run().result()}>
               {(r) => (
-                <>
-                  <p role="status">{said(r())}</p>
-                  <div class="acts">
-                    <Button variant={GOOD.has(r().kind) ? 'primary' : 'secondary'} onClick={close}>
-                      Close
-                    </Button>
-                  </div>
-                </>
+                <div class="acts">
+                  <Button variant={GOOD.has(r().kind) ? 'primary' : 'secondary'} onClick={close}>
+                    Close
+                  </Button>
+                </div>
               )}
             </Match>
             <Match when={o().kind === 'imperfect' && (o() as { update: boolean }).update}>
               <p>
-                This device needs imperfect clone, and imperfect clone needs v3.4.4 or later for it: older firmware
-                leaves one of its endpoints unanswered, and Windows then resets it. Update first.
+                This device needs imperfect clone. On firmware before v3.4.4 a device with more than four IN endpoints
+                goes unanswered on one of them, and Windows then resets it: update first. A device that needs it for
+                another reason works now.
               </p>
               <div class="acts">
                 <Button variant="primary" onClick={() => navigate('/dashboard/update')}>
                   Update
                 </Button>
-                <Button variant="secondary" onClick={() => keepAsItIs(o())}>
-                  Keep as it is
+                <Button variant="secondary" loading={run().running()} disabled={run().running()} onClick={() => apply(o())}>
+                  {run().running() ? 'Applying...' : 'Allow imperfect anyway'}
                 </Button>
+                <Show when={!run().running()}>
+                  <Button variant="secondary" onClick={() => keepAsItIs(o())}>
+                    Keep as it is
+                  </Button>
+                </Show>
               </div>
             </Match>
             <Match when={o().kind === 'imperfect'}>
               <p>This device is past what the box copies exactly, so it does nothing through the box until imperfect clone is on.</p>
-              <Actions label="Allow imperfect" running={running()} onApply={() => apply(o())} onKeep={() => keepAsItIs(o())} />
+              <Actions label="Allow imperfect" running={run().running()} onApply={() => apply(o())} onKeep={() => keepAsItIs(o())} />
             </Match>
             <Match when={o().kind === 'logitech'}>
               <p>
-                Logitech mice declare a low rate through the box though they report faster. The Logitech fix turns
-                imperfect clone on, forces the wire rate to 1000 Hz and paces injected motion at 1000 Hz.
+                Many Logitech mice report faster than the rate they declare through the box. The Logitech fix turns
+                imperfect clone on, forces the wire rate to 1000 Hz and paces injected motion at 1000 Hz; a mouse that
+                can't go faster keeps its rate.
               </p>
-              <Actions label="Force 1000 Hz" running={running()} onApply={() => apply(o())} onKeep={() => keepAsItIs(o())} />
+              <Actions label="Force 1000 Hz" running={run().running()} onApply={() => apply(o())} onKeep={() => keepAsItIs(o())} />
             </Match>
             <Match when={o().kind === 'razer'}>
               <p>
-                Plug it into the PC, set it to 8000 Hz in Razer Synapse, then plug it back into the box: through the
-                box it then runs at 1000 Hz.
+                If it's one of Razer's 8K mice: plug it into the PC, set it to 8000 Hz in Razer Synapse, then plug it back
+                into the box, where it runs at 1000 Hz. A Razer mouse set to 125 Hz on purpose needs nothing.
               </p>
               <div class="acts">
                 <Button variant="secondary" onClick={() => keepAsItIs(o())}>
@@ -161,6 +219,10 @@ export default function DeviceFixes() {
               </div>
             </Match>
           </Switch>
+          {/* There before it speaks, so a screen reader hears what it says. */}
+          <p role="status" tabindex="-1" ref={status} classList={{ mut: run().running() }}>
+            {run().result() ? said(run().result()!) : run().running() ? 'The box restarts to clone the device again. This takes up to a minute.' : ''}
+          </p>
         </Panel>
       )}
     </Show>
@@ -168,21 +230,14 @@ export default function DeviceFixes() {
 }
 
 const Actions = (props: { label: string; running: boolean; onApply: () => void; onKeep: () => void }) => (
-  <>
-    <Show when={props.running}>
-      <p class="mut" role="status">
-        The box restarts to clone the device again. This takes up to a minute.
-      </p>
-    </Show>
-    <div class="acts">
-      <Button variant="primary" loading={props.running} disabled={props.running} onClick={props.onApply}>
-        {props.running ? 'Applying...' : props.label}
+  <div class="acts">
+    <Button variant="primary" loading={props.running} disabled={props.running} onClick={props.onApply}>
+      {props.running ? 'Applying...' : props.label}
+    </Button>
+    <Show when={!props.running}>
+      <Button variant="secondary" onClick={props.onKeep}>
+        Keep as it is
       </Button>
-      <Show when={!props.running}>
-        <Button variant="secondary" onClick={props.onKeep}>
-          Keep as it is
-        </Button>
-      </Show>
-    </div>
-  </>
+    </Show>
+  </div>
 );

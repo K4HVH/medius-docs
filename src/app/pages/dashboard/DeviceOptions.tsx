@@ -24,7 +24,7 @@ import { FixLink } from '../../shell/Filter';
 
 // An option's section on the Guide's Options page.
 const GuideLink = (props: { id: string }) => (
-  <span data-search-skip data-agent-hide>
+  <span class="guide" data-search-skip data-agent-hide>
     <FixLink href={`/guide/options#${props.id}`}>Guide</FixLink>
   </span>
 );
@@ -441,10 +441,13 @@ const DeviceOptions = (props: { proto?: number }) => {
         />
         <p class="mut">{RENDER_BLURB[renderKey()]}</p>
         <div id="render-full" class="labelled" data-search-target>
-          <span class="field-l">
-            Rendered motion
-            <CopyLink id="render-full" label="Rendered motion" />
-          </span>
+          <div class="field-row">
+            <span class="field-l">
+              Rendered motion
+              <CopyLink id="render-full" label="Rendered motion" />
+            </span>
+            <GuideLink id="render-full" />
+          </div>
           <Segmented
             name="render-full"
             label="Rendered motion"
@@ -564,10 +567,13 @@ const DeviceOptions = (props: { proto?: number }) => {
         />
         <p class="mut">{MODE_BLURB[mode()]}</p>
         <div id="wire-rate" class="labelled" data-search-target>
-          <span class="field-l">
-            Wire rate
-            <CopyLink id="wire-rate" label="Wire rate" />
-          </span>
+          <div class="field-row">
+            <span class="field-l">
+              Wire rate
+              <CopyLink id="wire-rate" label="Wire rate" />
+            </span>
+            <GuideLink id="wire-rate" />
+          </div>
           <Segmented
             name="wire-rate"
             label="Wire rate"

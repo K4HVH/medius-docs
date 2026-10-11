@@ -124,6 +124,9 @@ describe('DeviceOptions', () => {
       expect(link?.getAttribute('href'), id).toBe(`/guide/options#${id}`);
       expect(link?.textContent, id).toBe('Guide');
     }
+    for (const id of ['render-full', 'wire-rate']) {
+      expect(container.querySelector(`[id="${id}"] a.fix`)?.getAttribute('href'), id).toBe(`/guide/options#${id}`);
+    }
   });
 
   it('has every place a link names, under the title the link names it by', async () => {

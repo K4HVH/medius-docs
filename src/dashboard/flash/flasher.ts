@@ -10,9 +10,12 @@ import {
   type FlashNativeParams,
   type FlashProgress,
   type FlashStockParams,
+  WrongChipError,
   romMac,
   validateImage,
 } from './types';
+
+export { WrongChipError };
 import { SLOT_BYTES, mediusChip, readAppHeader } from './image';
 
 // Native USB ignores the baud and breaks on a change, so stay at the ROM baud.
@@ -83,35 +86,26 @@ async function runEsptool(
 // bootloader with no package to load.
 const STOCK_PACKAGE_ADDR = 0x4000;
 
-const CHIP_NAME: Record<FlashChip, string> = { device: 'main chip', host: 'mouse-side chip' };
-const CHIP_PORT: Record<FlashChip, string> = { device: 'USB1', host: 'USB3' };
-
-export class WrongChipError extends Error {
-  constructor(readonly found: FlashChip) {
-    super(`This is the ${CHIP_NAME[found]}. Pick it above, or plug in ${CHIP_PORT[found === 'device' ? 'host' : 'device']} with the button beside it held.`);
-  }
-}
-
 // What the chip's flash says it is: a Medius image names its project; MAKCU's bootloader carries its port's
 // marker ("MKCLIMG1", role 1 for USB1, 2 for USB3). Null where it says nothing.
-async function flashNames(loader: ESPLoader): Promise<FlashChip | null> {
+async function flashNames(loader: ESPLoader): Promise<{ chip: FlashChip; sure: boolean } | null> {
   for (const at of [APP_FLASH_ADDR, APP_FLASH_ADDR + SLOT_BYTES]) {
     const named = mediusChip(readAppHeader(await loader.readFlash(at, 256), 'app'));
-    if (named) return named;
+    if (named) return { chip: named, sure: true };
   }
   const boot = await loader.readFlash(0, 0x4000);
   const marker = new TextEncoder().encode('MKCLIMG1');
   for (let i = 0; i + 16 <= boot.length; i += 4) {
     if (!marker.every((c, k) => boot[i + k] === c)) continue;
     const role = boot[i + 8] | (boot[i + 9] << 8);
-    if (role === 1) return 'device';
-    if (role === 2) return 'host';
+    if (role === 1) return { chip: 'device', sure: false };
+    if (role === 2) return { chip: 'host', sure: false };
   }
   return null;
 }
 
 export async function flashStock(params: FlashStockParams): Promise<void> {
-  const { port, chip, pkg, boot, onProgress, onLog, onMac } = params;
+  const { port, chip, pkg, boot, onProgress, onLog, onMac, anyway, knownMain } = params;
   const terminal: IEspLoaderTerminal = { clean: () => {}, write: (d) => onLog?.(d), writeLine: (d) => onLog?.(d) };
   const transport = new Transport(port, false);
   const loader = new ESPLoader({ transport, baudrate: NATIVE_BAUD, terminal });
@@ -119,9 +113,11 @@ export async function flashStock(params: FlashStockParams): Promise<void> {
     onProgress?.({ phase: 'connecting' });
     await loader.main('no_reset');
     if (loader.chip.CHIP_NAME !== 'ESP32-S3') throw new Error(`This is an ${loader.chip.CHIP_NAME}, not one of the MAKCU's ESP32-S3 chips.`);
-    onMac?.(romMac(await loader.chip.readMac(loader).catch(() => '')));
-    const named = await flashNames(loader);
-    if (named && named !== chip) throw new WrongChipError(named);
+    const mac = romMac(await loader.chip.readMac(loader).catch(() => ''));
+    // A box is known by its main chip's MAC, so a known one names a blank chip too.
+    const named = (await flashNames(loader)) ?? (mac && knownMain?.(mac) ? { chip: 'device' as const, sure: true } : null);
+    if (named && named.chip !== chip && (named.sure || !anyway)) throw new WrongChipError(named.chip, named.sure);
+    onMac?.(mac);
     onProgress?.({ phase: 'erasing' });
     const total = pkg.length + boot.length;
     await loader.writeFlash({
@@ -134,7 +130,9 @@ export async function flashStock(params: FlashStockParams): Promise<void> {
       flashSize: 'keep',
       eraseAll: true,
       compress: true,
-      reportProgress: (i, written) => onProgress?.({ phase: 'writing', written: (i ? pkg.length : 0) + written, total }),
+      // esptool-js counts what it sends, compressed: each file's share of it, in bytes written.
+      reportProgress: (i, sent, of) =>
+        onProgress?.({ phase: 'writing', written: Math.round((i ? pkg.length : 0) + (of ? sent / of : 0) * (i ? boot.length : pkg.length)), total }),
       calculateMD5Hash: md5Hex,
     });
     onProgress?.({ phase: 'done' });

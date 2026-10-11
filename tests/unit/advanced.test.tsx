@@ -10,7 +10,9 @@ const st = vi.hoisted(() => ({
     const [status, setStatus] = createSignal('disconnected');
     const [progress, setProgress] = createSignal<{ phase: string; written?: number; total?: number } | null>(null);
     const [update, setUpdate] = createSignal<{ page: string; outcome: string } | null>(null);
-    return { running, setRunning, status, setStatus, progress, setProgress, update, setUpdate };
+    // The wrong chip a stock flash reported, as the real runner keeps it.
+    const [wrong, setWrong] = createSignal<{ found: string; sure: boolean } | null>(null);
+    return { running, setRunning, status, setStatus, progress, setProgress, update, setUpdate, wrong, setWrong };
   },
 }));
 
@@ -23,7 +25,9 @@ const mock = vi.hoisted(() => ({
   metas: [] as unknown[],
   supported: true,
   secure: true,
-  stock: [] as { chip: string; pkg: number; boot: number }[],
+  stock: [] as { chip: string; pkg: number; boot: number; anyway?: boolean; knownMain?: (mac: string) => boolean }[],
+  // A chip MAKCU's bootloader names as the other one, which the page asks about.
+  wrong: null as null | { found: string; sure: boolean },
   // What a failed flash left the progress at, and its error.
   failedAt: null as string | null,
   error: null as string | null,
@@ -34,6 +38,7 @@ vi.mock('../../src/app/pages/dashboard/context', () => ({
   useBoxes: () => ({
     supported: mock.supported,
     secure: mock.secure,
+    entries: () => [{ key: '588c81df1e28' }],
     scope: () => ({
       status: () => mock.s!.status(),
       name: () => 'Desk',
@@ -56,8 +61,15 @@ vi.mock('../../src/app/pages/dashboard/context', () => ({
       mock.s!.setRunning(false);
       return mock.flashOk;
     },
-    flashStock: async (_port: unknown, chip: string, pkg: Uint8Array, boot: Uint8Array) => {
-      mock.stock.push({ chip, pkg: pkg.length, boot: boot.length });
+    wrongChip: () => mock.s!.wrong(),
+    flashStock: async (_port: unknown, chip: string, pkg: Uint8Array, boot: Uint8Array, _page: string, opts: { anyway?: boolean; knownMain?: (mac: string) => boolean } = {}) => {
+      mock.stock.push({ chip, pkg: pkg.length, boot: boot.length, ...opts });
+      mock.s!.setWrong(null);
+      if (mock.wrong && !opts.anyway) {
+        mock.s!.setWrong(mock.wrong);
+        return false;
+      }
+      mock.wrong = null;
       return mock.flashOk;
     },
   }),
@@ -118,6 +130,7 @@ afterEach(() => {
   mock.supported = true;
   mock.secure = true;
   mock.stock = [];
+  mock.wrong = null;
   mock.failedAt = null;
   mock.error = null;
   navigate.mockClear();
@@ -519,7 +532,7 @@ const relay = (over: { catalog?: Response; files?: Record<string, Response> } = 
     if (url === '/api/stock/catalog')
       return (
         over.catalog ??
-        new Response(JSON.stringify({ build: { id: 'v4.094', label: 'V4.094', size: 5000 }, files: { package: 'makcu-update-v4.094.bin', usb1: 'boot-usb1.bin', usb3: 'boot-usb3.bin' } }))
+        new Response(JSON.stringify({ build: { id: 'v4.094', size: 5000 }, files: { package: 'makcu-update-v4.094.bin', usb1: 'boot-usb1.bin', usb3: 'boot-usb3.bin' } }))
       );
     const name = url.replace('/api/stock/file/', '');
     return over.files?.[name] ?? new Response(new Uint8Array(name.startsWith('makcu') ? 5000 : name === 'boot-usb1.bin' ? 800 : 700));
@@ -535,7 +548,7 @@ describe("MAKCU's stock firmware on the Manual tab", () => {
     relay();
     const r = render(() => <Advanced />);
     await pickStock(r);
-    await waitFor(() => expect(r.container.textContent).toContain('MAKCU V4.094'));
+    await waitFor(() => expect(r.container.textContent).toContain('MAKCU v4.094'));
     expect(() => field(r, 'Image')).toThrow();
     expect(r.container.textContent).toMatch(/erases the whole chip/i);
   });
@@ -547,15 +560,18 @@ describe("MAKCU's stock firmware on the Manual tab", () => {
     await openGate(r);
     await waitFor(() => expect((r.getByRole('button', { name: /^flash$/i }) as HTMLButtonElement).disabled).toBe(false));
     fireEvent.click(r.getByRole('button', { name: /^flash$/i }));
-    await waitFor(() => expect(mock.stock).toEqual([{ chip: 'device', pkg: 5000, boot: 800 }]));
+    await waitFor(() => expect(mock.stock).toMatchObject([{ chip: 'device', pkg: 5000, boot: 800, anyway: false }]));
     expect(asked).toContain('/api/stock/file/boot-usb1.bin');
     await waitFor(() => expect(r.container.textContent).toContain("The main chip runs MAKCU's firmware"));
     fireEvent.click(r.getByRole('button', { name: /flash the mouse-side chip/i }));
     await openGate(r);
     await waitFor(() => expect((r.getByRole('button', { name: /^flash$/i }) as HTMLButtonElement).disabled).toBe(false));
     fireEvent.click(r.getByRole('button', { name: /^flash$/i }));
-    await waitFor(() => expect(mock.stock[1]).toEqual({ chip: 'host', pkg: 5000, boot: 700 }));
+    await waitFor(() => expect(mock.stock[1]).toMatchObject({ chip: 'host', pkg: 5000, boot: 700 }));
     await waitFor(() => expect(r.container.textContent).toContain("Both chips run MAKCU's firmware"));
+    expect(r.container.textContent).toContain('without the button');
+    expect(mock.stock[0].knownMain?.('588c81df1e28')).toBe(true);
+    expect(mock.stock[0].knownMain?.('000000000001')).toBe(false);
     fireEvent.click(r.getByRole('button', { name: /^set up$/i }));
     expect(navigate).toHaveBeenCalledWith('/dashboard/setup');
   });
@@ -602,5 +618,56 @@ describe("MAKCU's stock firmware on the Manual tab", () => {
     fireEvent.click(r.getByRole('button', { name: /^flash$/i }));
     await waitFor(() => expect(r.container.textContent).toContain('This is the mouse-side chip.'));
     expect(r.container.textContent).not.toMatch(/may be erased/);
+  });
+
+  it("asks before flashing a chip MAKCU's bootloader names as the other, and flashes it when told", async () => {
+    relay();
+    mock.wrong = { found: 'host', sure: false };
+    mock.error = "MAKCU's bootloader on this chip is the mouse-side chip's.";
+    const r = render(() => <Advanced />);
+    await pickStock(r);
+    await waitFor(() => expect((r.getByRole('button', { name: /^flash$/i }) as HTMLButtonElement).disabled).toBe(false));
+    fireEvent.click(r.getByRole('button', { name: /^flash$/i }));
+    const anyway = await waitFor(() => r.getByRole('button', { name: /flash it as the main chip/i }));
+    fireEvent.click(anyway);
+    await waitFor(() => expect(mock.stock.at(-1)).toMatchObject({ chip: 'device', anyway: true }));
+    await waitFor(() => expect(r.container.textContent).toContain("The main chip runs MAKCU's firmware"));
+    // A later flash asks again.
+    fireEvent.click(r.getByRole('button', { name: /flash the mouse-side chip/i }));
+    await choose(r, 'Chip', /main chip/i);
+    await waitFor(() => expect((r.getByRole('button', { name: /^flash$/i }) as HTMLButtonElement).disabled).toBe(false));
+    fireEvent.click(r.getByRole('button', { name: /^flash$/i }));
+    await waitFor(() => expect(mock.stock.at(-1)).toMatchObject({ chip: 'device', anyway: false }));
+  });
+
+  it("forgets a chip's stock flash once Medius goes back on it", async () => {
+    relay();
+    const r = render(() => <Advanced />);
+    await pickStock(r);
+    await waitFor(() => expect((r.getByRole('button', { name: /^flash$/i }) as HTMLButtonElement).disabled).toBe(false));
+    fireEvent.click(r.getByRole('button', { name: /^flash$/i }));
+    await waitFor(() => expect(r.container.textContent).toContain("The main chip runs MAKCU's firmware"));
+    fireEvent.click(r.getByRole('button', { name: /flash the mouse-side chip/i }));
+    await choose(r, 'Chip', /main chip/i);
+    fireEvent.click(field(r, 'Source').querySelector('[role="radio"][data-v="release"]') as HTMLElement);
+    await waitFor(() => expect((r.getByRole('button', { name: /^flash$/i }) as HTMLButtonElement).disabled).toBe(false));
+    fireEvent.click(r.getByRole('button', { name: /^flash$/i }));
+    await waitFor(() => expect(mock.flashes).toBe(1));
+    fireEvent.click(await waitFor(() => r.getByRole('button', { name: /flash another/i })));
+    await choose(r, 'Chip', /mouse-side/i);
+    await pickStock(r);
+    await waitFor(() => expect((r.getByRole('button', { name: /^flash$/i }) as HTMLButtonElement).disabled).toBe(false));
+    fireEvent.click(r.getByRole('button', { name: /^flash$/i }));
+    await waitFor(() => expect(r.container.textContent).toContain("The mouse-side chip runs MAKCU's firmware"));
+    expect(r.container.textContent).not.toContain('Both chips');
+  });
+
+  it('reads the catalog again when a file is not one it lists any more', async () => {
+    const asked = relay({ files: { 'boot-usb1.bin': new Response(JSON.stringify({ error: 'Not a file the catalog lists' }), { status: 404 }) } });
+    const r = render(() => <Advanced />);
+    await pickStock(r);
+    await waitFor(() => expect((r.getByRole('button', { name: /^flash$/i }) as HTMLButtonElement).disabled).toBe(false));
+    fireEvent.click(r.getByRole('button', { name: /^flash$/i }));
+    await waitFor(() => expect(asked.filter((u) => u === '/api/stock/catalog')).toHaveLength(2));
   });
 });

@@ -37,7 +37,8 @@ export const EXPECT: CheckContext['expect'] = [
   { q: '"every-id sentinel"', path: '/library/types/errors', within: 1 },
   { q: 'query_patch_entry', path: '/library/advanced/patch#query-patch-entry', within: 1 },
   { q: 'lcok', path: '/native/commands/lock', within: 3 },
-  { q: 'polling rate', path: '/dashboard#emit-rate', within: 8 },
+  // The Guide's Wire rate section: what the poll rate is and where to set it, linked to the dashboard row.
+  { q: 'polling rate', path: '/guide/options#wire-rate', within: 8 },
   { q: '"blanket"', path: '/native/commands/lock#blanket', within: 3 },
   { q: 'move rel', path: '/library/move#move-rel', within: 1 },
   { q: 'bsod', path: '/guide/help#bsod', within: 1 },
