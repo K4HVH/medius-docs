@@ -89,7 +89,7 @@ const Privacy: Component = () => (
           ['Ticket check results', 'A pass until it expires; a failure for a day'],
           ['Captcha challenges', 'Until they expire'],
           ["A temp-ban's end", 'Until it lifts the ban'],
-          ['Scam signatures: links and image fingerprints from scam posts', '30 days after last seen'],
+          ['Scam signatures: links and image fingerprints from scam posts', '1 year after last seen'],
           ['Mod-log posts naming members', '1 year'],
           ['Member-log posts: edited and deleted messages, joins, leaves, verifications, role and name changes', '90 days'],
           ["A ticket's transcript, DMed to its opener when it closes", 'In their DMs until deleted'],
