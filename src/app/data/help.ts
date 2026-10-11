@@ -104,8 +104,8 @@ export const HELP: readonly HelpGroup[] = [
       {
         id: 'no-options',
         q: 'My box has no Options',
-        a: 'Options needs v3.4.2 or later, so update the box. On an older box, logitech_fix.bat (Windows) or logitech_fix.sh (Linux) from Discord #tools turns on imperfect clone, forces the wire rate to 1000 Hz and paces injection at a fixed 1000 Hz. After an update, set them under Options instead.',
-        links: [{ label: 'Update', href: '/dashboard/update' }],
+        a: 'The Options tab opens for v3.2.0 and later, with the options that firmware has; Update adds the rest. A box older than v3.2.0 needs setting up once with the installer.',
+        links: [{ label: 'Update', href: '/dashboard/update' }, SET_UP],
       },
       {
         id: 'razer-8k',
@@ -178,8 +178,8 @@ export const HELP: readonly HelpGroup[] = [
       {
         id: 'stock-firmware',
         q: 'How do I go back to the stock firmware?',
-        a: "The fetch_makcu_fw script in Discord #tools downloads MAKCU's v4 firmware. Flash it on Update's Manual tab over ROM download, with Upload a file.",
-        links: [MANUAL, DISCORD],
+        a: "On Update's Manual tab, choose ROM download and MAKCU stock: it flashes MAKCU's official build from MAKCU's signed catalog, one chip at a time. Set up puts Medius back.",
+        links: [MANUAL, SET_UP],
       },
     ],
   },
