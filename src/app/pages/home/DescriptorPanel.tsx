@@ -49,7 +49,7 @@ export function DescriptorPanel(props: { sample: DescriptorSample }) {
   const later = (g: number, fn: () => void, ms: number) => timers.push(setTimeout(() => g === gen && fn(), ms));
 
   // The count's box is as wide as the widest number it passes through, so the slash never moves while it
-  // counts.
+  // counts. Kept in ems: the type scales with the page, and the prerendered page is right at any width.
   const sizeCount = (total: number, instant: boolean) => {
     if (!countEl?.parentNode) return;
     const probe = countEl.cloneNode() as HTMLSpanElement;
@@ -61,12 +61,15 @@ export function DescriptorPanel(props: { sample: DescriptorSample }) {
       w = Math.max(w, probe.getBoundingClientRect().width);
     }
     probe.remove();
+    const size = parseFloat(getComputedStyle(countEl).fontSize);
+    if (!size) return;
+    const width = `${(w / size).toFixed(4)}em`;
     if (instant) {
       countEl.style.transition = 'none';
-      countEl.style.minWidth = `${w}px`;
+      countEl.style.minWidth = width;
       void countEl.offsetWidth;
       countEl.style.transition = '';
-    } else countEl.style.minWidth = `${w}px`;
+    } else countEl.style.minWidth = width;
   };
 
   const runCompare = (g: number) => {
@@ -138,6 +141,18 @@ export function DescriptorPanel(props: { sample: DescriptorSample }) {
   const pick = (n: number) => {
     setPicked(true);
     show(n, !reduce);
+  };
+
+  // One tab stop: the arrows, Home and End move along the tabs and pick as they go.
+  let strip: HTMLDivElement | undefined;
+  const onKey = (e: KeyboardEvent) => {
+    const last = TABS.length - 1;
+    const at = selected();
+    const to = { ArrowRight: at === last ? 0 : at + 1, ArrowLeft: at === 0 ? last : at - 1, Home: 0, End: last }[e.key];
+    if (to === undefined) return;
+    e.preventDefault();
+    if (to !== at) pick(to);
+    strip?.querySelectorAll<HTMLButtonElement>('[role="tab"]')[to]?.focus();
   };
 
   onMount(() => {
@@ -227,17 +242,25 @@ export function DescriptorPanel(props: { sample: DescriptorSample }) {
         <span class="caps">Bytes matched</span>
       </div>
       <div class="dside">
-        <div class="dtabs" role="tablist">
+        <div class="dtabs" role="tablist" aria-label="Descriptors" ref={strip} onKeyDown={onKey}>
           <For each={TABS}>
             {(t, i) => (
-              <button type="button" role="tab" aria-selected={selected() === i() ? 'true' : 'false'} onClick={() => pick(i())}>
+              <button
+                type="button"
+                role="tab"
+                id={`desc-tab-${t.key}`}
+                aria-controls="desc-panel"
+                aria-selected={selected() === i() ? 'true' : 'false'}
+                tabIndex={selected() === i() ? 0 : -1}
+                onClick={() => pick(i())}
+              >
                 {t.tab}
                 <i class="bar" style={{ transform: `scaleX(${bar(i()).toFixed(4)})` }} />
               </button>
             )}
           </For>
         </div>
-        <div class="cmp" classList={{ pending: count() === null }}>
+        <div class="cmp" classList={{ pending: count() === null }} role="tabpanel" id="desc-panel" aria-labelledby={`desc-tab-${TABS[selected()].key}`}>
           <table>
             <thead>
               <tr>
