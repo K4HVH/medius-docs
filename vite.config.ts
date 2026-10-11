@@ -7,6 +7,7 @@ import { agentDocsDev } from './server/agentDevMiddleware';
 import { handleHomeApi } from './server/home';
 import { serveIndex } from './server/searchIndex';
 import { handleOg } from './server/og';
+import { createStock } from './server/stock';
 import { cardFor } from './server/items';
 import type { SearchIndex } from './src/app/search/types';
 
@@ -19,6 +20,27 @@ function firmwareApi(): Plugin {
         if (!req.url || !req.url.startsWith('/api/firmware')) return next();
         const request = new Request(`http://localhost${req.url}`, { method: req.method });
         handleFirmwareApi(request)
+          .then(async (response) => {
+            if (!response) return next();
+            res.statusCode = response.status;
+            response.headers.forEach((v, k) => res.setHeader(k, v));
+            res.end(Buffer.from(await response.arrayBuffer()));
+          })
+          .catch(() => next());
+      });
+    },
+  };
+}
+
+// MAKCU's stock firmware under the dev server, relayed by the code serve.ts runs.
+function stockApi(): Plugin {
+  const stock = createStock();
+  return {
+    name: 'stock-api',
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        if (!req.url?.startsWith('/api/stock/')) return next();
+        stock(new Request(`http://localhost${req.url}`, { method: req.method }))
           .then(async (response) => {
             if (!response) return next();
             res.statusCode = response.status;
@@ -191,7 +213,7 @@ export default defineConfig(({ mode }) => {
   process.env.GITHUB_REPO = process.env.GITHUB_REPO ?? env.GITHUB_REPO;
 
   return {
-    plugins: [firmwareApi(), statsApi(), homeApi(), linkCards(), searchIndex(), agentDocs(), devtools(), solidPlugin()],
+    plugins: [firmwareApi(), statsApi(), homeApi(), stockApi(), linkCards(), searchIndex(), agentDocs(), devtools(), solidPlugin()],
     root: 'src',
     publicDir: '../public',
     // The devtools plugin adds this import itself, past the dependency scan, and a dev server with a cold
