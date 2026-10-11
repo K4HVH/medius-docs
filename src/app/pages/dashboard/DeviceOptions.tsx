@@ -60,7 +60,7 @@ const RENDER_MODES: Record<string, RenderMode> = {
 const RENDER_BLURB: Record<string, string> = {
   off: 'An even stream at the Emit rate.',
   stock: "The model's original smoother.",
-  despiked: 'The original smoother, with the first report flattened.',
+  despiked: 'The original smoother, ramped up over 8 ms.',
   unsmoothed: 'No smoother.',
 };
 

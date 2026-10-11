@@ -274,7 +274,8 @@ device.set_bearing(None, BearingMode::PerAxis)?; // and off again`}</code></pre>
         </p>
         <div class="callout callout--warning">
           <p>
-            Rendering adds a little latency, to native motion too when <code>full</code> is on.{' '}
+            Rendering adds the smoother's group delay: 4 ms stock, 2.7 ms de-spiked, none unsmoothed. With{' '}
+            <code>full</code> on, native motion takes it plus 1 ms.{' '}
             <A href="/library/move#move-rel-now"><code>move_rel_now</code></A>,{' '}
             <A href="/library/move#flush-motion"><code>flush_motion</code></A> and{' '}
             <A href="/library/move#discard-motion"><code>discard_motion</code></A> skip the model for

@@ -90,7 +90,7 @@ describe('Guide pages', () => {
       const back = el!.querySelector('h2 a.fix');
       expect(back?.getAttribute('href'), id).toBe(`/dashboard#${id}`);
       expect(back?.textContent, id).toBe('Dashboard');
-      expect(el!.querySelector('thead')?.textContent, id).toMatch(/^(Value|Setting)Effect$/);
+      expect(el!.querySelector('thead')?.textContent, id).toMatch(/^(Value|Setting)Effect(Delay)?$/);
       expect(el!.textContent, id).toContain('(default');
     }
   });
@@ -103,7 +103,7 @@ describe('Guide pages', () => {
     for (const id of ['imperfect-clone', 'wire-rate', 'render-full', 'spread']) expect(entries.some((e) => e.path === `/guide/options#${id}`), id).toBe(true);
     const md = htmlToMarkdown(page.innerHTML);
     expect(md).toContain('## Imperfect clone');
-    expect(md).toContain('Forcing needs Imperfect clone on');
+    expect(md).toMatch(/\| Needs \| Imperfect clone on/);
     expect(md).not.toMatch(/\[Dashboard\]/);
   });
 

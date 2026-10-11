@@ -181,7 +181,7 @@ describe('DeviceOptions', () => {
   it('describes only the selected texture, and only the setting in force', async () => {
     mock.render = { mode: RenderMode.Despiked, full: true, ready: true };
     const { queryByText, findByText } = render(() => <DeviceOptions />);
-    await findByText('The original smoother, with the first report flattened.');
+    await findByText('The original smoother, ramped up over 8 ms.');
     expect(queryByText('An even stream at the Emit rate.')).toBeNull();
     await findByText("Your mouse's movement and injected movement go through the model as one stream.");
     expect(queryByText("Native motion is relayed untouched.")).toBeNull();
@@ -254,7 +254,7 @@ describe('DeviceOptions', () => {
 
     mock.render = { mode: RenderMode.Despiked, full: false, ready: true };
     const armed = render(() => <DeviceOptions />);
-    await armed.findByText('The original smoother, with the first report flattened.');
+    await armed.findByText('The original smoother, ramped up over 8 ms.');
     expect(armed.queryByText('Move the mouse to start')).toBeNull();
   });
 
