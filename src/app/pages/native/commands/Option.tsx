@@ -434,8 +434,9 @@ const Option: Component = () => {
         </Anchor>
         <div class="callout callout--warning">
           <p>
-            Rendering adds a little latency, which reaches native motion when{' '}
-            <code>full</code> is <code>1</code>.
+            Rendering adds the smoother's group delay: 4 ms at <code>mode = 1</code>, 2.7 ms at{' '}
+            <code>mode = 2</code>, none at <code>mode = 3</code>. With <code>full</code> at <code>1</code>,
+            native motion takes it plus 1 ms.
           </p>
           <p>
             A rendered report is bounded per axis by what the clone's cursor field holds, and by no less
