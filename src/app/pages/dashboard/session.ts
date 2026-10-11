@@ -338,13 +338,29 @@ export function createBoxSession(
       void reattach(++lostGen);
     };
 
+    // A reattach with no port to try waits for one, rather than waking every second.
+    let portBack: (() => void) | null = null;
+    createEffect(() => {
+      if (port() && portBack) {
+        portBack();
+        portBack = null;
+      }
+    });
+
     const reattach = async (gen: number) => {
+      let pause = true;
       for (;;) {
-        await sleep(REATTACH_MS);
+        if (pause) await sleep(REATTACH_MS);
+        pause = true;
         if (disposed || gen !== lostGen || status() !== 'lost') return;
         const p = port();
+        if (!p) {
+          await new Promise<void>((r) => (portBack = r));
+          pause = false;
+          continue;
+        }
         // Nothing writes to a box whose chip may be in ROM download.
-        if (!p || hooks.nativeFlashing()) continue;
+        if (hooks.nativeFlashing()) continue;
         try {
           const found = await exclusive(p, async () => {
             const { link: nl, version: v, baud } = await attachLink(p, makeLink, bauds(lastBaud));

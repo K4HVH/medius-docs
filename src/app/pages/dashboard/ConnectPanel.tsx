@@ -1,6 +1,7 @@
 import { Match, Show, Switch } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
 import { Button } from '../../../components/inputs/Button';
+import { Progress } from '../../../components/feedback/Progress';
 import { versionString } from '../../../dashboard/protocol';
 import type { ConnectVerdict } from '../../../dashboard/serial';
 import { useDashboard } from './context';
@@ -208,10 +209,11 @@ export const ConnectPanel = (props: { onSetup?: () => void }) => {
         <div class="callout callout--danger" role="alert">
           The box isn't answering. Check USB1 is plugged in too.
         </div>
-        <div class="acts">
-          <Button loading disabled>
+        <div class="acts mid">
+          <span class="reconnect" role="status">
+            <Progress type="circular" aria-hidden="true" />
             Reconnecting...
-          </Button>
+          </span>
           <Button variant="secondary" onClick={() => void dash.disconnect()}>
             Disconnect
           </Button>
