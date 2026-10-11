@@ -87,9 +87,9 @@ describe('DeviceFixes', () => {
   it('allows imperfect clone for a refused device, and keeps the result up once the offer goes', async () => {
     setup();
     const { container, getByRole } = render(() => <DeviceFixes />);
-    expect(container.querySelector('#device-fix h2')!.textContent).toBe('Imperfect clone needed');
+    expect(container.querySelector('#device-fix h2')!.textContent).toBe('Device not cloned');
     fireEvent.click(getByRole('button', { name: 'Allow imperfect' }));
-    await waitFor(() => expect(container.textContent).toContain('Done. Imperfect clone is on'), { timeout: 3000 });
+    await waitFor(() => expect(container.textContent).toContain('Done. The device is cloned.'), { timeout: 3000 });
     expect(box.writes).toEqual(['allow']);
     fireEvent.click(getByRole('button', { name: 'Close' }));
     expect(container.querySelector('#device-fix')).toBeNull();
@@ -98,7 +98,7 @@ describe('DeviceFixes', () => {
   it('sends a device over capacity on firmware before v3.4.4 to Update, with nothing to allow', () => {
     setup({ fw: '3.4.3' });
     const { container, getByRole, queryByRole } = render(() => <DeviceFixes />);
-    expect(container.textContent).toContain('Update the box first');
+    expect(container.textContent).toContain('Update first');
     expect(queryByRole('button', { name: 'Allow imperfect' })).toBeNull();
     expect(getByRole('button', { name: 'Allow imperfect anyway' })).toBeTruthy();
     fireEvent.click(getByRole('button', { name: 'Update' }));
@@ -238,7 +238,7 @@ describe('DeviceFixes', () => {
     expect(busy.disabled).toBe(true);
     fireEvent.click(busy);
     release!();
-    await waitFor(() => expect(again.container.textContent).toContain('Done. Imperfect clone is on'), { timeout: 3000 });
+    await waitFor(() => expect(again.container.textContent).toContain('Done. The device is cloned.'), { timeout: 3000 });
     expect(box.writes).toEqual(['allow']);
   });
 
@@ -260,13 +260,13 @@ describe('DeviceFixes', () => {
     expect(status.textContent).toBe('');
     fireEvent.click(getByRole('button', { name: 'Allow imperfect' }));
     expect(document.activeElement).toBe(status);
-    await waitFor(() => expect(status.textContent).toContain('Done. Imperfect clone is on'), { timeout: 3000 });
+    await waitFor(() => expect(status.textContent).toContain('Done. The device is cloned.'), { timeout: 3000 });
   });
 
-  it("tells a Razer owner what to do only if it's an 8K mouse", () => {
+  it('tells a Razer owner to raise the polling rate in Razer Synapse', () => {
     setup({ device: mouse(0x1532, 0x00c1), imperfect: { allowed: false, overCapacity: false, cloneImperfect: false } });
     box.state!.setDevice(mouse(0x1532, 0x00c1));
     const { container } = render(() => <DeviceFixes />);
-    expect(container.textContent ?? '').toMatch(/8K|8000/);
+    expect(container.textContent ?? '').toContain('Set its highest polling rate in Razer Synapse');
   });
 });

@@ -7,6 +7,10 @@ const rom = vi.hoisted(() => ({
   writes: [] as { fileArray: { data: Uint8Array; address: number }[]; eraseAll: boolean; flashMode: string; flashFreq: string; flashSize: string; compress: boolean; md5: boolean }[],
   fail: null as Error | null,
   disconnected: 0,
+  // The flash's size id (0x16, 4 MB) as its JEDEC id reports it, each erase command in turn, and regions to refuse once.
+  sizeId: 0x16,
+  erased: [] as string[],
+  refuse: new Map<number, number>(),
 }));
 
 vi.mock('esptool-js', () => {
@@ -22,6 +26,31 @@ vi.mock('esptool-js', () => {
     }
     async main() {
       return rom.chip;
+    }
+    ESP_ERASE_REGION = 0xd1;
+    ERASE_REGION_TIMEOUT_PER_MB = 30000;
+    DETECTED_FLASH_SIZES: Record<number, string> = { 0x16: '4MB', 0x17: '8MB' };
+    timeoutPerMb(ms: number, bytes: number) {
+      return ms * (bytes / 1e6);
+    }
+    async readFlashId() {
+      return (rom.sizeId << 16) | 0x4020;
+    }
+    async eraseFlash() {
+      rom.erased.push('all');
+      return 0;
+    }
+    async checkCommand(_what: string, op: number, data: Uint8Array) {
+      if (op !== 0xd1) throw new Error(`unexpected command ${op}`);
+      const v = new DataView(data.buffer, data.byteOffset);
+      const at = v.getUint32(0, true);
+      const left = rom.refuse.get(at) ?? 0;
+      if (left > 0) {
+        rom.refuse.set(at, left - 1);
+        throw new Error('Timed out waiting for packet header');
+      }
+      rom.erased.push(`${at.toString(16)}+${v.getUint32(4, true).toString(16)}`);
+      return 0;
     }
     async readFlash(addr: number, size: number) {
       const out = new Uint8Array(size).fill(0xff);
@@ -44,6 +73,7 @@ vi.mock('esptool-js', () => {
       calculateMD5Hash?: (d: Uint8Array) => string;
     }) {
       if (rom.fail) throw rom.fail;
+      rom.erased.push('write');
       rom.writes.push({ fileArray: o.fileArray, eraseAll: o.eraseAll, flashMode: o.flashMode, flashFreq: o.flashFreq, flashSize: o.flashSize, compress: o.compress, md5: !!o.calculateMD5Hash?.(o.fileArray[0].data) });
       // esptool-js counts what it sends, compressed.
       o.fileArray.forEach((f, i) => {
@@ -96,6 +126,9 @@ beforeEach(() => {
   rom.writes = [];
   rom.fail = null;
   rom.disconnected = 0;
+  rom.sizeId = 0x16;
+  rom.erased = [];
+  rom.refuse = new Map();
 });
 
 describe('flashStock', () => {
@@ -103,7 +136,8 @@ describe('flashStock', () => {
     await run('device').done;
     expect(rom.writes).toHaveLength(1);
     const w = rom.writes[0];
-    expect(w.eraseAll).toBe(true);
+    expect(w.eraseAll).toBe(false);
+    expect(rom.erased.at(-1)).toBe('write');
     expect(w.fileArray.map((f) => [f.address, f.data.length])).toEqual([[0x4000, PKG.length], [0, BOOT.length]]);
     expect([w.flashMode, w.flashFreq, w.flashSize]).toEqual(['keep', 'keep', 'keep']);
     expect(w.compress).toBe(true);
@@ -165,6 +199,41 @@ describe('flashStock', () => {
     rom.flash = new Map();
     await run('device').done;
     expect(rom.writes).toHaveLength(3);
+  });
+
+  it('erases the whole flash in 64 KiB regions, one command each, so the port never goes quiet for long', async () => {
+    await run('device').done;
+    const regions = rom.erased.slice(0, -1);
+    expect(regions).toHaveLength(64);
+    expect(regions[0]).toBe('0+10000');
+    expect(regions.at(-1)).toBe('3f0000+10000');
+    rom.erased = [];
+    rom.sizeId = 0x17;
+    await run('device').done;
+    expect(rom.erased.slice(0, -1)).toHaveLength(128);
+  });
+
+  it('tries a region that failed again, and stops on one that keeps failing', async () => {
+    rom.refuse.set(0x20000, 1);
+    await run('device').done;
+    expect(rom.erased.filter((e) => e === '20000+10000')).toHaveLength(1);
+    rom.erased = [];
+    rom.refuse.set(0x30000, 9);
+    await expect(run('device').done).rejects.toThrow(/Timed out/);
+    expect(rom.erased).not.toContain('write');
+  });
+
+  it('erases a flash of unknown size whole', async () => {
+    rom.sizeId = 0x99;
+    await run('device').done;
+    expect(rom.erased).toEqual(['all', 'write']);
+  });
+
+  it('shows the erase as it goes', async () => {
+    const { seen, done } = run('device');
+    await done;
+    const erasing = seen.filter((p) => p.phase === 'erasing' && p.total);
+    expect(erasing.at(-1)).toMatchObject({ written: 0x400000, total: 0x400000 });
   });
 
   it('lets a failed write through, and lets the port go', async () => {

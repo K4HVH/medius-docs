@@ -1,8 +1,13 @@
 // MAKCU's stock firmware, as this site's server relays it from MAKCU's signed catalog (server/stock.ts).
 
+export interface StockFileInfo {
+  name: string;
+  size: number;
+}
+
 export interface StockCatalog {
-  build: { id: string; label: string; size: number };
-  files: { package: string; usb1: string; usb3: string };
+  id: string;
+  files: { package: StockFileInfo; usb1: StockFileInfo; usb3: StockFileInfo };
 }
 
 const reason = async (res: Response, fallback: string) => {

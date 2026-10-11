@@ -532,7 +532,12 @@ const relay = (over: { catalog?: Response; files?: Record<string, Response> } = 
     if (url === '/api/stock/catalog')
       return (
         over.catalog ??
-        new Response(JSON.stringify({ build: { id: 'v4.094', size: 5000 }, files: { package: 'makcu-update-v4.094.bin', usb1: 'boot-usb1.bin', usb3: 'boot-usb3.bin' } }))
+        new Response(
+          JSON.stringify({
+            id: 'v4.094',
+            files: { package: { name: 'makcu-update-v4.094.bin', size: 5000 }, usb1: { name: 'boot-usb1.bin', size: 600 }, usb3: { name: 'boot-usb3.bin', size: 600 } },
+          }),
+        )
       );
     const name = url.replace('/api/stock/file/', '');
     return over.files?.[name] ?? new Response(new Uint8Array(name.startsWith('makcu') ? 5000 : name === 'boot-usb1.bin' ? 800 : 700));
@@ -544,13 +549,13 @@ const pickStock = async (r: ReturnType<typeof render>) => {
 };
 
 describe("MAKCU's stock firmware on the Manual tab", () => {
-  it('names the official build from the signed catalog, and asks no image kind', async () => {
+  it('names the image as the release does, and asks no image kind', async () => {
     relay();
     const r = render(() => <Advanced />);
     await pickStock(r);
-    await waitFor(() => expect(r.container.textContent).toContain('MAKCU v4.094'));
+    await waitFor(() => expect(r.container.textContent).toContain('makcu-update-v4.094.bin (5 KB) from v4.094'));
     expect(() => field(r, 'Image')).toThrow();
-    expect(r.container.textContent).toMatch(/erases the chip, settings included/i);
+    expect(r.container.querySelector('.callout')).toBeNull();
   });
 
   it("flashes MAKCU's package with the picked chip's bootloader, then asks for the other chip", async () => {
@@ -572,7 +577,7 @@ describe("MAKCU's stock firmware on the Manual tab", () => {
     expect(r.container.textContent).toContain('without the button');
     expect(mock.stock[0].knownMain?.('588c81df1e28')).toBe(true);
     expect(mock.stock[0].knownMain?.('000000000001')).toBe(false);
-    fireEvent.click(r.getByRole('button', { name: /^set up$/i }));
+    fireEvent.click(r.getByRole('button', { name: /^put medius back$/i }));
     expect(navigate).toHaveBeenCalledWith('/dashboard/setup');
   });
 

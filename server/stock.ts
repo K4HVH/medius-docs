@@ -326,7 +326,8 @@ export function createStock(deps: StockDeps = { fetch: (u, i) => fetch(u, i), no
       const read = await catalog();
       if ('error' in read) return json(502, { error: read.error });
       const { build, usb1, usb3 } = read.offer;
-      return json(200, { build: { id: build.id, size: build.size }, files: { package: build.file, usb1: usb1.file, usb3: usb3.file } });
+      const named = (f: StockFile) => ({ name: f.file, size: f.size });
+      return json(200, { id: build.id, files: { package: named(build), usb1: named(usb1), usb3: named(usb3) } });
     }
     return file(path.slice('/api/stock/file/'.length), req.method === 'HEAD');
   };
