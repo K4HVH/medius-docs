@@ -15,7 +15,7 @@ import {
 } from './mcpSearch';
 import { liveSearcher } from './searchIndex';
 import { fillMarkdown } from './fill';
-import { LIVE_PATHS } from '../src/app/site';
+import { LIVE_PATHS, SOFT_FILL_PATHS } from '../src/app/site';
 
 const DIST = resolve(process.env.PUBLIC_DIR || './dist');
 const SITE = (process.env.SITE_ORIGIN || 'https://medius.k4tech.net').replace(/\/+$/, '');
@@ -38,10 +38,11 @@ function loadPages(): IndexPage[] {
   return pages;
 }
 
-// The changelog and stats as they are now, from the same fill the server gives crawlers.
+// The changelog, stats and Devices list as they are now, from the same fill the server gives crawlers.
 async function liveText(page: IndexPage): Promise<string> {
-  if (!LIVE_PATHS.has(page.path)) return page.text;
-  return (await fillMarkdown(page.path)) ?? page.text;
+  if (LIVE_PATHS.has(page.path)) return (await fillMarkdown(page.path)) ?? page.text;
+  if (SOFT_FILL_PATHS.has(page.path)) return (await fillMarkdown(page.path, undefined, undefined, page.text)) ?? page.text;
+  return page.text;
 }
 
 const NO_INDEX = 'Search is not available: the site was built without its search index.';

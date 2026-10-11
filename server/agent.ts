@@ -153,6 +153,11 @@ export async function handleAgentDocs(req: Request, routes?: ReadonlySet<string>
         if (!md) return new Response('Try again shortly.\n', { status: 503, headers: { ...headers, ...LIVE_DOWN } });
         return new Response(md, { headers: { ...headers, 'cache-control': LIVE_CACHE } });
       }
+      if (SOFT_FILL_PATHS.has(live)) {
+        const built = await Bun.file(abs).text();
+        const md = (await fillMarkdown(live, undefined, undefined, built)) ?? built;
+        return new Response(md, { headers: { ...headers, 'cache-control': LIVE_CACHE } });
+      }
       return new Response(Bun.file(abs), { headers });
     }
     case 'html': {

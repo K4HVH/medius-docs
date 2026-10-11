@@ -79,6 +79,18 @@ describe('layoutCard', () => {
     expect(address.width).toBeLessThanOrEqual(address.box);
   });
 
+  it('keeps the list items and given title lines that fit, and leaves the rest out', () => {
+    const long = 'one physical input reaches the game PC, and every report the device sends';
+    const l = layoutCard(card({ description: undefined, list: [long, long, long, long, long] }), faces);
+    expect(l.bottom).toBeLessThanOrEqual(l.rule - 28);
+    const bars = l.rects.filter((r) => r.w === 10 && r.h === 2).length;
+    expect(bars).toBeGreaterThan(0);
+    expect(bars).toBeLessThan(5);
+    const given = layoutCard(card({ titleLines: ['One', 'Two', 'Three'] }), faces);
+    expect(given.title.lines).toEqual(['One', 'Two']);
+    expect(given.bottom).toBeLessThanOrEqual(given.rule - 28);
+  });
+
   it('lists each line under a bar', () => {
     const l = layoutCard(card({ description: undefined, list: ['Fixed updates', 'Faster round trips'] }), faces);
     const items = l.runs.filter((r) => r.face === 'regular');
@@ -92,6 +104,11 @@ describe('layoutCard', () => {
     expect(l.title.lines).toEqual(['Mouse']);
     expect(l.dropped).toEqual(['Mouse 中文']);
     expect(layoutCard(card(), faces).dropped).toEqual([]);
+  });
+
+  it('draws the Latin letters a name may carry, Ł and ő among them', () => {
+    const l = layoutCard(card({ title: 'Łukasz Mysz Győr', description: 'Ćma żółw ąę', address: 'medius.k4tech.net/guide/compatibility/łukasz' }), faces);
+    expect(l.dropped).toEqual([]);
   });
 
   it('keeps the home claim on its two lines', () => {

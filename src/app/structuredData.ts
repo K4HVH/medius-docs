@@ -7,12 +7,10 @@ const MEDIUS_ID = `${SITE}/#medius`;
 
 const abs = (path: string) => SITE + (path === '/' ? '/' : path);
 
-// schema.org graph for one page. Medius is a plain Thing: a SoftwareApplication item is a rich-result
+// The site and Medius, on every page. Medius is a plain Thing: a SoftwareApplication item is a rich-result
 // candidate Google wants a rating for, and Medius has none to give.
-// `faq`: the Help answers, which the Help page lists in its markup and fetches only there.
-export function buildJsonLd(route: RouteInfo, lastmod?: string, faq?: readonly HelpItem[]): object {
-  const url = abs(route.path);
-  const graph: object[] = [
+function siteNodes(): object[] {
+  return [
     {
       '@type': 'WebSite',
       '@id': WEBSITE_ID,
@@ -31,6 +29,16 @@ export function buildJsonLd(route: RouteInfo, lastmod?: string, faq?: readonly H
       sameAs: Object.values(LINKS),
     },
   ];
+}
+
+// An item's address is out of search and names no page of its own, so it carries the site's nodes alone.
+export const itemJsonLd = (): object => ({ '@context': 'https://schema.org', '@graph': siteNodes() });
+
+// schema.org graph for one page. `faq`: the Help answers, which the Help page lists in its markup and
+// fetches only there.
+export function buildJsonLd(route: RouteInfo, lastmod?: string, faq?: readonly HelpItem[]): object {
+  const url = abs(route.path);
+  const graph = siteNodes();
 
   if (route.kind === 'article' && route.index) {
     graph.push({

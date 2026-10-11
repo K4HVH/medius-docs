@@ -125,6 +125,8 @@ describe('RouteMeta', () => {
     expect(meta('meta[name="robots"]')).toBe('noindex');
     expect(document.head.querySelector('link[rel="canonical"]')).toBeNull();
     expect(meta('meta[property="og:url"]')).toBe(`${SITE}/guide/help/bsod`);
+    const types = JSON.parse(document.head.querySelector('script#ld-json')!.textContent!)['@graph'].map((n: { '@type': string }) => n['@type']);
+    expect(types).toEqual(['WebSite', 'Thing']);
   });
 
   it("keeps the 404 page's head for an item the server knew nothing of", async () => {

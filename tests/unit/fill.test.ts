@@ -170,3 +170,33 @@ describe('fillPage on the soft pages', () => {
   });
 });
 
+describe('the Devices page in Markdown', () => {
+  const BUILT = [
+    '<!-- Source: https://medius.k4tech.net/guide/compatibility -->',
+    '# Devices',
+    '',
+    '| Device | Kind | Status | Note | Reported | Boxes |',
+    '| --- | --- | --- | --- | --- | --- |',
+    '| Seed row | Mouse | Supported |  | v3.0.1 |  |',
+    '',
+    '## Limits',
+    '',
+    'Kept.',
+    '',
+  ].join('\n');
+
+  it('carries the devices the stats add, as the page does', async () => {
+    const top = [{ vid: 0x31e3, pid: 0x1322, kind: 1, product: 'Wooting 60HE+', boxes: 45 }, { vid: 0x3837, pid: 0x100a, kind: 2, product: null, boxes: 3 }];
+    const stats = async () => ({ ...(await SOURCES.stats())!, devices: { unique: 2, byKind: [], top } });
+    const md = (await fillMarkdown('/guide/compatibility', { ...SOURCES, stats }, new Map(), BUILT))!;
+    expect(md).not.toContain('Seed row');
+    expect(md).toContain('| Wooting 60HE+ (31e3:1322) | Keyboard | Supported | Needs imperfect clone | v3.4.4 | 45 |');
+    expect(md).toContain('| 3837:100a |');
+    expect(md).toContain('## Limits\n\nKept.');
+    expect(md.startsWith('<!-- Source: https://medius.k4tech.net/guide/compatibility -->\n# Devices\n\n| Device | Kind |')).toBe(true);
+  });
+
+  it('is the built list while the stats are down', async () => {
+    expect(await fillMarkdown('/guide/compatibility', { ...SOURCES, stats: async () => null }, new Map(), BUILT)).toBe(BUILT);
+  });
+});

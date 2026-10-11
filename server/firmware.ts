@@ -51,6 +51,7 @@ interface GhAsset {
 interface GhRelease {
   tag_name: string;
   name: string | null;
+  draft?: boolean;
   published_at: string;
   prerelease: boolean;
   body: string | null;
@@ -90,7 +91,7 @@ async function readReleases(): Promise<string | null> {
     return releasesCache?.body ?? null;
   }
   const data = (await res.json()) as GhRelease[];
-  const releases = data.map((r) => ({
+  const releases = data.filter((r) => !r.draft).map((r) => ({
     tag: r.tag_name,
     name: r.name ?? r.tag_name,
     publishedAt: r.published_at,
