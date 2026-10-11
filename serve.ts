@@ -9,6 +9,9 @@ import { handleSearchIndex } from "./server/searchIndex";
 import { planRedirect } from "./server/routing";
 import { handleOg } from "./server/og";
 import { cardFor, itemPage } from "./server/items";
+import { createStock } from "./server/stock";
+
+const stock = createStock();
 
 const PORT = parseInt(process.env.PORT || "3000");
 const PUBLIC_DIR = process.env.PUBLIC_DIR || "./dist";
@@ -51,6 +54,9 @@ Bun.serve({
 
     const stats = await handleStatsApi(req, server.requestIP(req)?.address);
     if (stats) return stats;
+
+    const stocked = await stock(req);
+    if (stocked) return stocked;
 
     const home = await handleHomeApi(req);
     if (home) return home;

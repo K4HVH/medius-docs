@@ -1,0 +1,292 @@
+import { createHash, createPublicKey, verify } from 'node:crypto';
+import { crc32 } from 'node:zlib';
+import { canonical } from './stock/canon';
+
+// MAKCU's stock firmware for the Manual tab: read from MAKCU's signed catalog on request (makcu.com lets no
+// other site's page read it), checked as makcu-toolkit 1.13.4 checks it, and passed on unstored.
+
+const ROOTS = ['https://makcu.com/devinfo', 'https://makcu.15-204-2-173.sslip.io/devinfo'];
+// The catalog's signing key, as makcu-toolkit carries it.
+export const MAKCU_KEY = '2fc038fdabd2a997cbb80c056da05edf81ea49ddde247d5a8b8fa099871812ca';
+// The newest repair flash this page performs: the one the toolkit had at 1.13.4.
+const TOOLKIT = [1, 13, 4];
+const CATALOG_MAX = 2 * 1024 * 1024;
+const CATALOG_MS = 10_000;
+const FILE_MS = 30_000;
+const FRESH_MS = 60_000;
+const AGENT = 'medius-dashboard (+https://medius.k4tech.net)';
+
+export interface StockFile {
+  file: string;
+  size: number;
+  sha256: string;
+}
+
+// MAKCU's notes aren't passed on: they are MAKCU's words about MAKCU's firmware.
+export interface StockOffer {
+  build: StockFile & { id: string; label: string };
+  usb1: StockFile;
+  usb3: StockFile;
+}
+
+type Doc = Record<string, unknown>;
+const isDoc = (v: unknown): v is Doc => typeof v === 'object' && v !== null && !Array.isArray(v);
+
+// A catalog entry's file: a plain .bin name, a size in bounds, a SHA-256.
+function entry(v: unknown, min: number, max: number): StockFile | null {
+  if (!isDoc(v)) return null;
+  const { file, size, sha256 } = v;
+  if (typeof file !== 'string' || !/^[^/\\]+\.bin$/.test(file) || file === '.bin' || file.includes('..')) return null;
+  if (typeof size !== 'number' || !Number.isInteger(size) || size < min || size > max) return null;
+  if (typeof sha256 !== 'string' || !/^[0-9a-fA-F]{64}$/.test(sha256)) return null;
+  return { file, size, sha256: sha256.toLowerCase() };
+}
+
+const SPKI_ED25519 = Buffer.from('302a300506032b6570032100', 'hex');
+const dotted = (s: string) => s.replace(/^v/, '').split('.').map(Number);
+const newer = (a: number[], b: number[]) => {
+  for (let i = 0; i < Math.max(a.length, b.length); i++) if ((a[i] ?? 0) !== (b[i] ?? 0)) return (a[i] ?? 0) > (b[i] ?? 0);
+  return false;
+};
+// A build id as the catalog numbers builds: "v4.094" is 4094.
+const buildNumber = (id: string) => Number(id.replace(/^v/, '').replace('.', ''));
+
+export function checkCatalog(text: string, key = MAKCU_KEY): StockOffer | { error: string } {
+  let body: Uint8Array;
+  let doc: unknown;
+  try {
+    body = canonical(text);
+    doc = JSON.parse(text);
+  } catch {
+    return { error: "MAKCU's catalog couldn't be read" };
+  }
+  if (!isDoc(doc) || typeof doc.signature !== 'string' || !/^[0-9a-fA-F]{128}$/.test(doc.signature))
+    return { error: "MAKCU's catalog carries no signature" };
+  const pub = createPublicKey({ key: Buffer.concat([SPKI_ED25519, Buffer.from(key, 'hex')]), format: 'der', type: 'spki' });
+  if (!verify(null, body, pub, Buffer.from(doc.signature, 'hex'))) return { error: "MAKCU's catalog signature doesn't check out" };
+  if (doc.app !== 'makcu-devinfo' || doc.kind !== 'firmware-catalog' || !Array.isArray(doc.builds))
+    return { error: "MAKCU's catalog isn't a firmware catalog" };
+
+  const official = doc.builds.find((b): b is Doc => isDoc(b) && !!b.official);
+  if (!official) return { error: "MAKCU's catalog marks no build official" };
+  if (official.withdrawn) return { error: "MAKCU's official build is withdrawn" };
+  const file = entry(official, 1000, 1048576);
+  if (!file || typeof official.id !== 'string') return { error: "MAKCU's official build has a malformed entry" };
+
+  const rom = doc.repair_rom;
+  if (!isDoc(rom)) return { error: "MAKCU's catalog has no repair flash" };
+  if (typeof rom.min_toolkit === 'string' && newer(dotted(rom.min_toolkit), TOOLKIT))
+    return { error: `MAKCU's repair flash needs toolkit ${rom.min_toolkit}, newer than the one this page follows` };
+  const usb1 = entry(rom.usb1, 24, 16384);
+  const usb3 = entry(rom.usb3, 24, 16384);
+  if (!usb1 || !usb3) return { error: "MAKCU's repair bootloaders have malformed entries" };
+  const listed = Array.isArray(rom.pairs) && rom.pairs.includes(official.id);
+  const fromMin = typeof rom.pair_min === 'string' && buildNumber(official.id) >= buildNumber(rom.pair_min);
+  if (!listed && !fromMin) return { error: `MAKCU's repair bootloaders don't pair with the official build ${official.id}` };
+
+  return {
+    build: { ...file, id: official.id, label: typeof official.label === 'string' ? official.label : official.id },
+    usb1,
+    usb3,
+  };
+}
+
+const u32 = (b: Uint8Array, o: number) => (b[o] | (b[o + 1] << 8) | (b[o + 2] << 16) | (b[o + 3] << 24)) >>> 0;
+// "MKC" + kind + "IMG1": the role markers MAKCU's images and bootloaders carry.
+const mark = (b: Uint8Array, o: number, kind: string) => {
+  const want = `MKC${kind}IMG1`;
+  for (let i = 0; i < 8; i++) if (b[o + i] !== want.charCodeAt(i)) return false;
+  return true;
+};
+
+// One image of a package: its role's marker and none of the other role's.
+function imageRoles(b: Uint8Array, role: number): string | null {
+  let mine = false;
+  let other = false;
+  for (let o = 0; o + 16 <= b.length; o++) {
+    if (b[o] !== 77 || !mark(b, o, 'U') || u32(b, o + 12) !== 2) continue;
+    if (u32(b, o + 8) === role && o % 4 === 0) mine = true;
+    if (u32(b, o + 8) === 3 - role) other = true;
+  }
+  return mine && !other ? null : 'wrong image roles';
+}
+
+// An MKU1 v2 package: a 32-byte header, then the USB1 image (role 1), then the USB3 image (role 2).
+export function checkPackage(b: Uint8Array): string | null {
+  if (b.length < 32) return 'not an MKU1 v2 package';
+  const [magic, version, a, ac, n3, bc, ident, hc] = Array.from({ length: 8 }, (_, i) => u32(b, i * 4));
+  if (!(magic === 827673421 && version === 2 && ident && a <= 524288 && n3 <= 524288 && b.length === 32 + a + n3 && b.length <= 1048576))
+    return 'not an MKU1 v2 package';
+  if (crc32(b.subarray(0, 28)) >>> 0 !== hc) return 'header CRC mismatch';
+  const usb1 = b.subarray(32, 32 + a);
+  const usb3 = b.subarray(32 + a);
+  if (crc32(usb1) >>> 0 !== ac) return 'USB1 image CRC mismatch';
+  if (crc32(usb3) >>> 0 !== bc) return 'USB3 image CRC mismatch';
+  const r1 = imageRoles(usb1, 1);
+  if (r1) return `USB1 image: ${r1}`;
+  const r3 = imageRoles(usb3, 2);
+  return r3 ? `USB3 image: ${r3}` : null;
+}
+
+const IN_DRAM = (a: number, len: number) => a >= 0x3fce8000 && a + len <= 0x3fce9000;
+const IN_IRAM = (a: number, len: number) => a >= 0x403d5e00 && a + len <= 0x403d8000;
+
+// An ESP32-S3 second-stage bootloader for one port: its segments in loader RAM, the entry in IRAM, the
+// checksum and SHA-256 the ROM checks, and that port's marker, once.
+export function checkBoot(b: Uint8Array, role: number): string | null {
+  const n = b.length;
+  if (n < 24 || n > 16384 || b[0] !== 0xe9 || b[1] < 1 || b[1] > 16 || b[2] !== 2 || b[3] !== 0x2f || b[12] !== 9 || b[13] !== 0 || b[23] !== 1)
+    return 'not an ESP32-S3 bootloader';
+  let off = 24;
+  let ck = 0xef;
+  const segs: [number, number][] = [];
+  for (let s = 0; s < b[1]; s++) {
+    if (off + 8 > n) return 'malformed segment table';
+    const a = u32(b, off);
+    const len = u32(b, off + 4);
+    off += 8;
+    if (!len || a % 4 || len % 4 || off + len > n) return 'malformed segment table';
+    if (!IN_DRAM(a, len) && !IN_IRAM(a, len)) return 'segment outside loader RAM';
+    segs.push([a, a + len]);
+    for (let i = off; i < off + len; i++) ck ^= b[i];
+    off += len;
+  }
+  const fin = Math.floor((off + 16) / 16) * 16;
+  if (n !== fin + 32 || b[fin - 1] !== ck) return 'checksum mismatch';
+  for (let i = off; i < fin - 1; i++) if (b[i]) return 'nonzero padding';
+  const entryAt = u32(b, 4);
+  if (entryAt % 4 || !segs.some(([a, e]) => a >= 0x40370000 && a <= entryAt && entryAt < e)) return 'entry point outside IRAM';
+  // IRAM and DRAM are one memory at two addresses: compare segments on the data bus.
+  const bus = segs.map(([a, e]) => (a >= 0x40370000 ? [a - 0x6f0000, e - 0x6f0000] : [a, e])).sort((x, y) => x[0] - y[0] || x[1] - y[1]);
+  for (let s = 1; s < bus.length; s++) if (bus[s - 1][1] > bus[s][0]) return 'overlapping segments';
+  let marks = 0;
+  for (let i = 0; i + 16 <= n; i += 4) {
+    if (b[i] !== 77 || !mark(b, i, 'L')) continue;
+    if (u32(b, i + 8) !== role || u32(b, i + 12) !== 2) return 'bootloader for the other port';
+    marks++;
+  }
+  if (marks !== 1) return 'role marker missing or repeated';
+  return createHash('sha256').update(b.subarray(0, fin)).digest().equals(Buffer.from(b.subarray(fin))) ? null : 'image hash mismatch';
+}
+
+export interface StockDeps {
+  fetch: (url: string, init?: RequestInit) => Promise<Response>;
+  now: () => number;
+  key: string;
+}
+
+// The body, read until it passes `max` bytes, when it is dropped.
+async function capped(res: Response, max: number): Promise<Uint8Array<ArrayBuffer> | null> {
+  const declared = Number(res.headers.get('content-length'));
+  if (declared > max) {
+    await res.body?.cancel().catch(() => undefined);
+    return null;
+  }
+  const reader = res.body?.getReader();
+  if (!reader) return new Uint8Array(0);
+  const parts: Uint8Array[] = [];
+  let total = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    total += value.length;
+    if (total > max) {
+      await reader.cancel().catch(() => undefined);
+      return null;
+    }
+    parts.push(value);
+  }
+  const out = new Uint8Array(total);
+  let at = 0;
+  for (const p of parts) {
+    out.set(p, at);
+    at += p.length;
+  }
+  return out;
+}
+
+type Read = { offer: StockOffer; root: string } | { error: string };
+
+const json = (status: number, body: unknown) =>
+  new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json', 'cache-control': 'no-store' } });
+
+export function createStock(deps: StockDeps = { fetch: (u, i) => fetch(u, i), now: Date.now, key: MAKCU_KEY }) {
+  let kept: { at: number; read: Read } | null = null;
+  let inflight: Promise<Read> | null = null;
+  const get = (url: string, ms: number) => deps.fetch(url, { headers: { 'user-agent': AGENT, 'cache-control': 'no-cache' }, signal: AbortSignal.timeout(ms), redirect: 'error' });
+
+  const readCatalog = async (): Promise<Read> => {
+    let reason = "MAKCU's catalog couldn't be reached";
+    for (const root of ROOTS) {
+      try {
+        const res = await get(`${root}/firmware/catalog.json`, CATALOG_MS);
+        if (!res.ok) {
+          await res.body?.cancel().catch(() => undefined);
+          continue;
+        }
+        const bytes = await capped(res, CATALOG_MAX);
+        if (!bytes) {
+          reason = "MAKCU's catalog is larger than this page reads";
+          continue;
+        }
+        const offer = checkCatalog(new TextDecoder().decode(bytes), deps.key);
+        return 'error' in offer ? offer : { offer, root };
+      } catch {
+        // the next address
+      }
+    }
+    return { error: reason };
+  };
+
+  const catalog = (): Promise<Read> => {
+    if (kept && deps.now() - kept.at < FRESH_MS) return Promise.resolve(kept.read);
+    return (inflight ??= readCatalog()
+      .then((read) => {
+        kept = { at: deps.now(), read };
+        return read;
+      })
+      .finally(() => {
+        inflight = null;
+      }));
+  };
+
+  const file = async (name: string): Promise<Response> => {
+    const read = await catalog();
+    if ('error' in read) return json(502, { error: read.error });
+    const { offer, root } = read;
+    const which = name === offer.build.file ? 'package' : name === offer.usb1.file ? 'usb1' : name === offer.usb3.file ? 'usb3' : null;
+    if (!which) return json(404, { error: 'Not a file the catalog lists' });
+    const want = which === 'package' ? offer.build : offer[which];
+    let bytes: Uint8Array<ArrayBuffer> | null;
+    try {
+      const res = await get(`${root}/firmware/${name}`, FILE_MS);
+      bytes = res.ok ? await capped(res, want.size) : null;
+    } catch {
+      bytes = null;
+    }
+    if (!bytes) return json(502, { error: `${name} couldn't be read from MAKCU` });
+    if (bytes.length !== want.size || createHash('sha256').update(bytes).digest('hex') !== want.sha256)
+      return json(502, { error: `${name} doesn't match MAKCU's signed catalog` });
+    const why = which === 'package' ? checkPackage(bytes) : checkBoot(bytes, which === 'usb1' ? 1 : 2);
+    if (why) return json(502, { error: `${name}: ${why}` });
+    return new Response(bytes, {
+      headers: { 'content-type': 'application/octet-stream', 'content-length': String(bytes.length), 'cache-control': 'no-store' },
+    });
+  };
+
+  return async (req: Request): Promise<Response | null> => {
+    const path = new URL(req.url).pathname;
+    if (path !== '/api/stock/catalog' && !path.startsWith('/api/stock/file/')) return null;
+    if (req.method !== 'GET' && req.method !== 'HEAD') return new Response('Use GET.', { status: 405 });
+    if (path === '/api/stock/catalog') {
+      const read = await catalog();
+      if ('error' in read) return json(502, { error: read.error });
+      const { build, usb1, usb3 } = read.offer;
+      return json(200, {
+        build: { id: build.id, label: build.label, size: build.size },
+        files: { package: build.file, usb1: usb1.file, usb3: usb3.file },
+      });
+    }
+    return file(path.slice('/api/stock/file/'.length));
+  };
+}
