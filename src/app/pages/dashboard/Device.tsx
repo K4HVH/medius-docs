@@ -9,6 +9,7 @@ import { CapabilitiesPanel, PerformancePanel } from './DeviceInfo';
 import DeviceFactoryReset from './DeviceFactoryReset';
 import DeviceOptions from './DeviceOptions';
 import { OPTION_PLACES } from './optionPlaces';
+import DeviceFixes from './DeviceFixes';
 import { ConnectPanel } from './ConnectPanel';
 import UpdateOnlyCard from './UpdateOnlyCard';
 import { PageHeader } from '../../shell/PageHeader';
@@ -109,6 +110,9 @@ const Device = () => {
       >
         <Pane key="overview">
           <Panels>
+            <Show when={full() || older()}>
+              <DeviceFixes />
+            </Show>
             <Stack wide={!full()}>
               <Panel id="your-box" title="Your box">
                 <div aria-live="polite" class="boxstate">

@@ -10,6 +10,9 @@
 //                                  when the dashboard opens, without Connect
 //   newer, older                   the box speaks a newer or an older protocol (v3.4.1, protocol 8)
 //   oldest                         v3.2.0 on protocol 5, with no Render or Spread to answer
+//   refused, logitech125, razer125 a device the box refused, a Logitech mouse declaring 125 Hz, a Razer mouse
+//                                  measured at 125 Hz: each draws its offer on Overview, and the first two
+//                                  take the fix
 //   nomouse, keyboard              nothing cloned, or a keyboard
 //   imperfect                      imperfect clones allowed (the Advanced tab's controls)
 //   fail                           every command the box is sent is refused
@@ -58,7 +61,11 @@ const VERSION: Version = {
   name: 'Desk',
 };
 
-const DEVICE: DeviceInfo = on.has('keyboard')
+const DEVICE: DeviceInfo = on.has('refused')
+  ? { vid: 0, pid: 0, bcdDevice: 0, bcdUsb: 0, hasSerial: false, hasBos: false, kind: DeviceKind.Unknown, product: '' }
+  : on.has('razer125')
+  ? { vid: 0x1532, pid: 0x00c1, bcdDevice: 0x0100, bcdUsb: 0x0200, hasSerial: true, hasBos: false, kind: DeviceKind.Mouse, product: 'Razer Viper V3 Pro' }
+  : on.has('keyboard')
   ? { vid: 0x31e3, pid: 0x1322, bcdDevice: 0x0100, bcdUsb: 0x0200, hasSerial: true, hasBos: false, kind: DeviceKind.Keyboard, product: 'Wooting 60HE+' }
   : { vid: 0x046d, pid: 0xc098, bcdDevice: 0x0100, bcdUsb: 0x0200, hasSerial: true, hasBos: false, kind: DeviceKind.Mouse, product: 'G502 X LIGHTSPEED' };
 
@@ -84,17 +91,17 @@ const ANSWERS: Record<string, unknown> = {
     mouseChangeDriven: false,
     kbdChangeDriven: on.has('keyboard'),
   },
-  queryRate: { nativePeriodUs: 1000, pollPeriodUs: 1000, confident: mouse, changeDriven: on.has('keyboard') },
+  queryRate: { nativePeriodUs: on.has('razer125') ? 8000 : 1000, pollPeriodUs: 1000, confident: mouse, changeDriven: on.has('keyboard') },
   queryStats: {
     injectEmits: 0, txDrops: 0, txMerges: 0, txMaxdepth: 0, txWedges: 0, wakeups: 0, resetCount: 0,
     configCount: 1, linkRxDrops: 0, hostRxDrops: 0, relayDrops: 0, session: 1,
   },
   queryLocks: { entries: [] },
   queryCatch: { tableFull: false, dropped: 0, clock: { offsetUs: 412, ratePpb: 0, delayUs: 6, ageMs: 212 }, entries: [] },
-  queryImperfect: { allowed: on.has('imperfect'), overCapacity: on.has('nomouse'), cloneImperfect: false },
+  queryImperfect: { allowed: on.has('imperfect'), overCapacity: on.has('nomouse') || on.has('refused'), cloneImperfect: on.has('refused') },
   queryMovementRiding: 0,
   queryBearing: { windowMs: 20, mode: BearingMode.PerAxis },
-  queryEmitPace: { mode: EmitMode.Learned, fixedHz: 1000, resolvedHz: 1000, forceHz: 0, advertisedHz: 1000, forceActive: false },
+  queryEmitPace: { mode: EmitMode.Learned, fixedHz: 1000, resolvedHz: 1000, forceHz: 0, advertisedHz: on.has('logitech125') ? 125 : 1000, forceActive: false },
   queryRender: { mode: RenderMode.Despiked, full: false, ready: true },
   querySpread: { percent: 100, spanUs: 1000 },
   queryClip: on.has('clip')
@@ -266,6 +273,18 @@ function devLink(port: SerialPort, events: SerialLinkEvents): SerialLink {
       if (on.has('oldest') && (key === 'queryRender' || key === 'querySpread')) return () => new Promise(() => {});
       if (key in ANSWERS) return async () => (silent() ? Promise.reject(new Error('No reply')) : structuredClone(ANSWERS[key]));
       if (key.startsWith('query')) return async () => (silent() ? Promise.reject(new Error('No reply')) : undefined);
+      // Imperfect clone and the emit option take, as a box's do, so a fix offered on Overview can finish.
+      if (key === 'allowImperfectClones' || key === 'setEmitPace') {
+        return async (...args: number[]) => {
+          if (on.has('fail')) return refused();
+          const imp = ANSWERS.queryImperfect as { allowed: boolean };
+          const e = ANSWERS.queryEmitPace as { mode: number; fixedHz: number; forceHz: number; advertisedHz: number; forceActive: boolean };
+          if (key === 'allowImperfectClones') imp.allowed = !!args[0];
+          else [e.mode, e.fixedHz, e.forceHz] = [args[0], args[1] ?? 0, args[2] ?? 0];
+          e.forceActive = e.forceHz > 0 && imp.allowed;
+          if (e.forceActive) e.advertisedHz = e.forceHz;
+        };
+      }
       return async () => (on.has('fail') ? refused() : undefined);
     },
   }) as unknown as SerialLink;
