@@ -51,6 +51,7 @@ vi.mock('../../src/app/pages/dashboard/context', () => {
 });
 
 import DeviceOptions from '../../src/app/pages/dashboard/DeviceOptions';
+import { OPTION_PLACES } from '../../src/app/pages/dashboard/optionPlaces';
 
 const button = (root: HTMLElement, text: string) =>
   [...root.querySelectorAll('button')].find((b) => b.textContent?.trim() === text);
@@ -65,6 +66,18 @@ afterEach(() => {
 });
 
 describe('DeviceOptions', () => {
+  it('has every place a link names, under the title the link names it by', async () => {
+    const { container, findByText } = render(() => <DeviceOptions />);
+    await findByText('Each axis is weighed against its bearing.');
+    for (const [id, title] of Object.entries(OPTION_PLACES)) {
+      if (id === 'options') continue;
+      const el = container.querySelector(`[id="${id}"]`);
+      expect(el, id).not.toBeNull();
+      const named = el!.querySelector('h2')?.getAttribute('aria-label') ?? el!.querySelector('.field-l')?.textContent?.trim();
+      expect(named, id).toBe(title);
+    }
+  });
+
   // Each multi-option control used to describe every option at once. Only the selected one is a
   // statement about the box you are looking at.
   it('describes only the selected bearing geometry', async () => {

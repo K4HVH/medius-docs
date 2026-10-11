@@ -20,6 +20,7 @@ const mock = vi.hoisted(() => ({
   // The page that started the update in flight.
   runPage: 'update',
   error: null as string | null,
+  hash: '',
 }));
 
 vi.mock('../../src/app/pages/dashboard/context', async () => {
@@ -65,7 +66,7 @@ const navigate = vi.hoisted(() => vi.fn());
 vi.mock('@solidjs/router', () => ({
   useNavigate: () => navigate,
   A: (p: { children: unknown }) => p.children,
-  useLocation: () => ({ pathname: '/dashboard', hash: '' }),
+  useLocation: () => ({ pathname: '/dashboard', hash: mock.hash }),
 }));
 
 import Device from '../../src/app/pages/dashboard/Device';
@@ -80,9 +81,22 @@ afterEach(() => {
   mock.runPage = 'update';
   mock.verdict = null;
   mock.error = null;
+  mock.hash = '';
 });
 
 describe('Device', () => {
+  it('names the option a link asked for while no box is connected', () => {
+    mock.hash = '#imperfect-clone';
+    const { container } = render(() => <Device />);
+    expect(container.querySelector('#your-box')!.textContent).toContain('Connect your box to reach Imperfect clone.');
+    cleanup();
+    mock.hash = '#options';
+    expect(render(() => <Device />).container.textContent).toContain('Connect your box to reach Options.');
+    cleanup();
+    mock.hash = '#log';
+    expect(render(() => <Device />).container.textContent).not.toContain('Connect your box to reach');
+  });
+
   it('keeps the page in a browser without Web Serial, with the reason where Connect was', async () => {
     mock.supported = false;
     const { container, queryByRole } = render(() => <Device />);
