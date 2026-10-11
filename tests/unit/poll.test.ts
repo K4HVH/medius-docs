@@ -139,8 +139,8 @@ describe('dashboard poller', () => {
     });
   });
 
-  it('polls health on its own, faster than the box clears its state', async () => {
-    // The keepalive is the poller's own job, not a card's.
+  it('polls health without a card asking, faster than the box clears its state', async () => {
+    // The keepalive is the poller's job, not a card's.
     const { calls, link } = makeLink();
     await createRoot(async (dispose) => {
       createPoller(() => link);

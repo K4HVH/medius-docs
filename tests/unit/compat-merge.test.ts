@@ -59,7 +59,7 @@ describe('mergeCompat', () => {
 });
 
 describe('COMPAT seed', () => {
-  it('gives every report a verdict, a kind and its own name', () => {
+  it('gives every report a verdict, a kind and a distinct name', () => {
     expect(COMPAT.length).toBeGreaterThan(40);
     expect(new Set(COMPAT.map((e) => e.name.toLowerCase())).size).toBe(COMPAT.length);
     for (const e of COMPAT) {

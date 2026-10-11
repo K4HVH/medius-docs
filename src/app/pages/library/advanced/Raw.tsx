@@ -16,7 +16,7 @@ const Raw: Component = () => {
           The write is stateless: the next native report overwrites it. <code>raw</code> bypasses the{' '}
           <A href="/library/advanced/rewrite">rewrite rules</A> and the clip's{' '}
           <A href="/library/clip#packet-triggers">packet triggers</A>. No native report carries a raw{' '}
-          <code>IN</code> report, so on an endpoint the device reports on at every poll it takes its own
+          <code>IN</code> report, so on an endpoint the device reports on at every poll it takes a separate
           poll, within two of the device's reports.
         </p>
         <pre class="diagram">{`  native device          the box  (host chip  |  device chip = the clone)         game PC

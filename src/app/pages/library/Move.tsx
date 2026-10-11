@@ -167,9 +167,9 @@ device.pan(-1)?;  // pan left`}</code></pre>
           waiting for a real move, and held motion stays held.
         </p>
         <p>
-          The box sends its own report for it on the first poll no native report can be ready for. A
-          native report that reaches the box first carries the delta instead, unless it carries injected
-          motion of its own while the mouse leaves polls free; then the delta takes a poll of its own.
+          The box sends a report for it on the first poll no native report can be ready for. A
+          native report that reaches the box first carries the delta instead, unless it already carries injected
+          motion while the mouse leaves polls free; then the delta takes a separate poll.
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`device.set_movement_riding(Some(Duration::from_millis(20)))?;
@@ -225,7 +225,7 @@ device.move_rel_now(100, 0)?;  // emits either way`}</code></pre>
           <table class="api-params">
             <thead><tr><th>Accumulator</th><th>What flush does</th></tr></thead>
             <tbody>
-              <tr><td>Riding</td><td>Emptied into the immediate accumulator, regardless of the ride window. Sends no motion of its own.</td></tr>
+              <tr><td>Riding</td><td>Emptied into the immediate accumulator, regardless of the ride window. Sends no motion itself.</td></tr>
               <tr><td>Immediate</td><td>Gains that amount, sent on the box's next mouse report.</td></tr>
             </tbody>
           </table>

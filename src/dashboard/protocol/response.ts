@@ -617,7 +617,7 @@ export function parseResp(payload: Uint8Array): Resp | null {
       };
     }
     case Q_PATCH_ENTRY: {
-      // [what][list_index][section][cfg][index][offset u16 LE][bytes..], the PATCH command's own shape.
+      // [what][list_index][section][cfg][index][offset u16 LE][bytes..], the PATCH command's shape.
       if (payload.length < 7) return null;
       return {
         kind: 'patchEntry',

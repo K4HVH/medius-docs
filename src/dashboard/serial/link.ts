@@ -308,7 +308,7 @@ export class SerialLink {
   // TRANSFER_RESP waiters, keyed by the SEQ the reply echoes (§3.14).
   private transferWaiters = new Map<number, TransferWaiter>();
   // UPDATE_RESP waiters, keyed by op: one acknowledgement answers a window of DATA frames and carries
-  // its own rolling SEQ.
+  // a separate rolling SEQ.
   private updateWaiters = new Map<number, (r: UpdateResp | null, cause?: Error) => void>();
   // Replies that beat their waiter; dropping them loses refusals raised inside a credit window.
   private updateBacklog: UpdateResp[] = [];
@@ -636,7 +636,7 @@ export class SerialLink {
     return resp.clip;
   }
 
-  // CLIP_APPEND has its own SEQ: the box faults on any gap, and every query advances the shared one.
+  // CLIP_APPEND has a separate SEQ: the box faults on any gap, and every query advances the shared one.
   // No backpressure: an overflowing append faults, so check `freeBytes`. Dropped with no reply while
   // no clone is up, and after FINALIZE on a retained clip (§3.11).
   async clipAppend(entries: ClipEntry[]): Promise<void> {

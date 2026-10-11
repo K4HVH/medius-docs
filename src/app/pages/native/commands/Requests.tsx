@@ -575,7 +575,7 @@ const Requests: Component = () => {
               <tr><td><code>OPTION(IMPERFECT)</code> turned off</td><td>when it drops rewrite rules, consuming packet triggers or queued clip transfers; a re-clone it causes counts again</td></tr>
               <tr><td>a configuration switch by the game PC that unbinds a role</td><td>when a host held a lock, an injected usage or owed motion on that role</td></tr>
               <tr><td>state the box refused on arrival: a rule with the opt-in off, a patch with no device attached</td><td>not counted</td></tr>
-              <tr><td>the host's own clear: a whole-table <code>REWRITE</code> clear, a <code>CATCH</code> unsubscribe, <code>CLIP_CTRL</code> <code>CLEAR</code></td><td>not counted</td></tr>
+              <tr><td>a clear from the host: a whole-table <code>REWRITE</code> clear, a <code>CATCH</code> unsubscribe, <code>CLIP_CTRL</code> <code>CLEAR</code></td><td>not counted</td></tr>
             </tbody>
           </table>
         </div>
@@ -641,9 +641,9 @@ const Requests: Component = () => {
               <tr><th>State</th><th>Reports as</th></tr>
             </thead>
             <tbody>
-              <tr><td>An axis or button weighed on a direction</td><td>One entry under its own <code>class</code> and <code>id</code>, per direction.</td></tr>
+              <tr><td>An axis or button weighed on a direction</td><td>One entry under its <code>class</code> and <code>id</code>, per direction.</td></tr>
               <tr><td>A target passing on every direction</td><td>Absent.</td></tr>
-              <tr><td>A <A href="/native/commands/lock#blanket">blanket</A> button or axis lock</td><td>One entry per member, under its own <code>id</code>; never <code>0xFFFF</code>.</td></tr>
+              <tr><td>A <A href="/native/commands/lock#blanket">blanket</A> button or axis lock</td><td>One entry per member, under the member's <code>id</code>; never <code>0xFFFF</code>.</td></tr>
               <tr><td>A blanket key lock</td><td>One entry per blocked edge, <code>id = 0xFFFF</code>, direction <code>1</code> and/or <code>2</code>; never <code>0</code>.</td></tr>
               <tr><td>A media lock, blanket or specific</td><td>Direction <code>0</code>, always. Media has no edges.</td></tr>
               <tr><td>A relative direction in <A href="/native/commands/option#bearing">vector</A> mode</td><td>The effective scale, the lower of X's and Y's, on both axes.</td></tr>
@@ -1058,7 +1058,7 @@ const Requests: Component = () => {
               <tr><td>b0</td><td><code>0x01</code></td><td><code>LOOP</code>: playback restarts from the top on drain instead of stopping</td></tr>
               <tr><td>b1</td><td><code>0x02</code></td><td><code>RETAIN</code>: the buffered content survives a stop instead of clearing</td></tr>
               <tr><td>b2</td><td><code>0x04</code></td><td><code>FINALIZED</code>: the clip is sealed, no more <A href="/native/commands/clip#append"><code>CLIP_APPEND</code></A> accepted</td></tr>
-              <tr><td>b3</td><td><code>0x08</code></td><td><code>RIDE</code>: the clip's motion waits to ride a native report instead of emitting on the box's own clock</td></tr>
+              <tr><td>b3</td><td><code>0x08</code></td><td><code>RIDE</code>: the clip's motion waits to ride a native report instead of emitting on the box's clock</td></tr>
             </tbody>
           </table>
         </div>
@@ -1524,7 +1524,7 @@ const Requests: Component = () => {
               <tr><th>State</th><th>Reports as</th></tr>
             </thead>
             <tbody>
-              <tr><td>An installed entry</td><td>One 7-byte line, under its own <code>(source, dest)</code> key.</td></tr>
+              <tr><td>An installed entry</td><td>One 7-byte line, under its <code>(source, dest)</code> key.</td></tr>
               <tr><td>An entry the box refused</td><td>Absent. <code>TRANSFORM</code> is fire-and-forget, so this reply is the only confirmation an entry landed.</td></tr>
               <tr><td>An entry the 32-slot table turned away</td><td>Absent, with <code>flags</code> b0 (full) set.</td></tr>
               <tr><td>An entry whose destination this configuration doesn't declare</td><td>Present and unchanged. It is <A href="/native/commands/transform#cross">inert</A>, not removed, and works again once the destination binds.</td></tr>

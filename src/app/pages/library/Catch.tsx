@@ -52,7 +52,7 @@ for ev in device.input_events([CatchFilter::watch(Key::F)])? {
         <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
         <p>
           Each <A href="/library/types/structs#catch-filter"><code>CatchFilter</code></A> becomes one
-          entry in the box's 32-entry table, sent as its own frame. The returned{' '}
+          entry in the box's 32-entry table, sent as a separate frame. The returned{' '}
           <A href="/library/catch#event-stream"><code>EventStream</code></A> receives every event any
           of them matches.
         </p>
@@ -204,7 +204,7 @@ for event in &device.catch_events([filter])? {
         <p>
           Every event carries <code>ts_us</code> and the{' '}
           <A href="/library/types/enums#clock-domain"><code>ClockDomain</code></A> that produced it.
-          The two chips boot independently, so a stamp is only meaningful within its own domain.
+          The two chips boot independently, so a stamp is only meaningful within its domain.
         </p>
         <div class="table-scroll">
           <table class="api-params">

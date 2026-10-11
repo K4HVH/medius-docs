@@ -96,7 +96,7 @@ const Rewrite: Component = () => {
             <tbody>
               <tr><td><code>OPTION(IMPERFECT)</code> off, for any frame but the whole-table clear</td><td>the advanced layer needs the opt-in</td></tr>
               <tr><td>frame shorter than <code>9 + 2 x mlen</code></td><td>malformed</td></tr>
-              <tr><td><code>11 + 2 x mlen + plen</code> above 512</td><td>a rule must fit its own <A href="/native/commands/requests#rewrite-entry">readback</A> in one frame</td></tr>
+              <tr><td><code>11 + 2 x mlen + plen</code> above 512</td><td>a rule's <A href="/native/commands/requests#rewrite-entry">readback</A> must fit in one frame</td></tr>
               <tr><td><code>cls</code> is not <code>4</code>-<code>9</code> or <code>0xFF</code></td><td>other classes carry no packet</td></tr>
               <tr><td><code>dir</code> above <code>2</code></td><td>a packet travels IN or OUT</td></tr>
               <tr><td><code>mlen</code> above <code>16</code></td><td>the head compare reads at most 16 bytes</td></tr>
@@ -295,7 +295,7 @@ const Rewrite: Component = () => {
               <tr><td><code>HID_IN</code></td><td>Buttons, keys, media and a secondary mouse's report are read from the rewritten bytes by <A href="/native/commands/lock"><code>LOCK</code></A>, <A href="/native/commands/transform#order"><code>TRANSFORM</code></A> and injection. A <code>DROP</code> removes the native report; injection still emits on the frame clock.</td></tr>
               <tr><td><code>EMIT</code></td><td>Acts last, on native, injected and rendered reports and a clip's entries. A rewritten report that carries no event against the last one sent is suppressed, unless the device reports every poll.</td></tr>
               <tr><td><A href="/native/commands/raw"><code>RAW</code></A></td><td>Goes straight to the endpoint, past every rule and trigger, as a clip's <A href="/native/commands/clip#items">raw items</A> do.</td></tr>
-              <tr><td><A href="/native/commands/transfer"><code>TRANSFER</code></A></td><td>Runs on its own messages to the device, past every rule.</td></tr>
+              <tr><td><A href="/native/commands/transfer"><code>TRANSFER</code></A></td><td>Runs on dedicated messages to the device, past every rule.</td></tr>
             </tbody>
           </table>
         </div>

@@ -98,8 +98,8 @@ const Enums: Component = () => {
         <p>
           The first four are <A href="/native/commands/lock"><code>LOCK</code></A>'s classes at the
           same byte values. The other eight address USB traffic;{' '}
-          <A href="/library/types/enums#traffic-class"><code>TrafficClass</code></A> is that half on
-          its own.
+          <A href="/library/types/enums#traffic-class"><code>TrafficClass</code></A> is that half
+          alone.
         </p>
         <div class="table-scroll">
           <table class="api-params">
@@ -220,7 +220,7 @@ let trace = device.catch_events([
             <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>Ride</code></td><td><code>0x00</code></td><td>Wait for a real cursor move to carry this delta, as movement riding asks.</td></tr>
-              <tr><td><code>Now</code></td><td><code>0x01</code></td><td>Leave on the box's next mouse report, native or its own, whatever movement riding is set to.</td></tr>
+              <tr><td><code>Now</code></td><td><code>0x01</code></td><td>Leave on the next mouse report the box sends, native or not, whatever movement riding is set to.</td></tr>
             </tbody>
           </table>
         </div>
@@ -439,7 +439,7 @@ let trace = device.catch_events([
           <A href="/library/options#set-bearing"><code>set_bearing</code></A>.
         </p>
         <p>
-          The other two readings get their own names:{' '}
+          The other two readings have separate names:{' '}
           <code>Direction::PRESS</code> and <code>RELEASE</code> for a usage,{' '}
           <code>Direction::IN</code> and <code>OUT</code> for traffic.{' '}
           <code>admits()</code> tests one against another, and <code>of_delta()</code> reads the
@@ -457,7 +457,7 @@ let trace = device.catch_events([
           <table class="api-params">
             <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>PerAxis</code></td><td><code>0</code></td><td>Each axis compares its sign against its own bearing. The default.</td></tr>
+              <tr><td><code>PerAxis</code></td><td><code>0</code></td><td>Each axis compares its sign against its bearing. The default.</td></tr>
               <tr><td><code>Vector</code></td><td><code>1</code></td><td>The physical delta is projected onto the injected XY vector, and the relative scale weighs only the part along it.</td></tr>
             </tbody>
           </table>
@@ -621,7 +621,7 @@ match stream.recv()? {
           The kind of a <A href="/library/types/enums#catch-class"><code>CatchClass::Bus</code></A>{' '}
           event. Read it with <code>TrafficEvent::bus_event()</code>, which returns{' '}
           <code>Option&lt;BusEvent&gt;</code>: <code>None</code> for a kind byte this build does not
-          name. The two kinds with operands parse them into their own fields.
+          name. The two kinds with operands parse them into named fields.
         </p>
         <div class="table-scroll">
           <table class="api-params">
@@ -669,7 +669,7 @@ if let CatchEvent::Traffic(t) = stream.recv()? {
           <table class="api-params">
             <thead><tr><th>Variant</th><th>Byte</th><th>Fields it admits</th><th>Effect</th></tr></thead>
             <tbody>
-              <tr><td><code>Remap</code></td><td><code>0</code></td><td>axis→axis, button→button, button→key, button→media</td><td>Move the source's value into the destination, clearing the source. A button to key or media remap holds the destination through that interface's own report for as long as the button is down.</td></tr>
+              <tr><td><code>Remap</code></td><td><code>0</code></td><td>axis→axis, button→button, button→key, button→media</td><td>Move the source's value into the destination, clearing the source. A button to key or media remap holds the destination through that interface's report for as long as the button is down.</td></tr>
               <tr><td><code>Swap</code></td><td><code>1</code></td><td>two axes</td><td>Read both, then write both, so it is not two remaps.</td></tr>
             </tbody>
           </table>

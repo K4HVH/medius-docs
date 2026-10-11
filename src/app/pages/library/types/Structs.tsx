@@ -293,7 +293,7 @@ println!("{}%", locks.scale_of(Axis::X, Direction::Against));`}</code></pre>
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>window</code></td><td><code>Option&lt;Duration&gt;</code></td><td>How long an axis holds the direction of its last injected delta. <code>None</code> is off, so <code>With</code> and <code>Against</code> are inert whatever their scale.</td></tr>
-              <tr><td><code>mode</code></td><td><code>BearingMode</code></td><td><code>PerAxis</code>: each axis reads its own sign. <code>Vector</code>: the physical delta is projected onto the injected direction, and the relative scale weighs only the part along it.</td></tr>
+              <tr><td><code>mode</code></td><td><code>BearingMode</code></td><td><code>PerAxis</code>: each axis reads its sign. <code>Vector</code>: the physical delta is projected onto the injected direction, and the relative scale weighs only the part along it.</td></tr>
             </tbody>
           </table>
         </div>
@@ -689,7 +689,7 @@ assert_eq!(vol_up.usage(), custom.usage());`}</code></pre>
         <pre class="api-signature">struct CatchState {'{'} table_full: bool, dropped: u32, clock: ClockEstimate, entries: Vec&lt;CatchEntry&gt; {'}'}</pre>
         <p>
           What <A href="/library/requests#query-catch"><code>query_catch()</code></A> returns.
-          Subscribing has no reply of its own, so this is the only view of what the box accepted.
+          Subscribing has no reply, so this is the only view of what the box accepted.
         </p>
         <div class="table-scroll">
           <table class="api-params">
@@ -809,7 +809,7 @@ match clock.age {
             <tbody>
               <tr><td><code>observe(&amp;event)</code></td><td><A href="/library/types/structs#stamped"><code>Stamped</code></A></td><td>Place an event on this machine's clock, taking the arrival as now.</td></tr>
               <tr><td><code>observe_at(&amp;event, now)</code></td><td><code>Stamped</code></td><td>The same with the arrival supplied, for replaying a capture.</td></tr>
-              <tr><td><code>observe_stamp(ts_us, domain, now)</code></td><td><code>Stamped</code></td><td>The same from a stamp and domain held on their own.</td></tr>
+              <tr><td><code>observe_stamp(ts_us, domain, now)</code></td><td><code>Stamped</code></td><td>The same from a stamp and domain held apart from an event.</td></tr>
               <tr><td><code>box_us(&amp;event)</code></td><td><code>u64</code></td><td>The stamp unwrapped past the rollover, monotonic within its domain.</td></tr>
               <tr><td><code>reset(domain)</code></td><td><code>()</code></td><td>Forget one domain's rollover count and floor, for a chip that rebooted.</td></tr>
               <tr><td><code>samples(domain)</code></td><td><code>u64</code></td><td>Events observed for a domain; the floor is a minimum over these.</td></tr>
@@ -841,7 +841,7 @@ for ev in input.by_ref().take(20) {
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>host</code></td><td><code>Instant</code></td><td>When the event happened, on this machine's monotonic clock.</td></tr>
-              <tr><td><code>box_us</code></td><td><code>u64</code></td><td>The event's own stamp, unwrapped past the 32-bit rollover.</td></tr>
+              <tr><td><code>box_us</code></td><td><code>u64</code></td><td>The event's stamp, unwrapped past the 32-bit rollover.</td></tr>
               <tr><td><code>excess</code></td><td><code>Duration</code></td><td>How much later than the measured floor this event arrived. Jitter, not latency: the constant part of the delay is unknowable here.</td></tr>
             </tbody>
           </table>

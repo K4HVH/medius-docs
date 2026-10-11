@@ -14,7 +14,7 @@ export function createRefused(panels: readonly string[], home: string) {
     setShown({ panel: panels.includes(p) ? p : home, msg: e instanceof Error ? e.message : String(e) });
   };
   const clear = () => setShown(null);
-  // For a command whose error is a signal of its own: clears with it, and places each refusal anew.
+  // For a command whose error is a separate signal: clears with it, and places each refusal anew.
   const follow = (error: Accessor<string | null>) =>
     createEffect(() => {
       const msg = error();

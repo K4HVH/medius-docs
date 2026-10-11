@@ -71,7 +71,7 @@ describe('ByteStrip', () => {
     expect(cells(container).map((d) => d.style.getPropertyValue('--w'))).toEqual(['1', '2', '4']);
   });
 
-  it('marks a value too long for a phone so it can take its own row', () => {
+  it('marks a value too long for a phone so it can take a whole row', () => {
     const { container } = render(() => (
       <ByteStrip fields={[{ value: '12 01 00 02 00 00 00 40 ... (18 bytes)', name: 'data' }, { value: '12 34 56 78 9A BC', name: 'mac' }]} />
     ));

@@ -153,10 +153,10 @@ const Lock: Component = () => {
                 <tr><th>Class</th><th>Covers</th><th>Direction</th><th>Reads back as</th></tr>
               </thead>
               <tbody>
-                <tr><td>button</td><td>Every button the device declares.</td><td>As a named button.</td><td>One entry per button and edge, under its own id.</td></tr>
+                <tr><td>button</td><td>Every button the device declares.</td><td>As a named button.</td><td>One entry per button and edge, under the button's id.</td></tr>
                 <tr><td>key</td><td>Every keyboard usage.</td><td>Honoured: <code>1</code> blocks press edges, <code>2</code> release edges, <code>0</code> both.</td><td>One entry per blocked edge, id <code>0xFFFF</code>.</td></tr>
                 <tr><td>media</td><td>Every Consumer usage.</td><td>Ignored.</td><td>One entry, id <code>0xFFFF</code>, direction <code>0</code>.</td></tr>
-                <tr><td>axis</td><td>X, Y, the wheel, and pan.</td><td>As a named axis.</td><td>One entry per axis and direction, under its own id.</td></tr>
+                <tr><td>axis</td><td>X, Y, the wheel, and pan.</td><td>As a named axis.</td><td>One entry per axis and direction, under the axis's id.</td></tr>
               </tbody>
             </table>
           </div>
@@ -272,7 +272,7 @@ re-clone    the box binds a device again`}</pre>
        bearing +X       bearing +X               no bearing`}</pre>
         <div class="api-response-label">LIFETIME</div>
         <p>
-          Each axis has its own bearing and deadline, set by{' '}
+          Each axis has a separate bearing and deadline, set by{' '}
           <A href="/native/commands/option#bearing"><code>OPTION(BEARING)</code></A>. A window of{' '}
           <code>0</code> holds no bearing, so <code>with</code> and <code>against</code> stop
           weighing without being cleared.
@@ -286,7 +286,7 @@ re-clone    the box binds a device again`}</pre>
               <tr><td>An injected delta on that axis, from a <A href="/native/commands/move#move"><code>MOVE</code></A> on either <A href="/native/injection#state">accumulator</A> or from a <A href="/native/commands/clip#entries">clip</A></td><td>Set, and the deadline restarted; a zero component leaves that axis unchanged.</td></tr>
               <tr><td>Injected motion still owed on that axis, held for a ride or queued behind a slow <A href="/native/commands/option#emit">emit</A> gate</td><td>Keeps restarting the deadline, and points at the net pending delta rather than the last one sent.</td></tr>
               <tr><td>The window elapses</td><td>That axis has no bearing. Both relative directions stop applying and it passes at its fixed-sign scale alone.</td></tr>
-              <tr><td><A href="/native/commands/move#flags"><code>MOVE</code> with <code>DISCARD</code></A></td><td>Cleared, then set again by the command's own delta; only a zero-delta discard leaves the axis without one.</td></tr>
+              <tr><td><A href="/native/commands/move#flags"><code>MOVE</code> with <code>DISCARD</code></A></td><td>Cleared, then set again by the command's delta; only a zero-delta discard leaves the axis without one.</td></tr>
               <tr><td>Motion held for a ride goes stale</td><td>Cleared with the held motion, on the next native move that would have carried it.</td></tr>
               <tr><td>A change to <A href="/native/commands/option#move-ride"><code>OPTION(MOVE_RIDE)</code></A></td><td>Cleared, along with the held motion it pointed with.</td></tr>
               <tr><td>A change to <A href="/native/commands/option#bearing"><code>OPTION(BEARING)</code></A></td><td>Cleared, and the banked <A href="/native/commands/lock#scale">carry</A> with it.</td></tr>
@@ -307,7 +307,7 @@ re-clone    the box binds a device again`}</pre>
               <tr><th>Mode</th><th>Value</th><th>Weighs</th></tr>
             </thead>
             <tbody>
-              <tr><td>per axis</td><td><code>0</code></td><td>Each axis against its own bearing, independently.</td></tr>
+              <tr><td>per axis</td><td><code>0</code></td><td>Each axis against its bearing, independently.</td></tr>
               <tr><td>vector</td><td><code>1</code></td><td>Only the movement along the injected direction.</td></tr>
             </tbody>
           </table>
@@ -330,7 +330,7 @@ re-clone    the box binds a device again`}</pre>
           effective number on both axes, so a readback replayed as commands levels the higher stored
           byte down to it.
         </p>
-        <p>The wheel and pan are never projected; each weighs against its own bearing.</p>
+        <p>The wheel and pan are never projected; each weighs against its bearing.</p>
         <div class="api-response-label">TWO STAGES</div>
         <div class="table-scroll">
           <table class="api-params">

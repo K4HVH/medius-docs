@@ -22,7 +22,7 @@ const Transform: Component = () => {
                                    +-- remap   source -> destination, source cleared
                                          |
                                          +-- button -> key / media, held on the
-                                             destination's own interface`}</pre>
+                                             destination's interface`}</pre>
         <div class="table-scroll">
           <table class="api-params">
             <thead>
@@ -243,7 +243,7 @@ const Transform: Component = () => {
         </p>
         <pre class="diagram">{`  physical report
        |
-       +-- 1  LOCK        weighs each field on its own sign and bearing
+       +-- 1  LOCK        weighs each field on its sign and bearing
        |
        +-- 2  TRANSFORM   moves the weighed fields, in table order
        |
@@ -292,7 +292,7 @@ re-clone    the box binds a device again`}</pre>
         <p>
           <A href="/native/commands/transform#cross">Cross-class holds</A> release before their
           entries go, so no key or media usage stays down after its entry. Removing one entry
-          releases only its own holds.
+          releases only that entry's holds.
         </p>
         <p>
           <A href="/native/commands/admin#reset"><code>RESET</code></A>, a detach and a link drop

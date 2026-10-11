@@ -189,7 +189,7 @@ const DeviceInject = () => {
     setDragging(false);
   };
 
-  // Every other send clears a refusal when it lands and shows its own when refused.
+  // Every other send clears a refusal when it lands, and shows one when refused.
   const settle = (p: Promise<unknown> | undefined) => p?.then(clear, report);
 
   // Everything the pad and the arrows have sent, read in the middle of the arrows.

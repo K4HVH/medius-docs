@@ -123,7 +123,7 @@ vi.mock('../../src/dashboard/serial', async () => {
         if (s.target === 0) mock.deviceSlot ^= 1;
         else mock.hostSlot ^= 1;
       }
-      // The main chip reboots only when its own image was part of the update.
+      // The main chip reboots only when its image was part of the update.
       if (mock.after && mock.staged.some((s) => s.target === 0)) {
         mock.baud = mock.after.baud;
         mock.version = mock.after.version;

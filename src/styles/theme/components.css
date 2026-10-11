@@ -1,5 +1,5 @@
 /* MidnightUI components in the site theme. Their files stay untouched; these rules restyle them through
-   their own classes. Values follow the approved mockup. */
+   the classes MidnightUI gives them. Values follow the approved mockup. */
 
 /* Buttons: square caps. The primary's fill grows from the left and shrinks back to it; the secondary
    (a dark fill and an edge), the subtle and the danger light their edge. */

@@ -40,7 +40,7 @@ medius_device_free(dev);`}</code></pre>
           <p>
             Opaque handles (<code>MediusDevice</code>, <code>MediusEventStream</code>,{' '}
             <code>MediusInputStream</code>, <code>MediusTimeline</code>, <code>MediusLogStream</code>,{' '}
-            <code>MediusMockBox</code>) are yours to free, each with its own <code>*_free</code>.
+            <code>MediusMockBox</code>) are yours to free, each with a matching <code>*_free</code>.
           </p>
           <p>
             Events and log lines are fixed-size structs with nothing to free per event; see{' '}
@@ -324,7 +324,7 @@ MediusCatchFilter ep0 = medius_catch_filter_with_capture(
           Build an entry stream with a <code>MediusClipBuilder</code>, fill a multi-field frame
           with a <code>MediusClipFrame</code>, then drive playback through the{' '}
           <code>MediusClip</code> from <code>medius_device_clip</code>. All three are opaque, each
-          with its own <code>*_free</code>. See <A href="/library/clip">Clip</A>.
+          with a matching <code>*_free</code>. See <A href="/library/clip">Clip</A>.
         </p>
         <div class="api-response-label">BUILDER</div>
         <div class="table-scroll">
@@ -385,7 +385,7 @@ medius_clip_frame_free(f);`}</code></pre>
               <tr><td><code>medius_clip_append(clip, b)</code></td><td>Append the builder's entries to the ring. Every entry is checked first, so a refusal sends nothing: <A href="/bindings/c/types#errors"><code>MEDIUS_STATUS_ERR_CLIP_FRAME_COUNT</code></A>, <code>_CLIP_FRAME_TOO_LONG</code>, <code>_CLIP_TRANSFER_DATA</code>, <code>_RAW_DIRECTION</code>, or <code>_RELATIVE_DIRECTION</code>.</td></tr>
               <tr><td><code>medius_clip_set_autolock(clip, const MediusBlanket *scope, uintptr_t scope_len)</code></td><td>The auto-lock scope: the <A href="/bindings/c/types#blanket"><code>MediusBlanket</code></A> groups <code>scope</code> points at (<code>NULL</code> / 0 = no lock). Set before the first append.</td></tr>
               <tr><td><code>medius_clip_set_loop(clip, uint8_t on) / _set_retain(clip, uint8_t on)</code></td><td>Loop at the clip end (retained only) / retain the loaded clip so it can rewind and replay (0 = streaming, the default).</td></tr>
-              <tr><td><code>medius_clip_set_ride(clip, uint8_t on)</code></td><td>Run the clip's motion under <A href="/library/options#set-movement-riding">movement riding</A> (0 = the box's own clock, the default). Only its wheel and pan while rendering is on with a profile armed.</td></tr>
+              <tr><td><code>medius_clip_set_ride(clip, uint8_t on)</code></td><td>Run the clip's motion under <A href="/library/options#set-movement-riding">movement riding</A> (0 = the box's clock, the default). Only its wheel and pan while rendering is on with a profile armed.</td></tr>
               <tr><td><code>medius_clip_finalize(clip)</code></td><td>Fix a retained clip's end so it can replay and loop.</td></tr>
               <tr><td><code>medius_clip_bind(clip, MediusClipTrigger trigger)</code></td><td>Add or overwrite a <A href="/bindings/c/types#clip-trigger"><code>MediusClipTrigger</code></A>: a <A href="/bindings/c/types#edge"><code>MediusEdge</code></A> of <code>on</code> drives a <A href="/bindings/c/types#clip-action"><code>MediusClipAction</code></A>; <code>consume</code> hides the input from the game.</td></tr>
               <tr><td><code>medius_clip_unbind(clip, MediusUsage usage, MediusEdge edge)</code></td><td>Remove the input trigger on that usage + edge.</td></tr>
@@ -412,7 +412,7 @@ medius_clip_frame_free(f);`}</code></pre>
             <tbody>
               <tr><td><code>medius_device_raw(MediusDevice *dev, uint8_t ep_num, uint8_t dir, const uint8_t *bytes, size_t len)</code></td><td>Put <code>bytes</code> verbatim on cloned endpoint <code>ep_num</code>. <code>dir</code> is a <code>MEDIUS_DIRECTION_*</code> value: <code>POSITIVE</code> (IN) toward the game PC, <code>NEGATIVE</code> (OUT) to the device.</td></tr>
               <tr><td><code>medius_device_transfer(MediusDevice *dev, uint8_t ep, MediusSetup setup,</code> <code>const uint8_t *out_data, size_t out_len, MediusTransferOutcome *out)</code></td><td>Run one control transfer against the real device; fill <code>out</code> with its <A href="/bindings/c/types#transfer-outcome"><code>status</code> and IN data</A>.</td></tr>
-              <tr><td><code>medius_device_transfer_timeout(MediusDevice *dev, uint8_t ep, MediusSetup setup,</code> <code>const uint8_t *out_data, size_t out_len, uint32_t timeout_ms, MediusTransferOutcome *out)</code></td><td>The same transfer with its own reply wait, in ms.</td></tr>
+              <tr><td><code>medius_device_transfer_timeout(MediusDevice *dev, uint8_t ep, MediusSetup setup,</code> <code>const uint8_t *out_data, size_t out_len, uint32_t timeout_ms, MediusTransferOutcome *out)</code></td><td>The same transfer, waiting <code>timeout_ms</code> for the reply.</td></tr>
               <tr><td><code>medius_device_set_rewrite(MediusDevice *dev, const MediusRewriteRule *rule)</code></td><td>Install or overwrite one <A href="/bindings/c/types#rewrite-rule"><code>rewrite rule</code></A>. A payload past what the held rules leave of <A href="/bindings/c/types#capacities"><code>MEDIUS_REWRITE_PAYLOAD_POOL</code></A> is <code>MEDIUS_STATUS_ERR_REWRITE_POOL_FULL</code>, and a new rule past <code>MEDIUS_MAX_REWRITE_ENTRIES</code> is <code>MEDIUS_STATUS_ERR_REWRITE_TABLE_FULL</code>.</td></tr>
               <tr><td><code>medius_device_remove_rewrite(MediusDevice *dev, const MediusRewriteRule *rule)</code></td><td>Drop the rule with this rule's key.</td></tr>
               <tr><td><code>medius_device_clear_rewrite(MediusDevice *dev)</code></td><td>Drop the whole rewrite table.</td></tr>

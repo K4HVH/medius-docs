@@ -207,7 +207,7 @@ describe('clip entry encoding (§3.11)', () => {
   });
 });
 
-// The same logical entries the firmware's own codec test encodes (tests/host/test_clip_entry.c), byte
+// The same logical entries the firmware's codec test encodes (tests/host/test_clip_entry.c), byte
 // for byte: the box decodes what this writes, so the two encoders have to agree on every one.
 describe('clip entry encoding against the firmware vectors (§3.11)', () => {
   const IN = Direction.Positive;
@@ -635,7 +635,7 @@ describe('packet trigger refusals (§3.11)', () => {
     expect(clipPacketTriggerFault({ ...held[0], action: ClipOp.Stop }, { imperfect: true, held })).toBeNull();
   });
 
-  it('encodes nothing for a trigger the box would refuse on its own bytes', () => {
+  it("encodes nothing for a trigger the box would refuse on the trigger's bytes", () => {
     expect(clipPacketTriggerPayload({ ...vectorTrigger, cls: CatchClass.Control }, true)).toBeNull();
     expect(clipPacketTriggerPayload({ ...vectorTrigger, selectorLen: 2 }, true)).toBeNull();
     expect(clipPacketTriggerPayload({ ...vectorTrigger, mask: hex('FF') }, true)).toBeNull();
@@ -845,7 +845,7 @@ describe('RESP(CLIP) decoding (§4.15)', () => {
     expect(packetTriggersOf([...front, 0])).toEqual([]);
   });
 
-  it('reads consume and once per run from their own bits', () => {
+  it('reads consume and once per run from separate bits', () => {
     const consuming = { ...vectorTrigger, oncePerRun: false, selectorLen: 0 };
     const running = { ...vectorTrigger, consume: false };
     const got = packetTriggersOf([...front, 2, ...pktEntry(consuming, 3), ...pktEntry(running, 0x0201)]);
@@ -897,7 +897,7 @@ describe('RESP(CLIP) decoding (§4.15)', () => {
     const wide = { ...watching, match: new Uint8Array(17), mask: new Uint8Array(17) };
     expect(parseResp(new Uint8Array([...front, 1, ...pktEntry(wide, 0)]))).toBeNull();
 
-    // Eight entries of 15 bytes is 120, past the pool of 112, with every entry legal on its own.
+    // Eight entries of 15 bytes is 120, past the pool of 112, with every entry legal alone.
     const over = Array.from({ length: 8 }, (_, i) =>
       pktEntry({ ...watching, id: i, match: new Uint8Array(15), mask: new Uint8Array(15) }, 0),
     ).flat();
@@ -912,7 +912,7 @@ describe('RESP(CLIP) decoding (§4.15)', () => {
 });
 
 describe('clipAppend on the link', () => {
-  it('numbers appends on their own sequence, not the shared command sequence', async () => {
+  it('numbers appends on a separate sequence, not the shared command sequence', async () => {
     // The box faults the engine when an append's SEQ is not exactly one past the last append's.
     const mock = new MockSerialPort();
     mock.responder = (f) => {

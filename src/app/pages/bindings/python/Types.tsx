@@ -108,7 +108,7 @@ const Types: Component = () => {
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th><th>Meaning</th></tr></thead>
               <tbody>
-                <tr><td><code>PER_AXIS</code></td><td><code>0</code></td><td>each axis compares its own sign against its own bearing, independently; the default</td></tr>
+                <tr><td><code>PER_AXIS</code></td><td><code>0</code></td><td>each axis compares its sign against its bearing, independently; the default</td></tr>
                 <tr><td><code>VECTOR</code></td><td><code>1</code></td><td>the physical delta is projected onto the injected direction, and the relative scale weighs only the part along it; one relative scale, the lower of X's and Y's, governs X and Y as one vector, and the fixed-sign scales still reach what the projection leaves on each axis</td></tr>
               </tbody>
             </table>
@@ -737,7 +737,7 @@ Capture.first(n)   # keep the first n bytes; first(0) is WHOLE`}</pre>
               <thead><tr><th>Member</th><th>Value</th><th>Meaning</th></tr></thead>
               <tbody>
                 <tr><td><code>RIDE</code></td><td><code>0</code></td><td>wait for a real cursor move to carry the delta (the default)</td></tr>
-                <tr><td><code>NOW</code></td><td><code>1</code></td><td>leave on the box's next mouse report, native or its own, whatever <A href="/library/options#set-movement-riding">movement riding</A> is set to</td></tr>
+                <tr><td><code>NOW</code></td><td><code>1</code></td><td>leave on the next mouse report the box sends, native or not, whatever <A href="/library/options#set-movement-riding">movement riding</A> is set to</td></tr>
               </tbody>
             </table>
           </div>
@@ -1468,7 +1468,7 @@ for b in medius.list_boxes():
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
                 <tr><td><code>host_ns</code></td><td><code>int</code></td><td>when the event happened, on the same monotonic scale passed as <code>now_ns</code></td></tr>
-                <tr><td><code>box_us</code></td><td><code>int</code></td><td>the event's own stamp, unwrapped past the 32-bit rollover</td></tr>
+                <tr><td><code>box_us</code></td><td><code>int</code></td><td>the event's stamp, unwrapped past the 32-bit rollover</td></tr>
                 <tr><td><code>excess_ns</code></td><td><code>int</code></td><td>how much later than the measured floor this event arrived. Jitter, not latency.</td></tr>
               </tbody>
             </table>

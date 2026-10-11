@@ -31,7 +31,7 @@ describe('InstallPorts', () => {
     expect(socketState(container, 'USB1')).toBe('out');
   });
 
-  it('names the button by its own socket, never left/right or a chip, and holds that button', () => {
+  it('names the button by its socket, never left/right or a chip, and holds that button', () => {
     const { container } = render(() => <InstallPorts socket="usb3" />);
     expect(cue(container)).toMatch(/button next to USB3/i);
     expect(cue(container)).not.toMatch(/\bleft\b|\bright\b|main chip|mouse-side chip/i);

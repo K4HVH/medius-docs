@@ -62,7 +62,7 @@ const Led: Component = () => {
         </div>
         <div class="api-response-label">STATUS DISPLAY</div>
         <p>
-          In <code>auto</code> (the default), each chip drives its own LED from its state.
+          In <code>auto</code> (the default), each chip's LED shows that chip's state.
         </p>
         <p>
           Device chip: solid with link, mouse, and clone all up; slow blink with the link up but the

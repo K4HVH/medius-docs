@@ -73,7 +73,7 @@ medius_device_catch_events(dev, filters, 3, &events);`}</code></pre>
         <p>
           The box's table holds{' '}
           <A href="/bindings/c/types#capacities"><code>MEDIUS_MAX_CATCH_ENTRIES</code></A> (32)
-          entries. More entries, or a filter the box cannot honour, fail the whole call with its own{' '}
+          entries. More entries, or a filter the box cannot honour, fail the whole call with a distinct{' '}
           <A href="/bindings/c/types#errors"><code>MediusStatus</code></A>.
         </p>
         <div class="callout callout--info">
@@ -360,7 +360,7 @@ medius_timeline_free(tl);`}</code></pre>
             The <A href="/bindings/c">C ABI</A> is synchronous, with no <A href="/library/features/async">async</A> API.
             Poll with <code>medius_event_stream_try_recv</code>, bound a block with{' '}
             <code>medius_event_stream_recv_timeout</code>, or run the blocking{' '}
-            <code>recv</code> loop on its own thread. Catch and log handles clone; an input stream
+            <code>recv</code> loop on a separate thread. Catch and log handles clone; an input stream
             does not.
           </p>
         </div>

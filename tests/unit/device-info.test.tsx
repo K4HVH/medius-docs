@@ -207,7 +207,7 @@ describe('DeviceInfo: the Performance card', () => {
     expect(container.querySelector('.chip--info')).toBeNull();
   });
 
-  it('each counter shows its own count on its own row', async () => {
+  it('each counter shows its count on a separate row', async () => {
     mouse();
     mock.stats = { ...stats, txDrops: 3, txWedges: 1, linkRxDrops: 4, hostRxDrops: 11, relayDrops: 202 };
     const { findByText, container } = render(() => <DeviceInfo />);

@@ -23,7 +23,7 @@ const Transfer: Component = () => {
       |                     |<-- link answer ------|                     |
       |<- TRANSFER_RESP, n -|                      |                     |`}</pre>
         <p>
-          The request crosses the inter-chip link on its own messages and joins the game PC's control
+          The request crosses the inter-chip link on dedicated messages and joins the game PC's control
           requests in the host chip's <A href="/native/commands/transfer#proxy">control queue</A>.
         </p>
         <div class="callout callout--warning">
@@ -259,7 +259,7 @@ const Transfer: Component = () => {
         <p>
           The host chip feeds the real device one control request at a time from one six-deep
           queue, shared by <code>TRANSFER</code>, the game PC's requests,{' '}
-          <A href="/native/commands/clip#items">clip</A> transfers, and the box's own.
+          <A href="/native/commands/clip#items">clip</A> transfers, and the box's requests.
         </p>
         <pre class="diagram">{`  game PC ------EP0------> clone -----------------+
                                                   |

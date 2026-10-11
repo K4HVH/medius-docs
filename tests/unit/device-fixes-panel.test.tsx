@@ -41,7 +41,7 @@ vi.mock('../../src/app/pages/dashboard/context', () => ({
 import DeviceFixes from '../../src/app/pages/dashboard/DeviceFixes';
 
 const confirmedFirmware = { device: { state: ImageState.Valid }, host: { state: ImageState.Valid } };
-// Each test its own box: a fix's state is kept per box.
+// Each test a fresh box: a fix's state is kept per box.
 let boxes = 0;
 const v = (fw: string, mac = [1, 2, 3, 4, 5, ++boxes]) => {
   const [fwMajor, fwMinor, fwPatch] = fw.split('.').map(Number);
@@ -116,7 +116,7 @@ describe('DeviceFixes', () => {
     expect(getByRole('button', { name: 'Force 1000 Hz' })).toBeTruthy();
   });
 
-  it('puts an offer away for that device, across a reload, and offers another device its own', () => {
+  it('puts an offer away for that device, across a reload, and still offers the fix to another device', () => {
     setup();
     const first = render(() => <DeviceFixes />);
     fireEvent.click(first.getByRole('button', { name: 'Keep as it is' }));

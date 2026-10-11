@@ -1327,7 +1327,7 @@ describe('OPTION command (§3.10)', () => {
   });
 
   it('renderPayload packs [id=5][mode u8][full u8]', () => {
-    // The texture is its own command, so nothing about it can disturb the pace.
+    // The texture is a separate command, so nothing about it can disturb the pace.
     expect(Array.from(renderPayload(RenderMode.Off, false))).toEqual([5, 0, 0]);
     expect(Array.from(renderPayload(RenderMode.Stock, false))).toEqual([5, 1, 0]);
     expect(Array.from(renderPayload(RenderMode.Despiked, true))).toEqual([5, 2, 1]);
@@ -1364,7 +1364,7 @@ describe('OPTION command (§3.10)', () => {
         forceActive: false,
       },
     });
-    // Interval resolved to the 1000 Hz poll rate, nothing forced, the clone advertising its own 1 kHz.
+    // Interval resolved to the 1000 Hz poll rate, nothing forced, the clone advertising 1 kHz.
     expect(parseResp(new Uint8Array([9, 2, 1, 0, 0, 0xe8, 0x03, 0, 0, 0xe8, 0x03, 0]))).toEqual({
       kind: 'emitPace',
       emit: {
@@ -1655,7 +1655,7 @@ describe('keyboard + media (v2.0.0)', () => {
       ],
     });
     // One held key ('A', class 1, id 0x04) and one held media usage (Volume Up, class 2, id 0x00E9),
-    // each in its own event; the id stays little-endian.
+    // each in a separate event; the id stays little-endian.
     expect(
       parseUsageEvent(new Uint8Array([...hdr(1, Direction.Positive), 1, 1, 0x04, 0x00])),
     ).toEqual({
@@ -1908,7 +1908,7 @@ describe('advanced control layer (§3.14 / §4.17)', () => {
     });
   });
 
-  // A refused set is pending and not applied: the clone serves the device unpatched. FULL is its own bit.
+  // A refused set is pending and not applied: the clone serves the device unpatched. FULL is a separate bit.
   it('decodes a refused RESP(PATCHES) with the full flag as four separate bits', () => {
     const r = parseResp(fromHex('0e 0e 00'));
     if (r?.kind !== 'patches') throw new Error('expected patches');

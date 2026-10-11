@@ -62,7 +62,7 @@ async function runEsptool(
     };
     await loader.writeFlash(flashOptions);
     onProgress?.({ phase: 'done' });
-    // Reboot into the new firmware. esptool-js's own USB-OTG hard_reset only deasserts RTS (no
+    // Reboot into the new firmware. esptool-js's USB-OTG hard_reset only deasserts RTS (no
     // edge); esptool.py pulses it.
     try {
       await port.setSignals({ dataTerminalReady: false, requestToSend: true });

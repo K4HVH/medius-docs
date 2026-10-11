@@ -163,13 +163,13 @@ const Injection: Component = () => {
           silence until it changes.
         </p>
         <p>
-          The box's own report goes on the first poll no native report can be ready for, so no native
+          The box's report goes on the first poll no native report can be ready for, so no native
           report moves to a later poll. A native report reaching the box first carries the box's motion
           and button changes.
         </p>
         <p>
-          A native report carrying injected motion of its own goes first instead, and the box's report
-          takes a poll of its own, so two injections don't share one report.
+          A native report already carrying injected motion goes first instead, and the box's report
+          takes a separate poll, so two injections don't share one report.
         </p>
         <p>
           That holds while the device leaves polls free (it reports less often than every poll, no other
@@ -178,11 +178,11 @@ const Injection: Component = () => {
           waiting, the native report carries them.
         </p>
         <p>
-          A multi-packet report of the box's own goes once the device has been still for 12 ms.
+          A multi-packet report from the box goes once the device has been still for 12 ms.
         </p>
         <p>
           Native reports under another report ID on the same endpoint go first, for two polls at most.
-          While they fill every poll, a report of the box's own takes the next one and leaves them two in
+          While they fill every poll, a report from the box takes the next one and leaves them two in
           three.
         </p>
         <p>

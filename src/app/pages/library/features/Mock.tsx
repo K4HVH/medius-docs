@@ -180,7 +180,7 @@ assert!(!device.query_health()?.mouse_attached);`}</code></pre>
               <tr>
                 <td><code>push_usages</code></td>
                 <td><code>Usages</code> on an <A href="/library/catch#event-stream"><code>EventStream</code></A></td>
-                <td>Stamps itself <code>HostChip</code> for the same reason, and carries its own <code>class</code>, so a test can push the empty snapshot.</td>
+                <td>Stamps itself <code>HostChip</code> for the same reason, and carries a <code>class</code>, so a test can push the empty snapshot.</td>
               </tr>
               <tr>
                 <td><code>push_traffic</code></td>

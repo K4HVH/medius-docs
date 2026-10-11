@@ -51,7 +51,7 @@ const Usage: Component = () => {
           subclass); each{' '}
           <A href="/library/types/errors">status code</A> (a <A href="/bindings/python/types#status"><code>Status</code></A>{' '}
           <a href="https://docs.python.org/3/library/enum.html" target="_blank" rel="noreferrer">IntEnum</a>)
-          maps to its own <A href="/bindings/python/types#subclasses">subclass</A>. Catch{' '}
+          maps to a distinct <A href="/bindings/python/types#subclasses">subclass</A>. Catch{' '}
           <code>MediusError</code> for all of them; full mapping on{' '}
           <A href="/bindings/python/types#subclasses">Types &amp; errors</A>.
         </p>
@@ -104,7 +104,7 @@ except MediusError as e:
                 ├──▶  one USB-serial link  (stays up while ANY handle is open)
 dev.clone() ────┘
 
-  each handle is freed on its own; the link closes with the last one`}</pre>
+  each handle is freed separately; the link closes with the last one`}</pre>
         <div class="api-response-label">RELEASE ROUTES</div>
         <div class="table-scroll">
           <table class="api-params">

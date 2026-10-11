@@ -85,7 +85,7 @@ describe('classifyConnectError', () => {
     });
   });
 
-  it('anything else keeps its own message', () => {
+  it('anything else keeps its message', () => {
     expect(classifyConnectError(new Error('boom'))).toEqual({ kind: 'other', message: 'boom' });
     expect(classifyConnectError('boom')).toEqual({ kind: 'other', message: 'boom' });
   });

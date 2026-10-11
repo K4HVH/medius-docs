@@ -123,7 +123,7 @@ describe('Device', () => {
     expect(container.textContent).not.toMatch(/Page not secure/);
   });
 
-  it('uses the same browser wording as every other page, not its own', async () => {
+  it('uses the same browser wording as every other page', async () => {
     mock.supported = false;
     const { container } = render(() => <Device />);
     await waitFor(() => expect(container.textContent).toMatch(/can't talk to your box/i));

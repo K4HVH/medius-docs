@@ -8,7 +8,7 @@ const Options: Component = () => {
     <>
       <PageHeader>
         <p>
-          Seven box settings, each set and read on its own, all persisted in NVS across a reboot. The
+          Seven box settings, each set and read separately, all persisted in NVS across a reboot. The
           wire contract is on the native <A href="/native/commands/option"><code>OPTION</code></A>{' '}
           command; <A href="/library/admin#factory-reset"><code>factory_reset</code></A> returns all
           seven to their defaults.
@@ -330,7 +330,7 @@ device.set_render(RenderMode::Off, false)?;        // renderer out of the path, 
           <p>
             Spreading adds half the interval of latency on average, about 4 ms on a 125 Hz loop. The
             delivered total never changes; a loop at the native report rate keeps each command whole,
-            on its own report.
+            alone on one report.
           </p>
           <p>
             <A href="/library/move#move-rel-now"><code>move_rel_now</code></A>,{' '}

@@ -178,7 +178,7 @@ const Option: Component = () => {
           <table class="api-params">
             <thead><tr><th>Value</th><th>Effect</th></tr></thead>
             <tbody>
-              <tr><td><code>0</code></td><td>Off: injected motion goes out on native reports and the box's own alike <em>(default)</em></td></tr>
+              <tr><td><code>0</code></td><td>Off: injected motion goes out on native reports and the box's reports alike <em>(default)</em></td></tr>
               <tr><td><code>N</code> ms</td><td>Injected cursor and wheel motion only rides a native move seen within <code>N</code> ms; no synthetic motion frame, and motion left unridden is dropped (never dumped on the next move)</td></tr>
             </tbody>
           </table>
@@ -529,14 +529,14 @@ const Option: Component = () => {
             <tbody>
               <tr><td>Delivered total</td><td>Exact</td><td>Exact</td></tr>
               <tr><td>Added latency</td><td>None</td><td>Half the interval on average, about 4 ms at 125 Hz</td></tr>
-              <tr><td>Reports per command</td><td>One</td><td>Up to one per report the box emits in the interval, and never more than the delta's own count</td></tr>
+              <tr><td>Reports per command</td><td>One</td><td>Up to one per report the box emits in the interval, and never more than the delta's count</td></tr>
               <tr><td>Wheel motion</td><td>Not spread</td><td>Not spread: a detent is one unit</td></tr>
             </tbody>
           </table>
         </div>
         <p>
           A loop at the native report rate keeps each command whole: it waits in a short queue and
-          leaves on a report of its own, no later than the first report after its interval ends. A
+          leaves alone on one report, no later than the first report after its interval ends. A
           delta smaller than its interval's report count can't be split one count per report; it
           goes out once, part way through.
         </p>

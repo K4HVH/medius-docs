@@ -63,7 +63,7 @@ describe('htmlToMarkdown', () => {
     expect(htmlToMarkdown(html)).toBe('| Method | Does |\n| --- | --- |\n| `start()` | Play. |');
   });
 
-  it('renders byte-table as a GFM table with its own header schema', () => {
+  it('renders byte-table as a GFM table with its header schema', () => {
     const html =
       '<table class="byte-table"><thead><tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr></thead><tbody><tr><td>0</td><td>opcode</td><td>u8</td><td>0x12</td></tr></tbody></table>';
     expect(htmlToMarkdown(html)).toBe(
