@@ -95,67 +95,48 @@ describe('ReportFeed', () => {
     expect(last.classList.contains('now')).toBe(true);
     const withApi = rows.find((x) => x.querySelector('.b.api'))!;
     expect([...withApi.querySelectorAll('.b.api')].map((s) => s.textContent)).toEqual(['01', '00']);
-    expect(withApi.textContent).not.toContain('+API');
+    expect(withApi.querySelector('.tag')!.textContent).toBe('+API');
+    expect(rows.filter((x) => x.querySelector('.b') && !x.querySelector('.b.api')).every((x) => x.querySelector('.tag')!.textContent === '')).toBe(true);
     expect(rows.some((x) => x.children[1].textContent === 'NAK')).toBe(true);
   });
 
-  it('gives the report every byte, set apart by a gap, not a space, beside its frame alone', () => {
+  it('gives the report every byte, set apart by a gap, not a space, beside its frame and its tag', () => {
     const r = render(() => <ReportFeed frames={FRAMES} />);
     const row = [...r.container.querySelectorAll('.row')].find((x) => x.querySelector('.b'))!;
-    expect(row.children).toHaveLength(2);
+    expect(row.children).toHaveLength(3);
     expect([...row.children[1].querySelectorAll('.b')].map((s) => s.textContent).join('')).toMatch(/^[0-9A-F]{10}$/);
     expect(row.children[1].textContent).not.toContain(' ');
     expect([...r.container.querySelectorAll('.tape-head > span')].map((s) => s.textContent)).toEqual(['Frame', 'Report', 'MouseAPI']);
   });
 
-  // jsdom lays nothing out. A byte is two 0.6em characters at the rows' type size (12.5px from a
-  // stylesheet), set apart by --byte-gap, in a column of the given width.
-  const layout = (column: number) => {
-    const sheet = document.createElement('style');
-    sheet.textContent = '.rows { font-size: 12.5px; }';
-    document.head.appendChild(sheet);
-    onTestFinished(() => sheet.remove());
-    const metrics = (el: Element) => {
-      const rows = el.closest('.rows') as HTMLElement;
-      const size = parseFloat(getComputedStyle(rows).fontSize);
-      const gap = rows.style.getPropertyValue('--byte-gap') || '1ch';
-      return { w: size * 1.2, g: gap.endsWith('ch') ? parseFloat(gap) * size * 0.6 : parseFloat(gap) };
-    };
-    const rect = (left: number, width: number) => ({ left, right: left + width, width }) as DOMRect;
-    vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(function (this: Element) {
-      if (this.querySelector(':scope > .b')) return rect(0, column);
-      if (this.matches('.b')) {
-        const { w, g } = metrics(this);
-        return rect([...this.parentElement!.children].indexOf(this) * (w + g), w);
-      }
-      return rect(0, 0);
-    });
-  };
-  const fitted = async (column: number) => {
-    layout(column);
+  it("numbers each row by the capture's frame, so the loop starts the count again", () => {
     const r = render(() => <ReportFeed frames={FRAMES} />);
-    await new Promise((ok) => setTimeout(ok, 0));
-    const rows = r.container.querySelector('.rows') as HTMLElement;
-    vi.restoreAllMocks();
-    return { size: rows.style.fontSize, gap: rows.style.getPropertyValue('--byte-gap') };
-  };
-
-  it('keeps a full space between bytes where the report has room', async () => {
-    expect(await fitted(200)).toEqual({ size: '', gap: '7.5px' });
+    const labels = [...r.container.querySelectorAll('.row')].map((x) => x.children[0].textContent);
+    expect(new Set(labels)).toEqual(new Set(['000', '001', '002']));
   });
 
-  it('narrows the gap before it touches the type', async () => {
-    const { size, gap } = await fitted(100);
-    expect(size).toBe('');
-    expect(parseFloat(gap)).toBeCloseTo(6.25, 1);
+  it('tells the stylesheet how many bytes a report holds, which sets their spacing', () => {
+    const r = render(() => <ReportFeed frames={FRAMES} />);
+    expect((r.container.querySelector('.tape') as HTMLElement).style.getPropertyValue('--bytes')).toBe('5');
+    expect((r.container.querySelector('.rows') as HTMLElement).getAttribute('style') ?? '').not.toMatch(/byte-gap|font-size/);
   });
 
-  it('steps the type down only once the gap is down to 0.3ch', async () => {
-    const { size, gap } = await fitted(60);
-    expect(parseFloat(size)).toBeLessThanOrEqual(60 / 6.72);
-    expect(parseFloat(size)).toBeGreaterThan(60 / 6.72 - 0.1);
-    expect(parseFloat(gap)).toBeGreaterThanOrEqual(0.3 * parseFloat(size) * 0.6 - 0.01);
-    expect(parseFloat(gap)).toBeLessThan(0.35 * parseFloat(size) * 0.6);
+  it('holds still while the pointer is over it', () => {
+    vi.useFakeTimers({ toFake: ['requestAnimationFrame', 'cancelAnimationFrame', 'performance'] });
+    vi.stubGlobal('matchMedia', (q: string) => ({ matches: false, media: q, addEventListener() {}, removeEventListener() {} }));
+    const r = render(() => <ReportFeed frames={FRAMES} />);
+    const now = () => r.container.querySelector('.row.now')!.children[0].textContent;
+    vi.advanceTimersByTime(600);
+    const tape = r.container.querySelector('.tape')!;
+    tape.dispatchEvent(new PointerEvent('pointerenter'));
+    const held = now();
+    vi.advanceTimersByTime(2000);
+    expect(now()).toBe(held);
+    tape.dispatchEvent(new PointerEvent('pointerleave'));
+    vi.advanceTimersByTime(600);
+    expect(now()).not.toBe(held);
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
   });
 });
 
@@ -254,6 +235,41 @@ describe('DescriptorPanel', () => {
     counts.forEach((n, i) => i && expect(n).toBeGreaterThanOrEqual(counts[i - 1]));
     expect(score(r.container)).toBe('6/6');
     vi.unstubAllGlobals();
+  });
+
+  it("sizes the count's box in ems, which hold at any width", () => {
+    const sheet = document.createElement('style');
+    sheet.textContent = '.score b span { font-size: 100px; }';
+    document.head.appendChild(sheet);
+    onTestFinished(() => sheet.remove());
+    vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(function (this: Element) {
+      return { width: (this.textContent?.length ?? 0) * 60 } as DOMRect;
+    });
+    const r = panel();
+    vi.restoreAllMocks();
+    expect((r.container.querySelector('.score b span') as HTMLElement).style.minWidth).toBe('0.6000em');
+  });
+
+  it('is one tab stop whose arrows, Home and End pick a descriptor, over the panel the tab names', () => {
+    const r = panel();
+    const tabs = [...r.container.querySelectorAll<HTMLButtonElement>('[role="tab"]')];
+    expect(tabs.map((b) => b.tabIndex)).toEqual([0, -1, -1, -1, -1]);
+    const panelEl = r.container.querySelector('[role="tabpanel"]')!;
+    expect(panelEl.getAttribute('aria-labelledby')).toBe(tabs[0].id);
+    tabs[0].focus();
+    fireEvent.keyDown(tabs[0], { key: 'ArrowRight' });
+    expect(document.activeElement).toBe(tabs[1]);
+    expect(tabs[1].getAttribute('aria-selected')).toBe('true');
+    expect(tabs.map((b) => b.tabIndex)).toEqual([-1, 0, -1, -1, -1]);
+    expect(panelEl.getAttribute('aria-labelledby')).toBe(tabs[1].id);
+    fireEvent.keyDown(tabs[1], { key: 'End' });
+    expect(document.activeElement).toBe(tabs[4]);
+    fireEvent.keyDown(tabs[4], { key: 'ArrowRight' });
+    expect(document.activeElement).toBe(tabs[0]);
+    fireEvent.keyDown(tabs[0], { key: 'ArrowLeft' });
+    expect(document.activeElement).toBe(tabs[4]);
+    fireEvent.keyDown(tabs[4], { key: 'Home' });
+    expect(document.activeElement).toBe(tabs[0]);
   });
 
   it('holds the panel on its tab while keyboard focus is inside it', () => {
