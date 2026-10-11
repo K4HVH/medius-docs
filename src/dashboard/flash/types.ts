@@ -7,7 +7,7 @@ export const FACTORY_FLASH_ADDR = 0x0;
 
 export type FlashKind = 'app' | 'factory';
 // An update over the control port also restarts the box and verifies what it runs.
-export type FlashPhase = 'rebooting' | 'connecting' | 'writing' | 'restarting' | 'verifying' | 'done';
+export type FlashPhase = 'rebooting' | 'connecting' | 'erasing' | 'writing' | 'restarting' | 'verifying' | 'done';
 
 export interface FlashProgress {
   phase: FlashPhase;
@@ -15,6 +15,17 @@ export interface FlashProgress {
   chip?: 'host' | 'device';
   written?: number;
   total?: number;
+}
+
+// MAKCU's stock firmware for one chip: the package both chips take, and that chip's bootloader.
+export interface FlashStockParams {
+  port: SerialPort;
+  chip: FlashChip;
+  pkg: Uint8Array;
+  boot: Uint8Array;
+  onProgress?: (p: FlashProgress) => void;
+  onLog?: (line: string) => void;
+  onMac?: (mac: string | null) => void;
 }
 
 export interface FlashNativeParams {

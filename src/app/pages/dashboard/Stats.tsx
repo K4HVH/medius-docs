@@ -43,7 +43,7 @@ const RESULT: Record<keyof Omit<WeekFlashes, 'week'>, string> = {
 const PAGE: Record<string, string> = { update: 'Update', advanced: 'Manual flash', setup: 'Set up' };
 const ROUTE: Record<string, string> = { usb2: 'USB2', rom: 'ROM download' };
 const CHIPS: Record<string, string> = { both: 'Both chips', device: 'Main chip', host: 'Mouse-side chip' };
-const SOURCE: Record<string, string> = { release: 'Release', file: 'File' };
+const SOURCE: Record<string, string> = { release: 'Release', file: 'File', stock: 'MAKCU stock' };
 const KIND: Record<number, string> = { 2: 'Mouse', 1: 'Keyboard', 0: 'Unknown' };
 
 const route = (key: string) => {
