@@ -1410,8 +1410,10 @@ describe('OPTION command (§3.10)', () => {
     };
     expect(decodePace(0x80)).toBeNull();
     expect(decodePace(0x82)).toBeNull();
+    // v3.3.0's rendered pace, withdrawn after that release, reads as itself.
+    expect(decodePace(3)).toBe(EmitMode.Rendered);
     // A pace this build doesn't know -> mode null, the rates still decode.
-    expect(parseResp(new Uint8Array([9, 2, 3, 0, 0, 0xe8, 0x03, 0, 0, 0xe8, 0x03, 0]))).toEqual({
+    expect(parseResp(new Uint8Array([9, 2, 4, 0, 0, 0xe8, 0x03, 0, 0, 0xe8, 0x03, 0]))).toEqual({
       kind: 'emitPace',
       emit: {
         mode: null,

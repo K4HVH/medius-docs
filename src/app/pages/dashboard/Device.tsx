@@ -55,6 +55,9 @@ const Device = () => {
   // A refusal belongs to the link it came over.
   createEffect(on(dash.link, () => blink.clear(), { defer: true }));
   const full = () => connected() && !dash.updateOnly();
+  // On older firmware the Options tab holds the options it has; a newer box stays update-only.
+  const proto = () => dash.version()?.protoVer ?? 0;
+  const older = () => connected() && dash.updateOnly() && proto() < PROTO_VER;
   const location = useLocation();
   // An option a link named (from the Guide or Help), which only a connected box shows.
   const asked = () => {
@@ -100,7 +103,7 @@ const Device = () => {
         id="device"
         tabs={[
           { key: 'overview', label: 'Overview' },
-          { key: 'options', label: 'Options', disabled: !full() },
+          { key: 'options', label: 'Options', disabled: !full() && !older() },
           { key: 'log', label: 'Log' },
         ]}
       >
@@ -205,11 +208,28 @@ const Device = () => {
         </Pane>
 
         <Pane key="options">
-          {/* A box on another protocol takes neither: its RESET has no flags byte. */}
-          <Show when={full()}>
+          <Show when={full() || older()}>
             <Panels>
-              <DeviceOptions />
-              <DeviceFactoryReset />
+              <Show when={older()}>
+                <Panel id="older-firmware" title="Older firmware" wide transient>
+                  <p>
+                    This box runs v{versionString(dash.version()!)}, with the options below. Update it for{' '}
+                    {proto() < 6 ? 'Render, Spread, factory reset' : 'factory reset'} and the Control page.
+                  </p>
+                  <div class="acts">
+                    <Button variant="primary" onClick={() => navigate('/dashboard/update')}>
+                      Update
+                    </Button>
+                  </div>
+                </Panel>
+              </Show>
+              <Show when={proto()} keyed>
+                {(p) => <DeviceOptions proto={p} />}
+              </Show>
+              {/* Factory reset needs the current protocol: an older RESET has no flags byte, so erases nothing. */}
+              <Show when={full()}>
+                <DeviceFactoryReset />
+              </Show>
             </Panels>
           </Show>
         </Pane>

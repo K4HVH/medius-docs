@@ -13,6 +13,7 @@ import {
   EmitMode,
   RenderMode,
   NAME_MAX,
+  PROTO_VER,
 } from '../../../dashboard/protocol';
 import { useDashboard } from './context';
 import { createCommand } from './action';
@@ -32,18 +33,21 @@ const EMIT_MODES: Record<string, EmitMode> = {
   learned: EmitMode.Learned,
   interval: EmitMode.Interval,
   fixed: EmitMode.Fixed,
+  rendered: EmitMode.Rendered,
 };
 
 const MODE_BLURB: Record<string, string> = {
   learned: "Matches native report rate.",
   interval: 'Follows the declared poll rate.',
   fixed: 'Pins the rate to the number you pick.',
+  rendered: 'Paced by the renderer, as v3.3.0 does.',
 };
 
 const MODE_NAMES: Record<number, string> = {
   [EmitMode.Learned]: 'learned',
   [EmitMode.Interval]: 'interval',
   [EmitMode.Fixed]: 'fixed',
+  [EmitMode.Rendered]: 'rendered',
 };
 
 const RENDER_MODES: Record<string, RenderMode> = {
@@ -104,20 +108,26 @@ const emitLabel = (e: EmitPace): string => {
     case EmitMode.Fixed:
       base = `Fixed · ${e.resolvedHz || e.fixedHz} Hz`;
       break;
+    case EmitMode.Rendered:
+      base = e.resolvedHz > 0 ? `Rendered · ${e.resolvedHz} Hz` : 'Rendered';
+      break;
     default:
       base = 'Unknown';
   }
   return base;
 };
 
-const DeviceOptions = () => {
+// `proto`: the box's protocol. A box on older firmware gets the options it has; Render and Spread came with
+// protocol 6, and Control's Advanced tab only on the current one.
+const DeviceOptions = (props: { proto?: number }) => {
   const dash = useDashboard();
+  const has = (proto: number) => (props.proto ?? PROTO_VER) >= proto;
   const imperfect = dash.poll('imperfect');
   const ride = dash.poll('moveRide');
   const bearing = dash.poll('bearing');
   const emit = dash.poll('emit');
-  const render = dash.poll('render');
-  const spread = dash.poll('spread');
+  const render = has(6) ? dash.poll('render') : () => null;
+  const spread = has(6) ? dash.poll('spread') : () => null;
   const version = dash.poll('version');
   const cmd = createCommand();
   // A refused write shows in the panel whose button sent it.
@@ -284,7 +294,9 @@ const DeviceOptions = () => {
 
       <Panel id="imperfect-clone" title="Imperfect clone" aside={<GuideLink id="imperfect-clone" />}>
         <p>
-          Clones a device the box can't copy exactly, and unlocks the Advanced tab on Control.
+          {has(PROTO_VER)
+            ? 'Clones a device the box can\'t copy exactly, and unlocks the Advanced tab on Control.'
+            : 'Clones a device the box can\'t copy exactly.'}
         </p>
         <div class="acts">
           <Button variant="primary" disabled={cmd.busy()} onClick={() => allowImperfect(true)}>
@@ -410,6 +422,7 @@ const DeviceOptions = () => {
         <Refused panel="bearing" />
       </Panel>
 
+      <Show when={has(6)}>
       <Panel id="render" title="Render" aside={<GuideLink id="render" />}>
         <p>
           Emits injected motion with native report texture, and picks which motion is rendered.
@@ -531,6 +544,7 @@ const DeviceOptions = () => {
         </Show>
         <Refused panel="spread" />
       </Panel>
+      </Show>
 
       <Panel id="emit-rate" title="Emit rate" aside={<GuideLink id="emit-rate" />}>
         <p>
@@ -545,6 +559,7 @@ const DeviceOptions = () => {
             { value: 'learned', label: 'Learned' },
             { value: 'interval', label: 'Interval' },
             { value: 'fixed', label: 'Fixed' },
+            ...(emit()?.mode === EmitMode.Rendered ? [{ value: 'rendered', label: 'Rendered' }] : []),
           ]}
         />
         <p class="mut">{MODE_BLURB[mode()]}</p>

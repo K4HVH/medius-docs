@@ -156,6 +156,27 @@ describe('Device', () => {
     });
   });
 
+  it("gives a box on older firmware the Options it has, names what an update adds, and keeps factory reset away", async () => {
+    mock.status = 'connected';
+    mock.updateOnly = true;
+    mock.hash = '#options';
+    for (const [proto, missing] of [[5, 'Render, Spread, factory reset and the Control page'], [6, 'factory reset and the Control page'], [8, 'factory reset and the Control page']] as const) {
+      mock.protoVer = proto;
+      const { container } = render(() => <Device />);
+      const tab = container.querySelector<HTMLButtonElement>('[data-tab="options"]')!;
+      expect(tab.disabled, String(proto)).toBe(false);
+      await waitFor(() => expect(container.querySelector('#older-firmware'), String(proto)).not.toBeNull());
+      expect(container.querySelector('#older-firmware')!.textContent).toContain(`Update it for ${missing}.`);
+      expect(container.querySelector('#imperfect-clone'), String(proto)).not.toBeNull();
+      expect(!!container.querySelector('#render'), String(proto)).toBe(proto >= 6);
+      expect(container.querySelector('#factory-reset'), String(proto)).toBeNull();
+      cleanup();
+    }
+    mock.protoVer = PROTO_VER + 1;
+    const newer = render(() => <Device />);
+    expect(newer.container.querySelector<HTMLButtonElement>('[data-tab="options"]')!.disabled).toBe(true);
+  });
+
   it('a box newer than the page is called newer and pointed at Reload and the manual flash, never told to update', async () => {
     mock.status = 'connected';
     mock.updateOnly = true;
@@ -218,10 +239,12 @@ describe('Device', () => {
     // silently do a plain reset instead of what it says.
     mock.status = 'connected';
     mock.updateOnly = true;
+    mock.hash = '#options';
     const { container } = render(() => <Device />);
-    await waitFor(() => {
-      expect(container.textContent ?? '').not.toMatch(/Factory reset/i);
-    });
+    await waitFor(() => expect(container.querySelector('#imperfect-clone')).not.toBeNull());
+    expect(container.querySelector('#factory-reset')).toBeNull();
+    expect(container.querySelector('button')?.textContent ?? '').not.toMatch(/factory reset/i);
+    expect([...container.querySelectorAll('button')].some((b) => /reset/i.test(b.textContent ?? ''))).toBe(false);
   });
 
   it('a box that stopped answering keeps its card, with the reason and Disconnect', async () => {
