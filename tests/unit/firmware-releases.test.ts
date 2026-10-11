@@ -29,6 +29,22 @@ afterEach(() => {
 const tags = (list: { tag: string }[] | null) => list?.map((r) => r.tag);
 
 describe('releases', () => {
+  it('leaves drafts out: they are not published', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify([
+            { tag_name: 'v3.4.6', name: 'v3.4.6', draft: true, published_at: null, prerelease: false, body: '', assets: [] },
+            { tag_name: 'v3.4.5', name: 'v3.4.5', draft: false, published_at: '2026-10-05T12:00:00Z', prerelease: false, body: '', assets: [] },
+          ]),
+        ),
+      ),
+    );
+    const fw = await import('../../server/firmware');
+    expect(tags(await fw.getReleases())).toEqual(['v3.4.5']);
+  });
+
   it('reads the list again at once when asked to, for a release published a moment ago', async () => {
     const fw = await import('../../server/firmware');
     expect(tags(await fw.getReleases())).toEqual(['v3.4.4']);

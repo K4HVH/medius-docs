@@ -5,7 +5,7 @@ import { cardUrl, pageCard } from './card/content';
 import { itemFor } from './items';
 import { lostPath } from './served';
 import { SITE } from './site';
-import { buildJsonLd } from './structuredData';
+import { buildJsonLd, itemJsonLd } from './structuredData';
 
 // Written by scripts/lastmod.mjs in CI; absent in a local build.
 const LASTMOD: Record<string, string> =
@@ -123,7 +123,7 @@ function write(route: RouteInfo, item: string | null): void {
   upsertMeta('name', 'twitter:image', image);
   upsertMeta('name', 'twitter:image:alt', card.title);
   setThemeColor(card.colour);
-  setJsonLd(buildJsonLd(route, LASTMOD[route.path]));
+  setJsonLd(item ? itemJsonLd() : buildJsonLd(route, LASTMOD[route.path]));
 }
 
 // Per-route <head> from the route registry, for the SPA and the prerendered snapshots alike. The head the

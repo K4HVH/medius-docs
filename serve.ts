@@ -70,6 +70,7 @@ Bun.serve({
 
     // One Help answer, release or device: its parent page under the item's head.
     const item = req.method === "GET" || req.method === "HEAD" ? await itemPage(url.pathname, snapshot) : null;
+    if (item?.location) return new Response(null, { status: item.status, headers: { location: item.location, "cache-control": "no-store" } });
     if (item) {
       const cache: Record<string, string> =
         item.status === 200

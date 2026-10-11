@@ -130,8 +130,8 @@ describe('drawable', () => {
   });
 
   it('keeps the letter under an accent the font lacks', () => {
-    expect(bold.hasChar('ǎ')).toBe(false);
-    expect(drawable(bold, 'Hǎo')).toBe('Hao');
+    expect(bold.hasChar('ạ')).toBe(false);
+    expect(drawable(bold, 'Hạo')).toBe('Hao');
   });
 
   it('drops control characters, though the font maps some', () => {
@@ -140,7 +140,7 @@ describe('drawable', () => {
   });
 
   it('never sets an accent the font lacks as a mark beside its letter', () => {
-    const lacking = [...'źŚşřůĳ'].find((c) => !bold.hasChar(c) && /\p{M}/u.test(c.normalize('NFD')));
+    const lacking = [...'ạảấầẩẫậắằẳẵặẹẻẽếềểễệ'].find((c) => !bold.hasChar(c) && /\p{M}/u.test(c.normalize('NFD')));
     expect(lacking).toBeDefined();
     expect(drawable(bold, `M${lacking}x`)).toBe(`M${lacking!.normalize('NFD')[0]}x`);
   });

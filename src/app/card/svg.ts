@@ -104,8 +104,9 @@ export function layoutCard(c: CardContent, faces: Faces): CardLayout {
   const crumb = clampLines(faces.mono, clean('mono', c.crumb.toUpperCase()), CRUMB.size, crumbBox, 1, CRUMB.tracking)[0] ?? '';
   put('mono', crumb, CRUMB.size, CRUMB.tracking, end('mono', crumb, CRUMB.size, CRUMB.tracking), TOP + (MARK.size - CRUMB.size) / 2, CRUMB.size, crumbBox, MUTED);
 
-  const items = (c.list ?? []).map((i) => clampLines(faces.regular, clean('regular', i), LIST.size, LIST.width, LIST.lines)).filter((l) => l.length);
-  const listHeight = items.reduce((h, l) => h + l.length * LIST.size * LIST.leading, 0) + Math.max(0, items.length - 1) * LIST.gap;
+  let items = (c.list ?? []).map((i) => clampLines(faces.regular, clean('regular', i), LIST.size, LIST.width, LIST.lines)).filter((l) => l.length);
+  const heightOf = (list: string[][]) => list.reduce((h, l) => h + l.length * LIST.size * LIST.leading, 0) + Math.max(0, list.length - 1) * LIST.gap;
+  let listHeight = heightOf(items);
   const descText = c.description ? clean('regular', c.description) : '';
   const descs = new Map<number, { size: number; lines: string[] }>();
   const desc = (titleLines: number) => {
@@ -124,8 +125,15 @@ export function layoutCard(c: CardContent, faces: Faces): CardLayout {
     return BODY + lines * size * TITLE.leading + (below ? GAP + below : 0) <= RULE - CLEAR;
   };
 
-  const titleText = c.titleLines ? c.titleLines.map((l) => clean('bold', l)) : clean('bold', c.title);
-  const fit = fitTitle(faces.bold, titleText, { max: TITLE.max, min: TITLE.min, width: WIDE, lines: TITLE.lines, tracking: TITLE.tracking, room });
+  const titleText = c.titleLines ? c.titleLines.slice(0, TITLE.lines).map((l) => clean('bold', l)) : clean('bold', c.title);
+  const fitNow = () => fitTitle(faces.bold, titleText, { max: TITLE.max, min: TITLE.min, width: WIDE, lines: TITLE.lines, tracking: TITLE.tracking, room });
+  let fit = fitNow();
+  // A list longer than the card holds loses items from its end.
+  while (items.length > 1 && !room(fit.size, fit.lines.length)) {
+    items = items.slice(0, -1);
+    listHeight = heightOf(items);
+    fit = fitNow();
+  }
   const n = fit.lines.length;
   const lineHeight = fit.size * TITLE.leading;
   fit.lines.forEach((line, i) =>

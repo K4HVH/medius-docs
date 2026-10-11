@@ -1,6 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { createRequire } from 'node:module';
-import { Resvg, initWasm } from '@resvg/resvg-wasm';
+import { Worker } from 'node:worker_threads';
 import { type CardContent, cardHash, cardKey } from '../src/app/card/content';
 import { loadFace } from '../src/app/card/layout';
 import { type Faces, cardSvg } from '../src/app/card/svg';
@@ -12,44 +11,51 @@ const SHORT = 'public, max-age=300';
 // About 200 KB a drawing; a redraw takes about 0.1 s.
 const KEPT = 100;
 
-let faces: Promise<Faces> | undefined;
+let faces: Faces | undefined;
 const drawn = new Map<string, Promise<Uint8Array<ArrayBuffer>>>();
 
-// The renderer starts once a process, and outlives this module when it is loaded again (the dev server
-// reloads its config): a second start throws, and means it is running.
-async function startRenderer(): Promise<void> {
-  try {
-    await initWasm(readFileSync(createRequire(import.meta.url).resolve('@resvg/resvg-wasm/index_bg.wasm')));
-  } catch (e) {
-    if (!/Already initialized/.test(String(e))) throw e;
-  }
+function ready(): Faces {
+  const face = (name: string) => loadFace(readFileSync(new URL(`./og/fonts/${name}.ttf`, import.meta.url)));
+  return (faces ??= { regular: face('inter-400'), bold: face('inter-700'), mono: face('plex-mono-500') });
 }
 
-function ready(): Promise<Faces> {
-  faces ??= (async () => {
-    await startRenderer();
-    const face = (name: string) => loadFace(readFileSync(new URL(`./og/fonts/${name}.ttf`, import.meta.url)));
-    return { regular: face('inter-400'), bold: face('inter-700'), mono: face('plex-mono-500') };
-  })().catch((e: unknown) => {
-    faces = undefined;
-    throw e;
-  });
-  return faces;
+interface Renderer {
+  worker?: Worker;
+  next: number;
+  pending: Map<number, { resolve: (png: Uint8Array<ArrayBuffer>) => void; reject: (e: Error) => void }>;
+}
+
+// One renderer thread a process, kept on globalThis so a copy of this module loaded again (the dev server
+// reloads its config) uses it too. A thread that stops fails what it held; the next drawing starts another.
+const renderer: Renderer = ((globalThis as Record<symbol, Renderer>)[Symbol.for('medius.og.renderer')] ??= { next: 0, pending: new Map() });
+
+function rasterise(svg: string): Promise<Uint8Array<ArrayBuffer>> {
+  if (!renderer.worker) {
+    const w = new Worker(new URL('./og-render.mjs', import.meta.url));
+    w.unref();
+    const fail = (e: Error) => {
+      if (renderer.worker === w) renderer.worker = undefined;
+      for (const p of renderer.pending.values()) p.reject(e);
+      renderer.pending.clear();
+    };
+    w.on('message', (m: { id: number; png?: Uint8Array<ArrayBuffer>; error?: string }) => {
+      const p = renderer.pending.get(m.id);
+      renderer.pending.delete(m.id);
+      if (m.png) p?.resolve(m.png);
+      else p?.reject(new Error(m.error));
+    });
+    w.on('error', fail);
+    w.on('exit', (code) => fail(new Error(`card renderer stopped (${code})`)));
+    renderer.worker = w;
+  }
+  const id = renderer.next++;
+  const out = new Promise<Uint8Array<ArrayBuffer>>((resolve, reject) => renderer.pending.set(id, { resolve, reject }));
+  renderer.worker.postMessage({ id, svg });
+  return out;
 }
 
 export async function drawCard(c: CardContent): Promise<Uint8Array<ArrayBuffer>> {
-  const svg = cardSvg(c, await ready());
-  const r = new Resvg(svg, { fitTo: { mode: 'original' } });
-  try {
-    const image = r.render();
-    try {
-      return new Uint8Array(image.asPng());
-    } finally {
-      image.free();
-    }
-  } finally {
-    r.free();
-  }
+  return rasterise(cardSvg(c, ready()));
 }
 
 // Drawings are kept by what they show (cardKey), never by the hash in their address. Requests for one card
@@ -74,11 +80,13 @@ export async function handleOg(req: Request, lookup: (path: string) => Promise<C
   const url = new URL(req.url);
   if (!url.pathname.startsWith('/og/') || !url.pathname.endsWith('.png')) return null;
   const stem = url.pathname.slice('/og'.length, -'.png'.length);
-  const card = await lookup(stem === '/index' ? '/' : stem);
+  // A page's path, exactly: the lookup would read '' or a trailing slash as another page.
+  const card = stem.length > 1 && !stem.endsWith('/') ? await lookup(stem === '/index' ? '/' : stem) : null;
   if (card === 'down') return new Response('Try again shortly.\n', { status: 503, headers: { 'retry-after': '120', 'cache-control': 'no-store' } });
   if (!card) return new Response('Not found', { status: 404, headers: { 'content-type': 'text/plain; charset=utf-8' } });
   const hash = cardHash(card);
-  const png = await draw(card, cardKey(card));
+  const png = await draw(card, cardKey(card)).catch(() => null);
+  if (!png) return new Response('Try again shortly.\n', { status: 503, headers: { 'retry-after': '120', 'cache-control': 'no-store' } });
   return new Response(png, {
     headers: { 'content-type': 'image/png', 'cache-control': url.searchParams.get('v') === hash ? IMMUTABLE : SHORT },
   });

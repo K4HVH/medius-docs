@@ -18,6 +18,7 @@ const snapshot = (path: string) =>
   `<meta property="og:image" content="${SITE}/og${path}.png?v=00000000"><meta property="og:image:alt" content="${path}">` +
   `<meta name="twitter:title" content="${path} title"><meta name="twitter:description" content="${path} description">` +
   `<meta name="twitter:image" content="${SITE}/og${path}.png?v=00000000"><meta name="twitter:image:alt" content="${path}">` +
+  `<script id="ld-json" type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Thing"},{"@type":"FAQPage","url":"${SITE}${path}"}]}</script>` +
   `<title>${path} title</title></head><body><main>${path} page</main></body></html>`;
 
 const read = async (path: string) => (path === '/nowhere' ? null : snapshot(path));
@@ -64,6 +65,8 @@ describe('itemPage', () => {
     expect(html).toContain(`<meta name="theme-color" content="${BLUE}" data-embed="${BLUE}">`);
     expect(count(html, 'property="og:image"')).toBe(1);
     expect(count(html, '<title>')).toBe(1);
+    const ld = JSON.parse(/<script id="ld-json" type="application\/ld\+json">([\s\S]*?)<\/script>/.exec(html)![1]);
+    expect(ld['@graph'].map((n: { '@type': string }) => n['@type'])).toEqual(['WebSite', 'Thing']);
   });
 
   it("colours a device's stripe by its verdict", async () => {
@@ -88,6 +91,13 @@ describe('itemPage', () => {
     expect(tag(page.html, 'name', 'description')).toBe('Fixed updates without PSRAM. Faster round trips.');
   });
 
+  it("fills a new release's page from the list that found it", async () => {
+    const changelog = (path: string) => (path === '/dashboard/changelog' ? '<html><head></head><body><main><div data-fill="changelog"><p>Loading...</p></div></main></body></html>' : null);
+    const page = (await itemPage('/dashboard/changelog/v3.4.5', async (p) => changelog(p), sources()))!;
+    expect(page.status).toBe(200);
+    expect(page.html).toContain('id="v3.4.5"');
+  });
+
   it('reads the list once for a release it already has', async () => {
     const s = sources();
     expect((await itemPage('/dashboard/changelog/v3.4.4', read, s, fill))!.status).toBe(200);
@@ -95,11 +105,15 @@ describe('itemPage', () => {
   });
 
   it('answers an item it knows nothing of with the 404 page', async () => {
-    for (const path of ['/guide/help/nope', '/dashboard/changelog/v9.9.9', '/guide/compatibility/nope']) {
+    for (const path of ['/guide/help/nope', '/dashboard/changelog/v9.9.9']) {
       const page = (await itemPage(path, read, sources(), fill))!;
       expect(page.status).toBe(404);
       expect(page.html).toContain('/404 page');
     }
+  });
+
+  it('sends a device address that names no device to the Devices page, since the stats can drop or rename one', async () => {
+    expect(await itemPage('/guide/compatibility/nope', read, sources(), fill)).toEqual({ status: 302, html: '', location: '/guide/compatibility' });
   });
 
   it('asks again later, at once, while the list is slow to come', async () => {

@@ -110,6 +110,11 @@ describe('releaseCard', () => {
 describe('deviceCard', () => {
   const row = (over: object) => ({ name: 'Glorious Model O3', kind: 'mouse' as const, verdict: 'works' as const, id: 'device-glorious-model-o3', ...over });
 
+  it('titles a device whose name the card cannot draw by its ids', () => {
+    expect(deviceCard(row({ name: '罗技鼠标', vidpid: '046d:c547', id: 'device-046d-c547' })).title).toBe('046d:c547');
+    expect(deviceCard(row({ name: 'Łukasz Mysz', id: 'device-lukasz-mysz' })).title).toBe('Łukasz Mysz');
+  });
+
   it('puts a note first', () => {
     const c = deviceCard(row({ verdict: 'partial', note: "Works wired at 1000 Hz only; wireless doesn't", reported: 'v3.0.1' }));
     expect(c.description).toBe("Works wired at 1000 Hz only; wireless doesn't. Mouse, reported on v3.0.1.");

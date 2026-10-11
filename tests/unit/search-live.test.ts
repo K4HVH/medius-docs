@@ -51,6 +51,14 @@ describe('withIds', () => {
     expect(one).toEqual(two);
     expect(withIds([b]).map((r) => r.id)).toEqual(['device-usb-receiver']);
   });
+
+  it('names a device with no Latin letters by its ids, and one with accents by its letters', () => {
+    const rows = withIds([
+      { name: '罗技鼠标', kind: 'mouse', verdict: 'works', vidpid: '046d:c547' },
+      { name: 'Łukasz Mysz Ósmá', kind: 'mouse', verdict: 'works' },
+    ]);
+    expect(rows.map((r) => r.id)).toEqual(['device-046d-c547', 'device-lukasz-mysz-osma']);
+  });
 });
 
 describe('mergeLive', () => {

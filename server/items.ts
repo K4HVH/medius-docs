@@ -1,6 +1,7 @@
 import { type Item, itemFor } from '../src/app/items';
 import { type RouteInfo, routeFor } from '../src/app/routes';
 import { SITE } from '../src/app/site';
+import { itemJsonLd } from '../src/app/structuredData';
 import { type CardContent, cardUrl, deviceCard, helpCard, pageCard, releaseCard } from '../src/app/card/content';
 import { HELP_ITEMS } from '../src/app/data/help';
 import { COMPAT } from '../src/app/data/compatibility';
@@ -10,7 +11,7 @@ import type { StatsSummary } from './stats/types';
 import { getStatsSummary } from './stats';
 import { getReleases, refreshReleases } from './firmware';
 import { livePage } from './agent';
-import { fillPage } from './fill';
+import { FILL_SOURCES, fillPage } from './fill';
 
 // An item's address (src/app/items.ts) is answered with its parent page, filled as the parent is, under a
 // head naming the item: its title, description and card, noindex and no canonical, and its stripe colour.
@@ -26,7 +27,8 @@ export interface ItemSources {
 const LIVE: ItemSources = { releases: getReleases, refresh: refreshReleases, stats: getStatsSummary };
 
 // down: the source that would know the item can't be read, so the reader is asked to come back.
-type Found = { card: CardContent; description: string } | 'unknown' | 'down';
+// `releases`: the list a release was found in, which its page is filled from.
+type Found = { card: CardContent; description: string; releases?: FirmwareRelease[] } | 'unknown' | 'down';
 
 async function read<T>(source: () => Promise<T | null>): Promise<T | null> {
   try {
@@ -61,15 +63,21 @@ async function find(item: Item, sources: ItemSources): Promise<Found> {
     const list = await within(read(sources.releases));
     if (list === LATE) return 'down';
     let release = named(list);
+    let from = list;
     if (!release) {
       // Only a list read again says a release isn't out.
       const again = await within(read(sources.refresh));
       if (again === LATE || !again) return 'down';
       release = named(again);
       if (!release) return 'unknown';
+      from = again;
     }
     const card = releaseCard(release);
-    return { card, description: card.list?.length ? card.list.map(stop).join(' ') : routeFor(item.parent)!.description };
+    return {
+      card,
+      description: card.list?.length ? card.list.map(stop).join(' ') : routeFor(item.parent)!.description,
+      releases: from ?? undefined,
+    };
   }
   const stats = await read(sources.stats);
   const row = withIds(mergeCompat(COMPAT, stats?.devices.top ?? null)).find((d) => d.id === item.target);
@@ -127,6 +135,9 @@ function writeHead(html: string, path: string, parent: RouteInfo, found: { card:
   ];
   for (const [attr, key, value] of tags) head = setMeta(head, attr, key, value);
   head = setMeta(head, 'name', 'theme-color', card.colour, ` data-embed="${card.colour}"`);
+  head = head.replace(/(<script id="ld-json" type="application\/ld\+json">)[\s\S]*?(<\/script>)/, (_m, open: string, close: string) =>
+    open + JSON.stringify(itemJsonLd()).replace(/</g, '\\u003c') + close,
+  );
   return head + html.slice(end);
 }
 
@@ -136,15 +147,19 @@ export async function itemPage(
   path: string,
   snapshot: (path: string) => Promise<string | null>,
   sources: ItemSources = LIVE,
-  fill: (path: string, html: string) => Promise<string | null> = fillPage,
-): Promise<{ status: number; html: string } | null> {
+  fill: (path: string, html: string, releases?: FirmwareRelease[]) => Promise<string | null> = (path, html, releases) =>
+    fillPage(path, html, releases ? { ...FILL_SOURCES, releases: async () => releases } : FILL_SOURCES),
+): Promise<{ status: number; html: string; location?: string } | null> {
   const item = itemFor(path);
   if (!item) return null;
   const found = await find(item, sources);
+  // A device leaves the list when the stats drop it or its name changes; the list is where it was.
+  if (found === 'unknown' && item.kind === 'device') return { status: 302, html: '', location: item.parent };
   if (found === 'unknown') return { status: 404, html: (await snapshot('/404')) ?? 'Not Found' };
   const html = await snapshot(item.parent);
   if (!html) return null;
-  const page = (await livePage(item.parent, html, fill)) ?? { status: 200, html };
+  const releases = found === 'down' ? undefined : found.releases;
+  const page = (await livePage(item.parent, html, (p, h) => fill(p, h, releases))) ?? { status: 200, html };
   if (found === 'down' || page.status !== 200) return { status: 503, html: page.html };
   return { status: 200, html: writeHead(page.html, path, routeFor(item.parent)!, found) };
 }

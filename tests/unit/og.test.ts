@@ -2,16 +2,11 @@
 import { describe, it, expect, vi } from 'vitest';
 import { BLUE, cardHash, type CardContent } from '../../src/app/card/content';
 
+// Each drawing lays its card out once.
 const drawn = vi.hoisted(() => ({ n: 0 }));
-vi.mock('@resvg/resvg-wasm', async (load) => {
-  const real = await load<typeof import('@resvg/resvg-wasm')>();
-  class Counted extends real.Resvg {
-    constructor(...args: ConstructorParameters<typeof real.Resvg>) {
-      super(...args);
-      drawn.n++;
-    }
-  }
-  return { ...real, Resvg: Counted };
+vi.mock('../../src/app/card/svg', async (load) => {
+  const real = await load<typeof import('../../src/app/card/svg')>();
+  return { ...real, cardSvg: (...args: Parameters<typeof real.cardSvg>) => (drawn.n++, real.cardSvg(...args)) };
 });
 
 const { drawCard, handleOg } = await import('../../server/og');
@@ -39,6 +34,27 @@ describe('drawCard', () => {
     const png = await drawCard(lock);
     expect([...png.slice(0, 8)]).toEqual(PNG);
     expect(size(png)).toEqual({ w: 1200, h: 630 });
+  });
+
+  it('keeps the server answering while it draws', async () => {
+    await drawCard(lock);
+    let done = false;
+    const png = drawCard({ ...lock, title: 'Drawn aside' }).then(() => (done = true));
+    await new Promise((r) => setTimeout(r, 1));
+    expect(done).toBe(false);
+    await png;
+  });
+
+  it('answers 503 when the renderer stops mid-drawing, and draws again on the next request', async () => {
+    const card = { ...lock, title: 'Renderer stopped' };
+    const one = async (path: string) => (path === '/y' ? card : null);
+    const pending = handleOg(new Request('https://medius.k4tech.net/og/y.png'), one);
+    await new Promise((r) => setTimeout(r, 1));
+    await (globalThis as Record<symbol, { worker?: { terminate(): Promise<number> } }>)[Symbol.for('medius.og.renderer')].worker!.terminate();
+    const res = (await pending)!;
+    expect(res.status).toBe(503);
+    expect(res.headers.get('cache-control')).toBe('no-store');
+    expect((await handleOg(new Request('https://medius.k4tech.net/og/y.png'), one))!.status).toBe(200);
   });
 
   it('draws a title holding characters the fonts lack', async () => {
@@ -80,6 +96,13 @@ describe('handleOg', () => {
 
   it('reads home at index', async () => {
     expect((await get('/og/index.png'))!.status).toBe(200);
+  });
+
+  it('answers 404 for a card address that names no page, home included', async () => {
+    const { cardFor } = await import('../../server/items');
+    for (const path of ['/og/.png', '/og//.png', '/og/native/.png']) {
+      expect((await handleOg(new Request(`https://medius.k4tech.net${path}`), (p) => cardFor(p)))!.status).toBe(404);
+    }
   });
 
   it('draws a card once and answers again from memory', async () => {

@@ -26,7 +26,7 @@ const TONE: Record<string, string> = { ok: '#10b981', warn: '#f59e0b', bad: '#dc
 
 // Raised whenever the card is drawn differently: its address changes with it, and unfurlers that keep an
 // image by its address fetch the new one.
-export const STYLE = 1;
+export const STYLE = 2;
 
 const HOST = SITE.replace(/^https?:\/\//, '');
 const FIRMWARE = ['MAKCU', 'firmware'] as const;
@@ -100,7 +100,8 @@ function deviceLine(row: CompatRow): string {
 export function deviceCard(row: CompatRow & { id: string }): CardContent {
   return {
     crumb: parentCrumb('/guide/compatibility'),
-    title: row.name,
+    // The card's fonts carry Latin letters alone.
+    title: /[a-z0-9\u00c0-\u024f]/i.test(row.name) ? row.name : (row.vidpid ?? row.name),
     description: deviceLine(row),
     address: HOST + itemPath('device', row.id.replace(/^device-/, '')),
     fact: [VERDICT_LABEL[row.verdict]],

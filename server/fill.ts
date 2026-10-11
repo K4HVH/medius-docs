@@ -18,7 +18,7 @@ export interface FillSources {
 }
 
 // The changelog waits up to 5 s for releases it has never had, short of the server's 10 s request limit.
-const LIVE: FillSources = { releases: () => liveReleases(5_000), stats: getStatsSummary, home: () => getHomeFigures() };
+export const FILL_SOURCES: FillSources = { releases: () => liveReleases(5_000), stats: getStatsSummary, home: () => getHomeFigures() };
 
 const esc = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -149,13 +149,25 @@ function compatHtml(html: string, stats: StatsSummary): string {
   return html.replace(/(<tbody[^>]*\sdata-fill="compat"[^>]*>)[\s\S]*?(<\/tbody>)/, (_m, open: string, close: string) => open + rows + close);
 }
 
+const cell = (s: string) => s.replace(/\|/g, '\\|');
+
+// The built twin's device table, rewritten with the merged rows.
+function compatMarkdown(md: string, stats: StatsSummary): string {
+  const rows = withIds(mergeCompat(COMPAT, stats.devices.top)).map((r) => {
+    const name = r.vidpid && r.vidpid !== r.name ? `${r.name} (${r.vidpid})` : r.name;
+    const cells = [name, KIND_LABEL[r.kind], VERDICT_LABEL[r.verdict], r.note ?? '', r.reported ?? '', r.boxes?.toString() ?? ''];
+    return `| ${cells.map(cell).join(' | ')} |`;
+  });
+  return md.replace(/^(\| Device \|.*\n\|[- |]+\|\n)(?:\|.*\n?)*/m, (_m, head: string) => head + rows.join('\n') + '\n');
+}
+
 // The page with its live block filled, the last good copy while the source is down, or null when the
 // source has never answered. The landing and compatibility pages always come back: what their sources
 // can't give stays as prerendered. Any other page comes back unchanged.
 export async function fillPage(
   path: string,
   html: string,
-  sources: FillSources = LIVE,
+  sources: FillSources = FILL_SOURCES,
   memory: Map<string, string> = LAST_GOOD,
 ): Promise<string | null> {
   if (path === '/') {
@@ -196,11 +208,18 @@ function freshMarkdown(path: string, releases: FirmwareRelease[] | null, s: Stat
   return null;
 }
 
+// `built` is the twin the build wrote, which the Devices page fills rather than replaces.
 export async function fillMarkdown(
   path: string,
-  sources: FillSources = LIVE,
+  sources: FillSources = FILL_SOURCES,
   memory: Map<string, string> = LAST_GOOD,
+  built?: string,
 ): Promise<string | null> {
+  if (path === '/guide/compatibility') {
+    if (built === undefined) return null;
+    const stats = await read(sources.stats);
+    return stats ? compatMarkdown(built, stats) : built;
+  }
   const key = path + '.md';
   let md: string | null = null;
   if (path === '/dashboard/changelog') md = freshMarkdown(path, await read(sources.releases), null);
