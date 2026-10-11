@@ -121,7 +121,7 @@ async function confirmed(io: FixIO): Promise<'ok' | 'checking' | 'silent'> {
 
 const set = (e: EmitPace) => e.mode === EmitMode.Fixed && e.fixedHz === RATE_HZ && e.forceHz === RATE_HZ;
 
-// The Logitech fix, as tools/logitech_fix does it: injection paced at a fixed 1000 Hz, the wire rate forced
+// The Logitech fix, as medius-fw's tools/logitech_fix does it: injection paced at a fixed 1000 Hz, the wire rate forced
 // to 1000 Hz and imperfect clone on. A device that only goes slower forced keeps the rate it declares.
 export async function logitechFix(io: FixIO): Promise<Outcome> {
   const ready = await confirmed(io);
