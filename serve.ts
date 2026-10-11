@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from "fs";
 import { join } from "path";
 import { handleFirmwareApi } from "./server/firmware";
+import { handleDevicesApi } from "./server/devices";
 import { handleStatsApi } from "./server/stats";
 import { acceptsMarkdown, handleAgentDocs, livePage, DOC_CACHE, LIVE_CACHE, LLMS_LINK, NOINDEX_ARTIFACTS } from "./server/agent";
 import { handleHomeApi } from "./server/home";
@@ -55,6 +56,9 @@ Bun.serve({
 
     const stats = await handleStatsApi(req, server.requestIP(req)?.address);
     if (stats) return stats;
+
+    const devices = await handleDevicesApi(req);
+    if (devices) return devices;
 
     const stocked = await stock(req, server.requestIP(req)?.address);
     if (stocked) return stocked;
