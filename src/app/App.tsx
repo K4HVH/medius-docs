@@ -40,6 +40,7 @@ const App: Component = () => {
           <Route path="/guide/:place?" component={AtPage} />
           <Route path="/guide/compatibility/:place?" component={AtPage} />
           <Route path="/guide/options/:place?" component={AtPage} />
+          <Route path="/guide/privacy/:place?" component={AtPage} />
           <Route path="/guide/help/:place?" component={AtPage} />
           <Route path="/native/:place?" component={AtPage} />
           <Route path="/native/quickstart/:place?" component={AtPage} />

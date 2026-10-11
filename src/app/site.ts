@@ -28,4 +28,6 @@ export const MOVED: Readonly<Record<string, string>> = {
   '/guide/faq': '/guide/help',
   '/guide/troubleshooting': '/guide/help',
   '/guide/device-fixes': '/guide/compatibility#fixes',
+  // The address a privacy policy is looked for at, and the one the Discord bot's listing names.
+  '/privacy': '/guide/privacy',
 };

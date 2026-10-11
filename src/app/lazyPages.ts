@@ -54,6 +54,7 @@ export const PAGES: Record<string, LazyPage> = {
   '/guide': page(() => import('./pages/guide/Start')),
   '/guide/compatibility': page(() => import('./pages/guide/Devices')),
   '/guide/options': page(() => import('./pages/guide/Options')),
+  '/guide/privacy': page(() => import('./pages/guide/Privacy')),
   '/guide/help': page(() => import('./pages/guide/Help')),
   '/native': page(() => import('./pages/native/Introduction')),
   '/native/quickstart': codePage(() => import('./pages/native/Quickstart')),

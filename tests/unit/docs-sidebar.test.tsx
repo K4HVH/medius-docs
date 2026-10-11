@@ -74,7 +74,7 @@ describe('DocsSidebar', () => {
   it('shows the guide without the code switcher', () => {
     const r = mount('/guide/help');
     expect(r.side().querySelector('.sections')).toBeNull();
-    expect([...r.side().querySelectorAll('.group a')].map((a) => a.getAttribute('href'))).toEqual(['/guide', '/guide/compatibility', '/guide/options', '/guide/help']);
+    expect([...r.side().querySelectorAll('.group a')].map((a) => a.getAttribute('href'))).toEqual(['/guide', '/guide/compatibility', '/guide/options', '/guide/help', '/guide/privacy']);
   });
 
   it('shows the box list on dashboard pages, built once', () => {

@@ -32,6 +32,13 @@ describe('SiteFooter', () => {
     expect(r.container.querySelector('footer')!.textContent).toContain('© 2026 K4TECH');
   });
 
+  it('links the privacy page beside the copyright', () => {
+    const r = mount();
+    const legal = r.container.querySelector('footer .legal')!;
+    expect(legal.querySelector('a')!.getAttribute('href')).toBe('/guide/privacy');
+    expect(legal.textContent).toContain('Privacy');
+  });
+
   it('links Discord, GitHub, crates.io and PyPI in a new tab', () => {
     const r = mount();
     const external = [...r.container.querySelectorAll('footer a')].filter((a) => !a.getAttribute('href')!.startsWith('/'));
