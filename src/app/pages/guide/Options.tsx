@@ -2,7 +2,6 @@ import type { Component, JSX } from 'solid-js';
 import { A } from '@solidjs/router';
 import { PageHeader } from '../../shell/PageHeader';
 import { DocSection } from '../../shell/DocSection';
-import { Anchor } from '../../shell/Anchor';
 import { FixLink } from '../../shell/Filter';
 
 const Values = (props: { head?: string; rows: [JSX.Element, JSX.Element][] }) => (
@@ -132,18 +131,20 @@ const Options: Component = () => (
         The model starts empty after every restart and needs to see your mouse move before it renders. Until then,
         injected movement goes out as with Off. Needs v3.3.1 or later.
       </p>
-      <Anchor id="render-full" label="Rendered motion" aside={<Dashboard id="render-full" />}>
-        <Values
-          rows={[
-            [<Default>Injected only</Default>, 'Your mouse\'s movement passes through untouched. Only injected movement is rendered.'],
-            ['Injected and native', 'Your mouse\'s (native) movement goes through the model too, mixed with injected movement into one stream.'],
-          ]}
-        />
-        <p>
-          Injected and native delays your mouse's movement by the smoother's delay plus 1 ms, and Movement riding
-          stops applying. With Render off, nothing is rendered either way.
-        </p>
-      </Anchor>
+    </DocSection>
+
+    <DocSection id="render-full" title="Rendered motion" aside={<Dashboard id="render-full" />}>
+      <p>Which movement goes through Render's model.</p>
+      <Values
+        rows={[
+          [<Default>Injected only</Default>, 'Your mouse\'s movement passes through untouched. Only injected movement is rendered.'],
+          ['Injected and native', 'Your mouse\'s (native) movement goes through the model too, mixed with injected movement into one stream.'],
+        ]}
+      />
+      <p>
+        Injected and native delays your mouse's movement by Render's smoother delay plus 1 ms, and Movement riding
+        stops applying. With Render off, nothing is rendered either way.
+      </p>
     </DocSection>
 
     <DocSection id="spread" title="Spread" aside={<Dashboard id="spread" />}>
@@ -180,23 +181,24 @@ const Options: Component = () => (
         Leave it on Learned unless your software needs a set rate. Faster than your mouse, the box sends reports your
         mouse wouldn't; slower, injected movement goes out in fewer, bigger reports.
       </p>
-      <Anchor id="wire-rate" label="Wire rate" aside={<Dashboard id="wire-rate" />}>
-        <p>The polling rate the clone declares to the PC. The box polls your device at the same rate.</p>
-        <Values
-          rows={[
-            [<Default>Native</Default>, 'What your device declares.'],
-            ['Forced', 'A rate you pick, set to one the PC polls at exactly: 1000, 500, 250, 125, 62, 31, 15 or 7 Hz (600 becomes 500). A low-speed device can\'t go above 62 Hz.'],
-          ]}
-        />
-        <p>
-          Force it for a mouse that declares 125 Hz but can report faster, as Logitech's receivers do. The dashboard offers it
-          for one, and <Fixes /> lists them.
-        </p>
-        <p>
-          Forcing needs Imperfect clone on, since the clone's descriptor no longer matches the device. Changing it
-          restarts the box, which clones the device again.
-        </p>
-      </Anchor>
+    </DocSection>
+
+    <DocSection id="wire-rate" title="Wire rate" aside={<Dashboard id="wire-rate" />}>
+      <p>The polling rate the clone declares to the PC. The box polls your device at the same rate.</p>
+      <Values
+        rows={[
+          [<Default>Native</Default>, 'What your device declares.'],
+          ['Forced', 'A rate you pick, set to one the PC polls at exactly: 1000, 500, 250, 125, 62, 31, 15 or 7 Hz (600 becomes 500). A low-speed device can\'t go above 62 Hz.'],
+        ]}
+      />
+      <p>
+        Force it for a mouse that declares 125 Hz but can report faster, as Logitech's receivers do. The dashboard
+        offers it for one, and <Fixes /> lists them.
+      </p>
+      <p>
+        Forcing needs Imperfect clone on, since the clone's descriptor no longer matches the device. Changing it
+        restarts the box, which clones the device again.
+      </p>
     </DocSection>
   </>
 );
