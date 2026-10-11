@@ -51,7 +51,7 @@ it("gives each device the address of its card on the Devices page", async () => 
   const { devices } = await read();
   const first = devices.find((d) => d.name === COMPAT[0]!.name)!;
   expect(first.url.startsWith('https://medius.k4tech.net/guide/compatibility/')).toBe(true);
-  // Each address is its own row's card, not some section of the page.
+  // Each address is its row's card, not a section of the page.
   const rows = withIds(devices.map(({ url: _, ...d }) => d as CompatRow));
   devices.forEach((d, i) => expect(addressFor(new URL(d.url).pathname)).toMatchObject({ kind: 'device', target: rows[i]!.id }));
   expect(new Set(devices.map((d) => d.url)).size).toBe(devices.length);
