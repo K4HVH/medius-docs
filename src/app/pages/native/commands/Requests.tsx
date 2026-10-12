@@ -181,7 +181,7 @@ const Requests: Component = () => {
           <A href="/library/requests#version"><code>query_version</code></A>.
         </p>
         <div class="api-response-label">EXAMPLE</div>
-        <p>Firmware <code>3.4.5</code>, protocol <code>9</code>, MAC <code>123456789abc</code>, name "Loki":</p>
+        <p>Firmware <code>3.4.6</code>, protocol <code>9</code>, MAC <code>123456789abc</code>, name "Loki":</p>
         <ByteStrip
           fields={[
             { value: 'A5', name: 'SOF' },
@@ -192,7 +192,7 @@ const Requests: Component = () => {
             { value: '09', name: 'proto' },
             { value: '03', name: 'major' },
             { value: '04', name: 'minor' },
-            { value: '05', name: 'patch' },
+            { value: '06', name: 'patch' },
             { value: '...', name: '...' },
             { value: '...', name: '...' },
             { value: '12 34 56 78 9A BC', name: 'mac (6 bytes)' },
@@ -1182,7 +1182,7 @@ const Requests: Component = () => {
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <p>
-          Both chips on <code>3.4.5</code>, device on <code>ota_1</code>, host on{' '}
+          Both chips on <code>3.4.6</code>, device on <code>ota_1</code>, host on{' '}
           <code>ota_0</code>, both images <code>valid</code>, nothing staged:
         </p>
         <ByteStrip
@@ -1194,13 +1194,13 @@ const Requests: Component = () => {
             { value: '0B', name: 'what' },
             { value: '03', name: 'devmaj' },
             { value: '04', name: 'devmin' },
-            { value: '05', name: 'devpat' },
+            { value: '06', name: 'devpat' },
             { value: '01', name: 'devslt' },
             { value: '02', name: 'devsta' },
             { value: '01', name: 'hostpr' },
             { value: '03', name: 'hstmaj' },
             { value: '04', name: 'hstmin' },
-            { value: '05', name: 'hstpat' },
+            { value: '06', name: 'hstpat' },
             { value: '00', name: 'hstslt' },
             { value: '02', name: 'hststa' },
             { value: '00 00 0F 00', name: 'slot_size' },
