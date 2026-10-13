@@ -4,210 +4,238 @@ import { PageHeader } from '../../shell/PageHeader';
 import { DocSection } from '../../shell/DocSection';
 import { RESULTS, categoryOf } from '../../data/comparison';
 import { pageFor } from '../../data/comparison/pages';
-import type { Cell, Chart, Defect, Group, Row, Verdict } from '../../data/comparison/types';
+import { resultOf, showValue, span, type Result } from '../../data/comparison/result';
+import type { Box, Defect, FeatureRow, MeasureRow, OutcomeRow, PairRow, Section, SettingsTable, Table, Value } from '../../data/comparison/types';
 
-export const VERDICT: Record<Verdict, string> = {
-  medius: 'Medius',
-  stock: 'Stock',
-  equal: 'Equal',
-  mixed: 'Mixed',
-  design: 'By design',
-  unranked: 'Unranked',
-};
-const TONE: Partial<Record<Verdict, string>> = { medius: 'medius', stock: 'stock' };
-export const BOX = { stock: 'Stock', medius: 'Medius' } as const;
+export const BOX: Record<Box, string> = { stock: 'Stock', medius: 'Medius' };
+const BOXES: Box[] = ['stock', 'medius'];
+const RESULT: Record<Exclude<Result, null>, string> = { stock: 'Stock', medius: 'Medius', equal: 'Equal', differs: 'Differs' };
 
-export const cellText = (c: Cell) => (typeof c === 'string' ? c : c.text);
+export interface Item {
+  table: Exclude<Table, SettingsTable>;
+  row: PairRow;
+  // On a page that gathers rows from several tables: what the row compares, in place of its label, and the
+  // label under it.
+  head?: JSX.Element;
+  sub?: string;
+}
 
-// A value a narrow column may break between its parts: after a slash or an underscore and before a bracket,
-// never inside a word or a range (0.93-0.98).
-export const Breakable = (props: { text: string }) =>
-  props.text
-    .split(/(\d[\d,.]*-\d[\d,.]*)/)
-    .flatMap((part, i) =>
-      i % 2 ? [<span class="nw">{part}</span>] : part.split(/(?<=[/_])|(?=\()/).flatMap((bit, j) => (j ? [<wbr />, bit] : [bit])),
-    );
-const amount = (v: number, unit: string) => `${v.toLocaleString('en-US', { maximumFractionDigits: 3 })} ${unit}`;
-
-// A pair of bars per point, stock above Medius, to the scale of the largest value. A box that wasn't measured
-// gets no bar.
-export const PairBars = (props: { chart: Chart }) => {
-  const max = () => Math.max(0, ...props.chart.points.flatMap((p) => [p.stock ?? 0, p.medius ?? 0]));
-  const width = (v: number | null) => `${v != null && max() > 0 ? (Math.max(0, v) / max()) * 100 : 0}%`;
+// A value's bar on the stats page's track: solid to the low end of its range and fainter on to the high
+// end, to the scale of the largest value it is drawn beside.
+const Bar = (props: { v: Value; max: number }) => {
+  // A value above zero always shows: no bar is drawn under 1.5% of its track.
+  const at = (x: number) => (props.max > 0 && x > 0 ? Math.max(1.5, Math.min(100, (x / props.max) * 100)) : 0);
+  const lo = () => at(span(props.v)[0]);
+  const hi = () => at(span(props.v)[1]);
   return (
-    <figure class="pairs-fig">
-      <figcaption class="caps">{props.chart.label}</figcaption>
-      <div class="pairs">
-        <For each={props.chart.points}>
-          {(p) => (
-            <div class="pt">
-              <span class="x">{p.x}</span>
-              <For each={['stock', 'medius'] as const}>
-                {(box) => (
-                  <>
-                    <span class="k">{BOX[box]}</span>
-                    <span class={`t ${box}`}>
-                      <i style={{ width: width(p[box]) }} />
+    <span class="t" aria-hidden="true">
+      <i style={{ width: `${lo()}%` }} />
+      <Show when={hi() > lo()}>
+        <i class="hi" style={{ left: `${lo()}%`, width: `${hi() - lo()}%` }} />
+      </Show>
+    </span>
+  );
+};
+
+const valueOf = (item: Item, box: Box) => (item.row as MeasureRow)[box];
+// A command as the API spells it is code; a tool's or a site's name is words.
+const COMMAND = /^(km\.[a-z_0-9]+(\(\))?|[A-Z][A-Z0-9_]+(\([A-Z_]+\))?)$/;
+
+// A box's cell: a measure's value and its bar, an outcome's word, or a feature's command (as code) or tool
+// (in words). The box that's behind is dimmed; where the two match, or neither is better, both stand.
+const PairCell = (props: { item: Item; box: Box; result: Result; max: number }) => {
+  // Behind the other box, or level with it on the worst outcome a table has.
+  const worst = () => {
+    const t = props.item.table;
+    if (t.kind !== 'outcome' || t.ranked === false || props.result !== 'equal') return false;
+    return (props.item.row as OutcomeRow)[props.box].is === t.outcomes[t.outcomes.length - 1];
+  };
+  const behind = () => props.result === (props.box === 'stock' ? 'medius' : 'stock') || worst();
+  const t = props.item.table;
+  const feature = () => (props.item.row as FeatureRow)[props.box];
+  return (
+    <td class={`v ${props.box}${behind() ? ' behind' : ''}`} data-label={BOX[props.box]}>
+      {t.kind === 'measure' ? (
+        <span class="meter">
+          <span class="n">{showValue(valueOf(props.item, props.box), t.unit)}</span>
+          <Bar v={valueOf(props.item, props.box)} max={props.max} />
+        </span>
+      ) : t.kind === 'outcome' ? (
+        (props.item.row as OutcomeRow)[props.box].is
+      ) : feature() ? (
+        COMMAND.test(feature()!) ? <code>{feature()}</code> : feature()
+      ) : (
+        'No'
+      )}
+    </td>
+  );
+};
+
+// Stock against Medius, a row per condition: what was varied, each box's value, and which box is ahead.
+// Bars share one scale across a table, or, where the rows come from several tables, a scale per row.
+export const PairTable = (props: { key: string; commands?: Record<Box, string>; items: Item[]; scale: 'table' | 'row'; defects: Defect[] }) => {
+  const ranked = () => props.items.some((i) => resultOf(i.table, i.row) !== null);
+  const measures = () => props.items.filter((i) => i.table.kind === 'measure');
+  const top = (items: Item[]) => Math.max(0, ...items.flatMap((i) => BOXES.map((b) => span(valueOf(i, b))[1])));
+  return (
+    <div class="stack-box">
+      <Show when={props.commands}>
+        {(c) => (
+          <p class="pair-cmds caps">
+            <For each={BOXES}>
+              {(b) => (
+                <>
+                  {BOX[b]} <code>{c()[b]}</code>
+                </>
+              )}
+            </For>
+          </p>
+        )}
+      </Show>
+      <div class="table-scroll">
+        <table class="api-params names pair stacked">
+          <thead>
+            <tr>
+              <th>{props.key}</th>
+              <For each={BOXES}>
+                {(b) => (
+                  <th>
+                    <span class="hd">
+                      {BOX[b]}
+                      <Show when={props.commands?.[b]}>{(c) => <code class="cmd">{c()}</code>}</Show>
                     </span>
-                    <b>{p[box] == null ? 'Not measured' : amount(p[box]!, props.chart.unit)}</b>
-                  </>
+                  </th>
                 )}
               </For>
-            </div>
-          )}
-        </For>
+              <Show when={ranked()}>
+                <th class="res">Result</th>
+              </Show>
+            </tr>
+          </thead>
+          <tbody>
+            <For each={props.items}>
+              {(item) => {
+                const result = resultOf(item.table, item.row);
+                const max = item.table.kind !== 'measure' ? 0 : props.scale === 'row' ? top([item]) : top(measures());
+                return (
+                  <tr>
+                    <td>
+                      {item.head ?? item.row.label}
+                      <Show when={item.sub}>
+                        <span class="sub">{item.sub}</span>
+                      </Show>
+                      <Show when={item.row.note}>
+                        <span class="sub">{item.row.note}</span>
+                      </Show>
+                    </td>
+                    <For each={BOXES}>{(b) => <PairCell item={item} box={b} result={result} max={max} />}</For>
+                    <Show when={ranked()}>
+                      <td class="res">
+                        <Show when={result}>{(r) => <span class={`status ${r()}`}>{RESULT[r()]}</span>}</Show>
+                        <For each={props.defects.filter((d) => d.row === item.row.id)}>
+                          {(d) => (
+                            <A class="status bad" href="/comparison/defects" aria-label={`${BOX[d.box]} defect: ${d.text}`}>
+                              {`${BOX[d.box]} defect`}
+                            </A>
+                          )}
+                        </For>
+                      </td>
+                    </Show>
+                  </tr>
+                );
+              }}
+            </For>
+          </tbody>
+        </table>
       </div>
-    </figure>
+    </div>
   );
 };
 
-// Under a test: its caveat, then how many, the layer it was timed on and the hubs it was measured behind.
-const RowNote = (props: { row: Row }) => {
-  const hubs = () => props.row.hubs && (props.row.hubs === 'both' ? 'both hubs' : `behind ${props.row.hubs}`);
-  const facts = () => [props.row.n, props.row.layer && `${props.row.layer} timing`, hubs()].filter(Boolean).join(' · ');
+// Each box's settings measured the same way: a row per setting, a bar per value to the scale of its column.
+export const SettingsTableView = (props: { table: SettingsTable }) => {
+  const max = (col: string) => Math.max(0, ...props.table.rows.map((r) => span(r.values[col])[1]));
+  const rows = () => BOXES.flatMap((b) => props.table.rows.filter((r) => r.box === b));
   return (
-    <>
-      <Show when={props.row.note}>
-        <span class="sub">{props.row.note}</span>
-      </Show>
-      <Show when={facts()}>
-        <span class="sub">{facts()}</span>
-      </Show>
-    </>
+    <div class="stack-box">
+      <div class="table-scroll">
+        <table class="api-params names pair settings stacked">
+          <thead>
+            <tr>
+              <th>Box</th>
+              <th>{props.table.key}</th>
+              <For each={props.table.columns}>{(c) => <th>{c.label}</th>}</For>
+            </tr>
+          </thead>
+          <tbody>
+            <For each={rows()}>
+              {(r) => (
+                <tr>
+                  <td>{BOX[r.box]}</td>
+                  <td>
+                    {r.label}
+                    <Show when={r.default}>
+                      {' '}
+                      <em>(default)</em>
+                    </Show>
+                  </td>
+                  <For each={props.table.columns}>
+                    {(c) => (
+                      <td class={`v ${r.box}`} data-label={c.label}>
+                        <span class="meter">
+                          <span class="n">{showValue(r.values[c.id], c.unit)}</span>
+                          <Bar v={r.values[c.id]} max={max(c.id)} />
+                        </span>
+                      </td>
+                    )}
+                  </For>
+                </tr>
+              )}
+            </For>
+          </tbody>
+        </table>
+      </div>
+    </div>
   );
 };
 
-const Result = (props: { row: Row; defects: Defect[] }) => (
-  <>
-    <span class={`status${TONE[props.row.verdict] ? ` ${TONE[props.row.verdict]}` : ''}`}>{VERDICT[props.row.verdict]}</span>
-    <Show when={props.row.verdict === 'unranked' && props.row.reason}>
-      <span class="sub">{props.row.reason}</span>
-    </Show>
-    <For each={props.defects}>
-      {(d) => (
-        <A class="vs-d" href={`/comparison#defect-${d.id}`} aria-label={`${BOX[d.box]} defect: ${d.text}`}>
-          {`${BOX[d.box]} defect`}
-        </A>
+// One section of results: what was done, anything the page draws for it, then its tables, each under its
+// label where it has one.
+export const ResultSection = (props: { section: Section; defects: Defect[]; before?: JSX.Element }) => (
+  <DocSection id={props.section.id} title={props.section.title}>
+    <p>{props.section.about}</p>
+    {props.before}
+    <For each={props.section.tables}>
+      {(t) => (
+        <>
+          <Show when={t.label}>
+            <div class="api-response-label">{t.label}</div>
+          </Show>
+          {t.kind === 'settings' ? (
+            <SettingsTableView table={t} />
+          ) : (
+            <PairTable
+              key={t.key}
+              commands={'commands' in t ? t.commands : undefined}
+              items={(t.rows as PairRow[]).map((row) => ({ table: t, row }))}
+              scale="table"
+              defects={props.defects}
+            />
+          )}
+        </>
       )}
     </For>
-  </>
+  </DocSection>
 );
 
-// Results as stock against Medius: the test, each box's value, and which is ahead.
-export const ResultRows = (props: { label?: string; rows: Row[]; defects: Defect[] }) => (
-  <div class="table-scroll">
-    <table class="api-params names fixed vs">
-      <colgroup>
-        <col class="vs-t" />
-        <col />
-        <col />
-        <col class="vs-r" />
-      </colgroup>
-      <thead>
-        <tr>
-          <th>{props.label ?? 'Test'}</th>
-          <th>Stock</th>
-          <th>Medius</th>
-          <th>Result</th>
-        </tr>
-      </thead>
-      <tbody>
-        <For each={props.rows}>
-          {(r) => (
-            <tr>
-              <td>
-                <Breakable text={r.test} />
-                <RowNote row={r} />
-              </td>
-              <td>
-                <Breakable text={cellText(r.stock)} />
-              </td>
-              <td>
-                <Breakable text={cellText(r.medius)} />
-              </td>
-              <td>
-                <Result row={r} defects={props.defects.filter((d) => d.row === r.id)} />
-              </td>
-            </tr>
-          )}
-        </For>
-      </tbody>
-    </table>
-  </div>
-);
-
-const GridTable = (props: { columns: string[]; rows: { cells: Cell[] }[] }) => (
-  <div class="table-scroll">
-    <table class="api-params names vs-grid">
-      <thead>
-        <tr>
-          <For each={props.columns}>{(c) => <th>{c}</th>}</For>
-        </tr>
-      </thead>
-      <tbody>
-        <For each={props.rows}>
-          {(r) => (
-            <tr>
-              <For each={r.cells}>
-                {(c, i) => (
-                  <td data-label={i() ? props.columns[i()] : undefined}>
-                    <Breakable text={cellText(c)} />
-                  </td>
-                )}
-              </For>
-            </tr>
-          )}
-        </For>
-      </tbody>
-    </table>
-  </div>
-);
-
-// One group of results as a section of its page: what was done, anything the page draws by hand for it,
-// its chart, its table, and a defect that names no row.
-export const GroupSection = (props: { group: Group; defects: Defect[]; layers: Record<string, string>; before?: JSX.Element }) => {
-  const mine = () => props.defects.filter((d) => d.group === props.group.id);
-  return (
-    <DocSection id={props.group.id} title={props.group.title}>
-      <p>{props.group.about}</p>
-      {props.before}
-      <Show when={props.group.chart}>{(c) => <PairBars chart={c()} />}</Show>
-      {props.group.kind === 'rows' ? (
-        <ResultRows label={props.group.label} rows={props.group.rows} defects={mine()} />
-      ) : (
-        <GridTable columns={props.group.columns} rows={props.group.rows} />
-      )}
-      <For each={mine().filter((d) => !d.row)}>{(d) => <p class="vs-dl">{`${BOX[d.box]} defect: ${d.text}`}</p>}</For>
-    </DocSection>
-  );
-};
-
-// The foot of every Comparison page: the versions, how it was measured, and the page's data. Method, which
-// holds no results and is the method, gives the versions alone.
-export const SourceLine = (props: { path: string; bare?: boolean }) => (
-  <p class="src">
-    <Show when={!props.bare} fallback={<>Stock {RESULTS.firmware.stock} and Medius v{RESULTS.firmware.medius}.</>}>
-      Stock {RESULTS.firmware.stock} and Medius v{RESULTS.firmware.medius}, measured as{' '}
-      <A href="/comparison/method">Method</A> describes. This page's results:{' '}
-      <a href={`${props.path}.json`} download="">
-        {props.path.slice(props.path.lastIndexOf('/') + 1)}.json
-      </a>
-      .
-    </Show>
-  </p>
-);
-
-// A Comparison page drawn from its categories: the lead, then each group, with anything drawn by hand put
-// in the group it belongs to.
+// A Comparison page drawn from its categories: the lead, then each section, with anything drawn by hand
+// put in the section it belongs to.
 export const ComparisonPage = (props: { path: string; lead: JSX.Element; before?: Record<string, JSX.Element> }) => {
-  const groups = () => (pageFor(props.path)?.categories ?? []).flatMap((c) => categoryOf(c)?.groups ?? []);
+  const sections = () => (pageFor(props.path)?.categories ?? []).flatMap((c) => categoryOf(c)?.sections ?? []);
   return (
     <>
       <PageHeader>{props.lead}</PageHeader>
-      <For each={groups()}>
-        {(g) => <GroupSection group={g} defects={RESULTS.defects} layers={RESULTS.layers} before={props.before?.[g.id]} />}
-      </For>
-      <SourceLine path={props.path} />
+      <For each={sections()}>{(s) => <ResultSection section={s} defects={RESULTS.defects} before={props.before?.[s.id]} />}</For>
     </>
   );
 };

@@ -180,7 +180,7 @@ async function main(): Promise<void> {
       ['/dashboard', 'options'],
       ['/dashboard/control', 'input-locks'],
       ['/guide/help', 'q-windows'],
-      [CMP_PAGE.path, categoryOf(CMP_PAGE.categories[0])!.groups[0].id],
+      [CMP_PAGE.path, categoryOf(CMP_PAGE.categories[0])!.sections[0].id],
     ];
     for (const [page, id] of places) {
       const at = placeFor(search, page, id);

@@ -95,6 +95,28 @@ const DocsLayout = (props: RouteSectionProps) => {
     else navigate(fullPath, { scroll: !same });
   };
 
+  // A link to a place on the page shown goes there without the router, which scrolls to the top after any
+  // address with no hash, after the page has moved to the place, and ignores the address already shown.
+  onMount(() => {
+    const toPlace = (e: MouseEvent) => {
+      if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      const a = e.target instanceof Element ? e.target.closest<HTMLAnchorElement>('a[href]') : null;
+      if (!a || a.target || a.hasAttribute('download') || a.origin !== window.location.origin || a.hash) return;
+      if (pagePath(a.pathname) !== pagePath(location.pathname)) return;
+      if (a.pathname !== location.pathname) {
+        e.preventDefault();
+        navigate(a.pathname + a.search, { scroll: false });
+        return;
+      }
+      const target = landingId(a.pathname, '', has);
+      if (!target) return;
+      e.preventDefault();
+      scrollToTarget(target, 'auto', false);
+    };
+    main?.addEventListener('click', toPlace);
+    onCleanup(() => main?.removeEventListener('click', toPlace));
+  });
+
   // Ctrl or Cmd with K opens and closes the search; / opens it from anywhere but a field.
   onMount(() => {
     // During a flash the keys open nothing, and the browser's Ctrl K stays blocked as ever.

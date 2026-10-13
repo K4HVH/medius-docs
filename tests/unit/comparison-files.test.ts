@@ -1,8 +1,10 @@
-// The Comparison downloads: the whole file, and each page's categories with their defects.
+// The Comparison downloads: the whole file, and each page's categories with their defects and pending tests,
+// each a results file in its own right.
 import { describe, expect, it } from 'vitest';
-import { RESULTS } from '../../src/app/data/comparison';
+import { RESULTS, placeOf } from '../../src/app/data/comparison';
 import { COMPARISON_PAGES } from '../../src/app/data/comparison/pages';
 import { comparisonFiles } from '../../src/app/data/comparison/files';
+import { checkResults } from '../../src/app/data/comparison/check';
 
 describe('comparisonFiles', () => {
   const files = comparisonFiles();
@@ -12,14 +14,20 @@ describe('comparisonFiles', () => {
     expect(JSON.parse(files.get('/comparison.json')!)).toEqual(RESULTS);
   });
 
-  it("gives a page its categories, their defects, the versions, the rig and the layers, and nothing else", () => {
-    const page = JSON.parse(files.get('/comparison/control-link.json')!);
-    expect(page.categories.map((c: { id: string }) => c.id)).toEqual(['control-link']);
-    expect(page.defects).toEqual(RESULTS.defects.filter((d) => d.category === 'control-link'));
-    expect(page.firmware).toEqual(RESULTS.firmware);
-    expect(page.rig).toBe(RESULTS.rig);
-    expect(page.layers).toEqual(RESULTS.layers);
-    expect(page.pending).toBeUndefined();
+  it('writes files that pass the check', () => {
+    for (const [path, body] of files) expect(checkResults(JSON.parse(body)), path).toEqual([]);
+  });
+
+  it("gives a page its categories, their defects and pending tests, the versions, the rig and the layers", () => {
+    for (const page of COMPARISON_PAGES.filter((p) => p.categories.length)) {
+      const file = JSON.parse(files.get(`${page.path}.json`)!);
+      expect(file.categories.map((c: { id: string }) => c.id)).toEqual(page.categories);
+      expect(file.defects).toEqual(RESULTS.defects.filter((d) => page.categories.includes(placeOf(d.row)!.category.id)));
+      expect(file.pending).toEqual(RESULTS.pending.filter((p) => page.categories.includes(p.category)));
+      expect(file.firmware).toEqual(RESULTS.firmware);
+      expect(file.rig).toBe(RESULTS.rig);
+      expect(file.layers).toEqual(RESULTS.layers);
+    }
   });
 
   it('writes two-space JSON ending in a newline', () => {

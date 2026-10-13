@@ -4,102 +4,144 @@ import { DocSection } from '../../shell/DocSection';
 import { routeFor } from '../../routes';
 import { RESULTS } from '../../data/comparison';
 import { COMPARISON_PAGES } from '../../data/comparison/pages';
-import { SourceLine } from './parts';
 
-const RIG = `                the PC: test programs
-   +---------------------------------------------------------+
-                               |
-   +---------------------------+-----------------------------+
-   |  hub                                                    |
-   +----+-----------------+------------------+---------------+
-        ^                 |                  |
-        | USB1: the clone | USB2: control    | emulator
-        |                 |                  | control
-        |                 v                  v
-   +----+-----------------+----+        +----+---------------+
-   |  MAKCU box                |  USB3  |  USB device        |
-   |  stock or Medius          | <----- |  emulator          |
-   +---------------------------+        +--------------------+
+// One box's wiring. The other is wired the same way, on the same PC.
+const RIG = `+-------------------------+
+|    PC: tests, usbmon    |
++------------+------------+
+             |
++------------+------------+
+|           hub           |
++---+--------+--------+---+
+    |        |        |
+  USB1     USB2   emulator
+  clone   control  control
+    |        |        |
++---+--------+---+    |
+|      box       |    |
++-------+--------+    |
+        | USB3        |
++-------+-------------+---+
+|   USB device emulator   |
++-------------------------+`;
 
-   The same again for the other box, behind a second hub.`;
+const LAYER: Record<string, string> = { wire: 'Wire', host: 'Host', evdev: 'evdev', hidraw: 'hidraw' };
+
+// The pending tests by area, in page order.
+const pendingByArea = () =>
+  COMPARISON_PAGES.filter((p) => p.categories.length)
+    .map((p) => ({ page: p, tests: RESULTS.pending.filter((x) => p.categories.includes(x.category)) }))
+    .filter((a) => a.tests.length);
 
 const Method: Component = () => (
   <>
     <PageHeader>
-      <p>How each result was measured, what the timings can see, and what hasn't been tested yet.</p>
+      <p>How each result was measured, and the tests not yet run on both boxes the same way.</p>
     </PageHeader>
 
     <DocSection id="rig" title="Rig">
-      <p>Two MAKCU boxes, one on stock firmware and one on Medius, measured side by side.</p>
+      <p>Both boxes are wired like this, on the same PC.</p>
       <pre class="diagram">{RIG}</pre>
-      <p>{RESULTS.rig}.</p>
-      <p>The emulator plays a device shape or a scripted stream of reports, so both boxes get the same input.</p>
-    </DocSection>
-
-    <DocSection id="conventions" title="Conventions">
       <div class="table-scroll">
-        <table class="api-params names fixed opts">
+        <table class="api-params names">
           <colgroup>
-            <col class="k" />
+            <col style={{ width: '24%' }} />
             <col />
           </colgroup>
-          <thead><tr><th>Item</th><th>Detail</th></tr></thead>
+          <thead>
+            <tr><th>Item</th><th>Detail</th></tr>
+          </thead>
           <tbody>
-            <tr><td>Times</td><td>The median (p50), unless the test names another figure (p95, sd)</td></tr>
-            <tr><td>Ranges</td><td><code>a-b</code> runs from the lowest value to the highest over what the test covers: runs, hubs, shapes, rates or counts</td></tr>
-            <tr><td>A row</td><td>Both cells come from the same test, settings and timing layer</td></tr>
-            <tr><td>Interval sd</td><td>Timed from usbmon completions, so the PC's interrupt jitter dominates it. The counts of slipped intervals are the steadier relay measure</td></tr>
-            <tr><td>Equal</td><td>The ranges over runs and hubs overlap, or both boxes give the same outcome. Each box gets the same number of runs</td></tr>
-            <tr><td>Mixed</td><td>Ahead on one part of the row and behind on another; the cells say which</td></tr>
-            <tr><td>By design</td><td>The boxes differ by choice, not by a fault</td></tr>
-            <tr><td>Unranked</td><td>The two rigs differ in a way that decides the result; the row says how</td></tr>
+            <tr><td>Firmware</td><td>Stock {RESULTS.firmware.stock}, Medius {RESULTS.firmware.medius}</td></tr>
+            <tr><td>Real device</td><td>A USB device emulator on each box's USB3, presenting the same device and native reports to both</td></tr>
+            <tr><td>Hubs</td><td>One Genesys Logic and one VIA Labs. Where a hub can change a result, both boxes were behind the same hub, or each was behind both</td></tr>
+            <tr><td>PC</td><td>Linux</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </DocSection>
+
+    <DocSection id="rules" title="Rules">
+      <div class="table-scroll">
+        <table class="api-params names">
+          <colgroup>
+            <col style={{ width: '24%' }} />
+            <col />
+          </colgroup>
+          <thead>
+            <tr><th>Rule</th><th>Detail</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Row</td><td>One condition, run on both boxes with the same test, settings, sample size and timing layer</td></tr>
+            <tr><td>Table</td><td>One quantity in one unit</td></tr>
+            <tr><td>Time</td><td>The median (p50), unless the table names another statistic</td></tr>
+            <tr><td>Range</td><td>Lowest to highest over the runs and both hubs. The fainter part of a bar spans it</td></tr>
+            <tr><td>Bar</td><td>Drawn to the largest value in its table, or in its row on the Overview</td></tr>
+            <tr><td>Result</td><td>The box ahead, worked out from the values. The box behind is dimmed</td></tr>
+            <tr><td>Faithful</td><td>Where a test records the native behaviour, the box that matches it is ahead</td></tr>
+            <tr><td>Equal</td><td>The two ranges overlap, or the outcomes match</td></tr>
+            <tr><td>Differs</td><td>The boxes behave differently, and neither is better or no test shows which is faithful</td></tr>
+            <tr><td>Defect</td><td>A fault that reproduces, marked on its row and listed on the Overview</td></tr>
+            <tr><td>Pending</td><td>A test not yet run the same way on both boxes. Listed below, not compared</td></tr>
           </tbody>
         </table>
       </div>
     </DocSection>
 
     <DocSection id="layers" title="Timing layers">
-      <p>Where a row names a timing layer, both its cells were timed there.</p>
       <div class="table-scroll">
-        <table class="api-params names fixed opts">
+        <table class="api-params names">
           <colgroup>
-            <col class="k" />
+            <col style={{ width: '24%' }} />
             <col />
           </colgroup>
-          <thead><tr><th>Layer</th><th>What it sees</th></tr></thead>
+          <thead>
+            <tr><th>Layer</th><th>Detail</th></tr>
+          </thead>
           <tbody>
-            <For each={Object.entries(RESULTS.layers)}>{([k, v]) => <tr><td>{k}</td><td>{v}</td></tr>}</For>
+            <For each={Object.entries(RESULTS.layers)}>
+              {([k, v]) => (
+                <tr><td>{LAYER[k] ?? k}</td><td>{v}</td></tr>
+              )}
+            </For>
           </tbody>
         </table>
       </div>
     </DocSection>
 
     <DocSection id="pending" title="Pending tests">
-      <div class="table-scroll">
-        <table class="api-params names">
-          <thead><tr><th>Test</th></tr></thead>
-          <tbody>
-            <For each={RESULTS.pending}>{(p) => <tr><td>{p.test}</td></tr>}</For>
-          </tbody>
-        </table>
-      </div>
+      <For each={pendingByArea()}>
+        {(a) => (
+          <>
+            <p class="api-response-label">{routeFor(a.page.path)!.title}</p>
+            <ul>
+              <For each={a.tests}>{(x) => <li>{x.test}</li>}</For>
+            </ul>
+          </>
+        )}
+      </For>
     </DocSection>
 
     <DocSection id="data" title="Data">
-      <p>Every result as JSON, whole or a page at a time, in the format the pages are drawn from.</p>
+      <p>The results as JSON, all in one file or split by area.</p>
       <div class="table-scroll">
-        <table class="api-params names fixed vs-files">
+        <table class="api-params names">
           <colgroup>
-            <col class="k" />
+            <col style={{ width: '24%' }} />
             <col />
           </colgroup>
-          <thead><tr><th>File</th><th>Holds</th></tr></thead>
+          <thead>
+            <tr><th>File</th><th>Area</th></tr>
+          </thead>
           <tbody>
-            <tr><td><a href="/comparison.json" download="">comparison.json</a></td><td>Every result, the versions and the rig</td></tr>
+            <tr>
+              <td><a href="/comparison.json" download="">comparison.json</a></td>
+              <td>All</td>
+            </tr>
             <For each={COMPARISON_PAGES.filter((p) => p.categories.length)}>
               {(p) => (
                 <tr>
-                  <td><a href={`${p.path}.json`} download="">{p.path.slice(p.path.lastIndexOf('/') + 1)}.json</a></td>
+                  <td><a class="nw" href={`${p.path}.json`} download="">{p.path.slice(p.path.lastIndexOf('/') + 1)}.json</a></td>
                   <td>{routeFor(p.path)!.title}</td>
                 </tr>
               )}
@@ -108,8 +150,6 @@ const Method: Component = () => (
         </table>
       </div>
     </DocSection>
-
-    <SourceLine path="/comparison/method" bare />
   </>
 );
 

@@ -40,7 +40,7 @@ const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
       { label: 'Overview', href: '/comparison' },
       { label: 'Devices', href: '/comparison/devices' },
       { label: 'Injected motion', href: '/comparison/injection' },
-      { label: 'Capabilities', href: '/comparison/capabilities' },
+      { label: 'Features', href: '/comparison/features' },
       { label: 'Software', href: '/comparison/software' },
       { label: 'Method', href: '/comparison/method' },
     ],

@@ -7,8 +7,9 @@ import { COMPARISON_PAGES, KEY_ROWS, pageFaults, type ComparisonPage } from '../
 import type { Results } from '../../src/app/data/comparison/types';
 import { ROUTES } from '../../src/app/routes';
 
+const value = (v: number) => ({ value: v, src: [{ file: 'a.json', ptr: '/a' }] });
 const DATA: Results = {
-  format: 1,
+  format: 2,
   firmware: { stock: 'V4.094', medius: '3.4.6' },
   rig: 'Two boxes',
   layers: {},
@@ -16,14 +17,22 @@ const DATA: Results = {
     {
       id: 'injection',
       title: 'Injected motion',
-      groups: [
-        { id: 'streams', title: 'Streams', about: 'A stream.', kind: 'rows', rows: [{ id: 'stream-1000', test: '1,000 Hz', stock: '10.8 ms', medius: '1.85 ms', verdict: 'medius' }] },
+      sections: [
+        {
+          id: 'streams', title: 'Streams', about: 'A stream.',
+          tables: [{ kind: 'measure', label: 'Lag', key: 'Rate', unit: 'ms', better: 'lower', rows: [{ id: 'stream-1000', label: '1,000 Hz', stock: value(10.8), medius: value(1.85) }] }],
+        },
       ],
     },
     {
       id: 'devices',
       title: 'Devices',
-      groups: [{ id: 'shapes', title: 'Shapes', about: 'Shapes.', kind: 'rows', rows: [{ id: 'byte-exact', test: 'Byte-exact', stock: '20', medius: '21', verdict: 'medius' }] }],
+      sections: [
+        {
+          id: 'shapes', title: 'Shapes', about: 'Shapes.',
+          tables: [{ kind: 'feature', label: 'Clone', key: 'Shape', rows: [{ id: 'byte-exact', label: 'Byte-exact', stock: 'Yes', medius: 'Yes' }] }],
+        },
+      ],
     },
   ],
   defects: [],
@@ -73,11 +82,11 @@ describe('the comparison guard', () => {
 
   it('fails a section id the site shell already uses', () => {
     const data = structuredClone(DATA);
-    data.categories[1].groups[0].id = 'side';
+    data.categories[1].sections[0].id = 'side';
     expect(pageFaults(data, PAGES, KEYS).join()).toContain('side');
   });
 
-  it("fails a page's own section id that a group of its data also uses", () => {
+  it("fails a page's own section id that a section of its data also uses", () => {
     const pages = PAGES.map((p) => (p.path === '/comparison/devices' ? { ...p, own: ['shapes'] } : p));
     expect(pageFaults(DATA, pages, KEYS).join()).toContain('shapes');
   });

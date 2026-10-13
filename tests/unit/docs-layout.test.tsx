@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeAll, beforeEach, afterEach, onTestFinis
 import { render, cleanup, fireEvent, waitFor } from '@solidjs/testing-library';
 import { PageHeader } from '../../src/app/shell/PageHeader';
 import { createSignal, For } from 'solid-js';
-import { MemoryRouter, Route, createMemoryHistory } from '@solidjs/router';
+import { A, MemoryRouter, Route, createMemoryHistory } from '@solidjs/router';
 import DocsLayout from '../../src/app/pages/DocsLayout';
 import { SiteNav } from '../../src/app/shell/SiteNav';
 import { useScrollPlace } from '../../src/app/shell/scrollPlace';
@@ -66,7 +66,7 @@ const world = (opts: { supported?: boolean; kind?: 'medius' | 'other' | null } =
 const Sections = () => (
   <>
     <section class="doc-section" id="transport" data-search-target><h2 class="doc-h2">Transport</h2><p>opening</p></section>
-    <section class="doc-section" id="intro"><h2 class="doc-h2">Intro</h2><p>first</p></section>
+    <section class="doc-section" id="intro"><h2 class="doc-h2">Intro</h2><p>first <A href="/native/transport/later">later</A></p></section>
     <section class="doc-section" id="frames" data-search-target><h2 class="doc-h2">Frames</h2><p>target</p></section>
     <section class="doc-section" id="later" data-search-target><h2 class="doc-h2">Later</h2><p>below</p></section>
   </>
@@ -642,6 +642,26 @@ describe('DocsLayout scrolling', () => {
     await waitFor(() => expect(jumped).toBe(r.container.querySelector('#later')));
     expect(how).toEqual({ behavior: 'auto', block: 'start' });
     expect(r.container.querySelector('#intro')).toBe(section);
+  });
+
+  it('stays on a place of the same page that a link goes to, after the router scrolls to the top', async () => {
+    const r = mount('/native/transport');
+    await waitFor(() => expect(r.container.querySelector('#later')).not.toBeNull());
+    const log: string[] = [];
+    vi.spyOn(window, 'scrollTo').mockImplementation(() => log.push('top'));
+    vi.spyOn(Element.prototype, 'scrollIntoView').mockImplementation(function (this: Element) {
+      jumped = this;
+      log.push(this.id);
+    });
+    fireEvent.click(r.container.querySelector('#intro a')!);
+    await waitFor(() => expect(log).toContain('later'));
+    await new Promise((done) => setTimeout(done, 50));
+    expect(r.history.get()).toBe('/native/transport/later');
+    expect(log.at(-1)).toBe('later');
+    // Again from the place it names: the address is already shown, and the page still moves there.
+    log.length = 0;
+    fireEvent.click(r.container.querySelector('#intro a')!);
+    await waitFor(() => expect(log).toEqual(['later']));
   });
 
   it("names an item's parent in the page bar and marks it in the sidebar", async () => {

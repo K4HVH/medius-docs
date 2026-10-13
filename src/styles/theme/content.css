@@ -19,12 +19,14 @@
 }
 :is(.byte-table td, .api-params td:first-child, th) code { font-size: 1em; font-weight: inherit; color: inherit; }
 
-/* The label over a table, a code sample or a strip: blue mono caps. */
+/* The label over a table, a code sample or a strip: blue mono caps. A label that wraps needs the leading, and the
+   margins give back its 2.2px above and below (0.2em of 11px), so a one-line label sits where it did at
+   line-height 1. */
 .api-response-label {
-  margin: 28px 0 0; font: 500 11px/1 var(--mono); letter-spacing: 0.16em; text-transform: uppercase;
+  margin: calc(28px - 2.2px) 0 0; font: 500 11px/1.4 var(--mono); letter-spacing: 0.16em; text-transform: uppercase;
   color: var(--accent);
 }
-.api-response-label + :is(p, pre, .table-scroll, .callout, .bytes, ul, ol) { margin-top: 12px; }
+.api-response-label + :is(p, pre, .table-scroll, .stack-box, .callout, .bytes, ul, ol) { margin-top: calc(12px - 2.2px); }
 
 /* A call's signature: one mono strip in a hairline box. */
 pre.api-signature {
@@ -305,75 +307,83 @@ a.fix .arr { width: 11px; height: 11px; margin: 0; }
 .doc nav.index .go h3 { font-size: 28px; }
 
 
-/* Comparison: results as stock against Medius, a pair of bars per point, and the marks a defect leaves. */
-.vs .vs-t { width: 32%; }
-.vs .vs-r { width: 16%; }
-.vs td:first-child { overflow-wrap: break-word; }
-.status.medius::before { background: var(--accent); }
+/* Status marks a comparison adds: the box that's ahead, in its colour. */
 .status.stock::before { background: var(--text); }
-.vs a.vs-d {
-  display: block; margin-top: 6px; font-size: 12.5px; color: var(--text-2); text-decoration: underline;
-  text-decoration-color: var(--bad); text-underline-offset: 4px;
+.status.medius::before { background: var(--accent); }
+a.status { text-decoration: none; }
+a.status:hover { color: var(--text); }
+
+/* Stock against Medius: each box's value in its column, a measure on a bar in the box's colour, and the
+   box that's behind dimmed. */
+/* A box's name and its command: on one line where they fit, the command under the name where they don't. */
+.api-params.pair th .hd { display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: 5px 10px; }
+.api-params.pair th code.cmd {
+  font: 500 11.5px/1 var(--mono); letter-spacing: 0; text-transform: none; white-space: nowrap; overflow-wrap: normal;
+  color: var(--muted);
 }
-.vs a.vs-d:hover { color: var(--text); }
-.doc p.vs-dl { margin-top: 12px; font-size: 13.5px; color: var(--muted); }
-.vs-defects .b { width: 96px; }
-.vs-defects .w { width: 28%; }
-.api-params.vs-defects td { overflow-wrap: normal; }
-.vs-grid :is(th, td) { min-width: 80px; }
-.vs-grid th { white-space: normal; line-height: 1.4; }
-.vs-files .k { width: 40%; }
-.api-params.vs-files td:first-child { overflow-wrap: normal; }
-.pairs-fig { margin: 20px 0 0; }
-.pairs-fig figcaption { margin: 0 0 12px; color: var(--dim); }
-.pairs { display: grid; grid-template-columns: minmax(64px, 120px) 64px minmax(0, 1fr) max-content; gap: 6px 14px; align-items: center; font-size: 13.5px; }
-.pairs .pt { display: contents; }
-.pairs .pt:not(:first-child) > :nth-child(-n + 4) { margin-top: 12px; }
-.pairs .x { grid-row: span 2; align-self: start; font: 500 13px/1.3 var(--mono); color: var(--text-2); }
-.pairs .k { color: var(--muted); }
-.pairs .t { height: 8px; background: var(--line); }
-.pairs .t i { display: block; height: 100%; opacity: 0.8; transform-origin: left; }
-.pairs .t.stock i { background: var(--text-2); }
-.pairs .t.medius i { background: var(--accent); }
-.pairs b { font: 500 13px/1 var(--mono); color: var(--text); text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
-@media (max-width: 480px) {
-  .pairs { grid-template-columns: 56px minmax(0, 1fr) max-content; }
-  .pairs .x { grid-column: 1 / -1; grid-row: auto; }
-  .pairs .pt:not(:first-child) > :nth-child(-n + 4) { margin-top: 0; }
-  .pairs .pt:not(:first-child) > .x { margin-top: 12px; }
-  .vs-files .k { width: 60%; }
+.api-params.pair td.v { overflow-wrap: anywhere; transition: color 0.25s; }
+.api-params.pair td.v code { font-size: 1em; }
+.api-params.pair td.v.behind { color: var(--dim); }
+.api-params.pair td.stock { --c: var(--text-2); }
+.api-params.pair td.medius { --c: var(--accent); }
+.api-params.pair td.v.behind .t i { opacity: 0.3; }
+.api-params.pair td.v.behind .t i.hi { opacity: 0.12; }
+.api-params.pair td.res { white-space: nowrap; }
+.api-params.pair td.res .status { display: flex; }
+.api-params.pair td.res .status + .status { margin-top: 6px; }
+.api-params.pair em { font-style: normal; color: var(--dim); }
+/* A comparison table and the commands over it, in a box whose width, not the screen's, decides whether the
+   rows stack: beside the docs sidebar a table is narrower than the screen suggests. */
+.stack-box { container: stack / inline-size; margin-top: 20px; }
+.stack-box > .table-scroll { margin-top: 0; }
+/* The same columns in every table, so tables one under another line up. */
+@container stack (min-width: 660px) {
+  .api-params.pair { table-layout: fixed; }
+  .api-params.pair th:first-child { width: 36%; }
+  .api-params.pair th.res { width: 132px; }
+  .api-params.pair td:first-child { overflow-wrap: break-word; }
 }
-/* A table that stacks on a phone keeps its headers for a screen reader, out of sight; its first cell loses
-   the hover edge, which would sit on its first letter. */
+/* A value and its bar: the number at the left like any other value, and the bar under it, starting at the
+   cell's edge, so bars in one column compare. */
+.meter { display: flex; flex-direction: column; gap: 6px; }
+.meter .n { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.meter .t { position: relative; }
+.meter .t i { position: absolute; top: 0; bottom: 0; left: 0; }
+.meter .t i.hi { opacity: 0.35; }
+/* The commands each box was sent: in the column heads, and on a phone, whose rows hide the heads, under the
+   table's label. */
+.pair-cmds { display: none; margin: 0 0 10px; color: var(--dim); }
+.pair-cmds code { margin-right: 14px; font: 500 11.5px/1 var(--mono); text-transform: none; letter-spacing: 0; color: var(--muted); }
+
+/* A table that stacks when narrow: each row's first cell leads, a cell with a data-label gets a line under it,
+   named, and any other sits at the right of the first line. The headers stay for a screen reader, out of
+   sight, and the names aren't read twice. The device list stacks on a phone; a comparison table when its box
+   is narrow. */
 @media (max-width: 700px) {
-  :is(.vs, .vs-grid, .compat) colgroup { display: none; }
-  :is(.vs, .vs-grid, .compat) thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-  :is(.vs, .vs-grid, .compat) tbody tr:hover td:first-child { box-shadow: none; }
+  .compat thead { position: absolute; top: 0; left: 0; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .table-scroll:has(> .compat) { position: relative; }
+  .compat colgroup { display: none; }
+  .compat tbody tr:hover td:first-child { box-shadow: none; }
 }
-@media (max-width: 480px) {
-  .vs-defects colgroup { display: none; }
-  .vs-defects thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-  .vs-defects tbody tr:hover td:first-child { box-shadow: none; }
-}
-/* On a phone a result stacks: the test, then stock and Medius side by side, then the result. A grid row stacks
-   the same way, its first cell over the rest, each named by its column. */
-@media (max-width: 700px) {
-  :is(.vs, .vs-grid) tbody tr { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px 14px; padding: 12px 14px; border-bottom: 1px solid var(--line); }
-  :is(.vs, .vs-grid) tbody tr:last-child { border-bottom: 0; }
-  :is(.vs, .vs-grid) td { min-width: 0; padding: 0; border: 0; }
-  .vs td:nth-child(1), .vs td:nth-child(4), .vs-grid td:first-child { grid-column: 1 / -1; }
-  :is(.vs td:nth-child(2), .vs td:nth-child(3), .vs-grid td[data-label])::before {
-    display: block; margin-bottom: 2px; font: 500 10.5px/1.4 var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--dim);
+@container stack (max-width: 659px) {
+  .stacked thead { position: absolute; top: 0; left: 0; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .table-scroll:has(> .stacked) { position: relative; }
+  .stacked tbody tr:hover td:first-child { box-shadow: none; }
+  .pair-cmds { display: block; }
+  .api-params.stacked tbody tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 12px; padding: 12px 14px; border-bottom: 1px solid var(--line); }
+  .api-params.stacked tbody tr:last-child { border-bottom: 0; }
+  .api-params.stacked td { width: auto; min-width: 0; padding: 0; border: 0; }
+  .api-params.stacked td:first-child { grid-column: 1; }
+  .api-params.stacked td:not(:first-child):not([data-label]) { grid-column: 2; grid-row: 1; justify-self: end; }
+  .api-params.stacked td[data-label] { grid-column: 1 / -1; display: flex; align-items: baseline; gap: 12px; }
+  .api-params.stacked td[data-label]::before {
+    content: attr(data-label) / ""; flex: none; min-width: 56px;
+    font: 500 10.5px/1.4 var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--dim);
   }
-  .vs td:nth-child(2)::before { content: "Stock"; }
-  .vs td:nth-child(3)::before { content: "Medius"; }
-  .vs-grid td[data-label]::before { content: attr(data-label); }
-}
-/* On a phone a defect's area goes under it. */
-@media (max-width: 480px) {
-  .vs-defects tbody tr { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 6px 12px; padding: 12px; border-bottom: 1px solid var(--line); }
-  .vs-defects tbody tr:last-child { border-bottom: 0; }
-  .vs-defects td { padding: 0; border: 0; }
-  .vs-defects td:nth-child(3) { grid-column: 2; }
-  .vs-defects td:nth-child(3):empty { display: none; }
+  .api-params.stacked td[data-label] > .meter { flex: 1; min-width: 0; }
+  /* A cell of prose takes the line under its name. */
+  .api-params.stacked td.long[data-label] { display: block; }
+  .api-params.stacked td.long[data-label]::before { display: block; margin-bottom: 4px; }
+  .api-params.settings td[data-label] { flex-wrap: wrap; gap: 4px 12px; }
+  .api-params.settings td[data-label]::before { width: 100%; }
 }

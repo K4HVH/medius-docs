@@ -70,6 +70,22 @@ describe('DocSection', () => {
     expect(s.querySelector('.doc-caption')!.textContent).toBe('4 bytes');
   });
 
+  it('keeps the last word on the copy-link icon line', () => {
+    const r = mount('/native', () => (
+      <>
+        <DocSection id="pending" title="Pending tests">x</DocSection>
+        <DocSection id="snap" title="MediusCountersSnapshot">y</DocSection>
+        <DocSection id="allow" title="allow_imperfect_clones">z</DocSection>
+      </>
+    ));
+    const last = [...r.container.querySelectorAll('.doc-last')];
+    expect(last.map((l) => l.firstChild!.textContent)).toEqual(['tests', 'Snapshot', 'clones']);
+    expect(last.every((l) => l.querySelector('button.cl'))).toBe(true);
+    // Chromium breaks at a <wbr> even in nowrap text.
+    expect(last.some((l) => l.querySelector('wbr'))).toBe(false);
+    expect([...r.container.querySelectorAll('.doc-t')].map((t) => t.textContent)).toEqual(['Pending tests', 'MediusCountersSnapshot', 'allow_imperfect_clones']);
+  });
+
   it('is not a search target without an id', () => {
     const r = mount('/native', () => <DocSection title="Notes">x</DocSection>);
     expect(r.container.querySelector('section')!.hasAttribute('data-search-target')).toBe(false);
