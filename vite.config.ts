@@ -10,6 +10,22 @@ import { handleOg } from './server/og';
 import { createStock } from './server/stock';
 import { cardFor } from './server/items';
 import type { SearchIndex } from './src/app/search/types';
+import { comparisonFiles } from './src/app/data/comparison/files';
+
+// The Comparison downloads under the dev server, as the prerender writes them into the build.
+function comparisonData(): Plugin {
+  return {
+    name: 'comparison-data',
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        const body = req.url ? comparisonFiles().get(req.url.split('?')[0]) : undefined;
+        if (body === undefined) return next();
+        res.setHeader('content-type', 'application/json; charset=utf-8');
+        res.end(body);
+      });
+    },
+  };
+}
 
 // Serve the firmware proxy under the dev server, mirroring serve.ts in prod.
 function firmwareApi(): Plugin {
@@ -222,7 +238,7 @@ export default defineConfig(({ mode }) => {
   process.env.GITHUB_REPO = process.env.GITHUB_REPO ?? env.GITHUB_REPO;
 
   return {
-    plugins: [firmwareApi(), statsApi(), homeApi(), stockApi(), linkCards(), searchIndex(), agentDocs(), devtools(), solidPlugin()],
+    plugins: [firmwareApi(), statsApi(), homeApi(), stockApi(), comparisonData(), linkCards(), searchIndex(), agentDocs(), devtools(), solidPlugin()],
     root: 'src',
     publicDir: '../public',
     // The devtools plugin adds this import itself, past the dependency scan, and a dev server with a cold

@@ -35,6 +35,17 @@ const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
     ],
   },
   {
+    title: 'Comparison',
+    links: [
+      { label: 'Overview', href: '/comparison' },
+      { label: 'Devices', href: '/comparison/devices' },
+      { label: 'Injected motion', href: '/comparison/injection' },
+      { label: 'Capabilities', href: '/comparison/capabilities' },
+      { label: 'Software', href: '/comparison/software' },
+      { label: 'Method', href: '/comparison/method' },
+    ],
+  },
+  {
     title: 'Community',
     links: [
       { label: 'Discord', href: LINKS.discord },

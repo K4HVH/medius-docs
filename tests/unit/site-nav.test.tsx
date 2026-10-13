@@ -59,7 +59,7 @@ afterEach(() => {
 });
 
 describe('SiteNav', () => {
-  it('links the wordmark, the four sections and Install', () => {
+  it('links the wordmark, the five sections and Install', () => {
     const r = mount();
     const hrefs = [...r.container.querySelectorAll('a')].map((a) => [a.textContent?.trim(), a.getAttribute('href')]);
     expect(hrefs).toEqual([
@@ -67,12 +67,15 @@ describe('SiteNav', () => {
       ['Guide', '/guide'],
       ['Docs', '/native'],
       ['Dashboard', '/dashboard'],
+      ['Comparison', '/comparison'],
       ['Changelog', '/dashboard/changelog'],
       ['Install', '/guide'],
     ]);
   });
 
   it('marks the section you are in', () => {
+    expect(mount('/comparison/injection').link('Comparison').getAttribute('aria-current')).toBe('page');
+    cleanup();
     expect(mount('/library/inject').link('Docs').getAttribute('aria-current')).toBe('page');
     cleanup();
     expect(mount('/bindings/python/api').link('Docs').getAttribute('aria-current')).toBe('page');

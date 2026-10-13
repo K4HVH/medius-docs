@@ -1,0 +1,1734 @@
+{
+  "format": 1,
+  "firmware": {
+    "stock": "V4.094",
+    "medius": "3.4.6"
+  },
+  "rig": "A Linux PC, each box fed by a USB device emulator on its USB3, each measured behind both of the rig's hubs where a hub could change the result",
+  "layers": {
+    "wire": "USB packets on the PC's bus, timed by the kernel's usbmon",
+    "usbfs": "Transfers a program reads through the kernel's USB file system",
+    "evdev": "Input events, timed by the kernel as they arrive"
+  },
+  "categories": [
+    {
+      "id": "devices",
+      "title": "Devices",
+      "groups": [
+        {
+          "id": "shapes",
+          "title": "Device shapes",
+          "about": "The emulator presented 56 USB device shapes to both boxes. Each clone's descriptors were read on the PC and compared with the device's where the shape was written for the test, and with the other box's clone otherwise.",
+          "kind": "rows",
+          "label": "Shape",
+          "rows": [
+            {
+              "id": "shapes-cloned-of-56",
+              "test": "Shapes cloned, of 56",
+              "stock": "55, 14 of them changed",
+              "medius": "41 exact, 15 refused; 52 with imperfect clones on",
+              "verdict": "mixed"
+            },
+            {
+              "id": "byte-exact-21-authored-shapes",
+              "test": "Byte-exact, 21 authored shapes",
+              "stock": "20",
+              "medius": "21",
+              "verdict": "medius"
+            },
+            {
+              "id": "other-34-shapes-mice-keyboards-composites-xinput",
+              "test": "Other 34 shapes (mice, keyboards, composites, XInput, CDC, alt settings, slow and refused descriptors)",
+              "stock": "Exact",
+              "medius": "Exact",
+              "verdict": "equal"
+            },
+            {
+              "id": "six-in-endpoints-on-two-interfaces",
+              "test": "Six IN endpoints on two interfaces",
+              "stock": "Interface 1 and its 5 endpoints removed",
+              "medius": "Refused; imperfect on: exact",
+              "verdict": "mixed"
+            },
+            {
+              "id": "interface-with-a-second-control-endpoint",
+              "test": "Interface with a second control endpoint",
+              "stock": "Interface removed",
+              "medius": "Exact",
+              "verdict": "medius"
+            },
+            {
+              "id": "hid-endpoint-declaring-65-b",
+              "test": "HID endpoint declaring 65 B",
+              "stock": "Presented as 64 B",
+              "medius": "Refused",
+              "verdict": "mixed"
+            },
+            {
+              "id": "vendor-endpoint-declaring-1024-b",
+              "test": "Vendor endpoint declaring 1,024 B",
+              "stock": "Presented as 64 B",
+              "medius": "Refused",
+              "verdict": "mixed"
+            },
+            {
+              "id": "report-descriptor-of-1500-b",
+              "test": "Report descriptor of 1,500 B",
+              "stock": "Not served; no HID driver binds",
+              "medius": "Exact (served to 2,048 B)",
+              "verdict": "medius"
+            },
+            {
+              "id": "report-descriptor-declared-3000-b-device-serves",
+              "test": "Report descriptor declared 3,000 B, device serves 50",
+              "stock": "Serves 3,000 B: the device's 50, then zeros",
+              "medius": "Refused; imperfect on: cloned",
+              "verdict": "mixed"
+            },
+            {
+              "id": "wooting-60he-shape-5-interfaces",
+              "test": "Wooting 60HE+ shape (5 interfaces)",
+              "stock": "Exact; 5th interface sends nothing",
+              "medius": "Refused; imperfect on: exact, 5th at 1,154/s",
+              "verdict": "medius"
+            },
+            {
+              "id": "five-in-endpoints-9-alternate-settings-interface",
+              "test": "Five IN endpoints, 9 alternate settings, interface 12",
+              "stock": "Exact",
+              "medius": "Refused; imperfect on: exact",
+              "verdict": "stock"
+            },
+            {
+              "id": "isochronous-vendor-bulk-hid-with-bulk-in",
+              "test": "Isochronous, vendor bulk, HID with bulk IN",
+              "stock": "Cloned",
+              "medius": "Refused; imperfect on: cloned",
+              "verdict": "stock"
+            },
+            {
+              "id": "in-endpoint-0x87",
+              "test": "IN endpoint 0x87",
+              "stock": "Cloned",
+              "medius": "Refused",
+              "verdict": "stock"
+            },
+            {
+              "id": "2083-byte-configuration",
+              "test": "2,083-byte configuration",
+              "stock": "Refused",
+              "medius": "Refused",
+              "verdict": "equal"
+            }
+          ]
+        },
+        {
+          "id": "intervals",
+          "title": "Endpoint interval",
+          "about": "The interval each clone declares for its endpoints, which sets how often the PC polls it, against the device's.",
+          "kind": "rows",
+          "rows": [
+            {
+              "id": "mouse-endpoint-interval-8-shapes-10-8",
+              "test": "Mouse endpoint interval (8 shapes: 10, 8 and 4 ms)",
+              "stock": "Rewritten to 1 ms",
+              "medius": "Device's value",
+              "verdict": "medius"
+            },
+            {
+              "id": "device-reporting-every-1-ms-behind-a",
+              "test": "Device reporting every 1 ms behind a 10 ms endpoint",
+              "stock": "PC gets 1,000 reports/s",
+              "medius": "PC gets 125/s, as from the device",
+              "verdict": "medius"
+            }
+          ]
+        },
+        {
+          "id": "endpoint-0",
+          "title": "Endpoint 0",
+          "about": "Requests the PC sends on endpoint 0, the control channel every USB device has, answered through each clone.",
+          "kind": "rows",
+          "label": "Request",
+          "rows": [
+            {
+              "id": "hid-class-descriptor-request",
+              "test": "HID class descriptor request",
+              "stock": "STALL",
+              "medius": "Device's answer",
+              "verdict": "medius"
+            },
+            {
+              "id": "other-endpoint-0-requests-32",
+              "test": "Other endpoint 0 requests (32)",
+              "stock": "Device's answers",
+              "medius": "Device's answers",
+              "verdict": "equal"
+            },
+            {
+              "id": "endpoint-0-at-8-16-32-b",
+              "test": "Endpoint 0 at 8/16/32 B, strings",
+              "stock": "Exact",
+              "medius": "Exact",
+              "verdict": "equal"
+            },
+            {
+              "id": "endpoint-0-answer-time-p50",
+              "test": "Endpoint 0 answer time (p50)",
+              "stock": "0.46-0.82 ms",
+              "medius": "0.12-0.43 ms",
+              "verdict": "medius"
+            }
+          ]
+        },
+        {
+          "id": "clone-time",
+          "title": "New device",
+          "about": "The time from a device the box hasn't seen being plugged in to its clone on the PC.",
+          "kind": "rows",
+          "rows": [
+            {
+              "id": "clone-time-new-device-8-shapes",
+              "test": "Clone time, new device (8 shapes)",
+              "stock": "0.76-1.01 s",
+              "medius": "0.96-1.19 s",
+              "verdict": "stock",
+              "note": "Includes each rig's hub"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "passthrough",
+      "title": "Passthrough",
+      "groups": [
+        {
+          "id": "relayed-reports",
+          "title": "Relayed reports",
+          "about": "A device's reports relayed with no program driving the box: whether each arrives unchanged, once and in order.",
+          "kind": "rows",
+          "rows": [
+            {
+              "id": "report-bytes-all-relay-legs",
+              "test": "Report bytes, all relay legs",
+              "stock": "Unchanged",
+              "medius": "Unchanged",
+              "verdict": "equal"
+            },
+            {
+              "id": "reports-dropped-duplicated-reordered",
+              "test": "Reports dropped, duplicated, reordered",
+              "stock": "0",
+              "medius": "0",
+              "verdict": "equal"
+            },
+            {
+              "id": "reports-the-box-adds-no-injection",
+              "test": "Reports the box adds, no injection",
+              "stock": "None",
+              "medius": "None",
+              "verdict": "equal"
+            },
+            {
+              "id": "keyboard-relay-1-khz-125-hz-bursts",
+              "test": "Keyboard relay, 1 kHz / 125 Hz / bursts: dropped, duplicated, reordered, changed",
+              "stock": "0",
+              "medius": "0",
+              "verdict": "equal"
+            }
+          ]
+        },
+        {
+          "id": "relay-timing",
+          "title": "Relay timing",
+          "about": "The spacing of relayed reports at each report rate, and the clone's report timed against the box's control-port event for the same press.",
+          "kind": "rows",
+          "rows": [
+            {
+              "id": "500-hz-2-min-intervals-outside-10",
+              "test": "500 Hz, 2 min: intervals outside ±10% / gaps over 1.5x",
+              "stock": "348 / 110",
+              "medius": "53 / 2",
+              "verdict": "medius"
+            },
+            {
+              "id": "1-khz-bursts-interval-sd",
+              "test": "1 kHz / bursts: interval sd",
+              "stock": "7.5-7.7 / 4.2-15.8 µs",
+              "medius": "4.8-7.2 / 6.4-10.2 µs",
+              "verdict": "equal"
+            },
+            {
+              "id": "250-125-hz-interval-sd",
+              "test": "250 / 125 Hz: interval sd",
+              "stock": "12-43 / 20-46 µs",
+              "medius": "12-41 / 23-28 µs",
+              "verdict": "equal"
+            },
+            {
+              "id": "keyboard-relay-interval-sd-1-khz-125",
+              "test": "Keyboard relay interval sd, 1 kHz / 125 Hz",
+              "stock": "5.7-7.3 / 26.9-28.2 µs",
+              "medius": "5.0-6.7 / 25.5-26.6 µs",
+              "verdict": "equal"
+            },
+            {
+              "id": "relay-delay-against-control-event-p50-sd",
+              "test": "Relay delay against control event (p50 / sd)",
+              "stock": "0.56-0.60 ms / 297-300 µs",
+              "medius": "0.12-0.13 ms / 88-91 µs",
+              "verdict": "medius",
+              "note": "Timed against each box's control-port event for the same button edge, which assumes both send it at the same point"
+            }
+          ]
+        },
+        {
+          "id": "reads-while-injecting",
+          "title": "Native report rate",
+          "about": "How often each box reads the device while it injects moves, for a mouse whose motion varies and one whose motion is constant or alternates.",
+          "kind": "rows",
+          "rows": [
+            {
+              "id": "device-reports-taken-while-injecting-varying-mouse",
+              "test": "Device reports taken while injecting, varying mouse",
+              "stock": "370-480/s of 1,000",
+              "medius": "1,000/s",
+              "verdict": "medius"
+            },
+            {
+              "id": "device-reports-taken-while-injecting-constant-or",
+              "test": "Device reports taken while injecting, constant or alternating mouse",
+              "stock": "991-1,000/s",
+              "medius": "1,000/s",
+              "verdict": "equal"
+            }
+          ]
+        },
+        {
+          "id": "pc-requests",
+          "title": "PC and device",
+          "about": "What the PC does to the clone and whether the device sees it; what the device does and whether the PC sees it.",
+          "kind": "rows",
+          "label": "Request",
+          "rows": [
+            {
+              "id": "set-protocol-boot-reaches-the-device",
+              "test": "SET_PROTOCOL(boot) reaches the device",
+              "stock": "Yes",
+              "medius": "Yes",
+              "verdict": "equal"
+            },
+            {
+              "id": "pc-bus-reset-resets-the-device-sees",
+              "test": "PC bus reset, resets the device sees",
+              "stock": "2",
+              "medius": "1",
+              "verdict": "medius"
+            },
+            {
+              "id": "pc-restart-port-cycle-resets-the-device",
+              "test": "PC restart (port cycle), resets the device sees",
+              "stock": "2",
+              "medius": "1",
+              "verdict": "medius"
+            },
+            {
+              "id": "pc-halts-the-interrupt-in",
+              "test": "PC halts the interrupt IN",
+              "stock": "Device sees set and clear",
+              "medius": "Device sees set and clear",
+              "verdict": "equal"
+            },
+            {
+              "id": "device-stalls-its-interrupt-in",
+              "test": "Device STALLs its interrupt IN",
+              "stock": "PC sees the STALL; device halted until the PC clears",
+              "medius": "Box clears the device; PC never sees it",
+              "verdict": "stock"
+            },
+            {
+              "id": "set-interface-to-a-streaming-setting",
+              "test": "SET_INTERFACE to a streaming setting",
+              "stock": "Device follows; packets reach the PC",
+              "medius": "Device follows; packets reach the PC",
+              "verdict": "equal"
+            },
+            {
+              "id": "set-configuration-second",
+              "test": "SET_CONFIGURATION to the device's second configuration",
+              "stock": "Clone disconnects; back in configuration 1",
+              "medius": "Device follows; packets reach the PC",
+              "verdict": "medius"
+            },
+            {
+              "id": "zero-length-packets-from-the-device",
+              "test": "Zero-length packets from the device",
+              "stock": "Relayed",
+              "medius": "Relayed",
+              "verdict": "equal"
+            },
+            {
+              "id": "keyboard-led-hid-out-vendor-in-stream",
+              "test": "Keyboard LED, HID OUT, vendor IN stream",
+              "stock": "Pass",
+              "medius": "Pass",
+              "verdict": "equal"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "injection",
+      "title": "Injected motion",
+      "groups": [
+        {
+          "id": "move-latency",
+          "title": "Move latency",
+          "about": "One move sent with each box's default command and with the command that skips smoothing, timed from the command to the report completing the move.",
+          "kind": "rows",
+          "label": "Move",
+          "rows": [
+            {
+              "id": "move-1-count-mouse-at-rest",
+              "test": "1 count, mouse at rest",
+              "stock": "km.move 64.3 ms; km.move_now 4.33 ms",
+              "medius": "MOVE 1.02 ms; MOVE now 1.04 ms",
+              "verdict": "medius"
+            },
+            {
+              "id": "move-50-counts-mouse-at-rest",
+              "test": "50 counts, mouse at rest",
+              "stock": "km.move 64.3 ms, 43 reports; km.move_now 4.30 ms, 4 reports",
+              "medius": "MOVE 0.98 ms, 1 report; MOVE now 1.01 ms, 1 report",
+              "verdict": "medius"
+            },
+            {
+              "id": "move-1-count-mouse-at-1-khz",
+              "test": "1 count, mouse at 1 kHz",
+              "stock": "km.move 71.7 ms; km.move_now 11.7 ms",
+              "medius": "MOVE 4.32 ms; MOVE now 1.27 ms",
+              "verdict": "medius"
+            },
+            {
+              "id": "move-50-counts-mouse-at-1-khz",
+              "test": "50 counts, mouse at 1 kHz",
+              "stock": "km.move 71.7 ms, 43 reports; km.move_now 11.8 ms, 4 reports",
+              "medius": "MOVE 13.8 ms, 9 reports; MOVE now 1.26 ms, 1 report",
+              "verdict": "mixed"
+            },
+            {
+              "id": "move-1-count-125-hz-mouse",
+              "test": "1 count, 125 Hz mouse",
+              "stock": "km.move 7.59 ms; km.move_now 4.31 ms",
+              "medius": "MOVE 6.08 ms; MOVE now 4.78 ms",
+              "verdict": "mixed"
+            },
+            {
+              "id": "move-50-counts-125-hz-mouse",
+              "test": "50 counts, 125 Hz mouse",
+              "stock": "km.move 7.17 ms, 7 reports; km.move_now 4.39 ms, 4 reports",
+              "medius": "MOVE 13.8 ms, 2 reports; MOVE now 5.25 ms, 1 report",
+              "verdict": "stock"
+            }
+          ]
+        },
+        {
+          "id": "streams",
+          "title": "Command streams",
+          "about": "A steady stream of one-count moves at each rate, on each box's defaults. The lag is from each command to the report carrying its count.",
+          "kind": "rows",
+          "label": "Rate",
+          "rows": [
+            {
+              "id": "stream-1000-hz",
+              "test": "1,000 Hz",
+              "stock": {
+                "text": "10.8 ms",
+                "value": 10.8,
+                "unit": "ms"
+              },
+              "medius": {
+                "text": "1.85 ms",
+                "value": 1.85,
+                "unit": "ms"
+              },
+              "verdict": "medius"
+            },
+            {
+              "id": "stream-500-hz",
+              "test": "500 Hz",
+              "stock": {
+                "text": "11.8 ms",
+                "value": 11.8,
+                "unit": "ms"
+              },
+              "medius": {
+                "text": "1.76 ms",
+                "value": 1.76,
+                "unit": "ms"
+              },
+              "verdict": "medius"
+            },
+            {
+              "id": "stream-250-hz",
+              "test": "250 Hz",
+              "stock": {
+                "text": "12.1 ms",
+                "value": 12.1,
+                "unit": "ms"
+              },
+              "medius": {
+                "text": "3.88 ms",
+                "value": 3.88,
+                "unit": "ms"
+              },
+              "verdict": "medius"
+            },
+            {
+              "id": "stream-125-hz",
+              "test": "125 Hz",
+              "stock": {
+                "text": "15.6 ms",
+                "value": 15.6,
+                "unit": "ms"
+              },
+              "medius": {
+                "text": "8.47 ms",
+                "value": 8.47,
+                "unit": "ms"
+              },
+              "verdict": "medius"
+            },
+            {
+              "id": "stream-60-hz",
+              "test": "60 Hz",
+              "stock": {
+                "text": "24.6 ms",
+                "value": 24.6,
+                "unit": "ms"
+              },
+              "medius": {
+                "text": "16.4 ms",
+                "value": 16.4,
+                "unit": "ms"
+              },
+              "verdict": "medius"
+            },
+            {
+              "id": "stream-30-hz",
+              "test": "30 Hz",
+              "stock": {
+                "text": "33.6 ms",
+                "value": 33.6,
+                "unit": "ms"
+              },
+              "medius": {
+                "text": "16.7 ms",
+                "value": 16.7,
+                "unit": "ms"
+              },
+              "verdict": "medius"
+            },
+            {
+              "id": "stream-fastest-setting-30-1000-hz",
+              "test": "Fastest setting, 30-1,000 Hz",
+              "stock": "Interpolation 0: 4.3-11.6 ms",
+              "medius": "Spread 0: 0.46-1.29 ms",
+              "verdict": "medius"
+            }
+          ],
+          "chart": {
+            "label": "Lag per count, p50",
+            "unit": "ms",
+            "points": [
+              {
+                "x": "1,000 Hz",
+                "stock": 10.8,
+                "medius": 1.85
+              },
+              {
+                "x": "500 Hz",
+                "stock": 11.8,
+                "medius": 1.76
+              },
+              {
+                "x": "250 Hz",
+                "stock": 12.1,
+                "medius": 3.88
+              },
+              {
+                "x": "125 Hz",
+                "stock": 15.6,
+                "medius": 8.47
+              },
+              {
+                "x": "60 Hz",
+                "stock": 24.6,
+                "medius": 16.4
+              },
+              {
+                "x": "30 Hz",
+                "stock": 33.6,
+                "medius": 16.7
+              }
+            ]
+          }
+        },
+        {
+          "id": "emitted-reports",
+          "title": "Emitted reports",
+          "about": "The reports each box emits while it pays out injected motion, against the reports the device sent.",
+          "kind": "rows",
+          "rows": [
+            {
+              "id": "reports-the-box-adds-while-paying-out",
+              "test": "Reports the box adds while paying out a move",
+              "stock": "Empty report every poll (63 per 1-count move)",
+              "medius": "None",
+              "verdict": "medius"
+            },
+            {
+              "id": "reports-in-2-s-at-125-hz",
+              "test": "Reports in 2 s at 125 Hz",
+              "stock": "2,008 (1,758 empty)",
+              "medius": "251 (1 empty)",
+              "verdict": "medius"
+            },
+            {
+              "id": "reports-reaching-the-pc-injecting-1-khz",
+              "test": "Reports reaching the PC, injecting 1 kHz into a 125 Hz mouse",
+              "stock": "2,072 in 2.5 s (device sent 312)",
+              "medius": "313 (device sent 313)",
+              "verdict": "medius"
+            }
+          ]
+        },
+        {
+          "id": "smoothing",
+          "title": "Smoothing settings",
+          "about": "Each smoothing setting alone: stock's interpolation and Medius's render and spread, timed from the command to the report.",
+          "kind": "grid",
+          "columns": [
+            "Setting",
+            "1 count, at rest",
+            "100 counts, at rest",
+            "1 kHz stream: lag / empty",
+            "125 Hz stream: lag / empty",
+            "1 count, mouse moving"
+          ],
+          "rows": [
+            {
+              "id": "smoothing-stock-interpolation-auto-default",
+              "cells": [
+                "Stock, interpolation AUTO (default)",
+                "64.2 ms; 1 report + 63 empty",
+                "5.1-64.1 ms; 53 reports of 1-3, 11 empty",
+                "11.4 ms / 33",
+                "15.6 ms / 1,757",
+                {
+                  "text": "11.1 ms",
+                  "value": 11.1,
+                  "unit": "ms"
+                }
+              ]
+            },
+            {
+              "id": "smoothing-stock-interpolation-0",
+              "cells": [
+                "Stock, interpolation 0",
+                "4.3 ms; 1 report + 3 empty",
+                "1.3-4.3 ms; 4 reports",
+                "11.6 ms / 32",
+                "4.5 ms / 750",
+                {
+                  "text": "11.6 ms",
+                  "value": 11.6,
+                  "unit": "ms"
+                }
+              ]
+            },
+            {
+              "id": "smoothing-stock-interpolation-25",
+              "cells": [
+                "Stock, interpolation 25",
+                "5.1 ms; 1 report + 4 empty",
+                "1.3-5.2 ms; 5 reports",
+                "12.3 ms / 80",
+                "5.0 ms / 1,001",
+                {
+                  "text": "12.6 ms",
+                  "value": 12.6,
+                  "unit": "ms"
+                }
+              ]
+            },
+            {
+              "id": "smoothing-stock-interpolation-50",
+              "cells": [
+                "Stock, interpolation 50",
+                "17.1 ms; 1 report + 16 empty",
+                "2.3-17.3 ms; 16 reports, 1 empty",
+                "24.3 ms / 529",
+                "25.1 ms / 1,767",
+                {
+                  "text": "24.7 ms",
+                  "value": 24.7,
+                  "unit": "ms"
+                }
+              ]
+            },
+            {
+              "id": "smoothing-stock-interpolation-100",
+              "cells": [
+                "Stock, interpolation 100",
+                "65.2 ms; 1 report + 64 empty",
+                "5.2-65.2 ms; 54 reports of 1-3, 11 empty",
+                "72.7 ms / 1,110",
+                "73.1 ms / 1,815",
+                {
+                  "text": "26.9 ms",
+                  "value": 26.9,
+                  "unit": "ms"
+                }
+              ]
+            },
+            {
+              "id": "smoothing-medius-render-despiked-default",
+              "cells": [
+                "Medius, render DESPIKED (default)",
+                "0.97 ms; 1 report",
+                "1.03 ms; 1 report",
+                "2.41 ms / 0",
+                "8.09 ms / 1",
+                {
+                  "text": "4.00 ms",
+                  "value": 4,
+                  "unit": "ms"
+                }
+              ]
+            },
+            {
+              "id": "smoothing-medius-render-stock",
+              "cells": [
+                "Medius, render STOCK",
+                "1.01 ms; 1 report",
+                "0.98 ms; 1 report",
+                "2.48 ms / 0",
+                "7.96 ms / 1",
+                {
+                  "text": "6.07 ms",
+                  "value": 6.07,
+                  "unit": "ms"
+                }
+              ]
+            },
+            {
+              "id": "smoothing-medius-render-unsmoothed",
+              "cells": [
+                "Medius, render UNSMOOTHED",
+                "1.07 ms; 1 report",
+                "0.93 ms; 1 report",
+                "2.26 ms / 0",
+                "8.38 ms / 1",
+                {
+                  "text": "1.96 ms",
+                  "value": 1.96,
+                  "unit": "ms"
+                }
+              ]
+            },
+            {
+              "id": "smoothing-medius-render-despiked-full",
+              "cells": [
+                "Medius, render DESPIKED, full",
+                "0.92 ms; 1 report",
+                "0.99 ms; 1 report",
+                "1.67 ms / 0",
+                "7.67 ms / 1",
+                {
+                  "text": "4.10 ms",
+                  "value": 4.1,
+                  "unit": "ms"
+                }
+              ]
+            },
+            {
+              "id": "smoothing-medius-render-off",
+              "cells": [
+                "Medius, render OFF",
+                "0.93 ms; 1 report",
+                "0.87 ms; 1 report",
+                "2.39 ms / 0",
+                "7.62 ms / 1",
+                {
+                  "text": "1.20 ms",
+                  "value": 1.2,
+                  "unit": "ms"
+                }
+              ]
+            },
+            {
+              "id": "smoothing-medius-render-off-spread-0",
+              "cells": [
+                "Medius, render OFF, spread 0",
+                "1.08 ms; 1 report",
+                "1.00 ms; 1 report",
+                "1.39 ms / 0",
+                "1.29 ms / 1",
+                {
+                  "text": "2.05 ms",
+                  "value": 2.05,
+                  "unit": "ms"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "totals",
+          "title": "Totals",
+          "about": "Whether every injected count reaches the PC, no more and no fewer, with the mouse still and moving.",
+          "kind": "rows",
+          "rows": [
+            {
+              "id": "400-sparse-moves-mouse-moving",
+              "test": "400 sparse moves, mouse moving",
+              "stock": "400/400",
+              "medius": "400/400; 401/400 on the 125 Hz mouse",
+              "verdict": "stock"
+            },
+            {
+              "id": "2000-moves-at-1-khz",
+              "test": "2,000 moves at 1 kHz",
+              "stock": "2,000/2,000 (1,999 once)",
+              "medius": "2,000/2,000 (1,999 once)",
+              "verdict": "equal"
+            },
+            {
+              "id": "steady-injection-varying-mouse",
+              "test": "Steady injection, varying mouse",
+              "stock": "0.03-0.3% short",
+              "medius": "Exact",
+              "verdict": "medius"
+            },
+            {
+              "id": "4-s-at-500-30-hz",
+              "test": "4 s at 500-30 Hz",
+              "stock": "Exact",
+              "medius": "Exact",
+              "verdict": "equal"
+            }
+          ]
+        },
+        {
+          "id": "first-report",
+          "title": "Fresh clones",
+          "about": "A 10-count move and a click sent just after cloning, to a device that never reports, one that reports once, and one that reports every 100 ms. Three tries each.",
+          "kind": "rows",
+          "label": "Device",
+          "rows": [
+            {
+              "id": "first-report-device-never-reports",
+              "test": "Device never reports",
+              "stock": "0/3",
+              "medius": "3/3",
+              "verdict": "medius"
+            },
+            {
+              "id": "first-report-one-report-at-start",
+              "test": "One report at start",
+              "stock": "2/3",
+              "medius": "3/3",
+              "verdict": "medius"
+            },
+            {
+              "id": "first-report-report-every-100-ms",
+              "test": "Report every 100 ms",
+              "stock": "3/3",
+              "medius": "3/3",
+              "verdict": "equal"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "control-link",
+      "title": "Control link",
+      "groups": [
+        {
+          "id": "intake",
+          "title": "Command intake",
+          "about": "How many commands each box takes: paced, back to back, many in one write and while the mouse moves, and what an overload leaves behind.",
+          "kind": "rows",
+          "rows": [
+            {
+              "id": "paced-lossless-up-to",
+              "test": "Paced, lossless up to",
+              "stock": "Text 8,000/s; binary 5,000/s (max tried)",
+              "medius": "Every rate the PC sent, to 34,870/s",
+              "verdict": "medius"
+            },
+            {
+              "id": "back-to-back",
+              "test": "Back to back",
+              "stock": "Text 9,768/20,000; binary 118/12,871",
+              "medius": "20,000/20,000 at 36,800/s",
+              "verdict": "medius"
+            },
+            {
+              "id": "moves-in-one-write",
+              "test": "Moves in one write",
+              "stock": "Binary 28, text 18 whole; 32 binary: 15 delivered, parser stuck",
+              "medius": "256 whole",
+              "verdict": "medius"
+            },
+            {
+              "id": "mouse-moving",
+              "test": "Mouse moving",
+              "stock": "~2,000/s accepted, rest refused",
+              "medius": "5,000/s, none refused",
+              "verdict": "medius"
+            },
+            {
+              "id": "after-an-overload",
+              "test": "After an overload",
+              "stock": "Parser one command behind until power-off",
+              "medius": "Next command works",
+              "verdict": "medius"
+            }
+          ]
+        },
+        {
+          "id": "queries",
+          "title": "Query round trips",
+          "about": "A short query and the version query, from the request on the bus to the answer.",
+          "kind": "rows",
+          "label": "Query",
+          "rows": [
+            {
+              "id": "short-query-round-trip-wire-p50-p95",
+              "test": "Short query round trip, wire (p50 / p95)",
+              "stock": "km.moving(): 176-178 / 216-219 µs",
+              "medius": "QUERY(HEALTH): 157-158 / 206-210 µs",
+              "verdict": "medius",
+              "layer": "wire"
+            },
+            {
+              "id": "version-query-round-trip-wire-p50-p95",
+              "test": "Version query round trip, wire (p50 / p95)",
+              "stock": "km.version(): 177-182 / 221-229 µs (14 B reply)",
+              "medius": "QUERY(VERSION): 216-217 / 256-261 µs (29 B reply)",
+              "verdict": "stock",
+              "layer": "wire"
+            }
+          ]
+        },
+        {
+          "id": "malformed-input",
+          "title": "Malformed input",
+          "about": "Broken input written to the control port, each followed by a valid move: whether the move arrives and the parser stays in step.",
+          "kind": "rows",
+          "label": "Input",
+          "rows": [
+            {
+              "id": "64-kb-of-random-bytes-then-a",
+              "test": "64 KB of random bytes, then a move",
+              "stock": "Move arrives",
+              "medius": "Move arrives",
+              "verdict": "equal"
+            },
+            {
+              "id": "command-cut-off-next-command-100-ms",
+              "test": "Command cut off, next command 100 ms later",
+              "stock": "Next command lost",
+              "medius": "Next command arrives",
+              "verdict": "medius"
+            },
+            {
+              "id": "command-cut-off-next-command-at-once",
+              "test": "Command cut off, next command at once",
+              "stock": "Next command lost",
+              "medius": "Next command lost",
+              "verdict": "equal"
+            },
+            {
+              "id": "length-field-too-long",
+              "test": "Length field too long",
+              "stock": "Next command lost",
+              "medius": "Next command arrives",
+              "verdict": "medius"
+            },
+            {
+              "id": "unknown-command",
+              "test": "Unknown command",
+              "stock": "Ignored; next arrives",
+              "medius": "Ignored; next arrives",
+              "verdict": "equal"
+            },
+            {
+              "id": "move-too-short",
+              "test": "Move too short",
+              "stock": "Ignored; next arrives",
+              "medius": "Ignored; next arrives",
+              "verdict": "equal"
+            },
+            {
+              "id": "one-bit-flipped-in-a-5-count",
+              "test": "One bit flipped in a 5-count move",
+              "stock": "Moves 4",
+              "medius": "Dropped",
+              "verdict": "medius"
+            },
+            {
+              "id": "move-written-one-byte-per-ms",
+              "test": "Move written one byte per ms",
+              "stock": "Arrives",
+              "medius": "Arrives",
+              "verdict": "equal"
+            },
+            {
+              "id": "100-moves-a-stray-zero-byte-after",
+              "test": "100 moves, a stray zero byte after each",
+              "stock": "100/100",
+              "medius": "100/100",
+              "verdict": "equal"
+            },
+            {
+              "id": "parser-after-all-of-the-above",
+              "test": "Parser after all of the above",
+              "stock": "In step",
+              "medius": "In step",
+              "verdict": "equal"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "input",
+      "title": "Buttons, keys and locks",
+      "groups": [
+        {
+          "id": "keys",
+          "title": "Keys",
+          "about": "Keys injected through each box, timed from the command to the clone's report.",
+          "kind": "rows",
+          "rows": [
+            {
+              "id": "key-latency-down-up-p50",
+              "test": "Key latency, down / up (p50)",
+              "stock": "1.54 / 1.46 ms",
+              "medius": "0.83 / 0.65 ms",
+              "verdict": "medius"
+            },
+            {
+              "id": "type-a-string",
+              "test": "Type a string",
+              "stock": "km.string: 30 chars, ~100 ms each",
+              "medius": "Host-sent: 30 chars exact, 1.9 ms each",
+              "verdict": "mixed"
+            },
+            {
+              "id": "injected-key-while-device-holds-another",
+              "test": "Injected key while device holds another",
+              "stock": "Both held",
+              "medius": "Both held",
+              "verdict": "equal"
+            }
+          ]
+        },
+        {
+          "id": "buttons",
+          "title": "Buttons",
+          "about": "Mouse buttons injected through each box, and how injected and physical presses combine.",
+          "kind": "rows",
+          "rows": [
+            {
+              "id": "button-latency-press-release-p50",
+              "test": "Button latency, press / release (p50)",
+              "stock": "0.6 / 0.7 ms",
+              "medius": "0.71 / 0.53 ms",
+              "verdict": "equal"
+            },
+            {
+              "id": "physical-or-injected-mask-passes-injected-press",
+              "test": "Physical OR injected; mask passes injected press",
+              "stock": "Yes",
+              "medius": "Yes",
+              "verdict": "equal"
+            }
+          ]
+        },
+        {
+          "id": "locks",
+          "title": "Locks",
+          "about": "Blocking physical input: how soon a lock takes effect and lifts, and whether anything gets through.",
+          "kind": "rows",
+          "rows": [
+            {
+              "id": "axis-lock-takes-effect-releases-p50",
+              "test": "Axis lock takes effect / releases (p50)",
+              "stock": "4.4 / 5.5 ms",
+              "medius": "0.50 / 1.42 ms",
+              "verdict": "medius"
+            },
+            {
+              "id": "physical-input-through-a-lock-10-s",
+              "test": "Physical input through a lock, 10 s legs",
+              "stock": "0",
+              "medius": "0",
+              "verdict": "equal"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "controllers",
+      "title": "Controllers",
+      "groups": [
+        {
+          "id": "pad-relay",
+          "title": "Pad relay",
+          "about": "XInput, GIP and HID game pads relayed through each box, both ways.",
+          "kind": "rows",
+          "rows": [
+            {
+              "id": "xinput-gip-hid-pad-relay",
+              "test": "XInput, GIP, HID pad relay",
+              "stock": "Yes",
+              "medius": "Yes",
+              "verdict": "equal"
+            },
+            {
+              "id": "pc-output-to-pad",
+              "test": "PC output to pad",
+              "stock": "Yes",
+              "medius": "Yes",
+              "verdict": "equal"
+            }
+          ]
+        },
+        {
+          "id": "pad-control",
+          "title": "Pad control",
+          "about": "Reading a pad's input from the control port, and sending input as the pad.",
+          "kind": "rows",
+          "label": "Capability",
+          "rows": [
+            {
+              "id": "read-and-drive-a-game-controller",
+              "test": "Read and drive a game controller",
+              "stock": "XInput, GIP, HID pad; DS4, DualSense documented",
+              "medius": "No",
+              "verdict": "stock"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "recovery",
+      "title": "Recovery",
+      "groups": [
+        {
+          "id": "program-exit",
+          "title": "Program exit",
+          "about": "A program holds a button, then stops talking to the box.",
+          "kind": "rows",
+          "rows": [
+            {
+              "id": "button-held-after-the-program-exits",
+              "test": "Button held after the program exits",
+              "stock": "Held",
+              "medius": "Released after 1 s",
+              "verdict": "design"
+            }
+          ]
+        },
+        {
+          "id": "replug",
+          "title": "Replug",
+          "about": "The device unplugged from the box and plugged back in.",
+          "kind": "rows",
+          "rows": [
+            {
+              "id": "unplug-noticed",
+              "test": "Unplug noticed",
+              "stock": "0.12-0.19 s",
+              "medius": "0.45-0.65 s",
+              "verdict": "stock"
+            },
+            {
+              "id": "replug-clone-back-first-report",
+              "test": "Replug: clone back / first report",
+              "stock": "0.87-0.93 / 0.93-0.99 s",
+              "medius": "0.87-0.92 / 0.93-0.98 s",
+              "verdict": "equal"
+            }
+          ]
+        },
+        {
+          "id": "pc-restart",
+          "title": "PC restart",
+          "about": "The PC cycles the clone's port, as a restart does, or unconfigures and configures it.",
+          "kind": "rows",
+          "rows": [
+            {
+              "id": "pc-restart-clone-back-genesys-via-hub",
+              "test": "PC restart: clone back (Genesys / VIA hub)",
+              "stock": "0.61-0.69 / 1.24-1.26 s",
+              "medius": "0.63-0.66 / 1.24-1.27 s",
+              "verdict": "equal"
+            },
+            {
+              "id": "pc-restart-first-injected-move",
+              "test": "PC restart: first injected move",
+              "stock": "~1.1 s in 6 of 10; 1.1-1.7 ms in 4",
+              "medius": "0.7-1.6 ms",
+              "verdict": "medius"
+            },
+            {
+              "id": "unconfigure-configure-back",
+              "test": "Unconfigure/configure: back",
+              "stock": "0.09-0.12 s",
+              "medius": "0.09-0.12 s",
+              "verdict": "equal"
+            },
+            {
+              "id": "unconfigure-configure-first-injected-move",
+              "test": "Unconfigure/configure: first injected move",
+              "stock": "1.1-1.7 ms; ~1.1 s once in 10",
+              "medius": "0.7-4.3 ms",
+              "verdict": "mixed"
+            }
+          ]
+        },
+        {
+          "id": "sleep",
+          "title": "Sleep",
+          "about": "The PC suspends the clone; then the box idles, a program sends a move, or the device reports.",
+          "kind": "rows",
+          "rows": [
+            {
+              "id": "pc-suspends-the-clone",
+              "test": "PC suspends the clone",
+              "stock": "Device suspended, remote wakeup armed",
+              "medius": "Device not suspended; keeps running",
+              "verdict": "stock"
+            },
+            {
+              "id": "device-input-while-the-pc-sleeps",
+              "test": "Device input while the PC sleeps",
+              "stock": "Device's wakeup stops at the box; PC stays asleep",
+              "medius": "Each report wakes the PC and arrives (5 of 5)",
+              "verdict": "medius"
+            },
+            {
+              "id": "idle-box-while-the-pc-sleeps",
+              "test": "Idle box while the PC sleeps",
+              "stock": "PC stays asleep",
+              "medius": "PC stays asleep",
+              "verdict": "equal"
+            },
+            {
+              "id": "move-sent-while-the-pc-sleeps",
+              "test": "Move sent while the PC sleeps",
+              "stock": "Lost; PC stays asleep",
+              "medius": "Wakes the PC; arrives whole 72-199 ms later",
+              "verdict": "medius"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "capabilities",
+      "title": "Capabilities",
+      "groups": [
+        {
+          "id": "motion",
+          "title": "Motion",
+          "about": "Commands for injected motion and its smoothing.",
+          "kind": "rows",
+          "label": "Capability",
+          "rows": [
+            {
+              "id": "relative-move",
+              "test": "Relative move",
+              "stock": "km.move, smoothed by interpolation",
+              "medius": "MOVE, rendered",
+              "verdict": "equal"
+            },
+            {
+              "id": "move-that-skips-smoothing",
+              "test": "Move that skips smoothing",
+              "stock": "km.move_now: 4 reports",
+              "medius": "MOVE with NOW: 1 report",
+              "verdict": "medius"
+            },
+            {
+              "id": "move-with-a-receipt",
+              "test": "Move with a receipt",
+              "stock": "RAW_MOVE (0x69) and RAW_STATUS (0x6A)",
+              "medius": "No",
+              "verdict": "stock"
+            },
+            {
+              "id": "is-motion-still-pending",
+              "test": "Is motion still pending?",
+              "stock": "km.moving()",
+              "medius": "No",
+              "verdict": "stock"
+            },
+            {
+              "id": "hold-flush-or-discard-pending-motion",
+              "test": "Hold, flush or discard pending motion",
+              "stock": "No",
+              "medius": "MOVE flags FLUSH, DISCARD",
+              "verdict": "medius"
+            },
+            {
+              "id": "absolute-move-on-a-virtual-screen",
+              "test": "Absolute move on a virtual screen",
+              "stock": "km.moveto, km.getpos, km.screen",
+              "medius": "No",
+              "verdict": "stock"
+            },
+            {
+              "id": "move-click-move-back",
+              "test": "Move, click, move back",
+              "stock": "km.silent",
+              "medius": "No command; a clip can",
+              "verdict": "stock"
+            },
+            {
+              "id": "wheel",
+              "test": "Wheel",
+              "stock": "km.wheel",
+              "medius": "MOVE wheel",
+              "verdict": "equal"
+            },
+            {
+              "id": "horizontal-scroll-ac-pan",
+              "test": "Horizontal scroll (AC Pan)",
+              "stock": "No",
+              "medius": "MOVE pan",
+              "verdict": "medius"
+            },
+            {
+              "id": "raw-report-bytes-on-any-endpoint",
+              "test": "Raw report bytes on any endpoint",
+              "stock": "No",
+              "medius": "RAW (imperfect clones on)",
+              "verdict": "medius"
+            },
+            {
+              "id": "smoothing-settings",
+              "test": "Smoothing settings",
+              "stock": "Interpolation 0-100 or AUTO",
+              "medius": "Render OFF/STOCK/DESPIKED/UNSMOOTHED, full; spread; riding",
+              "verdict": "equal"
+            }
+          ]
+        },
+        {
+          "id": "buttons-keys-locks",
+          "title": "Buttons, keys and locks",
+          "about": "Commands for buttons, keys, blocking and remapping.",
+          "kind": "rows",
+          "label": "Capability",
+          "rows": [
+            {
+              "id": "mouse-buttons",
+              "test": "Mouse buttons",
+              "stock": "5",
+              "medius": "Up to 16, as the device declares",
+              "verdict": "medius"
+            },
+            {
+              "id": "who-holds-a-button",
+              "test": "Who holds a button?",
+              "stock": "Query: none, physical, injected, both",
+              "medius": "No query; CATCH shows physical presses",
+              "verdict": "stock"
+            },
+            {
+              "id": "clicks-timed-by-the-box",
+              "test": "Clicks timed by the box",
+              "stock": "km.click",
+              "medius": "Clip",
+              "verdict": "equal"
+            },
+            {
+              "id": "string-typed-by-the-box",
+              "test": "String typed by the box",
+              "stock": "km.string",
+              "medius": "Clip",
+              "verdict": "equal"
+            },
+            {
+              "id": "keys",
+              "test": "Keys",
+              "stock": "km.down, up, press, multi",
+              "medius": "INJECT key (NKRO and 6KRO)",
+              "verdict": "equal"
+            },
+            {
+              "id": "media-keys",
+              "test": "Media keys",
+              "stock": "No: km.press(\"volumeup\") answers ERR",
+              "medius": "INJECT media; Volume Up reaches the PC",
+              "verdict": "medius"
+            },
+            {
+              "id": "block-a-button-axis-or-key",
+              "test": "Block a button, axis or key",
+              "stock": "Masks and km.lock_*",
+              "medius": "LOCK",
+              "verdict": "equal"
+            },
+            {
+              "id": "scale-physical-motion-0-255-reverse",
+              "test": "Scale physical motion (0-255%, reverse)",
+              "stock": "No",
+              "medius": "LOCK scale",
+              "verdict": "medius"
+            },
+            {
+              "id": "scale-with-or-against-the-injected-direction",
+              "test": "Scale with or against the injected direction",
+              "stock": "No",
+              "medius": "BEARING",
+              "verdict": "medius"
+            },
+            {
+              "id": "remap",
+              "test": "Remap",
+              "stock": "Key to key",
+              "medius": "Button to button, key or media; axis to axis; swap; no key to key",
+              "verdict": "mixed"
+            }
+          ]
+        },
+        {
+          "id": "device-and-box",
+          "title": "Device and box",
+          "about": "Commands for observing traffic, controlling the device and running the box.",
+          "kind": "rows",
+          "label": "Capability",
+          "rows": [
+            {
+              "id": "event-streams",
+              "test": "Event streams",
+              "stock": "km.buttons, km.stream, km.keys, km.controller",
+              "medius": "CATCH buttons, keys, axes, media",
+              "verdict": "equal"
+            },
+            {
+              "id": "raw-usb-capture",
+              "test": "Raw USB capture",
+              "stock": "RAW_PASSTHROUGH (0x35): arm, read, disarm",
+              "medius": "CATCH: every transfer both ways, timestamped",
+              "verdict": "medius"
+            },
+            {
+              "id": "control-transfers-to-the-device",
+              "test": "Control transfers to the device",
+              "stock": "No",
+              "medius": "TRANSFER",
+              "verdict": "medius"
+            },
+            {
+              "id": "rewrite-packets-in-flight",
+              "test": "Rewrite packets in flight",
+              "stock": "No",
+              "medius": "REWRITE",
+              "verdict": "medius"
+            },
+            {
+              "id": "patch-descriptors",
+              "test": "Patch descriptors",
+              "stock": "No",
+              "medius": "PATCH",
+              "verdict": "medius"
+            },
+            {
+              "id": "scripted-sequences-with-triggers-loop-auto-lock",
+              "test": "Scripted sequences with triggers, loop, auto-lock",
+              "stock": "No",
+              "medius": "Clips",
+              "verdict": "medius"
+            },
+            {
+              "id": "device-and-box-queries",
+              "test": "Device and box queries",
+              "stock": "km.device, DEVICE, INFO",
+              "medius": "DEVICE_INFO, CAPS, RATE, STATS, HEALTH",
+              "verdict": "equal"
+            },
+            {
+              "id": "report-rate-control",
+              "test": "Report rate control",
+              "stock": "Polling setting",
+              "medius": "EMIT pace, wire rate force",
+              "verdict": "equal"
+            },
+            {
+              "id": "control-link",
+              "test": "Control link",
+              "stock": "4 Mbaud or 115,200; text and binary; no checksum",
+              "medius": "6 Mbaud; framed binary; CRC16",
+              "verdict": "medius"
+            },
+            {
+              "id": "box-name",
+              "test": "Box name",
+              "stock": "No",
+              "medius": "OPTION NAME",
+              "verdict": "medius"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "software",
+      "title": "Software",
+      "groups": [
+        {
+          "id": "tools-and-support",
+          "title": "Tools and support",
+          "about": "The tools, libraries, updates and support around each firmware.",
+          "kind": "rows",
+          "label": "Area",
+          "rows": [
+            {
+              "id": "owner-tool",
+              "test": "Owner tool",
+              "stock": "MAKCU Toolkit (Windows); web app",
+              "medius": "Browser dashboard (Chromium on Windows, Linux, macOS)",
+              "verdict": "mixed"
+            },
+            {
+              "id": "programs-for-other-boxes",
+              "test": "Programs for other boxes",
+              "stock": "KMBox Net, B Pro, Ferrum through the Toolkit, with gaps",
+              "medius": "No",
+              "verdict": "stock"
+            },
+            {
+              "id": "several-programs-on-one-box",
+              "test": "Several programs on one box",
+              "stock": "Toolkit forwarding (COM, TCP, KMBox Net UDP)",
+              "medius": "No",
+              "verdict": "stock"
+            },
+            {
+              "id": "official-client-libraries",
+              "test": "Official client libraries",
+              "stock": "mak-suite (Python, Rust, C++, C, C#)",
+              "medius": "Rust crate, C ABI, Python",
+              "verdict": "equal"
+            },
+            {
+              "id": "update",
+              "test": "Update",
+              "stock": "Toolkit, over the CH343, both chips, assigned build",
+              "medius": "Dashboard or CLI, over the CH343, both chips, any release",
+              "verdict": "medius"
+            },
+            {
+              "id": "failed-update",
+              "test": "Failed update",
+              "stock": "Recovery-loader route, backups, roll back to official",
+              "medius": "Bootloader reverts an image that won't run",
+              "verdict": "mixed"
+            },
+            {
+              "id": "signed-firmware",
+              "test": "Signed firmware",
+              "stock": "Catalogue Ed25519, package ECDSA P-256",
+              "medius": "SHA-256 checked, not signed",
+              "verdict": "stock"
+            },
+            {
+              "id": "data-sent-at-every-launch",
+              "test": "Data sent at every launch",
+              "stock": "Update manifest, catalogue, device assignment with serial",
+              "medius": "Usage report, cloned device named, no opt-out",
+              "verdict": "design"
+            },
+            {
+              "id": "diagnostic-report",
+              "test": "Diagnostic report",
+              "stock": "With consent; descriptors, event logs, last 100 commands, running programs",
+              "medius": "None",
+              "verdict": "design"
+            },
+            {
+              "id": "docs",
+              "test": "Docs",
+              "stock": "English, Chinese; V4 section generated",
+              "medius": "English; every command, Rust/C/Python references",
+              "verdict": "mixed"
+            },
+            {
+              "id": "community-discord",
+              "test": "Community (Discord)",
+              "stock": "28,413",
+              "medius": "600",
+              "verdict": "stock"
+            }
+          ]
+        },
+        {
+          "id": "adoption",
+          "title": "Adoption",
+          "about": "How widely each API is used, from package downloads and public code. Stock's column counts the KMBox protocols its Toolkit accepts.",
+          "kind": "grid",
+          "columns": [
+            "Measure",
+            "Stock and the protocols it accepts",
+            "Medius"
+          ],
+          "rows": [
+            {
+              "id": "adoption-pypi-30-days",
+              "cells": [
+                "PyPI, 30 days",
+                "makcu 2,246; pymakcu 1,588; makxd 20; KMBox Net 333",
+                "medius 1,106"
+              ]
+            },
+            {
+              "id": "adoption-crates-io-all-time",
+              "cells": [
+                "crates.io, all time",
+                "makcu-rs 1,016; makcu 336; makxd 84; KMBox 5,599",
+                "medius 515"
+              ]
+            },
+            {
+              "id": "adoption-public-code",
+              "cells": [
+                "Public code",
+                "km.move: 1,386 files, 489+ repos; KMBox Net SDK: 69 repos",
+                "2 repos"
+              ]
+            },
+            {
+              "id": "adoption-client-libraries-on-github",
+              "cells": [
+                "Client libraries on GitHub",
+                "16 MAKCU, 34 KMBox",
+                "1"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "defects": [
+    {
+      "id": "first-report",
+      "box": "stock",
+      "text": "No injection until the device has reported since cloning; first move after a PC restart held ~1 s",
+      "category": "injection",
+      "group": "first-report",
+      "row": "first-report-device-never-reports"
+    },
+    {
+      "id": "clumped-writes",
+      "box": "stock",
+      "text": "Clumped writes and floods lost silently: 32 binary moves in one write, 17 lost; back to back, 118 of 12,871",
+      "category": "control-link",
+      "group": "intake",
+      "row": "moves-in-one-write"
+    },
+    {
+      "id": "parser-behind",
+      "box": "stock",
+      "text": "After an overload the parser stays one command behind until power-off",
+      "category": "control-link",
+      "group": "intake",
+      "row": "after-an-overload"
+    },
+    {
+      "id": "varying-mouse-reads",
+      "box": "stock",
+      "text": "While injecting, a varying mouse is read 370-480 times a second instead of 1,000",
+      "category": "passthrough",
+      "group": "reads-while-injecting",
+      "row": "device-reports-taken-while-injecting-varying-mouse"
+    },
+    {
+      "id": "large-report-descriptor",
+      "box": "stock",
+      "text": "Report descriptor over 512 B not served: the interface gets no HID driver",
+      "category": "devices",
+      "group": "shapes",
+      "row": "report-descriptor-of-1500-b"
+    },
+    {
+      "id": "wooting-fifth-interface",
+      "box": "stock",
+      "text": "Wooting 60HE+ shape: the 5th interface delivers no reports",
+      "category": "devices",
+      "group": "shapes",
+      "row": "wooting-60he-shape-5-interfaces"
+    },
+    {
+      "id": "pad-stick-override",
+      "box": "stock",
+      "text": "GIP pad's physical stick reached the PC for 200 ms inside an injected override (one run)",
+      "category": "controllers",
+      "group": "pad-control",
+      "row": "read-and-drive-a-game-controller"
+    },
+    {
+      "id": "remote-wakeup",
+      "box": "stock",
+      "text": "A sleeping PC can't be woken from the device: its remote wakeup stops at the box",
+      "category": "recovery",
+      "group": "sleep",
+      "row": "device-input-while-the-pc-sleeps"
+    }
+  ],
+  "pending": [
+    {
+      "id": "wheel-and-pan-buttons-and-keys-under",
+      "test": "Wheel and pan; buttons and keys under load; locks on Y, wheel, right, key; clicks and strings timed by the box; move with a receipt; GIP override x5; 2 h soak (Medius halves done)",
+      "needs": "Stock power cycle: its parser is one command behind"
+    },
+    {
+      "id": "stock-single-write-limit-252-288-b",
+      "test": "Stock single-write limit, 252-288 B; paced binary past 5,000/s",
+      "needs": "A power cycle after each overload (up to 5), or the stock sim's adapter on the VIA hub"
+    },
+    {
+      "id": "relay-and-endpoint-0-timing-against-the",
+      "test": "Relay and endpoint 0 timing against the device itself",
+      "needs": "Sniffers on USB3 and USB1"
+    },
+    {
+      "id": "high-speed-mouse-wireless-receiver-ds4-or",
+      "test": "High-speed mouse, wireless receiver, DS4 or DualSense with audio, low-speed keyboard",
+      "needs": "The devices on each box's USB3"
+    },
+    {
+      "id": "hub-between-the-device-and-the-box",
+      "test": "Hub between the device and the box",
+      "needs": "A hub on USB3"
+    },
+    {
+      "id": "windows-as-the-pc-toolkit-forwarding-several",
+      "test": "Windows as the PC; Toolkit forwarding (several programs, KMBox Net, B Pro, Ferrum)",
+      "needs": "A Windows PC"
+    }
+  ]
+}

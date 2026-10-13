@@ -15,7 +15,8 @@
     "test:ui": "vitest --ui",
     "typecheck": "./scripts/typecheck.sh",
     "conformance": "tsx scripts/conformance.ts",
-    "crawlcheck": "tsx scripts/crawlcheck.ts"
+    "crawlcheck": "tsx scripts/crawlcheck.ts",
+    "comparison:sync": "tsx scripts/comparison-sync.ts"
   },
   "license": "MIT",
   "devDependencies": {

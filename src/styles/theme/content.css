@@ -246,7 +246,6 @@ a.fix .arr { width: 11px; height: 11px; margin: 0; }
 }
 /* On a phone a device row stacks: name and status, kind and boxes, then the note and the release. */
 @media (max-width: 700px) {
-  .compat colgroup, .compat thead { display: none; }
   .compat tbody tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 12px; padding: 12px 14px; border-bottom: 1px solid var(--line); }
   .compat tbody tr:last-child { border-bottom: 0; }
   .compat td { padding: 0; border: 0; }
@@ -305,3 +304,76 @@ a.fix .arr { width: 11px; height: 11px; margin: 0; }
 .doc nav.index .go { padding-block: 24px; }
 .doc nav.index .go h3 { font-size: 28px; }
 
+
+/* Comparison: results as stock against Medius, a pair of bars per point, and the marks a defect leaves. */
+.vs .vs-t { width: 32%; }
+.vs .vs-r { width: 16%; }
+.vs td:first-child { overflow-wrap: break-word; }
+.status.medius::before { background: var(--accent); }
+.status.stock::before { background: var(--text); }
+.vs a.vs-d {
+  display: block; margin-top: 6px; font-size: 12.5px; color: var(--text-2); text-decoration: underline;
+  text-decoration-color: var(--bad); text-underline-offset: 4px;
+}
+.vs a.vs-d:hover { color: var(--text); }
+.doc p.vs-dl { margin-top: 12px; font-size: 13.5px; color: var(--muted); }
+.vs-defects .b { width: 96px; }
+.vs-defects .w { width: 28%; }
+.api-params.vs-defects td { overflow-wrap: normal; }
+.vs-grid :is(th, td) { min-width: 80px; }
+.vs-grid th { white-space: normal; line-height: 1.4; }
+.vs-files .k { width: 40%; }
+.api-params.vs-files td:first-child { overflow-wrap: normal; }
+.pairs-fig { margin: 20px 0 0; }
+.pairs-fig figcaption { margin: 0 0 12px; color: var(--dim); }
+.pairs { display: grid; grid-template-columns: minmax(64px, 120px) 64px minmax(0, 1fr) max-content; gap: 6px 14px; align-items: center; font-size: 13.5px; }
+.pairs .pt { display: contents; }
+.pairs .pt:not(:first-child) > :nth-child(-n + 4) { margin-top: 12px; }
+.pairs .x { grid-row: span 2; align-self: start; font: 500 13px/1.3 var(--mono); color: var(--text-2); }
+.pairs .k { color: var(--muted); }
+.pairs .t { height: 8px; background: var(--line); }
+.pairs .t i { display: block; height: 100%; opacity: 0.8; transform-origin: left; }
+.pairs .t.stock i { background: var(--text-2); }
+.pairs .t.medius i { background: var(--accent); }
+.pairs b { font: 500 13px/1 var(--mono); color: var(--text); text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+@media (max-width: 480px) {
+  .pairs { grid-template-columns: 56px minmax(0, 1fr) max-content; }
+  .pairs .x { grid-column: 1 / -1; grid-row: auto; }
+  .pairs .pt:not(:first-child) > :nth-child(-n + 4) { margin-top: 0; }
+  .pairs .pt:not(:first-child) > .x { margin-top: 12px; }
+  .vs-files .k { width: 60%; }
+}
+/* A table that stacks on a phone keeps its headers for a screen reader, out of sight; its first cell loses
+   the hover edge, which would sit on its first letter. */
+@media (max-width: 700px) {
+  :is(.vs, .vs-grid, .compat) colgroup { display: none; }
+  :is(.vs, .vs-grid, .compat) thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  :is(.vs, .vs-grid, .compat) tbody tr:hover td:first-child { box-shadow: none; }
+}
+@media (max-width: 480px) {
+  .vs-defects colgroup { display: none; }
+  .vs-defects thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .vs-defects tbody tr:hover td:first-child { box-shadow: none; }
+}
+/* On a phone a result stacks: the test, then stock and Medius side by side, then the result. A grid row stacks
+   the same way, its first cell over the rest, each named by its column. */
+@media (max-width: 700px) {
+  :is(.vs, .vs-grid) tbody tr { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px 14px; padding: 12px 14px; border-bottom: 1px solid var(--line); }
+  :is(.vs, .vs-grid) tbody tr:last-child { border-bottom: 0; }
+  :is(.vs, .vs-grid) td { min-width: 0; padding: 0; border: 0; }
+  .vs td:nth-child(1), .vs td:nth-child(4), .vs-grid td:first-child { grid-column: 1 / -1; }
+  :is(.vs td:nth-child(2), .vs td:nth-child(3), .vs-grid td[data-label])::before {
+    display: block; margin-bottom: 2px; font: 500 10.5px/1.4 var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--dim);
+  }
+  .vs td:nth-child(2)::before { content: "Stock"; }
+  .vs td:nth-child(3)::before { content: "Medius"; }
+  .vs-grid td[data-label]::before { content: attr(data-label); }
+}
+/* On a phone a defect's area goes under it. */
+@media (max-width: 480px) {
+  .vs-defects tbody tr { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 6px 12px; padding: 12px; border-bottom: 1px solid var(--line); }
+  .vs-defects tbody tr:last-child { border-bottom: 0; }
+  .vs-defects td { padding: 0; border: 0; }
+  .vs-defects td:nth-child(3) { grid-column: 2; }
+  .vs-defects td:nth-child(3):empty { display: none; }
+}

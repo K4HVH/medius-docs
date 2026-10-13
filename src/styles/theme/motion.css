@@ -23,7 +23,7 @@
 .rt.moving { animation: fade 0.4s ease var(--d, 0ms) both; }
 .rt.moving tr { animation: rowin 0.45s var(--ease) calc(var(--d, 0ms) + var(--r, 0) * 35ms) both; }
 .rb.moving .cols i, .rb.moving.cols i { animation: grow-y 0.7s var(--ease) calc(var(--d, 0ms) + 0.15s) both; }
-.rb.moving .bars .t i, .rb.moving.bars .t i { animation: grow-x 0.8s var(--ease) calc(var(--d, 0ms) + 0.15s) both; }
+.rb.moving :is(.bars, .pairs) .t i, .rb.moving:is(.bars, .pairs) .t i { animation: grow-x 0.8s var(--ease) calc(var(--d, 0ms) + 0.15s) both; }
 
 /* A block a state change brings (a refusal, a step, a connected box's panel contents) rises in. */
 .st-in { animation: rise 0.45s var(--ease) both; }
