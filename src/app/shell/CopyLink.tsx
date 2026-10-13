@@ -1,4 +1,4 @@
-import { createSignal, onCleanup, onMount } from 'solid-js';
+import { Show, createSignal, onCleanup, onMount } from 'solid-js';
 import { shareAddress } from './share';
 import { SITE } from '../site';
 
@@ -65,7 +65,7 @@ async function copy(text: string): Promise<boolean> {
 // drawn by the CSS from data-said, which stays while the word fades out: the button holds no text for
 // search, the rail or a Markdown twin to read. Near the right edge of the screen the word opens to the
 // icon's left (data-side), so it never widens the page.
-export function CopyLink(props: { id: string; label: string; to?: string }) {
+export function CopyLink(props: { id: string; label: string; to?: string; glued?: boolean }) {
   const [state, setState] = createSignal<'copied' | 'failed' | null>(null);
   const [said, setSaid] = createSignal('');
   const [side, setSide] = createSignal<'left' | undefined>();
@@ -91,10 +91,13 @@ export function CopyLink(props: { id: string; label: string; to?: string }) {
       fade = setTimeout(() => setSaid(''), 400);
     }, 1500);
   };
-  // <wbr>: a line may break between the text and the icon, where a long word leaves the icon no room.
+  // <wbr>: a line may break between the text and the icon, where a long word leaves the icon no room. A glued
+  // icon stays on the line of the word before it.
   return (
     <>
-      <wbr />
+      <Show when={!props.glued}>
+        <wbr />
+      </Show>
       <button
         type="button"
         class="cl"

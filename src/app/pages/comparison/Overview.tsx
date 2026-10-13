@@ -1,50 +1,61 @@
-import { For, type Component } from 'solid-js';
+import { For, Show, type Component } from 'solid-js';
 import { A } from '@solidjs/router';
 import { PageHeader } from '../../shell/PageHeader';
 import { DocSection } from '../../shell/DocSection';
 import { FixLink } from '../../shell/Filter';
 import { routeFor } from '../../routes';
-import { RESULTS, categoryOf, rowOf } from '../../data/comparison';
-import { COMPARISON_PAGES, KEY_ROWS } from '../../data/comparison/pages';
-import type { Box, Defect } from '../../data/comparison/types';
-import { BOX, ResultRows, SourceLine } from './parts';
+import { RESULTS, placeOf } from '../../data/comparison';
+import { COMPARISON_PAGES, KEY_ROWS, pageOfCategory } from '../../data/comparison/pages';
+import type { Box } from '../../data/comparison/types';
+import { BOX, PairTable, type Item } from './parts';
 
 // An area's section here: its page's last word and -results, so the section's address differs from the page's.
 const sectionOf = (path: string) => `${path.slice(path.lastIndexOf('/') + 1)}-results`;
-const pageOf = (category: string) => COMPARISON_PAGES.find((p) => p.categories.includes(category))!;
-const groupTitle = (category: string, group: string) => categoryOf(category)?.groups.find((g) => g.id === group)?.title ?? group;
+
+// Where a row sits: its section, as a link.
+const Where = (props: { row: string }) => {
+  const at = () => placeOf(props.row);
+  return (
+    <Show when={at()}>
+      {(p) => <A href={`${pageOfCategory(p().category.id)!.path}/${p().section.id}`}>{p().section.title}</A>}
+    </Show>
+  );
+};
 
 const Defects = () => {
   const rows = () =>
-    (['stock', 'medius'] as Box[]).flatMap((box): { box: Box; text: string; at: Defect | null }[] => {
+    (['stock', 'medius'] as Box[]).flatMap((box) => {
       const mine = RESULTS.defects.filter((d) => d.box === box);
-      return mine.length ? mine.map((d) => ({ box, text: d.text, at: d })) : [{ box, text: 'None found', at: null }];
+      return mine.length ? mine.map((d) => ({ box, text: d.text, row: d.row })) : [{ box, text: 'None found', row: '' }];
     });
   return (
-    <div class="table-scroll">
-      <table class="api-params names fixed vs-defects">
-        <colgroup>
-          <col class="b" />
-          <col />
-          <col class="w" />
-        </colgroup>
-        <thead>
-          <tr><th>Box</th><th>Defect</th><th>Section</th></tr>
-        </thead>
-        <tbody>
-          <For each={rows()}>
-            {(r) => (
-              <tr id={r.at ? `defect-${r.at.id}` : undefined}>
-                <td>{BOX[r.box]}</td>
-                <td>{r.text}</td>
-                <td>
-                  {r.at && <A href={`${pageOf(r.at.category).path}/${r.at.group}`}>{groupTitle(r.at.category, r.at.group)}</A>}
-                </td>
-              </tr>
-            )}
-          </For>
-        </tbody>
-      </table>
+    <div class="stack-box">
+      <div class="table-scroll">
+        <table class="api-params names stacked">
+          <thead>
+            <tr>
+              <th>Box</th>
+              <th>Defect</th>
+              <th>Section</th>
+            </tr>
+          </thead>
+          <tbody>
+            <For each={rows()}>
+              {(r) => (
+                <tr>
+                  <td>{BOX[r.box]}</td>
+                  <td class="long" data-label="Defect">{r.text}</td>
+                  <td data-label="Section">
+                    <Show when={r.row}>
+                      <Where row={r.row} />
+                    </Show>
+                  </td>
+                </tr>
+              )}
+            </For>
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };
@@ -53,8 +64,8 @@ const Overview: Component = () => (
   <>
     <PageHeader>
       <p>
-        MAKCU's stock firmware and Medius, each on a MAKCU box fed by an identical emulated device and measured the same way.
-        Below are the results each area leads with; its page has the rest.
+        Stock MAKCU firmware {RESULTS.firmware.stock} and Medius {RESULTS.firmware.medius}, tested the same way on two MAKCU boxes. The
+        main results from each area are below, and each area's page has the rest.
       </p>
     </PageHeader>
 
@@ -65,21 +76,32 @@ const Overview: Component = () => (
           title={routeFor(p.path)!.title}
           aside={
             <span class="cross" data-search-skip data-agent-hide>
-              <FixLink href={p.path}>All results</FixLink>
+              <FixLink href={p.path} label={`All results for ${routeFor(p.path)!.title}`}>
+                All results
+              </FixLink>
             </span>
           }
         >
-          <ResultRows rows={KEY_ROWS[p.path].map((id) => rowOf(id)!.row)} defects={RESULTS.defects} />
+          <PairTable
+            key="Test"
+            items={KEY_ROWS[p.path].map((id): Item => {
+              const at = placeOf(id)!;
+              const href = `${p.path}/${at.section.id}`;
+              // A feature's row names it; any other row's table names what it compares.
+              return at.table.kind === 'feature'
+                ? { table: at.table, row: at.row, head: <A href={href}>{at.row.label}</A>, sub: at.table.label }
+                : { table: at.table, row: at.row, head: <A href={href}>{at.table.label}</A>, sub: at.row.label };
+            })}
+            scale="row"
+            defects={RESULTS.defects}
+          />
         </DocSection>
       )}
     </For>
 
     <DocSection id="defects" title="Defects">
-      <p>Serious flaws only, each beside the result that shows it.</p>
       <Defects />
     </DocSection>
-
-    <SourceLine path="/comparison" />
   </>
 );
 

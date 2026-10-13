@@ -22,8 +22,8 @@ describe('the places a link can name', () => {
     const h2 = r.container.querySelector('h2')!;
     const b = icon(h2, 'frames')!;
     expect(b.getAttribute('aria-label')).toBe('Copy link to Frames');
-    expect(b.parentElement!.matches('.doc-t')).toBe(true);
-    expect(b.parentElement!.nextElementSibling?.classList.contains('doc-caption')).toBe(true);
+    expect(b.parentElement!.matches('.doc-t > .doc-last')).toBe(true);
+    expect(b.closest('.doc-t')!.nextElementSibling?.classList.contains('doc-caption')).toBe(true);
   });
 
   it("lets an identifier's title break between its words, and reads as before", () => {

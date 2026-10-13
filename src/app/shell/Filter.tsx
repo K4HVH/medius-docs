@@ -40,19 +40,20 @@ export function Marked(props: { text: string; query: string }) {
   return <For each={marks(props.text, props.query)}>{(p) => (p.hit ? <mark>{p.text}</mark> : p.text)}</For>;
 }
 
-// A small link to the setting or page a row or an answer points at.
-export function FixLink(props: { href: string; children: string }) {
+// A small link to the setting or page a row or an answer points at. `label` names it where several links share
+// its text.
+export function FixLink(props: { href: string; children: string; label?: string }) {
   return (
     <Show
       when={props.href.startsWith('/')}
       fallback={
-        <a class="fix" href={props.href} target="_blank" rel="noreferrer">
+        <a class="fix" href={props.href} target="_blank" rel="noreferrer" aria-label={props.label}>
           {props.children}
           <ArrowOut size={11} />
         </a>
       }
     >
-      <A class="fix" href={props.href} end activeClass="" inactiveClass="">
+      <A class="fix" href={props.href} end activeClass="" inactiveClass="" aria-label={props.label}>
         {props.children}
         <Arrow size={11} />
       </A>

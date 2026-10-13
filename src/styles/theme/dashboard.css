@@ -574,8 +574,9 @@
 .bars { display: grid; grid-template-columns: minmax(120px, 220px) minmax(0, 1fr) 64px; gap: 10px 16px; align-items: center; font-size: 14px; }
 .bars .br { display: contents; }
 .bars .br > span:first-child { color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: color 0.2s; cursor: crosshair; }
-.bars .t { height: 8px; background: var(--line); }
-.bars .t i { display: block; height: 100%; background: var(--c, var(--accent)); opacity: 0.75; transform-origin: left; transition: transform 0.8s var(--ease), opacity 0.2s; }
+/* The bar track: the stats page's bars, and a comparison's values. */
+:is(.bars, .meter) .t { height: 8px; background: var(--line); }
+:is(.bars, .meter) .t i { display: block; height: 100%; background: var(--c, var(--accent)); opacity: 0.75; transform-origin: left; transition: transform 0.8s var(--ease), opacity 0.2s; }
 .bars .br:hover > span:first-child { color: var(--text); }
 .bars .br:hover .t i { opacity: 1; }
 .bars b { font: 500 13px/1 var(--mono); color: var(--text); text-align: right; font-variant-numeric: tabular-nums; }
@@ -588,6 +589,6 @@
   .cols { height: 160px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .cols i, .bars .t i { transition: none; }
+  .cols i, :is(.bars, .meter) .t i { transition: none; }
 }
 .held-none { line-height: 28px; }
