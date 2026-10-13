@@ -255,22 +255,22 @@
             {
               "id": "1-khz-bursts-interval-sd",
               "test": "1 kHz / bursts: interval sd",
-              "stock": "7.5-7.7 / 4.2-15.8 µs",
+              "stock": "1.7-7.7 / 2.8-15.8 µs",
               "medius": "4.8-7.2 / 6.4-10.2 µs",
               "verdict": "equal"
             },
             {
               "id": "250-125-hz-interval-sd",
               "test": "250 / 125 Hz: interval sd",
-              "stock": "12-43 / 20-46 µs",
+              "stock": "12-52 / 20-46 µs",
               "medius": "12-41 / 23-28 µs",
               "verdict": "equal"
             },
             {
               "id": "keyboard-relay-interval-sd-1-khz-125",
               "test": "Keyboard relay interval sd, 1 kHz / 125 Hz",
-              "stock": "5.7-7.3 / 26.9-28.2 µs",
-              "medius": "5.0-6.7 / 25.5-26.6 µs",
+              "stock": "3.5-7.3 / 3.3-28.2 µs",
+              "medius": "5.0-7.5 / 21.4-26.6 µs",
               "verdict": "equal"
             },
             {
@@ -809,9 +809,10 @@
             {
               "id": "steady-injection-varying-mouse",
               "test": "Steady injection, varying mouse",
-              "stock": "0.03-0.3% short",
+              "stock": "0.03-0.3% short; refusals not counted",
               "medius": "Exact",
-              "verdict": "medius"
+              "verdict": "unranked",
+              "reason": "Stock's runs didn't count refusals"
             },
             {
               "id": "4-s-at-500-30-hz",
@@ -1051,7 +1052,7 @@
               "test": "Button latency, press / release (p50)",
               "stock": "0.6 / 0.7 ms",
               "medius": "0.71 / 0.53 ms",
-              "verdict": "equal"
+              "verdict": "mixed"
             },
             {
               "id": "physical-or-injected-mask-passes-injected-press",
@@ -1683,14 +1684,6 @@
       "row": "wooting-60he-shape-5-interfaces"
     },
     {
-      "id": "pad-stick-override",
-      "box": "stock",
-      "text": "GIP pad's physical stick reached the PC for 200 ms inside an injected override (one run)",
-      "category": "controllers",
-      "group": "pad-control",
-      "row": "read-and-drive-a-game-controller"
-    },
-    {
       "id": "remote-wakeup",
       "box": "stock",
       "text": "A sleeping PC can't be woken from the device: its remote wakeup stops at the box",
@@ -1701,14 +1694,49 @@
   ],
   "pending": [
     {
-      "id": "wheel-and-pan-buttons-and-keys-under",
-      "test": "Wheel and pan; buttons and keys under load; locks on Y, wheel, right, key; clicks and strings timed by the box; move with a receipt; GIP override x5; 2 h soak (Medius halves done)",
-      "needs": "Stock power cycle: its parser is one command behind"
+      "id": "injected-wheel-and-horizontal-scroll",
+      "test": "Injected wheel and horizontal scroll",
+      "needs": "Stock power cycle"
     },
     {
-      "id": "stock-single-write-limit-252-288-b",
-      "test": "Stock single-write limit, 252-288 B; paced binary past 5,000/s",
-      "needs": "A power cycle after each overload (up to 5), or the stock sim's adapter on the VIA hub"
+      "id": "injected-buttons-and-keys-while-the-mouse",
+      "test": "Injected buttons and keys while the mouse moves and moves stream",
+      "needs": "Stock power cycle"
+    },
+    {
+      "id": "locks-on-y-the-wheel-the-right",
+      "test": "Locks on Y, the wheel, the right button and a key",
+      "needs": "Stock power cycle"
+    },
+    {
+      "id": "clicks-and-typing-timed-by-the-box",
+      "test": "Clicks and typing timed by the box",
+      "needs": "Stock power cycle"
+    },
+    {
+      "id": "moves-with-a-receipt-stock-raw-move",
+      "test": "Moves with a receipt (stock RAW_MOVE) against Medius MOVE with NOW",
+      "needs": "Stock power cycle"
+    },
+    {
+      "id": "steady-injection-into-a-varying-mouse-with",
+      "test": "Steady injection into a varying mouse, with refusals counted",
+      "needs": "Stock power cycle"
+    },
+    {
+      "id": "game-pad-override-held-by-the-box",
+      "test": "Game pad override held by the box, five runs",
+      "needs": "Stock power cycle"
+    },
+    {
+      "id": "two-hours-of-relay-and-injection",
+      "test": "Two hours of relay and injection",
+      "needs": "Stock power cycle"
+    },
+    {
+      "id": "stock-s-single-write-limit-252-288",
+      "test": "Stock's single-write limit (252-288 bytes) and paced intake past 5,000 a second",
+      "needs": "A power cycle after each overload (up to 5)"
     },
     {
       "id": "relay-and-endpoint-0-timing-against-the",
@@ -1721,13 +1749,13 @@
       "needs": "The devices on each box's USB3"
     },
     {
-      "id": "hub-between-the-device-and-the-box",
-      "test": "Hub between the device and the box",
+      "id": "a-hub-between-the-device-and-the",
+      "test": "A hub between the device and the box",
       "needs": "A hub on USB3"
     },
     {
-      "id": "windows-as-the-pc-toolkit-forwarding-several",
-      "test": "Windows as the PC; Toolkit forwarding (several programs, KMBox Net, B Pro, Ferrum)",
+      "id": "windows-as-the-pc-toolkit-forwarding",
+      "test": "Windows as the PC; Toolkit forwarding",
       "needs": "A Windows PC"
     }
   ]
