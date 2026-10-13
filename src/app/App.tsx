@@ -42,6 +42,17 @@ const App: Component = () => {
           <Route path="/guide/options/:place?" component={AtPage} />
           <Route path="/guide/privacy/:place?" component={AtPage} />
           <Route path="/guide/help/:place?" component={AtPage} />
+          <Route path="/comparison/:place?" component={AtPage} />
+          <Route path="/comparison/devices/:place?" component={AtPage} />
+          <Route path="/comparison/passthrough/:place?" component={AtPage} />
+          <Route path="/comparison/injection/:place?" component={AtPage} />
+          <Route path="/comparison/control-link/:place?" component={AtPage} />
+          <Route path="/comparison/input/:place?" component={AtPage} />
+          <Route path="/comparison/controllers/:place?" component={AtPage} />
+          <Route path="/comparison/recovery/:place?" component={AtPage} />
+          <Route path="/comparison/capabilities/:place?" component={AtPage} />
+          <Route path="/comparison/software/:place?" component={AtPage} />
+          <Route path="/comparison/method/:place?" component={AtPage} />
           <Route path="/native/:place?" component={AtPage} />
           <Route path="/native/quickstart/:place?" component={AtPage} />
           <Route path="/native/architecture/:place?" component={AtPage} />

@@ -10,6 +10,7 @@ export const NAV_LINKS: { label: string; href: string; sections: Section[] }[] =
   { label: 'Guide', href: '/guide', sections: ['guide'] },
   { label: 'Docs', href: '/native', sections: ['native', 'library', 'bindings', 'ai'] },
   { label: 'Dashboard', href: '/dashboard', sections: ['dashboard'] },
+  { label: 'Comparison', href: '/comparison', sections: ['comparison'] },
   { label: 'Changelog', href: '/dashboard/changelog', sections: [] },
 ];
 

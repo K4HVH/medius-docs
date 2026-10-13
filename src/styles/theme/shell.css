@@ -97,7 +97,7 @@ html { scroll-padding-top: calc(var(--nav-h) + 24px); }
   padding: 56px var(--gutter) 40px; display: grid; grid-template-columns: repeat(8, minmax(0, 1fr));
   gap: 32px 0; background: var(--ground);
 }
-.site-footer > div:first-child { grid-column: span 4; }
+.site-footer > div:first-child { grid-column: span 3; }
 .site-footer .brand { display: block; margin-bottom: 16px; }
 .site-footer p { margin: 0; color: var(--muted); font-size: 14px; }
 .site-footer h2.label { margin: 0 0 16px; }

@@ -13,6 +13,11 @@ import type { FirmwareRelease } from '../src/dashboard/firmware/client';
 import type { SearchIndex } from '../src/app/search/types';
 import { cardHeadProblems } from './lib/cardHead';
 import { placeFor } from '../server/places';
+import { RESULTS, categoryOf } from '../src/app/data/comparison';
+import { COMPARISON_PAGES } from '../src/app/data/comparison/pages';
+
+// The first Comparison page that shows results: its first section is checked as a place, and its download.
+const CMP_PAGE = COMPARISON_PAGES.find((p) => p.categories.length)!;
 
 const PORT = Number(process.env.CRAWL_PORT || 4390);
 const HERO = 'Replacement firmware for the MAKCU box.';
@@ -175,6 +180,7 @@ async function main(): Promise<void> {
       ['/dashboard', 'options'],
       ['/dashboard/control', 'input-locks'],
       ['/guide/help', 'q-windows'],
+      [CMP_PAGE.path, categoryOf(CMP_PAGE.categories[0])!.groups[0].id],
     ];
     for (const [page, id] of places) {
       const at = placeFor(search, page, id);
@@ -196,6 +202,12 @@ async function main(): Promise<void> {
     for (const odd of ['/404', '//native', '/%6Eative', '/native/commands/zzz']) {
       const res = await get(odd);
       if (res.status !== 404) fail(`${odd}: status ${res.status}, want 404`);
+    }
+
+    for (const [path, category] of [['/comparison.json', RESULTS.categories[0].id], [`${CMP_PAGE.path}.json`, CMP_PAGE.categories[0]]]) {
+      const res = await get(path, 'application/json');
+      const data = res.status === 200 && res.headers.get('content-type')?.includes('json') ? ((await res.json()) as { categories?: { id: string }[] }) : null;
+      if (data?.categories?.[0]?.id !== category) fail(`${path}: not the comparison data`);
     }
 
     const md = await get('/native.md');

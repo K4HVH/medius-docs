@@ -4,7 +4,7 @@ import { lostPath } from './served';
 
 // Every page's metadata, in sidebar order. Plain data, so the prerender and server can load it too.
 
-export type Section = 'home' | 'guide' | 'native' | 'library' | 'bindings' | 'dashboard' | 'ai' | 'notfound';
+export type Section = 'home' | 'guide' | 'native' | 'library' | 'bindings' | 'dashboard' | 'comparison' | 'ai' | 'notfound';
 export type Lang = 'c' | 'python';
 export type Kind = 'home' | 'article' | 'app';
 
@@ -28,6 +28,7 @@ export const SECTION_LABEL: Record<Section, string> = {
   library: 'Rust Library',
   bindings: 'Bindings',
   dashboard: 'Dashboard',
+  comparison: 'Comparison',
   ai: 'AI access',
   notfound: 'Medius',
 };
@@ -38,6 +39,7 @@ export const SECTION_ROOT: Partial<Record<Section, string>> = {
   library: '/library',
   bindings: '/bindings',
   dashboard: '/dashboard',
+  comparison: '/comparison',
   ai: '/ai',
 };
 
@@ -56,6 +58,8 @@ const binding = (lang: Lang, sub: string, group: string, nav: string, title: str
   ({ path: LANG_ROOT[lang] + sub, section: 'bindings', lang, group, nav, title, description, fullTitle });
 const dashboard = (path: string, nav: string, title: string, description: string, fullTitle?: string): Entry =>
   ({ path, section: 'dashboard', group: 'Dashboard', nav, title, description, fullTitle, kind: 'app' });
+const comparison = (path: string, nav: string, title: string, description: string, fullTitle?: string): Entry =>
+  ({ path, section: 'comparison', group: 'Comparison', nav, title, description, fullTitle });
 
 const ENTRIES: Entry[] = [
   {
@@ -255,6 +259,30 @@ const ENTRIES: Entry[] = [
     'Medius firmware changelog'),
   dashboard('/dashboard/stats', 'Stats', 'Usage stats',
     'Public usage counts for Medius: boxes, cloned devices, firmware versions, flashes, countries and the systems the dashboard runs on.'),
+
+  comparison('/comparison', 'Overview', 'Stock vs Medius',
+    'MAKCU stock firmware and Medius measured side by side on two boxes: devices, passthrough, injected motion, the control link, recovery and software.',
+    'MAKCU stock firmware vs Medius'),
+  comparison('/comparison/devices', 'Devices', 'Devices',
+    'Which USB devices MAKCU stock firmware and Medius clone, how closely each clone matches its device, and how each answers on endpoint 0.'),
+  comparison('/comparison/passthrough', 'Passthrough', 'Passthrough',
+    "A device relayed through MAKCU stock firmware and Medius: reports kept or lost, timing at each report rate, and the PC's requests reaching the device."),
+  comparison('/comparison/injection', 'Injected motion', 'Injected motion',
+    'Injected moves on MAKCU stock firmware and Medius: latency, command streams, smoothing settings, reports emitted and whether every count arrives.'),
+  comparison('/comparison/control-link', 'Control link', 'Control link',
+    'How many commands MAKCU stock firmware and Medius take on the control port, what an overload or broken input does, and query round trips.'),
+  comparison('/comparison/input', 'Buttons and keys', 'Buttons, keys and locks',
+    'Buttons, keys and locks on MAKCU stock firmware and Medius: latency from command to report, typing, and physical input getting through a lock.'),
+  comparison('/comparison/controllers', 'Controllers', 'Controllers',
+    'Game controllers through MAKCU stock firmware and Medius: XInput, GIP and HID pads relayed, and reading and driving a pad from software.'),
+  comparison('/comparison/recovery', 'Recovery', 'Recovery',
+    'What MAKCU stock firmware and Medius do when a program stops talking, the device is replugged, or the PC restarts or sleeps.'),
+  comparison('/comparison/capabilities', 'Capabilities', 'Capabilities',
+    'What the commands of MAKCU stock firmware and Medius can do: motion, buttons, keys, locks, USB traffic and the box itself.'),
+  comparison('/comparison/software', 'Software', 'Software',
+    'The software around MAKCU stock firmware and Medius: programs that drive each, libraries and their use, owner tools, updates, docs and community.'),
+  comparison('/comparison/method', 'Method', 'Method',
+    'How MAKCU stock firmware and Medius were measured: the rig, what each timing layer sees, what has not been tested yet, and the data to download.'),
 ];
 
 export const ROUTES: readonly RouteInfo[] = ENTRIES.map((e) => ({ ...e, kind: e.kind ?? 'article', index: e.index ?? true }));

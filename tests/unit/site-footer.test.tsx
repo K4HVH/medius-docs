@@ -24,10 +24,10 @@ describe('SiteFooter', () => {
     for (const h of internal) expect(routeFor(h), h).toBeDefined();
   });
 
-  it('groups its links under Guide, Docs, Dashboard and Community', () => {
+  it('groups its links under Guide, Docs, Dashboard, Comparison and Community', () => {
     const r = mount();
     const titles = [...r.container.querySelectorAll('footer h2')].map((h) => h.textContent);
-    expect(titles).toEqual(['Guide', 'Docs', 'Dashboard', 'Community']);
+    expect(titles).toEqual(['Guide', 'Docs', 'Dashboard', 'Comparison', 'Community']);
     expect(r.container.querySelector('footer')!.textContent).toContain('Firmware for the MAKCU box.');
     expect(r.container.querySelector('footer')!.textContent).toContain('© 2026 K4TECH');
   });
