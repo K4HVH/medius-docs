@@ -158,9 +158,9 @@ src/
         UsagePicker.tsx               # class + usage picker shared by inject, lock and clip
         hex.ts                        # hex parsing, setup-packet fields, traffic class blurbs
         Setup.tsx                     # /dashboard/setup: the install flow, one step at a time
-        Update.tsx                    # /dashboard/update: tabs Latest (one-click update) and Manual
-        Advanced.tsx  AdvancedUsb2.tsx
-                                      # Update's Manual tab: any image, over USB2 or ROM download
+        Update.tsx                    # /dashboard/update: the latest release in one click
+        Flash.tsx  FlashUsb2.tsx  releaseChoice.tsx
+                                      # /dashboard/flash: any image by hand, over USB2 or ROM download
         Changelog.tsx                 # /dashboard/changelog: release notes, commits grouped by repo
         Stats.tsx                     # /dashboard/stats: figures, then tabs of charts and tables
   dashboard/                          # dashboard logic, not pages
@@ -288,7 +288,7 @@ The signature, the table, and the example carry the content. Prose is near zero.
 ## Styling
 
 - Docs and Guide pages are built from the shell: `PageHeader` first, then a `DocSection` per section, `IndexRow` for a list of links, `ByteStrip` for a frame, `Filter` over a long table or list.
-- Dashboard pages are built from the shell too, never MidnightUI's `Card`: `PageHeader` (its `aside` holds the page's state or action), then `PageTabs` with a `Pane` per tab, each holding `Panels` of `Panel`s (a panel's heading is the docs h2 with its rule; `Stack` makes a column). A choice of a few is `Segmented`, a list is `Select` (with `filter` when long), a log is `LogBox`. MidnightUI's `Button`, `Chip`, `NumberInput`, `TextField`, `Checkbox` and `Slider` stay, restyled by the theme. Dashboard styles live in `src/styles/theme/dashboard.css`; no inline style objects. No subtitles under a page or panel title, no flavour text; a caps label is muted, never blue.
+- Dashboard pages are built from the shell too, never MidnightUI's `Card`: `PageHeader` (its `aside` holds the page's state or action), then `PageTabs` with a `Pane` per tab, each holding `Panels` of `Panel`s (a panel's heading is the docs h2 with its rule; `Stack` makes a column). A choice of up to four is `Segmented` (it stacks in one column where a row doesn't fit), five or more is `Select` (with `filter` when long), a slider is `Range`, a log is `LogBox`. MidnightUI's `Button`, `Chip`, `NumberInput`, `TextField` and `Checkbox` stay, restyled by the theme. Dashboard styles live in `src/styles/theme/dashboard.css`; no inline style objects. No subtitles under a page or panel title, no flavour text; a caps label is muted, never blue.
 - A tab is the hash (`/dashboard#options`). An element id inside a tab opens it, even one that renders later (after Connect or a fetch).
 - `bun run dev`, then any dashboard page with `?fakebox`: Connect finds a fake box (`src/dev/fakeBox.ts`) that answers every query, for looking at the connected pages without hardware.
 - Site styles live in `src/styles/theme/`, imported after MidnightUI's `global.css` so its tokens win. Those files are editable; `global.css` and `src/components/` / `src/styles/components/` are not. Element styles take their scope through `:where()` so the spacing rules after a heading or a label win: 44px from the last ink to a section's rule, 44px from the rule to the heading's capitals, 24px from the heading's baseline to the content.

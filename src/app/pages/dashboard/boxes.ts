@@ -1,5 +1,5 @@
 /// <reference types="w3c-web-serial" />
-import { type Accessor, createEffect, createMemo, createSignal, onCleanup, untrack } from 'solid-js';
+import { type Accessor, createEffect, createMemo, createSignal, on, onCleanup, untrack } from 'solid-js';
 import type { Version } from '../../../dashboard/protocol';
 import {
   CH343_PID,
@@ -42,6 +42,9 @@ export interface Boxes {
   start: () => void;
   entries: Accessor<BoxEntry[]>;
   selected: Accessor<BoxEntry | null>;
+  // Which dashboard pages the selection takes: a Medius box's (Device, Control, Update), or Set up for anything
+  // else; null while a port this browser knows is still being checked and may be the box.
+  selectedKind: Accessor<'medius' | 'other' | null>;
   // The selected session, else a blank one whose Connect opens the chooser.
   scope: Accessor<BoxSession>;
   select: (key: string) => void;
@@ -347,7 +350,8 @@ export function createBoxes(deps: BoxesDeps): Boxes {
     const e = byPort(port);
     if (!e) return { ok: false, verdict: { kind: 'other', message: 'The port went away' } };
     choosing(e.key);
-    await open(e.session);
+    // The probe just ran: a port it found no box on keeps its verdict, rather than wait through a second check.
+    if (e.session.probe()?.kind === 'box') await open(e.session);
     return { ok: true, entry: e };
   };
 
@@ -398,6 +402,20 @@ export function createBoxes(deps: BoxesDeps): Boxes {
     );
   });
 
+  // Ports this browser may use, listed once at start: before then nothing is told.
+  const [scanned, setScanned] = createSignal(false);
+  const selectedKind = createMemo((): 'medius' | 'other' | null => {
+    if (!scanned()) return null;
+    const e = selected();
+    const checking = (x: BoxEntry) => x.session.present() && !x.session.probe();
+    if (!e) return selKey() !== NEW_BOX && entries().some((x) => isPortKey(x.key) && checking(x)) ? null : 'other';
+    const p = e.session.probe();
+    if (p?.kind === 'old-firmware') return 'other';
+    if (!isPortKey(e.key)) return 'medius';
+    if (checking(e)) return null;
+    return p?.kind === 'box' ? 'medius' : 'other';
+  });
+
   const blank = createBoxSession(
     { port: null },
     {
@@ -421,6 +439,9 @@ export function createBoxes(deps: BoxesDeps): Boxes {
       : null;
     untrack(() => blank.ctl.setProbe(stuck));
   });
+
+  // A port that came during a ROM flash was left unchecked.
+  createEffect(on(deps.nativeFlashing, (now, was) => void (was && !now && rescan()), { defer: true }));
 
   const onConnect = (ev: Event) => {
     const p = ev.target as SerialPort;
@@ -462,6 +483,8 @@ export function createBoxes(deps: BoxesDeps): Boxes {
     window.addEventListener('focus', onFocus);
     window.addEventListener('storage', onStorage);
     document.addEventListener('visibilitychange', onVisible);
+    // Without Web Serial nothing is found or ruled out: the selection is never told, and every page stays.
+    if (!deps.serial) return;
     void (async () => {
       let ports: SerialPort[] = [];
       try {
@@ -475,6 +498,7 @@ export function createBoxes(deps: BoxesDeps): Boxes {
         present.add(p);
         listPort(p);
       }
+      setScanned(true);
       await Promise.all(ports.map((p) => probe(p)));
     })();
   };
@@ -499,6 +523,7 @@ export function createBoxes(deps: BoxesDeps): Boxes {
     start,
     entries,
     selected,
+    selectedKind,
     scope: () => selected()?.session ?? blank.api,
     select,
     add,

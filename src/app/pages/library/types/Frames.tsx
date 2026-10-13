@@ -1,6 +1,7 @@
 import type { Component } from 'solid-js';
 import { A } from '@solidjs/router';
 import { PageHeader } from '../../../shell/PageHeader';
+import { DocSection } from '../../../shell/DocSection';
 
 const Frames: Component = () => {
   return (
@@ -11,7 +12,8 @@ const Frames: Component = () => {
           <code>FrameType</code> is the <code>TYPE</code> byte and <code>DecodedFrame</code> is one
           parsed frame.
         </p>
-
+      </PageHeader>
+      <DocSection id="frame-type" title="FrameType" caption="A frame's TYPE byte">
         <div class="table-scroll">
           <table class="api-params">
             <thead>
@@ -126,6 +128,8 @@ const Frames: Component = () => {
           </table>
         </div>
 
+      </DocSection>
+      <DocSection id="decoded-frame" title="DecodedFrame" caption="One parsed frame">
         <div class="table-scroll">
           <table class="api-params">
             <thead>
@@ -176,7 +180,7 @@ println!("{:?} seq={} {} bytes", frame.ty, frame.seq, frame.payload.len());`}</c
             <A href="/library/diagnostics">Diagnostics</A> cover everyday work.
           </p>
         </div>
-      </PageHeader>
+      </DocSection>
     </>
   );
 };

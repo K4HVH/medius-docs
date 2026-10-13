@@ -7,9 +7,7 @@ import { parseVersion } from '../../../dashboard/flash';
 import { BoxScope, useDashboard } from './context';
 import { ConnectPanel } from './ConnectPanel';
 import { WiringPorts } from './PortDiagram';
-import ManualFlash from './Advanced';
 import { PageHeader } from '../../shell/PageHeader';
-import { PageTabs, Pane } from '../../shell/PageTabs';
 import { prefersReducedMotion } from '../../shell/motion';
 
 type Step = 'choose' | 'update' | 'done' | 'sent';
@@ -150,7 +148,7 @@ export const Latest = () => {
     const r = run();
     return (!r?.device || deviceOnRelease()) && (!r?.host || hostOnRelease());
   };
-  // From the session, so it survives a tab change or box switch. A run the Manual tab started shows there.
+  // From the session, so it survives a page change or box switch. A run the Flash page started shows there.
   const run = () => {
     const r = dash.update();
     return r?.page === 'update' ? r : null;
@@ -173,7 +171,7 @@ export const Latest = () => {
     </Show>
   );
 
-  // A result of the Manual tab's stays for that tab to show.
+  // A result of the Flash page's stays for that page to show.
   const clearOwn = () => {
     if (dash.update()?.page === 'update') dash.clearUpdate();
   };
@@ -279,7 +277,7 @@ export const Latest = () => {
               >
                 <div class="acts">
                   <Button variant="primary" disabled={busy()} onClick={() => choose('both')}>
-                    Update both chips
+                    Both chips
                   </Button>
                   <Button variant="secondary" disabled={busy()} onClick={() => choose('main')}>
                     Main only
@@ -333,28 +331,13 @@ export const Latest = () => {
   );
 };
 
-// The latest release in one step, or any image by hand. The Manual tab sits outside the box scope: a
-// box coming or going would otherwise remount it and lose a ROM flash half set up, which unplugging
-// USB2 for it does.
+// The latest release in one step. Any other image, by hand, is the Flash page's.
 const Update = () => (
   <>
     <PageHeader />
-    <PageTabs
-      id="update"
-      tabs={[
-        { key: 'latest', label: 'Latest' },
-        { key: 'manual', label: 'Manual' },
-      ]}
-    >
-      <Pane key="latest">
-        <BoxScope>
-          <Latest />
-        </BoxScope>
-      </Pane>
-      <Pane key="manual">
-        <ManualFlash />
-      </Pane>
-    </PageTabs>
+    <BoxScope>
+      <Latest />
+    </BoxScope>
   </>
 );
 

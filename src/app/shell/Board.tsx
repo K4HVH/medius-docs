@@ -8,7 +8,7 @@ import { prefersReducedMotion } from './motion';
 
 export type Port = 'USB1' | 'USB2' | 'USB3';
 export type PortState = 'in' | 'out' | 'unp' | 'idle';
-export type Tone = 'pc' | 'dev' | 'gone' | '';
+export type Tone = 'pc' | 'dev' | '';
 export interface PortSpec {
   state: PortState;
   label: string;
@@ -76,7 +76,7 @@ const Soic = (p: ReturnType<typeof soic>) => (
 );
 
 // `motion`: 'draw' runs each cable in once as the board comes into view; 'loop' shows the BOOT press
-// (hold, plug in under it, let go) while on screen; 'unplug' slides the cable out once.
+// (hold, plug in under it, let go) while on screen; 'unplug' shows the cable pulled out while on screen.
 export function Board(props: {
   ports: Partial<Record<Port, PortSpec>>;
   hold?: Port;
@@ -94,44 +94,65 @@ export function Board(props: {
       if (motion === 'unplug') el.classList.add('unplug');
       return;
     }
-    const timers: ReturnType<typeof setTimeout>[] = [];
-    const after = (fn: () => void, ms: number) => timers.push(setTimeout(fn, ms));
+    const timers = new Set<ReturnType<typeof setTimeout>>();
+    const after = (fn: () => void, ms: number) => {
+      const t = setTimeout(() => {
+        timers.delete(t);
+        fn();
+      }, ms);
+      timers.add(t);
+    };
     const stop = () => {
       timers.forEach(clearTimeout);
-      timers.length = 0;
+      timers.clear();
     };
     let running = false;
-    const cycle = () => {
+    // Back to the first frame with no motion between.
+    const snap = (...cls: string[]) => {
+      el.classList.add('snap');
+      el.classList.remove(...cls);
+      void el.getBoundingClientRect();
+      el.classList.remove('snap');
+    };
+    const press = () => {
       if (!running) return;
       after(() => el.classList.add('pressing'), 500);
       after(() => el.classList.add('plugged'), 1200);
       after(() => el.classList.remove('pressing'), 3000);
       after(() => el.classList.add('fading'), 5000);
       after(() => {
-        el.classList.add('snap');
-        el.classList.remove('plugged', 'fading');
-        void el.getBoundingClientRect();
-        el.classList.remove('snap');
-        cycle();
+        snap('plugged', 'fading');
+        press();
       }, 5400);
     };
+    // 'fading' comes off after the snap, so the cable fades back in rather than appearing.
+    const pull = () => {
+      if (!running) return;
+      after(() => el.classList.add('unplug'), 1000);
+      after(() => el.classList.add('fading'), 3600);
+      after(() => {
+        snap('unplug');
+        el.classList.remove('fading');
+        pull();
+      }, 4000);
+    };
+    const cycle = motion === 'unplug' ? pull : press;
     if (motion === 'draw') el.classList.add('pre');
+    // Entries that come together are in the order they happened: the last is the board as it is now.
     const io = new IntersectionObserver(
-      ([e]) => {
+      (entries) => {
+        const e = entries[entries.length - 1];
         if (motion === 'draw' && e.isIntersecting) {
           io.disconnect();
           after(() => el.classList.remove('pre'), 150);
-        } else if (motion === 'unplug' && e.isIntersecting) {
-          io.disconnect();
-          after(() => el.classList.add('unplug'), 700);
-        } else if (motion === 'loop') {
+        } else if (motion === 'loop' || motion === 'unplug') {
           if (e.isIntersecting && !running) {
             running = true;
             cycle();
           } else if (!e.isIntersecting && running) {
             running = false;
             stop();
-            el.classList.remove('plugged', 'pressing', 'fading');
+            el.classList.remove('plugged', 'pressing', 'fading', 'unplug');
           }
         }
       },
@@ -229,13 +250,12 @@ export function Board(props: {
                   <path class="cab" d={`M${r1(cx)} ${MOUTH + 62} V${MOUTH + 14}`} />
                   <rect class="plug" x={r1(cx - 22)} y={MOUTH} width="44" height="14" rx="1" />
                 </g>
-                <text class={`to ${s().tone ?? ''}`} x={r1(cx)} y={MOUTH + 84} text-anchor="middle">
-                  {s().label}
-                </text>
               </Show>
-              <Show when={s().state === 'out'}>
-                <path class="x" d={`M${r1(cx - 9)} ${MOUTH + 24}l18 18m0 -18l-18 18`} />
-                <text class="to out" x={r1(cx)} y={MOUTH + 84} text-anchor="middle">
+              <Show when={s().state === 'out' || s().state === 'unp'}>
+                <path class={`x ${s().state}`} d={`M${r1(cx - 9)} ${MOUTH + 24}l18 18m0 -18l-18 18`} />
+              </Show>
+              <Show when={s().state !== 'idle'}>
+                <text class={`to ${s().state} ${s().tone ?? ''}`} x={r1(cx)} y={MOUTH + 84} text-anchor="middle">
                   {s().label}
                 </text>
               </Show>

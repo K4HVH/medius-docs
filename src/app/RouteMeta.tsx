@@ -126,7 +126,7 @@ function write(route: RouteInfo, item: string | null): void {
 }
 
 // Per-route <head> from the route registry, for the SPA and the prerendered snapshots alike. The head the
-// server wrote for an address inside a page (meta medius-item names it) is left as it is, and put back when
+// server wrote for an address inside a page (meta medius-item names it) is left as is, and put back when
 // the reader returns to that address.
 export default function RouteMeta() {
   const location = useLocation();

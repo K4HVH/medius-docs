@@ -27,8 +27,10 @@ beforeAll(() => {
   Element.prototype.scrollIntoView ??= () => {};
 });
 
-const world = (opts: { supported?: boolean } = {}) => {
+const world = (opts: { supported?: boolean; kind?: 'medius' | 'other' | null } = {}) => {
   const [running, setRunning] = createSignal(false);
+  // What the selection is: a Medius box by default, the box Desk below.
+  const [kind, setKind] = createSignal<'medius' | 'other' | null>(opts.kind === undefined ? 'medius' : opts.kind);
   const [status, setStatus] = createSignal('connected');
   const session = {
     name: () => 'Desk',
@@ -50,14 +52,15 @@ const world = (opts: { supported?: boolean } = {}) => {
     start,
     entries: () => [{ key: 'a', session }],
     selected: () => ({ key: 'a', session }),
+    selectedKind: kind,
     select,
     add: async () => ({ ok: false, verdict: { kind: 'no-port' } }),
     anyUpdating: () => status() === 'flashing',
     icon: () => 'box',
     setIcon: () => {},
   } as unknown as Boxes;
-  const native = { running, progress: () => null, log: () => [], error: () => null, flash: async () => true, clear: () => {} } as unknown as NativeFlash;
-  return { boxes, native, setRunning, setStatus, start, select };
+  const native = { running, progress: () => null, error: () => null, flash: async () => true, clear: () => {} } as unknown as NativeFlash;
+  return { boxes, native, setRunning, setStatus, setKind, start, select };
 };
 
 const Sections = () => (
@@ -122,6 +125,8 @@ const mount = (path: string, w = world()) => {
         <Route path="/dashboard/setup" component={() => <p>setup page</p>} />
         <Route path="/dashboard/changelog" component={() => <p>changelog page</p>} />
         <Route path="/dashboard/update" component={() => <p>update page</p>} />
+        <Route path="/dashboard/flash" component={() => <p>flash page</p>} />
+        <Route path="/dashboard/control/:place?" component={() => <p>control page</p>} />
         <Route path="*" component={() => <p>other page</p>} />
       </Route>
     </MemoryRouter>
@@ -183,9 +188,74 @@ describe('DocsLayout and the boxes', () => {
   it('names the selected box in the page bar on a box route, and not on Setup', async () => {
     const r = mount('/dashboard');
     await waitFor(() => expect(bar(r)).toContain('Device - Desk'));
-    r.history.set({ value: '/dashboard/setup' });
+    r.setKind('other');
     await waitFor(() => expect(r.container.textContent).toContain('setup page'));
     expect(bar(r)).not.toContain('Desk');
+  });
+
+  const links = (r: ReturnType<typeof mount>) => [...r.container.querySelectorAll('.side nav.group a')].map((a) => a.textContent);
+
+  it('with a Medius box selected, Set up is missing from the sidebar and its address goes to Device', async () => {
+    const r = mount('/dashboard/setup');
+    await waitFor(() => expect(r.history.get()).toBe('/dashboard'));
+    expect(r.container.textContent).toContain('device page');
+    expect(links(r)).toEqual(['Device', 'Control', 'Update', 'Flash', 'Changelog', 'Stats']);
+  });
+
+  it('with no Medius box selected, Device, Control and Update are missing, and their addresses go to Set up', async () => {
+    for (const path of ['/dashboard', '/dashboard/update', '/dashboard/control/input-locks']) {
+      const r = mount(path, world({ kind: 'other' }));
+      await waitFor(() => expect(r.history.get()).toBe('/dashboard/setup'));
+      expect(links(r)).toEqual(['Set up', 'Flash', 'Changelog', 'Stats']);
+      cleanup();
+    }
+  });
+
+  it('Changelog and Stats stay whatever is selected', async () => {
+    const r = mount('/dashboard/changelog', world({ kind: 'other' }));
+    await new Promise((res) => setTimeout(res, 30));
+    expect(r.history.get()).toBe('/dashboard/changelog');
+  });
+
+  it('keeps every page for the search pass, which reads them all with a box connected', async () => {
+    const g = globalThis as { __mediusSearchPass?: boolean };
+    g.__mediusSearchPass = true;
+    try {
+      const r = mount('/dashboard/setup');
+      await new Promise((res) => setTimeout(res, 30));
+      expect(r.history.get()).toBe('/dashboard/setup');
+      expect(links(r)).toEqual(['Set up', 'Device', 'Control', 'Update', 'Flash', 'Changelog', 'Stats']);
+    } finally {
+      delete g.__mediusSearchPass;
+    }
+  });
+
+  it('Flash stays in the list and on screen whatever is selected', async () => {
+    for (const kind of ['medius', 'other'] as const) {
+      const r = mount('/dashboard/flash', world({ kind }));
+      await new Promise((res) => setTimeout(res, 30));
+      expect(r.history.get()).toBe('/dashboard/flash');
+      expect(links(r)).toContain('Flash');
+      cleanup();
+    }
+  });
+
+  it('while the selection is still being checked, every link stays and no page moves', async () => {
+    const r = mount('/dashboard/setup', world({ kind: null }));
+    await new Promise((res) => setTimeout(res, 30));
+    expect(r.history.get()).toBe('/dashboard/setup');
+    expect(links(r)).toEqual(['Set up', 'Device', 'Control', 'Update', 'Flash', 'Changelog', 'Stats']);
+  });
+
+  it('no page moves during a flash, and a box that connects on Set up moves it to Device after', async () => {
+    const w = world({ kind: 'other' });
+    w.setRunning(true);
+    const r = mount('/dashboard/setup', w);
+    w.setKind('medius');
+    await new Promise((res) => setTimeout(res, 30));
+    expect(r.history.get()).toBe('/dashboard/setup');
+    w.setRunning(false);
+    await waitFor(() => expect(r.history.get()).toBe('/dashboard'));
   });
 
   it('names the box on Update, and a box picked there stays on Update', async () => {
@@ -204,30 +274,25 @@ describe('DocsLayout and the boxes', () => {
     await waitFor(() => expect(r.start).toHaveBeenCalled());
   });
 
-  it('a box picked on Changelog opens Device; one picked during Setup leaves the wizard where it is', async () => {
+  it('a box picked on Changelog opens Device', async () => {
     const r = mount('/dashboard/changelog');
     await waitFor(() => expect(row(r)).toBeTruthy());
     fireEvent.click(row(r));
     await waitFor(() => expect(r.container.textContent).toContain('device page'));
-    r.history.set({ value: '/dashboard/setup' });
-    await waitFor(() => expect(r.container.textContent).toContain('setup page'));
-    fireEvent.click(row(r));
-    await new Promise((res) => setTimeout(res, 20));
-    expect(r.container.textContent).toContain('setup page');
   });
 
   it('locks the sidebar and the box list during a flash over a chip USB, and not during a box update', async () => {
     const r = mount('/dashboard');
     await waitFor(() => expect(row(r)).toBeTruthy());
-    const setupLink = () => [...r.container.querySelectorAll('.side a')].find((t) => /Set up/.test(t.textContent ?? '')) as HTMLAnchorElement;
-    const inert = () => setupLink().getAttribute('aria-disabled') === 'true';
+    const changelogLink = () => [...r.container.querySelectorAll('.side nav.group a')].find((t) => t.textContent === 'Changelog') as HTMLAnchorElement;
+    const inert = () => changelogLink().getAttribute('aria-disabled') === 'true';
     r.setStatus('flashing');
     await new Promise((res) => setTimeout(res, 0));
     expect(inert()).toBe(false);
     expect((row(r) as HTMLButtonElement).disabled).toBe(false);
     r.setRunning(true);
     await waitFor(() => expect(inert()).toBe(true));
-    fireEvent.click(setupLink());
+    fireEvent.click(changelogLink());
     await new Promise((res) => setTimeout(res, 0));
     expect(r.container.textContent).toContain('device page');
     expect((row(r) as HTMLButtonElement).disabled).toBe(true);

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, cleanup, fireEvent } from '@solidjs/testing-library';
+import { choose, optionsOf, shownIn } from './helpers/dropdown';
 import {
   type ClipEntry,
   type ClipPacketTrigger,
@@ -321,9 +322,9 @@ const hasRadio = (container: HTMLElement, label: string): boolean =>
 const draftChips = (container: HTMLElement): string[] =>
   [...container.querySelectorAll('.chip__label')].map((e) => e.textContent ?? '');
 
-// What Send to box handed the link, which is the entry the pickers built.
+// What Send handed the link, which is the entry the pickers built.
 const sent = async (container: HTMLElement): Promise<ClipEntry[]> => {
-  fireEvent.click(button(container, 'Send to box'));
+  fireEvent.click(button(container, 'Send'));
   await settle();
   return (mock.appended.at(-1) ?? []) as ClipEntry[];
 };
@@ -334,7 +335,7 @@ describe('DeviceClip clone gate', () => {
     mock.setClip(status());
     const { queryByText, getByText } = render(() => <DeviceClip />);
     expect(queryByText(/Clips need/)).toBeNull();
-    expect(getByText('Send to box')).toBeTruthy();
+    expect(getByText('Send')).toBeTruthy();
   });
 
   it('stands down with no clone up, and asks for a device, not a mouse', () => {
@@ -342,7 +343,7 @@ describe('DeviceClip clone gate', () => {
     mock.setClip(status());
     const { getByText, queryByText } = render(() => <DeviceClip />);
     expect(getByText('Clips need a cloned device. Plug one into USB3.')).toBeTruthy();
-    expect(queryByText('Send to box')).toBeNull();
+    expect(queryByText('Send')).toBeNull();
   });
 });
 
@@ -350,7 +351,7 @@ describe('DeviceClip draft ticks', () => {
   it('builds a pan tick', async () => {
     mock.setClip(status());
     const { container } = render(() => <DeviceClip />);
-    fireEvent.click(radio(container, 'Pan'));
+    choose(container, 'Tick', 'Pan');
     await settle();
     fireEvent.click(button(container, 'Add'));
     await settle();
@@ -361,13 +362,13 @@ describe('DeviceClip draft ticks', () => {
   it('offers raw report and control transfer ticks only while imperfect clones are on', async () => {
     mock.setClip(status());
     const { container } = render(() => <DeviceClip />);
-    expect(hasRadio(container, 'Pan')).toBe(true);
-    expect(hasRadio(container, 'Raw report')).toBe(false);
-    expect(hasRadio(container, 'Control transfer')).toBe(false);
+    expect(optionsOf(container, 'Tick').includes('Pan')).toBe(true);
+    expect(optionsOf(container, 'Tick').includes('Raw report')).toBe(false);
+    expect(optionsOf(container, 'Tick').includes('Control transfer')).toBe(false);
     mock.setImperfect(true);
     await settle();
-    expect(hasRadio(container, 'Raw report')).toBe(true);
-    expect(hasRadio(container, 'Control transfer')).toBe(true);
+    expect(optionsOf(container, 'Tick').includes('Raw report')).toBe(true);
+    expect(optionsOf(container, 'Tick').includes('Control transfer')).toBe(true);
   });
 
   it('says why two tick kinds are missing while imperfect clones are off', async () => {
@@ -384,7 +385,7 @@ describe('DeviceClip draft ticks', () => {
     mock.setImperfect(true);
     mock.setClip(status());
     const { container, queryByText } = render(() => <DeviceClip />);
-    fireEvent.click(radio(container, 'Raw report'));
+    choose(container, 'Tick', 'Raw report');
     await settle();
     expect(queryByText('Reaches the game PC.')).toBeTruthy();
     expect(queryByText('Reaches the device.')).toBeNull();
@@ -398,7 +399,7 @@ describe('DeviceClip draft ticks', () => {
     mock.setImperfect(true);
     mock.setClip(status());
     const { container, getByLabelText, queryByText } = render(() => <DeviceClip />);
-    fireEvent.click(radio(container, 'Control transfer'));
+    choose(container, 'Tick', 'Control transfer');
     await settle();
     expect(queryByText('Device to host, standard, to the device: GET_DESCRIPTOR.')).toBeTruthy();
     expect(queryByText('Unused: this request reads.')).toBeTruthy();
@@ -418,13 +419,13 @@ describe('DeviceClip draft ticks', () => {
     mock.setImperfect(true);
     mock.setClip(status());
     const { container, queryByLabelText } = render(() => <DeviceClip />);
-    fireEvent.click(radio(container, 'Raw report'));
+    choose(container, 'Tick', 'Raw report');
     await settle();
     expect(queryByLabelText('Bytes (hex)')).toBeTruthy();
     mock.setImperfect(false);
     await settle();
     expect(queryByLabelText('Bytes (hex)')).toBeNull();
-    expect(on(radio(container, 'Move'))).toBe(true);
+    expect(shownIn(container, 'Tick')).toBe('Move');
     fireEvent.click(button(container, 'Add'));
     await settle();
     expect(draftChips(container)).toContain('move 10,0');
@@ -434,7 +435,7 @@ describe('DeviceClip draft ticks', () => {
     mock.setImperfect(true);
     mock.setClip(status());
     const { container, getByLabelText } = render(() => <DeviceClip />);
-    fireEvent.click(radio(container, 'Raw report'));
+    choose(container, 'Tick', 'Raw report');
     await settle();
     fireEvent.input(getByLabelText('Bytes (hex)'), { target: { value: '10 ff 05' } });
     fireEvent.click(radio(container, 'Out'));
@@ -451,7 +452,7 @@ describe('DeviceClip draft ticks', () => {
     mock.setImperfect(true);
     mock.setClip(status());
     const { container, getByLabelText, findByRole } = render(() => <DeviceClip />);
-    fireEvent.click(radio(container, 'Raw report'));
+    choose(container, 'Tick', 'Raw report');
     await settle();
 
     fireEvent.click(button(container, 'Add'));
@@ -481,7 +482,7 @@ describe('DeviceClip draft ticks', () => {
     mock.setImperfect(true);
     mock.setClip(status());
     const { container, getByLabelText } = render(() => <DeviceClip />);
-    fireEvent.click(radio(container, 'Control transfer'));
+    choose(container, 'Tick', 'Control transfer');
     await settle();
     fireEvent.input(getByLabelText('bmRequestType'), { target: { value: '0x21' } });
     fireEvent.input(getByLabelText('bRequest'), { target: { value: '9' } });
@@ -509,7 +510,7 @@ describe('DeviceClip draft ticks', () => {
     mock.setImperfect(true);
     mock.setClip(status());
     const { container, getByLabelText, findByRole } = render(() => <DeviceClip />);
-    fireEvent.click(radio(container, 'Control transfer'));
+    choose(container, 'Tick', 'Control transfer');
     await settle();
     const mismatch = 'Out data must be wLength bytes, and blank for a request that reads.';
 
@@ -614,7 +615,7 @@ describe('DeviceClip packet triggers', () => {
     fireEvent.click(radio(container, 'In'));
     type(container, 'clip-pkt-match', '07 20');
     type(container, 'clip-pkt-mask', 'ff 20');
-    fireEvent.click(radio(container, 'Start'));
+    choose(container, 'Runs', 'Start');
     fireEvent.click(box(container, 'Consume the packet'));
     fireEvent.click(box(container, 'Once per run'));
     await settle();
@@ -632,8 +633,8 @@ describe('DeviceClip packet triggers', () => {
     await settle();
     expect(hasRadio(container, 'Press')).toBe(false);
     expect(queryByLabelText('Match (hex)')).toBeTruthy();
-    expect(['HID in', 'HID out', 'Vendor interrupt', 'Vendor bulk', 'Control', 'Emit'].every((c) => hasRadio(container, c))).toBe(true);
-    expect(on(radio(container, 'HID in'))).toBe(true);
+    expect(optionsOf(container, 'Class')).toEqual(['HID in', 'HID out', 'Vendor interrupt', 'Vendor bulk', 'Control', 'Emit']);
+    expect(shownIn(container, 'Class')).toBe('HID in');
   });
 
   it('binds a watching trigger while imperfect clones are off', async () => {
@@ -698,14 +699,14 @@ describe('DeviceClip packet triggers', () => {
     const why = 'A control request always reaches the device.';
     const { container, queryByText } = await mount();
     fireEvent.click(box(container, 'Consume the packet'));
-    fireEvent.click(radio(container, 'Control'));
+    choose(container, 'Class', 'Control');
     await settle();
     expect(box(container, 'Consume the packet').disabled).toBe(true);
     expect(box(container, 'Consume the packet').checked).toBe(false);
     expect(queryByText(why)).toBeTruthy();
     await bind(container);
     expect(bound().map((t) => [t.cls, t.consume])).toEqual([[CatchClass.Control, false]]);
-    fireEvent.click(radio(container, 'Emit'));
+    choose(container, 'Class', 'Emit');
     await settle();
     expect(box(container, 'Consume the packet').disabled).toBe(false);
     expect(queryByText(why)).toBeNull();
@@ -727,7 +728,7 @@ describe('DeviceClip packet triggers', () => {
     const { container, queryByText, queryByLabelText } = await mount();
     expect(queryByText('Native reports by interface, before the box changes them.')).toBeTruthy();
     expect(queryByLabelText('Interface')).toBeTruthy();
-    fireEvent.click(radio(container, 'Control'));
+    choose(container, 'Class', 'Control');
     await settle();
     expect(queryByText('Class and vendor requests on EP0, and every request on higher control endpoints.')).toBeTruthy();
     expect(queryByLabelText('Endpoint (0 is EP0)')).toBeTruthy();
@@ -770,12 +771,12 @@ describe('DeviceClip packet triggers', () => {
     expect(alert(container)).toBe(stream);
 
     fireEvent.click(radio(container, 'One id'));
-    fireEvent.click(radio(container, 'Control'));
+    choose(container, 'Class', 'Control');
     await bind(container);
     expect(alert(container)).toBe(stream);
     expect(bound()).toEqual([]);
 
-    fireEvent.click(radio(container, 'Vendor bulk'));
+    choose(container, 'Class', 'Vendor bulk');
     await bind(container);
     expect(alert(container)).toBeNull();
     expect(bound().map((t) => [t.cls, t.dir, t.oncePerRun])).toEqual([[CatchClass.VendorBulk, Direction.Positive, true]]);
@@ -786,17 +787,17 @@ describe('DeviceClip packet triggers', () => {
     const dirs = () => ['Both', 'In', 'Out'].map((d) => radio(container, d).disabled);
     expect(dirs()).toEqual([false, false, true]);
     expect(queryByText('Every HID in report travels In.')).toBeTruthy();
-    fireEvent.click(radio(container, 'HID out'));
+    choose(container, 'Class', 'HID out');
     await settle();
     expect(dirs()).toEqual([false, true, false]);
     expect(queryByText('Every HID out report travels Out.')).toBeTruthy();
     expect(queryByText('Every HID in report travels In.')).toBeNull();
-    fireEvent.click(radio(container, 'Emit'));
+    choose(container, 'Class', 'Emit');
     await settle();
     expect(dirs()).toEqual([false, false, true]);
     expect(queryByText('Every emitted report travels In.')).toBeTruthy();
     for (const cls of ['Vendor interrupt', 'Vendor bulk', 'Control']) {
-      fireEvent.click(radio(container, cls));
+      choose(container, 'Class', cls);
       await settle();
       expect(dirs()).toEqual([false, false, false]);
       expect(queryByText(/ travels (In|Out)\.$/)).toBeNull();
@@ -805,10 +806,10 @@ describe('DeviceClip packet triggers', () => {
 
   it('falls back to Both when the class changes under a direction it never carries', async () => {
     const { container } = await mount();
-    fireEvent.click(radio(container, 'Vendor bulk'));
+    choose(container, 'Class', 'Vendor bulk');
     fireEvent.click(radio(container, 'Out'));
     await settle();
-    fireEvent.click(radio(container, 'HID in'));
+    choose(container, 'Class', 'HID in');
     await settle();
     expect(on(radio(container, 'Both'))).toBe(true);
     expect(on(radio(container, 'Out'))).toBe(false);
@@ -817,10 +818,10 @@ describe('DeviceClip packet triggers', () => {
     expect(bound().map((t) => [t.cls, t.dir])).toEqual([[CatchClass.HidIn, Direction.Both]]);
     // A direction the new class carries stays where it was.
     fireEvent.click(radio(container, 'In'));
-    fireEvent.click(radio(container, 'Emit'));
+    choose(container, 'Class', 'Emit');
     await settle();
     expect(on(radio(container, 'In'))).toBe(true);
-    fireEvent.click(radio(container, 'HID out'));
+    choose(container, 'Class', 'HID out');
     await settle();
     expect(on(radio(container, 'Both'))).toBe(true);
   });
@@ -982,10 +983,25 @@ describe('DeviceClip packet triggers', () => {
     ]);
   });
 
+  it.each([
+    ['Button or key', '[role="radiogroup"][aria-label="Action"]'],
+    ['Raw report', '[role="radiogroup"][aria-label="Direction"]'],
+  ])('puts Add after every field of the %s tick', async (kind, last) => {
+    mock.setImperfect(true);
+    mock.setClip(status());
+    const { container } = render(() => <DeviceClip />);
+    choose(container, 'Tick', kind);
+    await settle();
+    const build = container.querySelector<HTMLElement>('#clip-build')!;
+    const field = build.querySelector(last)!;
+    expect(field.compareDocumentPosition(button(build, 'Add')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
   it('says No triggers bound only while neither kind holds one', async () => {
     mock.setClip(status());
     const { queryByText } = render(() => <DeviceClip />);
-    expect(queryByText('No triggers bound.')).toBeTruthy();
+    // Muted, as every other line saying a list is empty.
+    expect(queryByText('No triggers bound.')?.classList.contains('mut')).toBe(true);
     mock.setClip(status({ packetTriggers: [packet()] }));
     await settle();
     expect(queryByText('No triggers bound.')).toBeNull();
@@ -1010,7 +1026,7 @@ describe('DeviceClip packet triggers', () => {
       }),
     );
     const { container } = render(() => <DeviceClip />);
-    fireEvent.click(button(container, 'Clear triggers'));
+    fireEvent.click(button(container, 'Clear all'));
     await settle();
     expect(mock.triggerCalls).toEqual([{ call: 'clear' }]);
   });
@@ -1018,13 +1034,13 @@ describe('DeviceClip packet triggers', () => {
   it('offers Clear triggers while either kind holds one', async () => {
     mock.setClip(status());
     const { container } = render(() => <DeviceClip />);
-    expect(button(container, 'Clear triggers').disabled).toBe(true);
+    expect(button(container, 'Clear all').disabled).toBe(true);
     mock.setClip(status({ packetTriggers: [packet()] }));
     await settle();
-    expect(button(container, 'Clear triggers').disabled).toBe(false);
+    expect(button(container, 'Clear all').disabled).toBe(false);
     mock.setClip(status({ triggers: [{ cls: 1, id: 0x3a, edge: Direction.Positive, action: ClipOp.Toggle, consume: false }] }));
     await settle();
-    expect(button(container, 'Clear triggers').disabled).toBe(false);
+    expect(button(container, 'Clear all').disabled).toBe(false);
   });
 
   it('keeps the id and selector fields to whole numbers, and sends what they show', async () => {
@@ -1076,7 +1092,7 @@ describe('DeviceClip bind verification', () => {
     fireEvent.click(radio(container, 'In'));
     type(container, 'clip-pkt-match', '07 20');
     type(container, 'clip-pkt-mask', 'ff 20');
-    fireEvent.click(radio(container, 'Start'));
+    choose(container, 'Runs', 'Start');
     if (consume) fireEvent.click(box(container, 'Consume the packet'));
     fireEvent.click(box(container, 'Once per run'));
     await settle();
@@ -1171,7 +1187,7 @@ describe('DeviceClip bind verification', () => {
 
   it('drops the check when the triggers change from here before the next status', async () => {
     const { container } = await bindVector([other(0)]);
-    fireEvent.click(button(container, 'Clear triggers'));
+    fireEvent.click(button(container, 'Clear all'));
     await settle();
     expect(mock.triggerCalls.at(-1)).toEqual({ call: 'clear' });
     await reply([]);
@@ -1192,8 +1208,8 @@ describe('DeviceClip clip status', () => {
       expect(text).not.toContain(empty);
     }
     expect(queryByText('Clear')).toBeNull();
-    expect(queryByText('Clear triggers')).toBeNull();
-    expect(queryByText('Send to box')).toBeNull();
+    expect(queryByText('Clear all')).toBeNull();
+    expect(queryByText('Send')).toBeNull();
   });
 
   it('shows the card again once a status decodes', async () => {
@@ -1251,7 +1267,7 @@ describe('DeviceClip whole-number fields', () => {
   ])('keeps the %s tick\'s %s to a whole number, and sends what it shows', async (kind, field, entry) => {
     mock.setClip(status());
     const { container } = render(() => <DeviceClip />);
-    fireEvent.click(radio(container, kind));
+    choose(container, 'Tick', kind);
     await settle();
     const el = numberField(container, field);
     await typeFraction(el);
@@ -1268,7 +1284,7 @@ describe('DeviceClip whole-number fields', () => {
     mock.setImperfect(true);
     mock.setClip(status());
     const { container } = render(() => <DeviceClip />);
-    fireEvent.click(radio(container, kind));
+    choose(container, 'Tick', kind);
     await settle();
     const el = container.querySelector(`input[name="${name}"]`) as HTMLInputElement;
     await typeFraction(el);

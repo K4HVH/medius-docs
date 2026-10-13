@@ -46,18 +46,19 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-describe('Advanced and BoxScope', () => {
-  it('Manual flash is not inside BoxScope, so a box coming or going never resets a ROM flash half set up', () => {
+describe('Flash and BoxScope', () => {
+  it('Flash is not inside BoxScope, so a box coming or going never resets a ROM flash half set up', () => {
     // Unplugging USB2 for a ROM flash removes an unheld box and moves the selection: inside BoxScope
-    // that remounted the form and put Chip back on the main chip. Update scopes its Latest tab alone.
+    // that remounted the form and put Chip back on the main chip. Flash scopes its USB2 form alone.
     const app = readFileSync('src/app/App.tsx', 'utf8');
     const scope = app.slice(app.indexOf('component={BoxScope}>'));
     const inside = scope.slice(0, scope.indexOf('</Route>'));
-    expect(inside).not.toContain('/dashboard/update/');
-    expect(app).toMatch(/<Route path="\/dashboard\/update\/:place\?" component=\{[^}]+\} \/>/);
-    const update = readFileSync('src/app/pages/dashboard/Update.tsx', 'utf8');
-    const manual = update.slice(update.indexOf('<Pane key="manual">'));
-    expect(manual.slice(0, manual.indexOf('</Pane>'))).not.toContain('BoxScope');
+    expect(inside).not.toContain('/dashboard/flash/');
+    expect(app).toMatch(/<Route path="\/dashboard\/flash\/:place\?" component=\{[^}]+\} \/>/);
+    const flash = readFileSync('src/app/pages/dashboard/Flash.tsx', 'utf8');
+    const scoped = [...flash.matchAll(/<BoxScope>([\s\S]*?)<\/BoxScope>/g)].map((m) => m[1]);
+    expect(scoped).toHaveLength(1);
+    expect(scoped[0]).toContain('<Usb2Flash');
   });
 });
 

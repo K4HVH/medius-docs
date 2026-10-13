@@ -22,7 +22,7 @@ export const MOVED: Readonly<Record<string, string>> = {
   // A place is named by its hash, which a browser keeps over the old address's (a Location with none takes the
   // old one); the page writes the place's address once it lands.
   '/dashboard/advanced-control': '/dashboard/control#advanced',
-  '/dashboard/advanced': '/dashboard/update#manual',
+  '/dashboard/advanced': '/dashboard/flash',
   // An anchor on the old page carries over where the new one keeps it (the FAQ's answers).
   '/guide/update': '/guide/help#q-update',
   '/guide/faq': '/guide/help',

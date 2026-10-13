@@ -1,7 +1,7 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { render, cleanup, fireEvent } from '@solidjs/testing-library';
 import { createSignal } from 'solid-js';
-import { UsagePicker, type PickerClass, type UsageValue } from '../../src/app/pages/dashboard/UsagePicker';
+import { UsageChips, UsagePicker, type PickerClass, type UsageValue } from '../../src/app/pages/dashboard/UsagePicker';
 
 afterEach(cleanup);
 
@@ -39,5 +39,16 @@ describe('UsagePicker', () => {
     fireEvent.input(container.querySelector('.dd-f')!, { target: { value: 'every' } });
     await new Promise((r) => setTimeout(r, 0));
     expect([...container.querySelectorAll('[role="option"]')].map((o) => o.textContent)).toContain('Every axis');
+  });
+});
+
+describe('UsageChips', () => {
+  it('keeps each chip when a poll hands it the same items anew', () => {
+    const items = () => [{ key: 'a', text: 'Left' }, { key: 'b', text: 'Right' }];
+    const [list, setList] = createSignal(items());
+    const { container } = render(() => <UsageChips items={list()} onRemove={() => {}} />);
+    const right = container.querySelectorAll('.chip')[1];
+    setList(items());
+    expect(container.querySelectorAll('.chip')[1]).toBe(right);
   });
 });

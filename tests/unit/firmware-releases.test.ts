@@ -55,7 +55,7 @@ describe('releases', () => {
     expect(calls).toHaveLength(2);
   });
 
-  it('takes a list read a moment ago as it is', async () => {
+  it('takes a list read a moment ago as is', async () => {
     const fw = await import('../../server/firmware');
     await fw.getReleases();
     expect(tags(await fw.refreshReleases())).toEqual(['v3.4.4']);

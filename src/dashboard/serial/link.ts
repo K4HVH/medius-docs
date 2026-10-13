@@ -327,7 +327,7 @@ export class SerialLink {
     private readonly events: SerialLinkEvents = {},
   ) {}
 
-  // The underlying Web Serial port, handed to esptool-js for the flash handoff.
+  // The underlying Web Serial port, kept to reconnect once an update restarts the box.
   get serialPort(): SerialPort {
     return this.port;
   }

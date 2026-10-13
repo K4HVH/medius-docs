@@ -1,7 +1,7 @@
 // The box drops a rule while imperfect clones are off, so the controls hide then. Removal keys on
 // match and mask, which the summary lacks, so a rule is read back in full first.
 
-import { For, Show, createMemo, createSignal } from 'solid-js';
+import { Index, Show, createMemo, createSignal } from 'solid-js';
 import { A } from '@solidjs/router';
 import { Button } from '../../../components/inputs/Button';
 import { Chip } from '../../../components/display/Chip';
@@ -82,7 +82,7 @@ const carriesPayload = (a: RewriteAction): boolean =>
 const readsOffset = (a: RewriteAction): boolean =>
   a === RewriteAction.Patch || a === RewriteAction.ReplyPatch;
 
-// A chip ellipsises past 250px, so match and payload lengths stay out of the name.
+// A chip runs onto a second line past its panel's width, so match and payload lengths stay out of the name.
 const describe = (e: RewriteRuleInfo): string => {
   const where = e.id === CATCH_ID_ANY ? 'any' : e.id;
   const head = `${displayName(rewriteActionName(e.action))} ${rewriteClassName(e.cls)} ${where} ${trafficDirWord(e.dir)}`;
@@ -166,17 +166,11 @@ const DeviceRewrite = () => {
         >
           <div class="labelled">
             <span class="field-l">Class</span>
-            <Segmented
-              name="rw-class"
-              label="Class"
-              value={rwClass()}
-              onChange={chooseClass}
-              options={TRAFFIC_CLASS_OPTIONS}
-            />
+            <Select label="Class" value={rwClass()} onChange={chooseClass} options={TRAFFIC_CLASS_OPTIONS} />
           </div>
           <p class="mut">{classBlurb(cls())}</p>
 
-          <div class="acts">
+          <div class="fields">
             <div class="labelled">
               <span class="field-l">Id</span>
               <Segmented
@@ -225,7 +219,7 @@ const DeviceRewrite = () => {
           </div>
           <p class="mut">{actionBlurb(cls(), action())}</p>
 
-          <div class="acts">
+          <div class="fields">
             <div class="grow">
               <TextField label="Match (hex)" value={rwMatch()} onInput={setRwMatch} placeholder="e.g. 21 09" />
             </div>
@@ -239,7 +233,7 @@ const DeviceRewrite = () => {
           </p>
 
           <Show when={carriesPayload(action())}>
-            <div class="acts">
+            <div class="fields">
               <Show when={readsOffset(action())}>
                 <div class="fw-s">
                   <NumberInput label="Offset" value={rwOff()} min={0} max={65534} precision={0} onChange={(v) => setRwOff(v ?? 0)} />
@@ -253,7 +247,7 @@ const DeviceRewrite = () => {
 
           <div class="acts">
             <Button variant="primary" disabled={cmd.busy()} onClick={addRule}>
-              Add rule
+              Add
             </Button>
             <Button variant="secondary" disabled={cmd.busy() || entries().length === 0} onClick={clearAll}>
               Clear all
@@ -275,15 +269,15 @@ const DeviceRewrite = () => {
           <p class="sublabel">
             Active ({entries().length} of {REWRITE_TAB_MAX})
           </p>
-          <Show when={entries().length > 0} fallback={<p data-search-skip>None.</p>}>
+          <Show when={entries().length > 0} fallback={<p class="mut" data-search-skip>None.</p>}>
             <div class="chips">
-              <For each={entries()}>
+              <Index each={entries()}>
                 {(e, i) => (
-                  <Chip variant="info" onRemove={() => removeAt(i())}>
-                    {describe(e)}
+                  <Chip variant="info" onRemove={() => removeAt(i)}>
+                    {describe(e())}
                   </Chip>
                 )}
-              </For>
+              </Index>
             </div>
           </Show>
         </Show>

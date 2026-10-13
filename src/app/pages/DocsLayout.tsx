@@ -17,6 +17,8 @@ const BOX_ROUTES = new Set([
   '/dashboard/control',
   '/dashboard/update',
 ]);
+const SETUP = '/dashboard/setup';
+const FLASH = '/dashboard/flash';
 
 
 const DocsLayout = (props: RouteSectionProps) => {
@@ -241,8 +243,22 @@ const DocsLayout = (props: RouteSectionProps) => {
   const handleBoxPick = () => {
     setCloseKey((k) => k + 1);
     const p = page();
-    if (!BOX_ROUTES.has(p) && p !== '/dashboard/setup' && !flashing()) navigate('/dashboard');
+    if (!BOX_ROUTES.has(p) && p !== SETUP && p !== FLASH && !flashing()) navigate('/dashboard');
   };
+
+  // The selection decides the dashboard's pages: a Medius box takes Device, Control and Update, anything else Set
+  // up; Flash stays for both. A page the selection doesn't take leaves the list, and its address goes to the one
+  // that does, but never mid-flash. While the selection isn't told (a port still being checked), every page stays.
+  const hidden = (path: string) => {
+    // The search pass (dev) reads every page, with a box connected.
+    if (import.meta.env.DEV && (globalThis as { __mediusSearchPass?: boolean }).__mediusSearchPass) return false;
+    const kind = boxes.selectedKind();
+    return kind === 'medius' ? path === SETUP : kind === 'other' ? BOX_ROUTES.has(path) : false;
+  };
+  createEffect(() => {
+    if (section() !== 'dashboard' || flashing() || boxes.anyUpdating() || !hidden(page())) return;
+    navigate((boxes.selectedKind() === 'medius' ? '/dashboard' : SETUP) + location.search, { replace: true });
+  });
 
   createEffect(() => {
     if (section() === 'dashboard') boxes.start();
@@ -260,6 +276,7 @@ const DocsLayout = (props: RouteSectionProps) => {
             if (!flashing()) setSearchOpen(true);
           }}
           boxes={boxes.supported && boxes.secure ? <BoxList onPick={handleBoxPick} disabled={flashing()} /> : undefined}
+          hide={section() === 'dashboard' ? hidden : undefined}
         />
         <main ref={main} class="docs-page doc">
           {props.children}

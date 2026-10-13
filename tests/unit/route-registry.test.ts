@@ -134,6 +134,7 @@ describe('route registry', () => {
       '/dashboard',
       '/dashboard/control',
       '/dashboard/update',
+      '/dashboard/flash',
       '/dashboard/changelog',
       '/dashboard/stats',
     ]);

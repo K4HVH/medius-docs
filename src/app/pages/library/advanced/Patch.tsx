@@ -139,7 +139,7 @@ device.apply_patch()?; // the clone replugs and re-presents patched`}</code></pr
             </thead>
             <tbody>
               <tr><td>Serves patches</td><td>Erases the set and re-presents the clone unpatched: one unplug/replug to the game PC, and a re-clone that releases the session.</td></tr>
-              <tr><td>Serves none</td><td>Erases the set and leaves the clone as it is.</td></tr>
+              <tr><td>Serves none</td><td>Erases the set and leaves the clone as is.</td></tr>
             </tbody>
           </table>
         </div>

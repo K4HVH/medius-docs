@@ -1,4 +1,4 @@
-import { createEffect, createMemo, createSignal, For, onCleanup, Show } from 'solid-js';
+import { createEffect, createMemo, createSignal, Index, onCleanup, Show } from 'solid-js';
 
 export interface SelectOption {
   value: string;
@@ -38,6 +38,9 @@ export function Select(props: {
   let button: HTMLButtonElement | undefined;
   let input: HTMLInputElement | undefined;
   let list: HTMLDivElement | undefined;
+  let panel: HTMLDivElement | undefined;
+  const [up, setUp] = createSignal(false);
+  const [room, setRoom] = createSignal<number | null>(null);
 
   const current = () => props.options.find((o) => o.value === props.value);
   const q = () => (props.onQuery ? props.query ?? '' : query());
@@ -56,11 +59,31 @@ export function Select(props: {
     setKb(-1);
     if (refocus) button?.focus();
   };
+  // The list opens under the button, or over it when it doesn't fit below and does fit between the button and
+  // the bars stuck over the top of the page; fitting neither, it takes the roomier side and scrolls within it.
+  // Focusing it never scrolls the page from under the pointer.
   const show = () => {
     if (props.disabled) return;
+    setUp(false);
+    setRoom(null);
     setOpen(true);
     setKb(Math.max(0, shown().findIndex((o) => o.value === props.value)));
-    queueMicrotask(() => (input ?? list)?.focus());
+    queueMicrotask(() => {
+      const r = root?.getBoundingClientRect();
+      const need = panel?.offsetHeight ?? 0;
+      if (r) {
+        const bars = [...document.querySelectorAll('.nav, .docbar, .ptabs')].map((e) => e.getBoundingClientRect().bottom);
+        const below = innerHeight - r.bottom - 8;
+        const above = r.top - Math.max(0, ...bars.filter((y) => y <= r.top)) - 8;
+        if (need > below) {
+          const upward = need <= above || above > below;
+          setUp(upward);
+          // Never under three options' height, however little room there is.
+          if (need > (upward ? above : below)) setRoom(Math.max(120, upward ? above : below));
+        }
+      }
+      (input ?? list)?.focus({ preventScroll: true });
+    });
   };
   const pick = (o: SelectOption) => {
     if (props.disabled || o.disabled) return;
@@ -99,7 +122,18 @@ export function Select(props: {
   onCleanup(() => document.removeEventListener('pointerdown', onDoc));
 
   return (
-    <div ref={root} class={`dd${props.class ? ` ${props.class}` : ''}`} classList={{ open: open(), 'dd--disabled': props.disabled }} onFocusOut={onFocusOut}>
+    <div
+      ref={root}
+      class={`dd${props.class ? ` ${props.class}` : ''}`}
+      classList={{ open: open(), 'dd--disabled': props.disabled, 'dd--long': !!props.filter }}
+      onFocusOut={onFocusOut}
+    >
+      {/* The button reads as its field and the value picked: "Direction Both". */}
+      <Show when={props.label}>
+        <span id={`${id}-n`} hidden data-search-skip>
+          {props.label}
+        </span>
+      </Show>
       <button
         ref={button}
         type="button"
@@ -108,7 +142,7 @@ export function Select(props: {
         aria-haspopup="listbox"
         aria-expanded={open()}
         aria-controls={`${id}-list`}
-        aria-label={props.label}
+        aria-labelledby={props.label ? `${id}-n ${id}-v` : `${id}-v`}
         data-search-text={props.options.map((o) => o.label).join('\n')}
         disabled={props.disabled}
         onClick={() => (open() ? close() : show())}
@@ -119,15 +153,30 @@ export function Select(props: {
           }
         }}
       >
-        <span data-search-skip>{current() ? shownLabel(current()!) : (props.placeholder ?? 'Select...')}</span>
+        <span id={`${id}-v`} data-search-skip>
+          {current() ? shownLabel(current()!) : (props.placeholder ?? 'Select...')}
+        </span>
         <svg viewBox="0 0 10 6" aria-hidden="true">
           <path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.4" />
         </svg>
       </button>
+      {/* As wide as the longest option, so a pick never changes the width; a long list that filters is not. The
+          labels are drawn by CSS, so they are no text to search, read out or find. */}
+      <Show when={!props.filter}>
+        <span class="dd-z" aria-hidden="true">
+          <Index each={props.options}>{(o) => <span data-w={o().note ? `${o().label} (${o().note})` : o().label} />}</Index>
+        </span>
+      </Show>
       <Show when={open()}>
         {/* The filter is a combobox over the listbox, which holds the options alone; either one names the
             option the arrows are on, for a screen reader. */}
-        <div class="dd-l" onKeyDown={onListKey}>
+        <div
+          ref={panel}
+          class="dd-l"
+          classList={{ up: up() }}
+          style={room() !== null ? { 'max-height': `${room()}px` } : undefined}
+          onKeyDown={onListKey}
+        >
           <Show when={props.filter}>
             <input
               ref={input}
@@ -155,23 +204,24 @@ export function Select(props: {
             aria-label={props.label}
             aria-activedescendant={props.filter ? undefined : active()}
           >
-            <For each={shown()}>
+            {/* By place, so a poll handing the same options anew keeps the one under the pointer. */}
+            <Index each={shown()}>
               {(o, i) => (
                 <button
                   type="button"
                   role="option"
-                  id={`${id}-o-${i()}`}
+                  id={`${id}-o-${i}`}
                   tabIndex={-1}
-                  aria-selected={o.value === props.value}
-                  disabled={o.disabled}
-                  classList={{ kb: kb() === i() }}
-                  onPointerMove={() => setKb(i())}
-                  onClick={() => pick(o)}
+                  aria-selected={o().value === props.value}
+                  disabled={o().disabled}
+                  classList={{ kb: kb() === i }}
+                  onPointerMove={() => setKb(i)}
+                  onClick={() => pick(o())}
                 >
-                  {shownLabel(o)}
+                  {shownLabel(o())}
                 </button>
               )}
-            </For>
+            </Index>
           </div>
           <Show when={shown().length === 0}>
             <p class="dd-none">No matches.</p>

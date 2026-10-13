@@ -31,7 +31,7 @@ describe('Help', () => {
     }
   });
 
-  it('names Update\'s Manual tab, never the Advanced page that became it', () => {
+  it('names the Flash page, never the Advanced page that became it', () => {
     for (const f of HELP_ITEMS) expect(f.a, f.id).not.toMatch(/\bAdvanced\b/);
   });
 });

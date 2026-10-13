@@ -133,6 +133,7 @@ export const PAGES: Record<string, LazyPage> = {
   '/dashboard/control': dashboard(() => import('./pages/dashboard/Control')),
   '/dashboard/setup': dashboard(() => import('./pages/dashboard/Setup')),
   '/dashboard/update': dashboard(() => import('./pages/dashboard/Update')),
+  '/dashboard/flash': dashboard(() => import('./pages/dashboard/Flash')),
   '/dashboard/changelog': withReleases(() => import('./pages/dashboard/Changelog')),
   '/dashboard/stats': dashboard(() => import('./pages/dashboard/Stats')),
 };

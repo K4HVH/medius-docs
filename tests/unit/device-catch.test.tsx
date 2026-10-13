@@ -138,6 +138,19 @@ describe('DeviceEventCatch log', () => {
   });
 });
 
+describe('DeviceEventCatch empty log', () => {
+  it('says it is not watching, with no empty log, until Watch starts', async () => {
+    const view = render(() => <DeviceEventCatch />);
+    const log = () => view.container.querySelector('[role="log"]');
+    expect(view.getByText('Not watching.').classList.contains('mut')).toBe(true);
+    expect(log()).toBeNull();
+    fireEvent.click(button(view.container, 'Watch'));
+    await settle();
+    expect(log()!.getAttribute('data-empty')).toBe('Move, click, or type...');
+    expect(view.queryByText('Not watching.')).toBeNull();
+  });
+});
+
 describe('DeviceEventCatch clip transfers', () => {
   it('subscribes to a clip\'s transfers with the raw endpoints', async () => {
     await watching();
@@ -224,7 +237,7 @@ describe('DeviceEventCatch clip transfers', () => {
 
   it('offers the class in the table builder, with what its id means', async () => {
     const { container, getByText, findByText } = render(() => <DeviceEventCatch />);
-    fireEvent.click(radio(container, 'Custom table'));
+    fireEvent.click(radio(container, 'Custom'));
     await settle();
     fireEvent.click(container.querySelector('.dd-b') as HTMLElement);
     await settle();
@@ -234,7 +247,7 @@ describe('DeviceEventCatch clip transfers', () => {
     expect(option).toBeTruthy();
     fireEvent.click(option!);
     await findByText('The id is endpoint number (0 is EP0).');
-    fireEvent.click(getByText('Add entry'));
+    fireEvent.click(getByText('Add'));
     await settle();
     expect(getByText('clip-transfer any first 16B')).toBeTruthy();
   });
@@ -281,7 +294,7 @@ const typeFraction = async (el: HTMLInputElement) => {
 describe('DeviceEventCatch whole-number fields', () => {
   const builder = async () => {
     const view = render(() => <DeviceEventCatch />);
-    fireEvent.click(radio(view.container, 'Custom table'));
+    fireEvent.click(radio(view.container, 'Custom'));
     await settle();
     fireEvent.click(radio(view.container, 'One id'));
     await settle();
@@ -296,7 +309,7 @@ describe('DeviceEventCatch whole-number fields', () => {
     const el = numberField(container, field);
     await typeFraction(el);
     expect(el.value).toBe('3');
-    fireEvent.click(getByText('Add entry'));
+    fireEvent.click(getByText('Add'));
     await settle();
     const chips = [...container.querySelectorAll('.chip__label')].map((c) => c.textContent ?? '');
     expect(chips.some((c) => c.includes(shown))).toBe(true);

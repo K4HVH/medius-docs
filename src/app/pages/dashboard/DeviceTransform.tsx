@@ -1,6 +1,6 @@
 // Moves a native field's value into another before the clone emits it. Weighing is the lock card's.
 
-import { For, Show, createMemo, createSignal } from 'solid-js';
+import { Index, Show, createMemo, createSignal } from 'solid-js';
 import { Button } from '../../../components/inputs/Button';
 import { Chip } from '../../../components/display/Chip';
 import {
@@ -36,7 +36,7 @@ const OP_LABELS = [
 const fieldName = (cls: number, id: number): string =>
   cls === LockClass.Axis ? (AXES.find((a) => a.id === id)?.name ?? `axis ${id}`) : usageName(cls, id);
 
-// A chip ellipsises past 250px, so each reads as the plain move.
+// A chip runs onto a second line past its panel's width, so each reads as the plain move.
 const describe = (t: Transform): string => {
   const src = fieldName(t.sclass, t.sid);
   const dst = fieldName(t.dclass, t.did);
@@ -151,28 +151,22 @@ const DeviceTransform = () => {
             <Segmented name="transform-op" label="Operation" value={op()} onChange={chooseOp} options={OP_LABELS} />
           </div>
 
-          <div class="acts">
-            <div class="acts">
-              <UsagePicker
-                classes={sourceClasses()}
-                name="transform-source"
-                value={source()}
-                onChange={chooseSource}
-                classLabel="From"
-                usageLabel={srcLabel()}
-              />
-            </div>
-            <div class="acts">
-              <UsagePicker
-                classes={destClasses()}
-                name="transform-dest"
-                value={dest()}
-                onChange={(v) => setDest(v)}
-                classLabel="To"
-                usageLabel={dstLabel()}
-              />
-            </div>
-          </div>
+          <UsagePicker
+            classes={sourceClasses()}
+            name="transform-source"
+            value={source()}
+            onChange={chooseSource}
+            classLabel="From"
+            usageLabel={srcLabel()}
+          />
+          <UsagePicker
+            classes={destClasses()}
+            name="transform-dest"
+            value={dest()}
+            onChange={(v) => setDest(v)}
+            classLabel="To"
+            usageLabel={dstLabel()}
+          />
 
           <div class="acts">
             <Button variant="primary" disabled={cmd.busy()} onClick={apply}>
@@ -208,13 +202,13 @@ const DeviceTransform = () => {
         >
           <Show when={active().length > 0} fallback={<p class="mut" data-search-skip>None.</p>}>
             <div class="chips">
-              <For each={active()}>
+              <Index each={active()}>
                 {(t) => (
-                  <Chip variant="info" onRemove={() => remove(t)}>
-                    {describe(t)}
+                  <Chip variant="info" onRemove={() => remove(t())}>
+                    {describe(t())}
                   </Chip>
                 )}
-              </For>
+              </Index>
             </div>
           </Show>
         </Panel>

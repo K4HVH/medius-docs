@@ -1,7 +1,7 @@
 // A tick is one native frame with a mouse cloned, else the OPTION(EMIT) fixed rate, else 1 ms. The
 // engine is soft state on a 1 s dead-man switch; the clip status poll is its keepalive.
 
-import { For, Show, createEffect, createMemo, createSignal } from 'solid-js';
+import { For, Index, Show, createEffect, createMemo, createSignal } from 'solid-js';
 import { A } from '@solidjs/router';
 import { Button } from '../../../components/inputs/Button';
 import { Checkbox } from '../../../components/inputs/Checkbox';
@@ -68,6 +68,7 @@ import { createRefused } from './refused';
 import { UsagePicker, type PickerClass } from './UsagePicker';
 import { Panel, Panels } from '../../shell/Panel';
 import { Segmented } from '../../shell/Segmented';
+import { Select } from '../../shell/Select';
 import {
   RAW_DIR_BLURB,
   SETUP_DEFAULT,
@@ -101,7 +102,7 @@ const TRIGGER_CLASSES: PickerClass[] = [
     label: 'Anything',
     table: [],
     blanket: CLIP_COND_ANY_ID,
-    blanketLabel: 'Any input at all',
+    blanketLabel: 'Any input',
   },
 ];
 
@@ -191,7 +192,7 @@ const PKT_FAULT_TEXT: Record<ClipPacketTriggerFault, string> = {
   pool: `Packet triggers share ${CLIP_PKT_MATCH_POOL} match bytes. Remove one or shorten the match.`,
 };
 
-// A chip ellipsises past 250px, so direction and match go in the line below.
+// A chip runs onto a second line past its panel's width, so direction and match go in the line below.
 const packetName = (t: ClipPacketTrigger): string => {
   const op = OPS.find((o) => o.op === t.action)?.name ?? `op ${t.action}`;
   return `${op} ${rewriteClassName(t.cls)} ${t.id === CATCH_ID_ANY ? 'any' : t.id}`;
@@ -619,25 +620,10 @@ const DeviceClip = () => {
                 when={clip()}
                 fallback={
                   <Panel id="clip-playback" wide>
-                    <p data-search-skip>Reading...</p>
+                    <p class="mut" data-search-skip>Reading...</p>
                   </Panel>
                 }
               >
-                <Show when={render() && (cursorRides() || wheelRides())}>
-                  <Panel wide>
-                    <div class="callout callout--warning">
-                      {cursorRides() && rendered()
-                        ? 'Movement riding is on and the box is rendering motion, so '
-                        : 'Movement riding is on, so '}
-                      {cursorRides() && wheelRides()
-                        ? 'clip motion is'
-                        : cursorRides()
-                          ? "the clip's cursor motion is"
-                          : "the clip's wheel and pan motion is"}{' '}
-                      only emitted alongside physical motion. Button, key and media ticks still play.
-                    </div>
-                  </Panel>
-                </Show>
 
                 <Panel id="clip-playback" title="Engine">
                   <div class="chips">
@@ -699,9 +685,9 @@ const DeviceClip = () => {
                   <Show when={(clip()?.held.length ?? 0) > 0}>
                     <p class="sublabel">Held by injection</p>
                     <div class="chips">
-                      <For each={clip()?.held ?? []}>
-                        {(u) => <Chip variant="warning">{usageName(u.cls, u.id)}</Chip>}
-                      </For>
+                      <Index each={clip()?.held ?? []}>
+                        {(u) => <Chip variant="warning">{usageName(u().cls, u().id)}</Chip>}
+                      </Index>
                     </div>
                   </Show>
 
@@ -746,6 +732,21 @@ const DeviceClip = () => {
                       onChange={(on) => setFlag(CLIP_SET_RIDE, on)}
                     />
                   </div>
+                  {/* Under the checkbox that turns riding on, so ticking it brings the warning in below it, not above
+                      every panel. */}
+                  <Show when={render() && (cursorRides() || wheelRides())}>
+                    <div class="callout callout--warning">
+                      {cursorRides() && rendered()
+                        ? 'Movement riding is on and the box is rendering motion, so '
+                        : 'Movement riding is on, so '}
+                      {cursorRides() && wheelRides()
+                        ? 'clip motion is'
+                        : cursorRides()
+                          ? "the clip's cursor motion is"
+                          : "the clip's wheel and pan motion is"}{' '}
+                      only emitted alongside physical motion. Button, key and media ticks still play.
+                    </div>
+                  </Show>
 
                   <div class="labelled">
                     <span class="field-l">Lock during playback</span>
@@ -768,8 +769,7 @@ const DeviceClip = () => {
                 <Panel id="clip-build" title="Build">
                   <div class="labelled">
                     <span class="field-l">Tick</span>
-                    <Segmented
-                      name="clip-kind"
+                    <Select
                       label="Tick"
                       value={kindNow()}
                       onChange={setKind}
@@ -791,82 +791,81 @@ const DeviceClip = () => {
                   <Show when={!allowed()}>
                     <p class="mut">Raw report and control transfer ticks need <A href="/dashboard#imperfect-clone">imperfect clones</A>, on Device's Options tab.</p>
                   </Show>
-                  <div class="acts">
-                    <Show when={kindNow() === 'move'}>
-                      <div class="fw-s">
-                        <NumberInput label="dx" value={dx()} min={-32768} max={32767} precision={0} onChange={(v) => setDx(v ?? 0)} />
-                      </div>
-                      <div class="fw-s">
-                        <NumberInput label="dy" value={dy()} min={-32768} max={32767} precision={0} onChange={(v) => setDy(v ?? 0)} />
-                      </div>
-                    </Show>
-                    <Show when={kindNow() === 'wheel'}>
-                      <div class="fw-s">
-                        <NumberInput label="Detents" value={dz()} min={-32768} max={32767} precision={0} onChange={(v) => setDz(v ?? 0)} />
-                      </div>
-                    </Show>
-                    <Show when={kindNow() === 'pan'}>
-                      <div class="fw-s">
-                        <NumberInput label="Detents" value={dpan()} min={-32768} max={32767} precision={0} onChange={(v) => setDpan(v ?? 0)} />
-                      </div>
-                    </Show>
-                    <Show when={kindNow() === 'gap'}>
-                      <div class="fw-s">
-                        <NumberInput label="Ticks" value={gap()} min={1} max={65535} precision={0} onChange={(v) => setGap(v ?? 1)} />
-                      </div>
-                    </Show>
-                    <Show when={kindNow() === 'raw'}>
-                      <div class="fw-s">
-                        <NumberInput
-                          name="clip-raw-ep"
-                          label="Endpoint"
-                          value={rawEp()}
-                          min={0}
-                          max={15}
-                          precision={0}
-                          onChange={(v) => setRawEp(v ?? 0)}
-                        />
-                      </div>
-                      <div class="grow">
-                        <TextField
-                          name="clip-raw-bytes"
-                          label="Bytes (hex)"
-                          value={rawBytes()}
-                          onInput={setRawBytes}
-                          placeholder="e.g. 01 00 05 00"
-                        />
-                      </div>
-                    </Show>
-                    <Show when={kindNow() === 'transfer'}>
-                      <div class="fw-s">
-                        <NumberInput
-                          name="clip-xfer-ep"
-                          label="Endpoint"
-                          value={xferEp()}
-                          min={0}
-                          max={15}
-                          precision={0}
-                          onChange={(v) => setXferEp(v ?? 0)}
-                        />
-                      </div>
-                      <For each={SETUP_FIELDS}>
-                        {(f) => (
-                          <div class="fw-s">
-                            <TextField
-                              name={`clip-xfer-${f.key}`}
-                              label={f.label}
-                              value={setup()[f.key]}
-                              onInput={(v) => setSetup((prev) => ({ ...prev, [f.key]: v }))}
-                              placeholder={f.placeholder}
-                            />
-                          </div>
-                        )}
-                      </For>
-                    </Show>
-                    <Button variant="secondary" onClick={addEntry}>
-                      Add
-                    </Button>
-                  </div>
+                  <Show when={kindNow() !== 'edge'}>
+                    <div class="fields">
+                      <Show when={kindNow() === 'move'}>
+                        <div class="fw-s">
+                          <NumberInput label="dx" value={dx()} min={-32768} max={32767} precision={0} onChange={(v) => setDx(v ?? 0)} />
+                        </div>
+                        <div class="fw-s">
+                          <NumberInput label="dy" value={dy()} min={-32768} max={32767} precision={0} onChange={(v) => setDy(v ?? 0)} />
+                        </div>
+                      </Show>
+                      <Show when={kindNow() === 'wheel'}>
+                        <div class="fw-s">
+                          <NumberInput label="Detents" value={dz()} min={-32768} max={32767} precision={0} onChange={(v) => setDz(v ?? 0)} />
+                        </div>
+                      </Show>
+                      <Show when={kindNow() === 'pan'}>
+                        <div class="fw-s">
+                          <NumberInput label="Detents" value={dpan()} min={-32768} max={32767} precision={0} onChange={(v) => setDpan(v ?? 0)} />
+                        </div>
+                      </Show>
+                      <Show when={kindNow() === 'gap'}>
+                        <div class="fw-s">
+                          <NumberInput label="Ticks" value={gap()} min={1} max={65535} precision={0} onChange={(v) => setGap(v ?? 1)} />
+                        </div>
+                      </Show>
+                      <Show when={kindNow() === 'raw'}>
+                        <div class="fw-s">
+                          <NumberInput
+                            name="clip-raw-ep"
+                            label="Endpoint"
+                            value={rawEp()}
+                            min={0}
+                            max={15}
+                            precision={0}
+                            onChange={(v) => setRawEp(v ?? 0)}
+                          />
+                        </div>
+                        <div class="grow">
+                          <TextField
+                            name="clip-raw-bytes"
+                            label="Bytes (hex)"
+                            value={rawBytes()}
+                            onInput={setRawBytes}
+                            placeholder="e.g. 01 00 05 00"
+                          />
+                        </div>
+                      </Show>
+                      <Show when={kindNow() === 'transfer'}>
+                        <div class="fw-s">
+                          <NumberInput
+                            name="clip-xfer-ep"
+                            label="Endpoint"
+                            value={xferEp()}
+                            min={0}
+                            max={15}
+                            precision={0}
+                            onChange={(v) => setXferEp(v ?? 0)}
+                          />
+                        </div>
+                        <For each={SETUP_FIELDS}>
+                          {(f) => (
+                            <div class="fw-s">
+                              <TextField
+                                name={`clip-xfer-${f.key}`}
+                                label={f.label}
+                                value={setup()[f.key]}
+                                onInput={(v) => setSetup((prev) => ({ ...prev, [f.key]: v }))}
+                                placeholder={f.placeholder}
+                              />
+                            </div>
+                          )}
+                        </For>
+                      </Show>
+                    </div>
+                  </Show>
                   <Show when={kindNow() === 'raw'}>
                     <div class="labelled">
                       <span class="field-l">Direction</span>
@@ -898,6 +897,11 @@ const DeviceClip = () => {
                       <Segmented name="clip-edge-action" label="Action" value={edgeAction()} onChange={setEdgeAction} options={ACTIONS} />
                     </div>
                   </Show>
+                  <div class="acts">
+                    <Button variant="secondary" onClick={addEntry}>
+                      Add
+                    </Button>
+                  </div>
 
                   <p class="sublabel">
                     Unsent <span data-search-skip>({plural(draft().length, 'tick')}, {draftBytes()} B)</span>
@@ -930,7 +934,7 @@ const DeviceClip = () => {
                       disabled={busy() || draft().length === 0 || wontFit() || finalized()}
                       onClick={append}
                     >
-                      Send to box
+                      Send
                     </Button>
                     <Button variant="subtle" disabled={draft().length === 0} onClick={() => setDraft([])}>
                       Discard
@@ -950,20 +954,20 @@ const DeviceClip = () => {
                 <Panel id="clip-triggers" title="Triggers">
                   <Show
                     when={(clip()?.triggers.length ?? 0) + packets().length > 0}
-                    fallback={<p data-search-skip>No triggers bound.</p>}
+                    fallback={<p class="mut" data-search-skip>No triggers bound.</p>}
                   >
                     <Show when={(clip()?.triggers.length ?? 0) > 0}>
                       <p class="sublabel">
                         Inputs ({clip()?.triggers.length ?? 0} of {CLIP_TRIG_MAX})
                       </p>
                       <div class="chips">
-                        <For each={clip()?.triggers ?? []}>
+                        <Index each={clip()?.triggers ?? []}>
                           {(t) => (
-                            <Chip variant="info" onRemove={() => removeTrigger(t)}>
-                              {triggerText(t)}
+                            <Chip variant="info" onRemove={() => removeTrigger(t())}>
+                              {triggerText(t())}
                             </Chip>
                           )}
-                        </For>
+                        </Index>
                       </div>
                     </Show>
                     <Show when={(clip()?.triggers ?? []).some(isWildcard)}>
@@ -976,19 +980,19 @@ const DeviceClip = () => {
                         Packets ({packets().length} of {CLIP_PKT_TRIG_MAX}, {pktBytes()} of {CLIP_PKT_MATCH_POOL} match
                         bytes)
                       </p>
-                      <For each={packets()}>
+                      <Index each={packets()}>
                         {(t) => (
                           <div data-packet-trigger>
                             <div class="chips">
-                              <Chip variant="info" onRemove={() => removePacket(t)}>
-                                {packetName(t)}
+                              <Chip variant="info" onRemove={() => removePacket(t())}>
+                                {packetName(t())}
                               </Chip>
-                              <Chip variant={t.hits > 0 ? 'info' : 'neutral'}>{hitsText(t.hits)}</Chip>
+                              <Chip variant={t().hits > 0 ? 'info' : 'neutral'}>{hitsText(t().hits)}</Chip>
                             </div>
-                            <p class="mut wrap">{packetText(t)}</p>
+                            <p class="mut wrap">{packetText(t())}</p>
                           </div>
                         )}
-                      </For>
+                      </Index>
                     </Show>
                   </Show>
 
@@ -1030,7 +1034,7 @@ const DeviceClip = () => {
                   <Show when={onPacket()}>
                     <div class="labelled">
                       <span class="field-l">Class</span>
-                      <Segmented name="clip-pkt-class" label="Class" value={pktClass()} onChange={choosePktClass} options={TRAFFIC_CLASS_OPTIONS} />
+                      <Select label="Class" value={pktClass()} onChange={choosePktClass} options={TRAFFIC_CLASS_OPTIONS} />
                     </div>
                     <p class="mut">{TRAFFIC_CLASS_BLURB[pktCls()]}</p>
                     <div class="labelled">
@@ -1066,7 +1070,7 @@ const DeviceClip = () => {
                     <Show when={DIR_WHY[pktCls()]}>
                       <p class="mut">{DIR_WHY[pktCls()]}</p>
                     </Show>
-                    <div class="acts">
+                    <div class="fields">
                       <div class="grow">
                         <TextField
                           name="clip-pkt-match"
@@ -1093,8 +1097,7 @@ const DeviceClip = () => {
                   </Show>
                   <div class="labelled">
                     <span class="field-l">Runs</span>
-                    <Segmented
-                      name="clip-trig-op"
+                    <Select
                       label="Runs"
                       value={trigOp()}
                       onChange={setTrigOp}
@@ -1156,7 +1159,7 @@ const DeviceClip = () => {
                       disabled={busy() || (clip()?.triggers.length ?? 0) + packets().length === 0}
                       onClick={clearTriggers}
                     >
-                      Clear triggers
+                      Clear all
                     </Button>
                   </div>
                   <Show when={onPacket() ? pktFull() : trigFull()}>

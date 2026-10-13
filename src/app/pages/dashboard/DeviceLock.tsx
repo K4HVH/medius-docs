@@ -1,7 +1,7 @@
 // Lock and Unlock are the ends of one signed scale; the sign inverts an axis. With, against and
 // reversal are offered on axes only: one bit has no bearing and nothing to reverse.
 
-import { For, Show, createMemo, createSignal } from 'solid-js';
+import { Index, Show, createMemo, createSignal } from 'solid-js';
 import { A } from '@solidjs/router';
 import { Button } from '../../../components/inputs/Button';
 import { Chip } from '../../../components/display/Chip';
@@ -28,7 +28,7 @@ import { createCommand } from './action';
 import { displayName } from './hex';
 import { UsagePicker, type PickerClass, type UsageValue } from './UsagePicker';
 import { Panel, Panels } from '../../shell/Panel';
-import { Segmented } from '../../shell/Segmented';
+import { Select } from '../../shell/Select';
 
 const AXES: NamedUsage[] = [
   { id: LockAxis.X, name: 'X (left/right)', group: 'Axes' },
@@ -159,13 +159,7 @@ const DeviceLock = () => {
 
           <div class="labelled">
             <span class="field-l">Direction</span>
-            <Segmented
-              name="lock-direction"
-              label="Direction"
-              value={direction()}
-              onChange={setDirection}
-              options={dirLabel()}
-            />
+            <Select label="Direction" value={direction()} onChange={setDirection} options={dirLabel()} />
           </div>
 
           <Show when={isAxis()}>
@@ -221,9 +215,9 @@ const DeviceLock = () => {
         <Panel id="active-locks" title="Active">
           <Show when={active().length > 0} fallback={<p class="mut" data-search-skip>None.</p>}>
             <div class="chips">
-              <For each={active()}>
-                {(item) => <Chip variant={item.blocked ? 'warning' : 'info'}>{item.text}</Chip>}
-              </For>
+              <Index each={active()}>
+                {(item) => <Chip variant={item().blocked ? 'warning' : 'info'}>{item().text}</Chip>}
+              </Index>
             </div>
           </Show>
         </Panel>

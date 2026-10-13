@@ -9,7 +9,7 @@ import { type FixIO, type Offer, type Outcome, type Signals, allowImperfect, log
 
 const KEPT = 'medius.fixes.kept';
 
-// Offers put away with "Keep as it is", by device and fix, and Logitech mice the fix showed can't go
+// Offers put away with Dismiss, by device and fix, and Logitech mice the fix showed can't go
 // faster. Storage that throws (a private window) keeps them for this page alone; a device the box reads no
 // ids for is kept for this page alone too, since every such device reads the same.
 const remembered = new Set<string>();
@@ -150,7 +150,7 @@ export default function DeviceFixes() {
   };
   // The panel goes with the offer: focus moves to the Overview tab, which stays.
   const leave = () => queueMicrotask(() => document.querySelector<HTMLElement>('[data-tab="overview"]')?.focus());
-  const keepAsItIs = (o: Offer) => {
+  const dismiss = (o: Offer) => {
     keep(offerSlot(signals(), o));
     setPut((n) => n + 1);
     leave();
@@ -187,29 +187,29 @@ export default function DeviceFixes() {
                   {run().running() ? 'Applying...' : 'Allow imperfect anyway'}
                 </Button>
                 <Show when={!run().running()}>
-                  <Button variant="secondary" onClick={() => keepAsItIs(o())}>
-                    Keep as it is
+                  <Button variant="secondary" onClick={() => dismiss(o())}>
+                    Dismiss
                   </Button>
                 </Show>
               </div>
             </Match>
             <Match when={o().kind === 'imperfect'}>
               <p>It needs Imperfect clone.</p>
-              <Actions label="Allow imperfect" running={run().running()} onApply={() => apply(o())} onKeep={() => keepAsItIs(o())} />
+              <Actions label="Allow imperfect" running={run().running()} onApply={() => apply(o())} onDismiss={() => dismiss(o())} />
             </Match>
             <Match when={o().kind === 'logitech'}>
               <p>
                 It can report at 1000 Hz through the box.
               </p>
-              <Actions label="Force 1000 Hz" running={run().running()} onApply={() => apply(o())} onKeep={() => keepAsItIs(o())} />
+              <Actions label="Force 1000 Hz" running={run().running()} onApply={() => apply(o())} onDismiss={() => dismiss(o())} />
             </Match>
             <Match when={o().kind === 'razer'}>
               <p>
                 Set its highest polling rate in Razer Synapse with it plugged into the PC, then plug it back into the box.
               </p>
               <div class="acts">
-                <Button variant="secondary" onClick={() => keepAsItIs(o())}>
-                  Keep as it is
+                <Button variant="secondary" onClick={() => dismiss(o())}>
+                  Dismiss
                 </Button>
               </div>
             </Match>
@@ -224,14 +224,14 @@ export default function DeviceFixes() {
   );
 }
 
-const Actions = (props: { label: string; running: boolean; onApply: () => void; onKeep: () => void }) => (
+const Actions = (props: { label: string; running: boolean; onApply: () => void; onDismiss: () => void }) => (
   <div class="acts">
     <Button variant="primary" loading={props.running} disabled={props.running} onClick={props.onApply}>
       {props.running ? 'Applying...' : props.label}
     </Button>
     <Show when={!props.running}>
-      <Button variant="secondary" onClick={props.onKeep}>
-        Keep as it is
+      <Button variant="secondary" onClick={props.onDismiss}>
+        Dismiss
       </Button>
     </Show>
   </div>

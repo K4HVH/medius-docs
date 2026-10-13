@@ -68,6 +68,9 @@ async function main(): Promise<void> {
   // keeps the links to the code of the page it shows, which the browser then fetches beside the shell.
   await page.addInitScript(() => {
     window.requestIdleCallback = () => 0;
+    // The port scan goes unanswered as the API calls do: no box is found or ruled out, so a dashboard page is
+    // snapshot where it is rather than sent to the page a selection takes.
+    if (navigator.serial) navigator.serial.getPorts = () => new Promise(() => {});
   });
   // Unanswered API calls hold the changelog and stats on the "Loading..." block the server fills.
   await page.route('**/api/**', () => {});

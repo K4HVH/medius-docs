@@ -1,7 +1,7 @@
 # Medius Dashboard: design
 
 A browser-based tool inside the Medius site for viewing, connecting to, and flashing a
-box, with no driver install. Built on WebSerial + esptool-js, native to the SolidJS app.
+box, with no driver install. Built on WebSerial and a boot ROM client written here, native to the SolidJS app.
 
 ## Goal
 
@@ -39,8 +39,8 @@ Hard constraints the design must respect:
 
 ## Hardware and protocol facts the design depends on
 
-Two ESP32-S3 chips, both flashed with the stock Espressif ROM serial protocol (so esptool-js
-mirrors the existing Python tooling exactly, no custom bootloader work).
+Two ESP32-S3 chips, both flashed with the stock Espressif ROM serial protocol (so the browser speaks
+what the Python tooling speaks, no custom bootloader work).
 
 | Chip | Faces | Port | Control/flash transport |
 |------|-------|------|-------------------------|
@@ -52,9 +52,9 @@ Entering download mode:
 - Running firmware: send the framed `REBOOT` command (opcode `0x07`, one target byte).
   Target 0 = device chip to ROM download, target 1 = host chip to ROM download (relayed over
   the 20 Mbaud inter-chip UART), targets 2/3 = reboot to run. The chip force-boots into ROM
-  via `RTC_CNTL_FORCE_DOWNLOAD_BOOT`. Then esptool writes with no-reset.
+  via `RTC_CNTL_FORCE_DOWNLOAD_BOOT`. Then the ROM client writes with no reset.
 - Blank/bricked: disconnect all USB, hold the button beside the socket you are plugging in, replug. That chip enumerates as
-  native ESP32-S3 ROM devices (303A:0009). Then esptool writes.
+  native ESP32-S3 ROM devices (303A:0009). Then the ROM client writes.
 
 Two transports the dashboard handles:
 
@@ -72,7 +72,7 @@ Flash layout (ESP32-S3, bootloader at 0x0):
 Frame format for the control link: `[SOF 0xA5][TYPE u8][SEQ u8][LEN u16 LE][PAYLOAD][CRC16
 LE]`, CRC16-CCITT-FALSE (poly 0x1021, init 0xFFFF, no reflection, no final XOR) over
 TYPE..PAYLOAD. Version reply is `[Q_VERSION, proto_ver, major, minor, patch]`, proto_ver 1.
-After a REBOOT the library waits ~2s for the ROM to settle before esptool runs.
+After a REBOOT the library waits ~2s for the ROM to settle before the ROM client runs.
 
 ## Architecture
 
@@ -120,21 +120,16 @@ web view and the native library share one definition:
 
 ### 4. View device panel (read-only, safe)
 
-- Never enters download mode, never touches esptool. Shows running version and health.
+- Never enters download mode, never touches the ROM. Shows running version and health.
 - Polls `QUERY(HEALTH)` on a cadence; renders flags as chips.
 
-### 5. Flash engine (esptool-js 0.6.0)
+### 5. Flash engine
 
-- `new Transport(port)` -> `new ESPLoader({transport, ...})`.
-- Custom download-mode entry: send the `REBOOT` frame over the control port, wait ~2s, then
-  `esploader.main('no_reset')` so it syncs to the already-in-ROM chip.
-- `writeFlash({ fileArray: [{address, data: Uint8Array}], flashSize:'keep', compress:true,
-  reportProgress, calculateMD5Hash })`. Note: 0.6.0 wants `data` as `Uint8Array` (0.5.x used
-  a binary string; old snippets break).
-- Device chip: REBOOT target 0 over the CH343 port, then flash on that same port.
-- Host chip: REBOOT target 1 over the CH343 port (relayed), then prompt the user to select
-  the host's native ROM port (303A:0009) and flash there. Two-port hand-off, explicit in UI.
-- Progress -> a SolidJS signal -> a Progress bar; esptool terminal text -> a log component.
+| Route | Engine |
+|---|---|
+| USB2, a box running Medius | The control protocol's update: each chip writes its second app slot and boots it (`SerialLink.stageFirmware`) |
+| ROM download, USB1 or USB3 with the button held | `src/dashboard/flash/rom/`: the ESP32-S3 boot ROM's serial protocol, then Espressif's esp-flasher-stub v1.4.0 (spec: medius-fw `docs/superpowers/specs/2026-10-11-rom-client-design.md`) |
+| Progress | A SolidJS signal, shown as a figure and a bar |
 
 ### 6. Recovery flow (blank/bricked)
 
@@ -147,7 +142,9 @@ web view and the native library share one definition:
 - Default: fetch the latest GitHub Release via the API, list assets
   (`medius_device.bin`, `medius_device-factory.bin`, `medius_host.bin`,
   `medius_host-factory.bin`), pick by chip + mode.
-- Manual: a FileUpload for a local `.bin` (rollback, dev builds).
+- Older: on the Flash page, any release from v3.2.0 on, picked by its version. Older ones aren't offered: this
+  dashboard can't connect to them (`MIN_PROTO_VER`), and they take no update over USB2.
+- Upload: a FileUpload for a local `.bin` (dev builds).
 - Show the selected image's version and a confirm step before writing.
 
 ## Safety and UX guards
@@ -158,16 +155,16 @@ web view and the native library share one definition:
 - Confirm dialog before every write, naming the chip, mode, image, and version.
 - The view panel and flasher are separate code paths; the panel must never toggle DTR/RTS or
   enter download mode while a box is running live.
-- A clear error when esptool sync fails ("device not in download mode, hold BOOT and replug").
+- A clear error when the ROM never answers SYNC ("The chip didn't answer. Replug it with the button held, then try again.").
 
 ## Dependencies and build changes
 
-- `bun add esptool-js` (0.6.0, Apache-2.0; deps atob-lite, pako, tslib). Not esp-web-tools
-  (its auto-reset + Wi-Fi assumptions do not fit, and it drags in Lit + Material).
+- fflate (MIT) for the stub's zlib stream, spark-md5 for MD5. Not esp-web-tools (its auto-reset + Wi-Fi
+  assumptions do not fit, and it drags in Lit + Material).
 - Production TLS: WebSerial needs a secure context. Confirm the deployment terminates HTTPS
   (localhost is exempt for dev).
 - Register dashboard pages in `src/app/searchIndex.ts`.
-- Vite/Bun: esptool-js is plain ESM, no special bundling expected. Verify the build.
+- Vite/Bun: the ROM client and its stub load lazily, in the flasher's chunk. Verify the build.
 
 ## Open questions to validate on real hardware
 
@@ -176,10 +173,10 @@ These are not blockers for building, but the flows must be tested against a box:
 1. Opening the CH343 port from WebSerial on Windows: confirm it does not reset the device
    chip (bring-up notes say the CH343/USB2 port does not suffer the open/close reset that the
    native OTG console does; deassert DTR/RTS to be safe).
-2. After a software REBOOT(target 0), confirm the device chip's ROM accepts esptool-js over
+2. After a software REBOOT(target 0), confirm the device chip's ROM accepts the ROM client over
    the same CH343 port (the Python path uses `--before no_reset` on that port).
 3. Confirm which native port enumerates for the host chip and for blank recovery, and that
-   esptool-js syncs to 303A:0009 cleanly.
+   the ROM client syncs to 303A:0009 cleanly.
 4. Confirm the CI release asset names and that the factory image writes at `0x0`.
 5. Confirm GitHub Release assets are fetchable from the browser (CORS). Fall back to a small
    proxy or manual upload if not.

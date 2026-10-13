@@ -119,7 +119,7 @@ describe('DeviceFixes', () => {
   it('puts an offer away for that device, across a reload, and still offers the fix to another device', () => {
     setup();
     const first = render(() => <DeviceFixes />);
-    fireEvent.click(first.getByRole('button', { name: 'Keep as it is' }));
+    fireEvent.click(first.getByRole('button', { name: 'Dismiss' }));
     expect(first.container.querySelector('#device-fix')).toBeNull();
     cleanup();
     setup();
@@ -142,7 +142,7 @@ describe('DeviceFixes', () => {
     });
     setup({ device: mouse(0x1111, 0x2222) });
     const r = render(() => <DeviceFixes />);
-    fireEvent.click(r.getByRole('button', { name: 'Keep as it is' }));
+    fireEvent.click(r.getByRole('button', { name: 'Dismiss' }));
     expect(r.container.querySelector('#device-fix')).toBeNull();
   });
 
@@ -207,7 +207,7 @@ describe('DeviceFixes', () => {
     const DeviceFixes = await freshPage();
     setup({ fw: '3.4.3' });
     const first = render(() => <DeviceFixes />);
-    fireEvent.click(first.getByRole('button', { name: 'Keep as it is' }));
+    fireEvent.click(first.getByRole('button', { name: 'Dismiss' }));
     expect(first.container.querySelector('#device-fix')).toBeNull();
     expect(localStorage.getItem('medius.fixes.kept') ?? '').not.toContain('unread');
     cleanup();

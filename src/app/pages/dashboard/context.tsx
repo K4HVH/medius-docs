@@ -99,6 +99,7 @@ export const DashboardProvider: ParentComponent = (props) => {
     start: () => void ready().then((b) => b.start()),
     entries: () => real()?.entries() ?? [],
     selected: () => real()?.selected() ?? null,
+    selectedKind: () => real()?.selectedKind() ?? null,
     scope: () => {
       const b = real();
       if (!b) throw new Error('no box session before the box runtime is in');

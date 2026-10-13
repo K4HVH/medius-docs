@@ -32,6 +32,9 @@ vi.mock('../../src/app/pages/dashboard/context', async () => {
   const [tick, setTick] = createSignal(0);
   mock.changed = () => setTick((n) => n + 1);
   return {
+  // The card's Add box picks Add box through the registry.
+  NEW_BOX: 'new',
+  useBoxes: () => ({ select: () => {} }),
   useDashboard: () => ({
     link,
     supported: mock.supported,
@@ -197,7 +200,7 @@ describe('Device', () => {
     expect(container.querySelector('#imperfect-clone')!.textContent).toContain('Advanced tab');
   });
 
-  it('a box newer than the page is called newer and pointed at Reload and the manual flash, never told to update', async () => {
+  it('a box newer than the page is called newer and pointed at Reload and the Flash page, never told to update', async () => {
     mock.status = 'connected';
     mock.updateOnly = true;
     mock.protoVer = PROTO_VER + 1;
@@ -209,11 +212,11 @@ describe('Device', () => {
       await waitFor(() => expect(container.textContent).toMatch(/Newer firmware/));
       const text = container.textContent ?? '';
       expect(text).toContain(`This box speaks protocol ${PROTO_VER + 1} and this page protocol ${PROTO_VER}.`);
-      expect(text).toContain("It can still be flashed by hand, on Update's Manual tab.");
+      expect(text).toContain('It can still be flashed by hand, on the Flash page.');
       expect(text).not.toMatch(/Update needed/i);
       expect(container.querySelector('#status')).toBeNull();
-      getByRole('button', { name: 'Manual flash' }).click();
-      expect(navigate).toHaveBeenCalledWith('/dashboard/update#manual');
+      getByRole('button', { name: 'Flash' }).click();
+      expect(navigate).toHaveBeenCalledWith('/dashboard/flash');
       getByRole('button', { name: /reload/i }).click();
       expect(reload).toHaveBeenCalled();
     } finally {
@@ -294,12 +297,12 @@ describe('Device', () => {
     expect(lost.container.querySelector('.conn')!.textContent).toMatch(/^Not answering/);
   });
 
-  it('while the manual flash runs on this box, the card takes you to it', async () => {
+  it('while the Flash page flashes this box, the card takes you to it', async () => {
     mock.status = 'flashing';
     mock.runPage = 'advanced';
     const { getByRole } = render(() => <Device />);
-    getByRole('button', { name: /go to manual flash/i }).click();
-    expect(navigate).toHaveBeenCalledWith('/dashboard/update#manual');
+    getByRole('button', { name: /go to flash/i }).click();
+    expect(navigate).toHaveBeenCalledWith('/dashboard/flash');
   });
 
   it('offers no Identify for a box newer than the page: the light command may have changed', () => {

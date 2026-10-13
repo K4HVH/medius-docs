@@ -1,6 +1,6 @@
 /// <reference types="w3c-web-serial" />
 import { type Accessor, createSignal } from 'solid-js';
-import { type FlashChip, type FlashKind, type FlashProgress, WrongChipError, imageVersion } from '../../../dashboard/flash';
+import { CHIP_NAME, type FlashChip, type FlashKind, type FlashProgress, NotTheBox, WrongChipError, imageVersion } from '../../../dashboard/flash';
 import type { FlashPage, FlashSource, StatsSink } from '../../../dashboard/stats';
 import { flashErrorText } from './flashText';
 
@@ -24,28 +24,39 @@ export interface NativeFlash {
   // The chip the last stock flash found plugged in, when it wasn't the one picked.
   wrongChip: Accessor<{ found: FlashChip; sure: boolean } | null>;
   progress: Accessor<FlashProgress | null>;
-  log: Accessor<string[]>;
   error: Accessor<string | null>;
   running: Accessor<boolean>;
   clear: () => void;
 }
 
+// The flasher's code arrives on first use. A chunk that won't load (a deploy since the page opened) reached no
+// chip.
+class FlasherNotLoaded extends Error {
+  constructor() {
+    super("The flasher didn't load. Reload the page, then try again.");
+  }
+}
+const flasher = () =>
+  import('../../../dashboard/flash/flasher').catch(() => {
+    throw new FlasherNotLoaded();
+  });
+
 export function createNativeFlash(report?: StatsSink): NativeFlash {
   const [progress, setProgress] = createSignal<FlashProgress | null>(null);
-  const [log, setLog] = createSignal<string[]>([]);
   const [error, setError] = createSignal<string | null>(null);
   const [running, setRunning] = createSignal(false);
   const [wrongChip, setWrongChip] = createSignal<{ found: FlashChip; sure: boolean } | null>(null);
 
-  // One write over ROM download, with its progress, log and error kept here, and counted.
+  // One write over ROM download, with its progress and error kept here, and counted. A failure once the erase or
+  // the write began leaves the chip without firmware that starts; either firmware puts that right.
   const run = async (
-    write: (hooks: { onProgress: (p: FlashProgress) => void; onLog: (line: string) => void; onMac: (m: string | null) => void }) => Promise<void>,
+    chip: FlashChip | null,
+    write: (hooks: { onProgress: (p: FlashProgress) => void; onMac: (m: string | null) => void }) => Promise<void>,
     count: ((mac: string | null, ok: boolean, ms: number) => void) | null,
   ): Promise<boolean> => {
     if (running()) return false;
     setError(null);
     setWrongChip(null);
-    setLog([]);
     setProgress({ phase: 'connecting' });
     setRunning(true);
     const started = performance.now();
@@ -54,11 +65,22 @@ export function createNativeFlash(report?: StatsSink): NativeFlash {
     // A chip refused before anything was written is no flash to count.
     let refused = false;
     try {
-      await write({ onProgress: (p) => setProgress(p), onLog: (line) => setLog((prev) => [...prev, line].slice(-500)), onMac: (m) => (mac = m) });
+      await write({ onProgress: (p) => setProgress(p), onMac: (m) => (mac = m) });
       setProgress({ phase: 'done' });
       ok = true;
     } catch (e) {
-      setError(flashErrorText(e));
+      const touched = ['erasing', 'writing'].includes(progress()?.phase ?? '');
+      setError(
+        e instanceof WrongChipError || e instanceof NotTheBox || e instanceof FlasherNotLoaded
+          ? e.message
+          : [
+              flashErrorText(e),
+              touched ? `The ${chip ? CHIP_NAME[chip] : 'chip'} may not start until it's flashed again.` : '',
+              'Replug it with the button held, then try again.',
+            ]
+              .filter(Boolean)
+              .join(' '),
+      );
       if (e instanceof WrongChipError) {
         refused = true;
         setWrongChip({ found: e.found, sure: e.sure });
@@ -84,8 +106,9 @@ export function createNativeFlash(report?: StatsSink): NativeFlash {
     opts: { anyway?: boolean; knownMain?: (mac: string) => boolean } = {},
   ) =>
     run(
+      chip,
       async (hooks) => {
-        const { flashStock: write } = await import('../../../dashboard/flash/flasher');
+        const { flashStock: write } = await flasher();
         await write({ port, chip, pkg, boot, ...opts, ...hooks });
       },
       report
@@ -108,8 +131,9 @@ export function createNativeFlash(report?: StatsSink): NativeFlash {
 
   const flash = (port: SerialPort, image: Uint8Array, kind: FlashKind, meta?: RomFlashMeta) =>
     run(
+      meta?.chip ?? null,
       async (hooks) => {
-        const { flashNativePort } = await import('../../../dashboard/flash/flasher');
+        const { flashNativePort } = await flasher();
         await flashNativePort({ port, image, kind, ...hooks });
       },
       meta && report
@@ -133,5 +157,5 @@ export function createNativeFlash(report?: StatsSink): NativeFlash {
         : null,
     );
 
-  return { flash, flashStock, wrongChip, progress, log, error, running, clear: () => setProgress(null) };
+  return { flash, flashStock, wrongChip, progress, error, running, clear: () => setProgress(null) };
 }

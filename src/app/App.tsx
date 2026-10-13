@@ -121,6 +121,7 @@ const App: Component = () => {
           </Route>
           <Route path="/dashboard/setup/:place?" component={AtPage} />
           <Route path="/dashboard/update/:place?" component={AtPage} />
+          <Route path="/dashboard/flash/:place?" component={AtPage} />
           <Route path="/dashboard/changelog/:place?" component={AtPage} />
           <Route path="/dashboard/stats/:place?" component={AtPage} />
           <Route path="*" component={NotFoundPage} />

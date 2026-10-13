@@ -29,12 +29,12 @@ describe('planRedirect', () => {
     ['/native//', '', null],
     // A page that moved goes to where its content is now, its anchor included.
     ['/dashboard/advanced-control', '', '/dashboard/control#advanced'],
-    ['/dashboard/advanced', '?x=1', '/dashboard/update?x=1#manual'],
+    ['/dashboard/advanced', '?x=1', '/dashboard/flash?x=1'],
     ['/guide/update', '', '/guide/help#q-update'],
     ['/guide/faq', '', '/guide/help'],
     ['/guide/troubleshooting', '', '/guide/help'],
     ['/guide/device-fixes', '', '/guide/compatibility#fixes'],
-    ['/Dashboard/Advanced/', '', '/dashboard/update#manual'],
+    ['/Dashboard/Advanced/', '', '/dashboard/flash'],
     // A moved page's Markdown twin follows it; the twin has no anchors.
     ['/guide/faq.md', '', '/guide/help.md'],
     ['/dashboard/advanced-control.md', '', '/dashboard/control.md'],

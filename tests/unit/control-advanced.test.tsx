@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, cleanup, fireEvent, waitFor } from '@solidjs/testing-library';
+import { choose, open } from './helpers/dropdown';
 import {
   type RewriteRule,
   CATCH_ID_ANY,
@@ -124,11 +125,11 @@ const radio = (root: ParentNode, name: string): HTMLElement => {
   return el as HTMLElement;
 };
 
-// Opens the first dropdown inside `root`; its options render while it is open.
-const openSelect = async (root: ParentNode): Promise<Element[]> => {
-  fireEvent.click(root.querySelector('.dd-b') as HTMLElement);
+// Opens the rewrite Action dropdown inside `root`; its options render while it is open.
+const openAction = async (root: ParentNode): Promise<Element[]> => {
+  const options = open(root, 'Action');
   await settle();
-  return [...document.querySelectorAll('[role="option"]')];
+  return options;
 };
 
 const on = () => {
@@ -169,7 +170,7 @@ describe('The Advanced tab of Control', () => {
     expect(getByText(/Control transfers need/)).toBeTruthy();
     const button = (name: string) =>
       [...container.querySelectorAll('button')].find((b) => b.textContent?.trim() === name);
-    expect(button('Add rule')).toBeUndefined();
+    expect(button('Add')).toBeUndefined();
     expect(button('Send')).toBeUndefined();
     expect(button('Set patch')).toBeTruthy();
     expect((button('Apply') as HTMLButtonElement).disabled).toBe(true);
@@ -178,14 +179,14 @@ describe('The Advanced tab of Control', () => {
   it('offers the gated controls once imperfect clones are on', () => {
     on();
     const { getByText } = render(() => <Cards />);
-    expect(getByText('Add rule')).toBeTruthy();
+    expect(getByText('Add')).toBeTruthy();
     expect(getByText('Send')).toBeTruthy();
   });
 
   it('adds a rewrite rule from the form defaults (a control-class pass)', async () => {
     on();
     const { getByText } = render(() => <Cards />);
-    fireEvent.click(getByText('Add rule'));
+    fireEvent.click(getByText('Add'));
     await settle();
     expect(mock.rewrites).toHaveLength(1);
     expect(mock.rewrites[0]).toMatchObject({
@@ -202,7 +203,7 @@ describe('The Advanced tab of Control', () => {
     on();
     const { getByText, container } = render(() => <Cards />);
     fireEvent.click(radio(container, 'Every id'));
-    fireEvent.click(getByText('Add rule'));
+    fireEvent.click(getByText('Add'));
     await settle();
     expect(mock.rewrites[0]).toMatchObject({ cls: CatchClass.Control, id: CATCH_ID_ANY, state: 1 });
   });
@@ -349,7 +350,7 @@ describe('The Advanced tab of Control', () => {
     await findByText('Class and vendor requests on EP0, and every request on higher control endpoints.');
     expect(queryByText('Reports from the game PC to the device, by endpoint.')).toBeNull();
 
-    fireEvent.click(radio(container, 'HID out'));
+    choose(container, 'Class', 'HID out');
     await findByText('Reports from the game PC to the device, by endpoint.');
     expect(queryByText('Class and vendor requests on EP0, and every request on higher control endpoints.')).toBeNull();
   });
@@ -360,9 +361,9 @@ describe('The Advanced tab of Control', () => {
     on();
     const { container, queryByText, findByText } = render(() => <Cards />);
     const card = container.querySelector('#rewrite-rules') as HTMLElement;
-    fireEvent.click(radio(card, 'HID in'));
+    choose(card, 'Class', 'HID in');
     await findByText(/before the box changes them\. Rewrite mouse motion at Emit/);
-    fireEvent.click(radio(card, 'Emit'));
+    choose(card, 'Class', 'Emit');
     await findByText('What the clone emits to the game PC, injection included.');
     expect(queryByText(/Rewrite mouse motion at Emit/)).toBeNull();
   });
@@ -373,7 +374,7 @@ describe('The Advanced tab of Control', () => {
     await findByText('Leaves the packet untouched.');
     expect(queryByText('The packet becomes the payload.')).toBeNull();
 
-    const replace = (await openSelect(container)).find((o) => o.textContent?.trim() === 'Replace');
+    const replace = (await openAction(container)).find((o) => o.textContent?.trim() === 'Replace');
     fireEvent.click(replace!);
     await waitFor(() => {
       if (!queryByText("Overwrites the start of an Out request's data, keeping the length.")) {
@@ -389,11 +390,11 @@ describe('The Advanced tab of Control', () => {
     on();
     const { container, queryByText, findByText } = render(() => <Cards />);
     const card = container.querySelector('#rewrite-rules') as HTMLElement;
-    fireEvent.click((await openSelect(card)).find((o) => o.textContent?.trim() === 'Replace')!);
+    fireEvent.click((await openAction(card)).find((o) => o.textContent?.trim() === 'Replace')!);
     await findByText("Overwrites the start of an Out request's data, keeping the length.");
     expect(queryByText('The packet becomes the payload.')).toBeNull();
 
-    fireEvent.click(radio(card, 'HID out'));
+    choose(card, 'Class', 'HID out');
     await findByText('The packet becomes the payload.');
     expect(queryByText(/an Out request's data/)).toBeNull();
   });
@@ -403,7 +404,7 @@ describe('The Advanced tab of Control', () => {
     const { container, queryByText, findByText } = render(() => <Cards />);
     await findByText('Offset into the 18-byte device descriptor.');
 
-    fireEvent.click(radio(container, 'String descriptor'));
+    choose(container, 'Descriptor', 'String descriptor');
     await findByText(/replace the whole string/);
     expect(queryByText('Offset into the 18-byte device descriptor.')).toBeNull();
   });
@@ -420,7 +421,7 @@ describe('The Advanced tab of Control', () => {
     fireEvent.input(off, { target: { value: '7' } });
     fireEvent.blur(off);
     await settle();
-    fireEvent.click(radio(card, 'String descriptor'));
+    choose(card, 'Descriptor', 'String descriptor');
     await settle();
     expect(offset()).toBeUndefined();
     const bytes = [...card.querySelectorAll('label')].find((l) => l.textContent?.trim() === 'Bytes (hex)');
@@ -501,7 +502,7 @@ describe('DeviceRewrite actions and payloads', () => {
     return (label?.parentElement?.querySelector('input') ?? undefined) as HTMLInputElement | undefined;
   };
 
-  const actionOptions = (card: HTMLElement): Promise<Element[]> => openSelect(card);
+  const actionOptions = (card: HTMLElement): Promise<Element[]> => openAction(card);
   const pickAction = async (card: HTMLElement, name: string) => {
     const option = (await actionOptions(card)).find((o) => o.textContent?.trim() === name);
     if (!option) throw new Error(`no action named ${name}`);
@@ -523,7 +524,7 @@ describe('DeviceRewrite actions and payloads', () => {
       'Pass', 'Patch', 'Replace', 'Answer', 'Stall', 'NAK', 'Reply patch', 'Reply replace',
     ]);
     fireEvent.keyDown(card.querySelector('.dd-l') as HTMLElement, { key: 'Escape' });
-    fireEvent.click(radio(card, 'HID in'));
+    choose(card, 'Class', 'HID in');
     await settle();
     expect((await actionOptions(card)).map((o) => o.textContent?.trim())).toEqual([
       'Pass', 'Drop', 'Patch', 'Replace',
@@ -540,21 +541,21 @@ describe('DeviceRewrite actions and payloads', () => {
     expect(field(card, 'Offset')).toBeTruthy();
     // Every rule is an address, an action and bytes: the card has no checkbox and no verb picker.
     expect(card.querySelectorAll('input[type=checkbox]')).toHaveLength(0);
-    expect([...card.querySelectorAll('[role="radiogroup"]')].map((g) => g.getAttribute('aria-label'))).toEqual([
-      'Class', 'Id', 'Direction',
-    ]);
+    expect([...card.querySelectorAll('[role="radiogroup"]')].map((g) => g.getAttribute('aria-label'))).toEqual(['Id', 'Direction']);
+    const named = (b: Element) => document.getElementById(b.getAttribute('aria-labelledby')!.split(' ')[0])?.textContent;
+    expect([...card.querySelectorAll('.dd-b')].map(named)).toEqual(['Class', 'Action']);
   });
 
   it('refuses a match longer than the box compares', async () => {
     const { card, getByText, findByText } = await mount();
     fireEvent.input(field(card, 'Match (hex)')!, { target: { value: 'aa'.repeat(17) } });
     fireEvent.input(field(card, 'Mask (hex)')!, { target: { value: 'ff'.repeat(17) } });
-    fireEvent.click(getByText('Add rule'));
+    fireEvent.click(getByText('Add'));
     await findByText('Match and mask must be at most 16 bytes.');
     expect(mock.rewrites).toEqual([]);
     fireEvent.input(field(card, 'Match (hex)')!, { target: { value: 'aa'.repeat(16) } });
     fireEvent.input(field(card, 'Mask (hex)')!, { target: { value: 'ff'.repeat(16) } });
-    fireEvent.click(getByText('Add rule'));
+    fireEvent.click(getByText('Add'));
     await settle();
     expect(mock.rewrites.length).toBe(1);
   });
@@ -562,11 +563,11 @@ describe('DeviceRewrite actions and payloads', () => {
   it('refuses a match that is not hex, or unlike its mask in length', async () => {
     const { card, getByText, findByText } = await mount();
     fireEvent.input(field(card, 'Match (hex)')!, { target: { value: '0g' } });
-    fireEvent.click(getByText('Add rule'));
+    fireEvent.click(getByText('Add'));
     await findByText('Match and mask must be hex.');
     fireEvent.input(field(card, 'Match (hex)')!, { target: { value: '21 09' } });
     fireEvent.input(field(card, 'Mask (hex)')!, { target: { value: 'ff' } });
-    fireEvent.click(getByText('Add rule'));
+    fireEvent.click(getByText('Add'));
     await findByText('Match and mask must be the same length.');
     expect(mock.rewrites).toEqual([]);
   });
@@ -579,7 +580,7 @@ describe('DeviceRewrite actions and payloads', () => {
     fireEvent.blur(field(card, 'Offset')!);
     await settle();
     await pickAction(card, 'Stall');
-    fireEvent.click(getByText('Add rule'));
+    fireEvent.click(getByText('Add'));
     await settle();
     expect(sentRule().action).toBe(RewriteAction.Stall);
     expect(sentRule().off).toBe(0);
@@ -693,7 +694,7 @@ describe('whole-number fields on the advanced control cards', () => {
     ['Offset', 'offset'],
   ] as const)('keeps the patch %s to a whole number, and sends what it shows', async (field, key) => {
     const root = card('descriptor-patches');
-    fireEvent.click(radio(root, 'Report descriptor'));
+    choose(root, 'Descriptor', 'Report descriptor');
     await settle();
     const el = numberField(root, field);
     await typeFraction(el);
@@ -709,20 +710,20 @@ describe('whole-number fields on the advanced control cards', () => {
     const el = numberField(root, 'Endpoint (0 is EP0)');
     await typeFraction(el);
     expect(el.value).toBe('3');
-    fireEvent.click(button(root, 'Add rule'));
+    fireEvent.click(button(root, 'Add'));
     await settle();
     expect(mock.rewrites.map((r) => r.id)).toEqual([3]);
   });
 
   it('keeps the rewrite offset to a whole number, and sends what it shows', async () => {
     const root = card('rewrite-rules');
-    fireEvent.click((await openSelect(root)).find((o) => o.textContent?.trim() === 'Patch')!);
+    fireEvent.click((await openAction(root)).find((o) => o.textContent?.trim() === 'Patch')!);
     await settle();
     const el = numberField(root, 'Offset');
     await typeFraction(el);
     expect(el.value).toBe('3');
     text(root, 'Payload (hex)', 'aa');
-    fireEvent.click(button(root, 'Add rule'));
+    fireEvent.click(button(root, 'Add'));
     await settle();
     expect(mock.rewrites.map((r) => (r as unknown as { off: number }).off)).toEqual([3]);
   });

@@ -1,4 +1,4 @@
-import { createEffect, For, on, onCleanup, onMount } from 'solid-js';
+import { createEffect, Index, on, onCleanup, onMount } from 'solid-js';
 
 export interface SegOption {
   value: string;
@@ -22,28 +22,49 @@ export function Segmented(props: {
   let fill: HTMLSpanElement | undefined;
   let placed = false;
 
-  const place = () => {
+  // The fill slides to a new pick; it jumps on its first placing and when the options change between a row
+  // and a column, where a slide would cross them.
+  const place = (jump = false) => {
     const b = root?.querySelector<HTMLButtonElement>('button[aria-checked="true"]');
     if (!fill || !root?.offsetParent) return;
     if (!b) {
       fill.style.height = '0';
       return;
     }
-    if (!placed) fill.style.transition = 'none';
+    jump ||= !placed;
+    if (jump) fill.classList.add('jump');
     fill.style.left = `${b.offsetLeft}px`;
     fill.style.top = `${b.offsetTop}px`;
     fill.style.width = `${b.offsetWidth}px`;
     fill.style.height = `${b.offsetHeight}px`;
-    if (!placed) {
+    if (jump) {
       void fill.offsetWidth;
-      fill.style.transition = '';
+      fill.classList.remove('jump');
       placed = true;
     }
   };
-  createEffect(on(() => [props.value, props.options.length], () => requestAnimationFrame(place)));
+  // Options that don't fit on one row stack in one column: measured as a row each time the room changes, and
+  // left as they are while hidden, when nothing has a place to measure. The class goes on outside Solid, since
+  // a measure inside an effect would read a row Solid hasn't drawn yet. Says whether it changed.
+  const fit = (): boolean => {
+    if (!root?.offsetParent) return false;
+    const was = root.classList.contains('seg--col');
+    root.classList.remove('seg--col');
+    const bs = [...root.querySelectorAll('button')];
+    const col = bs.some((b) => b.offsetTop !== bs[0].offsetTop);
+    root.classList.toggle('seg--col', col);
+    return col !== was;
+  };
+  const lay = () => place(fit());
+  createEffect(on(() => [props.value, props.options.length], () => requestAnimationFrame(lay)));
   onMount(() => {
+    // A column fills its row, so it never reports the room growing: the window does.
+    const resized = () => requestAnimationFrame(lay);
+    addEventListener('resize', resized);
+    onCleanup(() => removeEventListener('resize', resized));
     if (typeof ResizeObserver === 'undefined' || !root) return;
-    const ro = new ResizeObserver(() => place());
+    // A frame later, so the size the column changes isn't reported back inside this same delivery.
+    const ro = new ResizeObserver(resized);
     ro.observe(root);
     onCleanup(() => ro.disconnect());
   });
@@ -75,25 +96,27 @@ export function Segmented(props: {
       onKeyDown={onKey}
     >
       <span class="seg__fill" ref={fill} aria-hidden="true" />
-      <For each={props.options}>
-        {(o) => {
-          const checked = () => o.value === props.value;
-          const first = () => !props.options.some((x) => x.value === props.value) && props.options.find((x) => !x.disabled) === o;
+      {/* By place, not by object: a poll hands the same options anew, and new buttons would drop the focus
+          and the pointer's hover. */}
+      <Index each={props.options}>
+        {(o, i) => {
+          const checked = () => o().value === props.value;
+          const first = () => !props.options.some((x) => x.value === props.value) && props.options.findIndex((x) => !x.disabled) === i;
           return (
             <button
               type="button"
               role="radio"
               aria-checked={checked()}
               tabIndex={checked() || first() ? 0 : -1}
-              disabled={props.disabled || o.disabled}
-              data-v={o.value}
-              onClick={() => pick(o)}
+              disabled={props.disabled || o().disabled}
+              data-v={o().value}
+              onClick={() => pick(o())}
             >
-              {o.label}
+              {o().label}
             </button>
           );
         }}
-      </For>
+      </Index>
     </div>
   );
 }

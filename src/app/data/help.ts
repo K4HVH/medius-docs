@@ -20,7 +20,7 @@ export interface HelpGroup {
 
 const SET_UP = { label: 'Set up', href: '/dashboard/setup' };
 const OPTIONS = { label: 'Options', href: '/dashboard#imperfect-clone' };
-const MANUAL = { label: 'Manual flash', href: '/dashboard/update#manual' };
+const FLASH = { label: 'Flash', href: '/dashboard/flash' };
 const DISCORD = { label: 'Discord', href: LINKS.discord };
 
 // The Help page: the dashboard's messages, the Discord server's FAQ and the device fixes, by topic. The
@@ -71,7 +71,7 @@ export const HELP: readonly HelpGroup[] = [
         links: [SET_UP],
       },
       { id: 'not-answering', q: "The box isn't answering", a: 'Check USB1 is plugged in too.' },
-      { id: 'one-more-click', q: 'The browser needs one more click before it asks', a: 'Press Try again.' },
+      { id: 'one-more-click', q: 'The browser needs one more click before it asks', a: 'Press Retry.' },
       { id: 'in-use', q: 'Another tab or program has this box open', a: 'Close it. One program at a time holds the box.' },
       { id: 'unreadable', q: "This computer can't read from the box", a: 'Unplug USB2 and plug it back in.' },
     ],
@@ -166,20 +166,20 @@ export const HELP: readonly HelpGroup[] = [
       {
         id: 'newer-protocol',
         q: 'Newer firmware',
-        a: "This box speaks a newer protocol than this page. Reload the page; Update's Manual tab can still flash it.",
-        links: [MANUAL],
+        a: 'This box speaks a newer protocol than this page. Reload the page; the Flash page can still flash it.',
+        links: [FLASH],
       },
       {
         id: 'older-version',
         q: 'How do I go back to an older version?',
-        a: "Get its zip from the release's post in Discord #changelog. On Update's Manual tab, choose Upload a file and flash medius_device.bin to the main chip, then medius_host.bin to the mouse-side chip. A factory image also clears your settings.",
-        links: [MANUAL],
+        a: "On the Flash page, choose Older release and pick the version. Over USB2 both chips take it at once; with a chip's button held, flash the main chip, then the mouse-side chip. Versions before v3.2.0 aren't listed: this page can't connect to a box running one. A factory image also clears your settings.",
+        links: [FLASH],
       },
       {
         id: 'stock-firmware',
         q: 'How do I go back to the stock firmware?',
-        a: "On Update's Manual tab, pick ROM download, then MAKCU stock, and flash each chip.",
-        links: [MANUAL, SET_UP],
+        a: 'On the Flash page, pick MAKCU stock and flash each chip. With a Medius box selected, set Via to ROM download first.',
+        links: [FLASH, SET_UP],
       },
     ],
   },
