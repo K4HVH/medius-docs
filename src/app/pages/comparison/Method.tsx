@@ -48,7 +48,8 @@ const Method: Component = () => (
             <tr><td>Times</td><td>The median (p50), unless the test names another figure (p95, sd)</td></tr>
             <tr><td>Ranges</td><td><code>a-b</code> runs from the lowest value to the highest over what the test covers: runs, hubs, shapes, rates or counts</td></tr>
             <tr><td>A row</td><td>Both cells come from the same test, settings and timing layer</td></tr>
-            <tr><td>Equal</td><td>Within the spread between runs, or the same outcome on both</td></tr>
+            <tr><td>Interval sd</td><td>Timed from usbmon completions, so the PC's interrupt jitter dominates it. The counts of slipped intervals are the steadier relay measure</td></tr>
+            <tr><td>Equal</td><td>The ranges over runs and hubs overlap, or both boxes give the same outcome. Each box gets the same number of runs</td></tr>
             <tr><td>Mixed</td><td>Ahead on one part of the row and behind on another; the cells say which</td></tr>
             <tr><td>By design</td><td>The boxes differ by choice, not by a fault</td></tr>
             <tr><td>Unranked</td><td>The two rigs differ in a way that decides the result; the row says how</td></tr>
