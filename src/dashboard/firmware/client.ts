@@ -1,5 +1,7 @@
 // Client for the server's firmware proxy (/api/firmware/*), which holds the token.
 
+import { type Semver, parseVersion } from '../flash/image';
+
 export interface FirmwareAsset {
   id: number;
   name: string;
@@ -13,6 +15,21 @@ export interface FirmwareRelease {
   prerelease: boolean;
   notes: string;
   assets: FirmwareAsset[];
+}
+
+// The oldest release offered to flash by hand: v3.2.0 brought updates over USB2 and protocol 5, the oldest
+// this page connects to (MIN_PROTO_VER). A box on anything older couldn't come back from here.
+const OLDEST_OFFERED: Semver = { major: 3, minor: 2, patch: 0 };
+// v3.3.1 needed PSRAM to start, which some boxes lack; flashed with the button held it leaves nothing to fall back to.
+const WITHDRAWN = new Set(['v3.3.1']);
+const compare = (a: Semver, b: Semver) => a.major - b.major || a.minor - b.minor || a.patch - b.patch;
+
+// The releases before the latest that can be flashed by hand, newest first as the list comes.
+export function olderReleases(list: FirmwareRelease[] | undefined): FirmwareRelease[] {
+  return (list ?? []).slice(1).filter((r) => {
+    const v = parseVersion(r.tag);
+    return !r.prerelease && !WITHDRAWN.has(r.tag) && !!v && compare(v, OLDEST_OFFERED) >= 0;
+  });
 }
 
 export class FirmwareUnavailableError extends Error {
@@ -63,7 +80,7 @@ export async function downloadAsset(asset: FirmwareAsset): Promise<Uint8Array> {
     throw new Error(body?.error ?? `Download failed (${res.status}).`);
   }
   const bytes = new Uint8Array(await res.arrayBuffer());
-  // esptool's MD5 hashes a truncated file too, so a short download is rejected here.
+  // A flash's MD5 check is of the file as downloaded, which a short download passes, so the size is checked here.
   if (asset.size && bytes.length !== asset.size) {
     throw new Error(`Incomplete download (${bytes.length} of ${asset.size} bytes). Try again.`);
   }

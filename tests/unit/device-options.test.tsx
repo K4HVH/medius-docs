@@ -154,6 +154,19 @@ describe('DeviceOptions', () => {
     expect(queryByText('X and Y are compared with the injected direction separately.')).toBeNull();
   });
 
+  it('sets the rate fields side by side beside Apply, and no empty group when neither is on screen', async () => {
+    const learned = render(() => <DeviceOptions />);
+    await learned.findByText('The native report rate, measured as the mouse moves.');
+    expect(learned.container.querySelector('#emit-rate .fields')).toBeNull();
+    cleanup();
+    mock.emit = { mode: EmitMode.Fixed, fixedHz: 500, resolvedHz: 500, forceHz: 1000 } as typeof mock.emit;
+    const forced = render(() => <DeviceOptions />);
+    await forced.findByText('The rate you pick.');
+    const group = forced.container.querySelector('#emit-rate .acts > .fields')!;
+    expect(group.querySelectorAll('.number-input')).toHaveLength(2);
+    expect(group.nextElementSibling?.textContent?.trim()).toBe('Apply');
+  });
+
   it('describes only the selected emit mode', async () => {
     mock.emit = { mode: EmitMode.Fixed, fixedHz: 500, resolvedHz: 500 };
     const { queryByText, findByText } = render(() => <DeviceOptions />);
@@ -296,7 +309,7 @@ describe('DeviceOptions whole-number fields', () => {
     ) as HTMLElement;
 
   it.each([
-    ['movement riding window', 0, 'Turn on', 'riding', 0],
+    ['movement riding window', 0, 'Apply', 'riding', 0],
     ['bearing window', 1, 'Apply', 'bearing', 0],
   ] as const)('keeps the %s to a whole number, and sends what it shows', async (_what, nth, press, call, arg) => {
     const { container } = render(() => <DeviceOptions />);

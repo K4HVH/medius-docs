@@ -39,7 +39,7 @@
 .ptabs [role="tab"]:first-of-type { padding-left: 0; }
 .ptabs [role="tab"]:hover:not(:disabled), .ptabs [role="tab"][aria-selected="true"] { color: var(--text); }
 .ptabs [role="tab"]:disabled { color: var(--line-2); cursor: not-allowed; }
-.ptabs [role="tab"]:focus-visible { outline: 1px solid var(--primary); outline-offset: -4px; }
+.ptabs [role="tab"]:focus-visible { outline: 2px solid var(--accent); outline-offset: -4px; }
 .ptabs > .cl { flex: none; top: 0; margin: 0 0 0 8px; opacity: 1; transform: none; }
 /* Copied opens under the bar, never over a tab. */
 .ptabs > .cl::after, .ptabs > .cl[data-side]::after { left: auto; right: 0; top: calc(100% + 18px); transform: translateY(-4px); }
@@ -69,7 +69,7 @@
   .panels { grid-template-columns: minmax(0, 1fr); }
 }
 .ph {
-  position: relative; display: flex; justify-content: space-between; align-items: baseline; gap: 6px 16px; flex-wrap: wrap;
+  position: relative; display: flex; justify-content: space-between; align-items: baseline; gap: 6px 16px;
   margin-top: 44px; padding-top: 38px; border-top: 1px solid var(--line);
 }
 .ph::before {
@@ -80,19 +80,32 @@
 .ph h2 { margin: 0; font: 600 26px/1.2 var(--sans); letter-spacing: -0.02em; color: var(--text); }
 .ph .caps { color: var(--dim); }
 .ph .pr { display: flex; align-items: center; gap: 12px; }
-/* A Guide link stays at the heading's right; a long title wraps beside it. */
-.ph:has(> .cross) { flex-wrap: nowrap; }
-.ph:has(> .cross) > h2 { min-width: 0; }
-.ph > .cross { flex: none; }
+/* What sits at a heading's right (a Guide link, a count, a button) keeps its baseline but adds no height, so panels
+   side by side start their content level. */
+.ph > :not(h2) { margin-block: -8px; }
+/* What sits at a heading's right stays there on any screen; a long title wraps beside it. */
+.ph > h2 { min-width: 0; }
+.ph > :not(h2) { flex: none; }
+/* On the narrowest phones they go under the title instead, with no overlap to make them level. */
+@container doc (max-width: 340px) {
+  .ph { flex-wrap: wrap; }
+  .ph > :not(h2) { margin-block: 0; }
+}
 /* The tab strip's rule heads the first row, so those panels draw no rule. */
 .pn.top > .ph { margin-top: 32px; padding-top: 0; border-top: 0; }
 .pn.top > .ph::before { display: none; }
-/* With no tab strip, the first panel's rule takes its place and spaces its heading as the strip does. */
+/* With no tab strip, the first panel's rule takes its place and spaces its heading as the strip does; an untitled
+   one starts where the strip would. */
 .page-header + .panels > .pn:first-child > .ph { margin-top: 42px; padding-top: 32px; }
-.pb { display: grid; gap: 16px; align-content: start; margin-top: 18px; }
+.page-header + .panels > .pn:first-child > .pb:first-child { margin-top: 0; }
+/* One column no wider than the panel, so a long chip or value is cut, not the page pushed sideways. */
+.pb { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-content: start; margin-top: 18px; }
 .pn > .pb:first-child { margin-top: 28px; }
+/* An untitled panel under the tab strip starts where a titled one's heading does. */
+.pn.top > .pb:first-child { margin-top: 32px; }
 .pb > p { margin: 0; font-size: 14.5px; color: var(--text-2); }
 .pb .mut, .pb > p.mut { color: var(--muted); font-size: 14.5px; }
+.pb .callout { font-size: 14.5px; line-height: 1.625; }
 
 /* Controls. A choice of a few slides its fill; fields, steppers, dropdowns and sliders share one edge,
    one height and one focus colour. */
@@ -103,7 +116,13 @@
 .labelled { display: grid; gap: 8px; justify-items: start; min-width: 0; }
 /* A row's label with its Guide link at the right. */
 .field-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; justify-self: stretch; }
+/* The Guide link adds no height, so the label sits 8 px over its control as every other does. */
+.field-row > .cross { margin-block: -8px; }
 .labelled > p { margin: 0; font-size: 14.5px; }
+/* A choice's caption sits as far below it inside a field as outside one. */
+.labelled > :is(.seg, .dd) + p { margin-top: 8px; }
+/* Fields side by side, the parts of one value: as far apart as fields one over another. */
+.fields { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; min-width: 0; }
 /* Field widths in a row: a number, an id, a name; a free text field takes what the row leaves. */
 .fw-s { width: 9rem; max-width: 100%; }
 .fw-m { width: 11rem; max-width: 100%; }
@@ -113,74 +132,109 @@
 
 .seg { position: relative; display: inline-flex; flex-wrap: wrap; max-width: 100%; justify-self: start; align-self: start; background: var(--g-background); border: 1px solid var(--line-2); }
 .seg button {
-  flex: 1 0 auto; position: relative; z-index: 1; margin: -1px 0 0 -1px; padding: 12px 15px;
+  flex: 1 0 auto; position: relative; z-index: 1; margin: -1px 0 0 -1px; padding: 12px 14px 11px;
   font: 500 11px/1 var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted);
   background: none; border: 0; border-top: 1px solid var(--line-2); border-left: 1px solid var(--line-2); cursor: pointer; transition: color 0.25s;
 }
 .seg button:hover:not(:disabled) { color: var(--text); }
 .seg button[aria-checked="true"] { color: var(--text); }
-.seg button:disabled { cursor: not-allowed; color: var(--dim); }
-.seg button:focus-visible { outline: 1px solid var(--accent); outline-offset: -3px; }
+/* One option out of reach reads at half its colour, as a whole control out of reach reads at half. */
+.seg button:disabled { cursor: not-allowed; }
+.seg:not(.seg--disabled) button:disabled { color: color-mix(in srgb, var(--muted) 50%, transparent); }
+.seg button:focus-visible { outline: 2px solid var(--accent); outline-offset: -4px; }
 .seg__fill {
   position: absolute; z-index: 0; top: 0; height: 0; background: color-mix(in srgb, var(--accent) 10%, transparent); box-shadow: inset 0 -2px var(--accent);
   transition: left 0.45s var(--ease), width 0.45s var(--ease), top 0.45s var(--ease), height 0.45s var(--ease);
 }
-.seg--disabled { opacity: 0.6; }
+.seg__fill.jump { transition: none; }
+.seg--disabled { opacity: 0.5; }
+/* Options that don't fit on one row stack in one column, so the fill only ever moves along a line. */
+.seg.seg--col { flex-direction: column; flex-wrap: nowrap; width: 100%; }
+.seg--col button { flex: none; }
 
-.dd { position: relative; min-width: 12rem; }
+.dd { position: relative; min-width: 12rem; max-width: 100%; }
+/* The longest option, unseen, sets the width: the button's inset before it, and its gap and arrow after. */
+.dd-z { display: block; height: 0; overflow: hidden; visibility: hidden; padding: 0 35px 0 13px; font: 500 14px/1.3 var(--mono); }
+.dd-z > span { display: block; white-space: nowrap; }
+.dd-z > span::before { content: attr(data-w); }
+/* A long list that filters has too many options to measure: one width, its value cut where it runs past. */
+.dd.dd--long { width: 18rem; }
+/* A block rising in is a separate layer, which an open list can't paint out of: the block with the list sits
+   over the next. */
+:is(.rb.moving, .st-in):has(.dd.open) { position: relative; z-index: 31; }
 .dd-b {
   width: 100%; height: 36px; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 12px;
-  background: var(--g-background); border: 1px solid var(--line-2); color: var(--text); font: 400 14px/1 var(--sans); text-align: left; cursor: pointer; transition: border-color 0.25s;
+  background: var(--g-background); border: 1px solid var(--line-2); color: var(--text); font: 500 14px/1.3 var(--mono); text-align: left; cursor: pointer; transition: border-color 0.25s;
 }
 .dd-b span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dd-b:hover:not(:disabled), .dd.open .dd-b { border-color: var(--primary); }
-.dd-b:focus-visible { outline: none; border-color: var(--accent); }
-.dd-b:disabled { cursor: not-allowed; color: var(--dim); }
-.dd-b svg { flex: none; width: 10px; height: 6px; color: var(--muted); transition: transform 0.3s var(--ease); }
+/* After the hover, so a focused box keeps the bright edge under the pointer, as a number box does. */
+.dd-b:focus-visible { outline: none; }
+.dd-b:focus-visible:not(:disabled) { border-color: var(--accent); }
+.dd-b:disabled { cursor: not-allowed; opacity: 0.5; }
+.dd-b svg { flex: none; width: 10px; height: 6px; color: var(--muted); transition: transform 0.25s var(--ease); }
 .dd.open .dd-b svg { transform: rotate(180deg); }
 .dd-l {
   position: absolute; z-index: 30; left: 0; right: 0; top: calc(100% + 4px); max-height: 264px; overflow-y: auto;
-  background: var(--g-background); border: 1px solid var(--line-2); box-shadow: 0 16px 40px color-mix(in srgb, var(--ground) 70%, transparent); animation: ddin 0.18s var(--ease) both;
+  background: var(--g-background); border: 1px solid var(--line-2); box-shadow: 0 16px 40px color-mix(in srgb, var(--ground) 70%, transparent); animation: ddin 0.25s var(--ease) both;
 }
+.dd-l.up { top: auto; bottom: calc(100% + 4px); animation-name: ddup; }
 .dd-l:focus, .dd-l [role="listbox"]:focus { outline: none; }
 @keyframes ddin { from { opacity: 0; transform: translateY(-4px); } }
+@keyframes ddup { from { opacity: 0; transform: translateY(4px); } }
 .dd-l button {
   display: block; width: 100%; padding: 10px 12px; background: none; border: 0; border-left: 2px solid transparent;
-  color: var(--text-2); font: 400 14px/1.25 var(--sans); text-align: left; cursor: pointer; transition: color 0.15s, border-color 0.15s;
+  color: var(--text-2); font: 500 14px/1.25 var(--mono); text-align: left; cursor: pointer; transition: color 0.25s, border-color 0.25s;
 }
 .dd-l button.kb { color: var(--text); border-left-color: var(--accent); }
 .dd-l button[aria-selected="true"] { color: var(--accent); }
-.dd-l button:disabled { color: var(--dim); cursor: not-allowed; }
-.dd-f { display: block; width: 100%; height: 38px; padding: 0 12px; background: var(--ground); border: 0; border-bottom: 1px solid var(--line-2); color: var(--text); font: 400 13.5px/1 var(--sans); }
-.dd-f:focus { outline: none; border-bottom-color: var(--primary); }
-.dd-f::placeholder { color: var(--dim); }
+.dd-l button:disabled { color: color-mix(in srgb, var(--text-2) 50%, transparent); cursor: not-allowed; }
+.dd-f { display: block; width: 100%; height: 36px; padding: 0 12px; background: var(--g-background); border: 0; border-bottom: 1px solid var(--line-2); color: var(--text); font: 500 14px/1 var(--mono); }
+.dd-f:focus { outline: none; border-bottom-color: var(--accent); }
+.dd-f::placeholder { color: var(--muted); }
 .dd-none { margin: 0; padding: 10px 12px; color: var(--dim); font-size: 14px; }
 
 /* MidnightUI's number input as a stepper: the number, its unit, up and down stacked at the right. */
-.number-input__wrapper { display: grid; grid-template-columns: minmax(0, 1fr) auto 24px; grid-template-rows: 1fr 1fr; height: 36px; border-color: var(--line-2); background: var(--g-background); }
+/* Under .number-input: MidnightUI's stylesheet for it loads after these and would win a tie. */
+.number-input .number-input__wrapper { display: grid; grid-template-columns: minmax(0, 1fr) auto 24px; grid-template-rows: 1fr 1fr; height: 36px; border-color: var(--line-2); background: var(--g-background); }
 .number-input:not(.number-input--disabled) .number-input__wrapper:hover { border-color: var(--primary); }
-.number-input__input { grid-column: 1; grid-row: 1 / 3; padding: 0 0 0 10px; text-align: left; font: 500 14px/1 var(--mono); color: var(--text); }
-.number-input__suffix { grid-column: 2; grid-row: 1 / 3; padding: 0 8px 0 4px; border: 0; font: 500 11px/1 var(--mono); letter-spacing: 0.08em; color: var(--dim); }
-.number-input__prefix { display: none; }
-.number-input__stepper { min-width: 0; width: 24px; padding: 0; border: 0; border-left: 1px solid var(--line-2); color: var(--muted); }
-.number-input__stepper--increment { grid-column: 3; grid-row: 1; }
-.number-input__stepper--decrement { grid-column: 3; grid-row: 2; border-right: 0; border-top: 1px solid var(--line-2); }
-.number-input__label, .textfield__label { font: 500 10.5px/1.3 var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+.number-input .number-input__wrapper > .number-input__input { grid-column: 1; grid-row: 1 / 3; padding: 0 0 0 12px; text-align: left; font: 500 14px/1 var(--mono); color: var(--text); }
+.number-input .number-input__suffix { grid-column: 2; grid-row: 1 / 3; padding: 0 8px 0 4px; border: 0; font: 500 11px/1 var(--mono); letter-spacing: 0.08em; color: var(--dim); }
+.number-input .number-input__prefix { display: none; }
+.number-input .number-input__stepper { min-width: 0; width: 24px; padding: 0; border: 0; border-left: 1px solid var(--line-2); color: var(--muted); transition: color 0.25s ease; }
+.number-input .number-input__stepper:disabled { opacity: 0.5; }
+.number-input--disabled .number-input__stepper:disabled { opacity: 1; }
+.number-input .number-input__stepper--increment { grid-column: 3; grid-row: 1; }
+.number-input .number-input__stepper--decrement { grid-column: 3; grid-row: 2; border-right: 0; border-top: 1px solid var(--line-2); }
+/* The label MidnightUI draws on a number or text box reads as every other field's, 8 px above it. */
+.number-input .number-input__label, .textfield .textfield__label { font: 500 10.5px/1.3 var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+/* Block boxes: an inline one sits on a text line 8 px taller than the box. */
+:root :is(.number-input, .textfield) { display: flex; gap: 8px; }
 
-.textfield__wrapper { min-height: 36px; border-color: var(--line-2); background: var(--g-background); }
-.textfield__input { font: 500 14px/1 var(--mono); }
+/* 36px tall with its text 12px in, as a dropdown and a number box are. */
+.textfield__wrapper { height: 36px; border-color: var(--line-2); background: var(--g-background); }
+.textfield__wrapper > .textfield__input { align-self: stretch; min-height: 0; padding: 0 12px; font: 500 14px/1 var(--mono); color: var(--text); }
 
 /* A checkbox: an 18px square, blue when ticked. */
-.checkbox__box { width: 18px; height: 18px; border-radius: 0; border-color: var(--line-2); background: var(--g-background); }
-.checkbox:hover .checkbox__box { border-color: var(--primary); }
-.checkbox__label { font-size: 14.5px; color: var(--text-2); }
+.checkbox .checkbox__box { width: 18px; height: 18px; border-radius: 0; border-color: var(--line-2); background: var(--g-background); }
+.checkbox .checkbox__label { font-size: 14.5px; color: var(--text-2); }
 
 /* A stepper: the value, its unit, and two chevrons stacked on the right. */
-.number-input__stepper { display: grid; place-items: center; }
-.number-input__stepper > * { display: none; }
-.number-input__stepper::after { content: ""; width: 5px; height: 5px; border-right: 1.4px solid currentColor; border-bottom: 1.4px solid currentColor; transform: translateY(-1px) rotate(45deg); }
-.number-input__stepper--increment::after { transform: translateY(1px) rotate(-135deg); }
-.number-input__stepper:hover:not(:disabled) { color: var(--text); }
+.number-input .number-input__stepper { display: grid; place-items: center; }
+.number-input .number-input__stepper > * { display: none; }
+.number-input .number-input__stepper::after { content: ""; width: 5px; height: 5px; border-right: 1.4px solid currentColor; border-bottom: 1.4px solid currentColor; transform: translateY(-1px) rotate(45deg); }
+.number-input .number-input__stepper--increment::after { transform: translateY(1px) rotate(-135deg); }
+.number-input .number-input__stepper:hover:not(:disabled) { color: var(--text); }
+/* On a phone the two arrows sit side by side, each a finger wide, and the box widens to keep five digits; the boxes
+   in a row of fields widen with it, so the row's columns line up. */
+@media (max-width: 768px) {
+  .number-input .number-input__wrapper { grid-template-columns: minmax(0, 1fr) auto 36px 36px; grid-template-rows: 1fr; }
+  .number-input .number-input__wrapper > .number-input__input, .number-input .number-input__suffix { grid-row: 1; }
+  .number-input .number-input__stepper { width: 36px; }
+  .number-input .number-input__stepper--decrement { grid-column: 3; grid-row: 1; border-top: 0; }
+  .number-input .number-input__stepper--increment { grid-column: 4; grid-row: 1; }
+  .fw-s:has(> .number-input), .fields > .fw-s { width: 10rem; }
+}
 
 /* A slider: a hairline, a blue fill from zero to a square handle, the value beside it. A mark shows zero
    on a scale through it. The native input lies over the drawing, unseen, and takes the pointer and keys. */
@@ -190,12 +244,12 @@
 .sl-t::before { content: ""; position: absolute; left: 0; right: 0; top: 12px; height: 2px; background: var(--line-2); }
 .sl-z { position: absolute; top: 6px; left: calc(var(--inset) + var(--z) * (100% - 2 * var(--inset))); width: 1px; height: 14px; margin-left: -0.5px; background: var(--dim); }
 .sl-fill { position: absolute; top: 12px; height: 2px; left: calc(var(--inset) + var(--a) * (100% - 2 * var(--inset))); width: calc(var(--w) * (100% - 2 * var(--inset))); background: var(--accent); }
-.sl-h { position: absolute; top: 4px; left: calc(var(--inset) + var(--p) * (100% - 2 * var(--inset))); width: 10px; height: 18px; margin-left: -5px; background: var(--accent); transition: background 0.2s; }
+.sl-h { position: absolute; top: 4px; left: calc(var(--inset) + var(--p) * (100% - 2 * var(--inset))); width: 10px; height: 18px; margin-left: -5px; background: var(--accent); transition: background 0.25s; }
 .sl-t input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
 .sl-t:hover .sl-h, .sl-t:has(input:focus-visible) .sl-h, .sl-t:has(input:active) .sl-h { background: var(--text); }
-.sl-t:has(input:focus-visible) { outline: 1px solid var(--primary); outline-offset: 4px; }
-.sl output { min-width: 5ch; font: 500 13px/1 var(--mono); color: var(--text); text-align: right; font-variant-numeric: tabular-nums; }
-.sl.dis { opacity: 0.4; }
+.sl-t:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 3px; }
+.sl output { min-width: 5ch; font: 500 14px/1 var(--mono); color: var(--text); text-align: right; font-variant-numeric: tabular-nums; }
+.sl.dis { opacity: 0.5; }
 .sl.dis input { cursor: not-allowed; }
 
 /* Logs: read from the top, newest line last and lit; a log scrolled to its end follows new lines. */
@@ -205,7 +259,7 @@
   scrollbar-width: thin; scrollbar-color: var(--line-2) transparent;
 }
 .lg.full { height: clamp(280px, calc(100svh - 420px), 960px); }
-.lg:focus-visible { outline: 1px solid var(--primary); outline-offset: -1px; }
+.lg:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .lg:empty::before { content: attr(data-empty); display: block; padding: 0 12px; color: var(--dim); }
 .lg > div {
   display: grid; grid-template-columns: var(--cols, 56px minmax(0, 1fr)); gap: 12px; padding: 0 12px; color: var(--muted);
@@ -249,13 +303,12 @@
 .boxd .pl { font-size: 13px; letter-spacing: 0.12em; fill: var(--text); }
 .boxd .pl:is(.out, .idle) { fill: color-mix(in srgb, var(--dim) 65%, var(--ground)); }
 .boxd .to { font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; fill: var(--text); }
-.boxd .to:is(.out, .gone) { fill: var(--bad); }
+.boxd .to:is(.out, .unp) { fill: var(--bad); }
 .boxd .x { stroke: var(--bad); stroke-width: 1.5; }
 .boxd .cab { stroke-width: 2; fill: none; }
 .boxd .plug { fill: var(--g-background-elevated); stroke: color-mix(in srgb, var(--dim) 75%, var(--ground)); }
 .boxd .cable.pc .cab { stroke: var(--ok); }
 .boxd .cable.dev .cab { stroke: var(--accent); }
-.boxd .cable.gone .cab { stroke: color-mix(in srgb, var(--dim) 65%, var(--ground)); }
 .boxd .btnb { fill: var(--g-background-elevated); stroke: color-mix(in srgb, var(--dim) 75%, var(--ground)); }
 .boxd .btnc { fill: var(--line-2); }
 .boxd .btnl { font-size: 12px; letter-spacing: 0.14em; fill: var(--muted); }
@@ -269,7 +322,7 @@
 .boxd [data-cable] .cab { stroke-dasharray: 48; stroke-dashoffset: 0; transition: stroke-dashoffset 0.8s var(--ease); }
 .boxd [data-cable] .plug { transition: transform 0.8s var(--ease), opacity 0.3s ease; }
 .boxd.pre [data-cable] .cab { stroke-dashoffset: 48; }
-.boxd.pre [data-cable] .plug { transform: translateY(40px); opacity: 0; }
+.boxd.pre [data-cable] .plug { transform: translateY(48px); opacity: 0; }
 /* The install step: the button presses and holds, the cable goes in under it, the button lets go; the
    picture then fades and starts again. */
 .boxd.loop .bt.hold :is(.btnc, .ring) { transform-box: fill-box; transform-origin: center; transition: transform 0.25s var(--ease), opacity 0.25s; }
@@ -277,12 +330,19 @@
 .boxd.loop.pressing .bt.hold .btnc { transform: scale(0.7); }
 .boxd.loop.pressing .bt.hold .ring { opacity: 1; }
 .boxd.loop:not(.plugged) [data-cable] .cab { stroke-dashoffset: 48; }
-.boxd.loop:not(.plugged) [data-cable] .plug { transform: translateY(40px); opacity: 0; }
-.boxd.loop.fading [data-cable] { opacity: 0; }
-.boxd.loop.snap [data-cable], .boxd.loop.snap [data-cable] * { transition: none; }
-/* An unplug step: the cable slides out once and stays out. */
+.boxd.loop:not(.plugged) [data-cable] .plug { transform: translateY(48px); opacity: 0; }
+.boxd.fading [data-cable] { opacity: 0; }
+.boxd.snap [data-cable], .boxd.snap [data-cable] * { transition: none; }
+/* An unplug step, while on screen: the cable slides out, the socket dims and takes the cross the install
+   step puts on an empty one, then the cable fades back in. */
 .boxd.unplug [data-cable] .cab { stroke-dashoffset: 48; }
-.boxd.unplug [data-cable] .plug { transform: translateY(40px); opacity: 0; }
+.boxd.unplug [data-cable] .plug { transform: translateY(48px); opacity: 0; transition: transform 0.8s var(--ease), opacity 0.25s ease 0.6s; }
+.boxd .x.unp { opacity: 0; transition: opacity 0.25s; }
+.boxd .sock.unp :is(rect, path), .boxd .pl.unp { transition: stroke 0.3s, fill 0.3s; }
+.boxd.unplug:not(.fading) .x.unp { opacity: 1; transition-delay: 0.7s; }
+.boxd.unplug:not(.fading) .sock.unp rect { stroke: var(--line-2); transition-delay: 0.5s; }
+.boxd.unplug:not(.fading) .sock.unp path { stroke: var(--line); transition-delay: 0.5s; }
+.boxd.unplug:not(.fading) .pl.unp { fill: color-mix(in srgb, var(--dim) 65%, var(--ground)); transition-delay: 0.5s; }
 @media (prefers-reduced-motion: reduce) {
   .boxd.pre [data-cable] .cab, .boxd.loop:not(.plugged) [data-cable] .cab { stroke-dashoffset: 0; }
   .boxd.pre [data-cable] .plug, .boxd.loop:not(.plugged) [data-cable] .plug { transform: none; opacity: 1; }
@@ -298,8 +358,8 @@
   .board .key b { display: inline-flex; align-items: center; gap: 8px; font: 500 12px/1 var(--mono); letter-spacing: 0.1em; }
   .board .key b::before { content: ""; width: 6px; height: 6px; background: var(--ok); }
   .board .key .dev b::before { background: var(--accent); }
-  .board .key :is(.out, .gone) b::before { background: var(--bad); }
-  .board .key :is(.out, .gone) span { color: var(--bad); }
+  .board .key :is(.out, .unp) b::before { background: var(--bad); }
+  .board .key :is(.out, .unp) span { color: var(--bad); }
 }
 @media (max-width: 600px) {
   .boxd .pl, .boxd .btnl { font-size: 26px; }
@@ -354,9 +414,10 @@
   .vals td:first-child { width: 40%; }
 }
 .vals code { font: inherit; color: inherit; background: none; border: 0; padding: 0; }
-.vals .mut { color: var(--muted); }
+.vals .mut { color: var(--muted); font-size: inherit; }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-.doc .pb > p.sublabel { margin: 14px 0 0; }
+/* A group's label sits over its group as a field's does over its control. */
+.doc .pb > p.sublabel { margin: 0 0 -8px; }
 .pb > .sublabel + .vals tr:first-child td { border-top: 0; }
 
 /* Control: Clear everything at the title's right, with what it clears under it. */
@@ -434,6 +495,11 @@
   .stages:has(.now) span:not(.now) i, .stages:has(.now) span:not(.now) em::after { display: none; }
   .stages:has(.now) span.now { flex: 1 1 auto; }
 }
+/* Narrower still, the others are their lamps alone, so the step on screen keeps its name. */
+@container (max-width: 420px) {
+  .stages:has(.now) span:not(.now) { gap: 0; padding-inline: 10px; }
+  .stages:has(.now) span:not(.now) em { display: none; }
+}
 
 /* Long work: the percentage counts and the line fills with it. A wait with no count runs a segment
    along the line; between steps the filled line leaves to the right and the figure fades. */
@@ -464,9 +530,12 @@
   background:
     repeating-linear-gradient(0deg, transparent 0 19px, color-mix(in srgb, var(--text) 3%, transparent) 19px 20px),
     repeating-linear-gradient(90deg, transparent 0 19px, color-mix(in srgb, var(--text) 3%, transparent) 19px 20px);
-  touch-action: none; cursor: crosshair; user-select: none;
+  touch-action: none; cursor: crosshair; user-select: none; transition: border-color 0.25s;
 }
-.pad .caps { color: var(--dim); transition: color 0.2s; }
+.pad .caps { color: var(--dim); transition: color 0.25s; }
+@media (hover: hover) {
+  .pad:hover { border-color: var(--primary); }
+}
 .pad.on .caps { color: var(--text); }
 .nudge { display: flex; flex-wrap: wrap; gap: 20px 28px; align-items: flex-start; }
 .nudge-c { display: grid; gap: 14px; justify-items: start; }

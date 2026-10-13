@@ -1,7 +1,7 @@
 // A class, then a usage in it. The filter matches the hex id too, which is how an unnamed Consumer
 // usage gets picked.
 
-import { For, Show, createMemo, createSignal } from 'solid-js';
+import { Index, Show, createMemo, createSignal } from 'solid-js';
 import { Chip } from '../../../components/display/Chip';
 import type { NamedUsage } from '../../../dashboard/protocol';
 import { Segmented } from '../../shell/Segmented';
@@ -111,15 +111,15 @@ export const UsageChips = (props: {
   variant?: 'primary' | 'success' | 'warning' | 'error' | 'info' | 'neutral';
 }) => (
   <div class="chips">
-    <For each={props.items}>
+    <Index each={props.items}>
       {(it) => (
         <Chip
           variant={props.variant ?? 'neutral'}
-          onRemove={props.onRemove ? () => props.onRemove?.(it.key) : undefined}
+          onRemove={props.onRemove ? () => props.onRemove?.(it().key) : undefined}
         >
-          {it.text}
+          {it().text}
         </Chip>
       )}
-    </For>
+    </Index>
   </div>
 );

@@ -20,7 +20,7 @@ const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
       { label: 'Rust', href: '/library' },
       { label: 'C and C++', href: '/bindings/c' },
       { label: 'Python', href: '/bindings/python' },
-      { label: 'AI and LLMs', href: '/ai' },
+      { label: 'AI & LLMs', href: '/ai' },
     ],
   },
   {
@@ -29,6 +29,7 @@ const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
       { label: 'Set up', href: '/dashboard/setup' },
       { label: 'Device', href: '/dashboard' },
       { label: 'Update', href: '/dashboard/update' },
+      { label: 'Flash', href: '/dashboard/flash' },
       { label: 'Changelog', href: '/dashboard/changelog' },
       { label: 'Stats', href: '/dashboard/stats' },
     ],

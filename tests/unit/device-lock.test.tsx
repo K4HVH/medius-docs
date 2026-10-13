@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, cleanup, fireEvent } from '@solidjs/testing-library';
+import { choose, open, optionsOf } from './helpers/dropdown';
 import {
   Direction,
   LOCK_ID_ALL,
@@ -80,12 +81,9 @@ describe('DeviceLock', () => {
     }
   });
 
-  // The list is read off the document, and it only exists once the dropdown is open.
-  const openOptions = async (container: HTMLElement): Promise<string[]> => {
-    fireEvent.click(container.querySelector('.dd-b') as HTMLElement);
-    await new Promise((r) => setTimeout(r, 20));
-    return [...document.querySelectorAll('[role="option"]')].map((o) => o.textContent ?? '');
-  };
+  // The Input list, left open.
+  const openOptions = async (container: HTMLElement): Promise<string[]> =>
+    open(container, 'Input').map((o) => o.textContent ?? '');
 
   it('sends every-axis as one frame per axis, not as the class wildcard', async () => {
     // The box has no blanket representation for the mouse classes: it expands one into per-target
@@ -180,19 +178,17 @@ describe('DeviceLock', () => {
   it('offers no edge to name on a media usage', async () => {
     // Media is the one class with no press and release: the box suppresses the usage whole and
     // ignores the direction byte, so offering Press here would promise a distinction it does not make.
-    const { getByText, queryByText } = render(() => <DeviceLock />);
+    const { getByText, container } = render(() => <DeviceLock />);
     fireEvent.click(getByText('Media'));
     await settle();
-    expect(queryByText('Press')).toBeNull();
-    expect(queryByText('Release')).toBeNull();
-    expect(queryByText('The whole usage')).toBeTruthy();
+    expect(optionsOf(container, 'Direction')).toEqual(['The whole usage']);
   });
 
   it('drops a direction the newly picked class cannot address', async () => {
-    // A radio whose selected value is no longer among its options keeps the old byte, so switching
+    // A choice whose selected value is no longer among its options keeps the old byte, so switching
     // from an axis on Against to a key would have sent a relative direction the box refuses.
     const { getByText, container } = render(() => <DeviceLock />);
-    fireEvent.click(getByText('Against injection'));
+    choose(container, 'Direction', 'Against injection');
     await settle();
     fireEvent.click(getByText('Key'));
     await settle();
@@ -228,12 +224,11 @@ describe('DeviceLock', () => {
   });
 
   it('offers the bearing-relative directions on an axis and not on a usage', async () => {
-    const { getByText, queryByText } = render(() => <DeviceLock />);
-    expect(queryByText('Against injection')).toBeTruthy();
+    const { getByText, container } = render(() => <DeviceLock />);
+    expect(optionsOf(container, 'Direction')).toEqual(['Both', 'Positive', 'Negative', 'With injection', 'Against injection']);
     fireEvent.click(getByText('Button'));
     await settle();
-    // A button has no bearing to be with or against, so the radio set drops back to the two edges.
-    expect(queryByText('Against injection')).toBeNull();
-    expect(queryByText('Press')).toBeTruthy();
+    // A button has no bearing to be with or against, so the list drops back to the two edges.
+    expect(optionsOf(container, 'Direction')).toEqual(['Both', 'Press', 'Release']);
   });
 });

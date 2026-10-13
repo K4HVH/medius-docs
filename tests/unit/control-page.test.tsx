@@ -1,7 +1,7 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { render, cleanup, fireEvent, waitFor } from '@solidjs/testing-library';
 import { MemoryRouter, Route } from '@solidjs/router';
-import { DashboardContext, type DashboardContextValue } from '../../src/app/pages/dashboard/context';
+import { BoxesContext, DashboardContext, type Boxes, type DashboardContextValue } from '../../src/app/pages/dashboard/context';
 import Control from '../../src/app/pages/dashboard/Control';
 import { ClipOp, ClipState, Direction, EmitMode, PROTO_VER, RenderMode } from '../../src/dashboard/protocol';
 
@@ -112,7 +112,10 @@ const mount = (value = stub()) =>
   render(() => (
     <MemoryRouter
       root={(props) => (
-        <DashboardContext.Provider value={value}>{props.children}</DashboardContext.Provider>
+        // The card's Add box picks Add box through the registry.
+        <BoxesContext.Provider value={{ select: () => {} } as unknown as Boxes}>
+          <DashboardContext.Provider value={value}>{props.children}</DashboardContext.Provider>
+        </BoxesContext.Provider>
       )}
     >
       <Route path="*" component={Control} />
@@ -138,7 +141,7 @@ describe('Control page', () => {
     const alert = await findByRole('alert');
     expect(alert.textContent).toMatch(/USB2/);
     expect(queryByText('Connect')).toBeNull();
-    expect(queryByText('Try again')).toBeTruthy();
+    expect(queryByText('Retry')).toBeTruthy();
   });
 
   it('still surfaces an update failure that left the page in an error state', async () => {
@@ -161,11 +164,12 @@ describe('Control page', () => {
   });
 
   it('mounts every card when connected', async () => {
-    const { findByText } = mount();
+    const { findByText, findAllByText } = mount();
     await findByText('Injection');
     await findByText('Input locks');
     await findByText('Transforms');
-    await findByText('Status light');
+    // The tab, and the heading of the panel under it.
+    expect(await findAllByText('Status light')).toHaveLength(2);
     await findByText('Input catch');
     await findByText('Clip playback');
     await findByText('Clear everything');

@@ -14,7 +14,7 @@ import { prefersReducedMotion } from './motion';
 // moves through the pages; Enter opens the result, Ctrl or Cmd with Enter opens it in a new tab.
 
 const RECENT = 'medius.search.recent';
-const PAGES = ['/guide', '/guide/compatibility', '/guide/help', '/dashboard', '/dashboard/control', '/dashboard/update', '/native', '/library', '/bindings', '/dashboard/changelog'];
+const PAGES = ['/guide', '/guide/compatibility', '/guide/help', '/dashboard', '/dashboard/control', '/dashboard/update', '/dashboard/flash', '/native', '/library', '/bindings', '/dashboard/changelog'];
 const CLOSE_MS = 150;
 // Results the list shows: more than a screen, and few enough to redraw on every keystroke.
 const SHOWN = 24;

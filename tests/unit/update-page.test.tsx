@@ -53,6 +53,9 @@ const mock = vi.hoisted(() => ({
 }));
 
 vi.mock('../../src/app/pages/dashboard/context', () => ({
+  // The card's Add box picks Add box through the registry.
+  NEW_BOX: 'new',
+  useBoxes: () => ({ select: () => {} }),
   useDashboard: () => ({
     supported: true,
     secure: true,
@@ -176,9 +179,9 @@ describe('Update', () => {
   });
 
   it('no longer installs a new box; that lives in Setup', async () => {
-    const { container } = mount();
+    const { container, queryByRole } = mount();
     await waitFor(() => expect(container.textContent).toMatch(/USB1/));
-    expect(container.textContent).not.toMatch(/set up a new box/i);
+    expect(queryByRole('button', { name: 'Add box' })).toBeNull();
   });
 
   it('offers connecting through the shared panel while disconnected', async () => {
@@ -191,10 +194,10 @@ describe('Update', () => {
     const r = mount();
     mock.s!.setStatus('connected');
     await waitFor(() => expect(r.container.textContent).toMatch(/release list didn't load/i));
-    expect(r.queryByRole('button', { name: /update both chips/i })).toBeNull();
+    expect(r.queryByRole('button', { name: 'Both chips' })).toBeNull();
     mock.releasesThrow = false;
     fireEvent.click(r.getByRole('button', { name: /^retry$/i }));
-    await waitFor(() => expect(r.getByRole('button', { name: /update both chips/i })).toBeTruthy());
+    await waitFor(() => expect(r.getByRole('button', { name: 'Both chips' })).toBeTruthy());
     expect(mock.updates).toBe(0);
   });
 
@@ -204,12 +207,12 @@ describe('Update', () => {
     mock.s!.setStatus('connected');
     await waitFor(() => expect(r.container.textContent).toMatch(/no release is published yet/i));
     expect(r.container.textContent).not.toMatch(/didn't load/i);
-    expect(r.queryByRole('button', { name: /update both chips/i })).toBeNull();
+    expect(r.queryByRole('button', { name: 'Both chips' })).toBeNull();
   });
 
   it('a release missing the main image points at the choice that works', async () => {
     mock.assets = [host];
-    const r = await runUpdate(/update both chips/i);
+    const r = await runUpdate(/^both chips$/i);
     await waitFor(() => expect(r.container.textContent).toMatch(/nothing for the main chip/i));
     expect(r.container.textContent).toMatch(/mouse-side only/i);
     expect(mock.updates).toBe(0);
@@ -217,7 +220,7 @@ describe('Update', () => {
 
   it('a release missing the mouse-side image points at the choice that works', async () => {
     mock.assets = [dev];
-    const r = await runUpdate(/update both chips/i);
+    const r = await runUpdate(/^both chips$/i);
     await waitFor(() => expect(r.container.textContent).toMatch(/nothing for the mouse-side chip/i));
     expect(r.container.textContent).toMatch(/main only/i);
     expect(mock.updates).toBe(0);
@@ -246,14 +249,14 @@ describe('Update', () => {
 
   it('the Back button the refusal messages name is actually on that screen', async () => {
     mock.assets = [host];
-    const r = await runUpdate(/update both chips/i);
+    const r = await runUpdate(/^both chips$/i);
     await waitFor(() => expect(r.container.textContent).toMatch(/press back and choose/i));
     expect(r.getByRole('button', { name: /^back$/i })).toBeTruthy();
   });
 
   it('both chips landing on the release is what verified means', async () => {
     mock.assets = [dev, host];
-    const r = await runUpdate(/update both chips/i);
+    const r = await runUpdate(/^both chips$/i);
     await waitFor(() => expect(r.container.textContent).toMatch(/updated and verified/i));
     expect(r.container.textContent).toMatch(/3\.4\.2/);
   });
@@ -262,7 +265,7 @@ describe('Update', () => {
     // The device version alone cannot speak for the chip behind the link, and a chip that reverts
     // answers a handshake perfectly well.
     mock.assets = [dev, host];
-    const r = await runUpdate(/update both chips/i);
+    const r = await runUpdate(/^both chips$/i);
     mock.s!.setFirmwareInfo(fw(reverted));
     await waitFor(() =>
       expect(r.container.textContent).toMatch(/not on the version sent/i),
@@ -288,7 +291,7 @@ describe('Update', () => {
 
   it('a box that comes back on the old version is not called updated', async () => {
     mock.assets = [dev, host];
-    const r = await runUpdate(/update both chips/i);
+    const r = await runUpdate(/^both chips$/i);
     mock.s!.setVersion(REVERTED);
     await waitFor(() =>
       expect(r.container.textContent).toMatch(/not on the version sent/i),
@@ -299,7 +302,7 @@ describe('Update', () => {
   it('a box that never came back is NOT reported as verified on any version', async () => {
     mock.assets = [dev, host];
     mock.outcome = 'sent';
-    const r = await runUpdate(/update both chips/i);
+    const r = await runUpdate(/^both chips$/i);
     await waitFor(() => expect(r.container.textContent).toMatch(/box did not come back/i));
     expect(r.container.textContent).not.toMatch(/verified/i);
     expect(r.container.textContent).toMatch(/replug it, then connect/i);
@@ -310,7 +313,7 @@ describe('Update', () => {
     // of the flow.
     mock.assets = [dev, host];
     mock.outcome = 'sent';
-    const r = await runUpdate(/update both chips/i);
+    const r = await runUpdate(/^both chips$/i);
     await waitFor(() => expect(r.container.textContent).toMatch(/box did not come back/i));
     mock.s!.setVersion(REVERTED);
     r.getByRole('button', { name: /^connect$/i }).click();
@@ -325,7 +328,7 @@ describe('Update', () => {
     mock.assets = [dev, host];
     let release = () => {};
     mock.hold = new Promise<void>((r) => (release = r));
-    const r = await runUpdate(/update both chips/i);
+    const r = await runUpdate(/^both chips$/i);
     await waitFor(() => expect(r.container.textContent).toMatch(/updating/i));
     expect(r.container.textContent).toContain("Don't unplug or close this tab");
     cleanup();
@@ -341,12 +344,12 @@ describe('Update', () => {
 
   it('asks for its runs as the Update page, and shows no result from a flash Advanced ran', async () => {
     mock.assets = [dev, host];
-    await runUpdate(/update both chips/i);
+    await runUpdate(/^both chips$/i);
     await waitFor(() => expect(mock.s!.update()).toMatchObject({ page: 'update', outcome: 'verified' }));
     cleanup();
     mock.s!.setUpdate({ device: true, host: false, page: 'advanced', outcome: 'verified' });
     const r = render(() => <Update />);
-    await waitFor(() => expect(r.getByRole('button', { name: /update both chips/i })).toBeTruthy());
+    await waitFor(() => expect(r.getByRole('button', { name: 'Both chips' })).toBeTruthy());
     expect(r.container.textContent).not.toMatch(/verified|came back/i);
   });
 
@@ -354,8 +357,8 @@ describe('Update', () => {
     mock.assets = [dev, host];
     const r = mount();
     mock.s!.setStatus('connected');
-    await waitFor(() => r.getByRole('button', { name: /update both chips/i }));
-    r.getByRole('button', { name: /update both chips/i }).click();
+    await waitFor(() => r.getByRole('button', { name: 'Both chips' }));
+    r.getByRole('button', { name: 'Both chips' }).click();
     await waitFor(() => r.getByRole('button', { name: /^back$/i }));
     const back = r.getByRole('button', { name: /^back$/i });
     expect(back.className).toContain('button--secondary');
@@ -368,14 +371,14 @@ describe('Update', () => {
   it('a failed update keeps a way back to the chip choice', async () => {
     mock.assets = [dev, host];
     mock.outcome = 'failed';
-    const r = await runUpdate(/update both chips/i);
+    const r = await runUpdate(/^both chips$/i);
     await waitFor(() => expect(r.getByRole('button', { name: /^back$/i })).toBeTruthy());
   });
 
   it('a failed update says why once, not twice', async () => {
     mock.assets = [dev, host];
     mock.outcome = 'failed';
-    const r = await runUpdate(/update both chips/i);
+    const r = await runUpdate(/^both chips$/i);
     await waitFor(() => expect(r.container.textContent).toMatch(/the box refused that/i));
     const alerts = [...r.container.querySelectorAll('[role="alert"]')].filter((a) =>
       /the box refused that/i.test(a.textContent ?? ''),
@@ -388,8 +391,8 @@ describe('Update', () => {
     mock.holdReleases = true;
     const r = mount();
     mock.s!.setStatus('connected');
-    await waitFor(() => r.getByRole('button', { name: /update both chips/i }));
-    r.getByRole('button', { name: /update both chips/i }).click();
+    await waitFor(() => r.getByRole('button', { name: 'Both chips' }));
+    r.getByRole('button', { name: 'Both chips' }).click();
     await waitFor(() => r.getByRole('button', { name: /^update (both chips|main chip|mouse-side chip)$/i }));
     expect(r.getByRole('button', { name: /^update (both chips|main chip|mouse-side chip)$/i })).toBeDisabled();
   });
@@ -398,8 +401,8 @@ describe('Update', () => {
     const r = mount();
     mock.s!.setStatus('connected');
     mock.s!.setUpdate({ device: true, host: false, page: 'advanced', outcome: 'verified' });
-    await waitFor(() => r.getByRole('button', { name: /update both chips/i }));
-    r.getByRole('button', { name: /update both chips/i }).click();
+    await waitFor(() => r.getByRole('button', { name: 'Both chips' }));
+    r.getByRole('button', { name: 'Both chips' }).click();
     await waitFor(() => r.getByRole('button', { name: /^back$/i }));
     r.getByRole('button', { name: /^back$/i }).click();
     expect(mock.s!.update()).toMatchObject({ page: 'advanced', outcome: 'verified' });
@@ -408,7 +411,7 @@ describe('Update', () => {
   it('a connected box gets the three update choices and nothing about cables', async () => {
     const r = mount();
     mock.s!.setStatus('connected');
-    await waitFor(() => r.getByRole('button', { name: /update both chips/i }));
+    await waitFor(() => r.getByRole('button', { name: 'Both chips' }));
     expect(r.getByRole('button', { name: /main only/i })).toBeTruthy();
     expect(r.getByRole('button', { name: /mouse-side only/i })).toBeTruthy();
     expect(r.container.textContent).not.toMatch(/BOOT|unplug/i);

@@ -339,7 +339,7 @@ const DeviceOptions = (props: { proto?: number }) => {
             />
           </div>
           <Button variant="primary" disabled={cmd.busy()} onClick={() => setRiding(rideWindow())}>
-            Turn on
+            Apply
           </Button>
           <Button variant="secondary" disabled={cmd.busy()} onClick={() => setRiding(0)}>
             Turn off
@@ -591,30 +591,34 @@ const DeviceOptions = (props: { proto?: number }) => {
           </p>
         </div>
         <div class="acts">
-          <Show when={mode() === 'fixed'}>
-            <div class="fw-s">
-              <NumberInput
-                label="Emit rate"
-                suffix="Hz"
-                value={hz()}
-                min={1}
-                max={1000}
-                precision={0}
-                onChange={(v) => setHzEdit(v ?? 1)}
-              />
-            </div>
-          </Show>
-          <Show when={forceOn()}>
-            <div class="fw-s">
-              <NumberInput
-                label="Wire rate"
-                suffix="Hz"
-                value={forceHz()}
-                min={4}
-                max={1000}
-                precision={0}
-                onChange={(v) => setForceEdit(v ?? 4)}
-              />
+          <Show when={mode() === 'fixed' || forceOn()}>
+            <div class="fields">
+              <Show when={mode() === 'fixed'}>
+                <div class="fw-s">
+                  <NumberInput
+                    label="Emit rate"
+                    suffix="Hz"
+                    value={hz()}
+                    min={1}
+                    max={1000}
+                    precision={0}
+                    onChange={(v) => setHzEdit(v ?? 1)}
+                  />
+                </div>
+              </Show>
+              <Show when={forceOn()}>
+                <div class="fw-s">
+                  <NumberInput
+                    label="Wire rate"
+                    suffix="Hz"
+                    value={forceHz()}
+                    min={4}
+                    max={1000}
+                    precision={0}
+                    onChange={(v) => setForceEdit(v ?? 4)}
+                  />
+                </div>
+              </Show>
             </div>
           </Show>
           <Button variant="primary" disabled={cmd.busy()} onClick={applyEmit}>

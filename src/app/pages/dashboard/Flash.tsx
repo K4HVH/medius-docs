@@ -1,63 +1,64 @@
-import { Match, Show, Switch, createEffect, createResource, createSignal, type JSX } from 'solid-js';
+import { Match, Show, Switch, createEffect, createResource, createSignal, untrack, type JSX } from 'solid-js';
 import { Button } from '../../../components/inputs/Button';
 import { FileUpload } from '../../../components/inputs/FileUpload';
 import {
+  CHIP_NAME,
   FLASH_SIZE_BYTES,
   type FlashChip,
   type FlashKind,
-  type FlashPhase,
+  imageVersion,
   looksLikeWrongKind,
   romRefusal,
   validateImage,
 } from '../../../dashboard/flash';
-import { downloadAsset, fetchReleases } from '../../../dashboard/firmware';
+import { downloadAsset } from '../../../dashboard/firmware';
 import { fetchStockCatalog, fetchStockFile } from '../../../dashboard/flash/stock';
-import { requestRomPort } from '../../../dashboard/serial';
+import { type ConnectVerdict, requestRomPort } from '../../../dashboard/serial';
 import { useNavigate } from '@solidjs/router';
-import { BoxScope, useBoxes, useNativeFlash } from './context';
-import { Usb2Flash } from './AdvancedUsb2';
-import { BAD_BROWSER, BAD_CONTEXT } from './ConnectPanel';
+import { BoxScope, type Snapshot, useBoxes, useNativeFlash } from './context';
+import { Usb2Flash } from './FlashUsb2';
+import { BAD_BROWSER, BAD_CONTEXT, notConnected } from './ConnectPanel';
+import { flashPercent, flashWait } from './flashText';
 import { InstallPorts, WiringPorts } from './PortDiagram';
+import { createReleaseChoice } from './releaseChoice';
+import { PageHeader } from '../../shell/PageHeader';
 import { Panel, Panels } from '../../shell/Panel';
 import { Segmented } from '../../shell/Segmented';
-import { Select } from '../../shell/Select';
 
 // Over USB2 both chips may be written in turn; each count names its chip.
 const CHIP_CUE: Record<string, string> = { host: 'Flashing the mouse-side chip', device: 'Flashing the main chip' };
 
-const CHIP_NAME: Record<FlashChip, string> = { device: 'main chip', host: 'mouse-side chip' };
 const OTHER: Record<FlashChip, FlashChip> = { device: 'host', host: 'device' };
-
-const WAIT: Partial<Record<FlashPhase, string>> = {
-  rebooting: 'Rebooting',
-  connecting: 'Connecting',
-  erasing: 'Erasing',
-  restarting: 'Restarting',
-  verifying: 'Verifying',
-};
 
 const isUserCancel = (e: unknown) => e instanceof DOMException && e.name === 'NotFoundError';
 const fmtBytes = (n: number) => (n < 1024 ? `${n} B` : `${(n / 1024).toFixed(0)} KB`);
 
-// Manual flash of the selected box over USB2, or of either chip in ROM download over USB1 or USB3,
-// which works on a dead box. Update's Manual tab.
+// Any image by hand: to the selected box over USB2 when it runs Medius, or to either chip in ROM download over
+// USB1 or USB3, which works on any box, a dead one included.
 const ManualFlash = () => {
   const native = useNativeFlash();
   const boxes = useBoxes();
   // The selected box, read through the registry: inside BoxScope a box coming or going would remount the
   // page and lose a ROM flash half set up, which unplugging USB2 for it does.
   const dash = () => boxes.scope();
-  const [via, setVia] = createSignal<'usb2' | 'rom'>(
-    dash().update()?.page === 'advanced' || dash().status() === 'connected' || dash().status() === 'flashing'
-      ? 'usb2'
-      : 'rom',
-  );
+  // USB2 reaches a box running Medius, and is the way in while it is connected or a USB2 flash is under way, until
+  // Via says otherwise; anything else is flashed with its button held.
+  const [picked, setPicked] = createSignal<'usb2' | 'rom' | null>(null);
+  const usb2 = () => boxes.selectedKind() === 'medius';
+  const live = () => ['connected', 'connecting', 'flashing'].includes(dash().status()) || dash().update()?.page === 'advanced';
+  // A box that doesn't run Medius keeps its button-held flash when the list falls back to another box, which
+  // unplugging its USB2 to hold the button does.
+  createEffect(() => {
+    if (boxes.selectedKind() === 'other' && untrack(picked) === null) setPicked('rom');
+  });
+  const route = () => (usb2() && !romUnderWay() ? (picked() ?? (live() ? 'usb2' : 'rom')) : 'rom');
   const [usb2Busy, setUsb2Busy] = createSignal(false);
   const navigate = useNavigate();
-  const [releases] = createResource(fetchReleases);
   const [chip, setChip] = createSignal<FlashChip>('device');
   const [kind, setKind] = createSignal<FlashKind>('factory');
-  const [source, setSource] = createSignal<'release' | 'upload' | 'stock'>('release');
+  const [source, setSource] = createSignal<'release' | 'older' | 'upload' | 'stock'>('release');
+  const fromRelease = () => source() === 'release' || source() === 'older';
+  const { releases, release, earlier, where, VersionField } = createReleaseChoice(() => source() === 'older');
   // MAKCU's catalog, read once MAKCU stock is picked; the chips flashed with it on this visit.
   const [stock, { refetch: readStock }] = createResource(() => source() === 'stock' || null, fetchStockCatalog);
   const stockBuild = () => {
@@ -67,7 +68,10 @@ const ManualFlash = () => {
       return null;
     }
   };
-  const [stocked, setStocked] = createSignal<ReadonlySet<FlashChip>>(new Set());
+  // What each chip runs after this visit's flash: 'stock', a Medius version ('v3.4.5'), or 'other' firmware.
+  const [flashed, setFlashed] = createSignal<ReadonlyMap<FlashChip, string>>(new Map());
+  const both = () => flashed().size === 2 && flashed().get('device') === flashed().get('host');
+  const romUnderWay = () => busy() || done() || flashed().size > 0;
   const [files, setFiles] = createSignal<File[]>([]);
   const [image, setImage] = createSignal<Uint8Array | null>(null);
   const [done, setDone] = createSignal(false);
@@ -89,18 +93,9 @@ const ManualFlash = () => {
     setErr(null);
   });
 
-  // A rejected resource re-throws on every read, render included, and there is no ErrorBoundary:
-  // one unguarded read freezes the page.
-  const latest = () => {
-    try {
-      return releases()?.[0] ?? null;
-    } catch {
-      return null;
-    }
-  };
   const nameFor = (c: FlashChip, k: FlashKind) => `medius_${c}${k === 'factory' ? '-factory' : ''}.bin`;
   const assetName = () => nameFor(chip(), kind());
-  const asset = () => latest()?.assets.find((a) => a.name === assetName()) ?? null;
+  const asset = () => release()?.assets.find((a) => a.name === assetName()) ?? null;
   const validationError = () => {
     const img = image();
     return img ? (validateImage(img, kind()) ?? romRefusal(img, chip())) : null;
@@ -110,12 +105,14 @@ const ManualFlash = () => {
     return img ? looksLikeWrongKind(img, kind()) : false;
   };
   const progress = () => (native.running() ? native.progress() : dash().updateProgress());
-  const pct = () => {
+  const pct = () => flashPercent(progress());
+  const wait = () => flashWait(progress());
+  // A ROM flash writes the chip picked; an update over USB2 names each chip as it writes it.
+  const cue = () => {
+    if (native.running()) return `Flashing the ${CHIP_NAME[chip()]}`;
     const p = progress();
-    return p?.phase === 'writing' && p.total ? Math.round(((p.written ?? 0) / p.total) * 100) : p?.phase === 'done' ? 100 : undefined;
+    return CHIP_CUE[p?.phase === 'writing' ? (p.chip ?? '') : ''] ?? 'Flashing';
   };
-  // A phase with no count shows its name over the running segment.
-  const wait = () => (pct() === undefined ? (WAIT[progress()?.phase ?? 'connecting'] ?? 'Connecting') : null);
   const updating = () => dash().status() === 'flashing';
 
   // Tags each read with its selection, so a slow earlier read can't arm its bytes under a newer
@@ -144,21 +141,37 @@ const ManualFlash = () => {
       });
   };
 
+  // Via is drawn once, over both forms, so switching it keeps it and the focus on it. It stands until the flash
+  // it chose is done: the ROM form's done screens, or a USB2 update that verified or came back connected.
+  const usb2Run = () => {
+    const r = dash().update();
+    return r?.page === 'advanced' ? r : null;
+  };
+  const usb2Done = () => usb2Run()?.outcome === 'verified' || (usb2Run()?.outcome === 'sent' && dash().status() === 'connected');
   const viaField = () => (
-    <div class="labelled">
-      <span class="field-l">Via</span>
-      <Select
-        label="Via"
-        options={[
-          { value: 'usb2', label: 'Control port, USB2', note: dash().name() || undefined },
-          { value: 'rom', label: 'ROM download, USB1 or USB3' },
-        ]}
-        value={via()}
-        disabled={busy() || usb2Busy()}
-        onChange={(v) => setVia(v as 'usb2' | 'rom')}
-      />
-    </div>
+    <Show when={usb2() && (route() === 'rom' ? !done() : !usb2Done())}>
+      <div class="labelled">
+        <span class="field-l">Via</span>
+        <Segmented
+          name="Via"
+          options={[
+            { value: 'usb2', label: 'Control port' },
+            { value: 'rom', label: 'ROM download' },
+          ]}
+          value={route()}
+          disabled={busy() || usb2Busy()}
+          onChange={(v) => setPicked(v as 'usb2' | 'rom')}
+        />
+      </div>
+      {/* The box's name stays out of the search index. */}
+      <Show when={route() === 'usb2'} fallback={<p class="mut">Over USB1 or USB3, a chip at a time with its button held.</p>}>
+        <p class="mut">
+          Over USB2<span data-search-skip>{dash().name() ? ` to ${dash().name()}` : ''}</span>, with no button to hold.
+        </p>
+      </Show>
+    </Show>
   );
+
 
   const canFlash = () =>
     source() === 'stock'
@@ -169,12 +182,16 @@ const ManualFlash = () => {
 
   // `anyway`: the chip the owner said to flash though MAKCU's bootloader on it names the other.
   let anyway: FlashChip | null = null;
+  // Taken at the first flash: the box flashed is one that answers after it, unless it is the box selected then.
+  let at: { before: Snapshot; key: string | null } | null = null;
   const flash = async () => {
     setErr(null);
     setFileErr(null);
     native.clear();
+    at ??= { before: boxes.snapshot(), key: boxes.selected()?.key ?? null };
     // Captured before the awaits so the image and its offset come from one reading.
-    const target = { chip: chip(), kind: kind(), source: source() };
+    const target = { chip: chip(), kind: kind(), source: source(), release: release() };
+    let took = 'stock';
     // The owner's say-so is for this attempt alone.
     const told = anyway === target.chip;
     anyway = null;
@@ -195,35 +212,63 @@ const ManualFlash = () => {
         }
         const [pkg, boot] = files;
         const knownMain = (mac: string) => boxes.entries().some((e) => e.key === mac);
-        if (await native.flashStock(port, target.chip, pkg, boot, 'advanced', { anyway: told, knownMain })) {
-          setStocked((s) => new Set([...s, target.chip]));
-          setDone(true);
-          return;
+        if (!(await native.flashStock(port, target.chip, pkg, boot, 'advanced', { anyway: told, knownMain }))) {
+          return setErr(native.error() ?? 'That did not finish.');
         }
-        // Past the erase, the chip may hold nothing that boots: it can't be bricked, and either firmware puts it right.
-        const erased = ['erasing', 'writing'].includes(native.progress()?.phase ?? '');
-        return setErr(
-          `${native.error() ?? 'That did not finish.'}${erased ? ` The ${CHIP_NAME[target.chip]} may be erased. Flash it again, or put Medius back with Set up.` : ''}`,
-        );
+      } else {
+        const a = target.release?.assets.find((x) => x.name === nameFor(target.chip, target.kind)) ?? null;
+        const img = target.source === 'upload' ? image() : a ? await downloadAsset(a) : null;
+        if (!img) return setErr('No image selected.');
+        const version = target.source === 'upload' ? imageVersion(img, target.kind) : target.release?.tag.replace(/^v/, '');
+        took = version ? `v${version}` : 'other';
+        const ok = await native.flash(port, img, target.kind, {
+          page: 'advanced',
+          chip: target.chip,
+          source: target.source === 'upload' ? 'file' : 'release',
+        });
+        if (!ok) return setErr(native.error() ?? 'That did not finish.');
       }
-      const a = latest()?.assets.find((x) => x.name === nameFor(target.chip, target.kind)) ?? null;
-      const img = target.source === 'upload' ? image() : a ? await downloadAsset(a) : null;
-      if (!img) return setErr('No image selected.');
-      const ok = await native.flash(port, img, target.kind, {
-        page: 'advanced',
-        chip: target.chip,
-        source: target.source === 'upload' ? 'file' : 'release',
-      });
-      if (ok) {
-        // That chip runs Medius again.
-        setStocked((s) => new Set([...s].filter((c) => c !== target.chip)));
-        setDone(true);
-      }
-      else setErr(native.error() ?? 'That did not finish.');
+      setFlashed((m) => new Map(m).set(target.chip, took));
+      setDone(true);
     } catch (e) {
       setErr(isUserCancel(e) ? 'No port was picked. Press Flash, then pick the box in the list.' : (e as Error).message);
     } finally {
       setBusy(false);
+    }
+  };
+
+  // The other chip, from the same source; a file picked was the first chip's.
+  const flashOther = () => {
+    setChip(OTHER[chip()]);
+    setFiles([]);
+    setImage(null);
+    setDone(false);
+  };
+  // A new pass starts as a box does, at the main chip.
+  const flashAnother = () => {
+    at = null;
+    setFound(null);
+    setFlashed(new Map());
+    setChip('device');
+    setFiles([]);
+    setImage(null);
+    setDone(false);
+  };
+
+  // Straight to the box selected at the first flash when it runs Medius; otherwise the box just flashed is connected
+  // first, as the one that answers now.
+  const [finding, setFinding] = createSignal(false);
+  const [found, setFound] = createSignal<ConnectVerdict | null>(null);
+  const toBox = async () => {
+    if (boxes.selectedKind() === 'medius' && boxes.selected()?.key === at?.key) return navigate('/dashboard');
+    setFound(null);
+    setFinding(true);
+    try {
+      const v = await boxes.connectNew(at?.before ?? boxes.snapshot());
+      if (v) setFound(v);
+      else navigate('/dashboard');
+    } finally {
+      setFinding(false);
     }
   };
 
@@ -241,7 +286,7 @@ const ManualFlash = () => {
     <Panels>
       <Show when={native.running() || updating()}>
         <Panel id="flashing" wide>
-          <p class="cue">{CHIP_CUE[progress()?.phase === 'writing' ? (progress()?.chip ?? '') : ''] ?? 'Flashing'}</p>
+          <p class="cue">{cue()}</p>
           <p class="sub2">Don't unplug or close this tab</p>
           <div class="prog">
             <div class="pct">
@@ -258,119 +303,118 @@ const ManualFlash = () => {
 
       <Show when={!native.running() && !updating()}>
         <Panel id="manual-flash" wide>
+          {viaField()}
           <Show
-            when={via() === 'rom'}
+            when={route() === 'rom'}
             fallback={
               <BoxScope>
-                <Usb2Flash via={viaField} onBusy={setUsb2Busy} />
+                <Usb2Flash onBusy={setUsb2Busy} />
               </BoxScope>
             }
           >
             <Switch>
-              <Match when={done() && source() === 'stock'}>
-                <Show
-                  when={stocked().size === 2}
-                  fallback={
-                    <>
-                      <p class="state">
-                        <span class="dot ok" />
-                        The {CHIP_NAME[chip()]} runs MAKCU's firmware. The box works once the {CHIP_NAME[OTHER[chip()]]} does too.
-                      </p>
-                      <div class="acts">
-                        <Button
-                          variant="primary"
-                          onClick={() => {
-                            setChip(OTHER[chip()]);
-                            setDone(false);
-                          }}
-                        >
-                          Flash the {CHIP_NAME[OTHER[chip()]]}
-                        </Button>
-                      </div>
-                    </>
-                  }
-                >
-                  <p class="state">
-                    <span class="dot ok" />
-                    Both chips run MAKCU's firmware. Unplug the box for 10 s, then plug in USB1 and USB2, without the button.
-                  </p>
-                  <div class="acts">
-                    <Button variant="primary" onClick={() => navigate('/dashboard/setup')}>
-                      Put Medius back
-                    </Button>
-                    <Button
-                      variant="secondary"
-                      onClick={() => {
-                        setStocked(new Set<FlashChip>());
-                        setDone(false);
-                      }}
-                    >
-                      Flash another
-                    </Button>
-                  </div>
-                </Show>
-              </Match>
-
-              <Match when={done()}>
+              {/* The two chips run one version: one done, the other is next, from the same source. */}
+              <Match when={done() && !both()}>
                 <p class="state">
                   <span class="dot ok" />
-                  Done.
+                  {CHIP_NAME[chip()][0].toUpperCase() + CHIP_NAME[chip()].slice(1)} flashed and verified.
                 </p>
-                <WiringPorts />
                 <div class="acts">
-                  <Button variant="primary" onClick={() => navigate('/dashboard')}>
-                    Go to my box
+                  <Button variant="primary" onClick={flashOther}>
+                    Flash the {CHIP_NAME[OTHER[chip()]]}
                   </Button>
-                  <Button variant="secondary" onClick={() => setDone(false)}>
+                  <Button variant="secondary" onClick={flashAnother}>
                     Flash another
                   </Button>
                 </div>
               </Match>
 
+              {/* MAKCU stock, or other firmware: no Medius box to go to. */}
+              <Match when={done() && !flashed().get(chip())?.startsWith('v')}>
+                <p class="state">
+                  <span class="dot ok" />
+                  Flashed and verified.
+                </p>
+                <WiringPorts />
+                <div class="acts">
+                  <Button variant="secondary" onClick={flashAnother}>
+                    Flash another
+                  </Button>
+                </div>
+              </Match>
+
+              <Match when={done()}>
+                <p class="state">
+                  <span class="dot ok" />
+                  Flashed and verified.
+                </p>
+                <WiringPorts />
+                <div class="acts">
+                  <Button variant="primary" loading={finding()} disabled={finding()} onClick={() => void toBox()}>
+                    {finding() ? 'Connecting...' : 'Go to my box'}
+                  </Button>
+                  <Button variant="secondary" disabled={finding()} onClick={flashAnother}>
+                    Flash another
+                  </Button>
+                </div>
+                <Show when={found()}>
+                  {(v) => (
+                    <div class="callout callout--danger" role="alert">
+                      {notConnected(v())}
+                    </div>
+                  )}
+                </Show>
+              </Match>
+
               <Match when={!done()}>
-                {viaField()}
                 {choice(
                   'Chip',
-                  <Select
-                    label="Chip"
+                  <Segmented
+                    name="Chip"
                     options={[
-                      { value: 'device', label: 'Main chip (USB1 + USB2)' },
-                      { value: 'host', label: 'Mouse-side chip (USB3)' },
+                      { value: 'device', label: 'Main chip' },
+                      { value: 'host', label: 'Mouse-side chip' },
                     ]}
                     value={chip()}
                     disabled={busy()}
                     onChange={(v) => setChip(v as FlashChip)}
                   />,
                 )}
-                <Show when={source() !== 'stock'}>
-                  {choice(
-                    'Image',
-                    <Select
-                      label="Image"
-                      options={[
-                        { value: 'factory', label: 'Factory (full image at 0x0)' },
-                        { value: 'app', label: 'Application (app only at 0x10000)' },
-                      ]}
-                      value={kind()}
-                      disabled={busy()}
-                      onChange={(v) => setKind(v as FlashKind)}
-                    />,
-                  )}
-                </Show>
                 {choice(
                   'Source',
                   <Segmented
                     name="Source"
                     options={[
                       { value: 'release', label: 'Latest release' },
-                      { value: 'upload', label: 'Upload a file' },
+                      { value: 'older', label: 'Older release', disabled: !earlier().length },
+                      { value: 'upload', label: 'File' },
                       { value: 'stock', label: 'MAKCU stock' },
                     ]}
                     value={source()}
                     disabled={busy()}
-                    onChange={(v) => setSource(v as 'release' | 'upload' | 'stock')}
+                    onChange={(v) => setSource(v as 'release' | 'older' | 'upload' | 'stock')}
                   />,
                 )}
+                <Show when={source() === 'older'}>
+                  <VersionField disabled={busy()} />
+                </Show>
+                {/* Under Source, so picking MAKCU stock, which has no image to choose, takes nothing away above it. */}
+                <Show when={source() !== 'stock'}>
+                  {choice(
+                    'Image',
+                    <Segmented
+                      name="Image"
+                      options={[
+                        { value: 'factory', label: 'Factory' },
+                        { value: 'app', label: 'Application' },
+                      ]}
+                      value={kind()}
+                      disabled={busy()}
+                      onChange={(v) => setKind(v as FlashKind)}
+                    />,
+                  )}
+                  <p class="mut">{kind() === 'app' ? 'The app alone, written at 0x10000.' : 'The full image, written at 0x0.'}</p>
+                </Show>
 
                 <Show when={source() === 'stock'}>
                   <Switch>
@@ -390,24 +434,24 @@ const ManualFlash = () => {
                   </Switch>
                 </Show>
 
-                <Show when={source() === 'release'}>
+                <Show when={fromRelease()}>
                   <Switch>
                     <Match when={releases.loading}>
                       <p class="mut" data-search-skip>Loading releases...</p>
                     </Match>
                     <Match when={releases.error}>
-                      <div class="callout callout--warning">Couldn't reach the firmware downloads. Choose Upload a file.</div>
+                      <div class="callout callout--warning">Couldn't reach the firmware downloads. Choose File.</div>
                     </Match>
                     <Match when={asset()}>
                       {(a) => (
                         <p class="mut">
-                          <code>{a().name}</code> ({fmtBytes(a().size)}) from {latest()?.tag}
+                          <code>{a().name}</code> ({fmtBytes(a().size)}) from {release()?.tag}
                         </p>
                       )}
                     </Match>
                     <Match when={!asset()}>
                       <div class="callout callout--warning">
-                        No <code>{assetName()}</code> in the latest release. Upload one.
+                        No <code>{assetName()}</code> in {where()}. Upload one.
                       </div>
                     </Match>
                   </Switch>
@@ -475,7 +519,7 @@ const ManualFlash = () => {
                               void flash();
                             }}
                           >
-                            Flash it as the {CHIP_NAME[chip()]}
+                            Flash anyway
                           </Button>
                         </div>
                       </Show>
@@ -497,4 +541,12 @@ const ManualFlash = () => {
   );
 };
 
-export default ManualFlash;
+// The Flash page: any image to either chip, by hand.
+const Flash = () => (
+  <>
+    <PageHeader />
+    <ManualFlash />
+  </>
+);
+
+export default Flash;

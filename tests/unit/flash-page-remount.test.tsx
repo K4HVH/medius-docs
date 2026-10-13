@@ -7,7 +7,8 @@ import { BoxesContext, NativeFlashContext, type NativeFlash } from '../../src/ap
 import { probePort } from '../../src/dashboard/serial';
 import { FakeBox, FakePort, FakeSerial, makeFakeLink } from './fake-boxes';
 
-vi.mock('../../src/dashboard/firmware', () => ({
+vi.mock('../../src/dashboard/firmware', async () => ({
+  ...(await vi.importActual<typeof import('../../src/dashboard/firmware')>('../../src/dashboard/firmware')),
   fetchReleases: async () => [
     {
       tag: 'v3.4.4',
@@ -25,7 +26,7 @@ vi.mock('@solidjs/router', () => ({
   A: (p: { children: unknown }) => p.children,
 }));
 
-import Advanced from '../../src/app/pages/dashboard/Advanced';
+import Advanced from '../../src/app/pages/dashboard/Flash';
 
 afterEach(() => cleanup());
 
@@ -36,7 +37,6 @@ it('a ROM flash half set up keeps its choices when USB2 is unplugged, as its dia
   const [running] = createSignal(false);
   const native = {
     progress: () => null,
-    log: () => [],
     error: () => null,
     running,
     clear: () => {},
@@ -63,20 +63,15 @@ it('a ROM flash half set up keeps its choices when USB2 is unplugged, as its dia
     );
   });
   await waitFor(() => expect(boxes.selected()?.session.name()).toBe('Desk'), { timeout: 3000 });
-  // Not connected, so Via starts on ROM download, with the CHIP dropdown under its label.
+  // Not connected, so Via starts on ROM download, with the Chip choice under its label.
   const field = () =>
     [...r.container.querySelectorAll('.labelled')].find((el) => el.querySelector('.field-l')?.textContent === 'Chip');
-  const chip = () => field()?.querySelector('.dd-b') as HTMLButtonElement;
-  await waitFor(() => expect(chip()).toBeTruthy());
-  fireEvent.click(chip());
-  const mouseSide = await waitFor(() => {
-    const o = [...field()!.querySelectorAll('[role="option"]')].find((x) => /mouse-side/i.test(x.textContent ?? ''));
-    if (!o) throw new Error('no mouse-side option');
-    return o as HTMLElement;
-  });
-  fireEvent.click(mouseSide);
-  await waitFor(() => expect(chip().textContent).toMatch(/Mouse-side chip/));
+  const chip = () => field()?.querySelector('[aria-checked="true"]')?.textContent ?? '';
+  await waitFor(() => expect(field()).toBeTruthy());
+  const mouseSide = [...field()!.querySelectorAll('[role="radio"]')].find((x) => /mouse-side/i.test(x.textContent ?? ''));
+  fireEvent.click(mouseSide as HTMLElement);
+  await waitFor(() => expect(chip()).toMatch(/Mouse-side chip/));
   serial.unplug(port);
   await waitFor(() => expect(boxes.selected()).toBeNull());
-  expect(chip().textContent).toMatch(/Mouse-side chip/);
+  expect(chip()).toMatch(/Mouse-side chip/);
 });

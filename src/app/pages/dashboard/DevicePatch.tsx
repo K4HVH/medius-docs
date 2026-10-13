@@ -2,7 +2,7 @@
 // the set it last enumerated with, which the applied and pending flags compare against the store.
 
 import { A } from '@solidjs/router';
-import { For, Show, createSignal } from 'solid-js';
+import { Index, Show, createSignal } from 'solid-js';
 import { Button } from '../../../components/inputs/Button';
 import { Chip } from '../../../components/display/Chip';
 import { NumberInput } from '../../../components/inputs/NumberInput';
@@ -11,7 +11,7 @@ import { type PatchInfo, PATCH_POOL, PATCHES_MAX, PatchSection, patchSectionName
 import { useDashboard } from './context';
 import { createCommand } from './action';
 import { Panel } from '../../shell/Panel';
-import { Segmented } from '../../shell/Segmented';
+import { Select } from '../../shell/Select';
 import { displayName, parseHex } from './hex';
 
 const SECTIONS = [
@@ -39,7 +39,7 @@ const usesCfg = (s: PatchSection | null) => s === PatchSection.Config || s === P
 const usesIndex = (s: PatchSection | null) => s === PatchSection.Report || s === PatchSection.String;
 const usesOffset = (s: PatchSection | null) => s !== PatchSection.String;
 
-// A chip ellipsises past 250px, so a patch names only what addresses it.
+// A chip runs onto a second line past its panel's width, so a patch names only what addresses it.
 const describe = (e: PatchInfo): string => {
   const narrow: string[] = [];
   if (e.section === PatchSection.Report) narrow.push(`cfg ${e.cfg}`, `interface ${e.index}`);
@@ -112,17 +112,11 @@ const DevicePatch = () => {
       <Panel id="descriptor-patches" title="Descriptor patches">
         <div class="labelled">
           <span class="field-l">Descriptor</span>
-          <Segmented
-            name="patch-section"
-            label="Descriptor"
-            value={pSection()}
-            onChange={setPSection}
-            options={SECTION_OPTIONS}
-          />
+          <Select label="Descriptor" value={pSection()} onChange={setPSection} options={SECTION_OPTIONS} />
         </div>
         <p class="mut">{SECTION_BLURB[psection()]}</p>
 
-        <div class="acts">
+        <div class="fields">
           <Show when={usesCfg(psection())}>
             <div class="fw-s">
               <NumberInput label="Configuration index" value={pCfg()} min={0} max={255} precision={0} onChange={(v) => setPCfg(v ?? 0)} />
@@ -145,9 +139,10 @@ const DevicePatch = () => {
               <NumberInput label="Offset" value={pOff()} min={0} max={65534} precision={0} onChange={(v) => setPOff(v ?? 0)} />
             </div>
           </Show>
+          <div class="grow">
+            <TextField label="Bytes (hex)" value={pBytes()} onInput={setPBytes} placeholder="e.g. 00 03" />
+          </div>
         </div>
-
-        <TextField label="Bytes (hex)" value={pBytes()} onInput={setPBytes} placeholder="e.g. 00 03" />
 
         <div class="acts">
           <Button variant="primary" disabled={cmd.busy()} onClick={setPatch}>
@@ -207,16 +202,16 @@ const DevicePatch = () => {
         </p>
         <Show
           when={entries().length > 0}
-          fallback={<p>{applied() ? 'Nothing stored.' : 'Nothing patched.'}</p>}
+          fallback={<p class="mut">{applied() ? 'Nothing stored.' : 'Nothing patched.'}</p>}
         >
           <div class="chips">
-            <For each={entries()}>
+            <Index each={entries()}>
               {(e) => (
-                <Chip variant="info" onRemove={() => removeOne(e)}>
-                  {describe(e)}
+                <Chip variant="info" onRemove={() => removeOne(e())}>
+                  {describe(e())}
                 </Chip>
               )}
-            </For>
+            </Index>
           </div>
         </Show>
       </Panel>

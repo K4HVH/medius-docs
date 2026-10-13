@@ -1,3 +1,24 @@
+import type { FlashPhase, FlashProgress } from '../../../dashboard/flash';
+
+const WAIT: Partial<Record<FlashPhase, string>> = {
+  rebooting: 'Rebooting',
+  connecting: 'Connecting',
+  erasing: 'Erasing',
+  restarting: 'Restarting',
+  verifying: 'Verifying',
+};
+
+// A flash's figure: the count of a phase that has one, 100 once done, else none.
+export function flashPercent(p: FlashProgress | null | undefined): number | undefined {
+  if ((p?.phase === 'writing' || p?.phase === 'erasing') && p.total) return Math.round(((p.written ?? 0) / p.total) * 100);
+  return p?.phase === 'done' ? 100 : undefined;
+}
+
+// What shows in place of the figure while a phase counts nothing: its name over a running segment.
+export function flashWait(p: FlashProgress | null | undefined): string | null {
+  return flashPercent(p) === undefined ? (WAIT[p?.phase ?? 'connecting'] ?? 'Connecting') : null;
+}
+
 // Flash and update failures only: a failed CONNECT is a verdict, not a string.
 export function flashErrorText(e: unknown): string {
   // A DOMException isn't an Error everywhere, so Web Serial's wording is matched on the message.

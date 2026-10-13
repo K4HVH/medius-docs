@@ -146,6 +146,7 @@ pre code[class*='language-'] { font: inherit; color: #bdbdbd; }
    fold under them, grouped by repo. Changelog.tsx renders them; server/fill.ts writes the same markup for
    crawlers, with the commits in a <details>. */
 .rels { margin-top: 40px; }
+.doc > .page-header + div > .rels:first-child { margin-top: 0; }
 .rel {
   display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); gap: 0 48px; align-items: start;
   padding: 40px 0 44px; border-top: 1px solid var(--line); overflow-wrap: break-word;

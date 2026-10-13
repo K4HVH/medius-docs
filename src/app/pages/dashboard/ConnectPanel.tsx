@@ -4,12 +4,24 @@ import { Button } from '../../../components/inputs/Button';
 import { Progress } from '../../../components/feedback/Progress';
 import { versionString } from '../../../dashboard/protocol';
 import type { ConnectVerdict } from '../../../dashboard/serial';
-import { useDashboard } from './context';
+import { NEW_BOX, useBoxes, useDashboard } from './context';
 import { WiringPorts } from './PortDiagram';
 
 // Shared by every page that gates on these two conditions.
 export const BAD_BROWSER = "This browser can't talk to your box. Open this page in Chrome.";
 export const BAD_CONTEXT = "This page isn't secure. Open it again from the link you were given.";
+
+// Why a port a page tried to connect isn't a box that connected, in the connect card's words where it has them.
+const NOT_CONNECTED: Partial<Record<ConnectVerdict['kind'], string>> = {
+  silent: "That port isn't a Medius box. Pick another, or install Medius.",
+  'old-firmware': "That box's firmware is too old to connect. Install Medius.",
+  'no-port': "This computer can't see your box. Plug USB2 into it.",
+  busy: 'Another tab or program has this box open. Close it.',
+  unreadable: "This computer can't read from the box. Unplug USB2 and plug it back in.",
+  'needs-click': 'The browser needs one more click before it asks.',
+  other: "That didn't work. Unplug everything and plug it back in.",
+};
+export const notConnected = (v: ConnectVerdict) => NOT_CONNECTED[v.kind] ?? NOT_CONNECTED.silent;
 
 export interface ConnectViewProps {
   supported: boolean;
@@ -23,7 +35,13 @@ export interface ConnectViewProps {
 
 export const ConnectView = (props: ConnectViewProps) => {
   const navigate = useNavigate();
+  const boxes = useBoxes();
   const setup = () => (props.onSetup ? props.onSetup() : navigate('/dashboard/setup'));
+  // On a box's page, a new box is set up from Add box: Set up is not a box's page.
+  const newBox = () => {
+    if (!props.onSetup) boxes.select(NEW_BOX);
+    setup();
+  };
   const verdict = () => props.verdict;
   const busy = () => props.busy;
 
@@ -39,8 +57,8 @@ export const ConnectView = (props: ConnectViewProps) => {
   );
 
   const NeverInstalled = () => (
-    <Button variant="subtle" size="compact" onClick={setup}>
-      Set up a new box
+    <Button variant="subtle" size="compact" onClick={newBox}>
+      Add box
     </Button>
   );
 
@@ -76,14 +94,14 @@ export const ConnectView = (props: ConnectViewProps) => {
         <Match when={verdict()?.kind === 'unsupported'}>
           <div class="callout callout--warning" role="alert">{BAD_BROWSER}</div>
           <div class="acts">
-            <Connect label="Try again" />
+            <Connect label="Retry" />
           </div>
         </Match>
 
         <Match when={verdict()?.kind === 'insecure'}>
           <div class="callout callout--warning" role="alert">{BAD_CONTEXT}</div>
           <div class="acts">
-            <Connect label="Try again" />
+            <Connect label="Retry" />
           </div>
         </Match>
 
@@ -93,7 +111,7 @@ export const ConnectView = (props: ConnectViewProps) => {
           </div>
           <WiringPorts />
           <div class="acts">
-            <Connect label="Try again" />
+            <Connect label="Retry" />
             <NeverInstalled />
           </div>
         </Match>
@@ -103,7 +121,7 @@ export const ConnectView = (props: ConnectViewProps) => {
             The browser needs one more click before it asks.
           </div>
           <div class="acts">
-            <Connect label="Try again" />
+            <Connect label="Retry" />
           </div>
         </Match>
 
@@ -112,7 +130,7 @@ export const ConnectView = (props: ConnectViewProps) => {
             Another tab or program has this box open. Close it.
           </div>
           <div class="acts">
-            <Connect label="Try again" />
+            <Connect label="Retry" />
           </div>
         </Match>
 
@@ -121,7 +139,7 @@ export const ConnectView = (props: ConnectViewProps) => {
             This computer can't read from the box. Unplug USB2 and plug it back in.
           </div>
           <div class="acts">
-            <Connect label="Try again" />
+            <Connect label="Retry" />
           </div>
         </Match>
 
@@ -131,7 +149,7 @@ export const ConnectView = (props: ConnectViewProps) => {
           </div>
           <WiringPorts />
           <div class="acts">
-            <Connect label="Try again" />
+            <Connect label="Retry" />
             <NeverInstalled />
           </div>
         </Match>
@@ -171,7 +189,7 @@ export const ConnectView = (props: ConnectViewProps) => {
             );
           })()}
           <div class="acts">
-            <Connect label="Try again" />
+            <Connect label="Retry" />
           </div>
         </Match>
       </Switch>

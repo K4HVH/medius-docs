@@ -1,4 +1,4 @@
-import { For, Match, Show, Switch, createEffect, createSignal, on } from 'solid-js';
+import { Index, Match, Show, Switch, createEffect, createSignal, on } from 'solid-js';
 import { useLocation, useNavigate } from '@solidjs/router';
 import { Button } from '../../../components/inputs/Button';
 import { Chip } from '../../../components/display/Chip';
@@ -165,8 +165,8 @@ const Device = () => {
                             </Button>
                           }
                         >
-                          <Button variant="primary" onClick={() => navigate('/dashboard/update#manual')}>
-                            Go to Manual flash
+                          <Button variant="primary" onClick={() => navigate('/dashboard/flash')}>
+                            Go to Flash
                           </Button>
                         </Show>
                       </div>
@@ -189,13 +189,14 @@ const Device = () => {
                   <Show when={dash.health()} fallback={<p class="mut" data-search-skip>Reading...</p>}>
                     {(h) => (
                       <div class="flags">
-                        <For each={healthItems(h())}>
+                        {/* By place, so a poll's fresh list keeps each lamp and its fade plays. */}
+                        <Index each={healthItems(h())}>
                           {(item, i) => (
-                            <span class="lp" classList={{ on: item.value }} style={{ '--d': `${i() * 40}ms` }}>
-                              {item.label}
+                            <span class="lp" classList={{ on: item().value }} style={{ '--d': `${i * 40}ms` }}>
+                              {item().label}
                             </span>
                           )}
-                        </For>
+                        </Index>
                         <span class="lp blank" aria-hidden="true" />
                       </div>
                     )}

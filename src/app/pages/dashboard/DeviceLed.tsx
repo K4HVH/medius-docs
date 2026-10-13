@@ -39,7 +39,7 @@ const DeviceLed = () => {
   return (
     <Show when={dash.status() === 'connected'}>
       <Panels>
-        <Panel id="status-light" wide>
+        <Panel id="status-light" title="Status light">
           <div class="labelled">
             <span class="field-l">Light</span>
             <Segmented

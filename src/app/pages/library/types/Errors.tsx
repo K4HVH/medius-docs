@@ -1,6 +1,7 @@
 import type { Component } from 'solid-js';
 import { A } from '@solidjs/router';
 import { PageHeader } from '../../../shell/PageHeader';
+import { DocSection } from '../../../shell/DocSection';
 
 const Errors: Component = () => {
   return (
@@ -10,7 +11,8 @@ const Errors: Component = () => {
           Every fallible call returns <code>Result&lt;T&gt;</code>, the crate's alias for{' '}
           <code>core::result::Result&lt;T, Error&gt;</code>.
         </p>
-
+      </PageHeader>
+      <DocSection id="error" title="Error" caption="What a call returns on failure">
         <p>
           <code>Error</code> is{' '}
           <a
@@ -266,7 +268,7 @@ const Errors: Component = () => {
             </tbody>
           </table>
         </div>
-      </PageHeader>
+      </DocSection>
     </>
   );
 };

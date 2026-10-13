@@ -31,6 +31,8 @@ export function DocsSidebar(props: {
   closeKey?: unknown;
   title?: string;
   boxes?: JSX.Element;
+  // Pages left out of the list: the dashboard's that the selected box doesn't take.
+  hide?: (path: string) => boolean;
 }) {
   const route = createMemo(() => routeFor(props.pathname));
   // The AI page keeps the sidebar of the code section it was opened from.
@@ -232,7 +234,7 @@ export function DocsSidebar(props: {
           {(g) => (
             <nav class="group" aria-label={g.label}>
               <p class="label">{g.label}</p>
-              <For each={g.routes}>
+              <For each={g.routes.filter((r) => !props.hide?.(r.path))}>
                 {(r) => <Link href={r.path} label={r.nav} current={r.path === props.pathname ? 'page' : undefined} />}
               </For>
             </nav>

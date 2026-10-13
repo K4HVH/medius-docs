@@ -6,8 +6,9 @@ import { type FirmwareAsset, downloadAsset, fetchReleases } from '../../../dashb
 import type { FlashChip } from '../../../dashboard/flash';
 import { type ConnectVerdict, requestRomPort } from '../../../dashboard/serial';
 import { type BoxEntry, type Snapshot, useBoxes, useNativeFlash } from './context';
-import { BAD_BROWSER, BAD_CONTEXT, ConnectView } from './ConnectPanel';
+import { BAD_BROWSER, BAD_CONTEXT, ConnectView, notConnected } from './ConnectPanel';
 import { ClearPort, InstallPorts, type PortId } from './PortDiagram';
+import { flashPercent, flashWait } from './flashText';
 import { PageHeader } from '../../shell/PageHeader';
 
 type Step = 'main' | 'unplug' | 'mouse' | 'unplug3' | 'cables';
@@ -27,6 +28,21 @@ const Setup = () => {
   const [installed, setInstalled] = createSignal<BoxEntry | null>(null);
   const [finding, setFinding] = createSignal(false);
   const [found, setFound] = createSignal<ConnectVerdict | null>(null);
+  // A box that runs Medius already, picked in the chooser: the one pick a browser needs before it sees a port. A
+  // Medius box connects and takes its pages (DocsLayout); anything else is said here.
+  const [linking, setLinking] = createSignal(false);
+  const [linked, setLinked] = createSignal<ConnectVerdict | null>(null);
+  const link = async () => {
+    setLinked(null);
+    setLinking(true);
+    try {
+      const r = await boxes.add();
+      if (!r.ok) setLinked(r.verdict);
+      else if (r.entry.session.status() !== 'connected') setLinked(r.entry.session.verdict() ?? { kind: 'silent' });
+    } finally {
+      setLinking(false);
+    }
+  };
   // Taken at the first install: the box installed is one that answers after it.
   let before: Snapshot | null = null;
 
@@ -39,12 +55,8 @@ const Setup = () => {
       return null;
     }
   };
-  const pct = () => {
-    const p = native.progress();
-    return p?.phase === 'writing' && p.total
-      ? Math.round(((p.written ?? 0) / p.total) * 100)
-      : undefined;
-  };
+  const pct = () => flashPercent(native.progress());
+  const wait = () => flashWait(native.progress());
 
   // Only one chip's USB is plugged in with its button held, so only that chip answers.
   const install = async (chip: FlashChip, next: Step) => {
@@ -117,7 +129,7 @@ const Setup = () => {
       }
     >
       <div class="acts">
-        <Button variant="primary" disabled={busy() || releases.loading} onClick={() => void install(chip, next)}>
+        <Button variant="primary" disabled={busy() || linking() || releases.loading} onClick={() => void install(chip, next)}>
           {busy() ? 'Installing...' : 'Install'}
         </Button>
         {back}
@@ -166,10 +178,11 @@ const Setup = () => {
               <p class="sub2">Don't unplug or close this tab</p>
               <div class="prog">
                 <div class="pct">
-                  {pct() ?? 0}
-                  <small>%</small>
+                  <Show when={wait()} fallback={<>{pct()}<small>%</small></>}>
+                    {wait()}
+                  </Show>
                 </div>
-                <div class="track">
+                <div class="track" classList={{ wait: !!wait() }}>
                   <i style={{ '--p': (pct() ?? 0) / 100 }} />
                 </div>
               </div>
@@ -180,7 +193,27 @@ const Setup = () => {
             <Match when={step() === 'main'}>
               <div class="step">
                 <InstallPorts socket="usb1" />
-                <Show when={blocked()} fallback={installOr('device', 'unplug')}>
+                <Show
+                  when={blocked()}
+                  fallback={
+                    <>
+                      {installOr(
+                        'device',
+                        'unplug',
+                        <Button variant="secondary" disabled={busy() || linking()} loading={linking()} onClick={() => void link()}>
+                          {linking() ? 'Connecting...' : linked() ? 'Retry' : 'Connect'}
+                        </Button>,
+                      )}
+                      <Show when={linked()}>
+                        {(v) => (
+                          <div class="callout callout--danger" role="alert">
+                            {notConnected(v())}
+                          </div>
+                        )}
+                      </Show>
+                    </>
+                  }
+                >
                   {(reason) => (
                     <div class="callout callout--warning" role="alert">
                       {reason()}

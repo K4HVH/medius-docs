@@ -98,18 +98,32 @@ vi.mock('../../src/app/pages/dashboard/ConnectPanel', () => ({
   ConnectPanel: () => <p>connect panel: {String(mock.s!.error())}</p>,
 }));
 
-vi.mock('../../src/dashboard/firmware', () => ({
+vi.mock('../../src/dashboard/firmware', async () => ({
+  ...(await vi.importActual<typeof import('../../src/dashboard/firmware')>('../../src/dashboard/firmware')),
   fetchReleases: async () => {
     if (mock.releasesThrow) throw new Error('Firmware fetch is not set up on this server.');
-    return [{ tag: 'v3.4.5', assets: mock.assets }];
+    // The latest, two older ones offered, and one too old to offer.
+    return [
+      { tag: 'v3.4.5', prerelease: false, publishedAt: '2026-10-05T15:29:06Z', assets: mock.assets },
+      ...['3.4.4', '3.3.2', '3.1.0'].map((v) => ({
+        tag: `v${v}`,
+        prerelease: false,
+        publishedAt: v === '3.4.4' ? '2026-10-05T09:16:13Z' : '2026-09-04T09:47:52Z',
+        assets: [
+          { name: 'medius_device.bin', size: 480000, url: `${v}/d` },
+          { name: 'medius_host.bin', size: 400000, url: `${v}/h` },
+        ],
+      })),
+    ];
   },
-  downloadAsset: async (a: { name: string }) => mock.bytes[a.name],
+  // An older release's file by its address, the latest's by its name.
+  downloadAsset: async (a: { name: string; url: string }) => mock.bytes[a.url] ?? mock.bytes[a.name],
 }));
 
 const navigate = vi.hoisted(() => vi.fn());
 vi.mock('@solidjs/router', () => ({ useNavigate: () => navigate }));
 
-import { Usb2Flash } from '../../src/app/pages/dashboard/AdvancedUsb2';
+import { Usb2Flash } from '../../src/app/pages/dashboard/FlashUsb2';
 
 // An application image naming its project and version, as a medius build's app descriptor does.
 const app = (project: string, version: string): Uint8Array<ArrayBuffer> => {
@@ -130,7 +144,14 @@ const release = () => {
     { name: 'medius_device.bin', size: 494400, url: 'd' },
     { name: 'medius_host.bin', size: 408752, url: 'h' },
   ];
-  mock.bytes = { 'medius_device.bin': DEVICE_345, 'medius_host.bin': HOST_345 };
+  mock.bytes = {
+    'medius_device.bin': DEVICE_345,
+    'medius_host.bin': HOST_345,
+    '3.4.4/d': app('medius_device', '3.4.4'),
+    '3.4.4/h': app('medius_host', '3.4.4'),
+    '3.3.2/d': app('medius_device', '3.3.2'),
+    '3.3.2/h': app('medius_host', '3.3.2'),
+  };
 };
 
 beforeEach(() => {
@@ -149,7 +170,7 @@ afterEach(() => {
   mock.firmwareReads = 0;
 });
 
-const mount = () => render(() => <Usb2Flash via={() => <p>via field</p>} />);
+const mount = () => render(() => <Usb2Flash />);
 // Chip and Source are segmented choices, each in a field under its label.
 const radios = (r: ReturnType<typeof render>, label: 'Chip' | 'Source') => {
   const f = [...r.container.querySelectorAll('.labelled')].find((el) => el.querySelector('.field-l')?.textContent === label);
@@ -165,7 +186,7 @@ const pick = async (r: ReturnType<typeof render>, label: 'Chip' | 'Source', opti
   await new Promise((res) => setTimeout(res, 20));
 };
 const chips = (r: ReturnType<typeof render>, label: RegExp) => pick(r, 'Chip', label);
-const upload = (r: ReturnType<typeof render>) => pick(r, 'Source', /upload a file/i);
+const upload = (r: ReturnType<typeof render>) => pick(r, 'Source', /^file$/i);
 const flashButton = (r: ReturnType<typeof render>) => r.getByRole('button', { name: /^flash$/i });
 // Drops a file on the picker with this label.
 const drop = (r: ReturnType<typeof render>, label: string, bytes: Uint8Array<ArrayBuffer>) => {
@@ -187,10 +208,9 @@ const dropOn = (input: HTMLInputElement, bytes: Uint8Array<ArrayBuffer>) => {
 };
 
 describe('Advanced over USB2', () => {
-  it('a box that is not connected gets the shared connect panel, after the Via choice', async () => {
+  it('a box that is not connected gets the shared connect panel', async () => {
     mock.s!.setStatus('disconnected');
     const r = mount();
-    expect(r.container.textContent).toContain('via field');
     expect(r.container.textContent).toContain('connect panel');
     expect(r.queryByRole('button', { name: /^flash$/i })).toBeNull();
   });
@@ -265,7 +285,7 @@ describe('Advanced over USB2', () => {
   it('a release list that would not load leaves a message and no Flash', async () => {
     mock.releasesThrow = true;
     const r = mount();
-    await waitFor(() => expect(r.container.textContent).toContain("Couldn't reach the firmware downloads. Choose Upload a file."));
+    await waitFor(() => expect(r.container.textContent).toContain("Couldn't reach the firmware downloads. Choose File."));
     expect(flashButton(r)).toBeDisabled();
   });
 
@@ -335,6 +355,39 @@ describe('Advanced over USB2', () => {
     expect(flashButton(r)).toBeDisabled();
   });
 
+  it('offers the releases before the latest back to v3.2.0, newest first, each with its date', async () => {
+    const r = mount();
+    await waitFor(() => expect(flashButton(r)).not.toBeDisabled());
+    await pick(r, 'Source', /^older release$/i);
+    const field = [...r.container.querySelectorAll('.labelled')].find((el) => el.querySelector('.field-l')?.textContent === 'Version')!;
+    fireEvent.click(field.querySelector('.dd-b')!);
+    const options = await waitFor(() => [...field.querySelectorAll('[role="option"]')].map((o) => o.textContent));
+    expect(options).toEqual(['v3.4.4 (5 Oct 2026)', 'v3.3.2 (4 Sep 2026)']);
+  });
+
+  it('sends the older release picked to both chips, and names its files with its version', async () => {
+    const r = mount();
+    await waitFor(() => expect(flashButton(r)).not.toBeDisabled());
+    await pick(r, 'Source', /^older release$/i);
+    await waitFor(() => expect(r.container.textContent).toContain('medius_device.bin (469 KB) from v3.4.4'));
+    const field = [...r.container.querySelectorAll('.labelled')].find((el) => el.querySelector('.field-l')?.textContent === 'Version')!;
+    fireEvent.click(field.querySelector('.dd-b')!);
+    fireEvent.click(await waitFor(() => [...field.querySelectorAll('[role="option"]')].find((o) => o.textContent?.startsWith('v3.3.2'))!));
+    await waitFor(() => expect(r.container.textContent).toContain('medius_host.bin (391 KB) from v3.3.2'));
+    flashButton(r).click();
+    await waitFor(() => expect(mock.sent).toHaveLength(1));
+    expect(mock.sent[0]).toEqual({ images: { device: mock.bytes['3.3.2/d'], host: mock.bytes['3.3.2/h'] }, page: 'advanced', source: 'release' });
+  });
+
+  it('warns of a split when one chip would go back a version and the other not', async () => {
+    const r = mount();
+    await waitFor(() => expect(flashButton(r)).not.toBeDisabled());
+    await pick(r, 'Source', /^older release$/i);
+    await chips(r, /^Main chip$/);
+    await waitFor(() => expect(r.container.textContent).toContain('The main chip would run v3.4.4 and the mouse-side chip v3.4.2.'));
+    expect(flashButton(r)).toBeDisabled();
+  });
+
   it('sends both release images as the Advanced page', async () => {
     const r = mount();
     await waitFor(() => expect(flashButton(r)).not.toBeDisabled());
@@ -391,13 +444,12 @@ describe('Advanced over USB2', () => {
     );
   });
 
-  it('a box that did not come back gets the connect panel and its instruction, and Via to go another way', async () => {
+  it('a box that did not come back gets the connect panel and its instruction', async () => {
     mock.outcome = 'sent';
     const r = mount();
     await waitFor(() => expect(flashButton(r)).not.toBeDisabled());
     flashButton(r).click();
     await waitFor(() => expect(r.container.textContent).toContain('connect panel: The update was sent'));
-    expect(r.container.textContent).toContain('via field');
     expect(r.queryByRole('button', { name: /^flash$/i })).toBeNull();
   });
 

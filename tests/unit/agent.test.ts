@@ -117,7 +117,7 @@ describe('livePage', () => {
     }
   });
 
-  it('serves any other page as it is', async () => {
+  it('serves any other page as is', async () => {
     expect(await livePage('/native', 'snap', fill('filled'))).toBeNull();
   });
 });

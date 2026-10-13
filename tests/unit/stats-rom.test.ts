@@ -1,18 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createRoot } from 'solid-js';
 import type { StatsReport } from '../../src/dashboard/stats';
-import { romMac } from '../../src/dashboard/flash';
 
 const mock = vi.hoisted(() => ({
-  // What esptool reads once connected; null when it never gets that far.
-  mac: '58:8c:81:e0:82:44' as string | null,
+  // The MAC the ROM gives once connected; null when it never gets that far.
+  mac: '588c81e08244' as string | null,
   fails: null as Error | null,
   hold: null as Promise<void> | null,
 }));
 
 vi.mock('../../src/dashboard/flash/flasher', () => ({
   flashNativePort: async (p: { onMac?: (mac: string | null) => void }) => {
-    if (mock.mac !== null) p.onMac?.(romMac(mock.mac));
+    if (mock.mac !== null) p.onMac?.(mock.mac);
     if (mock.hold) await mock.hold;
     if (mock.fails) throw mock.fails;
   },
@@ -38,21 +37,13 @@ const make = (sink: ((r: StatsReport) => void) | null = (r) => reports.push(r)) 
 
 beforeEach(() => {
   reports = [];
-  mock.mac = '58:8c:81:e0:82:44';
+  mock.mac = '588c81e08244';
   mock.fails = null;
   mock.hold = null;
 });
 
-describe('romMac', () => {
-  it("normalises esptool's MAC to 12 lowercase hex digits", () => {
-    expect(romMac('58:8C:81:E0:82:44')).toBe('588c81e08244');
-    expect(romMac('nonsense')).toBeNull();
-    expect(romMac('00:00:00:00:00:00')).toBeNull();
-  });
-});
-
 describe('ROM download reports', () => {
-  it('a main-chip flash is written, with the MAC esptool read and the image version', async () => {
+  it('a main-chip flash is written, with the MAC the ROM gave and the image version', async () => {
     const f = make();
     expect(await f.flash(port, image('medius_device', '3.4.4', 0x10000), 'factory', { page: 'setup', chip: 'device', source: 'release' })).toBe(true);
     expect(reports).toEqual([
@@ -78,7 +69,7 @@ describe('ROM download reports', () => {
     expect(reports[0]).toMatchObject({ mac: null, chips: 'host', kind: 'app', source: 'file', to: { device: null, host: '3.4.4' } });
   });
 
-  it('a failure is failed, and keeps the MAC when esptool got that far', async () => {
+  it('a failure is failed, and keeps the MAC when the flash got that far', async () => {
     mock.fails = new Error('Failed to connect');
     const f = make();
     expect(await f.flash(port, image('medius_device', '3.4.4'), 'app', { page: 'advanced', chip: 'device', source: 'release' })).toBe(false);

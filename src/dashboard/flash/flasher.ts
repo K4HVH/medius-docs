@@ -1,83 +1,34 @@
-// Loaded lazily so esptool-js stays out of the main bundle.
+// Loaded lazily, so the ROM client and its flasher stub stay out of the main bundle.
 
-import { ESPLoader, type FlashOptions, type IEspLoaderTerminal, Transport } from 'esptool-js';
 import SparkMD5 from 'spark-md5';
 import {
   APP_FLASH_ADDR,
   FACTORY_FLASH_ADDR,
+  PARTITION_TABLE_OFFSET,
   type FlashChip,
   type FlashKind,
   type FlashNativeParams,
   type FlashProgress,
   type FlashStockParams,
   WrongChipError,
-  romMac,
   validateImage,
 } from './types';
+import { SLOT_BYTES, mediusChip, readAppHeader } from './image';
+import { Rom } from './rom/loader';
 
 export { WrongChipError };
-import { SLOT_BYTES, mediusChip, readAppHeader } from './image';
-
-// Native USB ignores the baud and breaks on a change, so stay at the ROM baud.
-const NATIVE_BAUD = 115200;
-
-const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
-
-function md5Hex(image: Uint8Array): string {
-  const copy = new Uint8Array(image);
-  return SparkMD5.ArrayBuffer.hash(copy.buffer as ArrayBuffer);
-}
 
 const addressFor = (kind: FlashKind) => (kind === 'factory' ? FACTORY_FLASH_ADDR : APP_FLASH_ADDR);
 
-async function runEsptool(
-  port: SerialPort,
-  image: Uint8Array,
-  address: number,
-  onProgress?: (p: FlashProgress) => void,
-  onLog?: (line: string) => void,
-  onMac?: (mac: string | null) => void,
-): Promise<void> {
-  const terminal: IEspLoaderTerminal = {
-    clean: () => {},
-    write: (d) => onLog?.(d),
-    writeLine: (d) => onLog?.(d),
-  };
-  const transport = new Transport(port, false);
-  const loader = new ESPLoader({ transport, baudrate: NATIVE_BAUD, terminal });
+// A Rom synced, with the stub running and the flash attached; the port is closed if a step fails.
+async function open(port: SerialPort): Promise<{ rom: Rom; size: number | null }> {
+  const rom = await Rom.connect(port);
   try {
-    onProgress?.({ phase: 'connecting' });
-    await loader.main('no_reset');
-    onMac?.(romMac(await loader.chip.readMac(loader).catch(() => '')));
-    onProgress?.({ phase: 'writing', written: 0, total: image.length });
-    const flashOptions: FlashOptions = {
-      fileArray: [{ data: image, address }],
-      flashMode: 'keep',
-      flashFreq: 'keep',
-      flashSize: 'keep',
-      eraseAll: false,
-      compress: true,
-      reportProgress: (_i, written, total) => onProgress?.({ phase: 'writing', written, total }),
-      calculateMD5Hash: md5Hex,
-    };
-    await loader.writeFlash(flashOptions);
-    onProgress?.({ phase: 'done' });
-    // Reboot into the new firmware. esptool-js's USB-OTG hard_reset only deasserts RTS (no
-    // edge); esptool.py pulses it.
-    try {
-      await port.setSignals({ dataTerminalReady: false, requestToSend: true });
-      await sleep(200);
-      await port.setSignals({ dataTerminalReady: false, requestToSend: false });
-    } catch {
-      // ignore
-    }
-    onLog?.('Flash complete.');
-  } finally {
-    try {
-      await transport.disconnect();
-    } catch {
-      // ignore
-    }
+    await rom.runStub();
+    return { rom, size: await rom.attachFlash() };
+  } catch (e) {
+    await rom.close();
+    throw e;
   }
 }
 
@@ -85,15 +36,16 @@ async function runEsptool(
 // chip's bootloader at 0x0, last, so a write that stops leaves a chip that doesn't boot rather than a
 // bootloader with no package to load.
 const STOCK_PACKAGE_ADDR = 0x4000;
+const STOCK_BOOT_ROOM = STOCK_PACKAGE_ADDR;
 
 // What the chip's flash says it is: a Medius image names its project; MAKCU's bootloader carries its port's
 // marker ("MKCLIMG1", role 1 for USB1, 2 for USB3). Null where it says nothing.
-async function flashNames(loader: ESPLoader): Promise<{ chip: FlashChip; sure: boolean } | null> {
+async function flashNames(rom: Rom): Promise<{ chip: FlashChip; sure: boolean } | null> {
   for (const at of [APP_FLASH_ADDR, APP_FLASH_ADDR + SLOT_BYTES]) {
-    const named = mediusChip(readAppHeader(await loader.readFlash(at, 256), 'app'));
+    const named = mediusChip(readAppHeader(await rom.readFlash(at, 256), 'app'));
     if (named) return { chip: named, sure: true };
   }
-  const boot = await loader.readFlash(0, 0x4000);
+  const boot = await rom.readFlash(0, 0x4000);
   const marker = new TextEncoder().encode('MKCLIMG1');
   for (let i = 0; i + 16 <= boot.length; i += 4) {
     if (!marker.every((c, k) => boot[i + k] === c)) continue;
@@ -104,90 +56,115 @@ async function flashNames(loader: ESPLoader): Promise<{ chip: FlashChip; sure: b
   return null;
 }
 
-// The flash erased whole, as MAKCU's toolkit does it (1.11.10 on): in 64 KiB regions, one command and answer each,
-// since one whole-chip erase left the chip's USB silent for 10 to 20 s and Windows dropped the port ("Serial data
-// stream stopped"). A region that fails is tried again; a flash of unknown size is erased in one command.
+// A range erased in 64 KiB regions, one command and answer each, as makcu-toolkit erases a chip from 1.11.10: one
+// whole-chip erase left the chip's USB silent for 10 to 20 s and Windows dropped the port ("Serial data stream
+// stopped"). A blank region is skipped; every region must read back blank.
 const REGION = 0x10000;
+const SECTOR = 0x1000;
 const REGION_TRIES = 3;
+const blanks = new Map<number, string>();
+const blankMd5 = (len: number) => {
+  let h = blanks.get(len);
+  if (!h) blanks.set(len, (h = SparkMD5.ArrayBuffer.hash(new Uint8Array(len).fill(0xff).buffer)));
+  return h;
+};
 
-async function eraseChip(loader: ESPLoader, onProgress?: (p: FlashProgress) => void): Promise<void> {
-  const named = loader.DETECTED_FLASH_SIZES[((await loader.readFlashId()) >> 16) & 0xff];
-  const size = /^(\d+)(KB|MB)$/.exec(named ?? '');
-  if (!size) {
-    await loader.eraseFlash();
-    return;
-  }
-  const total = Number(size[1]) * (size[2] === 'MB' ? 0x100000 : 0x400);
-  const region = new Uint8Array(8);
-  const view = new DataView(region.buffer);
-  view.setUint32(4, REGION, true);
-  for (let at = 0; at < total; at += REGION) {
-    view.setUint32(0, at, true);
-    for (let tries = 1; ; tries++) {
-      try {
-        await loader.checkCommand('erase region', loader.ESP_ERASE_REGION, region, 0, 0, loader.timeoutPerMb(loader.ERASE_REGION_TIMEOUT_PER_MB, REGION));
-        break;
-      } catch (e) {
-        if (tries === REGION_TRIES) throw e;
-      }
+async function eraseRange(rom: Rom, from: number, to: number, onErased?: (bytes: number) => void): Promise<void> {
+  for (let at = from; at < to; ) {
+    const end = Math.min(to, (Math.floor(at / REGION) + 1) * REGION);
+    for (let tries = 0; (await rom.md5(at, end - at)) !== blankMd5(end - at); tries++) {
+      if (tries === REGION_TRIES) throw new Error(`The flash at 0x${at.toString(16)} didn't erase after ${REGION_TRIES} tries.`);
+      await rom.eraseRegion(at, end - at);
     }
-    onProgress?.({ phase: 'erasing', written: at + REGION, total });
+    onErased?.(end - from);
+    at = end;
   }
 }
 
+// Where the chip's partition table puts otadata, when it puts ota_0 where an application is written. The
+// bootloader boots the slot otadata names, which after a USB2 update can be ota_1; with otadata blank it boots
+// ota_0, as after a factory image, whose blank stretch covers otadata.
+async function otadata(rom: Rom): Promise<[number, number] | null> {
+  const t = await rom.readFlash(PARTITION_TABLE_OFFSET, 0xc00);
+  let ota0 = false;
+  let range: [number, number] | null = null;
+  for (let i = 0; i + 32 <= t.length && t[i] === 0xaa && t[i + 1] === 0x50; i += 32) {
+    const v = new DataView(t.buffer, t.byteOffset + i);
+    if (t[i + 2] === 0 && t[i + 3] === 0x10 && v.getUint32(4, true) === APP_FLASH_ADDR) ota0 = true;
+    if (t[i + 2] === 1 && t[i + 3] === 0) range = [v.getUint32(4, true), v.getUint32(8, true)];
+  }
+  return ota0 ? range : null;
+}
+
+// A stock file's blank tail is left to the erase.
+const withoutBlankTail = (image: Uint8Array) => {
+  let end = image.length;
+  while (end > 0 && image[end - 1] === 0xff) end--;
+  return image.subarray(0, end);
+};
+// A write erases its range to the end of the sector it ends in.
+const sectors = (bytes: number) => Math.ceil(bytes / SECTOR) * SECTOR;
+
 export async function flashStock(params: FlashStockParams): Promise<void> {
-  const { port, chip, pkg, boot, onProgress, onLog, onMac, anyway, knownMain } = params;
-  const terminal: IEspLoaderTerminal = { clean: () => {}, write: (d) => onLog?.(d), writeLine: (d) => onLog?.(d) };
-  const transport = new Transport(port, false);
-  const loader = new ESPLoader({ transport, baudrate: NATIVE_BAUD, terminal });
+  const { port, chip, pkg, boot, onProgress, onMac, anyway, knownMain } = params;
+  onProgress?.({ phase: 'connecting' });
+  const { rom, size } = await open(port);
   try {
-    onProgress?.({ phase: 'connecting' });
-    await loader.main('no_reset');
-    if (loader.chip.CHIP_NAME !== 'ESP32-S3') throw new Error(`This is an ${loader.chip.CHIP_NAME}, not one of the MAKCU's ESP32-S3 chips.`);
-    const mac = romMac(await loader.chip.readMac(loader).catch(() => ''));
     // A box is known by its main chip's MAC, so a known one names a blank chip too.
-    const named = (await flashNames(loader)) ?? (mac && knownMain?.(mac) ? { chip: 'device' as const, sure: true } : null);
+    const named = (await flashNames(rom)) ?? (rom.mac && knownMain?.(rom.mac) ? { chip: 'device' as const, sure: true } : null);
     if (named && named.chip !== chip && (named.sure || !anyway)) throw new WrongChipError(named.chip, named.sure);
-    onMac?.(mac);
-    onProgress?.({ phase: 'erasing' });
-    await eraseChip(loader, onProgress);
-    const total = pkg.length + boot.length;
-    await loader.writeFlash({
-      fileArray: [
-        { data: pkg, address: STOCK_PACKAGE_ADDR },
-        { data: boot, address: 0 },
-      ],
-      flashMode: 'keep',
-      flashFreq: 'keep',
-      flashSize: 'keep',
-      eraseAll: false,
-      compress: true,
-      // esptool-js counts what it sends, compressed: each file's share of it, in bytes written.
-      reportProgress: (i, sent, of) =>
-        onProgress?.({ phase: 'writing', written: Math.round((i ? pkg.length : 0) + (of ? sent / of : 0) * (i ? boot.length : pkg.length)), total }),
-      calculateMD5Hash: md5Hex,
-    });
+    onMac?.(rom.mac);
+    const [p, b] = [withoutBlankTail(pkg), withoutBlankTail(boot)];
+    // The bootloader's write erases to its sector's end, which must stop short of the package.
+    if (sectors(b.length) > STOCK_BOOT_ROOM || STOCK_PACKAGE_ADDR + sectors(p.length) > (size ?? Infinity)) {
+      throw new Error("MAKCU's files don't fit this flash.");
+    }
+    // A flash of unknown size is erased in one command, which counts nothing; the files are then counted alone.
+    if (size === null) {
+      onProgress?.({ phase: 'erasing' });
+      await rom.eraseFlash();
+    }
+    // Erased first: everything but the package's sectors, the bootloader's room included. One count across the
+    // erase and both files, in bytes of the flash.
+    const erase: [number, number][] = size === null ? [] : [[0, STOCK_BOOT_ROOM], [STOCK_PACKAGE_ADDR + sectors(p.length), size]];
+    const total = erase.reduce((n, [from, to]) => n + to - from, 0) + sectors(p.length) + sectors(b.length);
+    let done = 0;
+    const count = (bytes: number) => onProgress?.({ phase: 'writing', written: done + bytes, total });
+    const write = async (file: Uint8Array, at: number) => {
+      if (file.length) await rom.write(file, at, (written, of) => count(Math.round((written / of) * sectors(of))));
+      done += sectors(file.length);
+    };
+    count(0);
+    for (const [from, to] of erase) {
+      await eraseRange(rom, from, to, count);
+      done += to - from;
+    }
+    await write(p, STOCK_PACKAGE_ADDR);
+    await write(b, 0);
     onProgress?.({ phase: 'done' });
-    try {
-      await port.setSignals({ dataTerminalReady: false, requestToSend: true });
-      await sleep(200);
-      await port.setSignals({ dataTerminalReady: false, requestToSend: false });
-    } catch {
-      // ignore
-    }
+    await rom.reset().catch(() => {});
   } finally {
-    try {
-      await transport.disconnect();
-    } catch {
-      // ignore
-    }
+    await rom.close();
   }
 }
 
 // Flash a chip already in ROM download on its native USB port.
 export async function flashNativePort(params: FlashNativeParams): Promise<void> {
-  const { port, image, kind, onProgress, onLog, onMac } = params;
+  const { port, image, kind, onProgress, onMac } = params;
   const invalid = validateImage(image, kind);
   if (invalid) throw new Error(invalid);
-  await runEsptool(port, image, addressFor(kind), onProgress, onLog, onMac);
+  onProgress?.({ phase: 'connecting' });
+  const { rom } = await open(port);
+  try {
+    onMac?.(rom.mac);
+    // The whole image, blank tail included: one count, which the erase is part of.
+    onProgress?.({ phase: 'writing', written: 0, total: image.length });
+    await rom.write(image, addressFor(kind), (written, total) => onProgress?.({ phase: 'writing', written, total }));
+    const slots = kind === 'app' ? await otadata(rom) : null;
+    if (slots) await eraseRange(rom, slots[0], slots[0] + slots[1]);
+    onProgress?.({ phase: 'done' });
+    await rom.reset().catch(() => {});
+  } finally {
+    await rom.close();
+  }
 }

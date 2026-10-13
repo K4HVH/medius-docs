@@ -1,7 +1,7 @@
 // Tracks every hold to release it on unmount: a hold whose pointerup never arrives (tab switch, drag
 // off the button, navigation) otherwise stays down on the game PC.
 
-import { For, Show, createEffect, createMemo, createSignal, onCleanup } from 'solid-js';
+import { Index, Show, createEffect, createMemo, createSignal, onCleanup } from 'solid-js';
 import { Button } from '../../../components/inputs/Button';
 import { Checkbox } from '../../../components/inputs/Checkbox';
 import { NumberInput } from '../../../components/inputs/NumberInput';
@@ -310,13 +310,13 @@ const DeviceInject = () => {
             <Show when={mouseReady()}>
               <Panel id="inject-buttons" title="Buttons">
                 <div class="acts">
-                  <For each={buttons()}>
+                  <Index each={buttons()}>
                     {(b) => (
-                      <Button variant="secondary" {...holdWhilePressed({ cls: INJ_BTN, id: b.id })}>
-                        {b.name}
+                      <Button variant="secondary" {...holdWhilePressed({ cls: INJ_BTN, id: b().id })}>
+                        {b().name}
                       </Button>
                     )}
-                  </For>
+                  </Index>
                 </div>
                 <Refused panel="inject-buttons" />
               </Panel>

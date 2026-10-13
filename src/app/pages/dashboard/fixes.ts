@@ -47,7 +47,7 @@ export function offerFor(s: Signals): Offer | null {
   return null;
 }
 
-// What "Keep as it is" puts an offer away under: the device, or one the box reads no ids for.
+// What Dismiss puts an offer away under: the device, or one the box reads no ids for.
 export function offerKey(s: Signals): string {
   const d = s.device;
   const hex = (n: number) => n.toString(16).padStart(4, '0');

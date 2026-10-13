@@ -52,8 +52,9 @@ export const EXPECT: CheckContext['expect'] = [
   { q: '1000hz', path: '/guide/compatibility#limits', within: 3 },
   { q: 'install', path: '/dashboard/setup', within: 1 },
   // A dashboard panel, by the words on its controls.
-  { q: 'flash over usb2', path: '/dashboard/update#manual', within: 1 },
-  { q: 'test firmware', path: '/dashboard/update#manual', within: 3 },
+  { q: 'flash over usb2', path: '/dashboard/flash', within: 1 },
+  { q: 'test firmware', path: '/dashboard/flash', within: 3 },
+  { q: 'downgrade', path: '/dashboard/flash', within: 3 },
   { q: 'mark complete', path: '/dashboard/control#clip-build', within: 1 },
   { q: 'replayable', path: '/dashboard/control#clip-settings', within: 1 },
   { q: 'mask', path: '/dashboard/control#any-input', within: 3 },

@@ -42,7 +42,7 @@ const DeviceRaw = () => {
             </p>
           }
         >
-          <div class="acts">
+          <div class="fields">
             <div class="fw-s">
               <NumberInput
                 label="Endpoint"

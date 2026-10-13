@@ -17,11 +17,11 @@
  },
  {
   "q": "flash usb2",
-  "first": "/dashboard/update#manual"
+  "first": "/dashboard/flash"
  },
  {
   "q": "usb2 flash",
-  "first": "/dashboard/update#manual"
+  "first": "/dashboard/flash"
  },
  {
   "q": "lock zzzz",
@@ -61,7 +61,7 @@
  },
  {
   "q": "flsh",
-  "first": "/dashboard/update#manual",
+  "first": "/dashboard/flash",
   "why": "One slip from both flash and flush; the results hold each."
  },
  {

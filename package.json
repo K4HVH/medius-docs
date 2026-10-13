@@ -41,7 +41,7 @@
   "dependencies": {
     "@resvg/resvg-wasm": "2.6.2",
     "@solidjs/router": "^0.15.4",
-    "esptool-js": "^0.6.0",
+    "fflate": "^0.8.3",
     "mcp-lite": "^0.10.0",
     "opentype.js": "2.0.0",
     "prismjs": "^1.30.0",

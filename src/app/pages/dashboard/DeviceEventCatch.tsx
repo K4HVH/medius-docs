@@ -1,7 +1,7 @@
 // The builder reaches what presets can't: one endpoint, one direction, another capture length. Each
 // event shows its box stamp and clock, the only view of report spacing.
 
-import { For, Show, createEffect, createMemo, createSignal, onCleanup } from 'solid-js';
+import { For, Index, Show, createEffect, createMemo, createSignal, onCleanup } from 'solid-js';
 import { Button } from '../../../components/inputs/Button';
 import { Chip } from '../../../components/display/Chip';
 import { NumberInput } from '../../../components/inputs/NumberInput';
@@ -460,7 +460,7 @@ const DeviceEventCatch = () => {
                 disabled={streaming()}
                 options={[
                   { value: 'preset', label: 'Presets' },
-                  { value: 'custom', label: 'Custom table' },
+                  { value: 'custom', label: 'Custom' },
                 ]}
               />
             </div>
@@ -548,7 +548,7 @@ const DeviceEventCatch = () => {
               </Show>
               <div class="acts">
                 <Button variant="secondary" disabled={streaming()} onClick={addCustom}>
-                  Add entry
+                  Add
                 </Button>
                 <Button variant="subtle" disabled={streaming()} onClick={() => setCustom([])}>
                   Clear
@@ -627,9 +627,9 @@ const DeviceEventCatch = () => {
 
           <Show when={streaming() && latestButtons()}>
             <Panel id="catch-held" title="Held buttons" transient>
-              <Show when={held().length > 0} fallback={<p data-search-skip>Nothing held.</p>}>
+              <Show when={held().length > 0} fallback={<p class="mut" data-search-skip>Nothing held.</p>}>
                 <div class="chips">
-                  <For each={held()}>{(name) => <Chip variant="warning">{name}</Chip>}</For>
+                  <Index each={held()}>{(name) => <Chip variant="warning">{name()}</Chip>}</Index>
                 </div>
               </Show>
             </Panel>
@@ -648,28 +648,31 @@ const DeviceEventCatch = () => {
 
         <Stack>
           <Panel id="catch-events" title="Recent events">
-            <div class="acts">
-              <Button variant="secondary" disabled={events().length === 0} onClick={copyLog}>
-                {copied() ? 'Copied' : 'Copy'}
-              </Button>
-            </div>
-            <LogBox
-              rows={logRows}
-              added={dash.inputEventsAdded}
-              version={moved}
-              empty={streaming() ? 'Move, click, or type...' : ''}
-              label="Recent events"
-              cols="5ch 13ch minmax(0,1fr)"
-            />
-            <Show when={streaming()}>
-              <p class="mut">
-                {events().length} received, {catchState()?.dropped ?? 0} dropped by the box, {entryDrops()}{' '}
-                charged to entries
-              </p>
-            </Show>
-            <p class="mut">H is the mouse-side chip's clock, D the main chip's.</p>
-            <Show when={events().some((e) => e.ev.kind === 'traffic' && trafficRuleActed(e.ev.traffic))}>
-              <p class="mut">RULE marks a packet a rewrite rule changed, dropped, answered or refused.</p>
+            {/* No log box until there is something to hold in it. */}
+            <Show when={streaming() || events().length > 0} fallback={<p class="mut" data-search-skip>Not watching.</p>}>
+              <div class="acts">
+                <Button variant="secondary" disabled={events().length === 0} onClick={copyLog}>
+                  {copied() ? 'Copied' : 'Copy'}
+                </Button>
+              </div>
+              <LogBox
+                rows={logRows}
+                added={dash.inputEventsAdded}
+                version={moved}
+                empty="Move, click, or type..."
+                label="Recent events"
+                cols="5ch 13ch minmax(0,1fr)"
+              />
+              <Show when={streaming()}>
+                <p class="mut">
+                  {events().length} received, {catchState()?.dropped ?? 0} dropped by the box, {entryDrops()}{' '}
+                  charged to entries
+                </p>
+              </Show>
+              <p class="mut">H is the mouse-side chip's clock, D the main chip's.</p>
+              <Show when={events().some((e) => e.ev.kind === 'traffic' && trafficRuleActed(e.ev.traffic))}>
+                <p class="mut">RULE marks a packet a rewrite rule changed, dropped, answered or refused.</p>
+              </Show>
             </Show>
           </Panel>
 

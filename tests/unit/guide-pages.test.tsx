@@ -76,7 +76,7 @@ describe('Guide pages', () => {
     for (const i of HELP_ITEMS) expect(i.a, i.id).not.toMatch(/#tools|logitech_fix|fetch_makcu_fw/);
     expect(answer('no-options').a).toMatch(/v3\.2\.0/);
     expect(answer('stock-firmware').a).toMatch(/MAKCU stock/);
-    expect(answer('stock-firmware').links?.map((l) => l.href)).toContain('/dashboard/update#manual');
+    expect(answer('stock-firmware').links?.map((l) => l.href)).toContain('/dashboard/flash');
   });
 
   it('gives every place on the Options tab a link can name a section under the same id, with a link back', () => {

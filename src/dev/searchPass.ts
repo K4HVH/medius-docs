@@ -77,7 +77,8 @@ export async function runSearchPass(): Promise<Pass> {
     await until(`${r.path} rendering`, () => document.title === documentTitle(r) && !!document.querySelector('.docs-page .page-header h1'));
     // Code read for its names needs the highlighter's marks, to leave comments and strings out.
     await until(`${r.path} highlighting`, () => document.querySelector<HTMLElement>('main.docs-page')?.dataset.highlighted === r.path);
-    if (r.kind === 'app') await connect();
+    // Set up reads the same without a box, and its Connect leaves no Disconnect to wait for.
+    if (r.kind === 'app' && r.path !== '/dashboard/setup') await connect();
     await settled();
     if (r.kind === 'app') await until(`${r.path} answering`, () => !reading(), 5000).catch(() => {});
     const root = document.querySelector('.docs-page');

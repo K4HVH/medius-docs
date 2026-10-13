@@ -1,4 +1,4 @@
-import { For, Match, Show, Switch, createEffect, createResource, createSignal, on, onCleanup, type JSX } from 'solid-js';
+import { For, Match, Show, Switch, createEffect, createSignal, on, onCleanup } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
 import { Button } from '../../../components/inputs/Button';
 import { Checkbox } from '../../../components/inputs/Checkbox';
@@ -12,10 +12,11 @@ import {
   readAppHeader,
   usb2Refusal,
 } from '../../../dashboard/flash';
-import { downloadAsset, fetchReleases } from '../../../dashboard/firmware';
+import { downloadAsset } from '../../../dashboard/firmware';
 import { PROTO_VER } from '../../../dashboard/protocol';
 import { ConnectPanel } from './ConnectPanel';
 import { useDashboard } from './context';
+import { createReleaseChoice } from './releaseChoice';
 
 type Chips = 'both' | FlashChip;
 const NAME: Record<FlashChip, string> = { device: 'Main chip', host: 'Mouse-side chip' };
@@ -27,12 +28,13 @@ const same = (a: Semver | null, b: Semver | null) =>
 const fmtBytes = (n: number) => (n < 1024 ? `${n} B` : `${(n / 1024).toFixed(0)} KB`);
 
 // Flashes the selected box over USB2: the Update page's update, with any medius image.
-export const Usb2Flash = (props: { via: () => JSX.Element; onBusy?: (busy: boolean) => void }) => {
+export const Usb2Flash = (props: { onBusy?: (busy: boolean) => void }) => {
   const dash = useDashboard();
   const navigate = useNavigate();
-  const [releases] = createResource(fetchReleases);
   const [chips, setChips] = createSignal<Chips>('both');
-  const [source, setSource] = createSignal<'release' | 'upload'>('release');
+  const [source, setSource] = createSignal<'release' | 'older' | 'upload'>('release');
+  const fromRelease = () => source() !== 'upload';
+  const { releases, release, earlier, where, VersionField } = createReleaseChoice(() => source() === 'older');
   const [files, setFiles] = createSignal<Record<FlashChip, File[]>>({ device: [], host: [] });
   const [images, setImages] = createSignal<Partial<Record<FlashChip, Uint8Array>>>({});
   const [pickErr, setPickErr] = createSignal<Partial<Record<FlashChip, string>>>({});
@@ -54,15 +56,6 @@ export const Usb2Flash = (props: { via: () => JSX.Element; onBusy?: (busy: boole
   // Until RESP(FIRMWARE) answers, neither chip's version is known and a split can't be judged.
   const known = () => dash.firmwareInfo() !== null;
 
-  // A rejected resource re-throws on every read, render included, and there is no ErrorBoundary:
-  // one unguarded read freezes the page.
-  const latest = () => {
-    try {
-      return releases()?.[0] ?? null;
-    } catch {
-      return null;
-    }
-  };
   const wanted = (): FlashChip[] => (chips() === 'both' ? ORDER : [chips() as FlashChip]);
   const hostMissing = () => {
     const i = dash.firmwareInfo();
@@ -71,7 +64,7 @@ export const Usb2Flash = (props: { via: () => JSX.Element; onBusy?: (busy: boole
   createEffect(() => {
     if (hostMissing() && chips() !== 'device') setChips('device');
   });
-  const asset = (c: FlashChip) => latest()?.assets.find((a) => a.name === ASSET[c]) ?? null;
+  const asset = (c: FlashChip) => release()?.assets.find((a) => a.name === ASSET[c]) ?? null;
   const current = (c: FlashChip): Semver | null => {
     const i = dash.firmwareInfo();
     const f = c === 'device' ? i?.device : i?.host;
@@ -83,7 +76,7 @@ export const Usb2Flash = (props: { via: () => JSX.Element; onBusy?: (busy: boole
   };
   // Null until there is something that will be sent.
   const incoming = (c: FlashChip): Semver | null => {
-    if (source() === 'release') return asset(c) ? parseVersion(latest()?.tag) : null;
+    if (fromRelease()) return asset(c) ? parseVersion(release()?.tag) : null;
     const img = images()[c];
     return img && !refusal(c) ? parseVersion(readAppHeader(img, 'app')?.version) : null;
   };
@@ -94,7 +87,7 @@ export const Usb2Flash = (props: { via: () => JSX.Element; onBusy?: (busy: boole
   createEffect(on(() => `${fmt(after('device'))} ${fmt(after('host'))}`, () => setAnyway(false), { defer: true }));
 
   const ready = (c: FlashChip) =>
-    source() === 'release' ? !!asset(c) && !releases.loading : !!images()[c] && !refusal(c);
+    fromRelease() ? !!asset(c) && !releases.loading : !!images()[c] && !refusal(c);
   const canFlash = () =>
     dash.status() === 'connected' && known() && !busy() && wanted().every(ready) && (!split() || anyway());
 
@@ -127,14 +120,14 @@ export const Usb2Flash = (props: { via: () => JSX.Element; onBusy?: (busy: boole
       const sent: { device?: Uint8Array; host?: Uint8Array } = {};
       for (const c of wanted()) {
         const a = asset(c);
-        const img = source() === 'upload' ? images()[c] : a ? await downloadAsset(a) : undefined;
+        const img = fromRelease() ? (a ? await downloadAsset(a) : undefined) : images()[c];
         if (!img) return setErr('No image selected.');
         // A release is read like a file, so nothing reaches the box unchecked.
         const why = usb2Refusal(img, c);
         if (why) return setErr(why);
         sent[c] = img;
       }
-      await dash.updateOverControl(sent, 'advanced', source() === 'upload' ? 'file' : 'release');
+      await dash.updateOverControl(sent, 'advanced', fromRelease() ? 'release' : 'file');
     } catch (e) {
       setErr((e as Error).message);
     } finally {
@@ -207,12 +200,9 @@ export const Usb2Flash = (props: { via: () => JSX.Element; onBusy?: (busy: boole
         <Show
           when={dash.status() === 'connected'}
           fallback={
-            <>
-              {props.via()}
-              <div>
-                <ConnectPanel />
-              </div>
-            </>
+            <div>
+              <ConnectPanel />
+            </div>
           }
         >
           <Outcome lead="The box is back." />
@@ -220,7 +210,6 @@ export const Usb2Flash = (props: { via: () => JSX.Element; onBusy?: (busy: boole
       </Match>
 
       <Match when={true}>
-        {props.via()}
         <Show
           when={dash.status() === 'connected'}
           fallback={
@@ -253,22 +242,27 @@ export const Usb2Flash = (props: { via: () => JSX.Element; onBusy?: (busy: boole
               name="Source"
               options={[
                 { value: 'release', label: 'Latest release' },
-                { value: 'upload', label: 'Upload a file' },
+                { value: 'older', label: 'Older release', disabled: !earlier().length },
+                { value: 'upload', label: 'File' },
               ]}
               value={source()}
               disabled={busy()}
-              onChange={(v) => setSource(v as 'release' | 'upload')}
+              onChange={(v) => setSource(v as 'release' | 'older' | 'upload')}
             />
           </div>
 
-          <Show when={source() === 'release'}>
+          <Show when={source() === 'older'}>
+            <VersionField disabled={busy()} />
+          </Show>
+
+          <Show when={fromRelease()}>
             <Switch>
               <Match when={releases.loading}>
-                <p data-search-skip>Loading releases...</p>
+                <p class="mut" data-search-skip>Loading releases...</p>
               </Match>
               <Match when={releases.error}>
                 <div class="callout callout--warning">
-                  Couldn't reach the firmware downloads. Choose Upload a file.
+                  Couldn't reach the firmware downloads. Choose File.
                 </div>
               </Match>
               <Match when={true}>
@@ -278,13 +272,13 @@ export const Usb2Flash = (props: { via: () => JSX.Element; onBusy?: (busy: boole
                       when={asset(c)}
                       fallback={
                         <div class="callout callout--warning">
-                          No <code>{ASSET[c]}</code> in the latest release. Upload one.
+                          No <code>{ASSET[c]}</code> in {where()}. Upload one.
                         </div>
                       }
                     >
                       {(a) => (
                         <p class="mut">
-                          <code>{a().name}</code> ({fmtBytes(a().size)}) from {latest()?.tag}
+                          <code>{a().name}</code> ({fmtBytes(a().size)}) from {release()?.tag}
                         </p>
                       )}
                     </Show>
