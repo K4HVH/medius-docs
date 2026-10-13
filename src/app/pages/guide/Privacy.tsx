@@ -1,132 +1,71 @@
-import type { Component, JSX } from 'solid-js';
+import type { Component } from 'solid-js';
 import { A } from '@solidjs/router';
 import { PageHeader } from '../../shell/PageHeader';
 import { DocSection } from '../../shell/DocSection';
 import { LINKS } from '../../site';
 
-const Details = (props: { head?: [string, string]; rows: [JSX.Element, JSX.Element][] }) => (
-  <div class="table-scroll">
-    <table class="api-params names fixed opts">
-      <colgroup>
-        <col class="k" />
-        <col />
-      </colgroup>
-      <thead>
-        <tr>
-          <th>{props.head?.[0] ?? 'Item'}</th>
-          <th>{props.head?.[1] ?? 'Detail'}</th>
-        </tr>
-      </thead>
-      <tbody>{props.rows.map(([k, v]) => <tr><td>{k}</td><td>{v}</td></tr>)}</tbody>
-    </table>
-  </div>
-);
-
-const Discord = () => <a href={LINKS.discord} target="_blank" rel="noreferrer">Discord server</a>;
-
 const Privacy: Component = () => (
   <>
-    <PageHeader />
-
-    <DocSection id="operator" title="Operator">
+    <PageHeader>
       <p>
-        K4TECH runs this site, the dashboard and Clanker, the bot in the Medius <Discord />. Questions and
-        requests go through a ticket in the Discord server.
+        K4TECH runs this site and Clanker, the bot in the Medius{' '}
+        <a href={LINKS.discord} target="_blank" rel="noreferrer">Discord server</a>. It keeps the data below to run
+        them, on the lawful basis of legitimate interests, and sells none of it. Cloudflare and Discord process some of
+        it in the US, under the Data Privacy Framework.
       </p>
-    </DocSection>
+    </PageHeader>
 
     <DocSection id="site" title="Site">
-      <Details
-        rows={[
-          ['Cloudflare', 'Carries every request, so it sees your IP address'],
-          ['Cookies', 'None'],
-          ['Analytics', <>None, apart from the <A href="/guide/privacy#usage-stats">usage stats</A></>],
-          ['Stock firmware', "Downloading MAKCU's firmware through the site holds your IP address in memory for 10 minutes, to limit each address to 30 requests; never stored"],
-        ]}
-      />
-      <p>Kept in your browser, and never sent anywhere:</p>
-      <Details
-        rows={[
-          ['Boxes', "The boxes you've connected, the one picked and their icons"],
-          ['Searches', 'Your last 5'],
-          ['Device fixes', 'The ones you put away with Keep as it is'],
-          ['Page position', 'Your place on each page, until the tab closes'],
-        ]}
-      />
+      <p>
+        The site sets no cookies. Cloudflare carries every request, so it sees your IP address. The server holds your
+        IP address in memory for up to 10 minutes to rate-limit requests. Everything the site saves for you stays in
+        your browser.
+      </p>
     </DocSection>
 
     <DocSection id="usage-stats" title="Usage stats">
       <p>
-        Always on. The dashboard reports each connect, device and flash to the site's server. Totals are public
-        on <A href="/dashboard/stats">Stats</A>.
+        The dashboard always reports each box it connects to, the device the box clones and each flash, for the
+        totals on <A href="/dashboard/stats">Stats</A> and the list on <A href="/guide/compatibility">Devices</A>. The
+        server records the Box ID as a keyed hash, when the box connected, firmware and protocol versions, operating
+        system and browser, country, the device's USB ID, kind and name, and each flash's details and result. Records
+        are kept until you have them deleted.
       </p>
-      <Details
-        head={['Field', 'Detail']}
-        rows={[
-          ['Box', "A keyed hash of the Box ID (the box's MAC); the Box ID itself is never stored"],
-          ['Firmware', "Both chips' versions and the protocol version"],
-          ['System', 'Operating system and browser'],
-          ['Activity', 'Each day the box connected, and when it was first and last seen'],
-          ['Device', "The cloned device's VID:PID, kind and product name"],
-          ['Flash', 'When, from which page and route, which chips, what was flashed, from and to which versions, the result and how long it took'],
-          ['Country', 'As Cloudflare reports it'],
-          ['IP address', 'Held in memory for 1 minute to limit each address to 60 reports; never stored'],
-          ['Kept', 'Until deleted on request'],
-        ]}
-      />
     </DocSection>
 
     <DocSection id="discord-bot" title="Discord bot">
       <p>
-        Staff read #✅-device-reports through the bot to keep <A href="/guide/compatibility">Devices</A> current:
-        device names only, never who posted them. What the bot keeps:
+        The bot reads the server's messages to moderate it. Staff read device reports through it for the Devices
+        list, and keep nothing about who posted them.
       </p>
-      <Details
-        head={['Data', 'Kept']}
-        rows={[
-          ['Warns, notes, bans and timeouts, with reasons', '1 year'],
-          ['Tickets: subject and transcript', '1 year after closing'],
-          ['Ticket check results', 'A pass until it expires; a failure for a day'],
-          ['Captcha challenges', 'Until they expire'],
-          ["A temp-ban's end", 'Until it lifts the ban'],
-          ['Scam signatures: links and image fingerprints from scam posts', '1 year after the last scam post that added them'],
-          ['Mod-log posts naming members', '1 year'],
-          ['Member-log posts: edited and deleted messages, joins, leaves, verifications, role and name changes', '90 days'],
-          ["A ticket's transcript, DMed to its opener when it closes", 'In their DMs until deleted'],
-        ]}
-      />
+      <div class="table-scroll">
+        <table class="api-params names">
+          <colgroup>
+            <col />
+            <col style={{ width: '32%' }} />
+          </colgroup>
+          <thead><tr><th>Data</th><th>Retention</th></tr></thead>
+          <tbody>
+            <tr><td>Moderation history and <span class="nw">mod-log</span> posts</td><td>1 year</td></tr>
+            <tr><td>Tickets and transcripts</td><td>1 year after closing</td></tr>
+            <tr><td>Edited and deleted messages, joins, leaves, verifications, role and name changes</td><td>90 days</td></tr>
+            <tr><td>Ticket check results</td><td>Up to 30 days</td></tr>
+            <tr><td>Captchas</td><td>5 minutes</td></tr>
+            <tr><td>Scam links and image fingerprints</td><td>1 year after last added</td></tr>
+          </tbody>
+        </table>
+      </div>
     </DocSection>
 
-    <DocSection id="requests" title="Requests">
-      <Details
-        head={['Request', 'Detail']}
-        rows={[
-          ['Bot data copied', 'Open a ticket. Staff post a file in it with everything the bot holds on you.'],
-          [
-            'Bot data deleted',
-            "Open a ticket. Moderation history, tickets and transcripts, check results, captchas, the bot's log posts naming you and its DMs to you are deleted. Bans and timeouts stay in force: Discord holds those.",
-          ],
-          [
-            'Usage stats copied',
-            <>
-              Open a ticket with the Box ID from the dashboard's <A href="/dashboard">Device</A> tab. You get every
-              record of that box.
-            </>,
-          ],
-          [
-            'Usage stats deleted',
-            <>
-              Open a ticket with the Box ID from the dashboard's <A href="/dashboard">Device</A> tab. Every
-              record of that box is deleted.
-            </>,
-          ],
-        ]}
-      />
+    <DocSection id="rights" title="Your rights">
+      <p>
+        Open a ticket in the Discord server to have your data copied, corrected, restricted or deleted, or to object
+        to its use. For usage stats, give the Box ID from the dashboard's <A href="/dashboard">Device</A> tab. A
+        deletion doesn't lift a ban or timeout. You can complain to your data protection authority.
+      </p>
     </DocSection>
 
-    <DocSection id="changes" title="Changes">
-      <p>Last changed 11 October 2026.</p>
-    </DocSection>
+    <p class="src">Last changed 13 October 2026.</p>
   </>
 );
 
