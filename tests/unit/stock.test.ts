@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { createHash, generateKeyPairSync, sign } from 'node:crypto';
 import { crc32 } from 'node:zlib';
 import { canonical } from '../../server/stock/canon';
@@ -302,6 +302,38 @@ describe('the stock routes', () => {
     expect(answers.slice(0, 30).every((s) => s === 200)).toBe(true);
     expect(answers.at(-1)).toBe(429);
     expect((await from('198.51.100.1'))!.status).toBe(200);
+  });
+
+  it("limits by Cloudflare's client address before the socket's, an IPv6 /64 as one client", async () => {
+    const stock = createStock(makcu(FILES()).deps);
+    const from = (visitor: string) =>
+      stock(new Request('https://medius.k4tech.net/api/stock/file/boot-usb1-v4.041-r1118.bin', { headers: { 'cf-connecting-ip': visitor } }), '10.0.0.1');
+    for (let i = 1; i <= 30; i++) expect((await from(`2001:db8:1:2::${i.toString(16)}`))!.status).toBe(200);
+    expect((await from('2001:db8:1:2::ffff'))!.status).toBe(429);
+    expect((await from('203.0.113.9'))!.status).toBe(200);
+  });
+
+  it('refuses a new address while 10,000 are held, and not one it holds', async () => {
+    const stock = createStock(makcu(FILES()).deps);
+    const from = (visitor: string) => stock(new Request('https://medius.k4tech.net/api/stock/catalog', { headers: { 'cf-connecting-ip': visitor } }));
+    for (let i = 0; i < 10_000; i++) await from(`10.0.${i >> 8}.${i & 255}`);
+    expect((await from('203.0.113.9'))!.status).toBe(429);
+    expect((await from('10.0.0.0'))!.status).toBe(200);
+  });
+
+  // The privacy page says an address is held 10 minutes; no later request may be needed to drop it.
+  it('forgets an address 10 minutes after its share began, with no request after it', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout'] });
+    try {
+      const stock = createStock({ ...makcu(FILES()).deps, now: () => 0 });
+      const from = () => stock(new Request('https://medius.k4tech.net/api/stock/file/boot-usb1-v4.041-r1118.bin'), '203.0.113.7');
+      for (let i = 0; i < 30; i++) await from();
+      expect((await from())!.status).toBe(429);
+      vi.advanceTimersByTime(10 * 60_000);
+      expect((await from())!.status).toBe(200);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('answers 502 with the reason for a catalog that fails its check, and for a file that does', async () => {
