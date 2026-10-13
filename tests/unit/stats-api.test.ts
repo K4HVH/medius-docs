@@ -2,7 +2,7 @@
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { handleStatsApi, resetStatsForTests } from '../../server/stats';
 import type { StatsSummary } from '../../server/stats/types';
 
@@ -86,13 +86,19 @@ describe('POST /api/stats/event', () => {
     expect((await post(BOX, { 'cf-connecting-ip': '2001:db8:1:3::1' }))!.status).toBe(204);
   });
 
-  it('refuses new addresses while the table is full, and frees it a window later', async () => {
-    resetStatsForTests({ path: ':memory:', now: () => now, limits: { addresses: 3 } });
-    for (const ip of ['10.0.0.1', '10.0.0.2', '10.0.0.3']) expect((await post(BOX, {}, ip))!.status).toBe(204);
-    expect((await post(BOX, {}, '10.0.0.4'))!.status).toBe(429);
-    expect((await post(BOX, {}, '10.0.0.1'))!.status).toBe(204);
-    now += 60_000;
-    expect((await post(BOX, {}, '10.0.0.4'))!.status).toBe(204);
+  // The privacy page says an address is held a minute; no later request may be needed to drop it.
+  it('refuses new addresses while the table is full, and frees it when the minute ends', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout'] });
+    try {
+      resetStatsForTests({ path: ':memory:', now: () => now, limits: { addresses: 3 } });
+      for (const ip of ['10.0.0.1', '10.0.0.2', '10.0.0.3']) expect((await post(BOX, {}, ip))!.status).toBe(204);
+      expect((await post(BOX, {}, '10.0.0.4'))!.status).toBe(429);
+      expect((await post(BOX, {}, '10.0.0.1'))!.status).toBe(204);
+      vi.advanceTimersByTime(60_000);
+      expect((await post(BOX, {}, '10.0.0.4'))!.status).toBe(204);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('caps every address together per minute', async () => {

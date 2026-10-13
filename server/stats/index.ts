@@ -3,6 +3,7 @@
 import { openDb } from './db';
 import { type Store, createStore } from './store';
 import { parseEvent } from './validate';
+import { clientOf } from '../client';
 import type { StatsSummary } from './types';
 
 export const MAX_BODY = 2048;
@@ -10,8 +11,8 @@ const RATE_WINDOW_MS = 60_000;
 
 const SUMMARY_TTL_MS = 60_000;
 const RETRY_OPEN_MS = 60_000;
-// Per client address, for every address together, and how many addresses are remembered at once: the
-// table is swept once a window, and a new address waits while it is full.
+// Per client address, for every address together, and how many addresses are remembered at once: an
+// address leaves the table when its window ends, and a new address waits while it is full.
 const LIMITS = { perAddress: 60, total: 1200, addresses: 10_000 };
 
 let path = process.env.STATS_DB || 'data/stats.db';
@@ -21,7 +22,6 @@ let store: Promise<Store | null> | null = null;
 let failedAt = 0;
 let summary: { at: number; body: string } | null = null;
 const seen = new Map<string, { start: number; n: number }>();
-let swept = 0;
 let all = { start: 0, n: 0 };
 
 // A database that won't open is tried again a minute later, not on every request.
@@ -54,33 +54,15 @@ export function resetStatsForTests(o: { path: string; now: () => number; limits?
   failedAt = -RETRY_OPEN_MS;
   summary = null;
   seen.clear();
-  swept = o.now();
   all = { start: o.now(), n: 0 };
 }
 
 const json = (body: unknown, status: number) =>
   new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
 
-// One home network hands out a whole IPv6 /64, so that is one client.
-const clientOf = (ip: string): string => {
-  const a = ip.split('%')[0].toLowerCase();
-  if (!a.includes(':')) return a;
-  const v4 = /^::ffff:(\d+\.\d+\.\d+\.\d+)$/.exec(a);
-  if (v4) return v4[1];
-  const [head, tail] = a.split('::');
-  const h = head ? head.split(':') : [];
-  const t = tail ? tail.split(':') : [];
-  const groups = tail === undefined ? h : [...h, ...Array(Math.max(0, 8 - h.length - t.length)).fill('0'), ...t];
-  return `${groups.slice(0, 4).map((g) => g.replace(/^0+(?=.)/, '')).join(':')}::/64`;
-};
-
 const allowed = (ip: string): boolean => {
   const t = now();
   if (t - all.start >= RATE_WINDOW_MS) all = { start: t, n: 0 };
-  if (t - swept >= RATE_WINDOW_MS) {
-    for (const [k, v] of seen) if (t - v.start >= RATE_WINDOW_MS) seen.delete(k);
-    swept = t;
-  }
   const key = clientOf(ip);
   const s = seen.get(key);
   if (s && t - s.start < RATE_WINDOW_MS) {
@@ -91,7 +73,12 @@ const allowed = (ip: string): boolean => {
   if (all.n >= limits.total) return false;
   all.n++;
   if (s && t - s.start < RATE_WINDOW_MS) s.n++;
-  else seen.set(key, { start: t, n: 1 });
+  else {
+    const entry = { start: t, n: 1 };
+    seen.set(key, entry);
+    // Dropped when its window ends, asked again or not: the privacy page says a minute.
+    setTimeout(() => seen.get(key) === entry && seen.delete(key), RATE_WINDOW_MS).unref();
+  }
   return true;
 };
 

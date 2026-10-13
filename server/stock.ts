@@ -1,8 +1,9 @@
 import { createHash, createPublicKey, verify } from 'node:crypto';
 import { crc32 } from 'node:zlib';
 import { canonical } from './stock/canon';
+import { clientOf } from './client';
 
-// MAKCU's stock firmware for the Manual tab: read from MAKCU's signed catalog on request (makcu.com lets no
+// MAKCU's stock firmware for the Flash page: read from MAKCU's signed catalog on request (makcu.com lets no
 // other site's page read it), checked as makcu-toolkit 1.15.20 checks it, and passed on unstored.
 
 const ROOTS = ['https://makcu.com/devinfo', 'https://makcu.15-204-2-173.sslip.io/devinfo'];
@@ -21,6 +22,7 @@ const FAILED_MS = 10_000;
 // Requests an address may make in a window, so the relay can't be turned on makcu.com.
 const SHARE = 30;
 const SHARE_MS = 10 * 60_000;
+const ADDRESSES = 10_000;
 const AGENT = 'medius-dashboard (+https://medius.k4tech.net)';
 
 export interface StockFile {
@@ -216,7 +218,8 @@ type Got = { bytes: Uint8Array<ArrayBuffer> } | { error: string };
 const json = (status: number, body: unknown) =>
   new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json', 'cache-control': 'no-store' } });
 
-// `ip`: the address a request came from, which the server gives; without one nothing is limited.
+// `ip`: the connection's address, which the server gives. Cloudflare's address for the visitor comes before it;
+// with neither, nothing is limited. A new address waits while 10,000 are held.
 export function createStock(deps: StockDeps = { fetch: (u, i) => fetch(u, i), now: Date.now, key: MAKCU_KEY }) {
   let kept: { at: number; read: Promise<Read> } | null = null;
   const files = new Map<string, { at: number; got: Promise<Got> }>();
@@ -308,21 +311,23 @@ export function createStock(deps: StockDeps = { fetch: (u, i) => fetch(u, i), no
 
   const allowed = (ip: string | undefined) => {
     if (!ip) return true;
+    const key = clientOf(ip);
     const now = deps.now();
-    let s = shares.get(ip);
-    if (!s || now - s.from >= SHARE_MS) {
-      if (shares.size > 10_000) for (const [k, v] of shares) if (now - v.from >= SHARE_MS) shares.delete(k);
-      s = { from: now, n: 0 };
-      shares.set(ip, s);
-    }
-    return ++s.n <= SHARE;
+    const s = shares.get(key);
+    if (s && now - s.from < SHARE_MS) return ++s.n <= SHARE;
+    if (!s && shares.size >= ADDRESSES) return false;
+    const share = { from: now, n: 1 };
+    shares.set(key, share);
+    // Dropped when its share ends, asked again or not: the privacy page says 10 minutes.
+    setTimeout(() => shares.get(key) === share && shares.delete(key), SHARE_MS).unref();
+    return true;
   };
 
   return async (req: Request, ip?: string): Promise<Response | null> => {
     const path = new URL(req.url).pathname;
     if (path !== '/api/stock/catalog' && !path.startsWith('/api/stock/file/')) return null;
     if (req.method !== 'GET' && req.method !== 'HEAD') return new Response('Use GET.', { status: 405, headers: { 'cache-control': 'no-store' } });
-    if (!allowed(ip)) return json(429, { error: 'Too many requests. Try again in a few minutes.' });
+    if (!allowed(req.headers.get('cf-connecting-ip') ?? ip)) return json(429, { error: 'Too many requests. Try again in a few minutes.' });
     if (path === '/api/stock/catalog') {
       const read = await catalog();
       if ('error' in read) return json(502, { error: read.error });
