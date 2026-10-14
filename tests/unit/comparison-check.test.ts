@@ -113,12 +113,16 @@ describe('checkResults', () => {
     names(broken((d) => (row(d, 0, 2, 0).note = 'One run; stock only')), 'semicolon');
   });
 
-  it('wants defects to name a row of results', () => {
-    names(broken((d) => (d.defects[0].row = 'nope')), 'nope');
-    names(broken((d) => (d.defects[0].row = 'absolute-move')), 'absolute-move');
-    names(broken((d) => (d.defects[0].row = 'stock-auto')), 'stock-auto');
+  it('wants defects to name rows of results', () => {
+    names(broken((d) => (d.defects[0].rows = ['nope'])), 'nope');
+    names(broken((d) => (d.defects[0].rows = ['move-cold', 'absolute-move'])), 'absolute-move');
+    names(broken((d) => (d.defects[0].rows = ['stock-auto'])), 'stock-auto');
     names(broken((d) => (d.defects[0].box = 'both')), 'box');
-    names(broken((d) => (d.defects[0].row = ['move-cold'])), 'row');
+    names(broken((d) => (d.defects[0].rows = 'move-cold')), 'rows');
+    names(broken((d) => (d.defects[0].rows = [])), 'rows');
+    names(broken((d) => (d.defects[0].rows = ['move-cold', 'move-cold'])), 'twice');
+    names(broken((d) => (d.defects[0].row = 'move-cold')), 'row');
+    expect(broken((d) => (d.defects[0].rows = ['move-cold', 'move-rest-1']))).toEqual([]);
   });
 
   it('wants defects and pending as lists, empty or not', () => {
@@ -134,7 +138,7 @@ describe('checkResults', () => {
   });
 
   it('lets a defect sit only on a row that shows a result', () => {
-    names(broken((d) => (d.defects[0].row = 'move-rest-reports')), 'move-rest-reports');
+    names(broken((d) => (d.defects[0].rows = ['move-cold', 'move-rest-reports'])), 'move-rest-reports');
   });
 
   it('wants counts of a total on both cells, whole, and within the total', () => {

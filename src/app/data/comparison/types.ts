@@ -101,7 +101,8 @@ export interface Defect {
   id: string;
   box: Box;
   text: string;
-  row: string;
+  // Every row it decides, the one that shows it first.
+  rows: string[];
 }
 
 export interface Pending {

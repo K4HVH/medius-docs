@@ -2162,6 +2162,50 @@
                   }
                 },
                 {
+                  "id": "devices-interval-mouse-4",
+                  "label": "Mouse with a 4 ms interval",
+                  "stock": {
+                    "is": "1 ms",
+                    "src": [
+                      {
+                        "file": "device_matrix_samehub_intervals.json",
+                        "ptr": "/results/2/boxes/stock/snapshot/descriptors"
+                      }
+                    ]
+                  },
+                  "medius": {
+                    "is": "Native interval",
+                    "src": [
+                      {
+                        "file": "device_matrix_samehub_intervals.json",
+                        "ptr": "/results/2/boxes/medius/snapshot/descriptors"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "devices-interval-mouse-2",
+                  "label": "Mouse with a 2 ms interval",
+                  "stock": {
+                    "is": "1 ms",
+                    "src": [
+                      {
+                        "file": "device_matrix_samehub_intervals.json",
+                        "ptr": "/results/1/boxes/stock/snapshot/descriptors"
+                      }
+                    ]
+                  },
+                  "medius": {
+                    "is": "Native interval",
+                    "src": [
+                      {
+                        "file": "device_matrix_samehub_intervals.json",
+                        "ptr": "/results/1/boxes/medius/snapshot/descriptors"
+                      }
+                    ]
+                  }
+                },
+                {
                   "id": "devices-interval-mouse-big-report",
                   "label": "Mouse with a 10 ms interval and a 1,500-byte report descriptor",
                   "stock": {
@@ -19814,61 +19858,112 @@
       "id": "devices-stock-report-over-512",
       "box": "stock",
       "text": "A report descriptor longer than 512 bytes isn't served, so the PC's HID driver doesn't load for that clone.",
-      "row": "devices-report-768-2047"
+      "rows": [
+        "devices-report-768-2047"
+      ]
     },
     {
       "id": "devices-stock-hid-descriptor-stall",
       "box": "stock",
       "text": "A request for the HID class descriptor gets a STALL instead of the native reply.",
-      "row": "devices-ep0-hid-descriptor"
+      "rows": [
+        "devices-ep0-hid-descriptor"
+      ]
     },
     {
       "id": "pass-inject-reads",
       "box": "stock",
       "text": "While it injects, stock reads a 1 kHz mouse whose motion varies about 460 times a second instead of 1,000, at 10 to 1,000 moves a second.",
-      "row": "pass-inject-varying"
+      "rows": [
+        "pass-inject-varying"
+      ]
     },
     {
       "id": "inj-fresh-clone-no-injection",
       "box": "stock",
       "text": "A move or click sent to a new clone before its first native report is lost: none of 3 tries arrived within 1 s.",
-      "row": "inj-fresh-never"
+      "rows": [
+        "inj-fresh-never"
+      ]
     },
     {
       "id": "recovery-restart-move-held",
       "box": "stock",
       "text": "After the PC turns the clone's port off and on, stock holds the first move for over 1 s in 6 of 10 tries.",
-      "row": "recovery-restart-move-port-cycle"
+      "rows": [
+        "recovery-restart-move-port-cycle"
+      ]
     },
     {
       "id": "recovery-exit-held",
       "box": "stock",
-      "row": "recovery-exit-left-button",
+      "rows": [
+        "recovery-exit-left-button"
+      ],
       "text": "A button a program pressed stays held after the program closes the port, until another program releases it or the box restarts."
     },
     {
       "id": "inj-stock-lost-counts",
       "box": "stock",
-      "row": "inj-total-counting-1000",
+      "rows": [
+        "inj-total-counting-1000"
+      ],
       "text": "Default moves at 1,000 a second into a moving 1 kHz mouse lose counts: 10 and 13 of 15,000 in two runs."
     },
     {
       "id": "pass-stock-config-reconnect",
       "box": "stock",
-      "row": "pass-pc-config",
+      "rows": [
+        "pass-pc-config"
+      ],
       "text": "When the PC switches the clone's configuration, stock reconnects the clone instead of passing the switch to the real device: 3 of 3 tries."
     },
     {
       "id": "link-stock-parser-jam",
       "box": "stock",
       "text": "One write of 30 binary moves, moves clumped 32 to a write, or moves written back to back lose commands and leave stock's parser one command behind until a power cycle.",
-      "row": "link-write-parser-30"
+      "rows": [
+        "link-write-parser-30"
+      ]
     },
     {
       "id": "recovery-stock-no-wake",
       "box": "stock",
       "text": "While the PC sleeps, neither an injected move nor the real device's remote wakeup wakes it.",
-      "row": "recovery-wake-device"
+      "rows": [
+        "recovery-wake-device"
+      ]
+    },
+    {
+      "id": "devices-stock-mouse-interval",
+      "box": "stock",
+      "text": "A mouse's clone declares a 1 ms poll interval where the mouse declares 2 to 10 ms, so the PC polls it up to ten times as often as the native interval, which is where stock's lower latency below 1 kHz comes from.",
+      "rows": [
+        "devices-interval-mouse-8",
+        "devices-interval-mouse-10",
+        "devices-interval-mouse-4",
+        "devices-interval-mouse-2",
+        "devices-clone-mice-slow",
+        "devices-poll-reports-1ms-behind-10ms",
+        "pass-latency-p50-500",
+        "pass-latency-p50-250",
+        "pass-latency-p50-125",
+        "pass-latency-p95-500",
+        "pass-latency-p95-250",
+        "pass-latency-p95-125",
+        "pass-latency-p99-500",
+        "pass-latency-p99-250",
+        "pass-latency-p99-125",
+        "pass-latency-min-500",
+        "pass-latency-min-250",
+        "pass-latency-min-125",
+        "inj-lat-now-125-1",
+        "inj-lat-now-125-50",
+        "inj-lat-now-p95-125-1",
+        "inj-lat-now-p95-125-50",
+        "inj-every-p95-125-1",
+        "inj-every-p95-125-50"
+      ]
     }
   ],
   "pending": [

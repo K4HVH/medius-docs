@@ -23,7 +23,7 @@ const COLUMN = new Set(['id', 'label', 'unit', 'better']);
 const VALUE = new Set(['value', 'lo', 'hi', 'of', 'src']);
 const OUTCOME = new Set(['is', 'src']);
 const REF = new Set(['file', 'ptr', 'unit']);
-const DEFECT = new Set(['id', 'box', 'text', 'row']);
+const DEFECT = new Set(['id', 'box', 'text', 'rows']);
 const PENDING = new Set(['id', 'category', 'test', 'needs']);
 
 type Obj = Record<string, unknown>;
@@ -221,8 +221,15 @@ export function checkResults(d: unknown): string[] {
     ident(x, 'defect', w);
     text(x, 'text', w);
     if (!BOXES.includes(x.box as never)) fault(w, `box ${JSON.stringify(x.box)} must be stock or medius`);
-    if (typeof x.row !== 'string') fault(w, 'row must be a row id');
-    else if (!['measure', 'outcome'].includes(rowsOf.get(x.row) ?? '')) fault(w, `row ${JSON.stringify(x.row)} isn't a row of a ranked measure or an outcome table`);
+    const rs = x.rows;
+    if (!Array.isArray(rs) || !rs.length || !rs.every((r) => typeof r === 'string')) {
+      fault(w, 'rows must be a list of row ids, the one that shows it first');
+      return;
+    }
+    for (const r of rs as string[]) {
+      if (rs.filter((o) => o === r).length > 1) fault(w, `row ${JSON.stringify(r)} named twice`);
+      if (!['measure', 'outcome'].includes(rowsOf.get(r) ?? '')) fault(w, `row ${JSON.stringify(r)} isn't a row of a ranked measure or an outcome table`);
+    }
   });
 
   listed(d, 'pending', 'pending', true).forEach((p, i) => {

@@ -64,10 +64,17 @@ describe('a measure', () => {
     expect(table.querySelectorAll('td.behind').length).toBe(0);
   });
 
-  it('marks a row a defect names, linked to the defect list', () => {
+  it('marks a row a defect names, linked to that defect', () => {
     const a = rowOf(section(0), 'Fresh clone').querySelector('a.status.bad')!;
-    expect(a.getAttribute('href')).toBe('/comparison/defects');
+    expect(a.getAttribute('href')).toBe('/comparison/defect-fresh-clone');
     expect(a.getAttribute('aria-label')).toBe(`Stock defect: ${DEFECTS[0].text}`);
+  });
+
+  it('marks every row a defect names, a win included, and no other', () => {
+    const many = [{ ...DEFECTS[0], rows: ['move-cold', 'move-rest-1'] }];
+    const el = show(() => <ResultSection section={sections[0]} defects={many} />);
+    for (const label of ['Fresh clone', 'At rest, 1 count']) expect(rowOf(el, label).querySelector('a.status.bad')).not.toBeNull();
+    expect(rowOf(el, 'At rest, 50 counts').querySelector('a.status.bad')).toBeNull();
   });
 
   it('labels each value with its box, for a phone', () => {

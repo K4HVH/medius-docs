@@ -4,7 +4,8 @@ import { PageHeader } from '../../shell/PageHeader';
 import { DocSection } from '../../shell/DocSection';
 import { FixLink } from '../../shell/Filter';
 import { routeFor } from '../../routes';
-import { RESULTS, placeOf } from '../../data/comparison';
+import { RESULTS, defectPlace, placeOf } from '../../data/comparison';
+import { CopyLink } from '../../shell/CopyLink';
 import { COMPARISON_PAGES, KEY_ROWS, pageOfCategory } from '../../data/comparison/pages';
 import type { Box } from '../../data/comparison/types';
 import { BOX, PairTable, type Item } from './parts';
@@ -26,7 +27,9 @@ const Defects = () => {
   const rows = () =>
     (['stock', 'medius'] as Box[]).flatMap((box) => {
       const mine = RESULTS.defects.filter((d) => d.box === box);
-      return mine.length ? mine.map((d) => ({ box, text: d.text, row: d.row })) : [{ box, text: 'None found', row: '' }];
+      return mine.length
+        ? mine.map((d) => ({ box, text: d.text, row: d.rows[0], id: defectPlace(d) }))
+        : [{ box, text: 'None found', row: '', id: '' }];
     });
   return (
     <div class="stack-box">
@@ -42,10 +45,15 @@ const Defects = () => {
           <tbody>
             <For each={rows()}>
               {(r) => (
-                <tr>
+                <tr id={r.id || undefined} data-search-target={r.id ? '' : undefined} data-search-title={r.id ? r.text : undefined}>
                   <td>{BOX[r.box]}</td>
-                  <td class="long" data-label="Defect">{r.text}</td>
-                  <td data-label="Section">
+                  <td class="long" data-label="Defect">
+                    {r.text}
+                    <Show when={r.id}>
+                      <CopyLink id={r.id} label={r.text} />
+                    </Show>
+                  </td>
+                  <td data-label={r.row ? 'Section' : undefined}>
                     <Show when={r.row}>
                       <Where row={r.row} />
                     </Show>
