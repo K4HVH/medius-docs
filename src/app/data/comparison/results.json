@@ -9,7 +9,8 @@
     "wire": "USB packets on the PC's bus, timed by the kernel's usbmon",
     "evdev": "Input events, timed by the kernel as the HID driver handles each report",
     "hidraw": "Each report byte for byte, timed when the reading program wakes",
-    "host": "The PC's clock, read by the test program when it writes a command, or when the clone connects or disconnects"
+    "host": "The PC's clock, read by the test program when it writes a command, or when the clone connects or disconnects",
+    "emulator": "Native reports as the emulator queued them, on its clock, placed on the bus clock through its control link's packets (usbmon)"
   },
   "categories": [
     {
@@ -6148,6 +6149,637 @@
                       {
                         "file": "kbd_relay_medius_samehub_fix2_r2.json",
                         "ptr": "/results/1/outside_10pct"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "pass-latency",
+          "title": "Report latency",
+          "about": "Each native report is timed from the emulator queuing it to the PC receiving the clone's copy, with the emulator 1,000 ppm slow so its reports land at every point between polls. Plugged straight into a PC, a native report waits half the native interval on average.",
+          "tables": [
+            {
+              "kind": "measure",
+              "label": "Report latency, p50",
+              "key": "Mouse",
+              "unit": "ms",
+              "better": "lower",
+              "layer": "emulator",
+              "n": "2 runs of 24 s",
+              "rows": [
+                {
+                  "id": "pass-latency-p50-1000",
+                  "label": "1 kHz mouse",
+                  "stock": {
+                    "lo": 1.43,
+                    "hi": 1.43,
+                    "src": [
+                      {
+                        "file": "relay_latency_stock_samehub_r1.json",
+                        "ptr": "/results/0/latency_us/p50",
+                        "unit": "us"
+                      },
+                      {
+                        "file": "relay_latency_stock_samehub_r2.json",
+                        "ptr": "/results/0/latency_us/p50",
+                        "unit": "us"
+                      }
+                    ]
+                  },
+                  "medius": {
+                    "lo": 1.06,
+                    "hi": 1.07,
+                    "src": [
+                      {
+                        "file": "relay_latency_medius_samehub_fix3_r1.json",
+                        "ptr": "/results/0/latency_us/p50",
+                        "unit": "us"
+                      },
+                      {
+                        "file": "relay_latency_medius_samehub_fix3_r2.json",
+                        "ptr": "/results/0/latency_us/p50",
+                        "unit": "us"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "pass-latency-p50-500",
+                  "label": "500 Hz mouse",
+                  "stock": {
+                    "lo": 1.28,
+                    "hi": 1.4,
+                    "src": [
+                      {
+                        "file": "relay_latency_stock_samehub_r1.json",
+                        "ptr": "/results/1/latency_us/p50",
+                        "unit": "us"
+                      },
+                      {
+                        "file": "relay_latency_stock_samehub_r2.json",
+                        "ptr": "/results/1/latency_us/p50",
+                        "unit": "us"
+                      }
+                    ]
+                  },
+                  "medius": {
+                    "lo": 1.55,
+                    "hi": 1.58,
+                    "src": [
+                      {
+                        "file": "relay_latency_medius_samehub_fix3_r1.json",
+                        "ptr": "/results/1/latency_us/p50",
+                        "unit": "us"
+                      },
+                      {
+                        "file": "relay_latency_medius_samehub_fix3_r2.json",
+                        "ptr": "/results/1/latency_us/p50",
+                        "unit": "us"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "pass-latency-p50-250",
+                  "label": "250 Hz mouse",
+                  "stock": {
+                    "lo": 1.26,
+                    "hi": 1.33,
+                    "src": [
+                      {
+                        "file": "relay_latency_stock_samehub_r1.json",
+                        "ptr": "/results/2/latency_us/p50",
+                        "unit": "us"
+                      },
+                      {
+                        "file": "relay_latency_stock_samehub_r2.json",
+                        "ptr": "/results/2/latency_us/p50",
+                        "unit": "us"
+                      }
+                    ]
+                  },
+                  "medius": {
+                    "lo": 2.57,
+                    "hi": 2.57,
+                    "src": [
+                      {
+                        "file": "relay_latency_medius_samehub_fix3_r1.json",
+                        "ptr": "/results/2/latency_us/p50",
+                        "unit": "us"
+                      },
+                      {
+                        "file": "relay_latency_medius_samehub_fix3_r2.json",
+                        "ptr": "/results/2/latency_us/p50",
+                        "unit": "us"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "pass-latency-p50-125",
+                  "label": "125 Hz mouse",
+                  "stock": {
+                    "lo": 1.24,
+                    "hi": 1.35,
+                    "src": [
+                      {
+                        "file": "relay_latency_stock_samehub_r1.json",
+                        "ptr": "/results/3/latency_us/p50",
+                        "unit": "us"
+                      },
+                      {
+                        "file": "relay_latency_stock_samehub_r2.json",
+                        "ptr": "/results/3/latency_us/p50",
+                        "unit": "us"
+                      }
+                    ]
+                  },
+                  "medius": {
+                    "lo": 4.55,
+                    "hi": 4.57,
+                    "src": [
+                      {
+                        "file": "relay_latency_medius_samehub_fix3_r1.json",
+                        "ptr": "/results/3/latency_us/p50",
+                        "unit": "us"
+                      },
+                      {
+                        "file": "relay_latency_medius_samehub_fix3_r2.json",
+                        "ptr": "/results/3/latency_us/p50",
+                        "unit": "us"
+                      }
+                    ]
+                  },
+                  "note": "Stock's clone declares 1 ms where the native interval is 8 ms (Poll interval)"
+                }
+              ]
+            },
+            {
+              "kind": "measure",
+              "label": "Report latency, p95",
+              "key": "Mouse",
+              "unit": "ms",
+              "better": "lower",
+              "stat": "p95",
+              "layer": "emulator",
+              "n": "2 runs of 24 s",
+              "rows": [
+                {
+                  "id": "pass-latency-p95-1000",
+                  "label": "1 kHz mouse",
+                  "stock": {
+                    "lo": 2.04,
+                    "hi": 2.08,
+                    "src": [
+                      {
+                        "file": "relay_latency_stock_samehub_r1.json",
+                        "ptr": "/results/0/latency_us/p95",
+                        "unit": "us"
+                      },
+                      {
+                        "file": "relay_latency_stock_samehub_r2.json",
+                        "ptr": "/results/0/latency_us/p95",
+                        "unit": "us"
+                      }
+                    ]
+                  },
+                  "medius": {
+                    "lo": 1.51,
+                    "hi": 1.51,
+                    "src": [
+                      {
+                        "file": "relay_latency_medius_samehub_fix3_r1.json",
+                        "ptr": "/results/0/latency_us/p95",
+                        "unit": "us"
+                      },
+                      {
+                        "file": "relay_latency_medius_samehub_fix3_r2.json",
+                        "ptr": "/results/0/latency_us/p95",
+                        "unit": "us"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "pass-latency-p95-500",
+                  "label": "500 Hz mouse",
+                  "stock": {
+                    "lo": 2.03,
+                    "hi": 2.05,
+                    "src": [
+                      {
+                        "file": "relay_latency_stock_samehub_r1.json",
+                        "ptr": "/results/1/latency_us/p95",
+                        "unit": "us"
+                      },
+                      {
+                        "file": "relay_latency_stock_samehub_r2.json",
+                        "ptr": "/results/1/latency_us/p95",
+                        "unit": "us"
+                      }
+                    ]
+                  },
+                  "medius": {
+                    "lo": 2.46,
+                    "hi": 2.47,
+                    "src": [
+                      {
+                        "file": "relay_latency_medius_samehub_fix3_r1.json",
+                        "ptr": "/results/1/latency_us/p95",
+                        "unit": "us"
+                      },
+                      {
+                        "file": "relay_latency_medius_samehub_fix3_r2.json",
+                        "ptr": "/results/1/latency_us/p95",
+                        "unit": "us"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "pass-latency-p95-250",
+                  "label": "250 Hz mouse",
+                  "stock": {
+                    "lo": 2.02,
+                    "hi": 2.03,
+                    "src": [
+                      {
+                        "file": "relay_latency_stock_samehub_r1.json",
+                        "ptr": "/results/2/latency_us/p95",
+                        "unit": "us"
+                      },
+                      {
+                        "file": "relay_latency_stock_samehub_r2.json",
+                        "ptr": "/results/2/latency_us/p95",
+                        "unit": "us"
+                      }
+                    ]
+                  },
+                  "medius": {
+                    "lo": 4.36,
+                    "hi": 4.36,
+                    "src": [
+                      {
+                        "file": "relay_latency_medius_samehub_fix3_r1.json",
+                        "ptr": "/results/2/latency_us/p95",
+                        "unit": "us"
+                      },
+                      {
+                        "file": "relay_latency_medius_samehub_fix3_r2.json",
+                        "ptr": "/results/2/latency_us/p95",
+                        "unit": "us"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "pass-latency-p95-125",
+                  "label": "125 Hz mouse",
+                  "stock": {
+                    "lo": 1.91,
+                    "hi": 2.01,
+                    "src": [
+                      {
+                        "file": "relay_latency_stock_samehub_r1.json",
+                        "ptr": "/results/3/latency_us/p95",
+                        "unit": "us"
+                      },
+                      {
+                        "file": "relay_latency_stock_samehub_r2.json",
+                        "ptr": "/results/3/latency_us/p95",
+                        "unit": "us"
+                      }
+                    ]
+                  },
+                  "medius": {
+                    "lo": 8.15,
+                    "hi": 8.16,
+                    "src": [
+                      {
+                        "file": "relay_latency_medius_samehub_fix3_r1.json",
+                        "ptr": "/results/3/latency_us/p95",
+                        "unit": "us"
+                      },
+                      {
+                        "file": "relay_latency_medius_samehub_fix3_r2.json",
+                        "ptr": "/results/3/latency_us/p95",
+                        "unit": "us"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "measure",
+              "label": "Report latency, slowest",
+              "key": "Mouse",
+              "unit": "ms",
+              "better": "lower",
+              "stat": "slowest",
+              "layer": "emulator",
+              "n": "2 runs of 24 s",
+              "rows": [
+                {
+                  "id": "pass-latency-max-1000",
+                  "label": "1 kHz mouse",
+                  "stock": {
+                    "lo": 2.3,
+                    "hi": 2.33,
+                    "src": [
+                      {
+                        "file": "relay_latency_stock_samehub_r1.json",
+                        "ptr": "/results/0/latency_us/max",
+                        "unit": "us"
+                      },
+                      {
+                        "file": "relay_latency_stock_samehub_r2.json",
+                        "ptr": "/results/0/latency_us/max",
+                        "unit": "us"
+                      }
+                    ]
+                  },
+                  "medius": {
+                    "lo": 1.57,
+                    "hi": 1.57,
+                    "src": [
+                      {
+                        "file": "relay_latency_medius_samehub_fix3_r1.json",
+                        "ptr": "/results/0/latency_us/max",
+                        "unit": "us"
+                      },
+                      {
+                        "file": "relay_latency_medius_samehub_fix3_r2.json",
+                        "ptr": "/results/0/latency_us/max",
+                        "unit": "us"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "pass-latency-max-500",
+                  "label": "500 Hz mouse",
+                  "stock": {
+                    "lo": 2.3,
+                    "hi": 2.3,
+                    "src": [
+                      {
+                        "file": "relay_latency_stock_samehub_r1.json",
+                        "ptr": "/results/1/latency_us/max",
+                        "unit": "us"
+                      },
+                      {
+                        "file": "relay_latency_stock_samehub_r2.json",
+                        "ptr": "/results/1/latency_us/max",
+                        "unit": "us"
+                      }
+                    ]
+                  },
+                  "medius": {
+                    "lo": 2.57,
+                    "hi": 2.62,
+                    "src": [
+                      {
+                        "file": "relay_latency_medius_samehub_fix3_r1.json",
+                        "ptr": "/results/1/latency_us/max",
+                        "unit": "us"
+                      },
+                      {
+                        "file": "relay_latency_medius_samehub_fix3_r2.json",
+                        "ptr": "/results/1/latency_us/max",
+                        "unit": "us"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "pass-latency-max-250",
+                  "label": "250 Hz mouse",
+                  "stock": {
+                    "lo": 2.29,
+                    "hi": 2.29,
+                    "src": [
+                      {
+                        "file": "relay_latency_stock_samehub_r1.json",
+                        "ptr": "/results/2/latency_us/max",
+                        "unit": "us"
+                      },
+                      {
+                        "file": "relay_latency_stock_samehub_r2.json",
+                        "ptr": "/results/2/latency_us/max",
+                        "unit": "us"
+                      }
+                    ]
+                  },
+                  "medius": {
+                    "lo": 4.56,
+                    "hi": 4.57,
+                    "src": [
+                      {
+                        "file": "relay_latency_medius_samehub_fix3_r1.json",
+                        "ptr": "/results/2/latency_us/max",
+                        "unit": "us"
+                      },
+                      {
+                        "file": "relay_latency_medius_samehub_fix3_r2.json",
+                        "ptr": "/results/2/latency_us/max",
+                        "unit": "us"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "pass-latency-max-125",
+                  "label": "125 Hz mouse",
+                  "stock": {
+                    "lo": 2.29,
+                    "hi": 2.3,
+                    "src": [
+                      {
+                        "file": "relay_latency_stock_samehub_r1.json",
+                        "ptr": "/results/3/latency_us/max",
+                        "unit": "us"
+                      },
+                      {
+                        "file": "relay_latency_stock_samehub_r2.json",
+                        "ptr": "/results/3/latency_us/max",
+                        "unit": "us"
+                      }
+                    ]
+                  },
+                  "medius": {
+                    "lo": 8.56,
+                    "hi": 8.57,
+                    "src": [
+                      {
+                        "file": "relay_latency_medius_samehub_fix3_r1.json",
+                        "ptr": "/results/3/latency_us/max",
+                        "unit": "us"
+                      },
+                      {
+                        "file": "relay_latency_medius_samehub_fix3_r2.json",
+                        "ptr": "/results/3/latency_us/max",
+                        "unit": "us"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "measure",
+              "label": "Report latency, fastest",
+              "key": "Mouse",
+              "unit": "µs",
+              "better": "lower",
+              "stat": "fastest",
+              "layer": "emulator",
+              "n": "2 runs of 24 s",
+              "rows": [
+                {
+                  "id": "pass-latency-min-1000",
+                  "label": "1 kHz mouse",
+                  "stock": {
+                    "lo": 417,
+                    "hi": 572,
+                    "src": [
+                      {
+                        "file": "relay_latency_stock_samehub_r1.json",
+                        "ptr": "/results/0/latency_us/min",
+                        "unit": "us"
+                      },
+                      {
+                        "file": "relay_latency_stock_samehub_r2.json",
+                        "ptr": "/results/0/latency_us/min",
+                        "unit": "us"
+                      }
+                    ]
+                  },
+                  "medius": {
+                    "lo": 544,
+                    "hi": 550,
+                    "src": [
+                      {
+                        "file": "relay_latency_medius_samehub_fix3_r1.json",
+                        "ptr": "/results/0/latency_us/min",
+                        "unit": "us"
+                      },
+                      {
+                        "file": "relay_latency_medius_samehub_fix3_r2.json",
+                        "ptr": "/results/0/latency_us/min",
+                        "unit": "us"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "pass-latency-min-500",
+                  "label": "500 Hz mouse",
+                  "stock": {
+                    "lo": 321,
+                    "hi": 326,
+                    "src": [
+                      {
+                        "file": "relay_latency_stock_samehub_r1.json",
+                        "ptr": "/results/1/latency_us/min",
+                        "unit": "us"
+                      },
+                      {
+                        "file": "relay_latency_stock_samehub_r2.json",
+                        "ptr": "/results/1/latency_us/min",
+                        "unit": "us"
+                      }
+                    ]
+                  },
+                  "medius": {
+                    "lo": 548,
+                    "hi": 550,
+                    "src": [
+                      {
+                        "file": "relay_latency_medius_samehub_fix3_r1.json",
+                        "ptr": "/results/1/latency_us/min",
+                        "unit": "us"
+                      },
+                      {
+                        "file": "relay_latency_medius_samehub_fix3_r2.json",
+                        "ptr": "/results/1/latency_us/min",
+                        "unit": "us"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "pass-latency-min-250",
+                  "label": "250 Hz mouse",
+                  "stock": {
+                    "lo": 325,
+                    "hi": 329,
+                    "src": [
+                      {
+                        "file": "relay_latency_stock_samehub_r1.json",
+                        "ptr": "/results/2/latency_us/min",
+                        "unit": "us"
+                      },
+                      {
+                        "file": "relay_latency_stock_samehub_r2.json",
+                        "ptr": "/results/2/latency_us/min",
+                        "unit": "us"
+                      }
+                    ]
+                  },
+                  "medius": {
+                    "lo": 563,
+                    "hi": 563,
+                    "src": [
+                      {
+                        "file": "relay_latency_medius_samehub_fix3_r1.json",
+                        "ptr": "/results/2/latency_us/min",
+                        "unit": "us"
+                      },
+                      {
+                        "file": "relay_latency_medius_samehub_fix3_r2.json",
+                        "ptr": "/results/2/latency_us/min",
+                        "unit": "us"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "pass-latency-min-125",
+                  "label": "125 Hz mouse",
+                  "stock": {
+                    "lo": 332,
+                    "hi": 342,
+                    "src": [
+                      {
+                        "file": "relay_latency_stock_samehub_r1.json",
+                        "ptr": "/results/3/latency_us/min",
+                        "unit": "us"
+                      },
+                      {
+                        "file": "relay_latency_stock_samehub_r2.json",
+                        "ptr": "/results/3/latency_us/min",
+                        "unit": "us"
+                      }
+                    ]
+                  },
+                  "medius": {
+                    "lo": 539,
+                    "hi": 564,
+                    "src": [
+                      {
+                        "file": "relay_latency_medius_samehub_fix3_r1.json",
+                        "ptr": "/results/3/latency_us/min",
+                        "unit": "us"
+                      },
+                      {
+                        "file": "relay_latency_medius_samehub_fix3_r2.json",
+                        "ptr": "/results/3/latency_us/min",
+                        "unit": "us"
                       }
                     ]
                   }
@@ -19244,12 +19876,6 @@
       "category": "devices",
       "test": "Endpoint 0 reply time of each clone, against the native reply time",
       "needs": "ep0_compare.py on both boxes, and the device's reply time from a sniffer on USB3, same hub"
-    },
-    {
-      "id": "pass-relay-delay",
-      "test": "Passthrough latency: time from each native report to the clone's report on the PC, at each report rate",
-      "needs": "The device's report timed by the sim or a sniffer on USB3, against the clone's report on the wire, on both boxes. relay_delta.py times the clone against each box's control-port event, a different message sent from an undocumented point in each firmware and read by different client code in user space",
-      "category": "passthrough"
     },
     {
       "id": "inj-box-reports",

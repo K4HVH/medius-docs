@@ -20,7 +20,7 @@ export const COMPARISON_PAGES: ComparisonPage[] = [
 // is ahead as well as where Medius is.
 export const KEY_ROWS: Record<string, string[]> = {
   '/comparison/devices': ['devices-data-wooting', 'devices-interval-mouse-10', 'devices-report-768-2047', 'devices-ep0-hid-descriptor'],
-  '/comparison/passthrough': ['pass-seq-1000', 'pass-inject-varying', 'pass-pc-config', 'pass-dev-stall'],
+  '/comparison/passthrough': ['pass-seq-1000', 'pass-latency-p50-1000', 'pass-latency-p50-125', 'pass-inject-varying', 'pass-pc-config', 'pass-dev-stall'],
   '/comparison/injection': ['inj-lat-rest-1', 'inj-lat-now-125-1', 'inj-delivered-125-1', 'inj-emitted-counting-1000', 'inj-fresh-never'],
   '/comparison/control-link': ['link-rtt-version-p50', 'link-rtt-status-p50', 'link-bad-cut', 'link-bad-moved-corrupt'],
   '/comparison/input': ['input-held-left-release', 'input-leak-x-inject-y-1khz'],
