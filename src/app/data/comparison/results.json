@@ -16500,31 +16500,31 @@
                     ]
                   },
                   "medius": {
-                    "lo": 48.8,
-                    "hi": 49,
+                    "lo": 49.9,
+                    "hi": 50,
                     "src": [
                       {
-                        "file": "click_timing_medius_samehub_fix2.json",
+                        "file": "click_timing_medius_samehub_fix3.json",
                         "ptr": "/results/0/hold/min",
                         "unit": "us"
                       },
                       {
-                        "file": "click_timing_medius_samehub_fix2.json",
+                        "file": "click_timing_medius_samehub_fix3.json",
                         "ptr": "/results/1/hold/min",
                         "unit": "us"
                       },
                       {
-                        "file": "click_timing_medius_samehub_fix2.json",
+                        "file": "click_timing_medius_samehub_fix3.json",
                         "ptr": "/results/2/hold/min",
                         "unit": "us"
                       },
                       {
-                        "file": "click_timing_medius_samehub_fix2.json",
+                        "file": "click_timing_medius_samehub_fix3.json",
                         "ptr": "/results/3/hold/min",
                         "unit": "us"
                       },
                       {
-                        "file": "click_timing_medius_samehub_fix2.json",
+                        "file": "click_timing_medius_samehub_fix3.json",
                         "ptr": "/results/4/hold/min",
                         "unit": "us"
                       }
@@ -16566,31 +16566,31 @@
                     ]
                   },
                   "medius": {
-                    "lo": 48.9,
+                    "lo": 49.9,
                     "hi": 50,
                     "src": [
                       {
-                        "file": "click_timing_medius_samehub_fix2.json",
+                        "file": "click_timing_medius_samehub_fix3.json",
                         "ptr": "/results/5/hold/min",
                         "unit": "us"
                       },
                       {
-                        "file": "click_timing_medius_samehub_fix2.json",
+                        "file": "click_timing_medius_samehub_fix3.json",
                         "ptr": "/results/6/hold/min",
                         "unit": "us"
                       },
                       {
-                        "file": "click_timing_medius_samehub_fix2.json",
+                        "file": "click_timing_medius_samehub_fix3.json",
                         "ptr": "/results/7/hold/min",
                         "unit": "us"
                       },
                       {
-                        "file": "click_timing_medius_samehub_fix2.json",
+                        "file": "click_timing_medius_samehub_fix3.json",
                         "ptr": "/results/8/hold/min",
                         "unit": "us"
                       },
                       {
-                        "file": "click_timing_medius_samehub_fix2.json",
+                        "file": "click_timing_medius_samehub_fix3.json",
                         "ptr": "/results/9/hold/min",
                         "unit": "us"
                       }
@@ -16647,30 +16647,30 @@
                   },
                   "medius": {
                     "lo": 50,
-                    "hi": 51,
+                    "hi": 50.1,
                     "src": [
                       {
-                        "file": "click_timing_medius_samehub_fix2.json",
+                        "file": "click_timing_medius_samehub_fix3.json",
                         "ptr": "/results/0/hold/max",
                         "unit": "us"
                       },
                       {
-                        "file": "click_timing_medius_samehub_fix2.json",
+                        "file": "click_timing_medius_samehub_fix3.json",
                         "ptr": "/results/1/hold/max",
                         "unit": "us"
                       },
                       {
-                        "file": "click_timing_medius_samehub_fix2.json",
+                        "file": "click_timing_medius_samehub_fix3.json",
                         "ptr": "/results/2/hold/max",
                         "unit": "us"
                       },
                       {
-                        "file": "click_timing_medius_samehub_fix2.json",
+                        "file": "click_timing_medius_samehub_fix3.json",
                         "ptr": "/results/3/hold/max",
                         "unit": "us"
                       },
                       {
-                        "file": "click_timing_medius_samehub_fix2.json",
+                        "file": "click_timing_medius_samehub_fix3.json",
                         "ptr": "/results/4/hold/max",
                         "unit": "us"
                       }
@@ -16716,27 +16716,27 @@
                     "hi": 50.1,
                     "src": [
                       {
-                        "file": "click_timing_medius_samehub_fix2.json",
+                        "file": "click_timing_medius_samehub_fix3.json",
                         "ptr": "/results/5/hold/max",
                         "unit": "us"
                       },
                       {
-                        "file": "click_timing_medius_samehub_fix2.json",
+                        "file": "click_timing_medius_samehub_fix3.json",
                         "ptr": "/results/6/hold/max",
                         "unit": "us"
                       },
                       {
-                        "file": "click_timing_medius_samehub_fix2.json",
+                        "file": "click_timing_medius_samehub_fix3.json",
                         "ptr": "/results/7/hold/max",
                         "unit": "us"
                       },
                       {
-                        "file": "click_timing_medius_samehub_fix2.json",
+                        "file": "click_timing_medius_samehub_fix3.json",
                         "ptr": "/results/8/hold/max",
                         "unit": "us"
                       },
                       {
-                        "file": "click_timing_medius_samehub_fix2.json",
+                        "file": "click_timing_medius_samehub_fix3.json",
                         "ptr": "/results/9/hold/max",
                         "unit": "us"
                       }
@@ -16790,23 +16790,23 @@
                     "is": "Exact",
                     "src": [
                       {
-                        "file": "click_timing_medius_samehub_fix2.json",
+                        "file": "click_timing_medius_samehub_fix3.json",
                         "ptr": "/results/10/exact"
                       },
                       {
-                        "file": "click_timing_medius_samehub_fix2.json",
+                        "file": "click_timing_medius_samehub_fix3.json",
                         "ptr": "/results/11/exact"
                       },
                       {
-                        "file": "click_timing_medius_samehub_fix2.json",
+                        "file": "click_timing_medius_samehub_fix3.json",
                         "ptr": "/results/12/exact"
                       },
                       {
-                        "file": "click_timing_medius_samehub_fix2.json",
+                        "file": "click_timing_medius_samehub_fix3.json",
                         "ptr": "/results/13/exact"
                       },
                       {
-                        "file": "click_timing_medius_samehub_fix2.json",
+                        "file": "click_timing_medius_samehub_fix3.json",
                         "ptr": "/results/14/exact"
                       }
                     ]
@@ -16862,30 +16862,30 @@
                   },
                   "medius": {
                     "lo": 57.9,
-                    "hi": 59,
+                    "hi": 58.9,
                     "src": [
                       {
-                        "file": "click_timing_medius_samehub_fix2.json",
+                        "file": "click_timing_medius_samehub_fix3.json",
                         "ptr": "/results/10/total_ms",
                         "unit": "ms"
                       },
                       {
-                        "file": "click_timing_medius_samehub_fix2.json",
+                        "file": "click_timing_medius_samehub_fix3.json",
                         "ptr": "/results/11/total_ms",
                         "unit": "ms"
                       },
                       {
-                        "file": "click_timing_medius_samehub_fix2.json",
+                        "file": "click_timing_medius_samehub_fix3.json",
                         "ptr": "/results/12/total_ms",
                         "unit": "ms"
                       },
                       {
-                        "file": "click_timing_medius_samehub_fix2.json",
+                        "file": "click_timing_medius_samehub_fix3.json",
                         "ptr": "/results/13/total_ms",
                         "unit": "ms"
                       },
                       {
-                        "file": "click_timing_medius_samehub_fix2.json",
+                        "file": "click_timing_medius_samehub_fix3.json",
                         "ptr": "/results/14/total_ms",
                         "unit": "ms"
                       }
