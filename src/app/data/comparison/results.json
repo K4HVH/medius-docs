@@ -21165,24 +21165,5 @@
       ]
     }
   ],
-  "pending": [
-    {
-      "id": "software-forwarding-latency",
-      "test": "Moves sent through the MAKCU Toolkit in Forwarding mode, on by default, against moves sent straight to Medius",
-      "needs": "A Windows PC with the Toolkit and its virtual COM driver, timing both boxes on the wire. Wine can't load the driver (toolkit-wine.md)",
-      "category": "software"
-    },
-    {
-      "id": "software-failed-update",
-      "test": "Update with power cut part way, on each box",
-      "needs": "Power removed mid-update on both boxes (stock through the Toolkit on Windows, Medius through the dashboard), then a record of what each box runs and how it gets back",
-      "category": "software"
-    },
-    {
-      "id": "software-update-time",
-      "test": "Time to update both chips",
-      "needs": "One timed update of the same kind on each box: stock through the Toolkit on Windows, Medius through the dashboard",
-      "category": "software"
-    }
-  ]
+  "pending": []
 }

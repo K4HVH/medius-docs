@@ -123,14 +123,10 @@ describe('Overview', () => {
 });
 
 describe('Method', () => {
-  it('names both versions, every timing layer, every test not run yet, and a download for the whole and each page', () => {
+  it('names both versions, every timing layer, and a download for the whole and each page', () => {
     const el = show(Method);
     expect(el.querySelector('section#rig')!.textContent).toContain(`Stock ${RESULTS.firmware.stock}, Medius ${RESULTS.firmware.medius}`);
     for (const detail of Object.values(RESULTS.layers)) expect(el.querySelector('section#layers')!.textContent).toContain(detail);
-    // Each area's tests under its name, in page order.
-    const areas = COMPARISON_PAGES.map((p) => ({ title: routeFor(p.path)!.title, n: RESULTS.pending.filter((x) => p.categories.includes(x.category)).length })).filter((a) => a.n);
-    expect([...el.querySelectorAll('section#pending .api-response-label')].map((l) => l.textContent)).toEqual(areas.map((a) => a.title));
-    expect([...el.querySelectorAll('section#pending ul')].map((u) => u.children.length)).toEqual(areas.map((a) => a.n));
     const files = [...el.querySelectorAll('section#data a[download]')].map((a) => a.getAttribute('href'));
     expect(files).toEqual(['/comparison.json', ...COMPARISON_PAGES.filter((p) => p.categories.length).map((p) => `${p.path}.json`)]);
   });
