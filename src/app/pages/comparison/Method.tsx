@@ -40,7 +40,7 @@ const Method: Component = () => (
     </PageHeader>
 
     <DocSection id="rig" title="Rig">
-      <p>Both boxes are wired like this, on the same PC.</p>
+      <p>Both boxes are wired like this, behind the same hub on the same PC.</p>
       <pre class="diagram">{RIG}</pre>
       <div class="table-scroll">
         <table class="api-params names">
@@ -54,7 +54,7 @@ const Method: Component = () => (
           <tbody>
             <tr><td>Firmware</td><td>Stock {RESULTS.firmware.stock}, Medius {RESULTS.firmware.medius}</td></tr>
             <tr><td>Real device</td><td>A USB device emulator on each box's USB3, presenting the same device and native reports to both</td></tr>
-            <tr><td>Hubs</td><td>One Genesys Logic and one VIA Labs. Where a hub can change a result, both boxes were behind the same hub, or each was behind both</td></tr>
+            <tr><td>Hub</td><td>One Genesys Logic hub for both boxes. One box was tested at a time, the other's emulator presenting a silent mouse</td></tr>
             <tr><td>PC</td><td>Linux</td></tr>
           </tbody>
         </table>
@@ -75,7 +75,7 @@ const Method: Component = () => (
             <tr><td>Row</td><td>One condition, run on both boxes with the same test, settings, sample size and timing layer</td></tr>
             <tr><td>Table</td><td>One quantity in one unit</td></tr>
             <tr><td>Time</td><td>The median (p50), unless the table names another statistic</td></tr>
-            <tr><td>Range</td><td>Lowest to highest over the runs and both hubs. The fainter part of a bar spans it</td></tr>
+            <tr><td>Range</td><td>Lowest to highest over the runs. The fainter part of a bar spans it</td></tr>
             <tr><td>Bar</td><td>Drawn to the largest value in its table, or in its row on the Overview</td></tr>
             <tr><td>Result</td><td>The box ahead, worked out from the values. The box behind is dimmed</td></tr>
             <tr><td>Faithful</td><td>Where a test records the native behaviour, the box that matches it is ahead</td></tr>
