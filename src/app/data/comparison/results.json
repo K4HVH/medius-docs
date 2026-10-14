@@ -4228,7 +4228,7 @@
         {
           "id": "devices-endpoint-0",
           "title": "Endpoint 0 replies",
-          "about": "The PC's standard, class and vendor requests to each clone, each reply checked against the native reply.",
+          "about": "The PC's standard, class and vendor requests to each clone, each reply checked against the native reply. Reply times are not ranked: the native time, which a faithful clone matches, isn't measured.",
           "tables": [
             {
               "kind": "outcome",
@@ -4769,6 +4769,305 @@
                       {
                         "file": "ep0_compare_medius_samehub_fix2_r2.json",
                         "ptr": "/results/29/match"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "measure",
+              "label": "Reply time on the bus",
+              "key": "Request",
+              "unit": "µs",
+              "layer": "wire",
+              "n": "200 requests a run, 2 runs",
+              "rows": [
+                {
+                  "id": "devices-ep0-time-device-descriptor",
+                  "label": "Device descriptor",
+                  "stock": {
+                    "lo": 597,
+                    "hi": 610,
+                    "src": [
+                      {
+                        "file": "ep0_compare_stock_samehub_r1.json",
+                        "ptr": "/results/0/wire/p50",
+                        "unit": "us"
+                      },
+                      {
+                        "file": "ep0_compare_stock_samehub_r2.json",
+                        "ptr": "/results/0/wire/p50",
+                        "unit": "us"
+                      }
+                    ]
+                  },
+                  "medius": {
+                    "lo": 122,
+                    "hi": 122,
+                    "src": [
+                      {
+                        "file": "ep0_compare_medius_samehub_fix2_r1.json",
+                        "ptr": "/results/0/wire/p50",
+                        "unit": "us"
+                      },
+                      {
+                        "file": "ep0_compare_medius_samehub_fix2_r2.json",
+                        "ptr": "/results/0/wire/p50",
+                        "unit": "us"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "devices-ep0-time-configuration",
+                  "label": "Configuration descriptor",
+                  "stock": {
+                    "lo": 772,
+                    "hi": 787,
+                    "src": [
+                      {
+                        "file": "ep0_compare_stock_samehub_r1.json",
+                        "ptr": "/results/4/wire/p50",
+                        "unit": "us"
+                      },
+                      {
+                        "file": "ep0_compare_stock_samehub_r2.json",
+                        "ptr": "/results/4/wire/p50",
+                        "unit": "us"
+                      }
+                    ]
+                  },
+                  "medius": {
+                    "lo": 160,
+                    "hi": 161,
+                    "src": [
+                      {
+                        "file": "ep0_compare_medius_samehub_fix2_r1.json",
+                        "ptr": "/results/4/wire/p50",
+                        "unit": "us"
+                      },
+                      {
+                        "file": "ep0_compare_medius_samehub_fix2_r2.json",
+                        "ptr": "/results/4/wire/p50",
+                        "unit": "us"
+                      }
+                    ]
+                  },
+                  "note": "All 34 bytes"
+                },
+                {
+                  "id": "devices-ep0-time-string",
+                  "label": "Product string",
+                  "stock": {
+                    "lo": 634,
+                    "hi": 636,
+                    "src": [
+                      {
+                        "file": "ep0_compare_stock_samehub_r1.json",
+                        "ptr": "/results/8/wire/p50",
+                        "unit": "us"
+                      },
+                      {
+                        "file": "ep0_compare_stock_samehub_r2.json",
+                        "ptr": "/results/8/wire/p50",
+                        "unit": "us"
+                      }
+                    ]
+                  },
+                  "medius": {
+                    "lo": 160,
+                    "hi": 160,
+                    "src": [
+                      {
+                        "file": "ep0_compare_medius_samehub_fix2_r1.json",
+                        "ptr": "/results/8/wire/p50",
+                        "unit": "us"
+                      },
+                      {
+                        "file": "ep0_compare_medius_samehub_fix2_r2.json",
+                        "ptr": "/results/8/wire/p50",
+                        "unit": "us"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "devices-ep0-time-report-descriptor",
+                  "label": "HID report descriptor",
+                  "stock": {
+                    "lo": 794,
+                    "hi": 794,
+                    "src": [
+                      {
+                        "file": "ep0_compare_stock_samehub_r1.json",
+                        "ptr": "/results/15/wire/p50",
+                        "unit": "us"
+                      },
+                      {
+                        "file": "ep0_compare_stock_samehub_r2.json",
+                        "ptr": "/results/15/wire/p50",
+                        "unit": "us"
+                      }
+                    ]
+                  },
+                  "medius": {
+                    "lo": 207,
+                    "hi": 209,
+                    "src": [
+                      {
+                        "file": "ep0_compare_medius_samehub_fix2_r1.json",
+                        "ptr": "/results/15/wire/p50",
+                        "unit": "us"
+                      },
+                      {
+                        "file": "ep0_compare_medius_samehub_fix2_r2.json",
+                        "ptr": "/results/15/wire/p50",
+                        "unit": "us"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "devices-ep0-time-absent-string",
+                  "label": "String the real device doesn't have",
+                  "stock": {
+                    "lo": 556,
+                    "hi": 570,
+                    "src": [
+                      {
+                        "file": "ep0_compare_stock_samehub_r1.json",
+                        "ptr": "/results/10/wire/p50",
+                        "unit": "us"
+                      },
+                      {
+                        "file": "ep0_compare_stock_samehub_r2.json",
+                        "ptr": "/results/10/wire/p50",
+                        "unit": "us"
+                      }
+                    ]
+                  },
+                  "medius": {
+                    "lo": 378,
+                    "hi": 378,
+                    "src": [
+                      {
+                        "file": "ep0_compare_medius_samehub_fix2_r1.json",
+                        "ptr": "/results/10/wire/p50",
+                        "unit": "us"
+                      },
+                      {
+                        "file": "ep0_compare_medius_samehub_fix2_r2.json",
+                        "ptr": "/results/10/wire/p50",
+                        "unit": "us"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "devices-ep0-time-status",
+                  "label": "GET_STATUS",
+                  "stock": {
+                    "lo": 574,
+                    "hi": 574,
+                    "src": [
+                      {
+                        "file": "ep0_compare_stock_samehub_r1.json",
+                        "ptr": "/results/17/wire/p50",
+                        "unit": "us"
+                      },
+                      {
+                        "file": "ep0_compare_stock_samehub_r2.json",
+                        "ptr": "/results/17/wire/p50",
+                        "unit": "us"
+                      }
+                    ]
+                  },
+                  "medius": {
+                    "lo": 122,
+                    "hi": 122,
+                    "src": [
+                      {
+                        "file": "ep0_compare_medius_samehub_fix2_r1.json",
+                        "ptr": "/results/17/wire/p50",
+                        "unit": "us"
+                      },
+                      {
+                        "file": "ep0_compare_medius_samehub_fix2_r2.json",
+                        "ptr": "/results/17/wire/p50",
+                        "unit": "us"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "devices-ep0-time-feature-report",
+                  "label": "Feature report 3",
+                  "stock": {
+                    "lo": 575,
+                    "hi": 577,
+                    "src": [
+                      {
+                        "file": "ep0_compare_stock_samehub_r1.json",
+                        "ptr": "/results/23/wire/p50",
+                        "unit": "us"
+                      },
+                      {
+                        "file": "ep0_compare_stock_samehub_r2.json",
+                        "ptr": "/results/23/wire/p50",
+                        "unit": "us"
+                      }
+                    ]
+                  },
+                  "medius": {
+                    "lo": 344,
+                    "hi": 359,
+                    "src": [
+                      {
+                        "file": "ep0_compare_medius_samehub_fix2_r1.json",
+                        "ptr": "/results/23/wire/p50",
+                        "unit": "us"
+                      },
+                      {
+                        "file": "ep0_compare_medius_samehub_fix2_r2.json",
+                        "ptr": "/results/23/wire/p50",
+                        "unit": "us"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "devices-ep0-time-vendor",
+                  "label": "Vendor request 0x42",
+                  "stock": {
+                    "lo": 598,
+                    "hi": 599,
+                    "src": [
+                      {
+                        "file": "ep0_compare_stock_samehub_r1.json",
+                        "ptr": "/results/28/wire/p50",
+                        "unit": "us"
+                      },
+                      {
+                        "file": "ep0_compare_stock_samehub_r2.json",
+                        "ptr": "/results/28/wire/p50",
+                        "unit": "us"
+                      }
+                    ]
+                  },
+                  "medius": {
+                    "lo": 383,
+                    "hi": 408,
+                    "src": [
+                      {
+                        "file": "ep0_compare_medius_samehub_fix2_r1.json",
+                        "ptr": "/results/28/wire/p50",
+                        "unit": "us"
+                      },
+                      {
+                        "file": "ep0_compare_medius_samehub_fix2_r2.json",
+                        "ptr": "/results/28/wire/p50",
+                        "unit": "us"
                       }
                     ]
                   }
@@ -10133,6 +10432,906 @@
                       {
                         "file": "passthrough_medius_samehub_fix2_r2.json",
                         "ptr": "/results/5/box_reports"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "measure",
+              "label": "Reports carrying only injected motion beside a mouse moving at a varying speed, in 30 s",
+              "key": "Moves sent",
+              "unit": "reports",
+              "better": "lower",
+              "layer": "evdev",
+              "n": "2 runs of 15 s, summed",
+              "commands": {
+                "stock": "km.move",
+                "medius": "MOVE"
+              },
+              "rows": [
+                {
+                  "id": "inj-box-only-sine-1000",
+                  "label": "1,000 moves a second",
+                  "stock": {
+                    "value": 5220,
+                    "src": [
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r1.json",
+                        "ptr": "/results/0/per_second/0/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r1.json",
+                        "ptr": "/results/0/per_second/1/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r1.json",
+                        "ptr": "/results/0/per_second/2/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r1.json",
+                        "ptr": "/results/0/per_second/3/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r1.json",
+                        "ptr": "/results/0/per_second/4/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r1.json",
+                        "ptr": "/results/0/per_second/5/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r1.json",
+                        "ptr": "/results/0/per_second/6/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r1.json",
+                        "ptr": "/results/0/per_second/7/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r1.json",
+                        "ptr": "/results/0/per_second/8/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r1.json",
+                        "ptr": "/results/0/per_second/9/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r1.json",
+                        "ptr": "/results/0/per_second/10/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r1.json",
+                        "ptr": "/results/0/per_second/11/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r1.json",
+                        "ptr": "/results/0/per_second/12/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r1.json",
+                        "ptr": "/results/0/per_second/13/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r1.json",
+                        "ptr": "/results/0/per_second/14/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r2.json",
+                        "ptr": "/results/0/per_second/0/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r2.json",
+                        "ptr": "/results/0/per_second/1/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r2.json",
+                        "ptr": "/results/0/per_second/2/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r2.json",
+                        "ptr": "/results/0/per_second/3/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r2.json",
+                        "ptr": "/results/0/per_second/4/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r2.json",
+                        "ptr": "/results/0/per_second/5/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r2.json",
+                        "ptr": "/results/0/per_second/6/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r2.json",
+                        "ptr": "/results/0/per_second/7/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r2.json",
+                        "ptr": "/results/0/per_second/8/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r2.json",
+                        "ptr": "/results/0/per_second/9/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r2.json",
+                        "ptr": "/results/0/per_second/10/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r2.json",
+                        "ptr": "/results/0/per_second/11/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r2.json",
+                        "ptr": "/results/0/per_second/12/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r2.json",
+                        "ptr": "/results/0/per_second/13/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r2.json",
+                        "ptr": "/results/0/per_second/14/box_only"
+                      }
+                    ]
+                  },
+                  "medius": {
+                    "value": 0,
+                    "src": [
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r1.json",
+                        "ptr": "/results/0/per_second/0/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r1.json",
+                        "ptr": "/results/0/per_second/1/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r1.json",
+                        "ptr": "/results/0/per_second/2/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r1.json",
+                        "ptr": "/results/0/per_second/3/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r1.json",
+                        "ptr": "/results/0/per_second/4/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r1.json",
+                        "ptr": "/results/0/per_second/5/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r1.json",
+                        "ptr": "/results/0/per_second/6/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r1.json",
+                        "ptr": "/results/0/per_second/7/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r1.json",
+                        "ptr": "/results/0/per_second/8/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r1.json",
+                        "ptr": "/results/0/per_second/9/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r1.json",
+                        "ptr": "/results/0/per_second/10/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r1.json",
+                        "ptr": "/results/0/per_second/11/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r1.json",
+                        "ptr": "/results/0/per_second/12/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r1.json",
+                        "ptr": "/results/0/per_second/13/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r1.json",
+                        "ptr": "/results/0/per_second/14/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r2.json",
+                        "ptr": "/results/0/per_second/0/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r2.json",
+                        "ptr": "/results/0/per_second/1/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r2.json",
+                        "ptr": "/results/0/per_second/2/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r2.json",
+                        "ptr": "/results/0/per_second/3/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r2.json",
+                        "ptr": "/results/0/per_second/4/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r2.json",
+                        "ptr": "/results/0/per_second/5/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r2.json",
+                        "ptr": "/results/0/per_second/6/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r2.json",
+                        "ptr": "/results/0/per_second/7/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r2.json",
+                        "ptr": "/results/0/per_second/8/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r2.json",
+                        "ptr": "/results/0/per_second/9/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r2.json",
+                        "ptr": "/results/0/per_second/10/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r2.json",
+                        "ptr": "/results/0/per_second/11/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r2.json",
+                        "ptr": "/results/0/per_second/12/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r2.json",
+                        "ptr": "/results/0/per_second/13/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r2.json",
+                        "ptr": "/results/0/per_second/14/box_only"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "inj-box-only-sine-500",
+                  "label": "500 moves a second",
+                  "stock": {
+                    "value": 3902,
+                    "src": [
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r1.json",
+                        "ptr": "/results/1/per_second/0/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r1.json",
+                        "ptr": "/results/1/per_second/1/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r1.json",
+                        "ptr": "/results/1/per_second/2/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r1.json",
+                        "ptr": "/results/1/per_second/3/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r1.json",
+                        "ptr": "/results/1/per_second/4/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r1.json",
+                        "ptr": "/results/1/per_second/5/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r1.json",
+                        "ptr": "/results/1/per_second/6/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r1.json",
+                        "ptr": "/results/1/per_second/7/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r1.json",
+                        "ptr": "/results/1/per_second/8/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r1.json",
+                        "ptr": "/results/1/per_second/9/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r1.json",
+                        "ptr": "/results/1/per_second/10/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r1.json",
+                        "ptr": "/results/1/per_second/11/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r1.json",
+                        "ptr": "/results/1/per_second/12/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r1.json",
+                        "ptr": "/results/1/per_second/13/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r1.json",
+                        "ptr": "/results/1/per_second/14/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r2.json",
+                        "ptr": "/results/1/per_second/0/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r2.json",
+                        "ptr": "/results/1/per_second/1/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r2.json",
+                        "ptr": "/results/1/per_second/2/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r2.json",
+                        "ptr": "/results/1/per_second/3/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r2.json",
+                        "ptr": "/results/1/per_second/4/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r2.json",
+                        "ptr": "/results/1/per_second/5/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r2.json",
+                        "ptr": "/results/1/per_second/6/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r2.json",
+                        "ptr": "/results/1/per_second/7/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r2.json",
+                        "ptr": "/results/1/per_second/8/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r2.json",
+                        "ptr": "/results/1/per_second/9/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r2.json",
+                        "ptr": "/results/1/per_second/10/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r2.json",
+                        "ptr": "/results/1/per_second/11/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r2.json",
+                        "ptr": "/results/1/per_second/12/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r2.json",
+                        "ptr": "/results/1/per_second/13/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r2.json",
+                        "ptr": "/results/1/per_second/14/box_only"
+                      }
+                    ]
+                  },
+                  "medius": {
+                    "value": 0,
+                    "src": [
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r1.json",
+                        "ptr": "/results/1/per_second/0/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r1.json",
+                        "ptr": "/results/1/per_second/1/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r1.json",
+                        "ptr": "/results/1/per_second/2/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r1.json",
+                        "ptr": "/results/1/per_second/3/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r1.json",
+                        "ptr": "/results/1/per_second/4/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r1.json",
+                        "ptr": "/results/1/per_second/5/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r1.json",
+                        "ptr": "/results/1/per_second/6/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r1.json",
+                        "ptr": "/results/1/per_second/7/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r1.json",
+                        "ptr": "/results/1/per_second/8/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r1.json",
+                        "ptr": "/results/1/per_second/9/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r1.json",
+                        "ptr": "/results/1/per_second/10/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r1.json",
+                        "ptr": "/results/1/per_second/11/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r1.json",
+                        "ptr": "/results/1/per_second/12/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r1.json",
+                        "ptr": "/results/1/per_second/13/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r1.json",
+                        "ptr": "/results/1/per_second/14/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r2.json",
+                        "ptr": "/results/1/per_second/0/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r2.json",
+                        "ptr": "/results/1/per_second/1/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r2.json",
+                        "ptr": "/results/1/per_second/2/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r2.json",
+                        "ptr": "/results/1/per_second/3/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r2.json",
+                        "ptr": "/results/1/per_second/4/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r2.json",
+                        "ptr": "/results/1/per_second/5/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r2.json",
+                        "ptr": "/results/1/per_second/6/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r2.json",
+                        "ptr": "/results/1/per_second/7/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r2.json",
+                        "ptr": "/results/1/per_second/8/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r2.json",
+                        "ptr": "/results/1/per_second/9/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r2.json",
+                        "ptr": "/results/1/per_second/10/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r2.json",
+                        "ptr": "/results/1/per_second/11/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r2.json",
+                        "ptr": "/results/1/per_second/12/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r2.json",
+                        "ptr": "/results/1/per_second/13/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r2.json",
+                        "ptr": "/results/1/per_second/14/box_only"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "inj-box-only-sine-125",
+                  "label": "125 moves a second",
+                  "stock": {
+                    "value": 1087,
+                    "src": [
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r1.json",
+                        "ptr": "/results/2/per_second/0/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r1.json",
+                        "ptr": "/results/2/per_second/1/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r1.json",
+                        "ptr": "/results/2/per_second/2/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r1.json",
+                        "ptr": "/results/2/per_second/3/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r1.json",
+                        "ptr": "/results/2/per_second/4/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r1.json",
+                        "ptr": "/results/2/per_second/5/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r1.json",
+                        "ptr": "/results/2/per_second/6/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r1.json",
+                        "ptr": "/results/2/per_second/7/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r1.json",
+                        "ptr": "/results/2/per_second/8/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r1.json",
+                        "ptr": "/results/2/per_second/9/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r1.json",
+                        "ptr": "/results/2/per_second/10/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r1.json",
+                        "ptr": "/results/2/per_second/11/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r1.json",
+                        "ptr": "/results/2/per_second/12/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r1.json",
+                        "ptr": "/results/2/per_second/13/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r1.json",
+                        "ptr": "/results/2/per_second/14/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r2.json",
+                        "ptr": "/results/2/per_second/0/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r2.json",
+                        "ptr": "/results/2/per_second/1/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r2.json",
+                        "ptr": "/results/2/per_second/2/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r2.json",
+                        "ptr": "/results/2/per_second/3/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r2.json",
+                        "ptr": "/results/2/per_second/4/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r2.json",
+                        "ptr": "/results/2/per_second/5/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r2.json",
+                        "ptr": "/results/2/per_second/6/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r2.json",
+                        "ptr": "/results/2/per_second/7/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r2.json",
+                        "ptr": "/results/2/per_second/8/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r2.json",
+                        "ptr": "/results/2/per_second/9/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r2.json",
+                        "ptr": "/results/2/per_second/10/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r2.json",
+                        "ptr": "/results/2/per_second/11/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r2.json",
+                        "ptr": "/results/2/per_second/12/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r2.json",
+                        "ptr": "/results/2/per_second/13/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_r2.json",
+                        "ptr": "/results/2/per_second/14/box_only"
+                      }
+                    ]
+                  },
+                  "medius": {
+                    "value": 0,
+                    "src": [
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r1.json",
+                        "ptr": "/results/2/per_second/0/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r1.json",
+                        "ptr": "/results/2/per_second/1/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r1.json",
+                        "ptr": "/results/2/per_second/2/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r1.json",
+                        "ptr": "/results/2/per_second/3/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r1.json",
+                        "ptr": "/results/2/per_second/4/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r1.json",
+                        "ptr": "/results/2/per_second/5/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r1.json",
+                        "ptr": "/results/2/per_second/6/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r1.json",
+                        "ptr": "/results/2/per_second/7/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r1.json",
+                        "ptr": "/results/2/per_second/8/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r1.json",
+                        "ptr": "/results/2/per_second/9/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r1.json",
+                        "ptr": "/results/2/per_second/10/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r1.json",
+                        "ptr": "/results/2/per_second/11/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r1.json",
+                        "ptr": "/results/2/per_second/12/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r1.json",
+                        "ptr": "/results/2/per_second/13/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r1.json",
+                        "ptr": "/results/2/per_second/14/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r2.json",
+                        "ptr": "/results/2/per_second/0/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r2.json",
+                        "ptr": "/results/2/per_second/1/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r2.json",
+                        "ptr": "/results/2/per_second/2/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r2.json",
+                        "ptr": "/results/2/per_second/3/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r2.json",
+                        "ptr": "/results/2/per_second/4/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r2.json",
+                        "ptr": "/results/2/per_second/5/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r2.json",
+                        "ptr": "/results/2/per_second/6/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r2.json",
+                        "ptr": "/results/2/per_second/7/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r2.json",
+                        "ptr": "/results/2/per_second/8/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r2.json",
+                        "ptr": "/results/2/per_second/9/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r2.json",
+                        "ptr": "/results/2/per_second/10/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r2.json",
+                        "ptr": "/results/2/per_second/11/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r2.json",
+                        "ptr": "/results/2/per_second/12/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r2.json",
+                        "ptr": "/results/2/per_second/13/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_r2.json",
+                        "ptr": "/results/2/per_second/14/box_only"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "measure",
+              "label": "Reports carrying only injected motion beside a mouse moving at a varying speed, in 5 s",
+              "key": "Moves sent",
+              "unit": "reports",
+              "better": "lower",
+              "layer": "evdev",
+              "n": "One 5 s run",
+              "commands": {
+                "stock": "km.move",
+                "medius": "MOVE"
+              },
+              "rows": [
+                {
+                  "id": "inj-box-only-slow-30",
+                  "label": "30 moves a second",
+                  "stock": {
+                    "value": 11,
+                    "src": [
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_slow.json",
+                        "ptr": "/results/1/per_second/0/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_slow.json",
+                        "ptr": "/results/1/per_second/1/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_slow.json",
+                        "ptr": "/results/1/per_second/2/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_slow.json",
+                        "ptr": "/results/1/per_second/3/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_slow.json",
+                        "ptr": "/results/1/per_second/4/box_only"
+                      }
+                    ]
+                  },
+                  "medius": {
+                    "value": 0,
+                    "src": [
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_slow.json",
+                        "ptr": "/results/1/per_second/0/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_slow.json",
+                        "ptr": "/results/1/per_second/1/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_slow.json",
+                        "ptr": "/results/1/per_second/2/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_slow.json",
+                        "ptr": "/results/1/per_second/3/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_slow.json",
+                        "ptr": "/results/1/per_second/4/box_only"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "inj-box-only-slow-10",
+                  "label": "10 moves a second",
+                  "stock": {
+                    "value": 0,
+                    "src": [
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_slow.json",
+                        "ptr": "/results/0/per_second/0/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_slow.json",
+                        "ptr": "/results/0/per_second/1/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_slow.json",
+                        "ptr": "/results/0/per_second/2/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_slow.json",
+                        "ptr": "/results/0/per_second/3/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_stock_samehub_sine_slow.json",
+                        "ptr": "/results/0/per_second/4/box_only"
+                      }
+                    ]
+                  },
+                  "medius": {
+                    "value": 0,
+                    "src": [
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_slow.json",
+                        "ptr": "/results/0/per_second/0/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_slow.json",
+                        "ptr": "/results/0/per_second/1/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_slow.json",
+                        "ptr": "/results/0/per_second/2/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_slow.json",
+                        "ptr": "/results/0/per_second/3/box_only"
+                      },
+                      {
+                        "file": "inject_native_rate_medius_samehub_fix2_sine_slow.json",
+                        "ptr": "/results/0/per_second/4/box_only"
                       }
                     ]
                   }
@@ -19967,18 +21166,6 @@
     }
   ],
   "pending": [
-    {
-      "id": "devices-ep0-reply-time",
-      "category": "devices",
-      "test": "Endpoint 0 reply time of each clone, against the native reply time",
-      "needs": "ep0_compare.py on both boxes, and the device's reply time from a sniffer on USB3, same hub"
-    },
-    {
-      "id": "inj-box-reports",
-      "test": "Reports carrying only injected motion, beside a mouse moving at a varying speed",
-      "needs": "A count of the reports carrying only injected motion beside a mouse moving at a varying speed, at 10 to 1,000 moves a second. inject_native_rate.py counts only the native reports read",
-      "category": "injection"
-    },
     {
       "id": "software-forwarding-latency",
       "test": "Moves sent through the MAKCU Toolkit in Forwarding mode, on by default, against moves sent straight to Medius",
