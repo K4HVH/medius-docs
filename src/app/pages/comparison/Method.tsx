@@ -27,12 +27,6 @@ const RIG = `+-------------------------+
 
 const LAYER: Record<string, string> = { wire: 'Wire', host: 'Host', evdev: 'evdev', hidraw: 'hidraw' };
 
-// The pending tests by area, in page order.
-const pendingByArea = () =>
-  COMPARISON_PAGES.filter((p) => p.categories.length)
-    .map((p) => ({ page: p, tests: RESULTS.pending.filter((x) => p.categories.includes(x.category)) }))
-    .filter((a) => a.tests.length);
-
 const Method: Component = () => (
   <>
     <PageHeader>
@@ -82,7 +76,6 @@ const Method: Component = () => (
             <tr><td>Equal</td><td>The two ranges overlap, or the outcomes match</td></tr>
             <tr><td>Differs</td><td>The boxes behave differently, and neither is better or no test shows which is faithful</td></tr>
             <tr><td>Defect</td><td>A fault that reproduces, marked on its row and listed on the Overview</td></tr>
-            <tr><td>Pending</td><td>A test not yet run the same way on both boxes. Listed below, not compared</td></tr>
           </tbody>
         </table>
       </div>
@@ -107,19 +100,6 @@ const Method: Component = () => (
           </tbody>
         </table>
       </div>
-    </DocSection>
-
-    <DocSection id="pending" title="Pending tests">
-      <For each={pendingByArea()}>
-        {(a) => (
-          <>
-            <p class="api-response-label">{routeFor(a.page.path)!.title}</p>
-            <ul>
-              <For each={a.tests}>{(x) => <li>{x.test}</li>}</For>
-            </ul>
-          </>
-        )}
-      </For>
     </DocSection>
 
     <DocSection id="data" title="Data">
