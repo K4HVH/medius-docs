@@ -7,7 +7,8 @@ import type { Component } from 'solid-js';
 import { RESULTS, categoryOf, placeOf } from '../../src/app/data/comparison';
 import { COMPARISON_PAGES, KEY_ROWS, pageOfCategory } from '../../src/app/data/comparison/pages';
 import { comparisonFiles } from '../../src/app/data/comparison/files';
-import { routeFor } from '../../src/app/routes';
+import { addressFor, routeFor } from '../../src/app/routes';
+import { holdsLink } from '../../src/app/shell/CopyLink';
 import Overview from '../../src/app/pages/comparison/Overview';
 import Devices from '../../src/app/pages/comparison/Devices';
 import Passthrough from '../../src/app/pages/comparison/Passthrough';
@@ -97,11 +98,23 @@ describe('Overview', () => {
     }
   });
 
-  it('lists every defect with a link to the section that shows it, and None found for a box with none', () => {
+  it('gives every defect its own place, which the defect marks on its rows link to', () => {
+    const page = show(Overview);
+    for (const d of RESULTS.defects) {
+      const id = `defect-${d.id}`;
+      const row = page.querySelector(`section#defects tr[id="${id}"]`)!;
+      expect(row.hasAttribute('data-search-target')).toBe(true);
+      expect(row.getAttribute('data-search-title')).toBe(d.text);
+      expect(holdsLink(page, id)).toBe(true);
+      expect(addressFor(`/comparison/${id}`)).toMatchObject({ kind: 'place', parent: '/comparison', id });
+    }
+  });
+
+  it('lists every defect with a link to the section of its first row, and None found for a box with none', () => {
     const rows = [...show(Overview).querySelectorAll('section#defects tbody tr')];
     for (const d of RESULTS.defects) {
       const row = rows.find((r) => r.textContent!.includes(d.text))!;
-      const at = placeOf(d.row)!;
+      const at = placeOf(d.rows[0])!;
       expect(row.querySelector('a')!.getAttribute('href')).toBe(`${pageOfCategory(at.category.id)!.path}/${at.section.id}`);
     }
     for (const box of ['Stock', 'Medius'])

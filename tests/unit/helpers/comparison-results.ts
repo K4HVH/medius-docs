@@ -122,6 +122,6 @@ export const GOOD = {
       ],
     },
   ],
-  defects: [{ id: 'fresh-clone', box: 'stock', text: 'No injection until the device has reported.', row: 'move-cold' }],
+  defects: [{ id: 'fresh-clone', box: 'stock', text: 'No injection until the device has reported.', rows: ['move-cold'] }],
   pending: [{ id: 'raw-move', category: 'injection', test: 'Stock RAW_MOVE', needs: 'A run on the stock box' }],
 };

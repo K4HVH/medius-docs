@@ -22,7 +22,10 @@ describe('comparisonFiles', () => {
     for (const page of COMPARISON_PAGES.filter((p) => p.categories.length)) {
       const file = JSON.parse(files.get(`${page.path}.json`)!);
       expect(file.categories.map((c: { id: string }) => c.id)).toEqual(page.categories);
-      expect(file.defects).toEqual(RESULTS.defects.filter((d) => page.categories.includes(placeOf(d.row)!.category.id)));
+      const mine = (r: string) => page.categories.includes(placeOf(r)!.category.id);
+      expect(file.defects).toEqual(
+        RESULTS.defects.filter((d) => d.rows.some(mine)).map((d) => ({ ...d, rows: d.rows.filter(mine) })),
+      );
       expect(file.pending).toEqual(RESULTS.pending.filter((p) => page.categories.includes(p.category)));
       expect(file.firmware).toEqual(RESULTS.firmware);
       expect(file.rig).toBe(RESULTS.rig);

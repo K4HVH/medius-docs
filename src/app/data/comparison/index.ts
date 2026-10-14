@@ -1,6 +1,6 @@
 // The comparison's results, copied from medius-fw and checked by `bun run comparison:sync`.
 import raw from './results.json';
-import type { Category, PairRow, Results, Section, SettingsTable, Table } from './types';
+import type { Category, Defect, PairRow, Results, Section, SettingsTable, Table } from './types';
 
 export const RESULTS = raw as unknown as Results;
 
@@ -20,3 +20,7 @@ for (const category of RESULTS.categories)
 export const categoryOf = (id: string): Category | undefined => categories.get(id);
 // A row of a stock-against-Medius table, with where it sits.
 export const placeOf = (id: string): Place | undefined => rows.get(id);
+
+// A defect's place in Overview's list, and its address.
+export const defectPlace = (d: Defect): string => `defect-${d.id}`;
+export const defectAddress = (d: Defect): string => `/comparison/${defectPlace(d)}`;

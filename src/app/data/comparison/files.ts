@@ -19,7 +19,10 @@ export function comparisonFiles(): Map<string, string> {
         rig,
         layers,
         categories: RESULTS.categories.filter((c) => p.categories.includes(c.id)),
-        defects: RESULTS.defects.filter((d) => p.categories.includes(placeOf(d.row)?.category.id ?? '')),
+        // A defect on rows across pages goes in each page's file with that page's rows, so the file checks.
+        defects: RESULTS.defects
+          .map((d) => ({ ...d, rows: d.rows.filter((r) => p.categories.includes(placeOf(r)?.category.id ?? '')) }))
+          .filter((d) => d.rows.length),
         pending: RESULTS.pending.filter((x) => p.categories.includes(x.category)),
       }),
     );

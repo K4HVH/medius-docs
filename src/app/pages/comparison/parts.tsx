@@ -2,7 +2,7 @@ import { For, Show, type JSX } from 'solid-js';
 import { A } from '@solidjs/router';
 import { PageHeader } from '../../shell/PageHeader';
 import { DocSection } from '../../shell/DocSection';
-import { RESULTS, categoryOf } from '../../data/comparison';
+import { RESULTS, categoryOf, defectAddress } from '../../data/comparison';
 import { pageFor } from '../../data/comparison/pages';
 import { resultOf, showValue, span, type Result } from '../../data/comparison/result';
 import type { Box, Defect, FeatureRow, MeasureRow, OutcomeRow, PairRow, Section, SettingsTable, Table, Value } from '../../data/comparison/types';
@@ -132,9 +132,9 @@ export const PairTable = (props: { key: string; commands?: Record<Box, string>; 
                     <Show when={ranked()}>
                       <td class="res">
                         <Show when={result}>{(r) => <span class={`status ${r()}`}>{RESULT[r()]}</span>}</Show>
-                        <For each={props.defects.filter((d) => d.row === item.row.id)}>
+                        <For each={props.defects.filter((d) => d.rows.includes(item.row.id))}>
                           {(d) => (
-                            <A class="status bad" href="/comparison/defects" aria-label={`${BOX[d.box]} defect: ${d.text}`}>
+                            <A class="status bad" href={defectAddress(d)} aria-label={`${BOX[d.box]} defect: ${d.text}`}>
                               {`${BOX[d.box]} defect`}
                             </A>
                           )}
