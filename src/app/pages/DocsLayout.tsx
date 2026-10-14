@@ -1,5 +1,5 @@
 import { createSignal, createEffect, createMemo, on, onCleanup, onMount } from 'solid-js';
-import { type RouteSectionProps, useBeforeLeave, useLocation, useNavigate, usePreloadRoute } from '@solidjs/router';
+import { type RouteSectionProps, useBeforeLeave, useIsRouting, useLocation, useNavigate, usePreloadRoute } from '@solidjs/router';
 import { Search } from '../shell/Search';
 import { highlighter, loadHighlighter } from '../highlight';
 import { openedByHistory, openingAt, settleAt } from '../shell/scrollPlace';
@@ -26,6 +26,7 @@ const DocsLayout = (props: RouteSectionProps) => {
   const [closeKey, setCloseKey] = createSignal(0);
   const navigate = useNavigate();
   const location = useLocation();
+  const routing = useIsRouting();
   const native = useNativeFlash();
   const boxes = useBoxes();
   const flashing = native.running;
@@ -37,7 +38,8 @@ const DocsLayout = (props: RouteSectionProps) => {
   let footer: HTMLElement | undefined;
 
   // 'auto' glides by the page's CSS, which reduced motion turns off; a new page lands with 'instant'.
-  // The outline marks a search result or a deep link, not a section the reader moved to themselves.
+  // The ring marks a search result, a deep link or a link in the page, not a section the reader picked from
+  // the rail.
   let highlightNext: string | null = null;
   // A target that comes with fetched content (a device the stats add, a release), or is drawn anew when
   // more arrives, is landed on again, for up to 10 s and until the reader scrolls, types or presses
@@ -66,22 +68,30 @@ const DocsLayout = (props: RouteSectionProps) => {
     }
     if (!el) return;
     showAddress(id, el);
+    // The place shows at once, settled: an arrival still under way around it (a table rising with its rows)
+    // would have it set short of the bar once the block came to rest.
+    for (let p: HTMLElement | null = el; p && p !== main; p = p.parentElement) p.classList.remove('moving');
     el.scrollIntoView({ behavior, block: 'start' });
     if (!highlight) return;
-    // The block the reader asked for shows at once, with its ring rather than an arrival.
-    el.classList.remove('moving');
     el.classList.add('search-highlight');
-    setTimeout(() => el.classList.remove('search-highlight'), 2000);
+    setTimeout(() => el.classList.remove('search-highlight'), 3000);
   };
   const has = (id: string) => !!document.getElementById(id);
   // A hash that lands on a place or an item: the address bar shows its address instead (shell/share.ts), in
   // the same history entry, so the address the reader copies from it has a card naming it. A section that
   // opens the page keeps the hash, which is where it already is.
+  // It is written once the router has finished the navigation under way: inside it, the router merges the two
+  // and keeps the first one's options, so a link's scroll to its hash became a scroll to the top of an address
+  // with no hash.
   const showAddress = (id: string, el: HTMLElement) => {
     if (landingId('', location.hash) !== id) return;
     const to = shareAddress(el, id, location.pathname);
     if (to.includes('#') || to === pagePath(location.pathname)) return;
-    queueMicrotask(() => navigate(to + location.search, { replace: true, scroll: false }));
+    const write = () => {
+      if (routing()) return void setTimeout(write, 16);
+      if (landingId('', location.hash) === id) navigate(to + location.search, { replace: true, scroll: false });
+    };
+    queueMicrotask(write);
   };
 
   const handleSearchNavigate = (fullPath: string) => {
@@ -96,22 +106,35 @@ const DocsLayout = (props: RouteSectionProps) => {
   };
 
   // A link to a place on the page shown goes there without the router, which scrolls to the top after any
-  // address with no hash, after the page has moved to the place, and ignores the address already shown.
+  // address with no hash, after the page has moved to the place, and ignores the address already shown. A
+  // hash link is the router's to follow; the place it goes to is ringed, as one a path names.
   onMount(() => {
     const toPlace = (e: MouseEvent) => {
       if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
       const a = e.target instanceof Element ? e.target.closest<HTMLAnchorElement>('a[href]') : null;
-      if (!a || a.target || a.hasAttribute('download') || a.origin !== window.location.origin || a.hash) return;
+      if (!a || a.target || a.hasAttribute('download') || a.origin !== window.location.origin) return;
       if (pagePath(a.pathname) !== pagePath(location.pathname)) return;
-      if (a.pathname !== location.pathname) {
+      if (a.hash) {
+        const id = landingId('', a.hash);
+        if (!id) return;
+        if (a.hash !== location.hash || a.pathname !== location.pathname) {
+          highlightNext = id;
+          return;
+        }
         e.preventDefault();
-        navigate(a.pathname + a.search, { scroll: false });
+        scrollToTarget(id, 'auto', true);
         return;
       }
       const target = landingId(a.pathname, '', has);
+      if (a.pathname !== location.pathname) {
+        e.preventDefault();
+        highlightNext = target || null;
+        navigate(a.pathname + a.search, { scroll: false });
+        return;
+      }
       if (!target) return;
       e.preventDefault();
-      scrollToTarget(target, 'auto', false);
+      scrollToTarget(target, 'auto', true);
     };
     main?.addEventListener('click', toPlace);
     onCleanup(() => main?.removeEventListener('click', toPlace));
