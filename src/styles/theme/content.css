@@ -109,12 +109,24 @@ pre code[class*='language-'] { font: inherit; color: #bdbdbd; }
 .token.punctuation, .token.operator, .token.entity { color: #9a9a9a; }
 .token.comment, .token.prolog, .token.doctype, .token.cdata { color: #6e798a; font-style: italic; }
 
-/* A section a search result or a hash link lands on: a blue outline that fades. */
+/* A place a search result or a link lands on: a blue outline that holds, then fades. A table row lights from
+   within instead, its first cell barred as on hover: an outline outside the row is cut by the table's scroll
+   box. Reduced motion stops the fade, and the mark goes when the class does (DocsLayout). */
 @keyframes search-highlight-ring {
-  0%, 40% { outline-color: var(--accent); }
+  0%, 55% { outline-color: var(--accent); }
   100% { outline-color: transparent; }
 }
-.search-highlight { outline: 1px solid transparent; outline-offset: 8px; animation: search-highlight-ring 2s var(--ease) forwards; }
+@keyframes search-highlight-row {
+  0%, 55% { background-color: color-mix(in srgb, var(--accent) 16%, transparent); }
+  100% { background-color: transparent; }
+}
+@keyframes search-highlight-bar {
+  0%, 55% { box-shadow: inset 2px 0 var(--accent); }
+  100% { box-shadow: inset 2px 0 transparent; }
+}
+.search-highlight { outline: 1px solid var(--accent); outline-offset: 8px; animation: search-highlight-ring 3s var(--ease) forwards; }
+tr.search-highlight { outline: none; background-color: color-mix(in srgb, var(--accent) 16%, transparent); animation-name: search-highlight-row; }
+tr.search-highlight > td:first-child { box-shadow: inset 2px 0 var(--accent); animation: search-highlight-bar 3s var(--ease) forwards; }
 
 /* Index rows inside a docs page sit under the section heading like its content. */
 .doc-section > .go:first-of-type { margin-top: 18px; }
@@ -274,7 +286,7 @@ a.fix .arr { width: 11px; height: 11px; margin: 0; }
 
 /* Help: a question and its answer side by side; a rule between rows, none over a group's first. */
 .qas { margin-top: 6px; }
-.qa { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 8px 40px; padding: 18px 0; border-top: 1px solid var(--line); scroll-margin-top: calc(var(--nav-h) + 24px); }
+.qa { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 8px 40px; padding: 18px 0; border-top: 1px solid var(--line); }
 .qa.first { border-top: 0; }
 .doc .qa h3 { margin: 0; font: 600 17px/1.4 var(--sans); letter-spacing: -0.01em; color: var(--text); }
 .doc .qa p { margin: 0; color: var(--text-2); }
@@ -342,6 +354,11 @@ a.status:hover { color: var(--text); }
   .api-params.pair th:first-child { width: 36%; }
   .api-params.pair th.res { width: 132px; }
   .api-params.pair td:first-child { overflow-wrap: break-word; }
+  /* The settings table: the box narrow, the setting beside it, and its measures sharing the rest, their names
+     wrapped over their values. */
+  .api-params.pair.settings th:first-child { width: 96px; }
+  .api-params.pair.settings th:nth-child(2) { width: 24%; }
+  .api-params.pair.settings th { white-space: normal; line-height: 1.45; vertical-align: bottom; }
 }
 /* A value and its bar: the number at the left like any other value, and the bar under it, starting at the
    cell's edge, so bars in one column compare. */
@@ -372,6 +389,9 @@ a.status:hover { color: var(--text); }
   .pair-cmds { display: block; }
   .api-params.stacked tbody tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 12px; padding: 12px 14px; border-bottom: 1px solid var(--line); }
   .api-params.stacked tbody tr:last-child { border-bottom: 0; }
+  /* A stacked row lands lit as one card, its bar down the card's edge. */
+  .stacked tr.search-highlight { box-shadow: inset 2px 0 var(--accent); animation: search-highlight-row 3s var(--ease) forwards, search-highlight-bar 3s var(--ease) forwards; }
+  .stacked tr.search-highlight > td:first-child { box-shadow: none; animation: none; }
   .api-params.stacked td { width: auto; min-width: 0; padding: 0; border: 0; }
   .api-params.stacked td:first-child { grid-column: 1; }
   .api-params.stacked td:not(:first-child):not([data-label]) { grid-column: 2; grid-row: 1; justify-self: end; }

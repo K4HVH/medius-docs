@@ -66,9 +66,10 @@ const world = (opts: { supported?: boolean; kind?: 'medius' | 'other' | null } =
 const Sections = () => (
   <>
     <section class="doc-section" id="transport" data-search-target><h2 class="doc-h2">Transport</h2><p>opening</p></section>
-    <section class="doc-section" id="intro"><h2 class="doc-h2">Intro</h2><p>first <A href="/native/transport/later">later</A></p></section>
+    <section class="doc-section" id="intro"><h2 class="doc-h2">Intro</h2><p>first <A href="/native/transport/later">later</A> <a href="#frames">frames</a></p></section>
     <section class="doc-section" id="frames" data-search-target><h2 class="doc-h2">Frames</h2><p>target</p></section>
     <section class="doc-section" id="later" data-search-target><h2 class="doc-h2">Later</h2><p>below</p></section>
+    <section class="doc-section" id="list"><h2 class="doc-h2">List</h2><div class="table-scroll"><table><tbody><tr><td>a</td></tr><tr id="row-b" data-search-target data-search-title="Row B"><td>b</td></tr></tbody></table></div></section>
   </>
 );
 
@@ -593,6 +594,18 @@ describe('DocsLayout scrolling', () => {
     expect(jumped).toBe(first);
   });
 
+  it('lands on a place inside a block still arriving at its settled place, with no arrival left around it', async () => {
+    const at: (string | null)[] = [];
+    vi.spyOn(Element.prototype, 'scrollIntoView').mockImplementation(function (this: Element) {
+      jumped = this;
+      at.push(this.closest('.moving')?.className ?? null);
+    });
+    const r = mount('/native/transport/row-b');
+    await waitFor(() => expect(jumped).toBe(r.container.querySelector('#row-b')));
+    expect(at).toEqual([null]);
+    expect(r.container.querySelector('#row-b')!.classList.contains('search-highlight')).toBe(true);
+  });
+
   it("lands on an item's address as on its hash, ringed", async () => {
     const r = mount('/guide/help/frames');
     await waitFor(() => expect(jumped).toBe(r.container.querySelector('#frames')));
@@ -662,6 +675,36 @@ describe('DocsLayout scrolling', () => {
     log.length = 0;
     fireEvent.click(r.container.querySelector('#intro a')!);
     await waitFor(() => expect(log).toEqual(['later']));
+  });
+
+  it('stays on a place the rail goes to once its address is written, never sent to the top after', async () => {
+    const r = mount('/native/transport');
+    await waitFor(() => expect(r.container.querySelector('aside.toc a[href="#later"]')).not.toBeNull());
+    const log: string[] = [];
+    vi.spyOn(window, 'scrollTo').mockImplementation(() => log.push('top'));
+    vi.spyOn(Element.prototype, 'scrollIntoView').mockImplementation(function (this: Element) {
+      jumped = this;
+      log.push(this.id);
+    });
+    // A bare hash link resolves against the document's address, which is the page's in a browser.
+    window.history.replaceState(null, '', '/native/transport');
+    fireEvent.click(r.container.querySelector('aside.toc a[href="#later"]')!);
+    await waitFor(() => expect(r.history.get()).toBe('/native/transport/later'));
+    await new Promise((done) => setTimeout(done, 50));
+    expect(log).toContain('later');
+    expect(log.at(-1)).toBe('later');
+    expect(r.container.querySelector('#later')!.classList.contains('search-highlight')).toBe(false);
+  });
+
+  it('rings the place a link in the page goes to, by its address or its hash', async () => {
+    const r = mount('/native/transport');
+    await waitFor(() => expect(r.container.querySelector('#later')).not.toBeNull());
+    fireEvent.click(r.container.querySelector('#intro a[href="/native/transport/later"]')!);
+    await waitFor(() => expect(r.container.querySelector('#later')!.classList.contains('search-highlight')).toBe(true));
+    window.history.replaceState(null, '', r.history.get());
+    fireEvent.click(r.container.querySelector('#intro a[href="#frames"]')!);
+    await waitFor(() => expect(r.container.querySelector('#frames')!.classList.contains('search-highlight')).toBe(true));
+    await waitFor(() => expect(r.history.get()).toBe('/native/transport/frames'));
   });
 
   it("names an item's parent in the page bar and marks it in the sidebar", async () => {
