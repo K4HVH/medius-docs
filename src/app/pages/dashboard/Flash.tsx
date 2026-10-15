@@ -79,7 +79,7 @@ const ManualFlash = () => {
   const [err, setErr] = createSignal<string | null>(null);
   // Apart from `err`, so a chip switch clears the flash failure but keeps the file refusal.
   const [fileErr, setFileErr] = createSignal<string | null>(null);
-  // FileUpload calls onError THEN onChange for one selection (a mixed drop included), so onFiles
+  // FileUpload calls onError, then onChange, for one selection (a mixed drop included), so onFiles
   // must not clear that rejection.
   let rejectedThisPick = false;
 
@@ -133,7 +133,7 @@ const ManualFlash = () => {
         setImage(new Uint8Array(b));
       })
       .catch(() => {
-        // `pick` doesn't move with SOURCE, so a slow read can land after the upload path, with no
+        // `pick` doesn't move with Source, so a slow read can land after the upload path, with no
         // picker left to point at.
         if (mine !== pick || source() !== 'upload') return;
         setImage(null);
@@ -197,7 +197,7 @@ const ManualFlash = () => {
     anyway = null;
     setBusy(true);
     try {
-      // ROM download over each chip's native USB: device chip on USB1, host chip on USB3, entered by
+      // ROM download over each chip's USB port: device chip on USB1, host chip on USB3, entered by
       // holding the button beside that socket while plugging in.
       const port = await requestRomPort();
       const cat = target.source === 'stock' ? stockBuild() : null;

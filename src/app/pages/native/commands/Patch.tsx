@@ -10,8 +10,8 @@ const Patch: Component = () => {
       <PageHeader>
         <p>
           <A href="/native/commands/patch#patch"><code>PATCH</code></A> stores byte overwrites for the
-          descriptors the clone serves at enumeration. The set persists in NVS under the device's
-          VID:PID, and the clone serves the copy taken at its last{' '}
+          descriptors the clone serves at enumeration. The set persists in NVS under the real
+          device's VID:PID, and the clone serves the copy taken at its last{' '}
           <A href="/native/commands/patch#presentation">presentation</A>.
         </p>
         <pre class="diagram">{`  real device --USB3--> HOST chip
@@ -213,7 +213,7 @@ const Patch: Component = () => {
       <DocSection id="clear" title="CLEAR" caption="Erase the set and present the clone without it">
         <p>
           CLEAR is a <code>PATCH</code> frame with <code>section</code> <code>0xFF</code>.
-          It runs with the opt-in off and with the device unplugged.
+          It runs with the opt-in off and with the real device unplugged.
         </p>
         <pre class="api-signature">PATCH  0x1D  ·  payload 1 byte</pre>
         <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
@@ -242,7 +242,7 @@ const Patch: Component = () => {
         </div>
         <p>
           Either way <A href="/native/commands/requests#patches"><code>RESP(PATCHES)</code></A> then
-          reads with <code>REFUSED</code> and <code>FULL</code> clear. With the device unplugged,
+          reads with <code>REFUSED</code> and <code>FULL</code> clear. With the real device unplugged,
           CLEAR erases the key of the last device attached since boot, or nothing after a boot with
           none attached.
         </p>
@@ -281,7 +281,7 @@ const Patch: Component = () => {
               <tr><th>Event</th><th>Presents when</th><th>Serves</th></tr>
             </thead>
             <tbody>
-              <tr><td>the device attaches</td><td>always</td><td>the stored set, under the opt-in</td></tr>
+              <tr><td>the real device attaches</td><td>always</td><td>the stored set, under the opt-in</td></tr>
               <tr><td><A href="/native/commands/patch#apply">APPLY</A></td><td>the stored set differs from the served one</td><td>the stored set, or none when it is empty</td></tr>
               <tr><td><A href="/native/commands/patch#clear">CLEAR</A></td><td>the clone serves patches</td><td>none</td></tr>
               <tr><td>the <A href="/native/commands/patch#gate">opt-in</A> turned on</td><td>the stored set differs from the served one and is not <A href="/native/commands/patch#ladder">refused</A></td><td>the stored set</td></tr>
@@ -295,7 +295,7 @@ const Patch: Component = () => {
         </p>
         <div class="callout callout--info">
           <p>
-            A presentation re-clones the device, as a replug does. It releases{' '}
+            A presentation re-clones the real device, as a replug does. It releases{' '}
             <A href="/native/injection#state">injection</A>,{' '}
             <A href="/native/commands/lock">locks</A>,{' '}
             <A href="/native/commands/transform">transforms</A>,{' '}
@@ -338,7 +338,7 @@ const Patch: Component = () => {
         <div class="callout callout--info">
           <p>
             A CONFIG patch to <code>bInterval</code> is served as written, while the box keeps
-            polling the device at the rate{' '}
+            polling the real device at the rate{' '}
             <A href="/native/commands/option#emit"><code>OPTION(EMIT)</code></A> forces.
           </p>
         </div>
@@ -346,7 +346,7 @@ const Patch: Component = () => {
 
       <DocSection id="ladder" title="Checks" caption="What a patched clone must pass">
         <p>
-          A set that fails a check the device passes without it is refused: the clone is presented
+          A set that fails a check the real device passes without it is refused: the clone is presented
           unpatched and one <A href="/native/commands/admin#log"><code>LOG</code></A> line names the
           check. A device that fails without the set is refused as any device is.
         </p>
@@ -436,7 +436,7 @@ RESET       a RESET carrying the NVS flag: the whole store`}</pre>
               <tr><th>Event</th><th>Effect</th></tr>
             </thead>
             <tbody>
-              <tr><td>the device detaches</td><td>the clone, <code>PATCH_ON</code> and <code>REFUSED</code> go; the set stays stored and readable until another device attaches</td></tr>
+              <tr><td>the real device detaches</td><td>the clone, <code>PATCH_ON</code> and <code>REFUSED</code> go; the set stays stored and readable until another device attaches</td></tr>
               <tr><td>another device attaches</td><td>that device's set loads in its place, cloned or refused</td></tr>
             </tbody>
           </table>

@@ -45,7 +45,7 @@ const Api: Component = () => {
             <tbody>
               <tr><td><code>medius.list_boxes(cap=16)</code></td><td>Enumerate every connected box as a <A href="/bindings/python/types#boxinfo"><code>BoxInfo</code></A>, reading each box's version and, on this protocol, its device info; <code>device</code> is <code>None</code> for a box on another protocol.</td></tr>
               <tr><td><code>Device.open_by_id(id)</code></td><td>Open the box whose identity matches <code>id</code> (device MAC hex or CH343 serial) and handshake. Raises <code>BadProtoVerError</code> when that box speaks another protocol, <code>NotFoundError</code> when no box matches.</td></tr>
-              <tr><td><code>Device.find_mouse_box()</code></td><td>Open the first box whose clone is a mouse. With none, a connected box on another protocol raises <code>BadProtoVerError</code>, since its clone is unread.</td></tr>
+              <tr><td><code>Device.find_mouse_box()</code></td><td>Open the first box whose clone is a mouse. With none, raises <code>BadProtoVerError</code> when a connected box is on another protocol, since its clone is unread.</td></tr>
               <tr><td><code>Device.find_keyboard_box()</code></td><td>Open the first box whose clone is a keyboard, with the same errors.</td></tr>
             </tbody>
           </table>
@@ -58,7 +58,7 @@ const Api: Component = () => {
           <table class="api-params">
             <thead><tr><th>Call</th><th>Does</th></tr></thead>
             <tbody>
-              <tr><td><code>dev.move_rel(dx, dy)</code></td><td>Nudge the cursor by a signed 16-bit delta.</td></tr>
+              <tr><td><code>dev.move_rel(dx, dy)</code></td><td>Move the cursor by a signed 16-bit delta.</td></tr>
               <tr><td><code>dev.wheel(delta)</code></td><td>Scroll the wheel.</td></tr>
               <tr><td><code>dev.move_rel_now(dx, dy)</code></td><td>The same, bypassing <A href="/library/options#set-movement-riding">movement riding</A>.</td></tr>
               <tr><td><code>dev.wheel_now(delta)</code></td><td>Scroll, bypassing movement riding.</td></tr>
@@ -101,8 +101,8 @@ const Api: Component = () => {
         </div>
       </DocSection>
 
-      <DocSection id="lock" title="Locks" caption="Weigh physical input">
-        <p>See <A href="/library/lock">Lock</A>. Build axis/usage targets with <A href="/bindings/python/types#locktarget"><code>LockTarget.x/y/wheel/usage</code></A> (or the <code>button</code>/<code>key</code>/<code>media</code> shortcuts); a <A href="/bindings/python/types#direction"><code>Direction</code></A> picks a direction, and <code>scale</code> takes one of the <A href="/bindings/python/types#scale-constants">scale constants</A>.</p>
+      <DocSection id="lock" title="Locks" caption="Weigh native input">
+        <p>See <A href="/library/lock">Lock</A>. Build axis/usage targets with <A href="/bindings/python/types#locktarget"><code>LockTarget.x/y/wheel/pan/usage</code></A> (or the <code>button</code>/<code>key</code>/<code>media</code> shortcuts); a <A href="/bindings/python/types#direction"><code>Direction</code></A> picks a direction, and <code>scale</code> takes one of the <A href="/bindings/python/types#scale-constants">scale constants</A>.</p>
         <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Call</th><th>Does</th></tr></thead>
@@ -135,15 +135,15 @@ const Api: Component = () => {
               <tr><td><code>dev.reset()</code></td><td>Clear all overrides. See <A href="/library/admin">Admin</A>.</td></tr>
               <tr><td><code>dev.factory_reset()</code></td><td>Clear all overrides, then the box erases its stored name, options and learned devices and reboots. See <A href="/library/admin#factory-reset">factory_reset</A>.</td></tr>
               <tr><td><code>dev.reapply()</code></td><td>Re-send the active settings.</td></tr>
-              <tr><td><code>dev.reconnect()</code></td><td>Rescan, reopen this box, and re-apply held state (<A href="/library/lifecycle#reconnect">reconnect</A>). Raises <code>BadProtoVerError</code> when the box answers on another protocol; it stays disconnected.</td></tr>
+              <tr><td><code>dev.reconnect()</code></td><td>Rescan, reopen this box, and re-apply held state (<A href="/library/lifecycle#reconnect">reconnect</A>). Raises <code>BadProtoVerError</code> when the box replies on another protocol; it stays disconnected.</td></tr>
               <tr><td><code>dev.reboot(target)</code></td><td>Reboot a chip to run or download mode.</td></tr>
-              <tr><td><code>dev.allow_imperfect_clones(allow)</code></td><td>Opt in to cloning a device the box can't clone exactly, and admit the advanced control layer. A toggle that re-presents the clone releases the session, and the library re-sends what it holds once the new clone is up. See <A href="/library/options">Options</A>.</td></tr>
+              <tr><td><code>dev.allow_imperfect_clones(allow)</code></td><td>Opt in to cloning a device the box can't clone faithfully, and admit the advanced control layer. A toggle that re-presents the clone releases the session, and the library re-sends what it holds once the new clone is up. See <A href="/library/options">Options</A>.</td></tr>
               <tr><td><code>dev.set_movement_riding(window_ms)</code></td><td>Set the riding window in ms, or <code>None</code> to turn it off.</td></tr>
               <tr><td><code>dev.set_emit_pace(pace, force_hz=None)</code></td><td>Pick the pace (<code>EmitPace.learned()</code> / <code>.interval()</code> / <code>.fixed(hz)</code>) and the advertised rate (<code>force_hz</code>, None = native). See <A href="/library/options">Options</A>.</td></tr>
               <tr><td><code>dev.set_name(name)</code></td><td>Set the box's human-readable name (1 to 32 printable ASCII). See <A href="/library/options#set-name">Name</A>.</td></tr>
               <tr><td><code>dev.clear_name()</code></td><td>Clear the name, back to the synthesised default. Read it back on <A href="/bindings/python/types#version"><code>Version.name</code></A>.</td></tr>
               <tr><td><code>dev.set_bearing(window_ms, mode)</code></td><td>Set what <code>Direction.WITH</code> / <code>AGAINST</code> are measured against; <code>None</code> turns it off. <code>mode</code> is a <A href="/bindings/python/types#bearing-mode"><code>BearingMode</code></A>.</td></tr>
-              <tr><td><code>dev.set_spread(percent)</code></td><td>The share of the interval between commands an injected delta is released across, in percent: 0 puts the whole delta on the next report, 100 spreads it over one interval, above 100 overlaps. The box boots at 100. See <A href="/library/options">Options</A>.</td></tr>
+              <tr><td><code>dev.set_spread(percent)</code></td><td>The share of the command interval an injected delta is released across, in percent: 0 puts the whole delta on the next report, 100 spreads it over one interval, above 100 overlaps. The box boots at 100. See <A href="/library/options">Options</A>.</td></tr>
               <tr><td><code>dev.set_render(mode, full)</code></td><td>Pick the texture (<A href="/bindings/python/types#rendermode"><code>RenderMode</code></A>) and whether native motion is rendered by the model rather than relayed. Both share one frame, so <code>full</code> is required, not defaulted; a <code>mode</code> outside <code>RenderMode</code> raises <code>ValueError</code> and nothing is sent. <code>full</code> is off on a box that has not been set. See <A href="/library/options">Options</A>.</td></tr>
             </tbody>
           </table>
@@ -195,7 +195,7 @@ const Api: Component = () => {
               <tr><td><code>dev.activate_firmware()</code></td><td>Commit everything staged and boot into it, host chip first.</td></tr>
               <tr><td><code>dev.abort_update(target)</code></td><td>Throw a staged or in-flight transfer away.</td></tr>
               <tr><td><code>dev.update_firmware(target, image, progress=None)</code></td><td>Stage one image and activate it in a single call. A refused activate aborts the staged image before <code>UpdateError</code> is raised.</td></tr>
-              <tr><td><code>dev.wait_firmware_confirmed()</code></td><td><A href="/bindings/python/types#firmwareinfo"><code>FirmwareInfo</code></A> once neither chip is on <A href="/native/commands/update#rollback">probation</A>, asking while the box reboots after an activate. After 55&nbsp;s it raises <code>UpdateError</code> if a chip is still on probation, <code>QueryTimeoutError</code> if the box has not answered.</td></tr>
+              <tr><td><code>dev.wait_firmware_confirmed()</code></td><td><A href="/bindings/python/types#firmwareinfo"><code>FirmwareInfo</code></A> once neither chip is on <A href="/native/commands/update#rollback">probation</A>, asking while the box reboots after an activate. After 55&nbsp;s it raises <code>UpdateError</code> if a chip is still on probation, <code>QueryTimeoutError</code> if the box has not replied.</td></tr>
             </tbody>
           </table>
         </div>
@@ -245,7 +245,7 @@ const Api: Component = () => {
               <tr><td><code>.press(usage) / .release(usage) / .force_release(usage)</code></td><td>A one-edge press / soft-release / force-release frame; <code>usage</code> is a <A href="/bindings/python/types#input"><code>Usage</code></A> (button, key, or media).</td></tr>
               <tr><td><code>.edge(usage, action)</code></td><td>A one-edge frame for any <A href="/bindings/python/types#input"><code>Usage</code></A> with an explicit <A href="/bindings/python/types#action"><code>Action</code></A> (default press).</td></tr>
               <tr><td><code>.raw(ep, direction, data)</code></td><td>A frame carrying one raw report, as <A href="/bindings/python/api#advanced"><code>dev.raw</code></A> sends one; played only with the imperfect-clone opt-in on.</td></tr>
-              <tr><td><code>.transfer(ep, setup, out=b"")</code></td><td>A frame carrying one control transfer, as <code>dev.transfer</code> runs one: <code>out</code> is <code>setup.length</code> bytes for an OUT request, empty for an IN one. The answer arrives as a <A href="/bindings/python/types#trafficclass"><code>TrafficClass.CLIP_TRANSFER</code></A> event. The box runs it only while the opt-in is on.</td></tr>
+              <tr><td><code>.transfer(ep, setup, out=b"")</code></td><td>A frame carrying one control transfer, as <code>dev.transfer</code> runs one: <code>out</code> is <code>setup.length</code> bytes for an OUT request, empty for an IN one. The reply arrives as a <A href="/bindings/python/types#trafficclass"><code>TrafficClass.CLIP_TRANSFER</code></A> event. The box runs it only while the opt-in is on.</td></tr>
               <tr><td><code>.frame(dx=0, dy=0, wheel=0, pan=0, edges=(), raw=(), transfers=())</code></td><td>One frame carrying the motion deltas plus <code>(usage, action)</code> edges, <code>(ep, direction, data)</code> raw reports, and <code>(ep, setup, out)</code> transfers, within the <A href="/bindings/python/types#clip-constants">clip constants</A>.</td></tr>
             </tbody>
           </table>
@@ -255,7 +255,7 @@ const Api: Component = () => {
 
 b = ClipBuilder()
 
-# move (+10, -4) AND press Left on the same frame
+# move (+10, -4) and press Left on the same frame
 b.frame(dx=10, dy=-4, edges=[(Usage.button(Button.LEFT), Action.PRESS)])
 
 # the next tick queues a SET_REPORT to the real device
@@ -271,7 +271,7 @@ b.transfer(0, Setup(0x21, 0x09, 0x0300, 0, 2), bytes([0x04, 0x01]))`}</code></pr
               <tr><td><code>clip.set_loop(on) / clip.set_retain(on)</code></td><td>Loop the ring on completion; retain entries after playback instead of flushing.</td></tr>
               <tr><td><code>clip.set_ride(on)</code></td><td>Run the clip's motion under <A href="/library/options#set-movement-riding">movement riding</A> (off = the box's clock, the default). Only its wheel and pan while rendering is on with a profile armed.</td></tr>
               <tr><td><code>clip.finalize()</code></td><td>Fix a retained clip's end so it can replay and loop.</td></tr>
-              <tr><td><code>clip.bind(trigger)</code></td><td>Bind a <A href="/bindings/python/types#cliptrigger"><code>ClipTrigger</code></A>: a physical <A href="/bindings/python/types#input"><code>Usage</code></A> + <A href="/bindings/python/types#edge"><code>Edge</code></A> fires a <A href="/bindings/python/types#clipaction"><code>ClipAction</code></A> (up to 8).</td></tr>
+              <tr><td><code>clip.bind(trigger)</code></td><td>Bind a <A href="/bindings/python/types#cliptrigger"><code>ClipTrigger</code></A>: a native <A href="/bindings/python/types#input"><code>Usage</code></A> + <A href="/bindings/python/types#edge"><code>Edge</code></A> fires a <A href="/bindings/python/types#clipaction"><code>ClipAction</code></A> (up to 8).</td></tr>
               <tr><td><code>clip.unbind(usage, edge)</code></td><td>Remove one input trigger by usage + edge.</td></tr>
               <tr><td><code>clip.bind_packet(trigger)</code></td><td>Bind a <A href="/bindings/python/types#clippackettrigger"><code>ClipPacketTrigger</code></A>: a matched packet runs its <A href="/bindings/python/types#clipaction"><code>ClipAction</code></A> on the frame clock's next tick, and only the <A href="/library/clip#packet-triggers">most specific</A> matching trigger acts. A trigger the box would refuse (the <A href="/library/clip#packet-triggers">crate's refusals</A>, or a <code>selector_len</code> without <code>once_per_run</code>) raises <A href="/bindings/python/types#subclasses"><code>ClipPacketTriggerError</code></A> before anything is sent. A bind the box refuses leaves the set unchanged; compare <code>clip.query_config()</code>'s readback with what was bound.</td></tr>
               <tr><td><code>clip.unbind_packet(trigger)</code></td><td>Remove the packet trigger with that trigger's <code>(traffic_class, id, direction, match_bytes, mask)</code>; its other fields are ignored, and a key the box cannot hold is refused as <code>bind_packet()</code> refuses it.</td></tr>
@@ -298,7 +298,7 @@ b.transfer(0, Setup(0x21, 0x09, 0x0300, 0, 2), bytes([0x04, 0x01]))`}</code></pr
           <table class="api-params">
             <thead><tr><th>Call</th><th>Does</th></tr></thead>
             <tbody>
-              <tr><td><code>dev.raw(ep, direction, data)</code></td><td>Put <code>data</code> verbatim on cloned endpoint number <code>ep</code>. <code>direction</code> is <code>Direction.IN</code> (toward the game PC) or <code>OUT</code> (to the device).</td></tr>
+              <tr><td><code>dev.raw(ep, direction, data)</code></td><td>Write <code>data</code> verbatim on cloned endpoint number <code>ep</code>. <code>direction</code> is <code>Direction.IN</code> (toward the game PC) or <code>OUT</code> (to the real device).</td></tr>
               <tr><td><code>dev.transfer(ep, setup, out=b"", timeout_ms=None)</code></td><td>Run one control transfer; returns a <A href="/bindings/python/types#transfer-outcome"><code>TransferOutcome</code></A>. <code>timeout_ms</code> replaces the default reply wait.</td></tr>
               <tr><td><code>dev.set_rewrite(rule)</code></td><td>Install or overwrite one <A href="/bindings/python/types#rewrite-rule"><code>RewriteRule</code></A>. A payload past what the held rules leave of the 2048-byte pool raises <A href="/bindings/python/types#subclasses"><code>RewritePoolFullError</code></A>, and a new rule past 32 raises <code>RewriteTableFullError</code>.</td></tr>
               <tr><td><code>dev.remove_rewrite(rule)</code></td><td>Drop the rule with this rule's key.</td></tr>
@@ -307,7 +307,7 @@ b.transfer(0, Setup(0x21, 0x09, 0x0300, 0, 2), bytes([0x04, 0x01]))`}</code></pr
               <tr><td><code>dev.query_rewrite_entry(index)</code></td><td>One rule in full, in the shape <code>set_rewrite</code> takes.</td></tr>
               <tr><td><code>dev.set_patch(patch)</code></td><td>Store one <A href="/bindings/python/types#patch"><code>Patch</code></A> (empty bytes removes it).</td></tr>
               <tr><td><code>dev.apply_patch()</code></td><td>Re-present the clone with the stored patch set (one replug) when it differs from the set the clone serves. The re-clone releases the session, and the library re-sends what it holds once the new clone is up (<A href="/library/lifecycle#restart">session recovery</A>). See <A href="/library/advanced/patch#apply-patch">apply_patch</A>.</td></tr>
-              <tr><td><code>dev.clear_patch()</code></td><td>Erase this device's stored set; a clone serving patches re-presents unpatched (one replug), which releases the session as <code>apply_patch</code> does.</td></tr>
+              <tr><td><code>dev.clear_patch()</code></td><td>Erase the real device's stored set; a clone serving patches re-presents unpatched (one replug), which releases the session as <code>apply_patch</code> does.</td></tr>
               <tr><td><code>dev.query_patches()</code></td><td>The <A href="/bindings/python/types#patch"><code>PatchSet</code></A> and its apply state.</td></tr>
               <tr><td><code>dev.query_patch_entry(index)</code></td><td>One patch in full.</td></tr>
             </tbody>
@@ -344,7 +344,7 @@ b.transfer(0, Setup(0x21, 0x09, 0x0300, 0, 2), bytes([0x04, 0x01]))`}</code></pr
           <table class="api-params">
             <thead><tr><th>Call</th><th>Does</th></tr></thead>
             <tbody>
-              <tr><td><code>MockBox()</code></td><td>A fresh mock that records every frame and answers queries. A context manager: <code>with MockBox() as mock:</code> frees it on exit, as <code>mock.close()</code> does.</td></tr>
+              <tr><td><code>MockBox()</code></td><td>A fresh mock that records every frame and replies to queries. A context manager: <code>with MockBox() as mock:</code> frees it on exit, as <code>mock.close()</code> does.</td></tr>
               <tr><td><code>mock.open()</code></td><td>A <A href="/bindings/python/api#connect"><code>Device</code></A> over the mock, after the handshake.</td></tr>
               <tr><td><code>mock.with_device()</code></td><td>A <code>Device</code> over the mock, with no handshake.</td></tr>
               <tr><td><code>Device.open_mock(mock)</code> / <code>Device.with_mock(mock)</code></td><td>The same two, named as in Rust.</td></tr>
@@ -357,20 +357,20 @@ b.transfer(0, Setup(0x21, 0x09, 0x0300, 0, 2), bytes([0x04, 0x01]))`}</code></pr
           <table class="api-params">
             <thead><tr><th>Call</th><th>Does</th></tr></thead>
             <tbody>
-              <tr><td><code>mock.set_version</code>, <code>set_health</code>, <code>set_device_info</code>, <code>set_caps</code>, <code>set_mouse_caps</code>, <code>set_kbd_caps</code>, <code>set_rate</code>, <code>set_stats</code>, <code>set_locks</code>, <code>set_catch_state</code></td><td>Set what each query answers.</td></tr>
-              <tr><td><code>mock.set_imperfect_status(status)</code></td><td>Set the <A href="/bindings/python/types#imperfectstatus"><code>ImperfectStatus</code></A> <code>dev.query_imperfect()</code> answers. With <code>allowed</code> false the mock drops its consuming packet triggers, as the box does.</td></tr>
-              <tr><td><code>mock.set_transfer_reply(status, data=b"")</code></td><td>The status and IN data a transfer is answered with while the opt-in is on; with it off, <code>REFUSED</code>.</td></tr>
-              <tr><td><code>mock.set_movement_riding</code>, <code>set_bearing</code>, <code>set_emit_pace</code>, <code>set_spread_learned</code>, <code>set_render</code>, <code>set_advertised_hz</code></td><td>Set what the option queries answer.</td></tr>
-              <tr><td><code>mock.set_clip_status(status)</code></td><td>Set the <A href="/bindings/python/types#clipstatus"><code>ClipStatus</code></A> <code>clip.query_status()</code> answers.</td></tr>
-              <tr><td><code>mock.set_clip_settings(settings)</code></td><td>Set the <A href="/bindings/python/types#clipsettings"><code>ClipSettings</code></A> <code>clip.query_config()</code> answers. Its packet triggers bind in order, as <code>clip.bind_packet()</code> binds them, under the opt-in <code>set_imperfect_status</code> scripted: script it first for a consuming one. The reply is these settings plus the triggers bound on the mock; <code>set_retain</code>, <code>finalize</code>, input binds and playback are recorded frames that leave it as scripted.</td></tr>
+              <tr><td><code>mock.set_version</code>, <code>set_health</code>, <code>set_device_info</code>, <code>set_caps</code>, <code>set_mouse_caps</code>, <code>set_kbd_caps</code>, <code>set_rate</code>, <code>set_stats</code>, <code>set_locks</code>, <code>set_catch_state</code></td><td>Set each query's reply.</td></tr>
+              <tr><td><code>mock.set_imperfect_status(status)</code></td><td>Set the <A href="/bindings/python/types#imperfectstatus"><code>ImperfectStatus</code></A> <code>dev.query_imperfect()</code> returns. With <code>allowed</code> false the mock drops its consuming packet triggers, as the box does.</td></tr>
+              <tr><td><code>mock.set_transfer_reply(status, data=b"")</code></td><td>The status and IN data of a transfer's reply while the opt-in is on; with it off, <code>REFUSED</code>.</td></tr>
+              <tr><td><code>mock.set_movement_riding</code>, <code>set_bearing</code>, <code>set_emit_pace</code>, <code>set_spread_learned</code>, <code>set_render</code>, <code>set_advertised_hz</code></td><td>Set the option queries' replies.</td></tr>
+              <tr><td><code>mock.set_clip_status(status)</code></td><td>Set the <A href="/bindings/python/types#clipstatus"><code>ClipStatus</code></A> <code>clip.query_status()</code> returns.</td></tr>
+              <tr><td><code>mock.set_clip_settings(settings)</code></td><td>Set the <A href="/bindings/python/types#clipsettings"><code>ClipSettings</code></A> <code>clip.query_config()</code> returns. Its packet triggers bind in order, as <code>clip.bind_packet()</code> binds them, under the opt-in <code>set_imperfect_status</code> scripted: script it first for a consuming one. The reply is these settings plus the triggers bound on the mock; <code>set_retain</code>, <code>finalize</code>, input binds and playback are recorded frames that leave it as scripted.</td></tr>
               <tr><td><code>mock.clip_packet(traffic_class, id,</code> <code>direction, head)</code></td><td><code>Tuple[Optional[ClipAction], bool]</code>: run one packet through the mock's packet triggers, as the box does; the most specific trigger the packet matches counts it in its <code>hits</code>. The action is <code>None</code> when no trigger matches, and when that trigger is <code>once_per_run</code> and the packet continues a run; the bool is whether that trigger consumes the packet.</td></tr>
               <tr><td><code>mock.restart()</code></td><td>Simulate a device-chip restart: the mock drops its session state, keeps what it stores, and sends its hello now and again on the next frame it receives. See <A href="/library/features/mock#restart">restart</A>.</td></tr>
               <tr><td><code>mock.link_lost()</code></td><td>Simulate the link between the box's chips dropping and coming back: the mock releases the session a host set, counted in <A href="/bindings/python/types#stats"><code>Stats.session</code></A>, and the clone stays up.</td></tr>
-              <tr><td><code>mock.detach(back_within_grace=False)</code></td><td>Simulate the real device detaching: the mock releases the session. With <code>back_within_grace</code> the device re-attaches inside the 250 ms grace and the clone stays up; without, the clone is down until <code>attach()</code>.</td></tr>
-              <tr><td><code>mock.attach()</code></td><td>Simulate a device attaching: a clone that was up is cloned again, which releases the session. See <A href="/library/features/mock#restart">restart and release</A>.</td></tr>
-              <tr><td><code>mock.silent()</code></td><td>Stop answering queries, for timeout tests. One-way; frames are still recorded.</td></tr>
+              <tr><td><code>mock.detach(back_within_grace=False)</code></td><td>Simulate the real device detaching: the mock releases the session. With <code>back_within_grace</code> the real device re-attaches inside the 250 ms grace and the clone stays up; without, the clone is down until <code>attach()</code>.</td></tr>
+              <tr><td><code>mock.attach()</code></td><td>Simulate the real device attaching: a clone that was up is cloned again, which releases the session. See <A href="/library/features/mock#restart">restart and release</A>.</td></tr>
+              <tr><td><code>mock.silent()</code></td><td>Stop replying to queries, for timeout tests. One-way; frames are still recorded.</td></tr>
               <tr><td><code>mock.refuse_next_activate(status)</code></td><td>Refuse the next <code>ACTIVATE</code> with update status <code>status</code>, keeping what is staged.</td></tr>
-              <tr><td><code>mock.reboot_after_activate(unanswered, pending)</code></td><td>After each accepted activate, leave <code>unanswered</code> firmware queries unanswered, then report the device chip on probation for the next <code>pending</code> queries.</td></tr>
+              <tr><td><code>mock.reboot_after_activate(unanswered, pending)</code></td><td>After each accepted activate, leave <code>unanswered</code> firmware queries with no reply, then report the device chip on probation for the next <code>pending</code> queries.</td></tr>
               <tr><td><code>mock.push_raw(data)</code>, <code>push_log(level, text)</code>, <code>push_motion</code>, <code>push_usages</code>, <code>push_traffic</code></td><td>Put bytes, a log line or a catch event on the inbound stream, as the box sends them.</td></tr>
             </tbody>
           </table>

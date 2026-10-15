@@ -47,7 +47,7 @@ for b in Device::list() {
         <pre class="api-signature">fn open_by_id(id: &amp;str) -&gt; Result&lt;Device&gt;</pre>
         <p><span class="api-badge api-badge--responded">Blocks</span></p>
         <p>
-          Opens the box whose identity matches <code>id</code>: the device MAC hex (
+          Opens the box whose identity matches <code>id</code>: the device chip's MAC hex (
           <A href="/library/types/structs#version"><code>Version::mac_hex</code></A>) or the CH343{' '}
           <A href="/library/types/structs#port-info">serial</A>. Returns{' '}
           <A href="/library/types/errors"><code>Error::BadProtoVer</code></A> when that box speaks
@@ -71,8 +71,8 @@ match Device::open_by_id("123456789abc") {
         <p>
           Opens the first box whose clone's{' '}
           <A href="/library/types/enums#device-kind"><code>DeviceKind</code></A> is a mouse. With none,
-          a connected box on another protocol, whose clone is unread, returns{' '}
-          <A href="/library/types/errors"><code>Error::BadProtoVer</code></A>; otherwise{' '}
+          a connected box on another protocol (its clone unread) returns{' '}
+          <A href="/library/types/errors"><code>Error::BadProtoVer</code></A>; with no such box,{' '}
           <A href="/library/types/errors"><code>Error::NotFound</code></A>.
         </p>
         <div class="api-response-label">EXAMPLE</div>
@@ -123,7 +123,7 @@ let device = Device::find_where(|b| b.device.as_ref().is_some_and(|d| d.vid == 0
         <p>
           Opening a box anchors <A href="/library/lifecycle#reconnect"><code>reconnect</code></A> to that
           identity: an automatic reconnect re-finds the <em>same</em> physical box across renumbered
-          ports, and never adopts a different box, or this box once it answers on another protocol.
+          ports, and never adopts a different box, or this box once it speaks another protocol.
         </p>
       </DocSection>
 

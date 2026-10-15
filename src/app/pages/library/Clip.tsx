@@ -33,7 +33,7 @@ const Clip: Component = () => {
        handle.query_status()    <--  ring depth + progress + playback state
        handle.stop()            -->  stop (retained: rewind; streaming: flush)
 
-  or let the box play it on a physical key or a matched packet, no host round-trip:
+  or let the box play it on a native key edge or a matched packet, no host round-trip:
        handle.bind(ClipTrigger::new(Key::F1, Edge::Press, ClipAction::Start))
        handle.bind_packet(&ClipPacketTrigger::new(
            TrafficClass::HidIn, 2, Direction::IN, ClipAction::Start))`}</pre>
@@ -66,7 +66,7 @@ const Clip: Component = () => {
         </div>
         <div class="callout callout--info">
           <p>
-            The ring is 64 KB with PSRAM and 16 KB without; <code>ClipStatus::free</code> on a
+            The ring is 64 KiB with PSRAM and 16 KiB without; <code>ClipStatus::free</code> on a
             cleared ring is the size.
           </p>
         </div>
@@ -76,9 +76,9 @@ const Clip: Component = () => {
         <pre class="api-signature">fn new() -&gt; ClipBuilder</pre>
         <p><span class="api-badge api-badge--executed">No round-trip</span></p>
         <p>
-          Each method appends one per-frame entry. Motion is a relative delta; an edge is an{' '}
+          Each method appends one per-frame entry. Motion is a relative delta. An edge is an{' '}
           <A href="/library/types/enums#action"><code>Action</code></A> that stays held until a later frame
-          changes it; a <code>gap</code> NAKs like an idle mouse.
+          changes it. A <code>gap</code> NAKs like an idle mouse.
         </p>
         <div class="table-scroll">
           <table class="api-params">
@@ -116,7 +116,7 @@ clip.press(Key::A)                         // then type 'a'
     .release(Key::A);`}</code></pre>
         <p>
           <code>frame</code> fills more than one field, so a move and an edge share one entry and one
-          wire report.
+          emitted report.
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`use medius::{Button, ClipBuilder, ClipFrame};
@@ -197,7 +197,7 @@ device.clip().append(&clip)?;`}</code></pre>
             <tr><td><code>set_autolock(scope: &amp;[Blanket])</code></td><td>Which <A href="/library/lock">input groups</A> to lock while playing (clip-owned, released on stop).</td></tr>
             <tr><td><code>set_loop(on: bool)</code></td><td>Loop playback at the clip end (retained mode only).</td></tr>
             <tr><td><code>set_retain(on: bool)</code></td><td>Retain the clip so it can rewind and replay (<code>false</code> = streaming, the default). Set before the first <code>append</code>.</td></tr>
-            <tr><td><code>set_ride(on: bool)</code></td><td>Make the clip's motion wait for a real move under <A href="/library/options#set-movement-riding">movement riding</A> (<code>false</code> = the box's clock, the default). Changeable mid-playback. Only its wheel and pan while rendering is on with a profile armed.</td></tr>
+            <tr><td><code>set_ride(on: bool)</code></td><td>Make the clip's motion wait for native motion under <A href="/library/options#set-movement-riding">movement riding</A> (<code>false</code> = the box's clock, the default). Changeable mid-playback. With rendering on and a profile armed, it applies to wheel and pan only.</td></tr>
             <tr><td><code>finalize()</code></td><td>Close a retained clip: fix its end so it can replay and loop.</td></tr>
           </tbody>
         </table>
@@ -209,7 +209,7 @@ device.clip().append(&clip)?;`}</code></pre>
             <tr><th>Method</th><th>Does</th></tr>
           </thead>
           <tbody>
-            <tr><td><code>bind(trigger: <A href="/library/types/structs#clip-trigger">ClipTrigger</A>)</code></td><td>Add or overwrite an <A href="/library/clip#input-triggers">input trigger</A>: a physical edge drives an action on the box, no host round-trip.</td></tr>
+            <tr><td><code>bind(trigger: <A href="/library/types/structs#clip-trigger">ClipTrigger</A>)</code></td><td>Add or overwrite an <A href="/library/clip#input-triggers">input trigger</A>: a native edge drives an action on the box, no host round-trip.</td></tr>
             <tr><td><code>unbind(usage, edge: <A href="/library/types/enums#edge">Edge</A>)</code></td><td>Remove the input trigger on that usage and edge.</td></tr>
             <tr><td><code>bind_packet(trigger: &amp;<A href="/library/types/structs#clip-packet-trigger">ClipPacketTrigger</A>)</code></td><td>Add or overwrite a <A href="/library/clip#packet-triggers">packet trigger</A>: a matched packet drives an action on the frame clock's next tick.</td></tr>
             <tr><td><code>unbind_packet(trigger: &amp;ClipPacketTrigger)</code></td><td>Remove the packet trigger with that trigger's key; its action, <code>consume</code>, <code>once_per_run</code> and <code>selector_len</code> are ignored. A key the box cannot hold is refused as <code>bind_packet</code> refuses it.</td></tr>
@@ -271,7 +271,7 @@ if handle.lost() {
 
       <DocSection id="modes" title="Streaming and retained" caption="Drain-and-discard, or keep-and-replay">
         <p>
-          <A href="/library/clip#handle"><code>set_retain</code></A> picks the shape before the first{' '}
+          <A href="/library/clip#handle"><code>set_retain</code></A> picks the mode before the first{' '}
           <A href="/library/clip#handle"><code>append</code></A>.
         </p>
         <div class="table-scroll">
@@ -281,7 +281,7 @@ if handle.lost() {
             </thead>
             <tbody>
               <tr><td>Turn on</td><td>default</td><td><code>set_retain(true)</code> before the first <code>append</code></td></tr>
-              <tr><td>The ring</td><td>each entry freed as it plays; unbounded</td><td>entries kept after playing, up to 64 KiB</td></tr>
+              <tr><td>Ring</td><td>each entry freed as it plays; unbounded</td><td>entries kept after playing, up to the ring size</td></tr>
               <tr><td>Top up mid-play</td><td>yes, appends to the tail in real time</td><td>until <code>finalize</code>, then sealed</td></tr>
               <tr><td>Replay</td><td>no, plays once</td><td>yes, rewinds and replays</td></tr>
               <tr><td><code>loop</code></td><td>not available</td><td>available once <code>finalize</code>d</td></tr>
@@ -294,7 +294,7 @@ if handle.lost() {
     append --> [ e4 e3 e2 ] --> play --> freed     (unbounded, top up forever)
                    box reclaims each entry once played; no replay
 
-retained (keep-and-replay, up to 64 KiB)
+retained (keep-and-replay, up to the ring size)
     append --> [ e0 e1 e2 e3 e4 ] --> finalize --> sealed
                base |--> play cursor --> end
                     +---- start / loop rewinds to base <----+`}</pre>
@@ -325,13 +325,13 @@ loop {
 handle.stop()?;`}</code></pre>
       </DocSection>
 
-      <DocSection id="triggers" title="Triggers" caption="Run a clip action on a physical edge or a matched packet">
+      <DocSection id="triggers" title="Triggers" caption="Run a clip action on a native edge or a matched packet">
         <p>
           A trigger runs one{' '}
           <A href="/library/types/enums#clip-action"><code>ClipAction</code></A> on the box, with no
           host round-trip. One set holds both kinds.
         </p>
-        <pre class="diagram">{`  a physical edge                 a packet at a traffic surface
+        <pre class="diagram">{`  a native edge                   a packet at a traffic surface
   button, key, media              HidIn, HidOut, VendorInterrupt,
         |                         VendorBulk, Control, Emit
         v                               |
@@ -341,7 +341,7 @@ handle.stop()?;`}</code></pre>
         | action                        | action       | packet
         v                               v              v
         +-----> ClipAction <------------+        [ rewrite table ]
-                run on the box                     sees it next, unless
+                run on the box                     reads it next, unless
                                                    the trigger consumed it
                                                        |
                                                        v
@@ -355,7 +355,7 @@ handle.stop()?;`}</code></pre>
               <tr><td>Type</td><td><A href="/library/types/structs#clip-trigger"><code>ClipTrigger</code></A></td><td><A href="/library/types/structs#clip-packet-trigger"><code>ClipPacketTrigger</code></A></td></tr>
               <tr><td>Fires on</td><td>a press or release edge of a button, key, or media usage</td><td>a packet on a traffic surface, by a masked head compare</td></tr>
               <tr><td>Key</td><td>usage and edge</td><td>class, id, direction, match and mask</td></tr>
-              <tr><td>The box holds</td><td>8</td><td>8, with 112 match bytes between them</td></tr>
+              <tr><td>Box capacity</td><td>8</td><td>8, with 112 match bytes between them</td></tr>
               <tr><td><code>.consume()</code></td><td>locks the usage for the hold</td><td>drops every packet the trigger matches as the top-ranked trigger; needs the imperfect-clone opt-in</td></tr>
               <tr><td>Calls</td><td><code>bind</code>, <code>unbind</code></td><td><code>bind_packet</code>, <code>unbind_packet</code></td></tr>
               <tr><td>Reads back in</td><td><A href="/library/types/structs#clip-settings"><code>triggers</code></A></td><td><code>packet_triggers</code>, each with its <code>hits</code></td></tr>
@@ -374,7 +374,7 @@ handle.stop()?;`}</code></pre>
           <div class="table-scroll">
             <table class="api-params">
               <thead>
-                <tr><th>Part</th><th>Is</th><th>Example</th></tr>
+                <tr><th>Part</th><th>Meaning</th><th>Example</th></tr>
               </thead>
               <tbody>
                 <tr><td>usage</td><td>the button, key, or media the edge is on (or any of a class)</td><td><code>Key::F1</code></td></tr>
@@ -385,13 +385,13 @@ handle.stop()?;`}</code></pre>
           </div>
           <p>
             Input triggers are keyed by <code>(usage, edge)</code>, like a{' '}
-            <A href="/library/lock">lock</A>. A physical edge runs only the most specific match:{' '}
+            <A href="/library/lock">lock</A>. A native edge runs only the most specific match:{' '}
             <code>Key::F1</code> before an any-key trigger.
           </p>
           <div class="table-scroll">
             <table class="api-params">
               <thead>
-                <tr><th>To get</th><th>Bind</th></tr>
+                <tr><th>Goal</th><th>Bind</th></tr>
               </thead>
               <tbody>
                 <tr><td>Hold to play</td><td><code>F1 Press -&gt; Start</code> and <code>F1 Release -&gt; Stop</code></td></tr>
@@ -442,13 +442,13 @@ clip.bind(ClipTrigger::new(Button::SIDE1, Edge::Press, ClipAction::Toggle))?;`}<
           <div class="table-scroll">
             <table class="api-params">
               <thead>
-                <tr><th>Part</th><th>Is</th></tr>
+                <tr><th>Part</th><th>Meaning</th></tr>
               </thead>
               <tbody>
                 <tr><td>address</td><td>the <A href="/library/types/enums#traffic-class"><code>TrafficClass</code></A>, the id within it (the interface number for <code>HidIn</code>, the endpoint number for the rest, or <code>ANY_ID</code>), and the <A href="/library/types/enums#direction"><code>Direction</code></A></td></tr>
                 <tr><td>action</td><td>the engine verb to run, on the frame clock's next tick: within one frame of the matching packet, 1&nbsp;ms at the default pace</td></tr>
                 <tr><td><code>.matching()</code></td><td>head bytes and their mask, one length, 16 at most; left out, every packet on the address matches</td></tr>
-                <tr><td><code>.consume()</code></td><td>drop every packet the trigger matches as the top-ranked trigger, whether or not the action runs on it; a consumed <code>HidIn</code> report is the whole report, the motion and buttons in it included, and a release edge in it reaches the PC with the next report</td></tr>
+                <tr><td><code>.consume()</code></td><td>drop every packet the trigger matches as the top-ranked trigger, whether or not the action runs on it; a consumed <code>HidIn</code> report is the whole report, the motion and buttons in it included, and a release edge in it is emitted with the next report</td></tr>
                 <tr><td><code>.once_per_run()</code></td><td>run the action on the first packet of a run of matching ones; the first <code>selector_len</code> match bytes select the stream, such as a report ID, and the rest are the condition</td></tr>
               </tbody>
             </table>
@@ -456,10 +456,10 @@ clip.bind(ClipTrigger::new(Button::SIDE1, Edge::Press, ClipAction::Toggle))?;`}<
           <div class="table-scroll">
             <table class="api-params">
               <thead>
-                <tr><th>What</th><th>Needs the opt-in</th><th>Why</th></tr>
+                <tr><th>Trigger</th><th>Needs the opt-in</th><th>Reason</th></tr>
               </thead>
               <tbody>
-                <tr><td>a trigger that watches</td><td>no</td><td>It alters no byte the PC or the device sees.</td></tr>
+                <tr><td>a trigger that watches</td><td>no</td><td>It alters no byte the PC or the real device receives.</td></tr>
                 <tr><td>a trigger that consumes</td><td>yes</td><td>It drops traffic, as a <code>Drop</code> rewrite rule does.</td></tr>
               </tbody>
             </table>
@@ -467,7 +467,7 @@ clip.bind(ClipTrigger::new(Button::SIDE1, Edge::Press, ClipAction::Toggle))?;`}<
           <div class="table-scroll">
             <table class="api-params">
               <thead>
-                <tr><th>To get</th><th>Bind</th></tr>
+                <tr><th>Goal</th><th>Bind</th></tr>
               </thead>
               <tbody>
                 <tr><td>Hold a vendor button to play</td><td>two <code>once_per_run</code> triggers: the pressed bytes to <code>Start</code>, the released bytes to <code>Stop</code></td></tr>
@@ -478,8 +478,8 @@ clip.bind(ClipTrigger::new(Button::SIDE1, Edge::Press, ClipAction::Toggle))?;`}<
           </div>
           <div class="callout callout--info">
             <p>
-              A run starts on the first matching packet the trigger sees. A trigger whose condition
-              already holds when it is bound fires on the next packet of its stream, so on a device
+              A run starts on the first matching packet the trigger reads. A trigger whose condition
+              already holds when it is bound fires on the next packet of its stream, so on a real device
               that reports every poll, a release trigger bound with the button up fires once. Bind
               the press trigger first and the release trigger while the button is held, or accept the
               one action.
@@ -499,9 +499,9 @@ clip.bind(ClipTrigger::new(Button::SIDE1, Edge::Press, ClipAction::Toggle))?;`}<
                 <tr><th>Report</th><th>Top-ranked trigger</th><th>Result</th></tr>
               </thead>
               <tbody>
-                <tr><td><code>07 20 ..</code></td><td><code>[07 20]/[FF 20]</code>, 9 masked bits</td><td>its action runs and the report reaches the PC</td></tr>
+                <tr><td><code>07 20 ..</code></td><td><code>[07 20]/[FF 20]</code>, 9 masked bits</td><td>its action runs and the report is relayed</td></tr>
                 <tr><td><code>07 00 ..</code></td><td>a consuming <code>[07]/[FF]</code>, 8 masked bits</td><td>its action runs and the report is dropped</td></tr>
-                <tr><td><code>08 20 ..</code></td><td>neither</td><td>the report reaches the PC</td></tr>
+                <tr><td><code>08 20 ..</code></td><td>neither</td><td>the report is relayed</td></tr>
               </tbody>
             </table>
           </div>
@@ -515,7 +515,7 @@ clip.bind(ClipTrigger::new(Button::SIDE1, Edge::Press, ClipAction::Toggle))?;`}<
           <div class="table-scroll">
           <table class="api-params">
             <thead>
-              <tr><th>Trigger</th><th>Why</th></tr>
+              <tr><th>Trigger</th><th>Reason</th></tr>
             </thead>
             <tbody>
               <tr><td><code>Bus</code> or <code>ClipTransfer</code> as the class</td><td>Neither is a surface packets cross.</td></tr>

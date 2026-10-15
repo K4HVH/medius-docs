@@ -36,8 +36,7 @@ const Transform: Component = () => {
         </div>
         <p>
           To weigh a field, or reverse it, use{' '}
-          <A href="/native/commands/lock#scale"><code>LOCK</code></A>, whose percent is signed. An{' '}
-          <code>op</code> above <code>1</code> is refused.
+          <A href="/native/commands/lock#scale"><code>LOCK</code></A>, whose percent is signed.
         </p>
         <p>
           A field is a <code>(class, id)</code> in the same space{' '}
@@ -84,7 +83,7 @@ const Transform: Component = () => {
           <pre class="diagram">{`  LOCK(X, both, -50)      keep half of X, reversed
   TRANSFORM(swap, X, Y)   and put what is left on Y
 
-  physical X = +10  ->  weighed -5  ->  emitted on Y`}</pre>
+  native X = +10  ->  weighed -5  ->  emitted on Y`}</pre>
         </Anchor>
 
         <div class="api-response-label">REFUSALS</div>
@@ -104,7 +103,7 @@ const Transform: Component = () => {
         </div>
         <div class="api-response-label">EFFECT</div>
         <p>
-          An entry applies from the device's next report. The box walks the table in install order,
+          An entry applies from the next native report. The box walks the table in install order,
           so a swap installed after a remap exchanges what the remap wrote.
         </p>
         <p>
@@ -189,10 +188,10 @@ const Transform: Component = () => {
           emits one.
         </p>
         <div class="api-response-label">HELD, NOT LATCHED</div>
-        <pre class="diagram">{`  physical button    ____----------________-----____
+        <pre class="diagram">{`  native button      ____----------________-----____
   key on the clone   ____----------________-----____
 
-  driven from the button mask the device just reported,
+  driven from the button mask the real device just reported,
   re-read every report, with no edge latch to strand`}</pre>
         <p>
           Following the level, a configuration switch, missed release, or briefly unbound
@@ -241,7 +240,7 @@ const Transform: Component = () => {
           The weigh runs first and the field pass moves what it left; everything downstream reads
           the field where the table put it.
         </p>
-        <pre class="diagram">{`  physical report
+        <pre class="diagram">{`  native report
        |
        +-- 1  LOCK        weighs each field on its sign and bearing
        |
@@ -259,8 +258,8 @@ const Transform: Component = () => {
               <tr><th>Stage</th><th>Reads</th><th>Acts on</th></tr>
             </thead>
             <tbody>
-              <tr><td><A href="/native/commands/lock"><code>LOCK</code></A></td><td>the physical field</td><td>a lock applies on the sign the device reported, not where the value ends up, so a swap never moves a lock with it</td></tr>
-              <tr><td><A href="/native/commands/option#render">rendering</A></td><td>the transformed, weighed cursor delta</td><td>the model gets the numbers the wire would have carried, so a scale changes what it renders, not what it corrects</td></tr>
+              <tr><td><A href="/native/commands/lock"><code>LOCK</code></A></td><td>the native field</td><td>a lock applies on the sign the real device reported, not where the value ends up, so a swap never moves a lock with it</td></tr>
+              <tr><td><A href="/native/commands/option#render">rendering</A></td><td>the transformed, weighed cursor delta</td><td>the model gets the numbers the clone would have emitted, so a scale changes what it renders, not what it corrects</td></tr>
               <tr><td><A href="/native/injection">injection</A></td><td>nothing the table wrote</td><td>injected motion drains into the axis after the pass, so a remap that zeroed that axis doesn't remove it</td></tr>
             </tbody>
           </table>
@@ -268,7 +267,7 @@ const Transform: Component = () => {
         <div class="api-response-label">CATCH</div>
         <p>
           <A href="/native/commands/catch#catch"><code>CATCH</code></A> input classes tap the
-          physical report before either pass, so they report the value the device sent;{' '}
+          native report before either pass, so they report the native value;{' '}
           <code>EMIT</code> carries what the clone emitted.
         </p>
       </DocSection>
@@ -284,7 +283,7 @@ detach      the real device goes away
 re-clone    the box binds a device again`}</pre>
         <p>
           Any valid frame resets the silence timer, so a keepalive keeps the table. The library
-          re-asserts the whole table after a device-side blip and across a control-link reconnect,
+          re-asserts the whole table after the box clears it and across a control-link reconnect,
           as for <A href="/native/commands/lock"><code>LOCK</code></A>.
         </p>
         <p>Every clear here but remove and clear moves the <A href="/native/commands/requests#stats"><code>session</code></A> count.</p>

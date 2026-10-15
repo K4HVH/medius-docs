@@ -36,20 +36,17 @@ const Quickstart: Component = () => {
             power, which can force a shutdown and drain the battery.
           </p>
         </div>
-        <p>
-          Full port map and hazard detail on <A href="/native/hardware">Hardware</A>.
-        </p>
       </DocSection>
 
       <DocSection id="open" title="Open the link" caption="Fixed baud, binary">
         <p>
           Open <code>/dev/ttyACM0</code> (Linux) or <code>COMx</code> (Windows) at{' '}
-          <code>6,000,000</code> baud, <code>8N1</code>, and send binary immediately; no{' '}
+          <A href="/native/transport#serial"><code>6,000,000</code> baud</A>, <code>8N1</code>, and send binary immediately; no{' '}
           <code>115200</code> handshake or baud-switch frame.
         </p>
         <p>
           <A href="/native/commands/requests#resp"><code>RESP</code></A> carries the box's
-          replies. To read the protocol version:
+          replies. To read the protocol version (<A href="/native/connection">handshake</A>):
         </p>
         <ol>
           <li>
@@ -66,10 +63,6 @@ const Quickstart: Component = () => {
             Check <code>proto_ver == 9</code> before trusting the commands here.
           </li>
         </ol>
-        <p>
-          Serial framing detail on <A href="/native/transport#serial">Transport</A>; handshake
-          and presence detail on <A href="/native/connection">Connection</A>.
-        </p>
       </DocSection>
 
       <DocSection id="first-move" title="Send a MOVE" caption="Relative cursor movement">
@@ -115,16 +108,14 @@ port.write(frame)`}</code></pre>
           right, 0 down.
         </p>
         <p>
-          That builds <code>A5 01 00 06 00 00 64 00 00 00 00 &lt;crc&gt;</code>. Byte breakdown
-          on <A href="/native/commands/move#move"><code>MOVE</code></A>, frame format on{' '}
-          <A href="/native/frame">Frame Format</A>.
+          That builds <code>A5 01 00 06 00 00 64 00 00 00 00 &lt;crc&gt;</code>.
         </p>
       </DocSection>
 
       <DocSection id="confirm" title="Confirm" caption="Check the chain before injecting">
         <p>
-          <A href="/native/injection">Injection</A> is input added on top of the mouse's
-          passthrough. Before relying on it, send{' '}
+          <A href="/native/injection">Injection</A> is input added on top of native input. Before
+          relying on it, send{' '}
           <A href="/native/commands/requests#health"><code>QUERY(HEALTH)</code></A> and check these
           bits in the <A href="/native/commands/requests#resp"><code>RESP</code></A>'s{' '}
           <code>flags</code> word.
@@ -143,15 +134,13 @@ port.write(frame)`}</code></pre>
         </div>
         <p>
           A flag is set when <code>(flags &amp; mask)</code> is non-zero. With all three set, a{' '}
-          <A href="/native/commands/move#move"><code>MOVE</code></A> reaches the game PC. Full
-          word on <A href="/native/commands/requests#health">HEALTH</A>.
+          <A href="/native/commands/move#move"><code>MOVE</code></A> reaches the game PC.
         </p>
       </DocSection>
 
       <DocSection id="library" title="Rust library">
         <p>
-          Ready-made client: <code>cargo add medius</code>. See the{' '}
-          <A href="/library">library</A>.
+          Ready-made client: <code>cargo add medius</code> (<A href="/library">library</A>).
         </p>
       </DocSection>
     </>

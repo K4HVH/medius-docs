@@ -1,7 +1,7 @@
 /// <reference types="w3c-web-serial" />
 import { SlipDecoder, slipEncode } from './slip';
 
-// The baud means nothing on the chip's native USB; the ROM's UART default.
+// The baud means nothing on the chip's USB port; the ROM's UART default.
 const BAUD = 115200;
 // A frame the chip never takes: it NAKs its USB OUT while it is wedged.
 const SEND_MS = 3000;

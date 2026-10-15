@@ -18,10 +18,10 @@ const Rewrite: Component = () => {
           <A href="/library/lifecycle#restart">session recovery</A> like a{' '}
           <A href="/library/lock"><code>lock</code></A>, and cleared on control-PC silence,{' '}
           <A href="/library/admin#reset"><code>reset</code></A>, the real device detaching, an
-          inter-chip link loss, a re-clone, or the opt-in going off. See the native{' '}
-          <A href="/native/commands/rewrite#lifecycle">lifecycle</A>.
+          inter-chip link loss, a re-clone, or the opt-in going off (native{' '}
+          <A href="/native/commands/rewrite#lifecycle">lifecycle</A>).
         </p>
-        <pre class="diagram">{`  native device          the box  (host chip  |  device chip = the clone)         game PC
+        <pre class="diagram">{`  real device            the box  (host chip  |  device chip = the clone)         game PC
 
   HID report  ---IN--->  [ HID_IN ]--> renderer --> [ EMIT ]---interrupt-IN---->  reads report
                           ^ as it arrived            ^ the wire
@@ -31,7 +31,7 @@ const Rewrite: Component = () => {
                           ^ id = endpoint number
 
               a rule acts at the [ bracketed ] stage its class names; ANY acts at each
-              on EP0 only the requests passed to the device reach [ CONTROL ]`}</pre>
+              on EP0 only the requests relayed to the real device reach [ CONTROL ]`}</pre>
         <p>
           A packet reaches the clip's{' '}
           <A href="/library/clip#packet-triggers">packet triggers</A> ahead of the table, and one a
@@ -77,7 +77,7 @@ const Rewrite: Component = () => {
         <p>
           Rules are keyed by <code>(class, id, direction, match, mask)</code>; setting an existing key
           overwrites the rule, resets its hits and moves it to the end of the table. The crate checks
-          the box's limits before sending, so a refusal is a real error.
+          the box's limits before sending.
         </p>
         <div class="api-response-label">REFUSALS</div>
         <div class="table-scroll">
@@ -97,7 +97,7 @@ const Rewrite: Component = () => {
 let device = Device::find()?;
 device.allow_imperfect_clones(true)?;
 
-// Drop the clone's wire on interrupt-IN endpoint 1.
+// Drop every report the clone emits on interrupt-IN endpoint 1.
 device.set_rewrite(&RewriteRule::new(RewriteClass::Emit, 1, Direction::IN, RewriteAction::Drop))?;
 
 // Overwrite byte 2 of each report the clone emits on endpoint 1, when byte 0 is the report id 0x01.

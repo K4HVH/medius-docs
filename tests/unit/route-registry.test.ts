@@ -123,7 +123,7 @@ describe('route registry', () => {
   it('groups each binding language the same way', () => {
     const c = sidebarGroups('bindings', 'c');
     const py = sidebarGroups('bindings', 'python');
-    expect(c.map((g) => g.label)).toEqual(['Getting Started', 'Usage', 'Reference', 'Build']);
+    expect(c.map((g) => g.label)).toEqual(['Getting started', 'Usage', 'Reference', 'Build']);
     expect(py.map((g) => g.label)).toEqual(c.map((g) => g.label));
     expect(c[0].routes.map((r) => r.path)).toEqual(['/bindings/c', '/bindings/c/quickstart']);
   });

@@ -142,7 +142,7 @@ export const Latest = () => {
     return matches(c ? { major: c.fwMajor, minor: c.fwMinor, patch: c.fwPatch } : null);
   };
   const hostOnRelease = () => matches(dash.firmwareInfo()?.host);
-  // A reverted chip still completes the handshake; only the version each ASKED chip reports proves
+  // A reverted chip still completes the handshake; only the version each chip asked reports proves
   // the update.
   const landed = () => {
     const r = run();

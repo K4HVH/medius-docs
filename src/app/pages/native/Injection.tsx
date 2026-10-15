@@ -26,7 +26,7 @@ const Injection: Component = () => {
         <p>
           Injected input is <em>added to</em> native input:
         </p>
-        <pre class="diagram">{`  physical input  (real device)  --+
+        <pre class="diagram">{`  native input    (real device)  --+
                                    +-->  one combined report  -->  game PC
   injected input  (control PC)   --+`}</pre>
         <div class="table-scroll">
@@ -36,7 +36,7 @@ const Injection: Component = () => {
             </thead>
             <tbody>
               <tr><td>a <code>MOVE</code> while the mouse moves</td><td>The sum of both.</td></tr>
-              <tr><td>an <code>INJECT</code> press while the user holds nothing</td><td>The injected press.</td></tr>
+              <tr><td>an <code>INJECT</code> press with nothing held on the real device</td><td>The injected press.</td></tr>
               <tr><td>nothing</td><td>Native input only.</td></tr>
             </tbody>
           </table>
@@ -56,9 +56,9 @@ const Injection: Component = () => {
           Command frames get no echo or acknowledgement, so input streams at up to about one command
           per millisecond. <A href="/native/commands/requests#requests"><code>QUERY</code></A> and{' '}
           <A href="/native/commands/transfer#transfer"><code>TRANSFER</code></A> each return a reply
-          frame; <A href="/native/commands/update#update"><code>UPDATE</code></A> replies to every op
-          but <code>DATA</code>, whose chunks get one acknowledgement per window, plus a reply of its
-          own for each refused chunk.
+          frame. <A href="/native/commands/update#update"><code>UPDATE</code></A> replies to every op
+          but <code>DATA</code>, whose chunks get one acknowledgement per window and one reply per
+          refused chunk.
         </p>
         <p>Correctness comes from:</p>
         <div class="table-scroll">
@@ -82,7 +82,7 @@ const Injection: Component = () => {
             </tbody>
           </table>
         </div>
-        <p>A lost movement frame costs one millisecond of motion.</p>
+        <p>A lost <code>MOVE</code> frame costs one millisecond of motion.</p>
       </DocSection>
 
       <DocSection id="state" title="Tracked state" caption="Pending motion and held usages">
@@ -98,11 +98,11 @@ const Injection: Component = () => {
               <tr>
                 <td>riding accumulator</td>
                 <td>
-                  Sent motion and scroll not yet delivered to the PC. An ordinary{' '}
+                  Injected motion and scroll not yet emitted. An ordinary{' '}
                   <A href="/native/commands/move#move"><code>MOVE</code></A>, cursor or wheel, adds in.
                   Drains into emitted reports, except with{' '}
                   <A href="/native/commands/option#move-ride">movement riding</A> on, where it waits
-                  to ride a native move.
+                  to ride a native motion report.
                 </td>
               </tr>
               <tr>
@@ -111,8 +111,8 @@ const Injection: Component = () => {
                   The same for motion that never waits: a <code>MOVE</code> carrying{' '}
                   <A href="/native/commands/move#flags"><code>NOW</code> or <code>FLUSH</code></A>, and
                   unrendered <A href="/native/commands/clip">clip</A> motion with <code>ride</code> off.
-                  Both always exist; riding gates whether the first drains, not which one a move lands
-                  in.
+                  Both always exist; movement riding gates whether the riding accumulator drains, not
+                  which one a <code>MOVE</code> lands in.
                 </td>
               </tr>
               <tr>
@@ -127,25 +127,22 @@ const Injection: Component = () => {
           </table>
         </div>
         <p>
-          A report carries limited movement. A large injected move sends what fits and keeps the
-          remainder in its accumulator, spread over as many reports as it takes; nothing is clipped
+          A large injected move emits what fits the native field width and keeps the remainder in
+          its accumulator, spread over as many reports as it takes; nothing is clipped
           (<code>total seen = total sent</code>).
         </p>
       </DocSection>
 
       <DocSection id="emission" title="Report emission" caption="At native report rate, only on activity">
-        <p>
-          Two of the three rows fire on the cloned mouse's tick.
-        </p>
         <div class="table-scroll">
           <table class="api-params">
             <thead>
-              <tr><th>When</th><th>Sends</th></tr>
+              <tr><th>When</th><th>Emits</th></tr>
             </thead>
             <tbody>
               <tr>
                 <td>the mouse reported</td>
-                <td>Native motion plus the drained accumulator; buttons combine physical state and overrides.</td>
+                <td>Native motion plus the drained accumulator; buttons combine native state and overrides.</td>
               </tr>
               <tr>
                 <td>the mouse was still, with motion pending</td>
@@ -172,26 +169,26 @@ const Injection: Component = () => {
           takes a separate poll, so two injections don't share one report.
         </p>
         <p>
-          That holds while the device leaves polls free (it reports less often than every poll, no other
+          That holds while the real device leaves polls free (it reports less often than every poll, no other
           report ID has reported in the last 12 ms, and the report fits one packet) and the box's report
           waiting matches the native one in everything but motion. With two of the box's reports already
           waiting, the native report carries them.
         </p>
         <p>
-          A multi-packet report from the box goes once the device has been still for 12 ms.
+          A multi-packet report from the box is emitted once the real device has been still for 12 ms.
         </p>
         <p>
-          Native reports under another report ID on the same endpoint go first, for two polls at most.
-          While they fill every poll, a report from the box takes the next one and leaves them two in
-          three.
+          Native reports under another report ID on the same endpoint are emitted ahead of the box's
+          report for two polls at most. While they fill every poll, the box's report takes the next
+          poll and leaves them two in three.
         </p>
         <p>
           A change waits until the PC collects the report carrying the previous changes, so a press and
           its release never cancel and changes arrive in the order sent.
         </p>
         <p>
-          Up to 160 key changes wait, about 80 characters sent at once (fewer when capitals use Shift),
-          and 16 button or media changes. Past that the oldest goes ahead of the report it waits for, and
+          Up to 160 key changes wait (80 characters sent at once, two changes each; a capital typed
+          with Shift takes four), and 16 button or media changes. Past that the oldest goes ahead of the report it waits for, and
           the order and final state still hold.
         </p>
         <p>
@@ -200,7 +197,7 @@ const Injection: Component = () => {
         </p>
         <p>
           <A href="/native/commands/option#emit"><code>OPTION(EMIT)</code></A> times the middle row,
-          pacing to the mouse's learnt report rate.{' '}
+          pacing to the learnt native report rate by default.{' '}
           <A href="/native/commands/option#render"><code>OPTION(RENDER)</code></A>, on by default,
           shapes motion through a live per-device model and can render native motion too.
         </p>
@@ -209,11 +206,11 @@ const Injection: Component = () => {
       <DocSection id="safety" title="Safety" caption="Injected state never sticks">
         <p>
           A <A href="/native/commands/inject#inject">force-release</A> always writes 0: it clears an
-          injected hold and masks a physical press.
+          injected hold and masks a native press.
         </p>
         <p>
-          The box clears all injection (every override and pending move) and returns to plain
-          passthrough on any of these:
+          The box clears all injection (every override and pending move) and returns to passthrough
+          on any of these:
         </p>
         <div class="table-scroll">
           <table class="api-params">

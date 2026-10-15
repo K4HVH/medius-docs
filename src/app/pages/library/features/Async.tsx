@@ -9,7 +9,7 @@ const Async: Component = () => {
       <PageHeader>
         <p>
           <code>AsyncDevice</code> is <A href="/library/connection"><code>Device</code></A> with its
-          queries as futures, behind the off-by-default <code>async</code> flag.
+          queries as futures, behind the off-by-default <code>async</code> feature.
         </p>
         <pre><code class="language-bash">cargo add medius --features async</code></pre>
         <p>
@@ -17,7 +17,7 @@ const Async: Component = () => {
         </p>
         <pre><code class="language-bash">cargo add futures</code></pre>
         <p>
-          <code>Result</code> is the fallible return type (see <A href="/library/types/errors">Errors</A>).
+          <A href="/library/types/errors"><code>Result</code></A> is the fallible return type.
         </p>
         <p>See also: <A href="/library/guides/calls#call-kinds">call kinds &amp; timeouts</A>, <A href="/library/guides/connection#threading">concurrency</A>, <A href="/library/guides/testing#testing">testing</A>.</p>
       </PageHeader>
@@ -53,7 +53,7 @@ const Async: Component = () => {
               <tr>
                 <td><code>find</code></td>
                 <td>
-                  Opens the first medius box by USB id and runs the handshake, blocking like{' '}
+                  Opens the first Medius box by USB id and runs the handshake, blocking like{' '}
                   <A href="/library/connection#open"><code>Device::find</code></A>.
                 </td>
               </tr>

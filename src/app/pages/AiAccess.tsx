@@ -30,7 +30,7 @@ curl -H "Accept: text/markdown" https://medius.k4tech.net/library/clip`}</code><
         <p>
           <a href="https://medius.k4tech.net/llms.txt" target="_blank" rel="noreferrer">/llms.txt</a> lists
           every page as a Markdown link, per the{' '}
-          <a href="https://llmstxt.org/" target="_blank" rel="noreferrer">llms.txt</a> convention;{' '}
+          <a href="https://llmstxt.org/" target="_blank" rel="noreferrer">llms.txt</a> convention.{' '}
           <a href="https://medius.k4tech.net/llms-full.txt" target="_blank" rel="noreferrer">/llms-full.txt</a>{' '}
           is every page in one file.
         </p>

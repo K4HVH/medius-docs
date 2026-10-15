@@ -77,7 +77,7 @@ let device = Device::open_mock(MockBox::new())?;
 device.move_rel(5, 5)?;`}</code></pre>
 
         <p>
-          The <A href="/library/features/mock#silent">silent-box card</A> lists the two ways{' '}
+          The <A href="/library/features/mock#silent">silent box</A> section lists the two ways{' '}
           <code>open_mock</code> can fail.
         </p>
       </DocSection>
@@ -138,7 +138,7 @@ mock.set_health(Health::from_flags(0x00));
 assert!(!device.query_health()?.mouse_attached);`}</code></pre>
       </DocSection>
 
-      <DocSection id="inject" title="Injecting inbound traffic" caption="push_log, push_raw, and the three event pushes">
+      <DocSection id="inject" title="Pushing inbound frames" caption="push_log, push_raw, and the three event pushes">
         <pre class="api-signature">fn push_log(&self, level: LogLevel, text: &str)</pre>
         <p><span class="api-badge api-badge--executed">No round-trip</span></p>
         <pre class="api-signature">fn push_raw(&self, bytes: &[u8])</pre>
@@ -151,7 +151,7 @@ assert!(!device.query_health()?.mouse_attached);`}</code></pre>
         <p><span class="api-badge api-badge--executed">No round-trip</span></p>
 
         <p>
-          Each puts bytes on the inbound stream as if the box emitted them; the three event calls
+          Each puts bytes on the inbound stream as if the box sent them; the three event calls
           share one <code>seq</code> counter, as on the wire.
         </p>
 
@@ -193,8 +193,8 @@ assert!(!device.query_health()?.mouse_attached);`}</code></pre>
 
         <p>
           The three event rows each name one{' '}
-          <A href="/library/types/enums#catch-event"><code>CatchEvent</code></A> variant. Losses
-          don't show here; exercise loss handling through <code>CatchState::dropped</code>.
+          <A href="/library/types/enums#catch-event"><code>CatchEvent</code></A> variant. A push records no
+          loss; exercise loss handling through <code>CatchState::dropped</code>.
         </p>
 
         <div class="api-response-label">EXAMPLE</div>
@@ -426,7 +426,7 @@ assert!(matches!(err, Error::BadProtoVer { got: 10 }));`}</code></pre>
               </tr>
               <tr>
                 <td><code>link_lost</code></td>
-                <td>The link between the box's chips dropping and coming back. The clone stays up.</td>
+                <td>The inter-chip link dropping and coming back. The clone stays up.</td>
                 <td><A href="/library/types/structs#stats"><code>Stats::session</code></A> moving.</td>
               </tr>
               <tr>
@@ -436,7 +436,7 @@ assert!(matches!(err, Error::BadProtoVer { got: 10 }));`}</code></pre>
               </tr>
               <tr>
                 <td><code>attach</code></td>
-                <td>A device attaching. A clone that was up is cloned again, which releases the session; one that was down comes up with nothing to release.</td>
+                <td>A real device attaching. A clone that was up is cloned again, which releases the session; one that was down comes up with nothing to release.</td>
                 <td>A clone for the recovery to re-send to.</td>
               </tr>
             </tbody>
@@ -487,7 +487,7 @@ assert_eq!(scale_x()?, 40);`}</code></pre>
               </tr>
               <tr>
                 <td><code>reboot_after_activate</code></td>
-                <td>The reboot after each accepted activate: <code>unanswered</code> firmware queries go unanswered, then the device chip reads on probation for the next <code>pending</code> queries.</td>
+                <td>The reboot after each accepted activate: <code>unanswered</code> firmware queries get no reply, then the device chip reads on probation for the next <code>pending</code> queries.</td>
               </tr>
             </tbody>
           </table>

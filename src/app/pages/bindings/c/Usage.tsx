@@ -63,7 +63,7 @@ const Usage: Component = () => {
              └─ != OK ──▶ medius_last_error_message(buf, cap)   text (this thread)
                           medius_last_error_proto_ver()         byte (BadProtoVer only)
                           medius_last_error_update(&out)        op + status (ErrUpdate only)`}</pre>
-        <div class="api-response-label">READING THE DETAIL</div>
+        <div class="api-response-label">ERROR DETAIL</div>
         <pre class="api-signature">{`uintptr_t medius_last_error_message(char *buf, uintptr_t cap);
 uint8_t   medius_last_error_proto_ver(void);
 bool      medius_last_error_update(MediusUpdateError *out);`}</pre>

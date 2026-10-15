@@ -74,7 +74,7 @@ export const CLIP_PKT_TRIG_MAX = 8;
 export const CLIP_PKT_MATCH_MAX = 16; // one masked head, as wide as a rewrite rule's
 export const CLIP_PKT_MATCH_POOL = 112;
 
-// Autolock scope (the CLIP_SET_AUTOLOCK value): classes whose physical input a playing clip blocks.
+// Autolock scope (the CLIP_SET_AUTOLOCK value): classes whose native input a playing clip blocks.
 export const CLIP_LOCK_AIM = 0x01; // the X and Y cursor axes
 export const CLIP_LOCK_WHEEL = 0x02;
 export const CLIP_LOCK_BUTTONS = 0x04;
@@ -250,8 +250,8 @@ export enum RewriteAction {
   Answer = 4, // control: answer from the payload without asking the device
   Stall = 5, // control: protocol STALL
   Nak = 6, // control: NAK to a timeout on EP0, STALL on a control endpoint above it
-  ReplyPatch = 7, // control IN: overwrite the device's reply at the offset
-  ReplyReplace = 8, // control IN: replace the device's reply with the payload
+  ReplyPatch = 7, // control IN: overwrite the real device's reply at the offset
+  ReplyReplace = 8, // control IN: replace the real device's reply with the payload
 }
 export const RW_ACTION_COUNT = 9;
 
@@ -364,7 +364,7 @@ export enum FrameType {
   // v3.4.0 advanced control layer (§3.14), gated on OPTION(IMPERFECT).
   Raw = 0x19, // [ep_num u8][dir u8][bytes...] put a raw report on a cloned endpoint
   Transfer = 0x1a, // [ep u8][setup 8][OUT data..] run a control request on the device
-  TransferResp = 0x1b, // [ep u8][status u8][IN data..] the device's answer (a separate opcode, SEQ-correlated)
+  TransferResp = 0x1b, // [ep u8][status u8][IN data..] the real device's reply (a separate opcode, SEQ-correlated)
   Rewrite = 0x1c, // [cls][id u16][dir][state][action][off u16][mlen][match][mask][payload] a rewrite rule
   Patch = 0x1d, // [section][cfg][index][offset u16][bytes..] a descriptor patch
   Transform = 0x1e, // [op][sclass][sid u16][dclass][did u16][state] a field transform

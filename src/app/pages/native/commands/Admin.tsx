@@ -16,9 +16,9 @@ const Admin: Component = () => {
         </p>
       </PageHeader>
 
-      <DocSection id="reset" title="RESET" caption="Back to pure passthrough">
+      <DocSection id="reset" title="RESET" caption="Back to passthrough">
         <p>
-          <code>RESET</code> drops all injection and returns the box to plain passthrough.{' '}
+          <code>RESET</code> drops all injection and returns the box to passthrough.{' '}
           <A href="/native/frame#opcodes">Opcode</A> <code>0x04</code>.
         </p>
         <pre class="api-signature">RESET  0x04  ·  payload 1 byte</pre>
@@ -54,7 +54,7 @@ const Admin: Component = () => {
           <A href="/native/commands/led"><code>LED</code></A> override.
         </p>
         <p>
-          The report is then byte-identical to passthrough; a second <code>RESET</code> is a no-op.
+          The emitted report is then byte-identical to passthrough; a second <code>RESET</code> is a no-op.
           The <A href="/native/injection#safety">safety auto-clear</A> performs the same release.
           Library binding:{' '}
           <A href="/library/admin#reset"><code>reset</code></A>.
@@ -98,7 +98,8 @@ const Admin: Component = () => {
       <DocSection id="reboot" title="REBOOT" caption="Restart a chip">
         <p>
           <code>REBOOT</code> restarts one of the two chips, mainly into ROM download mode (the
-          built-in bootloader that accepts new firmware) for flashing.{' '}
+          built-in bootloader that accepts new firmware) for{' '}
+          <A href="/native/flashing">flashing</A>.{' '}
           <A href="/native/frame#opcodes">Opcode</A> <code>0x07</code>.
         </p>
         <pre class="api-signature">REBOOT  0x07  ·  payload 1 byte</pre>
@@ -121,17 +122,16 @@ const Admin: Component = () => {
             </thead>
             <tbody>
               <tr><td>device download</td><td><code>0</code></td><td>Device chip enters ROM download, then flash over the <A href="/native/transport">CH343 link</A>.</td></tr>
-              <tr><td>host download</td><td><code>1</code></td><td>Device relays a download reboot to the host chip; the host flashes over USB3.</td></tr>
+              <tr><td>host download</td><td><code>1</code></td><td>Device chip relays a download reboot to the host chip; the host flashes over USB3.</td></tr>
               <tr><td>device run</td><td><code>2</code></td><td>Device chip reboots to run firmware.</td></tr>
-              <tr><td>host run</td><td><code>3</code></td><td>Device relays a run reboot to the host chip.</td></tr>
+              <tr><td>host run</td><td><code>3</code></td><td>Device chip relays a run reboot to the host chip.</td></tr>
             </tbody>
           </table>
         </div>
         <div class="api-response-label">EFFECT</div>
         <p>
           Reboot-to-run (<code>2</code> or <code>3</code>) is the board's only software cold-reboot;
-          DTR/RTS auto-reset isn't wired. No reply. See{' '}
-          <A href="/native/flashing">Flashing</A>. Library binding:{' '}
+          DTR/RTS auto-reset isn't wired. No reply. Library binding:{' '}
           <A href="/library/admin#reboot"><code>reboot</code></A>.
         </p>
         <div class="api-response-label">EXAMPLE</div>
@@ -184,7 +184,7 @@ const Admin: Component = () => {
         </div>
         <div class="api-response-label">EFFECT</div>
         <p>
-          Emitted only while a control PC is attached; logging before first contact is dropped. The
+          Sent only while a control PC is attached; logging before first contact is dropped. The
           box's other outbound frames are{' '}
           <A href="/native/commands/requests#resp"><code>RESP</code></A>,{' '}
           <A href="/native/commands/transfer#transfer-resp"><code>TRANSFER_RESP</code></A>,{' '}

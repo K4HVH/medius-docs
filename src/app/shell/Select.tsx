@@ -204,7 +204,7 @@ export function Select(props: {
             aria-label={props.label}
             aria-activedescendant={props.filter ? undefined : active()}
           >
-            {/* By place, so a poll handing the same options anew keeps the one under the pointer. */}
+            {/* By place, so a poll returning the same options as new objects keeps the one under the pointer. */}
             <Index each={shown()}>
               {(o, i) => (
                 <button

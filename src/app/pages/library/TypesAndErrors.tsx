@@ -19,7 +19,7 @@ const TypesAndErrors: Component = () => {
 // use medius::types::Button;`}</code></pre>
       </PageHeader>
 
-      <DocSection id="sections" title="Reference pages" caption="Pick a group">
+      <DocSection id="sections" title="Reference pages" caption="Four groups">
         <IndexRow href="/library/types/enums" title="Enums" tag="Button, Action, RebootTarget, LogLevel, CatchEvent" />
         <IndexRow href="/library/types/structs" title="Structs" tag="Version, Health, MouseCaps, KbdCaps, Key, MediaKey, and more" />
         <IndexRow href="/library/types/frames" title="Frames" tag="FrameType, DecodedFrame" />

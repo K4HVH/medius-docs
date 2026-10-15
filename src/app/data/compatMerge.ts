@@ -13,7 +13,7 @@ export const fixHref = (note?: string): string | null =>
   note && SETTING.test(note) ? (/wire rate/i.test(note) ? '/dashboard#wire-rate' : '/dashboard#imperfect-clone') : null;
 const hex = (n: number) => n.toString(16).padStart(4, '0');
 
-// The reports, plus every mouse and keyboard the stats saw cloned on at least minBoxes boxes. The stats
+// The reports, plus every mouse and keyboard the stats record as cloned on at least minBoxes boxes. The stats
 // only record a device once a box has cloned it, so one with no report counts as working. A device on fewer
 // boxes stays out: one box is one person. A product name matches a report, never another stats device:
 // receivers share names.

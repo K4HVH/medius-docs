@@ -10,7 +10,7 @@ const Catch: Component = () => {
       <PageHeader>
         <p>
           <A href="/native/commands/catch#catch"><code>CATCH</code></A> subscribes to traffic through
-          the box: physical input, vendor-interface endpoints, proxied control transactions, raw
+          the box: native input, vendor-interface endpoints, proxied control transactions, raw
           bytes of HID interfaces the semantic model doesn't parse, what the clone emitted, bus
           lifecycle, and the control transfers a <A href="/native/commands/clip#items">clip</A> runs.
         </p>
@@ -20,8 +20,8 @@ const Catch: Component = () => {
         </p>
         <p>
           While subscribed the box pushes a{' '}
-          <A href="/native/commands/catch#motion-event"><code>MOTION_EVENT</code></A> for movement,
-          the wheel, and pan, a{' '}
+          <A href="/native/commands/catch#motion-event"><code>MOTION_EVENT</code></A> for cursor
+          motion, the wheel, and pan, a{' '}
           <A href="/native/commands/catch#usage-event"><code>USAGE_EVENT</code></A> for buttons, keys
           and media, and a{' '}
           <A href="/native/commands/catch#traffic-event"><code>TRAFFIC_EVENT</code></A> for everything
@@ -89,7 +89,7 @@ const Catch: Component = () => {
               <tr><td><code>HID_OUT</code></td><td><code>5</code></td><td>endpoint number</td><td>every interrupt-OUT endpoint</td></tr>
               <tr><td><code>VEND_INTR</code></td><td><code>6</code></td><td>endpoint number</td><td>every vendor interrupt endpoint</td></tr>
               <tr><td><code>VEND_BULK</code></td><td><code>7</code></td><td>endpoint number</td><td>every vendor bulk endpoint</td></tr>
-              <tr><td><code>CONTROL</code></td><td><code>8</code></td><td>endpoint number (<code>0</code> = EP0; on EP0, the requests the clone passes to the device)</td><td>every control endpoint</td></tr>
+              <tr><td><code>CONTROL</code></td><td><code>8</code></td><td>endpoint number (<code>0</code> = EP0; on EP0, the requests the clone relays to the real device)</td><td>every control endpoint</td></tr>
               <tr><td><code>EMIT</code></td><td><code>9</code></td><td>endpoint number</td><td>every emitting endpoint</td></tr>
               <tr><td><code>BUS</code></td><td><code>10</code></td><td>unused</td><td>-</td></tr>
               <tr><td><code>CLIP_XFER</code></td><td><code>11</code></td><td>endpoint number (<code>0</code> = EP0)</td><td>every control endpoint</td></tr>
@@ -121,7 +121,7 @@ const Catch: Component = () => {
           Input classes are captured at the emission merge point <em>before</em> any{' '}
           <A href="/native/commands/lock#scale"><code>LOCK</code> scale</A> or{' '}
           <A href="/native/injection">injection</A>, so a weighed or blocked input still reports
-          its full physical value.
+          its full native value.
         </p>
         <p>
           <code>EMIT</code> is what the clone emitted <em>after</em> injection, locks, and
@@ -228,7 +228,7 @@ const Catch: Component = () => {
         </p>
         <p>
           The library holds an open table past the silence timeout with its injection keepalive,
-          re-asserting the whole table after a device-side blip and across a control-link reconnect;
+          re-asserting the whole table after the box clears it and across a control-link reconnect;
           the library's <code>RESET</code> ends the event stream.
         </p>
         <p>
@@ -249,7 +249,7 @@ const Catch: Component = () => {
               <tr><th><code>clk</code></th><th>Stamped by</th><th>Classes</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>0</code></td><td>the <strong>host</strong> chip, in USB interrupt context, when the real device's transfer completed</td><td><code>MOTION</code> / <code>USAGE</code>, <code>HID_IN</code>, the device's <code>VEND_INTR</code> / <code>VEND_BULK</code> IN</td></tr>
+              <tr><td><code>0</code></td><td>the <strong>host</strong> chip, in USB interrupt context, when the real device's transfer completed</td><td><code>MOTION</code> / <code>USAGE</code>, <code>HID_IN</code>, the real device's <code>VEND_INTR</code> / <code>VEND_BULK</code> IN</td></tr>
               <tr><td><code>1</code></td><td>the <strong>device</strong> chip, at the tap</td><td><code>HID_OUT</code>, both OUT directions, a vendor IN packet from <A href="/native/commands/raw#catch"><code>RAW</code></A> or a <A href="/native/commands/clip#items">clip raw entry</A>, <code>CONTROL</code>, <code>CLIP_XFER</code>, <code>EMIT</code>, <code>BUS</code></td></tr>
             </tbody>
           </table>
@@ -266,7 +266,7 @@ const Catch: Component = () => {
   clk = 0   HID_IN  ts_us = 1286544017   (host chip)
                             ----------
                     delta =      47000 µs / 1000 µs poll = 47 polls
-                                            -> 46 polls where the device said nothing
+                                            -> 46 polls where the device sent nothing
 
   clk = 1   EMIT    ts_us =  902114550   (device chip)
                     ^ smaller than the stamps above, and NOT earlier:
@@ -282,14 +282,14 @@ const Catch: Component = () => {
           <A href="/native/commands/requests#rate"><code>RESP(RATE)</code></A>'s{' '}
           <code>poll_period_us</code> for a poll count, but only where its{' '}
           <A href="/native/commands/requests#rate"><code>CHANGE_DRIVEN</code></A> flag is clear: a
-          change-driven device's idle polls never reach the wire and can't be counted.
+          change-driven device's idle polls carry no report and can't be counted.
         </p>
       </DocSection>
 
-      <DocSection id="motion-event" title="MOTION_EVENT" caption="One physical relative-axis snapshot, box → PC">
+      <DocSection id="motion-event" title="MOTION_EVENT" caption="One native relative-axis snapshot, box → PC">
         <p>
           While an <code>AXIS</code> subscription is active the box pushes a{' '}
-          <code>MOTION_EVENT</code> for each physical report whose motion changed.{' '}
+          <code>MOTION_EVENT</code> for each native report whose motion changed.{' '}
           <A href="/native/frame#opcodes">Opcode</A> <code>0x0C</code>.
         </p>
         <p>
@@ -314,19 +314,19 @@ const Catch: Component = () => {
             <tbody>
               <tr><td>0</td><td><code>ts_us</code></td><td><code>u32</code></td><td>report arrival time in box microseconds, little-endian</td></tr>
               <tr><td>4</td><td><code>clk</code></td><td><code>u8</code></td><td>always <code>0</code> (host chip); see <A href="/native/commands/catch#clocks">the clk byte</A></td></tr>
-              <tr><td>5</td><td><code>dx</code></td><td><code>i16</code></td><td>physical X this report; + = right, little-endian</td></tr>
-              <tr><td>7</td><td><code>dy</code></td><td><code>i16</code></td><td>physical Y this report; + = down, little-endian</td></tr>
-              <tr><td>9</td><td><code>dz</code></td><td><code>i16</code></td><td>physical wheel delta this report; + = up, little-endian</td></tr>
-              <tr><td>11</td><td><code>dpan</code></td><td><code>i16</code></td><td>physical AC Pan (horizontal scroll) delta this report; + = right, little-endian</td></tr>
+              <tr><td>5</td><td><code>dx</code></td><td><code>i16</code></td><td>native X this report; + = right, little-endian</td></tr>
+              <tr><td>7</td><td><code>dy</code></td><td><code>i16</code></td><td>native Y this report; + = down, little-endian</td></tr>
+              <tr><td>9</td><td><code>dz</code></td><td><code>i16</code></td><td>native wheel delta this report; + = up, little-endian</td></tr>
+              <tr><td>11</td><td><code>dpan</code></td><td><code>i16</code></td><td>native AC Pan (horizontal scroll) delta this report; + = right, little-endian</td></tr>
             </tbody>
           </table>
         </div>
         <p>
-          The stamp is taken when the device's interrupt-IN transfer completes, so it is always the
-          host chip's.
+          The stamp is taken when the real device's interrupt-IN transfer completes, so it is always
+          the host chip's.
         </p>
         <div class="api-response-label">EXAMPLE</div>
-        <p>A physical +10 right, no other motion (<code>dx = 10</code>):</p>
+        <p>A native +10 right, no other motion (<code>dx = 10</code>):</p>
         <ByteStrip
           fields={[
             { value: 'A5', name: 'SOF' },
@@ -344,7 +344,7 @@ const Catch: Component = () => {
         />
       </DocSection>
 
-      <DocSection id="usage-event" title="USAGE_EVENT" caption="One physical held-usage snapshot, box → PC">
+      <DocSection id="usage-event" title="USAGE_EVENT" caption="One native held-usage snapshot, box → PC">
         <p>
           While a <code>BTN</code>, <code>KEY</code>, or <code>MEDIA</code> subscription is active
           the box pushes a <code>USAGE_EVENT</code> when that class changes: a class-tagged snapshot
@@ -376,10 +376,10 @@ const Catch: Component = () => {
         <div class="api-response-label">SNAPSHOT</div>
         <p>
           Each entry is 3 bytes and the snapshot is <code>n</code> of them, all one class, since
-          one physical report is one class.
+          one native report is one class.
         </p>
         <p>
-          Only held usages that match the table appear; with none, no event is emitted.
+          Only held usages that match the table appear; with none, no event is sent.
         </p>
         <p>
           A snapshot lists what is currently <em>held</em>, so the release of a usage is the
@@ -388,7 +388,7 @@ const Catch: Component = () => {
         </p>
         <p>
           The box resolves each usage against its entry's direction, but while any other subscriber
-          holds a wider entry it emits on both edges, and only <code>dir</code> tells the two apart.
+          holds a wider entry it sends one on both edges, and only <code>dir</code> tells the two apart.
         </p>
         <p>
           Route by <strong>class</strong>, not by the usages present, and diff successive snapshots
@@ -478,7 +478,7 @@ const Catch: Component = () => {
               <tr><td>a report it ends with a zero-length packet</td><td>one event carrying the report's bytes, b1 set: the PC's read ends only at the packet</td></tr>
               <tr><td>a zero-length packet alone, its answer to a poll it had nothing for</td><td>one event of no bytes, b1 set, in <code>HID_IN</code> as it came and in <code>EMIT</code> as the PC took it</td></tr>
               <tr><td>a zero-length packet whose poll went to a report from the box</td><td>its <code>HID_IN</code> event, and no <code>EMIT</code> event</td></tr>
-              <tr><td>a zero-length packet answering a poll the PC missed: what the device sent before it still waits for the PC</td><td>its <code>HID_IN</code> event, and no <code>EMIT</code> event</td></tr>
+              <tr><td>a zero-length packet answering a poll the PC missed: what the real device sent before it still waits for the PC</td><td>its <code>HID_IN</code> event, and no <code>EMIT</code> event</td></tr>
             </tbody>
           </table>
         </div>
@@ -511,7 +511,7 @@ const Catch: Component = () => {
             <tbody>
               <tr><td>setup</td><td>The 8 setup bytes, from byte 0 of <code>bytes</code>.</td></tr>
               <tr><td>IN data</td><td>The reply the PC received: after a <code>REPLY_PATCH</code> or <code>REPLY_REPLACE</code> <A href="/native/commands/rewrite#actions">rule</A>, or an <code>ANSWER</code>'s payload.</td></tr>
-              <tr><td>OUT data</td><td>The data stage the PC sent, before a <code>PATCH</code> or <code>REPLACE</code> rule rewrote it for the device.</td></tr>
+              <tr><td>OUT data</td><td>The data stage the PC sent, before a <code>PATCH</code> or <code>REPLACE</code> rule rewrote it for the real device.</td></tr>
               <tr><td>b0-b1</td><td>The handshake the PC got. A request a rule refused reads STALL, or NAK for a <code>NAK</code> rule on endpoint 0; a failed request above endpoint 0 reads STALL, as the clone STALLs it there.</td></tr>
             </tbody>
           </table>
@@ -523,8 +523,8 @@ const Catch: Component = () => {
               <tr><th>Transaction</th><th>Why</th></tr>
             </thead>
             <tbody>
-              <tr><td>a standard request on endpoint 0, such as <code>GET_DESCRIPTOR</code> or <code>SET_CONFIGURATION</code></td><td>the clone serves it itself, and a configuration or interface change still raises a <code>BUS</code> event. Some standard requests go to the device and raise a <code>CONTROL</code> event: an interface's <code>GET_DESCRIPTOR</code> for a class descriptor other than the HID and report descriptors, and, while the clone is configured, a device qualifier or other-speed configuration the box did not keep (one too long for it, or at an index past 0)</td></tr>
-              <tr><td>a string the box did not keep</td><td>the clone asks the device for it directly, with no event</td></tr>
+              <tr><td>a standard request on endpoint 0, such as <code>GET_DESCRIPTOR</code> or <code>SET_CONFIGURATION</code></td><td>the clone serves it itself, and a configuration or interface change still raises a <code>BUS</code> event. Some standard requests are relayed to the real device and raise a <code>CONTROL</code> event: an interface's <code>GET_DESCRIPTOR</code> for a class descriptor other than the HID and report descriptors, and, while the clone is configured, a device qualifier or other-speed configuration the box did not keep (one too long for it, or at an index past 0)</td></tr>
+              <tr><td>a string the box did not keep</td><td>the clone asks the real device for it directly, with no event</td></tr>
               <tr><td>one a bus reset cut short</td><td>it never completed</td></tr>
               <tr><td>on endpoint 0, a request with an OUT data stage past 2048 bytes; above endpoint 0, any data stage past 2048 bytes</td><td>the box STALLs it before proxying it</td></tr>
               <tr><td>a request a new SETUP on its endpoint replaced, or, above endpoint 0, one the box had no room to queue</td><td>the box abandons it</td></tr>
@@ -666,10 +666,10 @@ const Catch: Component = () => {
               <tr><th>Class</th><th>Bytes</th><th><code>RULE</code> set when</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>HID_IN</code></td><td>the device's report as it arrived</td><td>a rule then changed or dropped it</td></tr>
-              <tr><td><code>HID_OUT</code>, <code>VEND_INTR</code> / <code>VEND_BULK</code> OUT</td><td>what the PC sent</td><td>a rule then changed or dropped it on its way to the device</td></tr>
+              <tr><td><code>HID_IN</code></td><td>the native report as it arrived</td><td>a rule then changed or dropped it</td></tr>
+              <tr><td><code>HID_OUT</code>, <code>VEND_INTR</code> / <code>VEND_BULK</code> OUT</td><td>what the PC sent</td><td>a rule then changed or dropped it on its way to the real device</td></tr>
               <tr><td><code>VEND_INTR</code> / <code>VEND_BULK</code> IN</td><td>what the PC receives</td><td>a rule changed it; a packet a rule drops raises no event</td></tr>
-              <tr><td><code>EMIT</code></td><td>the wire</td><td>a rule changed the report, or a report merged into it; never on a vendor endpoint, whose rules act at <code>VEND_INTR</code> and <code>VEND_BULK</code>; a dropped report raises no event</td></tr>
+              <tr><td><code>EMIT</code></td><td>the emitted report</td><td>a rule changed the report, or a report merged into it; never on a vendor endpoint, whose rules act at <code>VEND_INTR</code> and <code>VEND_BULK</code>; a dropped report raises no event</td></tr>
               <tr><td><code>CONTROL</code></td><td>the transaction the PC received, on every control endpoint</td><td>a rule rewrote its data, answered it or refused it</td></tr>
             </tbody>
           </table>

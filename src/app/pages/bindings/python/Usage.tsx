@@ -22,7 +22,7 @@ const Usage: Component = () => {
               <tr>
                 <td><span class="api-badge api-badge--executed">Fire-and-forget</span></td>
                 <td>Queues a <A href="/native/frame">frame</A> and returns at once; no reply is read (<A href="/native/injection#fire-and-forget">fire-and-forget</A>).</td>
-                <td><A href="/library/move"><code>move_rel</code></A>, <A href="/library/move"><code>wheel</code></A>, <A href="/library/inject"><code>inject</code></A>, <A href="/library/inject"><code>press</code></A>, <A href="/library/inject"><code>soft_release</code></A>, <A href="/library/lock"><code>scale</code></A>/<A href="/library/lock"><code>lock</code></A>/<A href="/library/lock"><code>unlock</code></A>, <A href="/library/led"><code>led</code></A>, <A href="/library/admin"><code>reset</code></A>, <A href="/library/admin"><code>reapply</code></A>, <A href="/library/options"><code>set_movement_riding</code></A>, <A href="/library/options"><code>set_bearing</code></A>, <A href="/library/options"><code>set_emit_pace</code></A> …</td>
+                <td><A href="/library/move"><code>move_rel</code></A>, <A href="/library/move"><code>wheel</code></A>, <A href="/library/inject"><code>inject</code></A>, <A href="/library/inject"><code>press</code></A>, <A href="/library/inject"><code>soft_release</code></A>, <A href="/library/lock"><code>scale</code></A>/<A href="/library/lock"><code>lock</code></A>/<A href="/library/lock"><code>unlock</code></A>, <A href="/library/led"><code>led</code></A>, <A href="/library/admin"><code>reset</code></A>, <A href="/library/admin"><code>reapply</code></A>, <A href="/library/options"><code>set_movement_riding</code></A>, <A href="/library/options"><code>set_bearing</code></A>, <A href="/library/options"><code>set_emit_pace</code></A> ...</td>
               </tr>
               <tr>
                 <td><span class="api-badge api-badge--responded">Blocks</span></td>
@@ -57,10 +57,10 @@ const Usage: Component = () => {
         </p>
         <pre class="api-signature">{`class MediusError(Exception):
     status:    Status   # the failure code
-    message:   str      # the box's last error text, may be ""
+    message:   str      # the last error text, may be ""
     proto_ver: int      # offending byte for BadProtoVerError, else 0
 
-str(err)   # "ERR_NOT_FOUND: no medius port found"  (or only the name)`}</pre>
+str(err)   # "ERR_NOT_FOUND: no medius device found"  (or only the name)`}</pre>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-python">{`from medius import Device, MediusError, DisconnectedError
 
@@ -71,12 +71,12 @@ try:
 except DisconnectedError:
     print("the link dropped mid-session")
 except MediusError as e:
-    print(e.status, "-", e.message)   # e.g. Status.ERR_NOT_FOUND - no medius port found`}</code></pre>
+    print(e.status.name, "-", e.message)   # e.g. ERR_NOT_FOUND - no medius device found`}</code></pre>
         <div class="callout callout--warning">
           <p>
             A dropped link raises <code>DisconnectedError</code> from a call and from{' '}
             <code>recv()</code>, but a <A href="/bindings/python/streams">stream</A> iterator
-            (<code>for ev in dev.catch_events(CatchFilter.everything()):</code>) ends cleanly.
+            (<code>for ev in dev.catch_events(CatchFilter.everything()):</code>) ends without raising.
             Box-side telemetry behind these errors is on{' '}
             <A href="/library/diagnostics">Diagnostics</A>.
           </p>
@@ -85,8 +85,7 @@ except MediusError as e:
 
       <DocSection id="lifecycle" title="Lifecycle" caption="Handle ownership and release">
         <p>
-          A <code>Device</code> owns a handle: open it, optionally <A href="/bindings/python/api#connect"><code>clone()</code></A> it,
-          release it three ways. Connection sharing is on{' '}
+          Connection sharing is on{' '}
           <A href="/library/connection">Connection</A> and <A href="/library/lifecycle">Lifecycle</A>.
         </p>
         <div class="table-scroll">
@@ -101,11 +100,11 @@ except MediusError as e:
           </table>
         </div>
         <pre class="diagram">{`Device.find() ──┐
-                ├──▶  one USB-serial link  (stays up while ANY handle is open)
+                ├──▶  one USB-serial link  (stays up while any handle is open)
 dev.clone() ────┘
 
   each handle is freed separately; the link closes with the last one`}</pre>
-        <div class="api-response-label">RELEASE ROUTES</div>
+        <div class="api-response-label">RELEASE</div>
         <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Route</th><th>Freed</th></tr></thead>
@@ -150,7 +149,7 @@ dev.close()`}</code></pre>
               <tr><td><code>Usage.media(media)</code></td><td>a consumer/media usage (<A href="/native/commands/usage#consumer">usages</A>)</td></tr>
               <tr><td><A href="/bindings/python/types#motion"><code>Motion.cursor(dx, dy)</code></A></td><td rowspan="2"><code>dev.move_axis(motion, timing, pending)</code><br />see <A href="/library/move">Move</A></td><td>a relative cursor move</td></tr>
               <tr><td><code>Motion.wheel(delta)</code></td><td>a wheel turn</td></tr>
-              <tr><td><A href="/bindings/python/types#locktarget"><code>LockTarget.x()</code></A> / <code>y()</code> / <code>wheel()</code></td><td rowspan="2"><code>dev.lock(target, direction)</code> / <code>unlock</code><br />see <A href="/library/lock">Lock</A></td><td>an axis lock target</td></tr>
+              <tr><td><A href="/bindings/python/types#locktarget"><code>LockTarget.x()</code></A> / <code>y()</code> / <code>wheel()</code> / <code>pan()</code></td><td rowspan="2"><code>dev.lock(target, direction)</code> / <code>unlock</code><br />see <A href="/library/lock">Lock</A></td><td>an axis lock target</td></tr>
               <tr><td><code>LockTarget.usage(usage)</code> (or <code>button</code>/<code>key</code>/<code>media</code>)</td><td>a usage lock target</td></tr>
               <tr><td><A href="/bindings/python/types#catchfilter"><code>CatchFilter.watch(usage)</code></A> / <code>.watch_axis(axis)</code> / <code>.watch_class(cls)</code> / <code>.watch_axes()</code> / <code>.all_input()</code></td><td rowspan="3"><code>dev.catch_events(filters)</code>, <code>dev.input_events(filters)</code><br />see <A href="/library/catch">Catch</A></td><td>one subscription entry on an input class, addressed as a lock is</td></tr>
               <tr><td><code>.traffic(tc, id)</code> / <code>.traffic_class(tc)</code> / <code>.everything()</code></td><td>one entry on a <A href="/bindings/python/types#trafficclass"><code>TrafficClass</code></A>, or the wildcard across every class</td></tr>

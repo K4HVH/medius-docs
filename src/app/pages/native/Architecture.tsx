@@ -22,16 +22,16 @@ const Architecture: Component = () => {
               <tr>
                 <td>Host chip</td>
                 <td>
-                  Reads the mouse on <code>USB3</code> and sets its four relative axes: what an
-                  injected <A href="/native/commands/move">movement</A> comes to, and when it goes
-                  out.
+                  Reads the mouse on <code>USB3</code> and sets the mouse's four relative axes: what
+                  injected <A href="/native/commands/move">motion</A> comes to, and when it is
+                  emitted.
                 </td>
               </tr>
               <tr>
                 <td>Device chip</td>
                 <td>
                   Presents the clone to the PC and merges the host chip's axes into each report it
-                  sends.
+                  emits.
                 </td>
               </tr>
               <tr>
@@ -94,7 +94,7 @@ const Architecture: Component = () => {
       <DocSection id="transparency" title="PC output" caption="Real mouse plus injected input">
         <p>
           The PC enumerates the same model of mouse, with the same buttons and capabilities.
-          Injected input adds to native input (<A href="/native/injection">Injection Model</A>).
+          Injected input adds to native input (<A href="/native/injection">Injection model</A>).
         </p>
         <div class="table-scroll">
           <table class="api-params">
@@ -112,7 +112,7 @@ const Architecture: Component = () => {
               <tr>
                 <td>Goes quiet</td>
                 <td>
-                  Returns to plain passthrough per the{' '}
+                  Returns to passthrough per the{' '}
                   <A href="/native/injection#safety">safety rule</A>.
                 </td>
               </tr>

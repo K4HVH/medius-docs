@@ -17,19 +17,19 @@ const Transfer: Component = () => {
           <A href="/library/advanced/rewrite">rewrite rule</A>, and waits in the host chip's{' '}
           <A href="/native/commands/transfer#proxy">control queue</A> beside the game PC's requests.
         </p>
-        <pre class="diagram">{`  native device          the box  (host chip  |  device chip = the clone)         game PC
+        <pre class="diagram">{`  real device            the box  (host chip  |  device chip = the clone)         game PC
 
   HID report  ---IN--->  [ HID_IN ]--> renderer --> [ EMIT ]---interrupt-IN---->  reads report
   relayed     <--OUT---  [ HID_OUT ]<-- relay <--------------- interrupt-OUT <--  writes report
 
   control     <-- EP0 -> [ CONTROL ]<-- proxy ------------------- EP0 <-------->  class, vendor requests
                   ^
-                  +-- transfer(ep, setup)   <== own messages, past every rule`}</pre>
+                  +-- transfer(ep, setup)   <== dedicated messages, past every rule`}</pre>
         <div class="callout callout--warning">
           <p>
             The advanced control layer needs{' '}
             <A href="/library/options#allow-imperfect-clones"><code>allow_imperfect_clones</code></A>;
-            with it off, the box replies <code>Refused</code> without reaching the device.
+            with it off, the box replies <code>Refused</code> without reaching the real device.
           </p>
         </div>
       </PageHeader>
@@ -42,7 +42,7 @@ const Transfer: Component = () => {
           <table class="api-params">
             <thead><tr><th>Parameter</th><th>Type</th><th>Description</th></tr></thead>
             <tbody>
-              <tr><td><code>ep</code></td><td><code>u8</code></td><td><code>0</code> for EP0, or a control endpoint number the device declares.</td></tr>
+              <tr><td><code>ep</code></td><td><code>u8</code></td><td><code>0</code> for EP0, or a control endpoint number the real device declares.</td></tr>
               <tr><td><code>setup</code></td><td><A href="/library/types/structs#setup"><code>Setup</code></A></td><td>Eight-byte setup packet.</td></tr>
               <tr><td><code>out</code></td><td><code>&amp;[u8]</code></td><td>OUT data stage, sent after the setup packet. Empty for an IN transfer.</td></tr>
             </tbody>
@@ -80,7 +80,7 @@ if reply.status == TransferStatus::Ok {
 }`}</code></pre>
       </DocSection>
 
-      <DocSection id="async" title="On AsyncDevice" caption="transfer awaits the device's reply">
+      <DocSection id="async" title="On AsyncDevice" caption="transfer awaits the native reply">
         <p>
           On <A href="/library/features/async"><code>AsyncDevice</code></A>, <code>transfer</code>{' '}
           and <code>transfer_timeout</code> are futures, awaited like any query.

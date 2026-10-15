@@ -36,7 +36,7 @@ const Types: Component = () => {
           </p>
           <p>
             Variable-length wire data lands in an inline fixed-cap array with a count, never a pointer
-            you own. These shapes are ABI version <code>9</code> (<code>MEDIUS_ABI_VERSION</code> in
+            you own. These shapes are ABI version <code>10</code> (<code>MEDIUS_ABI_VERSION</code> in
             the header); compare it with{' '}
             <A href="/bindings/c/api#module"><code>medius_abi_version()</code></A> once at{' '}
             <A href="/bindings/c#verify">start-up</A>.
@@ -112,8 +112,8 @@ const Types: Component = () => {
             <thead><tr><th>Enumerator</th><th>Value</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>MEDIUS_DEVICE_KIND_UNKNOWN</code></td><td><code>0</code></td><td>Neither a mouse nor a keyboard (a device with no HID interface reads this), or nothing cloned: <A href="/bindings/c/api#inspectors"><code>medius_device_info_is_cloned</code></A> tells them apart.</td></tr>
-              <tr><td><code>MEDIUS_DEVICE_KIND_KEYBOARD</code></td><td><code>1</code></td><td>The device is a keyboard.</td></tr>
-              <tr><td><code>MEDIUS_DEVICE_KIND_MOUSE</code></td><td><code>2</code></td><td>The device is a mouse.</td></tr>
+              <tr><td><code>MEDIUS_DEVICE_KIND_KEYBOARD</code></td><td><code>1</code></td><td>The real device is a keyboard.</td></tr>
+              <tr><td><code>MEDIUS_DEVICE_KIND_MOUSE</code></td><td><code>2</code></td><td>The real device is a mouse.</td></tr>
             </tbody>
           </table>
         </div>
@@ -154,6 +154,7 @@ const Types: Component = () => {
               <tr><td><code>MEDIUS_AXIS_X</code></td><td><code>0</code></td><td>Horizontal cursor movement.</td></tr>
               <tr><td><code>MEDIUS_AXIS_Y</code></td><td><code>1</code></td><td>Vertical cursor movement.</td></tr>
               <tr><td><code>MEDIUS_AXIS_WHEEL</code></td><td><code>2</code></td><td>The scroll wheel.</td></tr>
+              <tr><td><code>MEDIUS_AXIS_PAN</code></td><td><code>3</code></td><td>AC Pan (horizontal scroll).</td></tr>
             </tbody>
           </table>
         </div>
@@ -170,9 +171,9 @@ const Types: Component = () => {
           <table class="api-params">
             <thead><tr><th>Enumerator</th><th>Value</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>MEDIUS_ACTION_SOFT_RELEASE</code></td><td><code>0</code></td><td>Drop the <A href="/native/hardware">box</A>'s override, press or force; a physical hold stays down.</td></tr>
+              <tr><td><code>MEDIUS_ACTION_SOFT_RELEASE</code></td><td><code>0</code></td><td>Drop the <A href="/native/hardware">box</A>'s override, press or force; a hold on the real device stays down.</td></tr>
               <tr><td><code>MEDIUS_ACTION_PRESS</code></td><td><code>1</code></td><td>Force the input down.</td></tr>
-              <tr><td><code>MEDIUS_ACTION_FORCE_RELEASE</code></td><td><code>2</code></td><td>Force the input up, masking a physical hold.</td></tr>
+              <tr><td><code>MEDIUS_ACTION_FORCE_RELEASE</code></td><td><code>2</code></td><td>Force the input up, masking a hold on the real device.</td></tr>
             </tbody>
           </table>
         </div>
@@ -227,7 +228,8 @@ const Types: Component = () => {
               <tr><td><code>MEDIUS_LOCK_TARGET_KIND_X</code></td><td><code>0</code></td><td>Horizontal movement.</td></tr>
               <tr><td><code>MEDIUS_LOCK_TARGET_KIND_Y</code></td><td><code>1</code></td><td>Vertical movement.</td></tr>
               <tr><td><code>MEDIUS_LOCK_TARGET_KIND_WHEEL</code></td><td><code>2</code></td><td>Scroll wheel.</td></tr>
-              <tr><td><code>MEDIUS_LOCK_TARGET_KIND_USAGE</code></td><td><code>3</code></td><td>A momentary usage (the struct's <code>usage</code> field selects which).</td></tr>
+              <tr><td><code>MEDIUS_LOCK_TARGET_KIND_PAN</code></td><td><code>3</code></td><td>AC Pan (horizontal scroll).</td></tr>
+              <tr><td><code>MEDIUS_LOCK_TARGET_KIND_USAGE</code></td><td><code>4</code></td><td>A momentary usage (the struct's <code>usage</code> field selects which).</td></tr>
             </tbody>
           </table>
         </div>
@@ -530,12 +532,12 @@ const Types: Component = () => {
               <tr><td><code>MEDIUS_CATCH_CLASS_BTN</code></td><td><code>0</code></td><td>A mouse button id.</td><td>Every button.</td></tr>
               <tr><td><code>MEDIUS_CATCH_CLASS_KEY</code></td><td><code>1</code></td><td>A HID keyboard usage (modifiers are <code>0xE0</code> to <code>0xE7</code>).</td><td>Every key and modifier.</td></tr>
               <tr><td><code>MEDIUS_CATCH_CLASS_MEDIA</code></td><td><code>2</code></td><td>A 16-bit Consumer usage.</td><td>Every media usage.</td></tr>
-              <tr><td><code>MEDIUS_CATCH_CLASS_AXIS</code></td><td><code>3</code></td><td>A <A href="/bindings/c/types#axis"><code>MediusAxis</code></A>: X, Y, or the wheel.</td><td>Every axis.</td></tr>
+              <tr><td><code>MEDIUS_CATCH_CLASS_AXIS</code></td><td><code>3</code></td><td>A <A href="/bindings/c/types#axis"><code>MediusAxis</code></A>: X, Y, the wheel, or AC Pan.</td><td>Every axis.</td></tr>
               <tr><td><code>MEDIUS_CATCH_CLASS_HID_IN</code></td><td><code>4</code></td><td>A cloned HID interface number.</td><td>Every HID interface.</td></tr>
               <tr><td><code>MEDIUS_CATCH_CLASS_HID_OUT</code></td><td><code>5</code></td><td>An interrupt-OUT endpoint number.</td><td>Every interrupt-OUT endpoint.</td></tr>
               <tr><td><code>MEDIUS_CATCH_CLASS_VENDOR_INTERRUPT</code></td><td><code>6</code></td><td>A vendor interrupt endpoint number.</td><td>Every vendor interrupt endpoint.</td></tr>
               <tr><td><code>MEDIUS_CATCH_CLASS_VENDOR_BULK</code></td><td><code>7</code></td><td>A vendor bulk endpoint number.</td><td>Every vendor bulk endpoint.</td></tr>
-              <tr><td><code>MEDIUS_CATCH_CLASS_CONTROL</code></td><td><code>8</code></td><td>A control endpoint number (<code>0</code> is EP0; on EP0, the requests the clone passes to the device).</td><td>Every control endpoint.</td></tr>
+              <tr><td><code>MEDIUS_CATCH_CLASS_CONTROL</code></td><td><code>8</code></td><td>A control endpoint number (<code>0</code> is EP0; on EP0, the requests the clone relays to the real device).</td><td>Every control endpoint.</td></tr>
               <tr><td><code>MEDIUS_CATCH_CLASS_EMIT</code></td><td><code>9</code></td><td>An emitting endpoint number.</td><td>Every emitting endpoint.</td></tr>
               <tr><td><code>MEDIUS_CATCH_CLASS_BUS</code></td><td><code>10</code></td><td>Nothing; pass <code>MEDIUS_CATCH_ID_ANY</code>.</td><td>Every bus event.</td></tr>
               <tr><td><code>MEDIUS_CATCH_CLASS_CLIP_TRANSFER</code></td><td><code>11</code></td><td>The control endpoint number (<code>0</code> is EP0) a <A href="/bindings/c/api#clip">clip</A>'s transfer ran on.</td><td>Every control endpoint.</td></tr>
@@ -564,7 +566,7 @@ const Types: Component = () => {
     uint8_t          capture;     /* 0 = whole packet; traffic classes only */
 };`}</pre>
         <p>
-          The array you hand to{' '}
+          The array passed to{' '}
           <A href="/bindings/c/api#streams"><code>medius_device_catch_events</code></A> or{' '}
           <A href="/bindings/c/api#streams"><code>medius_device_input_events</code></A>. Build each
           with a <A href="/bindings/c/api#catch-filters"><code>medius_catch_filter_*</code></A>{' '}
@@ -613,7 +615,7 @@ const Types: Component = () => {
           └─ any     { class_ = ANY,              id = ID_ANY }  ──▶ used if neither matched
                      ties inside one tier go to the earlier entry in your array`}</pre>
         <div class="api-response-label">EXAMPLE</div>
-        <pre><code class="language-c">{`/* everything the box can see, first 16 bytes only */
+        <pre><code class="language-c">{`/* every class and id, first 16 bytes only */
 MediusCatchFilter blanket =
     medius_catch_filter_with_capture(medius_catch_filter_everything(), 16);
 
@@ -726,7 +728,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
         </div>
       </DocSection>
 
-      <DocSection id="move-timing" title="MediusMoveTiming" caption="When a move reaches the game PC">
+      <DocSection id="move-timing" title="MediusMoveTiming" caption="When a move is emitted">
         <pre class="api-signature">{`enum MediusMoveTiming : uint8_t`}</pre>
         <p>
           The <code>timing</code> argument of <A href="/bindings/c/api#move"><code>medius_device_move_axis</code></A>,
@@ -736,7 +738,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
           <table class="api-params">
             <thead><tr><th>Enumerator</th><th>Value</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>MEDIUS_MOVE_TIMING_RIDE</code></td><td><code>0</code></td><td>Wait for a real cursor move to carry the delta.</td></tr>
+              <tr><td><code>MEDIUS_MOVE_TIMING_RIDE</code></td><td><code>0</code></td><td>Wait for a native cursor move to carry the delta.</td></tr>
               <tr><td><code>MEDIUS_MOVE_TIMING_NOW</code></td><td><code>1</code></td><td>Emit on the next mouse report, native or not, whatever movement riding is set to.</td></tr>
             </tbody>
           </table>
@@ -754,8 +756,8 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
             <thead><tr><th>Enumerator</th><th>Value</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>MEDIUS_PENDING_MOTION_KEEP</code></td><td><code>0</code></td><td>Leave motion held for a ride alone.</td></tr>
-              <tr><td><code>MEDIUS_PENDING_MOTION_FLUSH</code></td><td><code>1</code></td><td>Emit it now, ignoring the ride window.</td></tr>
-              <tr><td><code>MEDIUS_PENDING_MOTION_DISCARD</code></td><td><code>2</code></td><td>Drop it.</td></tr>
+              <tr><td><code>MEDIUS_PENDING_MOTION_FLUSH</code></td><td><code>1</code></td><td>Emit held motion now, ignoring the ride window.</td></tr>
+              <tr><td><code>MEDIUS_PENDING_MOTION_DISCARD</code></td><td><code>2</code></td><td>Drop held motion.</td></tr>
             </tbody>
           </table>
         </div>
@@ -791,7 +793,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
           <table class="api-params">
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>kind</code></td><td><A href="/bindings/c/types#lock-target-kind"><code>MediusLockTargetKind</code></A></td><td>X, Y, Wheel, or Usage.</td></tr>
+              <tr><td><code>kind</code></td><td><A href="/bindings/c/types#lock-target-kind"><code>MediusLockTargetKind</code></A></td><td>X, Y, Wheel, Pan, or Usage.</td></tr>
               <tr><td><code>usage</code></td><td><A href="/bindings/c/types#input"><code>MediusUsage</code></A></td><td>The button, key, or media usage, when <code>kind == USAGE</code>.</td></tr>
             </tbody>
           </table>
@@ -858,7 +860,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
               <tr><td><code>bcd_usb</code></td><td><code>uint16_t</code></td><td>USB version (bcdUSB), e.g. <code>0x0200</code>.</td></tr>
               <tr><td><code>has_serial</code></td><td><code>uint8_t</code></td><td>The clone serves a serial string.</td></tr>
               <tr><td><code>has_bos</code></td><td><code>uint8_t</code></td><td>The clone serves a BOS descriptor.</td></tr>
-              <tr><td><code>kind</code></td><td><A href="/bindings/c/types#device-kind"><code>MediusDeviceKind</code></A></td><td>The device's primary kind, from its HID report descriptors.</td></tr>
+              <tr><td><code>kind</code></td><td><A href="/bindings/c/types#device-kind"><code>MediusDeviceKind</code></A></td><td>The real device's primary kind, from its HID report descriptors.</td></tr>
               <tr><td><code>product</code></td><td><code>char[MEDIUS_MAX_PRODUCT]</code></td><td>The product string (NUL-terminated; empty when none).</td></tr>
             </tbody>
           </table>
@@ -914,7 +916,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
               <tr><td><code>n_keys</code></td><td><code>uint8_t</code></td><td>Keycode-array slots, or <code>0xFF</code> for an NKRO bitmap.</td></tr>
               <tr><td><code>nkro</code></td><td><code>uint8_t</code></td><td>The keyboard reports an NKRO bitmap.</td></tr>
               <tr><td><code>has_consumer</code></td><td><code>uint8_t</code></td><td>A Consumer collection is present (media injectable).</td></tr>
-              <tr><td><code>has_system</code></td><td><code>uint8_t</code></td><td>A system-control collection is present (passthrough-only).</td></tr>
+              <tr><td><code>has_system</code></td><td><code>uint8_t</code></td><td>A system-control collection is present (relayed only).</td></tr>
               <tr><td><code>has_report_id</code></td><td><code>uint8_t</code></td><td>The keyboard report sits behind a HID report ID.</td></tr>
             </tbody>
           </table>
@@ -966,7 +968,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>device</code></td><td><A href="/bindings/c/types#chipfirmware"><code>MediusChipFirmware</code></A></td><td>The PC-facing chip.</td></tr>
-              <tr><td><code>host_present</code></td><td><code>uint8_t</code></td><td><code>0</code> when the host chip has not answered over the inter-chip link; <code>host</code> is then meaningless.</td></tr>
+              <tr><td><code>host_present</code></td><td><code>uint8_t</code></td><td><code>0</code> when the host chip has not replied over the inter-chip link; <code>host</code> is then meaningless.</td></tr>
               <tr><td><code>host</code></td><td><A href="/bindings/c/types#chipfirmware"><code>MediusChipFirmware</code></A></td><td>The chip that reads the real device.</td></tr>
               <tr><td><code>slot_size</code></td><td><code>uint32_t</code></td><td>Usable bytes in a spare slot; the same on both chips.</td></tr>
               <tr><td><code>device_staged</code></td><td><code>uint8_t</code></td><td>An image is written and waiting to be activated.</td></tr>
@@ -976,7 +978,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
         </div>
       </DocSection>
 
-      <DocSection id="update-error" title="MediusUpdateError" caption="The update op the box refused, and why">
+      <DocSection id="update-error" title="MediusUpdateError" caption="Update op the box refused, and why">
         <p>
           From <A href="/bindings/c/api#update"><code>medius_last_error_update</code></A> after{' '}
           <code>MEDIUS_STATUS_ERR_UPDATE</code>. A confirm that ran out of time gives op 0 and{' '}
@@ -995,13 +997,13 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
       </DocSection>
 
       <DocSection id="stats" title="MediusStats" caption="Box-side delivery / telemetry counters">
-        <p>From <A href="/bindings/c/api#queries"><code>medius_device_query_stats</code></A>. Nonzero <code>tx_drops</code> or <code>tx_wedges</code> means the player's input slipped on the way to the PC; nonzero <code>link_rx_drops</code> or <code>host_rx_drops</code> means it was lost between the box's two chips. <code>relay_drops</code> is relayed traffic and commands that went no further, not lost native input.</p>
+        <p>From <A href="/bindings/c/api#queries"><code>medius_device_query_stats</code></A>. Nonzero <code>tx_drops</code> or <code>tx_wedges</code> means input was lost between the box and the game PC; nonzero <code>link_rx_drops</code> or <code>host_rx_drops</code> means it was lost between the box's two chips. <code>relay_drops</code> is relayed traffic and commands that went no further, not lost native input.</p>
         <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>inject_emits</code></td><td><code>uint32_t</code></td><td>Pure-injection reports emitted.</td></tr>
-              <tr><td><code>tx_drops</code></td><td><code>uint16_t</code></td><td>Reports the clone's IN queue could not hold, so the game PC never saw them (should stay 0).</td></tr>
+              <tr><td><code>tx_drops</code></td><td><code>uint16_t</code></td><td>Reports the clone's IN queue could not hold, so they were never emitted to the game PC (should stay 0).</td></tr>
               <tr><td><code>tx_merges</code></td><td><code>uint16_t</code></td><td>Backed-up reports merged instead of queued.</td></tr>
               <tr><td><code>tx_maxdepth</code></td><td><code>uint8_t</code></td><td>Deepest the TX queue has reached.</td></tr>
               <tr><td><code>tx_wedges</code></td><td><code>uint8_t</code></td><td>Wedged-endpoint recoveries.</td></tr>
@@ -1010,7 +1012,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
               <tr><td><code>config_count</code></td><td><code>uint16_t</code></td><td>SET_CONFIGURATION events (re-enumerations).</td></tr>
               <tr><td><code>link_rx_drops</code></td><td><code>uint32_t</code></td><td>Input frames the device chip could not take off the link from the host chip (should stay 0).</td></tr>
               <tr><td><code>host_rx_drops</code></td><td><code>uint32_t</code></td><td>The same count on the host chip, relayed over the link (should stay 0).</td></tr>
-              <tr><td><code>relay_drops</code></td><td><code>uint32_t</code></td><td>Relayed traffic and commands that went no further, none of it native input: a vendor IN packet that found its endpoint's queue full of the control PC's <code>RAW</code> packets, or a device's zero-length packet answering a poll the PC did not make (the one poll the box runs ahead of a suspended PC); an OUT packet the box had no room to queue, that failed three times on the device's bus, or that a bus reset or <code>SET_INTERFACE</code> overtook; a <code>RAW</code> OUT packet with no room to wait; a relayed request the box could not queue; a flagged <code>MOVE</code> the motion batch could not take; any frame other than native input that either chip's link receive ring dropped; and a frame from the control PC its receive ring had no room for (one a frame), or an overrun of the control port's UART (one an overrun, however many frames it cost).</td></tr>
+              <tr><td><code>relay_drops</code></td><td><code>uint32_t</code></td><td>Relayed traffic and commands that went no further, none of it native input: a vendor IN packet that found its endpoint's queue full of the control PC's <code>RAW</code> packets, or a native zero-length packet answering a poll the PC did not make (the one poll the box runs ahead of a suspended PC); an OUT packet the box had no room to queue, that failed three times on the real device's bus, or that a bus reset or <code>SET_INTERFACE</code> overtook; a <code>RAW</code> OUT packet with no room to wait; a relayed request the box could not queue; a flagged <code>MOVE</code> the motion batch could not take; any frame other than native input that either chip's link receive ring dropped; and a frame from the control PC its receive ring had no room for (one a frame), or an overrun of the control port's UART (one an overrun, however many frames it cost).</td></tr>
               <tr><td><code>session</code></td><td><code>uint16_t</code></td><td>Times the box released some or all of the session state a host set. 0 at boot; it wraps, so compare for inequality. The library watches it for <A href="/library/lifecycle#restart">session recovery</A>.</td></tr>
             </tbody>
           </table>
@@ -1025,7 +1027,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
         </p>
         <div class="table-scroll">
           <table class="api-params">
-            <thead><tr><th>Asked with <code>MEDIUS_DIRECTION_BOTH</code></th><th>Answers about</th></tr></thead>
+            <thead><tr><th>Asked with <code>MEDIUS_DIRECTION_BOTH</code></th><th>Reports</th></tr></thead>
             <tbody>
               <tr><td><code>medius_locks_scale_of</code></td><td>The lowest scale across every direction, relative pair included, where a reversing (negative) one is lower than any pass. Not the figure a delta meets: a delta picks up one from each pair, multiplied.</td></tr>
               <tr><td><code>medius_locks_is_locked</code></td><td>The two fixed signs only. Name <code>_WITH</code> or <code>_AGAINST</code> to ask about one of those.</td></tr>
@@ -1046,7 +1048,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
           <table class="api-params">
             <thead><tr><th>Macro</th><th>Value</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>MEDIUS_LOCK_SCALE_BLOCK</code></td><td><code>0</code></td><td>Keep none of the physical value.</td></tr>
+              <tr><td><code>MEDIUS_LOCK_SCALE_BLOCK</code></td><td><code>0</code></td><td>Keep none of the native value.</td></tr>
               <tr><td><code>MEDIUS_LOCK_SCALE_PASS</code></td><td><code>100</code></td><td>Keep all of it, untouched.</td></tr>
               <tr><td><code>MEDIUS_LOCK_SCALE_MAX</code></td><td><code>255</code></td><td>2.55x, the ceiling.</td></tr>
               <tr><td><code>MEDIUS_LOCK_SCALE_MIN</code></td><td><code>-255</code></td><td>2.55x reversed, the floor. A negative reverses what it keeps, so -100 inverts an axis; axes only.</td></tr>
@@ -1061,7 +1063,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
               <tr><td><code>target</code></td><td><A href="/bindings/c/types#lock-target"><code>MediusLockTarget</code></A></td><td>The weighed axis or usage.</td></tr>
               <tr><td><code>is_blanket</code></td><td><code>bool</code></td><td>The entry covers a whole class; <code>target.usage.kind</code> names it and <code>target.usage.id</code> is unused.</td></tr>
               <tr><td><code>direction</code></td><td><code>uint8_t</code>, a <A href="/bindings/c/types#direction"><code>MEDIUS_DIRECTION_*</code></A> value</td><td>Which direction of the target this entry weighs.</td></tr>
-              <tr><td><code>scale</code></td><td><code>int16_t</code></td><td>Percent of the physical value kept; <code>0</code> is blocked and a negative reverses what it keeps. A momentary usage is one bit, so the box stores the block or pass it renders: never a value between, never negative.</td></tr>
+              <tr><td><code>scale</code></td><td><code>int16_t</code></td><td>Percent of the native value kept; <code>0</code> is blocked and a negative reverses what it keeps. A momentary usage is one bit, so the box stores the block or pass it renders: never a value between, never negative.</td></tr>
             </tbody>
           </table>
         </div>
@@ -1073,7 +1075,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
               <tr><td>A blanket key lock</td><td>One entry per blocked edge, never <code>MEDIUS_DIRECTION_BOTH</code>.</td></tr>
               <tr><td>A media lock, blanket or specific</td><td><code>MEDIUS_DIRECTION_BOTH</code>, always.</td></tr>
               <tr><td>A relative direction under <code>MEDIUS_BEARING_MODE_VECTOR</code></td><td>The effective scale, the lower of X's and Y's, on both axes.</td></tr>
-              <tr><td>The wire cap</td><td>One reply carries 85 entries, well under <code>MEDIUS_MAX_LOCKS</code>; past that the rest is absent, with nothing marking it. See the native <A href="/native/commands/requests#locks">LOCKS</A> budget.</td></tr>
+              <tr><td>The wire cap</td><td>One reply carries 85 entries, under <code>MEDIUS_MAX_LOCKS</code>; past that the rest is absent, with nothing marking it. See the native <A href="/native/commands/requests#locks">LOCKS</A> budget.</td></tr>
               <tr><td>A <code>direction</code> byte no constant names</td><td>The entry is dropped and <code>n</code> excludes it.</td></tr>
             </tbody>
           </table>
@@ -1106,7 +1108,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
             <thead><tr><th>Enumerator</th><th>Value</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>MEDIUS_BEARING_MODE_PER_AXIS</code></td><td><code>0</code></td><td>Each axis compares its sign against its bearing, independently. The default.</td></tr>
-              <tr><td><code>MEDIUS_BEARING_MODE_VECTOR</code></td><td><code>1</code></td><td>The physical delta is projected onto the injected XY vector, and the relative scale weighs only the part along it; the fixed-sign scales still reach what the projection leaves on each axis. One relative scale, the lower of X's and Y's, governs X and Y as one vector, and <A href="/bindings/c/types#locks"><code>MediusLocks</code></A> reports it.</td></tr>
+              <tr><td><code>MEDIUS_BEARING_MODE_VECTOR</code></td><td><code>1</code></td><td>The native delta is projected onto the injected XY vector, and the relative scale weighs only the part along it; the fixed-sign scales still reach what the projection leaves on each axis. One relative scale, the lower of X's and Y's, governs X and Y as one vector, and <A href="/bindings/c/types#locks"><code>MediusLocks</code></A> reports it.</td></tr>
             </tbody>
           </table>
         </div>
@@ -1185,9 +1187,9 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
           <table class="api-params">
             <thead><tr><th>Field</th><th>C type</th><th>True (1) when</th></tr></thead>
             <tbody>
-              <tr><td><code>allowed</code></td><td><code>uint8_t</code></td><td>The opt-in toggle; cloning a device the box can't clone exactly is allowed.</td></tr>
-              <tr><td><code>over_capacity</code></td><td><code>uint8_t</code></td><td>The device has more IN endpoints live at once than the box has transmit FIFOs (four), or more than six HID interfaces, or runs at high speed.</td></tr>
-              <tr><td><code>clone_imperfect</code></td><td><code>uint8_t</code></td><td>The live clone is not an exact copy: an opted-in device the box can't clone exactly, a forced rate, or an applied patch set.</td></tr>
+              <tr><td><code>allowed</code></td><td><code>uint8_t</code></td><td>The opt-in toggle; cloning a device the box can't clone faithfully is allowed.</td></tr>
+              <tr><td><code>over_capacity</code></td><td><code>uint8_t</code></td><td>The real device has more IN endpoints live at once than the box has transmit FIFOs (four), or more than six HID interfaces, or runs at high speed.</td></tr>
+              <tr><td><code>clone_imperfect</code></td><td><code>uint8_t</code></td><td>The live clone is imperfect: an opted-in device the box can't clone faithfully, a forced rate, or an applied patch set.</td></tr>
             </tbody>
           </table>
         </div>
@@ -1218,7 +1220,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
             <tbody>
               <tr><td><code>mode</code></td><td><A href="/bindings/c/types#render-mode"><code>MediusRenderMode</code></A></td><td>The texture stored on the box.</td></tr>
               <tr><td><code>full</code></td><td><code>uint8_t</code></td><td>1 when native motion is rendered by the model rather than relayed.</td></tr>
-              <tr><td><code>ready</code></td><td><code>uint8_t</code></td><td>1 once a profile has armed for the attached device. Nothing is rendered until it has.</td></tr>
+              <tr><td><code>ready</code></td><td><code>uint8_t</code></td><td>1 once a profile has armed for the real device. Nothing is rendered until it has.</td></tr>
             </tbody>
           </table>
         </div>
@@ -1284,7 +1286,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
               <tr><td><code>port</code></td><td><A href="/bindings/c/types#portinfo"><code>MediusPortInfo</code></A></td><td>The box's control port (path + CH343 serial).</td></tr>
               <tr><td><code>version</code></td><td><A href="/bindings/c/types#version"><code>MediusVersion</code></A></td><td>Its firmware version and control protocol, with the box MAC and name.</td></tr>
               <tr><td><code>device</code></td><td><A href="/bindings/c/types#device-info"><code>MediusDeviceInfo</code></A></td><td>The device it clones; zeroed when <code>has_device</code> is 0.</td></tr>
-              <tr><td><code>has_device</code></td><td><code>uint8_t</code></td><td>0 for a box whose <code>version.proto_ver</code> isn't the library's protocol; opening it answers <code>MEDIUS_STATUS_ERR_BAD_PROTO_VER</code>.</td></tr>
+              <tr><td><code>has_device</code></td><td><code>uint8_t</code></td><td>0 for a box whose <code>version.proto_ver</code> isn't the library's protocol; opening it returns <code>MEDIUS_STATUS_ERR_BAD_PROTO_VER</code>.</td></tr>
             </tbody>
           </table>
         </div>
@@ -1309,9 +1311,9 @@ for (uintptr_t i = 0; i < n; i++) {
         </p>
       </DocSection>
 
-      <DocSection id="motion-event" title="MediusMotionEvent" caption="One physical relative-axis snapshot">
+      <DocSection id="motion-event" title="MediusMotionEvent" caption="One native relative-axis snapshot">
         <p>
-          Physical motion at the merge point, before lock suppression or injection: the{' '}
+          Native motion at the merge point, before lock suppression or injection: the{' '}
           <code>Motion</code> arm of a <A href="/bindings/c/types#catch-event"><code>MediusCatchEvent</code></A>,
           raised by a <A href="/bindings/c/types#catch-class"><code>MEDIUS_CATCH_CLASS_AXIS</code></A>{' '}
           subscription.
@@ -1328,6 +1330,7 @@ for (uintptr_t i = 0; i < n; i++) {
               <tr><td><code>dx</code></td><td><code>int16_t</code></td><td>Relative X this report (right positive).</td></tr>
               <tr><td><code>dy</code></td><td><code>int16_t</code></td><td>Relative Y this report (down positive).</td></tr>
               <tr><td><code>dz</code></td><td><code>int16_t</code></td><td>Wheel delta this report (up positive).</td></tr>
+              <tr><td><code>pan</code></td><td><code>int16_t</code></td><td>AC Pan (horizontal-scroll) delta this report (right positive).</td></tr>
             </tbody>
           </table>
         </div>
@@ -1411,7 +1414,7 @@ for (uintptr_t i = 0; i < n; i++) {
               <tr><td><code>MEDIUS_CATCH_CLASS_HID_OUT</code>, <code>_VENDOR_INTERRUPT</code></td><td>Bit 1: a zero-length packet. Bit 7: a rule acted.</td><td><code>medius_traffic_event_zlp</code>, <code>medius_traffic_event_rule_acted</code></td></tr>
               <tr><td><code>MEDIUS_CATCH_CLASS_VENDOR_BULK</code></td><td>Bit 0: end of transfer. Bit 1: a zero-length packet. Bit 7: a rule acted.</td><td><code>medius_traffic_event_bulk_end_of_transfer</code>, <code>medius_traffic_event_zlp</code>, <code>medius_traffic_event_rule_acted</code></td></tr>
               <tr><td><code>MEDIUS_CATCH_CLASS_CONTROL</code></td><td>Bits 0-1: the handshake the game PC received, below. Bit 7: a rule acted.</td><td><code>medius_traffic_event_control_status</code>, into a <code>MediusControlStatus</code>; <code>medius_traffic_event_rule_acted</code></td></tr>
-              <tr><td><code>MEDIUS_CATCH_CLASS_CLIP_TRANSFER</code></td><td>How the transfer ended, a <A href="/bindings/c/types#transfer-outcome"><code>MEDIUS_TRANSFER_STATUS_*</code></A> byte; <code>0xFE</code> when no answer came.</td><td><code>medius_traffic_event_transfer_status</code></td></tr>
+              <tr><td><code>MEDIUS_CATCH_CLASS_CLIP_TRANSFER</code></td><td>How the transfer ended, a <A href="/bindings/c/types#transfer-outcome"><code>MEDIUS_TRANSFER_STATUS_*</code></A> byte; <code>0xFE</code> when no reply came.</td><td><code>medius_traffic_event_transfer_status</code></td></tr>
               <tr><td><code>MEDIUS_CATCH_CLASS_BUS</code></td><td>The bus event kind (table below).</td><td><code>medius_traffic_event_bus_event</code>, into a <code>MediusBusEvent</code></td></tr>
               <tr><td>every other class</td><td><code>0</code>.</td><td>-</td></tr>
             </tbody>
@@ -1429,7 +1432,7 @@ for (uintptr_t i = 0; i < n; i++) {
         <p>
           A <code>CONTROL</code> event is the transaction the game PC received, on every control
           endpoint: IN data is the reply it received, after any reply rule or an ANSWER, and OUT data
-          is what it sent, before a rule rewrote it. A request the box answered from its value cache
+          is what it sent, before a rule rewrote it. A request the box served from its value cache
           still produces an event.
         </p>
         <div class="table-scroll">
@@ -1437,8 +1440,8 @@ for (uintptr_t i = 0; i < n; i++) {
             <thead><tr><th><code>MediusControlStatus</code></th><th>Bits 0-1</th><th>PC received</th></tr></thead>
             <tbody>
               <tr><td><code>MEDIUS_CONTROL_STATUS_OK</code></td><td><code>0</code></td><td>A completed transaction.</td></tr>
-              <tr><td><code>MEDIUS_CONTROL_STATUS_STALLED</code></td><td><code>1</code></td><td>A STALL: from the device, from a rule that refused the request, or, above endpoint 0, for a request that failed.</td></tr>
-              <tr><td><code>MEDIUS_CONTROL_STATUS_NAKED</code></td><td><code>2</code></td><td>NAKs until it gave up, on endpoint 0 only.</td></tr>
+              <tr><td><code>MEDIUS_CONTROL_STATUS_STALLED</code></td><td><code>1</code></td><td>A STALL: from the real device, from a rule that refused the request, or, above endpoint 0, for a request that failed.</td></tr>
+              <tr><td><code>MEDIUS_CONTROL_STATUS_NAKED</code></td><td><code>2</code></td><td>NAKs until the PC gave up, on endpoint 0 only.</td></tr>
               <tr><td><code>MEDIUS_CONTROL_STATUS_OTHER</code></td><td><code>3</code></td><td>A value this build does not know; read <code>flags</code> for it.</td></tr>
             </tbody>
           </table>
@@ -1497,7 +1500,7 @@ for (uintptr_t i = 0; i < n; i++) {
             <tbody>
               <tr><td><code>kind</code></td><td><A href="/bindings/c/types#catch-event-kind"><code>MediusCatchEventKind</code></A></td><td>Which union member is live.</td></tr>
               <tr><td><code>ts_us</code></td><td><code>uint32_t</code></td><td>When the report or packet was seen, in box microseconds. Wraps every ~71.6 minutes and restarts at a chip reboot. See <A href="/library/catch#timestamps">Catch timestamps</A>.</td></tr>
-              <tr><td><code>clock</code></td><td><A href="/bindings/c/types#clock-domain"><code>MediusClockDomain</code></A></td><td>Which chip's clock <code>ts_us</code> came from. Compare stamps only within one domain, or map both onto your own clock with a <A href="/bindings/c/streams#timeline"><code>MediusTimeline</code></A>.</td></tr>
+              <tr><td><code>clock</code></td><td><A href="/bindings/c/types#clock-domain"><code>MediusClockDomain</code></A></td><td>Which chip's clock <code>ts_us</code> came from. Compare stamps only within one domain, or map both onto this machine's clock with a <A href="/bindings/c/streams#timeline"><code>MediusTimeline</code></A>.</td></tr>
               <tr><td><code>data.motion</code></td><td><A href="/bindings/c/types#motion-event"><code>MediusMotionEvent</code></A></td><td>Read when <code>kind == MOTION</code>.</td></tr>
               <tr><td><code>data.usages</code></td><td><A href="/bindings/c/types#usage-event"><code>MediusUsageEvent</code></A></td><td>Read when <code>kind == USAGES</code>.</td></tr>
               <tr><td><code>data.traffic</code></td><td><A href="/bindings/c/types#traffic-event"><code>MediusTrafficEvent</code></A></td><td>Read when <code>kind == TRAFFIC</code>.</td></tr>
@@ -1509,7 +1512,7 @@ for (uintptr_t i = 0; i < n; i++) {
           <table class="api-params">
             <thead><tr><th>Part</th><th>Bytes</th><th>Made of</th></tr></thead>
             <tbody>
-              <tr><td><code>data.motion</code></td><td><code>6</code></td><td>Three <code>int16_t</code> deltas.</td></tr>
+              <tr><td><code>data.motion</code></td><td><code>8</code></td><td>Four <code>int16_t</code> deltas.</td></tr>
               <tr><td><code>data.traffic</code></td><td><code>190</code></td><td>10 bytes of header once padded, plus <code>bytes[180]</code>.</td></tr>
               <tr><td><code>data.usages</code></td><td><code>1028</code></td><td><code>class_</code>, <code>direction</code>, <code>n</code>, plus 256 x 4-byte <code>MediusUsage</code> = 1024.</td></tr>
               <tr><td>the union</td><td><code>1028</code></td><td>The largest arm, so <code>usages</code> sets it.</td></tr>
@@ -1541,9 +1544,9 @@ for (uintptr_t i = 0; i < n; i++) {
         <pre class="api-signature">{`struct MediusInputEvent {
     MediusInputKind   kind;    /* PRESS = 0, RELEASE = 1, MOTION = 2   */
     uint32_t          ts_us;
-    MediusClockDomain clock;   /* always HOST_CHIP for physical input  */
+    MediusClockDomain clock;   /* always HOST_CHIP for native input    */
     MediusUsage       usage;   /* the edge's usage; zeroed for MOTION  */
-    int16_t           dx, dy, dz;
+    int16_t           dx, dy, dz, pan;
 };`}</pre>
         <p>
           Written by <A href="/bindings/c/streams#input"><code>medius_input_stream_recv</code></A> and
@@ -1555,9 +1558,9 @@ for (uintptr_t i = 0; i < n; i++) {
             <tbody>
               <tr><td><code>kind</code></td><td><A href="/bindings/c/types#input-event-kind"><code>MediusInputKind</code></A></td><td>Which fields are live.</td></tr>
               <tr><td><code>ts_us</code></td><td><code>uint32_t</code></td><td>The report's arrival stamp, in the <code>clock</code> chip's microseconds.</td></tr>
-              <tr><td><code>clock</code></td><td><A href="/bindings/c/types#clock-domain"><code>MediusClockDomain</code></A></td><td>Always <code>MEDIUS_CLOCK_DOMAIN_HOST_CHIP</code>: physical input is stamped on the host chip.</td></tr>
+              <tr><td><code>clock</code></td><td><A href="/bindings/c/types#clock-domain"><code>MediusClockDomain</code></A></td><td>Always <code>MEDIUS_CLOCK_DOMAIN_HOST_CHIP</code>: native input is stamped on the host chip.</td></tr>
               <tr><td><code>usage</code></td><td><A href="/bindings/c/types#input"><code>MediusUsage</code></A></td><td>The button, key, or media usage this is an edge on; zeroed for <code>MOTION</code>.</td></tr>
-              <tr><td><code>dx</code>, <code>dy</code>, <code>dz</code></td><td><code>int16_t</code></td><td>Relative X, Y, and wheel this report; zero unless <code>kind</code> is <code>MOTION</code>.</td></tr>
+              <tr><td><code>dx</code>, <code>dy</code>, <code>dz</code>, <code>pan</code></td><td><code>int16_t</code></td><td>Relative X, Y, wheel, and AC Pan this report; zero unless <code>kind</code> is <code>MOTION</code>.</td></tr>
             </tbody>
           </table>
         </div>
@@ -1580,13 +1583,13 @@ for (uintptr_t i = 0; i < n; i++) {
             <tbody>
               <tr><td><code>host_ns</code></td><td><code>uint64_t</code></td><td>When the event happened, on the caller's monotonic clock.</td></tr>
               <tr><td><code>box_us</code></td><td><code>uint64_t</code></td><td>The event's stamp, unwrapped: a raw <code>ts_us</code> wraps every ~71.6 minutes.</td></tr>
-              <tr><td><code>excess_ns</code></td><td><code>uint64_t</code></td><td>How much later than the measured floor this event reached you. Jitter, not latency.</td></tr>
+              <tr><td><code>excess_ns</code></td><td><code>uint64_t</code></td><td>How much later than the measured floor this event reached the caller. Jitter, not latency.</td></tr>
             </tbody>
           </table>
         </div>
       </DocSection>
 
-      <DocSection id="clip-trigger" title="MediusClipTrigger" caption="One physical-input binding that drives the clip">
+      <DocSection id="clip-trigger" title="MediusClipTrigger" caption="One native-input binding that drives the clip">
         <p>
           A managed binding added with <A href="/bindings/c/api#clip"><code>medius_clip_bind</code></A>: when <code>on</code> hits <code>edge</code>,
           the box runs <code>action</code> on the clip. Build <code>on</code> with the{' '}
@@ -1596,10 +1599,10 @@ for (uintptr_t i = 0; i < n; i++) {
           <table class="api-params">
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>on</code></td><td><A href="/bindings/c/types#input"><code>MediusUsage</code></A></td><td>The physical button, key, or media usage that fires the binding.</td></tr>
+              <tr><td><code>on</code></td><td><A href="/bindings/c/types#input"><code>MediusUsage</code></A></td><td>The native button, key, or media usage that fires the binding.</td></tr>
               <tr><td><code>edge</code></td><td><A href="/bindings/c/types#edge"><code>MediusEdge</code></A></td><td>Which edge of <code>on</code> fires it.</td></tr>
-              <tr><td><code>action</code></td><td><A href="/bindings/c/types#clip-action"><code>MediusClipAction</code></A></td><td>What it does to the clip.</td></tr>
-              <tr><td><code>consume</code></td><td><code>uint8_t</code></td><td>1 suppresses the input before the PC; 0 passes it through.</td></tr>
+              <tr><td><code>action</code></td><td><A href="/bindings/c/types#clip-action"><code>MediusClipAction</code></A></td><td>What the binding does to the clip.</td></tr>
+              <tr><td><code>consume</code></td><td><code>uint8_t</code></td><td>1 suppresses the input before the game PC; 0 relays it.</td></tr>
             </tbody>
           </table>
         </div>
@@ -1662,7 +1665,7 @@ medius_clip_unbind_packet(clip, &held);   /* by key */`}</code></pre>
               <tr><td><code>loop_</code></td><td><code>uint8_t</code></td><td>Playback loops at the clip end (retained mode only).</td></tr>
               <tr><td><code>retain</code></td><td><code>uint8_t</code></td><td>The loaded clip is retained so it can rewind and replay (0 = streaming).</td></tr>
               <tr><td><code>finalized</code></td><td><code>uint8_t</code></td><td>A retained clip's end is fixed, so it can replay and loop.</td></tr>
-              <tr><td><code>ride</code></td><td><code>uint8_t</code></td><td>The clip's motion waits for a real move under <A href="/library/options#set-movement-riding">movement riding</A>.</td></tr>
+              <tr><td><code>ride</code></td><td><code>uint8_t</code></td><td>The clip's motion waits for a native move under <A href="/library/options#set-movement-riding">movement riding</A>.</td></tr>
               <tr><td><code>triggers</code></td><td><A href="/bindings/c/types#clip-trigger"><code>MediusClipTrigger</code></A><code>[MEDIUS_CLIP_TRIG_MAX]</code></td><td>The bound input triggers, <code>triggers[0..n]</code>.</td></tr>
               <tr><td><code>n</code></td><td><code>uint8_t</code></td><td>Live entries in <code>triggers</code>.</td></tr>
               <tr><td><code>packet_triggers</code></td><td><A href="/bindings/c/types#clip-packet-trigger"><code>MediusClipPacketTrigger</code></A><code>[MEDIUS_CLIP_PKT_TRIG_MAX]</code></td><td>The bound packet triggers, <code>packet_triggers[0..packet_n]</code>, in the order the box holds them, each with its <code>hits</code>.</td></tr>
@@ -1699,8 +1702,8 @@ medius_clip_unbind_packet(clip, &held);   /* by key */`}</code></pre>
               <tr><td><code>underruns</code></td><td><code>uint16_t</code></td><td>Empty-ring episodes.</td></tr>
               <tr><td><code>overruns</code></td><td><code>uint16_t</code></td><td>Appends dropped because the ring was full.</td></tr>
               <tr><td><code>seq_gaps</code></td><td><code>uint16_t</code></td><td>Dropped append frames detected.</td></tr>
-              <tr><td><code>xfers</code></td><td><code>uint16_t</code></td><td>Clip transfers the device completed.</td></tr>
-              <tr><td><code>xfer_errs</code></td><td><code>uint16_t</code></td><td>Clip transfers that ended any other way: a refusal, no answer, no room in the box's queue, or dropped behind one the device did not answer.</td></tr>
+              <tr><td><code>xfers</code></td><td><code>uint16_t</code></td><td>Clip transfers the real device completed.</td></tr>
+              <tr><td><code>xfer_errs</code></td><td><code>uint16_t</code></td><td>Clip transfers that ended any other way: a refusal, no reply, no room in the box's queue, or dropped behind one the real device did not reply to.</td></tr>
               <tr><td><code>gated</code></td><td><code>uint16_t</code></td><td>Raw reports and transfers the box discarded because the imperfect-clone opt-in was off.</td></tr>
               <tr><td><code>held_n</code></td><td><code>uint16_t</code></td><td>Held usages in <code>held</code>.</td></tr>
               <tr><td><code>held</code></td><td><code>MediusUsage[MEDIUS_MAX_USAGES]</code></td><td>The buttons, keys, and media the clip is holding down; test one with <A href="/bindings/c/api#inspectors"><code>medius_clip_status_is_held</code></A>.</td></tr>
@@ -1725,15 +1728,15 @@ medius_clip_unbind_packet(clip, &held);   /* by key */`}</code></pre>
         </div>
       </DocSection>
 
-      <DocSection id="transfer-outcome" title="MediusTransferOutcome" caption="Device answer to a control transfer">
-        <p>Filled by <A href="/bindings/c/api#advanced"><code>medius_device_transfer</code></A>. <code>MEDIUS_STATUS_OK</code> means the box answered at all; <code>status</code> is the protocol result.</p>
+      <DocSection id="transfer-outcome" title="MediusTransferOutcome" caption="Real device's reply to a control transfer">
+        <p>Filled by <A href="/bindings/c/api#advanced"><code>medius_device_transfer</code></A>. <code>MEDIUS_STATUS_OK</code> means the box replied at all; <code>status</code> is the protocol result.</p>
         <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>status</code></td><td><code>uint8_t</code></td><td>A <code>MEDIUS_TRANSFER_STATUS_*</code> value (see below).</td></tr>
               <tr><td><code>len</code></td><td><code>uint16_t</code></td><td>Valid bytes in <code>data</code>.</td></tr>
-              <tr><td><code>data</code></td><td><code>uint8_t[MEDIUS_MAX_DEV_PAYLOAD]</code></td><td>The IN data the device returned.</td></tr>
+              <tr><td><code>data</code></td><td><code>uint8_t[MEDIUS_MAX_DEV_PAYLOAD]</code></td><td>The IN data the real device returned.</td></tr>
             </tbody>
           </table>
         </div>
@@ -1742,10 +1745,10 @@ medius_clip_unbind_packet(clip, &held);   /* by key */`}</code></pre>
             <thead><tr><th>Enumerator</th><th>Value</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>MEDIUS_TRANSFER_STATUS_OK</code></td><td><code>0x00</code></td><td>Completed; data is in <code>data</code>.</td></tr>
-              <tr><td><code>MEDIUS_TRANSFER_STATUS_REFUSED</code></td><td><code>0xFC</code></td><td>The box refused it before the device: opt-in off, malformed, <code>wLength</code> above 504 or the OUT data shorter than it, or the host chip's control queue full.</td></tr>
-              <tr><td><code>MEDIUS_TRANSFER_STATUS_STALL</code></td><td><code>0xFD</code></td><td>The device STALLed.</td></tr>
-              <tr><td><code>MEDIUS_TRANSFER_STATUS_NAK</code></td><td><code>0xFE</code></td><td>The device did not finish within 500 ms or the transfer failed on the bus, the endpoint is undeclared, no answer crossed the link within 800 ms, or the game PC has the clone suspended, and the device with it.</td></tr>
-              <tr><td><code>MEDIUS_TRANSFER_STATUS_NO_DEVICE</code></td><td><code>0xFF</code></td><td>No device attached on the host chip.</td></tr>
+              <tr><td><code>MEDIUS_TRANSFER_STATUS_REFUSED</code></td><td><code>0xFC</code></td><td>The box refused it before the real device: opt-in off, malformed, <code>wLength</code> above 504 or the OUT data shorter than it, or the host chip's control queue full.</td></tr>
+              <tr><td><code>MEDIUS_TRANSFER_STATUS_STALL</code></td><td><code>0xFD</code></td><td>The real device STALLed.</td></tr>
+              <tr><td><code>MEDIUS_TRANSFER_STATUS_NAK</code></td><td><code>0xFE</code></td><td>The real device did not finish within 500 ms or the transfer failed on the bus, the endpoint is undeclared, no reply crossed the link within 800 ms, or the game PC has the clone suspended, and the real device with it.</td></tr>
+              <tr><td><code>MEDIUS_TRANSFER_STATUS_NO_DEVICE</code></td><td><code>0xFF</code></td><td>No real device attached to the host chip.</td></tr>
             </tbody>
           </table>
         </div>
@@ -1823,7 +1826,7 @@ medius_clip_unbind_packet(clip, &held);   /* by key */`}</code></pre>
             <tbody>
               <tr><td><code>applied</code></td><td><code>uint8_t</code></td><td>The clone serves a non-empty patched set, which a later store leaves alone until the next presentation.</td></tr>
               <tr><td><code>pending</code></td><td><code>uint8_t</code></td><td>The stored set differs from the one the clone serves: not applied yet, changed or emptied since, refused, or held back by the opt-in.</td></tr>
-              <tr><td><code>refused</code></td><td><code>uint8_t</code></td><td>The stored set failed a clone or <A href="/native/commands/patch#ladder">consistency check</A> when last presented and is unchanged since, so the device is served unpatched; the box log names the check.</td></tr>
+              <tr><td><code>refused</code></td><td><code>uint8_t</code></td><td>The stored set failed a clone or <A href="/native/commands/patch#ladder">consistency check</A> when last presented and is unchanged since, so the clone is presented unpatched; the box log names the check.</td></tr>
               <tr><td><code>table_full</code></td><td><code>uint8_t</code></td><td>The box refused the last new patch or overwrite for room: 16 patches, or no space left in the 1024-byte pool. The next change to the set, or a clear, resets it.</td></tr>
               <tr><td><code>n</code>, <code>entries</code></td><td><code>uint16_t</code>, <code>MediusPatchEntry[]</code></td><td>The stored patches.</td></tr>
             </tbody>
@@ -1846,7 +1849,7 @@ medius_clip_unbind_packet(clip, &held);   /* by key */`}</code></pre>
       </DocSection>
 
       <DocSection id="transforms" title="MediusTransforms" caption="Transform-table summary">
-        <p>Filled by <A href="/bindings/c/api#transforms"><code>medius_device_query_transforms</code></A>: a full flag and one <A href="/bindings/c/types#transform"><code>MediusTransform</code></A> per entry, up to <code>MEDIUS_MAX_TRANSFORM_ENTRIES</code> (8).</p>
+        <p>Filled by <A href="/bindings/c/api#transforms"><code>medius_device_query_transforms</code></A>: a full flag and one <A href="/bindings/c/types#transform"><code>MediusTransform</code></A> per entry, up to <code>MEDIUS_MAX_TRANSFORM_ENTRIES</code> (32).</p>
         <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
@@ -1874,8 +1877,8 @@ medius_clip_unbind_packet(clip, &held);   /* by key */`}</code></pre>
               <tr><td><code>MEDIUS_STATUS_OK</code></td><td><code>0</code></td><td>Success.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_IO</code></td><td><code>1</code></td><td>An underlying serial or OS error.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_NOT_FOUND</code></td><td><code>2</code></td><td>No port has the box's VID/PID, or no box matches the <A href="/bindings/c/api#discovery">discovery</A> id or kind.</td></tr>
-              <tr><td><code>MEDIUS_STATUS_ERR_NO_REPLY</code></td><td><code>3</code></td><td>The box never answered the version query during the <A href="/native/connection#handshake">handshake</A>.</td></tr>
-              <tr><td><code>MEDIUS_STATUS_ERR_BAD_PROTO_VER</code></td><td><code>4</code></td><td>The box answered with an unexpected <code>proto_ver</code> (see <code>medius_last_error_proto_ver</code>), including a box the <A href="/bindings/c/api#discovery">discovery</A> openers matched.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_NO_REPLY</code></td><td><code>3</code></td><td>The box never replied to the version query during the <A href="/native/connection#handshake">handshake</A>.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_BAD_PROTO_VER</code></td><td><code>4</code></td><td>The box replied with an unexpected <code>proto_ver</code> (see <code>medius_last_error_proto_ver</code>), including a box the <A href="/bindings/c/api#discovery">discovery</A> openers matched.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_QUERY_TIMEOUT</code></td><td><code>5</code></td><td>A query waited past its timeout with no reply.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_DISCONNECTED</code></td><td><code>6</code></td><td>The link dropped (also returned by a stream when it closes).</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_FRAME_TOO_LONG</code></td><td><code>7</code></td><td>An outbound frame exceeded the wire limit.</td></tr>

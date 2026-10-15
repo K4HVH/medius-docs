@@ -28,7 +28,7 @@ const Frame: Component = () => {
           </table>
         </div>
         <p>
-          Max payload 512 bytes, max frame 519. Multi-byte numbers are little-endian: 16-bit{' '}
+          Max frame 519 bytes. Multi-byte numbers are little-endian: 16-bit{' '}
           <code>100</code> is <code>64 00</code>.
         </p>
       </PageHeader>
@@ -55,7 +55,7 @@ const Frame: Component = () => {
 
       <DocSection id="opcodes" title="Opcodes" caption="TYPE byte">
         <p>
-          Opcodes run <code>0x01</code> to <code>0x1E</code>. An unrecognised opcode is ignored.
+          An unrecognised opcode is ignored.
         </p>
         <div class="table-scroll">
           <table class="api-params">

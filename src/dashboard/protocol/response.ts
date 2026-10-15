@@ -636,7 +636,7 @@ export function parseResp(payload: Uint8Array): Resp | null {
   }
 }
 
-// Parse a TRANSFER_RESP payload (§3.14): [ep u8][status u8][IN data..]. Its own opcode, not a RESP
+// Parse a TRANSFER_RESP payload (§3.14): [ep u8][status u8][IN data..]. A separate opcode, not a RESP
 // frame, correlated by the SEQ that echoes the TRANSFER.
 export function parseTransferResp(payload: Uint8Array): TransferResult {
   if (payload.length < 2) {

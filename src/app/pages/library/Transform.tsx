@@ -14,7 +14,7 @@ const Transform: Component = () => {
         </p>
         <p>
           Transforms run before rendering, so <A href="/library/inject">injection</A>, riding and
-          rendering see the transformed field. They are session state on the same lifecycle as a{' '}
+          rendering act on the transformed field. They are session state on the same lifecycle as a{' '}
           <A href="/library/lock"><code>lock</code></A>.
         </p>
         <pre class="diagram">{`  native report        the box's semantic path                          the wire
@@ -52,7 +52,7 @@ const Transform: Component = () => {
               <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>t</code></td><td><A href="/library/types/structs#transform"><code>Transform</code></A></td><td>The <A href="/library/types/enums#transform-op">operation</A>, source and destination <A href="/library/types/enums#lock-target">fields</A>. A pair the op cannot address, or one field named as both ends, is <A href="/library/types/errors#errors"><code>Error::TransformOpFields</code></A>; installing one past <code>Transforms::CAPACITY</code> is <code>Error::TransformTableFull</code>; one the box refuses is absent from <A href="/library/transform#query-transforms"><code>query_transforms</code></A>.</td></tr>
+              <tr><td><code>t</code></td><td><A href="/library/types/structs#transform"><code>Transform</code></A></td><td>The <A href="/library/types/enums#transform-op">operation</A>, source and destination <A href="/library/types/enums#lock-target">fields</A>. A pair the op cannot address, or one field named as both ends, is <A href="/library/types/errors#errors"><code>Error::TransformOpFields</code></A>. Installing one past <code>Transforms::CAPACITY</code> is <code>Error::TransformTableFull</code>. One the box refuses is absent from <A href="/library/transform#query-transforms"><code>query_transforms</code></A>.</td></tr>
             </tbody>
           </table>
         </div>

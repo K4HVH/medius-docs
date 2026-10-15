@@ -181,7 +181,7 @@ describe('DeviceLock', () => {
     const { getByText, container } = render(() => <DeviceLock />);
     fireEvent.click(getByText('Media'));
     await settle();
-    expect(optionsOf(container, 'Direction')).toEqual(['The whole usage']);
+    expect(optionsOf(container, 'Direction')).toEqual(['Both']);
   });
 
   it('drops a direction the newly picked class cannot address', async () => {

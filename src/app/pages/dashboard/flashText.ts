@@ -23,7 +23,7 @@ export function flashWait(p: FlashProgress | null | undefined): string | null {
 export function flashErrorText(e: unknown): string {
   // A DOMException isn't an Error everywhere, so Web Serial's wording is matched on the message.
   const message = typeof e === 'object' && e !== null && 'message' in e ? String((e as { message: unknown }).message) : '';
-  if (/device has been lost/i.test(message)) return 'The box went away partway through.';
+  if (/device has been lost/i.test(message)) return 'The box disconnected partway through.';
   // Web Serial's wording says nothing about what to do. Matched exactly: the box's BUSY says "already
   // open" too, about an update session.
   if (/port is already open/i.test(message)) {

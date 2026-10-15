@@ -178,7 +178,7 @@ export function createBoxes(deps: BoxesDeps): Boxes {
     if (wasSelected) choosing(into.key);
   };
 
-  // False hands the port to whichever entry owns the box that answered on it.
+  // False: the port goes to the entry that owns the box which answered on it.
   const seen = (s: BoxSession, port: SerialPort, pr: Probe): boolean => {
     const self = bySession(s);
     const mac = boxId(versionOf(pr));

@@ -65,7 +65,7 @@ const ENTRIES: Entry[] = [
   {
     path: '/', section: 'home', nav: 'Home', title: 'Medius', kind: 'home',
     fullTitle: 'Medius: replacement firmware for the MAKCU box',
-    description: 'Medius is replacement firmware for the MAKCU box: it clones your mouse or keyboard to the PC and adds input sent over an open protocol.',
+    description: 'Medius is replacement firmware for the MAKCU box: it clones your mouse or keyboard to the PC and injects input sent over an open protocol.',
   },
 
   guide('/guide', 'Start here', 'Start here',
@@ -90,25 +90,25 @@ const ENTRIES: Entry[] = [
   native('/native/quickstart', 'Overview', 'Quickstart', 'Quickstart',
     'Wire a MAKCU box running Medius, open the 6 Mbaud serial port, send a first MOVE frame, then check the path with HEALTH.'),
   native('/native/architecture', 'Overview', 'Architecture', 'Architecture',
-    'How a Medius box presents a clone of the real mouse or keyboard to the game PC, passes its input through, and adds injected input.'),
+    'How a Medius box presents a clone of the real mouse or keyboard to the game PC, relays its native reports, and adds injected input.'),
   native('/native/hardware', 'Overview', 'Hardware', 'Hardware',
     "The MAKCU box's three USB ports, which cable goes where, the USB1 and USB3 power hazard, and unplugging safely."),
   native('/native/transport', 'Protocol', 'Transport', 'Transport',
     'The control link: a CH343 USB-serial port at a fixed 6 Mbaud carrying binary frames only, and the USB ID that identifies the box.'),
   native('/native/connection', 'Protocol', 'Connection', 'Connection',
     'Open the serial port, find the Medius box, and confirm its protocol version with one QUERY(VERSION) round trip or the boot hello.'),
-  native('/native/frame', 'Protocol', 'Frame Format', 'Frame format',
+  native('/native/frame', 'Protocol', 'Frame format', 'Frame format',
     'The one packet shape every Medius message uses: sync byte, TYPE, SEQ, length, payload and CRC16, plus the full opcode list.'),
-  native('/native/injection', 'Protocol', 'Injection Model', 'Injection model',
-    "How injected input adds to the real device's: axes and usages, MOVE and INJECT, reports at the native rate, and the safety clear."),
+  native('/native/injection', 'Protocol', 'Injection model', 'Injection model',
+    'How injected input adds to native input: axes and usages, MOVE and INJECT, reports at the native report rate, and the safety rules.'),
   native('/native/commands/inject', 'Commands', 'Inject', 'Inject',
-    'INJECT (0x03): press or release a mouse button, keyboard key or media key on top of physical input, named by class and usage id.'),
+    'INJECT (0x03): press or release a mouse button, keyboard key or media key on top of native input, named by class and usage id.'),
   native('/native/commands/move', 'Commands', 'Move', 'Move',
-    "MOVE (0x01): inject relative cursor motion, wheel scroll or horizontal pan, summed with the real mouse's motion in one report."),
+    "MOVE (0x01): inject relative cursor motion, wheel scroll or horizontal pan, summed with native motion in one report."),
   native('/native/commands/lock', 'Commands', 'Lock', 'Lock',
-    'LOCK (0x0A): set how much of one physical input reaches the game PC, from blocked to amplified, per class, axis or bearing.'),
+    'LOCK (0x0A): set how much of one native input reaches the game PC, from blocked to amplified, per class, axis or bearing.'),
   native('/native/commands/catch', 'Commands', 'Catch', 'Catch',
-    'CATCH (0x0B): subscribe to traffic through the box, from physical input events to vendor endpoints, control transfers and bus events.'),
+    'CATCH (0x0B): subscribe to traffic through the box, from native input events to vendor endpoints, control transfers and bus events.'),
   native('/native/commands/transform', 'Commands', 'Transform', 'Transform',
     'TRANSFORM (0x1E): swap or remap one declared field of the cloned device into another, such as a mouse button onto a key.'),
   native('/native/commands/option', 'Commands', 'Option', 'Option',
@@ -139,24 +139,24 @@ const ENTRIES: Entry[] = [
     'Fixes for common Medius problems: no reply to QUERY(VERSION), injection that does nothing, buttons that release, a PC that shuts off.'),
 
   {
-    path: '/ai', section: 'ai', group: 'AI Access', nav: 'AI & LLMs', title: 'AI and LLM access',
+    path: '/ai', section: 'ai', group: 'AI access', nav: 'AI & LLMs', title: 'AI and LLM access',
     fullTitle: 'Medius docs for AI agents and LLMs',
     description: 'Read the Medius docs from an AI agent: a Markdown twin of every page, llms.txt and llms-full.txt, and a read-only MCP server.',
   },
 
-  library('/library', 'Getting Started', 'Introduction', 'Rust Library',
+  library('/library', 'Getting started', 'Introduction', 'Rust Library',
     'The medius Rust crate: open a MAKCU box running Medius, inject mouse, keyboard and media input, and read what the box reports.',
     'Rust library for MAKCU boxes · Medius'),
-  library('/library/connection', 'Getting Started', 'Connection', 'Connection',
+  library('/library/connection', 'Getting started', 'Connection', 'Connection',
     'Open a Device in Rust: auto-detect the box or name its port, run the handshake in the same call, and release it by dropping the handle.'),
-  library('/library/discovery', 'Getting Started', 'Discovery', 'Discovery',
+  library('/library/discovery', 'Getting started', 'Discovery', 'Discovery',
     'List every connected Medius box from Rust, open one by its stable identity, or open the first box cloning a mouse or a keyboard.'),
   library('/library/inject', 'API', 'Inject', 'Inject',
     'inject, press, release and force_release: drive a mouse button, keyboard key or media key from Rust, one INJECT frame each.'),
   library('/library/move', 'API', 'Move', 'Move',
     'move_axis, move_rel, wheel and pan: inject cursor motion and scrolling from Rust, plus _now variants that skip movement riding.'),
   library('/library/lock', 'API', 'Lock', 'Lock',
-    'scale, lock, unlock and their axis and class variants: set how much physical input reaches the game PC, from Rust.'),
+    'scale, lock, unlock and their axis and class variants: set how much native input reaches the game PC, from Rust.'),
   library('/library/catch', 'API', 'Catch', 'Catch',
     'input_events and catch_events: subscribe from Rust to decoded press and release edges or to the raw traffic stream through the box.'),
   library('/library/transform', 'API', 'Transform', 'Transform',
@@ -175,7 +175,7 @@ const ENTRIES: Entry[] = [
     'stage_firmware, activate_firmware and update_firmware: update either chip of a Medius box from Rust over the open connection.'),
   library('/library/lifecycle', 'API', 'Lifecycle', 'Lifecycle',
     'reapply and reconnect: keep held overrides past the silence timeout and restore them after a dropped link, from Rust.'),
-  library('/library/diagnostics', 'API', 'Logs & Counters', 'Logs & counters',
+  library('/library/diagnostics', 'API', 'Logs & counters', 'Logs & counters',
     "logs and counters: read the box's log stream and the link's frame statistics from Rust without blocking."),
   library('/library/advanced/raw', 'Advanced control', 'Raw injection', 'Raw injection',
     'raw: put a report on a cloned endpoint byte for byte from Rust, bypassing the semantic model, behind the imperfect-clone opt-in.'),
@@ -213,9 +213,9 @@ const ENTRIES: Entry[] = [
     fullTitle: 'C, C++ and Python libraries for MAKCU boxes · Medius',
     description: 'Drive a MAKCU box running Medius from C, C++ or Python: which binding to pick, and what each one covers.',
   },
-  binding('c', '', 'Getting Started', 'Install', 'Install',
+  binding('c', '', 'Getting started', 'Install', 'Install',
     'Install the Medius C and C++ library: download the release archive for your platform, then build against medius.h and link.'),
-  binding('c', '/quickstart', 'Getting Started', 'First program', 'First program',
+  binding('c', '/quickstart', 'Getting started', 'First program', 'First program',
     'A first C program for a Medius box: connect, read the firmware version, move, click, wait for one input event, and free.'),
   binding('c', '/usage', 'Usage', 'Calls & errors', 'Calls & errors',
     'How the C binding behaves: fire-and-forget and blocking calls, MediusStatus codes and the last error, handle lifetime, builders.'),
@@ -227,11 +227,11 @@ const ENTRIES: Entry[] = [
     'Every C struct, enum, status code and sizing constant in medius.h, linked to what each value means.'),
   binding('c', '/build', 'Build', 'Build & features', 'Build & features',
     'Linking the Medius C library: compiler and linker flags, the off-by-default mock feature, and the prebuilt release archives.'),
-  binding('python', '', 'Getting Started', 'Install', 'Install',
+  binding('python', '', 'Getting started', 'Install', 'Install',
     'pip install medius: the Python library for MAKCU boxes running Medius, with its requirements, a version check and a first connection.',
     'Python library for MAKCU boxes: install · Medius'),
-  binding('python', '/quickstart', 'Getting Started', 'First program', 'First program',
-    'A first Python program for a Medius box: find the box, move the cursor, click, and read one physical input event.'),
+  binding('python', '/quickstart', 'Getting started', 'First program', 'First program',
+    'A first Python program for a Medius box: find the box, move the cursor, click, and read one native input event.'),
   binding('python', '/usage', 'Usage', 'Calls & errors', 'Calls & errors',
     'How the Python binding behaves: blocking and fire-and-forget calls, MediusError and its subclasses, handle lifetime, builders.'),
   binding('python', '/streams', 'Usage', 'Streams', 'Streams',
@@ -264,17 +264,17 @@ const ENTRIES: Entry[] = [
     'MAKCU stock firmware against Medius, measured the same way: devices, passthrough, injected motion, control link, buttons, recovery, features, software.',
     'MAKCU stock firmware vs Medius'),
   comparison('/comparison/devices', 'Devices', 'Devices',
-    'Which USB devices MAKCU stock firmware and Medius clone, how closely each clone matches its device, endpoint 0 answers and clone time.'),
+    'Which USB devices MAKCU stock firmware and Medius clone, how faithful each clone is, endpoint 0 replies and clone time.'),
   comparison('/comparison/passthrough', 'Passthrough', 'Passthrough',
-    "A device relayed through MAKCU stock firmware and Medius: reports kept in order, relay timing, reads while injecting, and requests between PC and device."),
+    'A device relayed through MAKCU stock firmware and Medius: reports kept in order, relay timing, reads while injecting, and traffic with the real device.'),
   comparison('/comparison/injection', 'Injected motion', 'Injected motion',
     'Injected moves on MAKCU stock firmware and Medius: latency, reports per move, reports the box adds, totals, and a freshly cloned device.'),
   comparison('/comparison/control-link', 'Control link', 'Control link',
-    'Query round trips on MAKCU stock firmware and Medius, and what broken input on the control port does.'),
+    'Query round trips on MAKCU stock firmware and Medius, and what malformed input on the control port does.'),
   comparison('/comparison/input', 'Buttons and keys', 'Buttons, keys and locks',
-    'Buttons, keys and locks on MAKCU stock firmware and Medius: physical and injected presses held together, and physical input through a lock.'),
+    'Buttons, keys and locks on MAKCU stock firmware and Medius: native and injected presses held together, and native input through a lock.'),
   comparison('/comparison/recovery', 'Recovery', 'Recovery',
-    'What MAKCU stock firmware and Medius do when a program stops talking, the device is replugged, or the PC restarts or sleeps.'),
+    'What MAKCU stock firmware and Medius do when a program stops sending, the real device is replugged, or the PC restarts or sleeps.'),
   comparison('/comparison/features', 'Features', 'Features',
     'What the commands of MAKCU stock firmware and Medius can do: motion, buttons, keys, locks, game pads, USB traffic and the box itself.'),
   comparison('/comparison/software', 'Software', 'Software',
@@ -313,7 +313,7 @@ export interface Address extends Omit<Item, 'kind'> {
 // A place's id: lowercase letters, digits and hyphens, as the server's redirects spell an address. No dot,
 // so a Markdown twin (/guide/compatibility.md) is never read as a place on the page above it.
 export const PLACE_ID = /^[a-z0-9][a-z0-9-]*$/;
-// A page that moved is answered by its redirect, never as a place on the page above it.
+// A page that moved is served its redirect, never as a place on the page above it.
 const MOVED_FROM = new Set(Object.keys(MOVED));
 
 export function addressFor(pathname: string): Address | null {
@@ -355,8 +355,8 @@ export function placeAddress(page: string, id: string): string | null {
   return BY_PATH.has(at) || MOVED_FROM.has(at) ? null : at;
 }
 
-// The page a path shows: an address inside a page shows that page, unless the server answered it with the
-// 404 page.
+// The page a path shows: an address inside a page shows that page, unless the server served the
+// 404 page for it.
 export function pagePath(pathname: string): string {
   return pathname === lostPath ? pathname : (addressFor(pathname)?.parent ?? pathname);
 }

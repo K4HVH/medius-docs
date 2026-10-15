@@ -54,7 +54,7 @@ export function offerKey(s: Signals): string {
   return d && (d.vid || d.pid) ? `${hex(d.vid)}:${hex(d.pid)}` : 'unread';
 }
 
-// The box's side of a fix: reads answer null when the box doesn't (it restarts as a setting takes),
+// The box's side of a fix: reads return null when the box doesn't reply (it restarts as a setting takes),
 // and writes get no reply.
 export interface FixIO {
   now(): number;

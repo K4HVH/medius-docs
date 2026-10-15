@@ -30,7 +30,7 @@ const Transfer: Component = () => {
           <p>
             <code>TRANSFER</code> is advanced control and runs only under the{' '}
             <A href="/native/commands/option#imperfect">imperfect-clone opt-in</A>. Otherwise a
-            request with a full setup packet gets <code>0xFC</code> and never reaches the device.
+            request with a full setup packet gets <code>0xFC</code> and never reaches the real device.
           </p>
         </div>
       </PageHeader>
@@ -61,15 +61,15 @@ const Transfer: Component = () => {
           </table>
         </div>
         <p>
-          Offsets 1 to 8 are the setup packet exactly as the device receives it, never rewritten or
-          retried.
+          Offsets 1 to 8 are the setup packet exactly as the real device receives it, never rewritten
+          or retried.
         </p>
         <div class="api-response-label">DATA STAGE</div>
         <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Value</th><th>Effect</th></tr></thead>
             <tbody>
-              <tr><td>bit 7 = 1, IN</td><td>bytes after offset 8 ignored; the reply carries what the device sent, up to <code>wLength</code></td></tr>
+              <tr><td>bit 7 = 1, IN</td><td>bytes after offset 8 ignored; the reply carries what the real device sent, up to <code>wLength</code></td></tr>
               <tr><td>bit 7 = 0, OUT</td><td>the first <code>wLength</code> bytes sent, the rest ignored; fewer is refused</td></tr>
             </tbody>
           </table>
@@ -177,10 +177,10 @@ const Transfer: Component = () => {
               <tr><th>Value</th><th>State</th><th>Means</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>0x00</code></td><td>completed</td><td>the device finished the status stage; an IN request's data follows</td></tr>
-              <tr><td><code>0xFC</code></td><td>refused</td><td>stopped before the device, per the <A href="/native/commands/transfer#transfer">refusals</A></td></tr>
-              <tr><td><code>0xFD</code></td><td>STALL</td><td>the device STALLed the request</td></tr>
-              <tr><td><code>0xFE</code></td><td>no answer</td><td>device didn't finish within 500 ms, the transfer failed on the bus, the endpoint is undeclared, no reply crossed the link within 800 ms, or the game PC has the clone suspended, and the device with it</td></tr>
+              <tr><td><code>0x00</code></td><td>completed</td><td>the real device finished the status stage; an IN request's data follows</td></tr>
+              <tr><td><code>0xFC</code></td><td>refused</td><td>stopped before the real device, per the <A href="/native/commands/transfer#transfer">refusals</A></td></tr>
+              <tr><td><code>0xFD</code></td><td>STALL</td><td>the real device STALLed the request</td></tr>
+              <tr><td><code>0xFE</code></td><td>no answer</td><td>the real device didn't finish within 500 ms, the transfer failed on the bus, the endpoint is undeclared, no reply crossed the link within 800 ms, or the game PC has the clone suspended, and the device with it</td></tr>
               <tr><td><code>0xFF</code></td><td>no device</td><td>nothing attached on the host chip, or the host chip is re-enumerating it</td></tr>
             </tbody>
           </table>
@@ -232,7 +232,7 @@ const Transfer: Component = () => {
               <tr><th>Quantity</th><th>Value</th></tr>
             </thead>
             <tbody>
-              <tr><td>Device reply, host chip</td><td>500 ms, then <code>0xFE</code>.</td></tr>
+              <tr><td>Native reply, host chip</td><td>500 ms, then <code>0xFE</code>.</td></tr>
               <tr><td>Link reply, device chip</td><td>800 ms, then <code>0xFE</code>.</td></tr>
               <tr><td>Frames held while one runs</td><td>63 frames, the running one included, or just under 16 KiB of payload; a frame past either is dropped.</td></tr>
               <tr><td>Injection silence timer</td><td>Restarts when the frame is read and again when a reply arrives; an 800 ms timeout leaves it counting from the frame.</td></tr>
@@ -250,7 +250,7 @@ const Transfer: Component = () => {
         <div class="callout callout--info">
           <p>
             An <code>0xFE</code> from the 800 ms window leaves the request queued on the host chip;
-            it can still reach the device after the reply, and its late result is dropped.
+            it can still reach the real device after the reply, and its late result is dropped.
           </p>
         </div>
       </DocSection>
@@ -281,7 +281,7 @@ const Transfer: Component = () => {
         </p>
         <div class="callout callout--warning">
           <p>
-            A slow request holds the device's EP0 for up to 500 ms, and a game PC request queued
+            A slow request holds the real device's EP0 for up to 500 ms, and a game PC request queued
             behind it waits that long.
           </p>
         </div>

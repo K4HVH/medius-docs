@@ -93,8 +93,8 @@ const Devices: Component = () => {
         </Show>
       </div>
       <p class="src">
-        Owners' reports from Discord, and every mouse and keyboard the usage stats saw on 2 or more boxes.
-        Reported: the latest release on the day of the report.
+        Owners' reports from Discord, and every mouse and keyboard the usage stats recorded on 2 or more boxes.
+        The Reported column gives the latest release on the day of the report.
       </p>
 
       <DocSection id="limits" title="Limits">
@@ -114,7 +114,7 @@ const Devices: Component = () => {
                 <td>A device over either limit, or with a vendor bulk or isochronous endpoint, needs Imperfect clone</td>
               </tr>
               <tr><td>Devices</td><td class="v">1 per box</td><td>A receiver carrying a mouse and a keyboard counts as 1</td></tr>
-              <tr><td>USB speed</td><td class="v">Full speed</td><td>High-speed devices run at full speed through the box</td></tr>
+              <tr><td>USB speed</td><td class="v">Full speed (12 Mbit/s)</td><td>High-speed devices run at full speed through the box</td></tr>
             </tbody>
           </table>
         </div>

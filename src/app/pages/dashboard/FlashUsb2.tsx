@@ -93,7 +93,7 @@ export const Usb2Flash = (props: { onBusy?: (busy: boolean) => void }) => {
 
   // Tags each read with its selection, so a slow earlier read can't arm its bytes under a newer file.
   const picks: Record<FlashChip, number> = { device: 0, host: 0 };
-  // FileUpload calls onError THEN onChange for one selection, so onFiles must not clear that rejection.
+  // FileUpload calls onError, then onChange, for one selection, so onFiles must not clear that rejection.
   const rejected: Record<FlashChip, boolean> = { device: false, host: false };
   const onFiles = (c: FlashChip, fs: File[]) => {
     const mine = ++picks[c];
@@ -172,12 +172,9 @@ export const Usb2Flash = (props: { onBusy?: (busy: boolean) => void }) => {
         <p class="mut">{runs(landed())}</p>
       </Show>
       <Show when={otherWire()}>
-        {(proto) => (
-          <div class="callout callout--info">
-            This box speaks protocol {proto()} and this page protocol {PROTO_VER}, so the page can flash it but
-            not control it.
-          </div>
-        )}
+        <div class="callout callout--info">
+          This box speaks a different protocol from this page, so the page can flash it but not control it.
+        </div>
       </Show>
       <div class="acts">
         <Button variant="primary" onClick={() => navigate('/dashboard')}>
@@ -321,7 +318,7 @@ export const Usb2Flash = (props: { onBusy?: (busy: boolean) => void }) => {
           <Show when={split()}>
             <div class="callout callout--warning">
               The main chip would run {fmt(after('device'))} and the mouse-side chip {fmt(after('host'))}. If they
-              can't talk to each other, the mouse stops working and the mouse-side chip can only be flashed over
+              can't talk to each other, your mouse stops working and the mouse-side chip can only be flashed over
               USB3.
             </div>
             <div class="checks col">

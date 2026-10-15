@@ -51,9 +51,9 @@ const Types: Component = () => {
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th><th>Meaning</th></tr></thead>
               <tbody>
-                <tr><td><code>SOFT_RELEASE</code></td><td><code>0</code></td><td>release unless the user is physically holding it</td></tr>
+                <tr><td><code>SOFT_RELEASE</code></td><td><code>0</code></td><td>release unless held on the real device</td></tr>
                 <tr><td><code>PRESS</code></td><td><code>1</code></td><td>hold down</td></tr>
-                <tr><td><code>FORCE_RELEASE</code></td><td><code>2</code></td><td>release even against a physical hold</td></tr>
+                <tr><td><code>FORCE_RELEASE</code></td><td><code>2</code></td><td>release even against a hold on the real device</td></tr>
               </tbody>
             </table>
           </div>
@@ -109,7 +109,7 @@ const Types: Component = () => {
               <thead><tr><th>Member</th><th>Value</th><th>Meaning</th></tr></thead>
               <tbody>
                 <tr><td><code>PER_AXIS</code></td><td><code>0</code></td><td>each axis compares its sign against its bearing, independently; the default</td></tr>
-                <tr><td><code>VECTOR</code></td><td><code>1</code></td><td>the physical delta is projected onto the injected direction, and the relative scale weighs only the part along it; one relative scale, the lower of X's and Y's, governs X and Y as one vector, and the fixed-sign scales still reach what the projection leaves on each axis</td></tr>
+                <tr><td><code>VECTOR</code></td><td><code>1</code></td><td>the native delta is projected onto the injected direction, and the relative scale weighs only the part along it; one relative scale, the lower of X's and Y's, governs X and Y as one vector, and the fixed-sign scales still reach what the projection leaves on each axis</td></tr>
               </tbody>
             </table>
           </div>
@@ -127,11 +127,12 @@ const Types: Component = () => {
                 <tr><td><code>X</code></td><td><code>0</code></td></tr>
                 <tr><td><code>Y</code></td><td><code>1</code></td></tr>
                 <tr><td><code>WHEEL</code></td><td><code>2</code></td></tr>
-                <tr><td><code>USAGE</code></td><td><code>3</code></td></tr>
+                <tr><td><code>PAN</code></td><td><code>3</code></td></tr>
+                <tr><td><code>USAGE</code></td><td><code>4</code></td></tr>
               </tbody>
             </table>
           </div>
-          <p>Built by <A href="/bindings/python/types#locktarget"><code>LockTarget.x/y/wheel/usage</code></A> (and the <code>button</code>/<code>key</code>/<code>media</code> shortcuts).</p>
+          <p>Built by <A href="/bindings/python/types#locktarget"><code>LockTarget.x/y/wheel/pan/usage</code></A> (and the <code>button</code>/<code>key</code>/<code>media</code> shortcuts).</p>
         </Anchor>
 
         <Anchor id="blanket" label="Blanket">
@@ -337,8 +338,8 @@ const Types: Component = () => {
               <thead><tr><th>Member</th><th>Value</th><th>Fires on</th></tr></thead>
               <tbody>
                 <tr><td><code>BOTH</code></td><td><code>0</code></td><td>either edge of the trigger usage</td></tr>
-                <tr><td><code>PRESS</code></td><td><code>1</code></td><td>the physical press edge</td></tr>
-                <tr><td><code>RELEASE</code></td><td><code>2</code></td><td>the physical release edge</td></tr>
+                <tr><td><code>PRESS</code></td><td><code>1</code></td><td>the native press edge</td></tr>
+                <tr><td><code>RELEASE</code></td><td><code>2</code></td><td>the native release edge</td></tr>
               </tbody>
             </table>
           </div>
@@ -361,7 +362,7 @@ const Types: Component = () => {
           <p>The action a bound trigger of either kind runs on the box, matching the <A href="/bindings/python/api#clip"><code>clip.start/stop/pause/resume/restart/toggle</code></A> methods.</p>
         </Anchor>
         <Anchor id="cliptrigger" label="ClipTrigger">
-          <p>A dataclass binding a physical usage's edge to a clip action, passed to <A href="/bindings/python/api#clip"><code>clip.bind()</code></A>. The box runs the action with no host round-trip.</p>
+          <p>A dataclass binding a native usage's edge to a clip action, passed to <A href="/bindings/python/api#clip"><code>clip.bind()</code></A>. The box runs the action with no host round-trip.</p>
           <div class="table-scroll">
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
@@ -369,7 +370,7 @@ const Types: Component = () => {
                 <tr><td><code>on</code></td><td><A href="/bindings/python/types#input"><code>Usage</code></A></td><td>the trigger usage (button, key, or media)</td></tr>
                 <tr><td><code>edge</code></td><td><A href="/bindings/python/types#edge"><code>Edge</code></A></td><td>which edge fires the action</td></tr>
                 <tr><td><code>action</code></td><td><A href="/bindings/python/types#clipaction"><code>ClipAction</code></A></td><td>what the box runs</td></tr>
-                <tr><td><code>consume</code></td><td><code>bool</code></td><td>suppress the physical edge so it does not reach the PC (default <code>False</code>)</td></tr>
+                <tr><td><code>consume</code></td><td><code>bool</code></td><td>suppress the native edge so it does not reach the game PC (default <code>False</code>)</td></tr>
               </tbody>
             </table>
           </div>
@@ -425,7 +426,7 @@ clip.clear_triggers()             # both kinds`}</code></pre>
                 <tr><td><code>loop</code></td><td><code>bool</code></td><td>playback loops at the clip end (retained mode only)</td></tr>
                 <tr><td><code>retain</code></td><td><code>bool</code></td><td>the loaded clip is retained so it can rewind and replay</td></tr>
                 <tr><td><code>finalized</code></td><td><code>bool</code></td><td>a retained clip's end is fixed, ready to replay and loop</td></tr>
-                <tr><td><code>ride</code></td><td><code>bool</code></td><td>the clip's motion waits for a real move under <A href="/library/options#set-movement-riding">movement riding</A></td></tr>
+                <tr><td><code>ride</code></td><td><code>bool</code></td><td>the clip's motion waits for a native move under <A href="/library/options#set-movement-riding">movement riding</A></td></tr>
                 <tr><td><code>triggers</code></td><td><code>List[<A href="/bindings/python/types#cliptrigger">ClipTrigger</A>]</code></td><td>the bound input triggers (up to 8)</td></tr>
                 <tr><td><code>packet_triggers</code></td><td><code>List[<A href="/bindings/python/types#clippackettrigger">ClipPacketTrigger</A>]</code></td><td>the bound packet triggers (up to 8), in the order the box holds them, each with its <code>hits</code></td></tr>
               </tbody>
@@ -442,8 +443,8 @@ clip.clear_triggers()             # both kinds`}</code></pre>
                 <tr><td><code>played</code></td><td><code>int</code></td><td>bytes played from the clip start (retained progress; ~0 while streaming)</td></tr>
                 <tr><td><code>ticks</code></td><td><code>int</code></td><td>content frames played since the box booted (gap runs excluded)</td></tr>
                 <tr><td><code>underruns</code> / <code>overruns</code> / <code>seq_gaps</code></td><td><code>int</code></td><td>empty-ring / ring-full / dropped-append counts</td></tr>
-                <tr><td><code>xfers</code></td><td><code>int</code></td><td>clip transfers the device completed</td></tr>
-                <tr><td><code>xfer_errs</code></td><td><code>int</code></td><td>clip transfers that ended any other way: a refusal, no answer, no room in the box's queue, or dropped behind one the device did not answer</td></tr>
+                <tr><td><code>xfers</code></td><td><code>int</code></td><td>clip transfers the real device completed</td></tr>
+                <tr><td><code>xfer_errs</code></td><td><code>int</code></td><td>clip transfers that ended any other way: a refusal, no reply, no room in the box's queue, or dropped behind one the real device did not reply to</td></tr>
                 <tr><td><code>gated</code></td><td><code>int</code></td><td>raw reports and transfers the box discarded because the imperfect-clone opt-in was off</td></tr>
                 <tr><td><code>held</code></td><td><code>List[Usage]</code></td><td>the held-usage snapshot: the buttons, keys, and media the clip is holding down (one shape, like a <A href="/bindings/python/types#usagesnapshot"><code>UsageSnapshot</code></A>)</td></tr>
                 <tr><td><code>is_held(usage)</code></td><td><code>bool</code></td><td>test one <A href="/bindings/python/types#input"><code>Usage</code></A> in <code>held</code></td></tr>
@@ -490,7 +491,7 @@ clip.clear_triggers()             # both kinds`}</code></pre>
                 <tr><td><code>HID_OUT</code></td><td><code>5</code></td><td>an endpoint number</td><td>every interrupt-OUT endpoint</td></tr>
                 <tr><td><code>VENDOR_INTERRUPT</code></td><td><code>6</code></td><td>an endpoint number</td><td>every vendor interrupt endpoint</td></tr>
                 <tr><td><code>VENDOR_BULK</code></td><td><code>7</code></td><td>an endpoint number</td><td>every vendor bulk endpoint</td></tr>
-                <tr><td><code>CONTROL</code></td><td><code>8</code></td><td>an endpoint number (<code>0</code> = EP0; on EP0, the requests the clone passes to the device)</td><td>every control endpoint</td></tr>
+                <tr><td><code>CONTROL</code></td><td><code>8</code></td><td>an endpoint number (<code>0</code> = EP0; on EP0, the requests the clone relays to the real device)</td><td>every control endpoint</td></tr>
                 <tr><td><code>EMIT</code></td><td><code>9</code></td><td>an endpoint number</td><td>every emitting endpoint</td></tr>
                 <tr><td><code>BUS</code></td><td><code>10</code></td><td>unused</td><td>the bus lifecycle</td></tr>
                 <tr><td><code>CLIP_TRANSFER</code></td><td><code>11</code></td><td>the endpoint number (<code>0</code> = EP0) a <A href="/bindings/python/api#clip">clip</A>'s transfer ran on</td><td>every control endpoint</td></tr>
@@ -538,6 +539,7 @@ clip.clear_triggers()             # both kinds`}</code></pre>
                 <tr><td><code>X</code></td><td><code>0</code></td></tr>
                 <tr><td><code>Y</code></td><td><code>1</code></td></tr>
                 <tr><td><code>WHEEL</code></td><td><code>2</code></td></tr>
+                <tr><td><code>PAN</code></td><td><code>3</code></td></tr>
               </tbody>
             </table>
           </div>
@@ -555,7 +557,7 @@ clip.clear_triggers()             # both kinds`}</code></pre>
           <pre class="api-signature">{`CatchFilter.watch(usage)               -> CatchFilter         # a Usage, or a Button/Key/MediaKey
 CatchFilter.watch_axis(axis)           -> CatchFilter         # one Axis
 CatchFilter.watch_class(input_class)   -> CatchFilter         # every usage in one Class
-CatchFilter.watch_axes()               -> CatchFilter         # X, Y and the wheel
+CatchFilter.watch_axes()               -> CatchFilter         # X, Y, the wheel and AC Pan
 CatchFilter.all_input()                -> List[CatchFilter]   # all four input classes
 CatchFilter.traffic(traffic_class, id) -> CatchFilter         # one endpoint, interface, or EP number
 CatchFilter.traffic_class(tc)          -> CatchFilter         # every id in one TrafficClass
@@ -726,6 +728,7 @@ Capture.first(n)   # keep the first n bytes; first(0) is WHOLE`}</pre>
               <tbody>
                 <tr><td><code>CURSOR</code></td><td><code>0</code></td></tr>
                 <tr><td><code>WHEEL</code></td><td><code>1</code></td></tr>
+                <tr><td><code>PAN</code></td><td><code>2</code></td></tr>
               </tbody>
             </table>
           </div>
@@ -736,7 +739,7 @@ Capture.first(n)   # keep the first n bytes; first(0) is WHOLE`}</pre>
             <table class="api-params">
               <thead><tr><th>Member</th><th>Value</th><th>Meaning</th></tr></thead>
               <tbody>
-                <tr><td><code>RIDE</code></td><td><code>0</code></td><td>wait for a real cursor move to carry the delta (the default)</td></tr>
+                <tr><td><code>RIDE</code></td><td><code>0</code></td><td>wait for a native cursor move to carry the delta (the default)</td></tr>
                 <tr><td><code>NOW</code></td><td><code>1</code></td><td>emit on the next mouse report, native or not, whatever <A href="/library/options#set-movement-riding">movement riding</A> is set to</td></tr>
               </tbody>
             </table>
@@ -749,8 +752,8 @@ Capture.first(n)   # keep the first n bytes; first(0) is WHOLE`}</pre>
               <thead><tr><th>Member</th><th>Value</th><th>Meaning</th></tr></thead>
               <tbody>
                 <tr><td><code>KEEP</code></td><td><code>0</code></td><td>leave motion held for a ride alone (the default)</td></tr>
-                <tr><td><code>FLUSH</code></td><td><code>1</code></td><td>emit it now, ignoring the ride window</td></tr>
-                <tr><td><code>DISCARD</code></td><td><code>2</code></td><td>drop it</td></tr>
+                <tr><td><code>FLUSH</code></td><td><code>1</code></td><td>emit held motion now, ignoring the ride window</td></tr>
+                <tr><td><code>DISCARD</code></td><td><code>2</code></td><td>drop held motion</td></tr>
               </tbody>
             </table>
           </div>
@@ -804,7 +807,7 @@ Usage.media(media)   -> Usage
 usage.kind           -> Class      # read one back
 usage.id             -> int`}</pre>
           <p>
-            An injection target for <A href="/bindings/python/api#inject"><code>dev.inject(input, action)</code></A>, and what a{' '}
+            An injection target for <A href="/bindings/python/api#inject"><code>dev.inject(input, action)</code></A>, and what an{' '}
             <A href="/bindings/python/types#inputevent"><code>InputEvent</code></A> and a{' '}
             <A href="/bindings/python/types#usagesnapshot"><code>UsageSnapshot</code></A> return. It
             compares by value, hashes, and reprs as <code>Usage(kind=BUTTON, id=0)</code>.
@@ -912,7 +915,7 @@ LockTarget.media(media)   -> LockTarget`}</pre>
                 <tr><td><code>bcd_usb</code></td><td><code>int</code></td><td>USB spec (BCD)</td></tr>
                 <tr><td><code>has_serial</code></td><td><code>bool</code></td><td>exposes a serial string</td></tr>
                 <tr><td><code>has_bos</code></td><td><code>bool</code></td><td>exposes a BOS descriptor</td></tr>
-                <tr><td><code>kind</code></td><td><A href="/bindings/python/types#devicekind"><code>DeviceKind</code></A></td><td>the device's primary kind, from its HID report descriptors</td></tr>
+                <tr><td><code>kind</code></td><td><A href="/bindings/python/types#devicekind"><code>DeviceKind</code></A></td><td>the real device's primary kind, from its HID report descriptors</td></tr>
                 <tr><td><code>product</code></td><td><code>str</code></td><td>the product string (empty when none)</td></tr>
                 <tr><td><code>is_cloned()</code></td><td><code>bool</code></td><td>a device is cloned, one with no HID interface (<code>n_hid</code> 0) included; with nothing cloned every field is zero</td></tr>
               </tbody>
@@ -992,7 +995,7 @@ LockTarget.media(media)   -> LockTarget`}</pre>
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
                 <tr><td><code>device</code></td><td><A href="/bindings/python/types#chipfirmware"><code>ChipFirmware</code></A></td><td>the PC-facing chip</td></tr>
-                <tr><td><code>host</code></td><td><code>ChipFirmware | None</code></td><td><code>None</code> when the host chip has not answered over the link</td></tr>
+                <tr><td><code>host</code></td><td><code>ChipFirmware | None</code></td><td><code>None</code> when the host chip has not replied over the link</td></tr>
                 <tr><td><code>slot_size</code></td><td><code>int</code></td><td>usable bytes in a spare slot, the same on both chips</td></tr>
                 <tr><td><code>device_staged</code></td><td><code>bool</code></td><td>an image is written and waiting to be activated</td></tr>
                 <tr><td><code>host_staged</code></td><td><code>bool</code></td><td>the same, for the host chip</td></tr>
@@ -1032,7 +1035,7 @@ LockTarget.media(media)   -> LockTarget`}</pre>
                 <tr><td><code>config_count</code></td><td><code>int</code></td><td>clone configures</td></tr>
                 <tr><td><code>link_rx_drops</code></td><td><code>int</code></td><td>input frames the device chip could not take off the link from the host chip</td></tr>
                 <tr><td><code>host_rx_drops</code></td><td><code>int</code></td><td>the same count on the host chip, relayed over the link</td></tr>
-                <tr><td><code>relay_drops</code></td><td><code>int</code></td><td>relayed traffic and commands that went no further, none of it native input: a vendor IN packet that found its endpoint's queue full of the control PC's <code>RAW</code> packets, or a device's zero-length packet answering a poll the PC did not make (the one poll the box runs ahead of a suspended PC); an OUT packet the box had no room to queue, that failed three times on the device's bus, or that a bus reset or <code>SET_INTERFACE</code> overtook; a <code>RAW</code> OUT packet with no room to wait; a relayed request the box could not queue; a flagged <code>MOVE</code> the motion batch could not take; any frame other than native input that either chip's link receive ring dropped; and a frame from the control PC its receive ring had no room for (one a frame), or an overrun of the control port's UART (one an overrun, however many frames it cost)</td></tr>
+                <tr><td><code>relay_drops</code></td><td><code>int</code></td><td>relayed traffic and commands that went no further, none of it native input: a vendor IN packet that found its endpoint's queue full of the control PC's <code>RAW</code> packets, or a native zero-length packet answering a poll the PC did not make (the one poll the box runs ahead of a suspended PC); an OUT packet the box had no room to queue, that failed three times on the real device's bus, or that a bus reset or <code>SET_INTERFACE</code> overtook; a <code>RAW</code> OUT packet with no room to wait; a relayed request the box could not queue; a flagged <code>MOVE</code> the motion batch could not take; any frame other than native input that either chip's link receive ring dropped; and a frame from the control PC its receive ring had no room for (one a frame), or an overrun of the control port's UART (one an overrun, however many frames it cost)</td></tr>
                 <tr><td><code>session</code></td><td><code>int</code></td><td>times the box released some or all of the session state a host set; 0 at boot, wraps, so compare for inequality; the library watches it for <A href="/library/lifecycle#restart">session recovery</A></td></tr>
               </tbody>
             </table>
@@ -1045,8 +1048,8 @@ LockTarget.media(media)   -> LockTarget`}</pre>
               <thead><tr><th>Field / method</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
                 <tr><td><code>entries</code></td><td><code>List[LockEntry]</code></td><td>one <A href="/bindings/python/types#lockentry"><code>LockEntry</code></A> per weighed direction</td></tr>
-                <tr><td><code>scale_of(target, direction)</code></td><td><code>int</code></td><td>percent of the physical value kept there, 100 when nothing weighs it; <code>BOTH</code> reports the lowest across every direction, a reversing (negative) one being lower than any pass, which is not the figure a delta meets (it picks up one from each pair, multiplied)</td></tr>
-                <tr><td><code>is_locked(target, direction)</code></td><td><code>bool</code></td><td>whether it is blocked outright; a direction merely weighed is not locked. Also true when a whole-class blanket covers it. <code>BOTH</code> asks about the two fixed signs only, so name <code>WITH</code> or <code>AGAINST</code> to ask about one of those</td></tr>
+                <tr><td><code>scale_of(target, direction)</code></td><td><code>int</code></td><td>percent of the native value kept there, 100 when nothing weighs it; <code>BOTH</code> reports the lowest across every direction, a reversing (negative) one being lower than any pass, which is not the figure a delta meets (it picks up one from each pair, multiplied)</td></tr>
+                <tr><td><code>is_locked(target, direction)</code></td><td><code>bool</code></td><td>whether that target/direction is blocked outright; a direction merely weighed is not locked. Also true when a whole-class blanket covers it. <code>BOTH</code> asks about the two fixed signs only, so name <code>WITH</code> or <code>AGAINST</code> to ask about one of those</td></tr>
               </tbody>
             </table>
           </div>
@@ -1068,7 +1071,7 @@ LockTarget.media(media)   -> LockTarget`}</pre>
             <table class="api-params">
               <thead><tr><th>Module constant</th><th>Value</th><th>Meaning</th></tr></thead>
               <tbody>
-                <tr><td><code>LOCK_SCALE_BLOCK</code></td><td><code>0</code></td><td>keep none of the physical value</td></tr>
+                <tr><td><code>LOCK_SCALE_BLOCK</code></td><td><code>0</code></td><td>keep none of the native value</td></tr>
                 <tr><td><code>LOCK_SCALE_PASS</code></td><td><code>100</code></td><td>keep all of it, untouched</td></tr>
                 <tr><td><code>LOCK_SCALE_MAX</code></td><td><code>255</code></td><td>2.55x, the ceiling</td></tr>
                 <tr><td><code>LOCK_SCALE_MIN</code></td><td><code>-255</code></td><td>2.55x reversed, the floor; a negative reverses what it keeps, so -100 inverts an axis. Axes only</td></tr>
@@ -1085,7 +1088,7 @@ LockTarget.media(media)   -> LockTarget`}</pre>
                 <tr><td><code>target</code></td><td><A href="/bindings/python/types#locktarget"><code>LockTarget</code></A></td><td>what is weighed (an axis or a usage)</td></tr>
                 <tr><td><code>is_blanket</code></td><td><code>bool</code></td><td>a whole-class entry, where <code>target</code> names only the class</td></tr>
                 <tr><td><code>direction</code></td><td><A href="/bindings/python/types#direction"><code>Direction</code></A></td><td>which direction of the target this entry weighs</td></tr>
-                <tr><td><code>scale</code></td><td><code>int</code></td><td>percent of the physical value kept, signed: a negative one reverses what it keeps. A usage is one bit, so the box stores the block or pass it renders: never a value between, never negative</td></tr>
+                <tr><td><code>scale</code></td><td><code>int</code></td><td>percent of the native value kept, signed: a negative one reverses what it keeps. A usage is one bit, so the box stores the block or pass it renders: never a value between, never negative</td></tr>
                 <tr><td><code>is_block</code></td><td><code>bool</code></td><td><code>scale == 0</code>: blocked outright rather than weighed</td></tr>
               </tbody>
             </table>
@@ -1180,7 +1183,7 @@ LockTarget.media(media)   -> LockTarget`}</pre>
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
                 <tr><td><code>allowed</code></td><td><code>bool</code></td><td>imperfect clones opted in</td></tr>
-                <tr><td><code>over_capacity</code></td><td><code>bool</code></td><td>device exceeds clone capacity</td></tr>
+                <tr><td><code>over_capacity</code></td><td><code>bool</code></td><td>real device exceeds clone capacity</td></tr>
                 <tr><td><code>clone_imperfect</code></td><td><code>bool</code></td><td>the live clone is imperfect</td></tr>
               </tbody>
             </table>
@@ -1211,7 +1214,7 @@ LockTarget.media(media)   -> LockTarget`}</pre>
               <tbody>
                 <tr><td><code>mode</code></td><td><A href="/bindings/python/types#rendermode"><code>RenderMode</code></A></td><td>the texture motion is rendered with; OFF is the paced fill</td></tr>
                 <tr><td><code>full</code></td><td><code>bool</code></td><td>whether native motion is rendered by the model rather than relayed</td></tr>
-                <tr><td><code>ready</code></td><td><code>bool</code></td><td>whether a profile has armed for the attached device; nothing is rendered until it has</td></tr>
+                <tr><td><code>ready</code></td><td><code>bool</code></td><td>whether a profile has armed for the real device; nothing is rendered until it has</td></tr>
               </tbody>
             </table>
           </div>
@@ -1268,7 +1271,7 @@ LockTarget.media(media)   -> LockTarget`}</pre>
               <tbody>
                 <tr><td><code>port</code></td><td><A href="/bindings/python/types#portinfo"><code>PortInfo</code></A></td><td>the box's control port</td></tr>
                 <tr><td><code>version</code></td><td><A href="/bindings/python/types#version"><code>Version</code></A></td><td>its firmware version and control protocol, with the box MAC and name</td></tr>
-                <tr><td><code>device</code></td><td><code>Optional[<A href="/bindings/python/types#deviceinfo">DeviceInfo</A>]</code></td><td>the device it clones; <code>None</code> for a box on another control protocol, which raises <code>BadProtoVerError</code> when opened</td></tr>
+                <tr><td><code>device</code></td><td><code>Optional[<A href="/bindings/python/types#deviceinfo">DeviceInfo</A>]</code></td><td>the real device it clones; <code>None</code> for a box on another control protocol, which raises <code>BadProtoVerError</code> when opened</td></tr>
                 <tr><td><code>id</code></td><td><code>str</code></td><td>the box identity (the MAC hex)</td></tr>
                 <tr><td><code>serial</code></td><td><code>Optional[str]</code></td><td>the CH343 serial</td></tr>
               </tbody>
@@ -1319,6 +1322,7 @@ for b in medius.list_boxes():
                 <tr><td><code>dx</code></td><td><code>int</code></td><td>X delta</td></tr>
                 <tr><td><code>dy</code></td><td><code>int</code></td><td>Y delta</td></tr>
                 <tr><td><code>dz</code></td><td><code>int</code></td><td>wheel delta</td></tr>
+                <tr><td><code>pan</code></td><td><code>int</code></td><td>AC Pan (horizontal scroll) delta</td></tr>
               </tbody>
             </table>
           </div>
@@ -1338,7 +1342,7 @@ for b in medius.list_boxes():
             </table>
           </div>
           <p>
-            Only held usages matching your filters appear, and no event is emitted when none do, so
+            Only held usages matching your filters appear, and no event is sent when none do, so
             a one-button subscription stays sparse while the mouse reports at 1 kHz.
           </p>
           <p>
@@ -1368,7 +1372,7 @@ for b in medius.list_boxes():
                 <tr><td><code>data()</code></td><td><code>bytes</code></td><td>the data stage of a <code>CONTROL</code> or <code>CLIP_TRANSFER</code> event, the whole packet for any other class</td></tr>
                 <tr><td><code>control_status()</code></td><td><code>Optional[<A href="/bindings/python/types#controlstatus">ControlStatus</A>]</code></td><td>the handshake the game PC received, <code>flags</code> bits 0-1; <code>None</code> for any class but <code>CONTROL</code></td></tr>
                 <tr><td><code>rule_acted()</code></td><td><code>bool</code></td><td>whether a rewrite rule changed, dropped, answered or refused the packet: <code>flags</code> bit 7 on <code>HID_IN</code>, <code>HID_OUT</code>, the vendor classes, <code>CONTROL</code> and <code>EMIT</code></td></tr>
-                <tr><td><code>transfer_status()</code></td><td><code>Optional[TransferStatus | int]</code></td><td>how the transfer ended, as a <A href="/bindings/python/types#transfer-outcome"><code>TransferStatus</code></A> (<code>NAK</code> when no answer came) or the raw byte for a status no member names; <code>None</code> for any class but <code>CLIP_TRANSFER</code></td></tr>
+                <tr><td><code>transfer_status()</code></td><td><code>Optional[TransferStatus | int]</code></td><td>how the transfer ended, as a <A href="/bindings/python/types#transfer-outcome"><code>TransferStatus</code></A> (<code>NAK</code> when no reply came) or the raw byte for a status no member names; <code>None</code> for any class but <code>CLIP_TRANSFER</code></td></tr>
                 <tr><td><code>bus_event()</code></td><td><code>Optional[<A href="/bindings/python/types#busevent">BusEvent</A>]</code></td><td>the decoded lifecycle event; <code>None</code> for any class but <code>BUS</code> or an unknown kind</td></tr>
                 <tr><td><code>zlp()</code></td><td><code>bool</code></td><td>whether the event is a zero-length packet, or on a HID endpoint a <code>HID_IN</code> or <code>EMIT</code> report one ended after its bytes: <code>flags</code> bit 1 on the packet classes</td></tr>
                 <tr><td><code>bulk_end_of_transfer()</code></td><td><code>bool</code></td><td>whether a <code>VENDOR_BULK</code> event is the last of its transfer, <code>flags</code> bit 0</td></tr>
@@ -1384,7 +1388,7 @@ for b in medius.list_boxes():
                 <tr><td><code>HID_OUT</code>, <code>VENDOR_INTERRUPT</code></td><td>b1 a zero-length packet, b7 a rule acted</td><td><code>zlp()</code>, <code>rule_acted()</code></td></tr>
                 <tr><td><code>VENDOR_BULK</code></td><td>b0 end-of-transfer, b1 zero-length packet, b7 a rule acted</td><td><code>bulk_end_of_transfer()</code>, <code>zlp()</code>, <code>rule_acted()</code></td></tr>
                 <tr><td><code>CONTROL</code></td><td>b0-b1 the handshake the game PC received, a <A href="/bindings/python/types#controlstatus"><code>ControlStatus</code></A>; b7 a rule acted</td><td><code>control_status()</code>, <code>rule_acted()</code></td></tr>
-                <tr><td><code>CLIP_TRANSFER</code></td><td>how the transfer ended, a <A href="/bindings/python/types#transfer-outcome"><code>TransferStatus</code></A> byte; <code>0xFE</code> when no answer came</td><td><code>transfer_status()</code></td></tr>
+                <tr><td><code>CLIP_TRANSFER</code></td><td>how the transfer ended, a <A href="/bindings/python/types#transfer-outcome"><code>TransferStatus</code></A> byte; <code>0xFE</code> when no reply came</td><td><code>transfer_status()</code></td></tr>
                 <tr><td><code>BUS</code></td><td>the <A href="/bindings/python/types#busevent"><code>BusEventKind</code></A>; the bytes hold its arguments</td><td><code>bus_event()</code></td></tr>
                 <tr><td>everything else</td><td><code>0</code></td><td>-</td></tr>
               </tbody>
@@ -1401,7 +1405,7 @@ for b in medius.list_boxes():
               <thead><tr><th><code>CONTROL</code> data</th><th>Holds</th></tr></thead>
               <tbody>
                 <tr><td>IN</td><td>the reply the game PC received, after a <code>REPLY_PATCH</code> or <code>REPLY_REPLACE</code> rule, or an <code>ANSWER</code> rule's payload</td></tr>
-                <tr><td>OUT</td><td>the data stage the game PC sent, before a <code>PATCH</code> or <code>REPLACE</code> rule rewrote it for the device</td></tr>
+                <tr><td>OUT</td><td>the data stage the game PC sent, before a <code>PATCH</code> or <code>REPLACE</code> rule rewrote it for the real device</td></tr>
               </tbody>
             </table>
           </div>
@@ -1417,7 +1421,7 @@ for b in medius.list_boxes():
               <thead><tr><th>Member</th><th>Value</th><th>Meaning</th></tr></thead>
               <tbody>
                 <tr><td><code>OK</code></td><td><code>0</code></td><td>the transaction completed</td></tr>
-                <tr><td><code>STALLED</code></td><td><code>1</code></td><td>the game PC got a STALL: from the device, from a rule that refused the request, or, above endpoint 0, for a request that failed</td></tr>
+                <tr><td><code>STALLED</code></td><td><code>1</code></td><td>the game PC got a STALL: from the real device, from a rule that refused the request, or, above endpoint 0, for a request that failed</td></tr>
                 <tr><td><code>NAKED</code></td><td><code>2</code></td><td>NAKed until the host gave up, on endpoint 0 only</td></tr>
                 <tr><td><code>OTHER</code></td><td><code>3</code></td><td>a handshake value this build does not know; read it off <code>TrafficEvent.flags</code> bits 0-1</td></tr>
               </tbody>
@@ -1437,7 +1441,7 @@ for b in medius.list_boxes():
               <tbody>
                 <tr><td><code>kind</code></td><td><A href="/bindings/python/types#inputkind"><code>InputKind</code></A></td><td>which arm is populated</td></tr>
                 <tr><td><code>usage</code></td><td><code>Optional[<A href="/bindings/python/types#input">Usage</A>]</code></td><td>the usage this is an edge on; <code>None</code> for <code>MOTION</code></td></tr>
-                <tr><td><code>dx</code> / <code>dy</code> / <code>dz</code></td><td><code>int</code></td><td>right / down / wheel-up deltas this report; <code>0</code> unless <code>kind</code> is <code>MOTION</code></td></tr>
+                <tr><td><code>dx</code> / <code>dy</code> / <code>dz</code> / <code>pan</code></td><td><code>int</code></td><td>right / down / wheel-up / pan-right deltas this report; <code>0</code> unless <code>kind</code> is <code>MOTION</code></td></tr>
                 <tr><td><code>ts_us</code></td><td><code>int</code></td><td>the box stamp, as on a <A href="/bindings/python/types#catchevent"><code>CatchEvent</code></A></td></tr>
                 <tr><td><code>clock</code></td><td><A href="/bindings/python/types#clockdomain"><code>ClockDomain</code></A></td><td>which chip stamped it</td></tr>
                 <tr><td><code>is_press</code> / <code>is_release</code></td><td><code>bool</code></td><td>shorthand for the <code>kind</code> test</td></tr>
@@ -1453,7 +1457,7 @@ for b in medius.list_boxes():
               <tbody>
                 <tr><td><code>PRESS</code></td><td><code>0</code></td><td><code>usage</code>, a momentary usage going down</td></tr>
                 <tr><td><code>RELEASE</code></td><td><code>1</code></td><td><code>usage</code>, the same coming up</td></tr>
-                <tr><td><code>MOTION</code></td><td><code>2</code></td><td><code>dx</code>, <code>dy</code>, <code>dz</code></td></tr>
+                <tr><td><code>MOTION</code></td><td><code>2</code></td><td><code>dx</code>, <code>dy</code>, <code>dz</code>, <code>pan</code></td></tr>
               </tbody>
             </table>
           </div>
@@ -1529,7 +1533,7 @@ for b in medius.list_boxes():
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
                 <tr><td><code>status</code></td><td><code>TransferStatus | int</code></td><td><code>OK</code> (0x00), <code>REFUSED</code> (0xFC), <code>STALL</code> (0xFD), <code>NAK</code> (0xFE), <code>NO_DEVICE</code> (0xFF), or a byte no constant names.</td></tr>
-                <tr><td><code>data</code></td><td><code>bytes</code></td><td>The IN data the device returned.</td></tr>
+                <tr><td><code>data</code></td><td><code>bytes</code></td><td>The IN data the real device returned.</td></tr>
                 <tr><td><code>is_ok()</code></td><td><code>bool</code></td><td>Whether the transfer completed.</td></tr>
               </tbody>
             </table>
@@ -1605,7 +1609,7 @@ Transform(op, source, dest)`}</pre>
               <thead><tr><th>Attribute</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
                 <tr><td><code>status</code></td><td><A href="/bindings/python/types#status"><code>Status</code></A></td><td>the failure code</td></tr>
-                <tr><td><code>message</code></td><td><code>str</code></td><td>the box's last error text</td></tr>
+                <tr><td><code>message</code></td><td><code>str</code></td><td>the last error text</td></tr>
                 <tr><td><code>proto_ver</code></td><td><code>int</code></td><td>offending version byte (bad-proto-version only)</td></tr>
               </tbody>
             </table>
@@ -1699,7 +1703,7 @@ except MediusError as e:     # any other failure
           <div class="callout callout--info">
             <p>
               <code>DisconnectedError</code> ends a <A href="/bindings/python/streams">stream</A>{' '}
-              iteration cleanly instead of propagating. <code>OK</code> and{' '}
+              iteration instead of propagating. <code>OK</code> and{' '}
               <code>ERR_UNKNOWN</code> have no subclass; <code>ERR_UNKNOWN</code> raises
               the base <code>MediusError</code>.
             </p>

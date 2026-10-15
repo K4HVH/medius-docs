@@ -142,7 +142,7 @@ const FAULT_TEXT: Record<ClipEntryFault, string> = {
 };
 
 const entryText = (e: ClipEntry): string => {
-  if (e.kind === 'gap') return `wait ${e.ticks}`;
+  if (e.kind === 'gap') return `Wait ${e.ticks}`;
   const parts: string[] = [];
   if (e.xy) parts.push(`move ${e.xy.dx},${e.xy.dy}`);
   if (e.wheel !== undefined) parts.push(`wheel ${e.wheel}`);
@@ -157,7 +157,7 @@ const entryText = (e: ClipEntry): string => {
   for (const t of e.transfers ?? []) {
     parts.push(`transfer ${t.setup.bmRequestType & 0x80 ? 'in' : 'out'} ${t.ep}, ${t.setup.wLength} B`);
   }
-  return parts.join(' + ');
+  return displayName(parts.join(' + '));
 };
 
 const triggerText = (t: ClipTrigger): string => {
@@ -175,7 +175,7 @@ const triggerText = (t: ClipTrigger): string => {
 
 // Box refusals, in this card's field names.
 const PKT_FAULT_TEXT: Record<ClipPacketTriggerFault, string> = {
-  class: 'Class must be one of the six traffic surfaces.',
+  class: 'Class must be one of the six traffic classes.',
   direction: 'Direction must be Both, In or Out.',
   verb: 'That verb cannot be bound to a trigger.',
   'mask-length': 'Match and mask must be the same length.',
@@ -471,7 +471,7 @@ const DeviceClip = () => {
       const u = trigUsage();
       const action = Number(trigOp());
       // The box discards an unbindable op with no reply, so refuse it here.
-      if (!isTriggerAction(action)) throw new Error('that verb cannot be bound to an input');
+      if (!isTriggerAction(action)) throw new Error('That verb cannot be bound to an input.');
       await dash.link()!.clipTrigger({
         cls: u.cls,
         id: u.id,
@@ -610,7 +610,7 @@ const DeviceClip = () => {
               fallback={
                 <Panel id="clip-playback" wide>
                   <p class="mut">
-                    This box's firmware sends clip status in an older layout than this dashboard reads.{' '}
+                    This box's firmware is too old for clip playback on this page.{' '}
                     <A href="/dashboard/update">Update the firmware</A> to use clip playback.
                   </p>
                 </Panel>
@@ -726,7 +726,7 @@ const DeviceClip = () => {
                       onChange={(on) => setFlag(CLIP_SET_LOOP, on)}
                     />
                     <Checkbox
-                      label={rendered() ? 'Wheel and pan motion rides a real report' : 'Motion rides a real report'}
+                      label={rendered() ? 'Wheel and pan motion rides a native report' : 'Motion rides a native report'}
                       checked={rideOn()}
                       disabled={busy()}
                       onChange={(on) => setFlag(CLIP_SET_RIDE, on)}
@@ -744,7 +744,7 @@ const DeviceClip = () => {
                         : cursorRides()
                           ? "the clip's cursor motion is"
                           : "the clip's wheel and pan motion is"}{' '}
-                      only emitted alongside physical motion. Button, key and media ticks still play.
+                      only emitted alongside native motion. Button, key and media ticks still play.
                     </div>
                   </Show>
 
@@ -1169,12 +1169,12 @@ const DeviceClip = () => {
                   </Show>
                   <Show when={!onPacket() && replacing()}>
                     <p class="mut">
-                      Already bound; binding again replaces it and re-arms every trigger's edge detector.
+                      Already bound. Replacing it re-arms every trigger's edge detector.
                     </p>
                   </Show>
                   <Show when={onPacket() && pktReplacing()}>
                     <p class="mut">
-                      Already bound; binding again replaces it, and a change starts its run and its hits again.
+                      Already bound. A changed binding starts its run and its hits again.
                     </p>
                   </Show>
                   <Refused panel="clip-triggers" />

@@ -10,7 +10,7 @@ const Inject: Component = () => {
       <PageHeader>
         <p>
           <A href="/native/commands/inject#inject"><code>INJECT</code></A> sets a momentary input on
-          top of physical input: a mouse <A href="/native/commands/inject#button">button</A>, a
+          top of native input: a mouse <A href="/native/commands/inject#button">button</A>, a
           keyboard <A href="/native/commands/inject#key">key</A> or modifier, or a{' '}
           <A href="/native/commands/inject#media">media</A> key, tagged by a <code>class</code> byte.
         </p>
@@ -23,7 +23,7 @@ const Inject: Component = () => {
       <DocSection id="inject" title="INJECT" caption="Momentary-usage override">
         <p>
           <code>INJECT</code> sets a per-usage <A href="/native/injection#state">override</A>, a held
-          level layered over physical input.{' '}
+          level layered over native input.{' '}
           <A href="/native/frame#opcodes">Opcode</A> <code>0x03</code>.
         </p>
         <pre class="api-signature">INJECT  0x03  ·  payload 4 bytes</pre>
@@ -60,14 +60,14 @@ const Inject: Component = () => {
               <tr><th>Action</th><th>Value</th><th>Effect</th></tr>
             </thead>
             <tbody>
-              <tr><td>press</td><td><code>1</code></td><td>Force the usage active regardless of physical state.</td></tr>
-              <tr><td>soft-release</td><td><code>0</code></td><td>Drop the override (press or force-release); a physical hold stays active.</td></tr>
-              <tr><td>force-release</td><td><code>2</code></td><td>Force the usage inactive, masking a physical hold too; used by the <A href="/native/injection#safety">safety auto-clear</A>.</td></tr>
+              <tr><td>press</td><td><code>1</code></td><td>Force the usage active regardless of native state.</td></tr>
+              <tr><td>soft-release</td><td><code>0</code></td><td>Drop the override (press or force-release); a hold on the real device stays active.</td></tr>
+              <tr><td>force-release</td><td><code>2</code></td><td>Force the usage inactive, masking a hold on the real device too; used by the <A href="/native/injection#safety">safety auto-clear</A>.</td></tr>
             </tbody>
           </table>
         </div>
         <div class="api-response-label">EMITTED STATE</div>
-        <p>The releases differ only while the same input is physically held:</p>
+        <p>The releases differ only while the same input is held on the real device:</p>
         <div class="table-scroll">
           <table class="api-params">
             <thead>
@@ -75,14 +75,14 @@ const Inject: Component = () => {
             </thead>
             <tbody>
               <tr><td><code>press</code></td><td>active</td><td>active</td></tr>
-              <tr><td><code>soft-release</code></td><td>inactive</td><td>active (physical bit passes)</td></tr>
-              <tr><td><code>force-release</code></td><td>inactive</td><td>inactive (masks physical)</td></tr>
+              <tr><td><code>soft-release</code></td><td>inactive</td><td>active (native bit relayed)</td></tr>
+              <tr><td><code>force-release</code></td><td>inactive</td><td>inactive (masks native)</td></tr>
             </tbody>
           </table>
         </div>
         <div class="api-response-label">RULES</div>
-        <pre class="diagram">{`additive   layers over physical input at the same merge point as
-           MOVE; never evicts native input
+        <pre class="diagram">{`additive   layers over native input at the same merge point as
+           MOVE; never evicts it
 no click   no firmware click or chord; send a press, then a
            client-timed soft-release
 RESET      releases every override at once`}</pre>
@@ -137,8 +137,8 @@ RESET      releases every override at once`}</pre>
           keycode slot (or sets its NKRO bit) in the emitted report.
         </p>
         <p>
-          Physical keys keep their slots, so injection never evicts native typing; past the
-          board's rollover limit it emits <code>ErrorRollOver</code>, as the board does. A keycode
+          Native keys keep their slots, so injection never evicts them; past the
+          board's rollover limit the box emits <code>ErrorRollOver</code>, as the board does. A keycode
           the cloned board can't report is a no-op. Library bindings:{' '}
           <A href="/library/inject#inject"><code>inject</code> / <code>press</code> / <code>release</code> / <code>force_release</code></A>.
         </p>

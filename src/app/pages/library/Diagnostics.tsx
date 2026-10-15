@@ -34,7 +34,7 @@ const Diagnostics: Component = () => {
 
         <div class="callout callout--info">
           <p>
-            The box emits <A href="/native/commands/admin#log"><code>LOG</code></A> frames only
+            The box sends <A href="/native/commands/admin#log"><code>LOG</code></A> frames only
             while the control link is up; with no control PC they are dropped, not buffered.
           </p>
         </div>

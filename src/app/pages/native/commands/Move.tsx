@@ -125,8 +125,7 @@ paced   a large move drains across frames; nothing is dropped`}</pre>
       <DocSection id="pan" title="MOVE (pan)" caption="Horizontal scroll (AC Pan)">
         <p>
           With <code>motion = 2</code>, <code>MOVE</code> drives AC Pan, horizontal scroll
-          (Consumer usage <code>0x0238</code>), by a relative amount. Pan is a relative axis like
-          the wheel.
+          (Consumer usage <code>0x0238</code>), by a relative amount.
         </p>
         <pre class="api-signature">MOVE  0x01  ·  pan payload 4 bytes</pre>
         <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
@@ -190,8 +189,8 @@ paced   a large move drains across frames; nothing is dropped`}</pre>
         <p>
           Order: discard, flush, then the delta. <code>FLUSH</code> and <code>DISCARD</code> together
           refuse the frame. Injected motion lands in one of two{' '}
-          <A href="/native/injection#state">accumulators</A>, so a bypassing delta never carries
-          held motion out with it. Library bindings:{' '}
+          <A href="/native/injection#state">accumulators</A>, so a <code>NOW</code> delta is
+          emitted without the motion held for a ride. Library bindings:{' '}
           <A href="/library/move#move-rel-now"><code>move_rel_now</code></A>,{' '}
           <A href="/library/move#flush-motion"><code>flush_motion</code></A>,{' '}
           <A href="/library/move#discard-motion"><code>discard_motion</code></A>.

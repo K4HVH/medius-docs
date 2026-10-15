@@ -25,7 +25,7 @@ const DeviceRaw = () => {
   const send = () => {
     const b = parseHex(bytes());
     if (b === null || b.length === 0) {
-      cmd.run(() => Promise.reject(new Error('Enter the bytes to put on the endpoint.')));
+      cmd.run(() => Promise.reject(new Error('Enter the bytes to send.')));
       return;
     }
     cmd.run(() => dash.link()!.raw(ep(), Number(dir()), b));

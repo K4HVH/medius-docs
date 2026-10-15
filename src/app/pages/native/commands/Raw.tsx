@@ -85,7 +85,7 @@ const Raw: Component = () => {
               <tr><td><code>dir</code> is not <code>1</code> or <code>2</code></td><td>only <code>1</code> (IN) and <code>2</code> (OUT) name an address</td></tr>
               <tr><td>IN: no cloned HID or vendor IN endpoint <code>ep_num</code></td><td>the box writes only IN endpoints it cloned</td></tr>
               <tr><td>OUT: no real-device OUT endpoint <code>ep_num</code></td><td>the host chip drops it, with no endpoint to submit to</td></tr>
-              <tr><td>an interrupt packet past its <A href="/native/commands/raw#packets">limit</A></td><td>an interrupt transfer is one packet, so a split would reach the PC as two reports</td></tr>
+              <tr><td>an interrupt packet past its <A href="/native/commands/raw#packets">limit</A></td><td>an interrupt transfer is one packet, so a split would be emitted as two reports</td></tr>
             </tbody>
           </table>
         </div>
@@ -183,16 +183,16 @@ const Raw: Component = () => {
               <tr><th>Name</th><th>Behaviour</th></tr>
             </thead>
             <tbody>
-              <tr><td>HID IN, 8 reports</td><td>drops the device's oldest zero-length packet when full, counted in <code>relay_drops</code>; else the oldest native report, else the oldest <code>RAW</code> one, counted in <A href="/native/commands/requests#stats"><code>tx_drops</code></A></td></tr>
+              <tr><td>HID IN, 8 reports</td><td>drops the oldest native zero-length packet when full, counted in <code>relay_drops</code>; else the oldest native report, else the oldest <code>RAW</code> one, counted in <A href="/native/commands/requests#stats"><code>tx_drops</code></A></td></tr>
               <tr><td>vendor interrupt IN, 8 packets</td><td>drops the oldest packet when full, counted in <A href="/native/commands/requests#stats"><code>relay_drops</code></A></td></tr>
-              <tr><td>vendor bulk IN, 8 packets</td><td>drops the new packet when full, counted in <code>relay_drops</code>. The box polls the device's bulk IN only while fewer than 8 packets are queued or armed, <code>RAW</code> ones included, so only a <code>RAW</code> packet finds it full</td></tr>
-              <tr><td>OUT relay, 16 packets across all endpoints</td><td>each waits its turn behind the device's two-packet hold, as the PC's writes do, and the PC's writes to that endpoint wait behind it (one the clone had already taken a read for goes first); one past 16 is dropped, counted in <code>relay_drops</code></td></tr>
+              <tr><td>vendor bulk IN, 8 packets</td><td>drops the new packet when full, counted in <code>relay_drops</code>. The box polls the real device's bulk IN only while fewer than 8 packets are queued or armed, <code>RAW</code> ones included, so only a <code>RAW</code> packet finds it full</td></tr>
+              <tr><td>OUT relay, 16 packets across all endpoints</td><td>each waits its turn behind the real device's two-packet hold, as the PC's writes do, and the PC's writes to that endpoint wait behind it (one the clone had already taken a read for goes first); one past 16 is dropped, counted in <code>relay_drops</code></td></tr>
             </tbody>
           </table>
         </div>
         <p>
-          Native reports take at most one place in an interrupt IN queue: the box polls the device
-          only as the PC takes what the last poll brought, so the rest of the queue is room for{' '}
+          Native reports take at most one place in an interrupt IN queue: the box polls the real
+          device only as the PC takes what the last poll brought, so the rest of the queue is room for{' '}
           <code>RAW</code> reports. A native bulk stream takes as many places as the PC leaves unread, all 8 at
           most.
         </p>
@@ -202,9 +202,9 @@ const Raw: Component = () => {
           up to three seconds while late ones keep coming.
         </p>
         <p>
-          A device's STALL on an interrupt or bulk IN reaches the game PC after the reports sent before it.
-          The endpoint stays halted until the PC's <code>CLEAR_FEATURE(HALT)</code>, which reaches the
-          device; the box never clears it.
+          A native STALL on an interrupt or bulk IN reaches the game PC after the reports sent before it.
+          The endpoint stays halted until the PC's <code>CLEAR_FEATURE(HALT)</code>, which is relayed to
+          the real device; the box never clears it.
         </p>
         <div class="callout callout--warning">
           <p>
@@ -221,11 +221,12 @@ const Raw: Component = () => {
         </p>
         <p>
           A <code>RAW</code> report takes a separate poll; no native report carries it. On an
-          endpoint the device reports on every poll, it goes after at most two native reports.
+          endpoint the real device reports on every poll, it is emitted after at most two native
+          reports.
         </p>
         <pre class="diagram">{`  native report   [ btn 0 ]                            [ btn 0 ]
   RAW, dir = 1                  [ btn 1 ]
-  on the wire     [ btn 0 ]     [ btn 1 ]              [ btn 0 ]
+  emitted         [ btn 0 ]     [ btn 1 ]              [ btn 0 ]
                                 |<- last report read ->|`}</pre>
         <div class="api-response-label">PIPELINE</div>
         <p>

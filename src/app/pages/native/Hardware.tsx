@@ -60,8 +60,7 @@ const Hardware: Component = () => {
       <DocSection id="disconnecting" title="Disconnecting" caption="Unplug any time">
         <p>
           The box is USB bus-powered, with no battery or power button, and safe to unplug at any
-          moment. Injected input never outlives the program that sent it, so a button or move
-          can't stick.
+          moment.
         </p>
         <div class="table-scroll">
           <table class="api-params">
@@ -71,7 +70,7 @@ const Hardware: Component = () => {
             <tbody>
               <tr>
                 <td><code>USB2</code> (control), or the program stops</td>
-                <td>After <code>1 s</code> of silence the box clears all <A href="/native/injection">injection</A> and returns to pure passthrough; the mouse keeps working.</td>
+                <td>After <code>1 s</code> of silence the box clears all <A href="/native/injection">injection</A> and returns to passthrough; the mouse keeps working.</td>
               </tr>
               <tr>
                 <td><code>USB1</code> (clone)</td>
@@ -85,7 +84,7 @@ const Hardware: Component = () => {
           </table>
         </div>
         <p>
-          For instant passthrough without the{' '}
+          For passthrough at once, without the{' '}
           <A href="/native/injection#safety">silence timeout</A>, send{' '}
           <A href="/native/commands/admin#reset"><code>RESET</code></A> before unplugging (library:{' '}
           <A href="/library/admin#reset"><code>reset</code></A>). Dropping the{' '}
@@ -95,8 +94,7 @@ const Hardware: Component = () => {
         <div class="callout callout--warning">
           <p>
             <code>USB1</code> and <code>USB3</code> must not share a machine at any point,
-            plugging in or unplugging. See the{' '}
-            <A href="/native/hardware#hazard">power hazard</A>.
+            plugging in or unplugging (<A href="/native/hardware#hazard">power hazard</A>).
           </p>
         </div>
       </DocSection>

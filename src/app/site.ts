@@ -16,7 +16,7 @@ export const LIVE_PATHS: ReadonlySet<string> = new Set(['/dashboard/changelog', 
 // Pages the server fills in per request where it can, and serves as prerendered when it can't.
 export const SOFT_FILL_PATHS: ReadonlySet<string> = new Set(['/', '/guide/compatibility']);
 
-// Pages that moved, each to where its content lives now: the server answers the old path with a 301
+// Pages that moved, each to where its content lives now: the server replies to the old path with a 301
 // there, and the app follows a stale link the same way.
 export const MOVED: Readonly<Record<string, string>> = {
   // A place is named by its hash, which a browser keeps over the old address's (a Location with none takes the

@@ -60,9 +60,6 @@ const Connection: Component = () => {
   scale =   0  (block)   ->  state = 0              ->  UNLOCKS it`}</pre>
         </div>
         <div class="api-response-label">RESP(VERSION)</div>
-        <p>
-          Full detail on <A href="/native/commands/requests#version">Requests</A>.
-        </p>
         <div class="table-scroll">
           <table class="byte-table">
             <thead>
@@ -93,7 +90,7 @@ const Connection: Component = () => {
             </thead>
             <tbody>
               <tr><td>Power-on</td><td>Once, as the device chip boots, before any other frame.</td></tr>
-              <tr><td>First contact</td><td>Once, on the device chip's first valid frame after boot, ahead of that frame's reply. A program opening the port after another has spoken gets neither hello and sends <code>QUERY(VERSION)</code>.</td></tr>
+              <tr><td>First contact</td><td>Once, on the device chip's first valid frame after boot, ahead of that frame's reply. A program opening the port after another has sent a frame gets neither hello and sends <code>QUERY(VERSION)</code>.</td></tr>
             </tbody>
           </table>
         </div>
@@ -112,8 +109,8 @@ const Connection: Component = () => {
             The <A href="/library/connection">medius library</A>'s{' '}
             <A href="/library/connection#open"><code>open</code></A> and{' '}
             <A href="/library/connection#open"><code>find</code></A> do all of this: send{' '}
-            <A href="/native/commands/requests#version"><code>QUERY(VERSION)</code></A>, retry a few
-            times, and check <code>proto_ver == 9</code> before returning a connection.
+            <A href="/native/commands/requests#version"><code>QUERY(VERSION)</code></A> up to 5 times,
+            waiting 250 ms for each reply, and check <code>proto_ver == 9</code> before returning a connection.
           </p>
         </div>
       </DocSection>

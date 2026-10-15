@@ -138,7 +138,7 @@ const DeviceLock = () => {
           { value: String(Direction.Against), label: 'Against injection' },
         ]
       : isMedia()
-        ? [{ value: String(Direction.Both), label: 'The whole usage' }]
+        ? [{ value: String(Direction.Both), label: 'Both' }]
         : [
             { value: String(Direction.Both), label: 'Both' },
             { value: String(Direction.Positive), label: 'Press' },
@@ -177,14 +177,14 @@ const DeviceLock = () => {
               />
             </div>
             <p class="mut">
-              {scale() < 0 ? `Reverse physical motion, keeping ${Math.abs(scale())}%` : `Keep ${scale()}% of physical motion`}
+              {scale() < 0 ? `Reverse native motion, keeping ${Math.abs(scale())}%` : `Keep ${scale()}% of native motion`}
             </p>
           </Show>
 
           <Show when={isAxis() && isRelativeDirection(dir())}>
             <p class="mut">
-              With and against follow the injected direction on that axis. See{' '}
-              <A href="/native/commands/lock#bearing">the bearing</A>.
+              With and against follow the <A href="/native/commands/lock#bearing">bearing</A>: the injected
+              direction on that axis.
             </p>
           </Show>
 

@@ -211,7 +211,7 @@ describe('Device', () => {
       const { container, getByRole } = render(() => <Device />);
       await waitFor(() => expect(container.textContent).toMatch(/Newer firmware/));
       const text = container.textContent ?? '';
-      expect(text).toContain(`This box speaks protocol ${PROTO_VER + 1} and this page protocol ${PROTO_VER}.`);
+      expect(text).toContain("This box speaks a newer protocol than this page.");
       expect(text).toContain('It can still be flashed by hand, on the Flash page.');
       expect(text).not.toMatch(/Update needed/i);
       expect(container.querySelector('#status')).toBeNull();

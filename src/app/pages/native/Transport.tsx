@@ -73,12 +73,6 @@ const Transport: Component = () => {
         <p>
           <code>8N1</code> is 8 data bits, no parity, 1 stop bit.
         </p>
-        <div class="callout callout--info">
-          <p>
-            Handshake on <A href="/native/connection">Connection</A>, wire format on{' '}
-            <A href="/native/frame">Frame Format</A>.
-          </p>
-        </div>
       </DocSection>
     </>
   );

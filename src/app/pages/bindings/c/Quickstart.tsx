@@ -9,7 +9,7 @@ const Quickstart: Component = () => {
       <PageHeader>
         <p>
           One file: <A href="/library/connection">connect</A>, read the firmware version, move,
-          click, wait for one physical motion event, free.
+          click, wait for one native motion event, free.
         </p>
         <p>
           Every fallible call returns a <A href="/bindings/c/types#errors"><code>MediusStatus</code></A>;{' '}
@@ -29,16 +29,11 @@ const Quickstart: Component = () => {
   query_version()   ──▶  read the version      blocks
   move() / press()  ──▶  inject input          fire-and-forget
   catch_events()    ──▶  subscribe by filter   fire-and-forget
-  recv()            ──▶  next physical event   blocks
+  recv()            ──▶  next native event     blocks
   free()            ──▶  close, NULL-safe      local`}</pre>
       </PageHeader>
 
       <DocSection id="program" title="Program" caption="Every call, with error checks">
-        <p>
-          <code>check()</code> compares against <code>MEDIUS_STATUS_OK</code> (<code>0</code>) and
-          on anything else reads <code>medius_last_error_message</code>. Results land through an
-          out-pointer (<code>&amp;dev</code>, <code>&amp;v</code>, <code>&amp;events</code>), never the return value.
-        </p>
         <pre><code class="language-c">{`#include <stdio.h>
 #include <medius.h>
 
@@ -66,12 +61,12 @@ int main(void) {
     check(medius_device_press(dev, medius_usage_button(MEDIUS_BUTTON_LEFT)), "press");
     check(medius_device_soft_release(dev, medius_usage_button(MEDIUS_BUTTON_LEFT)), "release");
 
-    /* one subscription entry: X, Y and the wheel, both directions */
+    /* one subscription entry: X, Y, the wheel and AC Pan, both directions */
     MediusCatchFilter axes = medius_catch_filter_watch_axes();
 
     MediusEventStream *events = NULL;
     if (!check(medius_device_catch_events(dev, &axes, 1, &events), "catch_events")) {
-        MediusCatchEvent ev;                                   /* blocks for one physical event */
+        MediusCatchEvent ev;                                   /* blocks for one native event */
         if (medius_event_stream_recv(events, &ev) == MEDIUS_STATUS_OK &&
             ev.kind == MEDIUS_CATCH_EVENT_KIND_MOTION)
             printf("motion: dx=%d dy=%d dz=%d\\n",
@@ -99,7 +94,7 @@ motion: dx=12 dy=-4 dz=0`}</code></pre>
         <div class="callout callout--info">
           <p>
             <A href="/bindings/c/api#streams"><code>medius_event_stream_recv</code></A> blocks until
-            the filters match an event; with this entry, a physical mouse motion. Polling, more
+            the filters match an event; with this entry, a native mouse motion. Polling, more
             classes and event loops are on <A href="/bindings/c/streams">Streams</A>.
           </p>
         </div>
@@ -108,12 +103,12 @@ motion: dx=12 dy=-4 dz=0`}</code></pre>
       <DocSection id="run" title="Run it" caption="gcc or clang, link libmedius_capi">
         <p>
           Run from the unpacked release (<code>medius.h</code> under <code>include/</code>,{' '}
-          <A href="/bindings/c"><code>libmedius_capi.so</code></A> beside it). <code>cc</code>,{' '}
+          <A href="/bindings/c"><code>libmedius_capi.so</code></A> under <code>lib/</code>). <code>cc</code>,{' '}
           <a href="https://gcc.gnu.org/" target="_blank" rel="noreferrer"><code>gcc</code></a>, and{' '}
           <a href="https://clang.llvm.org/" target="_blank" rel="noreferrer"><code>clang</code></a> all work.
         </p>
-        <pre><code class="language-bash">{`cc first.c -Iinclude -L. -lmedius_capi -o first
-LD_LIBRARY_PATH=. ./first      # so the loader finds libmedius_capi.so`}</code></pre>
+        <pre><code class="language-bash">{`cc first.c -Iinclude -Llib -lmedius_capi -o first
+LD_LIBRARY_PATH=lib ./first    # so the loader finds libmedius_capi.so`}</code></pre>
         <div class="table-scroll">
           <table class="api-params">
             <thead>
@@ -121,7 +116,7 @@ LD_LIBRARY_PATH=. ./first      # so the loader finds libmedius_capi.so`}</code><
             </thead>
             <tbody>
               <tr><td><code>-Iinclude</code></td><td>Where <code>medius.h</code> lives.</td></tr>
-              <tr><td><code>-L.</code></td><td>Where <code>libmedius_capi</code> lives (here, the current dir).</td></tr>
+              <tr><td><code>-Llib</code></td><td>Where <code>libmedius_capi</code> lives.</td></tr>
               <tr><td><code>-lmedius_capi</code></td><td>Link the library (file name is <code>libmedius_capi</code>).</td></tr>
             </tbody>
           </table>
@@ -211,7 +206,7 @@ uintptr_t    medius_last_error_message(char *buf, uintptr_t cap);  /* returns fu
         <div class="table-scroll">
           <table class="api-params">
             <thead>
-              <tr><th>Call</th><th>Meaning</th></tr>
+              <tr><th>Call</th><th>Pages</th></tr>
             </thead>
             <tbody>
               <tr>

@@ -23,19 +23,19 @@ const Option: Component = () => {
               <tr>
                 <td><A href="/native/commands/option#imperfect"><code>IMPERFECT</code></A></td>
                 <td><code>0</code></td>
-                <td>Clone a device the box can't clone exactly, and admit the advanced control layer</td>
+                <td>Clone a device the box can't clone faithfully, and admit the advanced control layer</td>
                 <td>off</td>
               </tr>
               <tr>
                 <td><A href="/native/commands/option#move-ride"><code>MOVE_RIDE</code></A></td>
                 <td><code>1</code></td>
-                <td>Inject motion only on a native move</td>
+                <td>Inject motion only on a native motion report</td>
                 <td>off</td>
               </tr>
               <tr>
                 <td><A href="/native/commands/option#emit"><code>EMIT</code></A></td>
                 <td><code>2</code></td>
-                <td>Pace and wire-rate injected motion</td>
+                <td>Injection pace and wire rate</td>
                 <td>learnt, no forced rate</td>
               </tr>
               <tr>
@@ -65,15 +65,12 @@ const Option: Component = () => {
             </tbody>
           </table>
         </div>
-        <p>
-          A set option boots at its stored value, not the factory default.
-        </p>
       </PageHeader>
 
       <DocSection id="option" title="OPTION" caption="One generic, persistent option">
         <p>
-          <code>OPTION</code> carries an <code>id</code> byte then an id-specific value; the setting
-          persists across reboots. <A href="/native/frame#opcodes">Opcode</A>{' '}
+          <code>OPTION</code> carries an <code>id</code> byte then an id-specific value.{' '}
+          <A href="/native/frame#opcodes">Opcode</A>{' '}
           <code>0x11</code>.
         </p>
         <pre class="api-signature">OPTION  0x11  ·  payload 1 + value bytes</pre>
@@ -103,8 +100,8 @@ const Option: Component = () => {
           <table class="api-params">
             <thead><tr><th>Value</th><th>Effect</th></tr></thead>
             <tbody>
-              <tr><td><code>0</code></td><td>Faithful-only: refuse a device the box can't clone exactly <em>(default)</em></td></tr>
-              <tr><td><code>1</code></td><td>Clone it anyway, every interface the box can serve byte-faithful, and admit the gated commands below</td></tr>
+              <tr><td><code>0</code></td><td>Faithful-only: refuse a device the box can't clone faithfully <em>(default)</em></td></tr>
+              <tr><td><code>1</code></td><td>Clone the device anyway, every interface the box can serve byte-faithful, and admit the gated commands below</td></tr>
             </tbody>
           </table>
         </div>
@@ -115,7 +112,7 @@ const Option: Component = () => {
               <tr><th>Item</th><th>Opt-in off</th></tr>
             </thead>
             <tbody>
-              <tr><td>a device the box can't clone exactly</td><td>Refused: no clone appears.</td></tr>
+              <tr><td>a device the box can't clone faithfully</td><td>Refused: no clone appears.</td></tr>
               <tr><td>a forced rate, <A href="/native/commands/option#emit"><code>EMIT</code></A>'s <code>force_hz</code></td><td>Not applied.</td></tr>
               <tr><td><A href="/native/commands/rewrite#rewrite"><code>REWRITE</code></A></td><td>Discarded, except the whole-table clear; turning the opt-in off clears the table.</td></tr>
               <tr><td><A href="/native/commands/patch#patch"><code>PATCH</code></A></td><td>Stored, not served; <code>APPLY</code> is ignored, and turning the opt-in off presents a patched clone again without its set.</td></tr>
@@ -127,7 +124,7 @@ const Option: Component = () => {
         </div>
         <div class="callout callout--info">
           <p>
-            A device the box can't clone exactly has more than four IN endpoints live at once, or more
+            A device the box can't clone faithfully has more than four IN endpoints live at once, or more
             than six HID interfaces; runs at high speed; has configurations the box did not capture; a
             vendor bulk or isochronous endpoint; a setting carrying more endpoint descriptors than it
             declares, where what fits is cloned and the rest left undriven; or a report descriptor
@@ -145,7 +142,7 @@ const Option: Component = () => {
             FIFO is in use.
           </p>
           <p>
-            Changing this with a device the box can't clone exactly attached, or with a forced rate pending, reboots
+            Changing this with a device the box can't clone faithfully attached, or with a forced rate pending, reboots
             the device chip to re-clone; otherwise the clone is presented again when the change
             alters the <A href="/native/commands/patch#presentation">patch set</A> it serves.
           </p>
@@ -171,7 +168,7 @@ const Option: Component = () => {
         />
       </DocSection>
 
-      <DocSection id="move-ride" title="MOVE_RIDE" caption="Inject motion only on a native move">
+      <DocSection id="move-ride" title="MOVE_RIDE" caption="Inject motion only on a native motion report">
         <pre class="api-signature">id 1  ·  [timeout u16 LE] ms</pre>
         <div class="api-response-label">TIMEOUT</div>
         <div class="table-scroll">
@@ -179,7 +176,7 @@ const Option: Component = () => {
             <thead><tr><th>Value</th><th>Effect</th></tr></thead>
             <tbody>
               <tr><td><code>0</code></td><td>Off: injected motion is emitted on native reports and the box's reports alike <em>(default)</em></td></tr>
-              <tr><td><code>N</code> ms</td><td>Injected cursor and wheel motion only rides a native move seen within <code>N</code> ms; no synthetic motion frame, and motion left unridden is dropped (never dumped on the next move)</td></tr>
+              <tr><td><code>N</code> ms</td><td>Injected cursor and wheel motion only rides a native motion report seen within <code>N</code> ms; no synthetic motion frame, and motion left unridden is dropped (never dumped on the next move)</td></tr>
             </tbody>
           </table>
         </div>
@@ -189,7 +186,7 @@ const Option: Component = () => {
         <div class="callout callout--warning">
           <p>
             While on, pure idle injection (moving the cursor while the real device is still) stops
-            working: motion waits for a native move and is dropped if none comes.
+            working: motion waits for a native motion report and is dropped if none comes.
           </p>
           <p>
             Button, key, and media injection are unaffected, and a move can opt out per command
@@ -221,7 +218,7 @@ const Option: Component = () => {
         />
       </DocSection>
 
-      <DocSection id="emit" title="EMIT" caption="Pace and wire-rate injected motion">
+      <DocSection id="emit" title="EMIT" caption="Injection pace and wire rate">
         <pre class="api-signature">id 2  ·  [mode u8][rate_hz u16 LE][force_hz u16 LE]</pre>
         <p>
           Every <code>OPTION(EMIT)</code> writes all three fields; resend the ones to keep.
@@ -231,7 +228,7 @@ const Option: Component = () => {
           <table class="api-params">
             <thead><tr><th>Value</th><th>Name</th><th><code>rate_hz</code></th><th>Emit paced to</th></tr></thead>
             <tbody>
-              <tr><td><code>0</code></td><td>Learnt <em>(default)</em></td><td>n/a</td><td>The mouse's measured report rate</td></tr>
+              <tr><td><code>0</code></td><td>Learnt <em>(default)</em></td><td>n/a</td><td>The measured native report rate</td></tr>
               <tr><td><code>1</code></td><td>Interval</td><td>n/a</td><td>The cloned mouse's declared poll rate (its <code>bInterval</code>)</td></tr>
               <tr><td><code>2</code></td><td>Fixed</td><td>target Hz</td><td><code>rate_hz</code>, snapped to <code>1000/n</code></td></tr>
             </tbody>
@@ -249,8 +246,8 @@ const Option: Component = () => {
           <table class="api-params">
             <thead><tr><th>Value</th><th>Effect</th></tr></thead>
             <tbody>
-              <tr><td><code>0</code> <em>(default)</em></td><td>Serves the captured descriptor and polls the device at the interval it declared</td></tr>
-              <tr><td>target Hz</td><td>Writes the <code>bInterval</code> nearest that rate onto every HID interrupt-IN endpoint of the served descriptor, and polls the device at that same interval</td></tr>
+              <tr><td><code>0</code> <em>(default)</em></td><td>Serves the captured descriptor and polls the real device at the interval it declared</td></tr>
+              <tr><td>target Hz</td><td>Writes the longest power-of-two <code>bInterval</code> no longer than that rate's, so the rate is never slower than asked, onto every HID interrupt-IN endpoint of the served descriptor, and polls the real device at that same interval</td></tr>
             </tbody>
           </table>
         </div>
@@ -259,7 +256,7 @@ const Option: Component = () => {
             A forced rate applies only with{' '}
             <A href="/native/commands/option#imperfect"><code>IMPERFECT</code></A> on, because the
             descriptor stops matching the real device. Changing the resolved interval re-clones the
-            box, which drops this port for a few seconds.
+            box: the device chip reboots, and queries time out for a few seconds.
           </p>
           <p>
             Vendor interfaces, interrupt-OUT and isochronous endpoints keep the captured value. A
@@ -280,7 +277,7 @@ const Option: Component = () => {
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <p>
-          A fixed 1 kHz ceiling with the wire forced to 1 kHz (<code>mode = 2</code>,{' '}
+          A fixed 1 kHz ceiling with the wire rate forced to 1 kHz (<code>mode = 2</code>,{' '}
           <code>rate_hz = 0x03E8</code>, <code>force_hz = 0x03E8</code>):
         </p>
         <ByteStrip
@@ -366,8 +363,8 @@ const Option: Component = () => {
             A write that changes either field drops the standing{' '}
             <A href="/native/commands/lock#bearing">bearing</A> and the banked{' '}
             <A href="/native/commands/lock#scale">carry</A> on every mouse interface. With a{' '}
-            <code>with</code> / <code>against</code> scale live that is a visible step in what
-            reaches the game PC, so set the geometry before the scales, not between reports.
+            <code>with</code> / <code>against</code> scale live that is a visible step in the
+            emitted motion, so set the geometry before the scales, not between reports.
           </p>
         </div>
         <p>
@@ -401,8 +398,8 @@ const Option: Component = () => {
             <thead><tr><th>Value</th><th>Name</th><th>Effect</th></tr></thead>
             <tbody>
               <tr><td><code>0</code></td><td>Off</td><td>Renderer off. The box emits the paced fill.</td></tr>
-              <tr><td><code>1</code></td><td>Stock</td><td>The model's bit-exact triangular smoother. Its first report carries a larger delta than the ones after it.</td></tr>
-              <tr><td><code>2</code></td><td>De-spiked <em>(default)</em></td><td>The same smoother with its onset ramped, which flattens that first report.</td></tr>
+              <tr><td><code>1</code></td><td>Stock</td><td>The model's bit-exact triangular smoother. Its first report carries twice the steady delta.</td></tr>
+              <tr><td><code>2</code></td><td>De-spiked <em>(default)</em></td><td>The same smoother, ramping up to the steady delta over 8 ms from the first report.</td></tr>
               <tr><td><code>3</code></td><td>Unsmoothed</td><td>No smoother. The model receives the raw injection.</td></tr>
             </tbody>
           </table>
@@ -410,7 +407,7 @@ const Option: Component = () => {
         <pre class="diagram">{`one injected correction, drained over ~12 ms  (| = a report, . = an idle ms)
 
   mode = 0     | | | | | | | | | | | |      even fill at the paced rate
-  mode > 0     | | . | . . | | . | . |      the live device's on/off texture`}</pre>
+  mode > 0     | | . | . . | | . | . |      the native on/off texture`}</pre>
         <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Aspect</th><th><code>mode = 0</code></th><th><code>mode &gt; 0</code></th></tr></thead>
@@ -427,7 +424,7 @@ const Option: Component = () => {
               <thead><tr><th>Value</th><th>Effect</th></tr></thead>
               <tbody>
                 <tr><td><code>0</code> <em>(default)</em></td><td>Renders injected motion only. Native cursor delta is relayed byte for byte.</td></tr>
-                <tr><td><code>1</code></td><td>Renders both: native cursor delta leaves the relayed report and joins injection as one stream through the model.</td></tr>
+                <tr><td><code>1</code></td><td>Renders both: native cursor delta is taken out of the relayed report and joins injection as one stream through the model.</td></tr>
               </tbody>
             </table>
           </div>
@@ -462,8 +459,8 @@ const Option: Component = () => {
             holds native motion it never rides out. A clip's stream does too.
           </p>
           <p>
-            The profile is built from the live mouse and never persisted, so every boot starts without
-            one and arms from a window of mouse motion. <code>full</code> renders nothing while{' '}
+            The profile is built from native reports and never persisted, so every boot starts
+            without one and arms from a window of native motion. <code>full</code> renders nothing while{' '}
             <code>mode</code> is <code>0</code>, with no model in the path.
           </p>
         </div>
@@ -537,7 +534,7 @@ const Option: Component = () => {
         </div>
         <p>
           A loop at the native report rate keeps each command whole: it waits in a short queue and
-          leaves alone on one report, no later than the first report after its interval ends. A
+          is emitted alone on one report, no later than the first report after its interval ends. A
           delta smaller than its interval's report count can't be split one count per report; it
           is emitted once, part way through.
         </p>
@@ -551,7 +548,7 @@ const Option: Component = () => {
           <p>
             <code>SPREAD</code> and <A href="/native/commands/option#render"><code>RENDER</code></A>{' '}
             compose independently. Under <code>full</code> rendering only injected motion is spread; native
-            motion already arrives at the device's report rate.
+            motion already arrives at the native report rate.
           </p>
         </div>
         <p>

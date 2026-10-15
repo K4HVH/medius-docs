@@ -9,16 +9,16 @@ const Streams: Component = () => {
       <PageHeader>
         <p>
           <A href="/native/hardware">The box</A> has two live channels: the traffic it carries
-          (<A href="/library/catch">Catch</A>: physical input and the USB bytes behind it) and its log
+          (<A href="/library/catch">Catch</A>: native input and the USB bytes behind it) and its log
           lines (<A href="/library/diagnostics">Logs &amp; counters</A>). What an event{' '}
           <em>means</em> is on those pages.
         </p>
-        <pre class="diagram">{`  physical mouse / keyboard          the traffic the box carries
-            │   (also forwarded       (vendor endpoints, control
+        <pre class="diagram">{`  real mouse / keyboard              the traffic the box carries
+            │   (also relayed         (vendor endpoints, control
             │    to the game PC)       transactions, bus events)
             ▼                                  ▼
    ┌─────────────────┐                         ┌─────────────┐
-   │   medius box    │ catch_events(filters) ─▶│ EventStream │ ─▶ recv() ─▶ CatchEvent
+   │   Medius box    │ catch_events(filters) ─▶│ EventStream │ ─▶ recv() ─▶ CatchEvent
    │                 │                         ├─────────────┤
    │                 │ input_events(filters) ─▶│ InputStream │ ─▶ recv() ─▶ InputEvent
    │                 │                         ├─────────────┤
@@ -63,7 +63,7 @@ const Streams: Component = () => {
         <pre class="api-signature">{`CatchFilter.watch(usage)                # one button, key, or media usage
 CatchFilter.watch_axis(axis)            # one Axis
 CatchFilter.watch_class(input_class)    # every usage in one Class
-CatchFilter.watch_axes()                # X, Y and the wheel
+CatchFilter.watch_axes()                # X, Y, the wheel and AC Pan
 CatchFilter.all_input()                 # a list: all four input classes
 CatchFilter.traffic(traffic_class, id)  # one endpoint, interface, or EP number
 CatchFilter.traffic_class(tc)           # every id in one TrafficClass
@@ -114,7 +114,7 @@ CatchFilter.everything()                # every class, every id, one table entry
               <tr><td><code>recv()</code></td><td><code>CatchEvent</code></td><td>Blocks for the next item. Raises <A href="/bindings/python/types#subclasses"><code>DisconnectedError</code></A> when the link drops or the stream is closed.</td></tr>
               <tr><td><code>try_recv()</code></td><td><code>Optional[CatchEvent]</code></td><td>Returns immediately; <code>None</code> if nothing is queued.</td></tr>
               <tr><td><code>recv_timeout(ms)</code></td><td><code>Optional[CatchEvent]</code></td><td>Waits up to <code>ms</code> milliseconds; <code>None</code> on timeout.</td></tr>
-              <tr><td><code>for ev in stream:</code></td><td>yields each item</td><td>Loops on <code>recv()</code>; ends cleanly when the link drops or the stream closes (no exception).</td></tr>
+              <tr><td><code>for ev in stream:</code></td><td>yields each item</td><td>Loops on <code>recv()</code>; ends when the link drops or the stream closes (no exception).</td></tr>
               <tr><td><code>clone()</code></td><td><code>EventStream</code></td><td>A second handle to the same subscription; the queue is shared. <code>EventStream</code> and <code>LogStream</code> only.</td></tr>
               <tr><td><code>is_connected</code></td><td><code>bool</code></td><td>Whether the box still delivers; a <code>None</code> from <code>try_recv()</code> or <code>recv_timeout()</code> can't tell.</td></tr>
               <tr><td><code>close()</code> / <code>with stream:</code></td><td>none</td><td>End the stream for every handle on it and free this one. A <code>recv()</code> blocked in another thread raises <code>DisconnectedError</code> at once. Automatic on <code>with</code> exit; garbage collection frees one handle and leaves the stream open for the others.</td></tr>
@@ -151,7 +151,7 @@ with Device.find() as dev:
  ├─ payload : MotionEvent | UsageSnapshot | TrafficEvent
  │
  ├─ .motion  → MotionEvent | None      None unless kind == MOTION
- │               dx, dy, dz
+ │               dx, dy, dz, pan
  ├─ .usages  → UsageSnapshot | None    None unless kind == USAGES
  │               usages[], cls, direction, is_held(usage)
  └─ .traffic → TrafficEvent | None     None unless kind == TRAFFIC
@@ -161,10 +161,10 @@ with Device.find() as dev:
           <table class="api-params">
             <thead><tr><th>Payload</th><th>Fields</th><th>Methods</th></tr></thead>
             <tbody>
-              <tr><td><A href="/bindings/python/types#motionevent"><code>MotionEvent</code></A></td><td><code>dx: int</code>, <code>dy: int</code>, <code>dz: int</code> (the relative deltas at the merge point)</td><td>none</td></tr>
+              <tr><td><A href="/bindings/python/types#motionevent"><code>MotionEvent</code></A></td><td><code>dx: int</code>, <code>dy: int</code>, <code>dz: int</code>, <code>pan: int</code> (the relative deltas at the merge point)</td><td>none</td></tr>
               <tr><td><A href="/bindings/python/types#usagesnapshot"><code>UsageSnapshot</code></A></td><td><code>usages: List[Usage]</code> (buttons, keys, and media, one shape), <code>cls: Class</code>, <code>direction: Direction</code></td><td><code>is_held(usage)</code>: the built <A href="/bindings/python/types#input"><code>Usage</code></A> is in the snapshot</td></tr>
               <tr><td><A href="/bindings/python/types#trafficevent"><code>TrafficEvent</code></A></td><td><code>catch_class: CatchClass</code>, <code>id: int</code>, <code>direction: Direction</code>, <code>flags: int</code>, <code>true_len: int</code>, <code>bytes: bytes</code></td><td><code>truncated()</code>, <code>setup()</code>, <code>data()</code>, <code>control_status()</code>, <code>transfer_status()</code>, <code>bus_event()</code>, <code>bulk_end_of_transfer()</code>, <code>zlp()</code></td></tr>
-              <tr><td><A href="/bindings/python/types#inputevent"><code>InputEvent</code></A></td><td><code>kind: InputKind</code>, <code>usage: Optional[Usage]</code>, <code>dx</code>/<code>dy</code>/<code>dz</code>, <code>ts_us</code>, <code>clock</code></td><td><code>is_press</code>, <code>is_release</code></td></tr>
+              <tr><td><A href="/bindings/python/types#inputevent"><code>InputEvent</code></A></td><td><code>kind: InputKind</code>, <code>usage: Optional[Usage]</code>, <code>dx</code>/<code>dy</code>/<code>dz</code>/<code>pan</code>, <code>ts_us</code>, <code>clock</code></td><td><code>is_press</code>, <code>is_release</code></td></tr>
               <tr><td><A href="/bindings/python/types#logline"><code>LogLine</code></A></td><td><A href="/bindings/python/types#loglevel"><code>level: LogLevel</code></A>, <code>text: str</code></td><td>none</td></tr>
             </tbody>
           </table>

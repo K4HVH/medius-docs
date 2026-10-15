@@ -8,18 +8,18 @@ const Raw: Component = () => {
     <>
       <PageHeader>
         <p>
-          <code>raw</code> puts <code>bytes</code> verbatim on one cloned endpoint, named by number and
-          direction: <code>IN</code> emits toward the game PC, <code>OUT</code> relays to the real
+          <code>raw</code> sends <code>bytes</code> verbatim on one cloned endpoint, named by number and
+          direction: <code>IN</code> emits toward the game PC, <code>OUT</code> writes to the real
           device. It bypasses the semantic model and never merges with native motion.
         </p>
         <p>
           The write is stateless: the next native report overwrites it. <code>raw</code> bypasses the{' '}
           <A href="/library/advanced/rewrite">rewrite rules</A> and the clip's{' '}
           <A href="/library/clip#packet-triggers">packet triggers</A>. No native report carries a raw{' '}
-          <code>IN</code> report, so on an endpoint the device reports on at every poll it takes a separate
-          poll, within two of the device's reports.
+          <code>IN</code> report, so on an endpoint the real device reports on at every poll it takes a
+          separate poll, within two native reports.
         </p>
-        <pre class="diagram">{`  native device          the box  (host chip  |  device chip = the clone)         game PC
+        <pre class="diagram">{`  real device            the box  (host chip  |  device chip = the clone)         game PC
 
   HID report  ---IN--->  [ HID_IN ]--> renderer --> [ EMIT ]---interrupt-IN---->  reads report
                                                                     ^
@@ -27,7 +27,7 @@ const Raw: Component = () => {
 
   relayed     <--OUT---  [ HID_OUT ]<-- relay <--------------- interrupt-OUT <--  writes report
                          (VEND_INTR / VEND_BULK)                ^
-                                                                +-- raw(n, OUT)  <== a report toward the device
+                                                                +-- raw(n, OUT)  <== a report toward the real device
 
   control     <-- EP0 -> [ CONTROL ]<-- proxy ------------------- EP0 <-------->  class, vendor requests
   enumerate   descriptor patches overwrite what the clone presents`}</pre>
@@ -51,7 +51,7 @@ const Raw: Component = () => {
             </thead>
             <tbody>
               <tr><td><code>ep</code></td><td><code>u8</code></td><td>Cloned endpoint number, 0 to 15.</td></tr>
-              <tr><td><code>direction</code></td><td><A href="/library/types/enums#direction"><code>Direction</code></A></td><td><code>IN</code> emits toward the game PC, <code>OUT</code> relays to the real device. Any other is <A href="/library/types/errors#errors"><code>Error::RawDirection</code></A>.</td></tr>
+              <tr><td><code>direction</code></td><td><A href="/library/types/enums#direction"><code>Direction</code></A></td><td><code>IN</code> emits toward the game PC, <code>OUT</code> writes to the real device. Any other is <A href="/library/types/errors#errors"><code>Error::RawDirection</code></A>.</td></tr>
               <tr><td><code>bytes</code></td><td><code>&amp;[u8]</code></td><td>The report, sent as given, at most 510 bytes. An interrupt report fits one packet; a bulk payload is split, per <A href="/library/advanced/raw#size">packet size</A>.</td></tr>
             </tbody>
           </table>
@@ -90,14 +90,14 @@ device.raw(1, Direction::IN, &[0x00, 0x01, 0x00, 0x00])?;  // one report on inte
           A standard input in the native report belongs in{' '}
           <A href="/library/inject"><code>inject</code></A> and{' '}
           <A href="/library/move"><code>move_rel</code></A>, which describe an input for the box to
-          render into a native-faithful report; <code>raw</code> sends bytes untouched.
+          render into a faithful report; <code>raw</code> sends bytes untouched.
         </p>
         <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Aspect</th><th><A href="/library/inject"><code>inject</code></A> / <A href="/library/move"><code>move_rel</code></A></th><th><code>raw</code></th></tr></thead>
             <tbody>
               <tr><td>Addresses</td><td>An axis or usage, by <A href="/library/types/enums#axis">semantic</A> id</td><td>An endpoint, by number and direction</td></tr>
-              <tr><td>On the wire</td><td>Merged into the native report, clamped to the field width, paced to the native rate</td><td>The bytes as given, one report</td></tr>
+              <tr><td>On the wire</td><td>Merged into the native report, clamped to the field width, paced to the native report rate</td><td>The bytes as given, one report</td></tr>
               <tr><td>State</td><td>Held until cleared; rides the native stream</td><td>Stateless; the next native report overwrites it</td></tr>
               <tr><td>Rewrite rules, packet triggers</td><td>Apply</td><td>Bypassed</td></tr>
               <tr><td>Gate</td><td>Always available</td><td>Imperfect-clone opt-in</td></tr>
@@ -105,16 +105,16 @@ device.raw(1, Direction::IN, &[0x00, 0x01, 0x00, 0x00])?;  // one report on inte
           </table>
         </div>
         <p>
-          <code>raw</code> is for a vendor packet no HID field describes, a byte sequence a device
+          <code>raw</code> is for a vendor packet no HID field describes, a byte sequence the real device
           expects on an OUT endpoint, or a report shape the semantic core does not model.
         </p>
       </DocSection>
 
-      <DocSection id="gate" title="Imperfect-clone gate" caption="One opt-in admits the whole layer">
+      <DocSection id="gate" title="Imperfect-clone gate" caption="One opt-in enables the whole layer">
         <p>
           <A href="/library/advanced/rewrite#set-rewrite"><code>set_rewrite</code></A> and{' '}
           <A href="/library/advanced/patch#apply-patch"><code>apply_patch</code></A> read the opt-in
-          before sending; <code>raw</code> runs per report, so it sends without asking.
+          before sending; <code>raw</code> runs per report, so it sends without reading the opt-in.
         </p>
         <div class="table-scroll">
           <table class="api-params">

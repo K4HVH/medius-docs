@@ -13,9 +13,9 @@ const NativeIntroduction: Component = () => {
           binary control protocol.
         </p>
         <p>
-          The box sits between a USB device and a PC. The device (mouse, keyboard, or combo) passes
-          through unchanged while a program injects over a separate USB-serial link: cursor and
-          buttons for a mouse, keys and media for a keyboard.
+          The box sits between a USB device and a PC. Native reports from the real device (mouse,
+          keyboard, or combo) are relayed unchanged while a program injects over a separate
+          USB-serial link: cursor and buttons for a mouse, keys and media for a keyboard.
         </p>
         <p>
           Drive it from any language; the Rust <A href="/library">library</A> is the official client.
@@ -69,10 +69,10 @@ const NativeIntroduction: Component = () => {
               <tr>
                 <td>Protocol version</td>
                 <td>
-                  These pages cover version <code>9</code>. Check <code>proto_ver</code> in the{' '}
+                  Check <code>proto_ver</code> in the{' '}
                   <A href="/native/commands/requests#version"><code>VERSION</code></A> reply during
-                  the <A href="/native/connection#handshake">handshake</A>; any other value is
-                  firmware these pages don't cover.
+                  the <A href="/native/connection#handshake">handshake</A>; a value other than{' '}
+                  <code>9</code> is firmware these pages don't cover.
                 </td>
               </tr>
               <tr>
@@ -102,21 +102,21 @@ const NativeIntroduction: Component = () => {
 
       <DocSection id="overview" title="Overview">
         <IndexRow href="/native/quickstart" title="Quickstart" tag="Open the port and inject" />
-        <IndexRow href="/native/architecture" title="Architecture" tag="Clone, passthrough, inject" />
+        <IndexRow href="/native/architecture" title="Architecture" tag="Clone, relay, inject" />
         <IndexRow href="/native/hardware" title="Hardware" tag="Three USB ports and the chips" />
       </DocSection>
 
       <DocSection id="protocol" title="Protocol">
         <IndexRow href="/native/transport" title="Transport" tag="6 Mbaud, framed-only" />
         <IndexRow href="/native/connection" title="Connection" tag="Handshake and hello" />
-        <IndexRow href="/native/frame" title="Frame Format" tag="SOF, type, CRC16" />
-        <IndexRow href="/native/injection" title="Injection Model" tag="Accumulator and emission" />
+        <IndexRow href="/native/frame" title="Frame format" tag="SOF, type, CRC16" />
+        <IndexRow href="/native/injection" title="Injection model" tag="Accumulator and emission" />
       </DocSection>
 
       <DocSection id="commands" title="Commands">
         <IndexRow href="/native/commands/inject" title="Inject" tag="Press buttons, keys, media" />
         <IndexRow href="/native/commands/move" title="Move" tag="Cursor and wheel" />
-        <IndexRow href="/native/commands/lock" title="Lock" tag="Weigh a physical input" />
+        <IndexRow href="/native/commands/lock" title="Lock" tag="Weigh a native input" />
         <IndexRow href="/native/commands/catch" title="Catch" tag="Stream input and raw traffic" />
         <IndexRow href="/native/commands/transform" title="Transform" tag="Swap or remap a field" />
         <IndexRow href="/native/commands/clip" title="Clip" tag="Buffered clip playback" />
@@ -130,7 +130,7 @@ const NativeIntroduction: Component = () => {
 
       <DocSection id="advanced" title="Advanced control">
         <IndexRow href="/native/commands/raw" title="Raw" tag="Bytes on a cloned endpoint" />
-        <IndexRow href="/native/commands/transfer" title="Transfer" tag="A control transfer on the device" />
+        <IndexRow href="/native/commands/transfer" title="Transfer" tag="Control transfer on the real device" />
         <IndexRow href="/native/commands/rewrite" title="Rewrite" tag="Rewrite packets in flight" />
         <IndexRow href="/native/commands/patch" title="Patch" tag="Patch cloned descriptors" />
       </DocSection>

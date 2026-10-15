@@ -10,8 +10,8 @@ const Lock: Component = () => {
     <>
       <PageHeader>
         <p>
-          <A href="/native/commands/lock#lock"><code>LOCK</code></A> sets how much of one physical
-          input reaches the game PC. <A href="/native/injection">Injection</A> drives that input at
+          <A href="/native/commands/lock#lock"><code>LOCK</code></A> sets how much of one native
+          input the box emits. <A href="/native/injection">Injection</A> drives that input at
           full strength regardless of scale.
         </p>
         <pre class="diagram">{` -255   min     <==    2.55x, reversed
@@ -23,7 +23,7 @@ const Lock: Component = () => {
 
   injection     -->    full strength whatever the scale`}</pre>
         <p>
-          A relative direction weighs physical motion against the{' '}
+          A relative direction weighs native motion against the{' '}
           <A href="/native/commands/lock#bearing">bearing</A>, in one of two{' '}
           <A href="/native/commands/lock#geometry">geometries</A>.
         </p>
@@ -61,7 +61,7 @@ const Lock: Component = () => {
               <tr><td>0</td><td><code>class</code></td><td><code>u8</code></td><td>input class (<A href="/native/commands/lock">table above</A>)</td></tr>
               <tr><td>1</td><td><code>id</code></td><td><code>u16</code></td><td>input within the class, little-endian; <code>0xFFFF</code> = a <A href="/native/commands/lock#blanket">blanket</A></td></tr>
               <tr><td>3</td><td><code>direction</code></td><td><code>u8</code></td><td>sign or edge, <A href="/native/commands/lock#direction"><code>0-4</code></A></td></tr>
-              <tr><td>4</td><td><code>scale</code></td><td><code>i16</code></td><td>percent of the physical value kept, little-endian, <A href="/native/commands/lock#scale"><code>-255 to 255</code></A></td></tr>
+              <tr><td>4</td><td><code>scale</code></td><td><code>i16</code></td><td>percent of the native value kept, little-endian, <A href="/native/commands/lock#scale"><code>-255 to 255</code></A></td></tr>
             </tbody>
           </table>
         </div>
@@ -74,9 +74,9 @@ const Lock: Component = () => {
               </thead>
               <tbody>
                 <tr><td>min</td><td><code>-255</code></td><td>2.55x, reversed. Anything negative reverses what it keeps.</td></tr>
-                <tr><td>invert</td><td><code>-100</code></td><td>All of it, reversed: an exact inversion.</td></tr>
-                <tr><td>block</td><td><code>0</code></td><td>None of the physical value reaches the PC.</td></tr>
-                <tr><td>pass</td><td><code>100</code></td><td>All of it, byte for byte.</td></tr>
+                <tr><td>invert</td><td><code>-100</code></td><td>All of the native value, reversed: an exact inversion.</td></tr>
+                <tr><td>block</td><td><code>0</code></td><td>None of the native value is emitted.</td></tr>
+                <tr><td>pass</td><td><code>100</code></td><td>All of the native value, byte for byte.</td></tr>
                 <tr><td>max</td><td><code>255</code></td><td>2.55x. Anything above <code>100</code> amplifies.</td></tr>
               </tbody>
             </table>
@@ -89,24 +89,24 @@ const Lock: Component = () => {
               </thead>
               <tbody>
                 <tr><td>combine</td><td>A delta picks up one fixed-sign scale and one relative scale, multiplied. A <code>0</code> in either blocks.</td></tr>
-                <tr><td>carry</td><td>A physical delta at 1 kHz is almost always <code>+/-1</code>, so the dropped fraction is banked per axis and sign: <code>40</code> on a run of <code>-1</code> emits <code>0 0 -1 0 -1</code>.</td></tr>
+                <tr><td>carry</td><td>A native delta at 1 kHz is almost always <code>+/-1</code>, so the dropped fraction is banked per axis and sign: <code>40</code> on a run of <code>-1</code> emits <code>0 0 -1 0 -1</code>.</td></tr>
                 <tr><td>saturate</td><td>A weighed value clamps to the field's declared range, never wraps, and forfeits the fraction it could not carry.</td></tr>
                 <tr><td>one bit</td><td>A button, key or media usage locks below <code>100</code> and passes at <code>100</code>. The box stores that, not the number sent.</td></tr>
                 <tr><td>sign</td><td>A negative reverses what it keeps: the magnitude is weighed and the result flipped, so <code>-100</code> is an inversion with no rounding. A negative on a momentary usage (one bit, nothing to reverse) is refused.</td></tr>
                 <tr><td>direction</td><td>The slot is picked from the sign of the delta <em>before</em> the weigh, so a directional negative does not loop: <code>-100</code> on <code>positive</code> sends rightward motion left and leaves leftward motion alone.</td></tr>
-                <tr><td>order</td><td>A scale is in force before the box acts on anything sent after it, a <A href="/native/commands/clip#set">clip's auto-lock</A> included: once a later command's effect reaches the PC, no physical input passes at the old scale.</td></tr>
+                <tr><td>order</td><td>A scale is in force before the box acts on anything sent after it, a <A href="/native/commands/clip#set">clip's auto-lock</A> included: once a later command's effect is emitted, no native input passes at the old scale.</td></tr>
               </tbody>
             </table>
           </div>
           <div class="callout callout--warning">
             <p>
               Weighing runs before injected motion drains, so a gain that fills an axis leaves
-              injected motion no room. It is held, not dropped, and leaves as one report once room
-              opens.
+              injected motion no room. It is held, not dropped, and is emitted in one report once
+              room opens.
             </p>
             <p>
               The threshold is the field's declared maximum divided by the gain: at <code>255</code>{' '}
-              on an 8-bit axis the field fills at a physical delta of <code>50</code> and clamps
+              on an 8-bit axis the field fills at a native delta of <code>50</code> and clamps
               from <code>51</code>.
             </p>
             <p>
@@ -128,7 +128,7 @@ const Lock: Component = () => {
                 <tr><td>positive</td><td><code>1</code></td><td>Positive sign only (<code>+</code>).</td><td>Press only (<code>0 to 1</code>).</td></tr>
                 <tr><td>negative</td><td><code>2</code></td><td>Negative sign only (<code>-</code>).</td><td>Release only (<code>1 to 0</code>).</td></tr>
                 <tr><td>with</td><td><code>3</code></td><td>The sign the box is <A href="/native/commands/lock#bearing">injecting</A>.</td><td>Refused on a button or key. Media locks the whole usage, as <code>0</code> would.</td></tr>
-                <tr><td>against</td><td><code>4</code></td><td>The sign opposing it.</td><td>Refused on a button or key. Media locks the whole usage, as <code>0</code> would.</td></tr>
+                <tr><td>against</td><td><code>4</code></td><td>The sign opposing the injected one.</td><td>Refused on a button or key. Media locks the whole usage, as <code>0</code> would.</td></tr>
               </tbody>
             </table>
           </div>
@@ -153,7 +153,7 @@ const Lock: Component = () => {
                 <tr><th>Class</th><th>Covers</th><th>Direction</th><th>Reads back as</th></tr>
               </thead>
               <tbody>
-                <tr><td>button</td><td>Every button the device declares.</td><td>As a named button.</td><td>One entry per button and edge, under the button's id.</td></tr>
+                <tr><td>button</td><td>Every button the real device declares.</td><td>As a named button.</td><td>One entry per button and edge, under the button's id.</td></tr>
                 <tr><td>key</td><td>Every keyboard usage.</td><td>Honoured: <code>1</code> blocks press edges, <code>2</code> release edges, <code>0</code> both.</td><td>One entry per blocked edge, id <code>0xFFFF</code>.</td></tr>
                 <tr><td>media</td><td>Every Consumer usage.</td><td>Ignored.</td><td>One entry, id <code>0xFFFF</code>, direction <code>0</code>.</td></tr>
                 <tr><td>axis</td><td>X, Y, the wheel, and pan.</td><td>As a named axis.</td><td>One entry per axis and direction, under the axis's id.</td></tr>
@@ -183,8 +183,8 @@ link loss   the inter-chip link drops
 detach      the real device goes away
 re-clone    the box binds a device again`}</pre>
           <p>
-            A keepalive holds one past a second of quiet. Injection auto-clears on the same events;
-            see <A href="/native/injection#safety">Injection</A>.
+            A keepalive holds one past a second of quiet.{' '}
+            <A href="/native/injection#safety">Injection</A> auto-clears on the same events.
           </p>
           <p>Every clear here but the unlock moves the <A href="/native/commands/requests#stats"><code>session</code></A> count.</p>
         </Anchor>
@@ -221,8 +221,8 @@ re-clone    the box binds a device again`}</pre>
           ]}
         />
         <p>
-          Keep 40% of leftward movement while the bearing on X is positive: <code>direction = 4</code>{' '}
-          (against), <code>scale = 40</code>. A physical <code>-10</code> then leaves as{' '}
+          Keep 40% of leftward motion while the bearing on X is positive: <code>direction = 4</code>{' '}
+          (against), <code>scale = 40</code>. A native <code>-10</code> is then emitted as{' '}
           <code>-4</code>, and as <code>-10</code> again once the bearing lapses:
         </p>
         <ByteStrip
@@ -259,7 +259,7 @@ re-clone    the box binds a device again`}</pre>
 
       <DocSection id="bearing" title="Bearing" caption="Current injected direction">
         <p>
-          <code>with</code> and <code>against</code> weigh a physical delta by its sign relative
+          <code>with</code> and <code>against</code> weigh a native delta by its sign relative
           to the bearing. The box reads it at the{' '}
           <A href="/native/injection">merge point</A>, where pending injection and the arriving
           report are both present.
@@ -287,8 +287,8 @@ re-clone    the box binds a device again`}</pre>
               <tr><td>Injected motion still owed on that axis, held for a ride or queued behind a slow <A href="/native/commands/option#emit">emit</A> gate</td><td>Keeps restarting the deadline, and points at the net pending delta rather than the last one sent.</td></tr>
               <tr><td>The window elapses</td><td>That axis has no bearing. Both relative directions stop applying and it passes at its fixed-sign scale alone.</td></tr>
               <tr><td><A href="/native/commands/move#flags"><code>MOVE</code> with <code>DISCARD</code></A></td><td>Cleared, then set again by the command's delta; only a zero-delta discard leaves the axis without one.</td></tr>
-              <tr><td>Motion held for a ride goes stale</td><td>Cleared with the held motion, on the next native move that would have carried it.</td></tr>
-              <tr><td>A change to <A href="/native/commands/option#move-ride"><code>OPTION(MOVE_RIDE)</code></A></td><td>Cleared, along with the held motion it pointed with.</td></tr>
+              <tr><td>Motion held for a ride goes stale</td><td>Cleared with the held motion, on the next native motion report that would have carried it.</td></tr>
+              <tr><td>A change to <A href="/native/commands/option#move-ride"><code>OPTION(MOVE_RIDE)</code></A></td><td>Cleared, along with the held motion.</td></tr>
               <tr><td>A change to <A href="/native/commands/option#bearing"><code>OPTION(BEARING)</code></A></td><td>Cleared, and the banked <A href="/native/commands/lock#scale">carry</A> with it.</td></tr>
               <tr><td><A href="/native/commands/admin#reset"><code>RESET</code></A>, ~1 s of control-PC silence, link loss, detach</td><td>Cleared with the rest of the PC-owned state.</td></tr>
             </tbody>
@@ -308,11 +308,11 @@ re-clone    the box binds a device again`}</pre>
             </thead>
             <tbody>
               <tr><td>per axis</td><td><code>0</code></td><td>Each axis against its bearing, independently.</td></tr>
-              <tr><td>vector</td><td><code>1</code></td><td>Only the movement along the injected direction.</td></tr>
+              <tr><td>vector</td><td><code>1</code></td><td>Only the motion along the injected direction.</td></tr>
             </tbody>
           </table>
         </div>
-        <pre class="diagram">{`the bearing is down-right at 45 degrees, the device moves straight right
+        <pre class="diagram">{`the bearing is down-right at 45 degrees, the real device moves straight right
 
         o----------->  h   (+12, 0)
          \\         /   across b  (+6, -6)  untouched by with / against
@@ -344,8 +344,8 @@ re-clone    the box binds a device again`}</pre>
           </table>
         </div>
         <p>
-          A fixed-sign scale governs what reaches the game PC, so it covers the across part as
-          well as the physical delta. Only the relative pair is redistributed; the fixed pair is
+          A fixed-sign scale governs what is emitted, so it covers the across part as well as the
+          native delta. Only the relative pair is redistributed; the fixed pair is
           per axis in both modes.
         </p>
         <div class="api-response-label">EXAMPLE</div>
@@ -354,7 +354,7 @@ re-clone    the box binds a device again`}</pre>
   LOCK(axis Y, negative, 0)                      Y's negative sign is blocked
 
                           X     Y
-  physical              +12     0   straight right, nothing on Y
+  native                +12     0   straight right, nothing on Y
   stage 1  along b       +6    +6   scaled by 0, so it goes
            across b      +6    -6   left alone, and is all that remains
            leaves        +6    -6
@@ -362,7 +362,7 @@ re-clone    the box binds a device again`}</pre>
   emitted                +6     0`}</pre>
         <p>
           Per axis, stage 2 would leave Y alone, since the report carried nothing there. With a scale
-          of <code>200</code> instead of the block, the same <code>-6</code> leaves as{' '}
+          of <code>200</code> instead of the block, the same <code>-6</code> is emitted as{' '}
           <code>-12</code>.
         </p>
       </DocSection>
