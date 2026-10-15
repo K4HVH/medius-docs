@@ -185,7 +185,7 @@ const Raw: Component = () => {
             <tbody>
               <tr><td>HID IN, 8 reports</td><td>drops the device's oldest zero-length packet when full, counted in <code>relay_drops</code>; else the oldest native report, else the oldest <code>RAW</code> one, counted in <A href="/native/commands/requests#stats"><code>tx_drops</code></A></td></tr>
               <tr><td>vendor interrupt IN, 8 packets</td><td>drops the oldest packet when full, counted in <A href="/native/commands/requests#stats"><code>relay_drops</code></A></td></tr>
-              <tr><td>vendor bulk IN, 8 packets</td><td>drops the new packet when full, counted in <code>relay_drops</code>; at 6 queued it pauses the native bulk stream until the queue drains to 2</td></tr>
+              <tr><td>vendor bulk IN, 8 packets</td><td>drops the new packet when full, counted in <code>relay_drops</code>. The box polls the device's bulk IN only while fewer than 8 packets are queued or armed, <code>RAW</code> ones included, so only a <code>RAW</code> packet finds it full</td></tr>
               <tr><td>OUT relay, 16 packets across all endpoints</td><td>each waits its turn behind the device's two-packet hold, as the PC's writes do, and the PC's writes to that endpoint wait behind it (one the clone had already taken a read for goes first); one past 16 is dropped, counted in <code>relay_drops</code></td></tr>
             </tbody>
           </table>
@@ -193,8 +193,13 @@ const Raw: Component = () => {
         <p>
           Native reports take at most one place in an interrupt IN queue: the box polls the device
           only as the PC takes what the last poll brought, so the rest of the queue is room for{' '}
-          <code>RAW</code> reports. They take two where the next report is fetched before the PC has the last
-          one whole, and for a few seconds after one reaches the clone too late for its poll.
+          <code>RAW</code> reports. A native bulk stream takes as many places as the PC leaves unread, all 8 at
+          most.
+        </p>
+        <p>
+          An interrupt endpoint's native reports take two places where the next report is fetched before the PC
+          has the last one whole, and for a tenth of a second after one reaches the clone too late for its poll,
+          up to three seconds while late ones keep coming.
         </p>
         <div class="callout callout--warning">
           <p>
