@@ -25,12 +25,12 @@ const RIG = `+-------------------------+
 |   USB device emulator   |
 +-------------------------+`;
 
-const LAYER: Record<string, string> = { wire: 'Wire', host: 'Host', evdev: 'evdev', hidraw: 'hidraw' };
+const LAYER: Record<string, string> = { wire: 'Wire', host: 'Host', evdev: 'evdev', hidraw: 'hidraw', emulator: 'Emulator' };
 
 const Method: Component = () => (
   <>
     <PageHeader>
-      <p>How each result was measured, and the tests not yet run on both boxes the same way.</p>
+      <p>How each result was measured.</p>
     </PageHeader>
 
     <DocSection id="rig" title="Rig">

@@ -128,10 +128,10 @@ const Option: Component = () => {
         <div class="callout callout--info">
           <p>
             A device the box can't clone exactly has more than four IN endpoints live at once, or more
-            than six HID interfaces; more interfaces, alternate settings or endpoints than the box reads
-            (interface numbers up to 11, 8 alternate settings each, 8 endpoints a setting); runs at high
-            speed; has configurations the box did not capture; a vendor bulk or isochronous endpoint; or
-            a report descriptor truncated or never captured.
+            than six HID interfaces; runs at high speed; has configurations the box did not capture; a
+            vendor bulk or isochronous endpoint; a setting carrying more endpoint descriptors than it
+            declares, where what fits is cloned and the rest left undriven; or a report descriptor
+            truncated or never captured.
           </p>
           <p>
             The{' '}

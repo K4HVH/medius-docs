@@ -628,8 +628,8 @@ match stream.recv()? {
             <thead><tr><th>Variant</th><th>Byte</th><th>bytes</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>Reset</code></td><td><code>0</code></td><td>-</td><td>The game PC reset the clone's bus.</td></tr>
-              <tr><td><code>Suspend</code></td><td><code>1</code></td><td>-</td><td>The bus went idle and the PC suspended the clone.</td></tr>
-              <tr><td><code>Resume</code></td><td><code>2</code></td><td>-</td><td>The bus came back.</td></tr>
+              <tr><td><code>Suspend</code></td><td><code>1</code></td><td>-</td><td>The bus went idle and the PC suspended the clone; the box suspends the real device with it.</td></tr>
+              <tr><td><code>Resume</code></td><td><code>2</code></td><td>-</td><td>The bus came back, and the box resumes the real device with it.</td></tr>
               <tr><td><code>Configured</code></td><td><code>3</code></td><td><code>a</code> = configuration index</td><td>The PC selected a configuration; the clone is live.</td></tr>
               <tr><td><code>Deconfigured</code></td><td><code>4</code></td><td>-</td><td>The PC dropped the clone back to configuration 0.</td></tr>
               <tr><td><code>SetInterface</code></td><td><code>5</code></td><td><code>a</code> = interface, <code>b</code> = alternate setting</td><td>The PC switched an interface's alternate setting.</td></tr>
@@ -791,7 +791,7 @@ if let CatchEvent::Traffic(t) = stream.recv()? {
               <tr><td><code>Ok</code></td><td><code>0x00</code></td><td>The transfer completed; any IN data is in <code>data</code>.</td></tr>
               <tr><td><code>Refused</code></td><td><code>0xFC</code></td><td>The box refused before reaching the device: the opt-in is off, the request was malformed, <code>wLength</code> was above 504 or the OUT data shorter than it, or the host chip's control queue was full.</td></tr>
               <tr><td><code>Stall</code></td><td><code>0xFD</code></td><td>The device STALLed the request.</td></tr>
-              <tr><td><code>Nak</code></td><td><code>0xFE</code></td><td>The device did not finish within 500 ms or the transfer failed on the bus, the endpoint is undeclared, or no reply crossed the link within 800 ms.</td></tr>
+              <tr><td><code>Nak</code></td><td><code>0xFE</code></td><td>The device did not finish within 500 ms or the transfer failed on the bus, the endpoint is undeclared, no reply crossed the link within 800 ms, or the game PC has the clone suspended, and the device with it.</td></tr>
               <tr><td><code>NoDevice</code></td><td><code>0xFF</code></td><td>No device is attached on the host chip.</td></tr>
               <tr><td><code>Other(u8)</code></td><td>any other</td><td>A status byte this build does not name.</td></tr>
             </tbody>

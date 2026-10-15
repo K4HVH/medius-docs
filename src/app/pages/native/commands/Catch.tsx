@@ -460,7 +460,7 @@ const Catch: Component = () => {
               <tr><td><code>HID_OUT</code>, <code>VEND_INTR</code></td><td>b1 zero-length packet, b7 <code>RULE</code></td></tr>
               <tr><td><code>VEND_BULK</code></td><td>b0 end-of-transfer, b1 zero-length packet, b7 <code>RULE</code></td></tr>
               <tr><td><code>CONTROL</code></td><td>b0-b1 the handshake the game PC received: <code>0</code> OK, <code>1</code> STALL, <code>2</code> NAK until the host gave up (endpoint 0 only); b7 <code>RULE</code></td></tr>
-              <tr><td><code>CLIP_XFER</code></td><td>how the transfer ended, as <A href="/native/commands/transfer#transfer-resp"><code>TRANSFER_RESP</code></A>'s status: <code>0</code> OK, <code>0xFD</code> STALL, <code>0xFE</code> no answer (NAKed past the host chip's timeout, failed on the bus, an undeclared endpoint, or no reply within 4&nbsp;s), <code>0xFF</code> no device, <code>0xFC</code> refused</td></tr>
+              <tr><td><code>CLIP_XFER</code></td><td>how the transfer ended, as <A href="/native/commands/transfer#transfer-resp"><code>TRANSFER_RESP</code></A>'s status: <code>0</code> OK, <code>0xFD</code> STALL, <code>0xFE</code> no answer (NAKed past the host chip's timeout, failed on the bus, an undeclared endpoint, no reply within 4&nbsp;s, or the clone suspended by the game PC), <code>0xFF</code> no device, <code>0xFC</code> refused</td></tr>
               <tr><td><code>BUS</code></td><td>the event kind (table below)</td></tr>
             </tbody>
           </table>
@@ -570,6 +570,10 @@ const Catch: Component = () => {
             </tbody>
           </table>
         </div>
+        <p>
+          The box suspends the real device on <code>SUSPEND</code> and resumes it on{' '}
+          <code>RESUME</code>. A device the PC armed for remote wakeup wakes the PC through the clone.
+        </p>
         <div class="api-response-label">EXAMPLE</div>
         <p>
           A 64-byte vendor interrupt report arriving IN on endpoint <code>0x83</code>, captured

@@ -190,6 +190,15 @@ const Injection: Component = () => {
           its release never cancel and changes arrive in the order sent.
         </p>
         <p>
+          Up to 160 key changes wait, about 80 characters sent at once (fewer when capitals use Shift),
+          and 16 button or media changes. Past that the oldest goes ahead of the report it waits for, and
+          the order and final state still hold.
+        </p>
+        <p>
+          While the game PC has the clone suspended, an injection wakes it if the PC armed remote wakeup;{' '}
+          <A href="/native/commands/requests#stats"><code>wakeups</code></A> counts each wake.
+        </p>
+        <p>
           <A href="/native/commands/option#emit"><code>OPTION(EMIT)</code></A> times the middle row,
           pacing to the mouse's learnt report rate.{' '}
           <A href="/native/commands/option#render"><code>OPTION(RENDER)</code></A>, on by default,

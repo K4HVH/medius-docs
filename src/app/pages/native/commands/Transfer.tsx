@@ -180,7 +180,7 @@ const Transfer: Component = () => {
               <tr><td><code>0x00</code></td><td>completed</td><td>the device finished the status stage; an IN request's data follows</td></tr>
               <tr><td><code>0xFC</code></td><td>refused</td><td>stopped before the device, per the <A href="/native/commands/transfer#transfer">refusals</A></td></tr>
               <tr><td><code>0xFD</code></td><td>STALL</td><td>the device STALLed the request</td></tr>
-              <tr><td><code>0xFE</code></td><td>no answer</td><td>device didn't finish within 500 ms, the transfer failed on the bus, the endpoint is undeclared, or no reply crossed the link within 800 ms</td></tr>
+              <tr><td><code>0xFE</code></td><td>no answer</td><td>device didn't finish within 500 ms, the transfer failed on the bus, the endpoint is undeclared, no reply crossed the link within 800 ms, or the game PC has the clone suspended, and the device with it</td></tr>
               <tr><td><code>0xFF</code></td><td>no device</td><td>nothing attached on the host chip, or the host chip is re-enumerating it</td></tr>
             </tbody>
           </table>
@@ -267,7 +267,7 @@ const Transfer: Component = () => {
                                                   |
   control PC --TRANSFER--> DEVICE chip -----------+--> HOST chip queue --> real device
                                                   |    six deep            one at a time
-  halt clears, baseline reads (HOST chip) --------+`}</pre>
+  baseline reads (HOST chip) ---------------------+`}</pre>
         <p>
           A queue filled by any of them refuses a <code>TRANSFER</code> with <code>0xFC</code>.
         </p>

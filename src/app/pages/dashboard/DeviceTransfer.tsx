@@ -24,7 +24,7 @@ const STATUS_BLURB: Record<number, string> = {
     "The box didn't send it: the request was malformed, asked for more than 504 bytes, carried less Out data than its length, or met a full control queue.",
   [TransferStatus.Stall]: 'The device refused the request.',
   [TransferStatus.Nak]:
-    "The device gave no answer within 0.5 s, the transfer failed, the device has no control endpoint with that number, or the box's host chip did not answer within 0.8 s.",
+    "The device gave no answer within 0.5 s, the transfer failed, the device has no control endpoint with that number, the box's host chip did not answer within 0.8 s, or the PC has put the clone to sleep.",
   [TransferStatus.NoDevice]: 'No device plugged into the box.',
 };
 
