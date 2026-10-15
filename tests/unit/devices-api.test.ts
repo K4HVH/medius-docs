@@ -43,7 +43,7 @@ it('leaves out a device only one box has', async () => {
   expect((await read()).devices.some((d) => d.vidpid === '1234:abcd')).toBe(false);
 });
 
-it('answers only its own path', async () => {
+it('answers only /api/devices', async () => {
   expect(await handleDevicesApi(new Request(`${SITE}/api/other`))).toBeNull();
 });
 

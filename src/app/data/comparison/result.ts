@@ -65,3 +65,6 @@ export function showValue(v: Value, unit: string): string {
   if (v.of !== undefined) return `${number(v.value)} of ${number(v.of)}`;
   return withUnit(number(v.value), unit);
 }
+
+// A command as the API spells it is code; a tool's or a site's name is words.
+export const isCommand = (feature: string): boolean => /^(km\.[a-z_0-9]+(\(\))?|[A-Z][A-Z0-9_]+(\([A-Z_]+\))?)$/.test(feature);
