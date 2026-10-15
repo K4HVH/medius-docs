@@ -1,18 +1,18 @@
 // Dashboard panels. A panel arrives as a docs block does: its heading and contents rise in order, a
 // table's rows come in one after another, and its charts grow. Panels on screen arrive when their tab
-// opens, each a little after the one before; the rest as they come into view. Each column lights the rule
+// opens, each a little after the one before; the rest arrive as they come into view. Each column lights the rule
 // of the panel being read in it, as the docs light the section being read.
 
 import { arrive, armReveals, blocksOf, inOrder, shown } from './motion';
 
-// A panel drawn again with a new box (takeover.ts `carryArrival`) holds still where it says the same, and
-// brings in only its contents where they changed.
+// A panel redrawn for a new box (takeover.ts `carryArrival`) holds still if its text is the same, and brings
+// in only its contents if they changed.
 const parts = (p: HTMLElement): HTMLElement[] =>
   p.dataset.still === 'all'
     ? []
     : [p.dataset.still === 'frame' ? null : p.querySelector<HTMLElement>(':scope > .ph'), ...p.querySelectorAll<HTMLElement>(':scope > .pb > *')].filter(shown);
 
-// The panels in a tab's first row sit under the tab strip's rule and draw none.
+// The panels in a tab's first row sit under the tab strip's rule and draw no rule.
 export function markTop(scope: ParentNode): void {
   const ps = [...scope.querySelectorAll<HTMLElement>('.pn')].filter(shown);
   if (!ps.length) return;
@@ -26,8 +26,8 @@ const atEnd = () => {
   return h > window.innerHeight + 2 && window.scrollY >= h - window.innerHeight - 2;
 };
 
-// The panel being read in each column: the last whose top has passed a third of the screen, or at the
-// page's end the last on it. A panel across both columns puts out those above it.
+// The panel being read in each column: the last one whose top has passed a third of the screen, or, at the
+// page's end, the last one on screen. A lit panel spanning both columns unlights those above it.
 export function lightPanels(): void {
   const ps = [...document.querySelectorAll<HTMLElement>('.pane:not([hidden]) .pn, .panels-page .pn')].filter(
     (p) => shown(p) && p.firstElementChild?.classList.contains('ph'),
@@ -48,8 +48,8 @@ export function lightPanels(): void {
 let watching = false;
 const disposers = new WeakMap<HTMLElement, () => void>();
 
-// A pane just opened, or panels appeared in it: rows marked, panels brought in, rules lit. On a page's
-// first arrival the panels wait for its header.
+// A pane just opened, or panels appeared in it: mark the first row, bring the panels in, light the rules. On
+// a page's first arrival the panels wait for its header.
 export function openPanels(scope: HTMLElement, panels?: HTMLElement[]): void {
   markTop(scope);
   const t0 = scope.parentElement?.closest('.arriving') ? 200 : 60;

@@ -15,8 +15,8 @@ export const VERDICT_LABEL: Record<Verdict, string> = { works: 'Supported', part
 export const VERDICT_TONE: Record<Verdict, string> = { works: 'ok', partial: 'warn', doesnt: 'bad' };
 export const KIND_LABEL: Record<CompatEntry['kind'], string> = { mouse: 'Mouse', keyboard: 'Keyboard', other: 'Other' };
 
-// Owners' reports from the Discord #✅-device-reports channel, newest report first where two disagree, and a
-// release that names a device over a report that predates it. Names follow the maker's spelling.
+// Owners' reports from the Discord #✅-device-reports channel. Where two disagree, the newer wins, and a
+// release that names a device wins over an older report. Names follow the maker's spelling.
 export const COMPAT: readonly CompatEntry[] = [
   { name: 'Ace 68 Pro', kind: 'keyboard', verdict: 'doesnt', reported: 'v3.0.1' },
   { name: 'Ajazz AJ159 APEX', kind: 'mouse', verdict: 'works', reported: 'v3.0.1' },
@@ -54,7 +54,7 @@ export const COMPAT: readonly CompatEntry[] = [
   { name: 'Lenovo MA204W', kind: 'mouse', verdict: 'works', reported: 'v2.2.0' },
   { name: 'Logitech G PRO X', kind: 'mouse', verdict: 'works', reported: 'v3.1.0' },
   { name: 'Logitech G PRO X SUPERLIGHT', kind: 'mouse', verdict: 'works', reported: 'v3.4.5' },
-  { name: 'Logitech G PRO X SUPERLIGHT 2', kind: 'mouse', verdict: 'works', note: 'Runs at 125 Hz without Imperfect clone and the Wire rate forced to 1000 Hz', reported: 'v3.3.4' },
+  { name: 'Logitech G PRO X SUPERLIGHT 2', kind: 'mouse', verdict: 'works', note: 'Needs Imperfect clone and the Wire rate forced to 1000 Hz, or it runs at 125 Hz', reported: 'v3.3.4' },
   { name: 'Logitech G PRO X TKL', kind: 'keyboard', verdict: 'works', note: 'Shares one receiver with a G PRO X SUPERLIGHT; both work with the default options', reported: 'v3.4.5' },
   { name: 'Logitech G PRO X2 SUPERSTRIKE', kind: 'mouse', verdict: 'works', note: 'Wireless needs Imperfect clone and the Wire rate forced to 1000 Hz', reported: 'v3.4.5' },
   { name: 'Logitech G402', kind: 'mouse', verdict: 'works', reported: 'v2.2.0' },

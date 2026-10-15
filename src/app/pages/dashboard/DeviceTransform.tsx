@@ -1,4 +1,5 @@
-// Moves a native field's value into another before the clone emits it. Weighing is the lock card's.
+// Moves a native field's value into another field before the clone emits the report. Weighing belongs to
+// the lock card.
 
 import { Index, Show, createMemo, createSignal } from 'solid-js';
 import { Button } from '../../../components/inputs/Button';
@@ -36,7 +37,7 @@ const OP_LABELS = [
 const fieldName = (cls: number, id: number): string =>
   cls === LockClass.Axis ? (AXES.find((a) => a.id === id)?.name ?? `axis ${id}`) : usageName(cls, id);
 
-// A chip runs onto a second line past its panel's width, so each reads as the plain move.
+// A chip wider than its panel wraps, so each chip names only the move.
 const describe = (t: Transform): string => {
   const src = fieldName(t.sclass, t.sid);
   const dst = fieldName(t.dclass, t.did);
@@ -90,8 +91,8 @@ const DeviceTransform = () => {
   const srcLabel = () => (remapping() ? 'Source' : 'Axis');
   const dstLabel = () => (remapping() ? 'Target' : 'With axis');
 
-  // Leaving Remap strands a button source, and an unmatched radio keeps sending the old field, so fall
-  // back to X and Y.
+  // Swap takes no button, and a radio with no matching option keeps sending the old field. So leaving
+  // Remap with a button source falls back to X and Y.
   const chooseOp = (v: string) => {
     setOp(v);
     if (Number(v) !== TransformOp.Remap && buttonSource()) {
@@ -119,7 +120,7 @@ const DeviceTransform = () => {
   };
 
   const apply = () => {
-    // The box drops a field named as both ends with no reply, so refuse it here.
+    // The box drops a transform whose two ends are one field with no error, so it is refused here.
     const s = source();
     const d = dest();
     if (s.cls === d.cls && s.id === d.id) {
@@ -192,7 +193,7 @@ const DeviceTransform = () => {
           aside={
             <div class="pr">
               <span class="caps">
-                {active().length} of {TRANSFORM_MAX_ENTRIES}
+                {active().length}/{TRANSFORM_MAX_ENTRIES}
               </span>
               <Button variant="subtle" disabled={cmd.busy() || active().length === 0} onClick={clearAll}>
                 Clear all

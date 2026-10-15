@@ -53,12 +53,12 @@ const Injection: Component = () => {
 
       <DocSection id="fire-and-forget" title="Fire-and-forget" caption="No per-command acknowledgement">
         <p>
-          Command frames get no echo or acknowledgement, so input streams at up to about one command
-          per millisecond. <A href="/native/commands/requests#requests"><code>QUERY</code></A> and{' '}
+          Command frames get no echo or acknowledgement, so input streams at up to ~1
+          command/ms. <A href="/native/commands/requests#requests"><code>QUERY</code></A> and{' '}
           <A href="/native/commands/transfer#transfer"><code>TRANSFER</code></A> each return a reply
           frame. <A href="/native/commands/update#update"><code>UPDATE</code></A> replies to every op
-          but <code>DATA</code>, whose chunks get one acknowledgement per window and one reply per
-          refused chunk.
+          except <code>DATA</code>. <code>DATA</code> chunks get one acknowledgement per window, plus
+          one reply per refused chunk.
         </p>
         <p>Correctness comes from:</p>
         <div class="table-scroll">
@@ -99,20 +99,20 @@ const Injection: Component = () => {
                 <td>riding accumulator</td>
                 <td>
                   Injected motion and scroll not yet emitted. An ordinary{' '}
-                  <A href="/native/commands/move#move"><code>MOVE</code></A>, cursor or wheel, adds in.
-                  Drains into emitted reports, except with{' '}
-                  <A href="/native/commands/option#move-ride">movement riding</A> on, where it waits
-                  to ride a native motion report.
+                  <A href="/native/commands/move#move"><code>MOVE</code></A> (cursor or wheel) adds to
+                  it. Drains into emitted reports. With{' '}
+                  <A href="/native/commands/option#move-ride">movement riding</A> on, it waits to ride
+                  a native motion report instead.
                 </td>
               </tr>
               <tr>
                 <td>immediate accumulator</td>
                 <td>
-                  The same for motion that never waits: a <code>MOVE</code> carrying{' '}
+                  The same, for motion that never waits: a <code>MOVE</code> carrying{' '}
                   <A href="/native/commands/move#flags"><code>NOW</code> or <code>FLUSH</code></A>, and
                   unrendered <A href="/native/commands/clip">clip</A> motion with <code>ride</code> off.
-                  Both always exist; movement riding gates whether the riding accumulator drains, not
-                  which one a <code>MOVE</code> lands in.
+                  Both accumulators always exist. Movement riding decides whether the riding accumulator
+                  drains, not which accumulator a <code>MOVE</code> lands in.
                 </td>
               </tr>
               <tr>
@@ -127,8 +127,8 @@ const Injection: Component = () => {
           </table>
         </div>
         <p>
-          A large injected move emits what fits the native field width and keeps the remainder in
-          its accumulator, spread over as many reports as it takes; nothing is clipped
+          A large injected move emits what fits the native field width. The rest stays in its
+          accumulator and is emitted over as many reports as it takes. Nothing is clipped
           (<code>total seen = total sent</code>).
         </p>
       </DocSection>
@@ -142,7 +142,7 @@ const Injection: Component = () => {
             <tbody>
               <tr>
                 <td>the mouse reported</td>
-                <td>Native motion plus the drained accumulator; buttons combine native state and overrides.</td>
+                <td>Native motion plus the drained accumulator. Buttons combine native state and overrides.</td>
               </tr>
               <tr>
                 <td>the mouse was still, with motion pending</td>
@@ -160,46 +160,46 @@ const Injection: Component = () => {
           silence until it changes.
         </p>
         <p>
-          The box's report is emitted on the first poll no native report can be ready for, so no native
-          report moves to a later poll. A native report reaching the box first carries the box's motion
-          and button changes.
+          The box emits its report on the first poll no native report can be ready for, so no native
+          report moves to a later poll. If a native report reaches the box first, it carries the box's
+          motion and button changes.
         </p>
         <p>
-          A native report already carrying injected motion goes first instead, and the box's report
-          takes a separate poll, so two injections don't share one report.
+          If that native report already carries injected motion, it goes first instead. The box's
+          report then takes a separate poll, so two injections don't share one report.
         </p>
         <p>
-          That holds while the real device leaves polls free (it reports less often than every poll, no other
-          report ID has reported in the last 12 ms, and the report fits one packet) and the box's report
-          waiting matches the native one in everything but motion. With two of the box's reports already
-          waiting, the native report carries them.
+          The separate poll needs the real device to leave polls free (it reports less often than every
+          poll, no other report ID has reported in the last 12 ms, and the report fits one packet). The
+          box's waiting report must also match the native one in everything but motion. If two of the
+          box's reports are already waiting, the native report carries them.
         </p>
         <p>
           A multi-packet report from the box is emitted once the real device has been still for 12 ms.
         </p>
         <p>
-          Native reports under another report ID on the same endpoint are emitted ahead of the box's
-          report for two polls at most. While they fill every poll, the box's report takes the next
-          poll and leaves them two in three.
+          Native reports under another report ID on the same endpoint go ahead of the box's report
+          for ≤2 polls. While they fill every poll, the box's report takes the next poll, and they keep
+          2 polls in 3.
         </p>
         <p>
-          A change waits until the PC collects the report carrying the previous changes, so a press and
-          its release never cancel and changes arrive in the order sent.
+          A change waits until the PC collects the report carrying the previous changes. A press and
+          its release never cancel, and changes arrive in the order sent.
         </p>
         <p>
-          Up to 160 key changes wait (80 characters sent at once, two changes each; a capital typed
-          with Shift takes four), and 16 button or media changes. Past that the oldest goes ahead of the report it waits for, and
-          the order and final state still hold.
+          Up to 160 key changes wait (80 characters sent at once, 2 changes each; a capital typed with
+          Shift takes 4), and 16 button or media changes. Past that, the oldest change goes ahead of
+          the report it waits for. Order and final state still hold.
         </p>
         <p>
-          While the game PC has the clone suspended, an injection wakes it if the PC armed remote wakeup;{' '}
-          <A href="/native/commands/requests#stats"><code>wakeups</code></A> counts each wake.
+          While the game PC has the clone suspended, an injection wakes the PC if the PC armed remote
+          wakeup. <A href="/native/commands/requests#stats"><code>wakeups</code></A> counts each wake.
         </p>
         <p>
-          <A href="/native/commands/option#emit"><code>OPTION(EMIT)</code></A> times the middle row,
-          pacing to the learnt native report rate by default.{' '}
-          <A href="/native/commands/option#render"><code>OPTION(RENDER)</code></A>, on by default,
-          shapes motion through a live per-device model and can render native motion too.
+          <A href="/native/commands/option#emit"><code>OPTION(EMIT)</code></A> paces the middle row
+          (mouse still, motion pending). Default: the learnt native report rate.{' '}
+          <A href="/native/commands/option#render"><code>OPTION(RENDER)</code></A> (on by default)
+          shapes motion through a live per-device model. It can render native motion too.
         </p>
       </DocSection>
 
@@ -220,7 +220,7 @@ const Injection: Component = () => {
             <tbody>
               <tr>
                 <td>silence timeout</td>
-                <td>No valid frame within the timeout (default <code>1000 ms</code>); a crash while holding a button releases it a second later.</td>
+                <td>No valid frame within the timeout (default <code>1000 ms</code>). If a program crashes holding a button, the button releases a second later.</td>
               </tr>
               <tr>
                 <td>link drop</td>
@@ -232,7 +232,7 @@ const Injection: Component = () => {
               </tr>
               <tr>
                 <td>re-clone</td>
-                <td>The box clones again: another device attaches, a <A href="/native/commands/patch#presentation">patch presentation</A>, or an <A href="/native/commands/update">update</A> takes the clone down.</td>
+                <td>The box clones again: another device attaches, or a <A href="/native/commands/patch#presentation">patch presentation</A> or an <A href="/native/commands/update">update</A> takes the clone down.</td>
               </tr>
               <tr>
                 <td><A href="/native/commands/admin#reset"><code>RESET</code></A></td>
@@ -242,9 +242,9 @@ const Injection: Component = () => {
           </table>
         </div>
         <p>
-          To hold an injected button, keep the link busy: any valid frame resets the timer, so a
+          To hold an injected button, keep the link busy. Any valid frame resets the timer, so a
           periodic{' '}
-          <A href="/native/commands/requests#health"><code>QUERY(HEALTH)</code></A> suffices.
+          <A href="/native/commands/requests#health"><code>QUERY(HEALTH)</code></A> is enough.
         </p>
         <p>
           Each release moves the <A href="/native/commands/requests#stats"><code>session</code></A> count,

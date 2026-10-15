@@ -55,7 +55,7 @@ const fill = (keys: string[], counts: Count[]): Count[] => {
   return keys.map((key) => ({ key, n: by.get(key) ?? 0 }));
 };
 
-// Seconds to the Monday of its week, as YYYY-MM-DD.
+// A time in Unix seconds to the Monday of its week, as YYYY-MM-DD.
 const WEEK_SQL = (col: string) => `date(${col}, 'unixepoch', '-6 days', 'weekday 1')`;
 const RANKED = 'ORDER BY n DESC, key ASC';
 

@@ -72,7 +72,7 @@ const ENTRIES: Entry[] = [
     'Start with Medius on a MAKCU box: which port goes where, what you need to install it from Chrome or Edge, then install, update, devices and help.',
     'Install Medius on a MAKCU box: start here'),
   guide('/guide/compatibility', 'Devices', 'Devices',
-    'Mice and keyboards owners have tried through a MAKCU box on Medius, the release each was reported on, the box\'s limits, and the fixes some need.',
+    'Owners\' reports of mice and keyboards through a MAKCU box on Medius: the release each was reported on, the box\'s limits, and the fixes some need.',
     'MAKCU compatibility: mice and keyboards · Medius'),
   guide('/guide/options', 'Options', 'Options',
     'Every option on the Medius dashboard for a MAKCU box: what each value does, the default, when to change it, and what it costs in delay or faithfulness.',
@@ -304,7 +304,8 @@ export function routeFor(path: string): RouteInfo | undefined {
 }
 
 // An address inside a page: an item (items.ts), or a place on the page, `/page/id`. Home has no places.
-// `alt`: on Devices, a section's id, landed on where the page has it before a device row of that name.
+// `alt`: on Devices, a section's id. Where the page has that section, the address lands on it before a
+// device row of that name.
 export interface Address extends Omit<Item, 'kind'> {
   kind: Item['kind'] | 'place';
   alt?: string;
@@ -343,9 +344,9 @@ export function landingId(pathname: string, hash: string, has: (id: string) => b
   return at.alt && has(at.alt) ? at.alt : at.target;
 }
 
-// A place's address, as copy link and the address bar write it; a device row or release as its item's
-// address (items.ts). Null on Home, which has no places, where a page is at that address or moved from it,
-// and for an id no address can spell.
+// A place's address, as copy link and the address bar write it. A device row or release gets its item's
+// address (items.ts). Null on Home (no places), where a page is at that address or moved from it, and for
+// an id no address can spell.
 export function placeAddress(page: string, id: string): string | null {
   if (page === '/' || !BY_PATH.has(page)) return null;
   const device = page === '/guide/compatibility' && id.startsWith('device-');
@@ -390,8 +391,8 @@ export interface SidebarGroup {
   routes: RouteInfo[];
 }
 
-// One list per section and language, kept: the sidebar draws its links once, so a page change moves the
-// mark of the current page and keeps the link the reader pressed, and its focus.
+// One list per section and language, built once and kept. The sidebar draws its links once, so a page
+// change only moves the current page's mark, and the link the reader pressed keeps its focus.
 const kept = new Map<string, SidebarGroup[]>();
 export function sidebarGroups(section: Section, lang?: Lang): SidebarGroup[] {
   const key = `${section}:${lang ?? ''}`;

@@ -4,9 +4,9 @@
 // caught a card shaped unlike every other card, because neither looks at shape. This does.
 //
 // Every rule is DERIVED, not asserted. A structural rule fires only where the corpus is near-unanimous
-// (>=85% one way), and a punctuation rule is measured against the page's OWN majority, since a page that
-// is consistently one way is consistent, and two stragglers on a page that is otherwise the other way
-// are the drift. The measured rate prints beside the rule, so changing the corpus moves the rule.
+// (>=85% one way). A punctuation rule is measured against the majority on THAT page: a page that is
+// consistently one way is consistent, and two stragglers on a page that is otherwise the other way are the
+// drift. The measured rate prints beside the rule, so changing the corpus moves the rule.
 
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, relative, dirname, resolve } from 'node:path';
@@ -51,7 +51,7 @@ const SIGS = (b: string) =>
   strip(
     [...b.matchAll(/<pre class="api-signature">([\s\S]*?)<\/pre>/g)].map((m) => m[1]).join(' \n '),
   );
-// Docs pages open with a page header (the intro, first in its page as the first card was) and hold
+// Docs pages open with a page header (the intro, first on the page, where the first card was) and hold
 // sections; dashboard pages hold cards.
 function cards(src: string): CardBlock[] {
   const block = (title: string, subtitle: string | undefined, body: string, start: number): CardBlock => ({
@@ -92,7 +92,7 @@ const isMethod = (sig: string, file: string, title: string) =>
     sig.trim(),
   );
 
-// Fires only where the corpus agrees at >=85%, and records the rate either way so the rule stays honest.
+// Fires only where >=85% of the corpus agrees, and records the rate either way, so the rule shows its basis.
 const familyOf = (f: string) =>
   f.includes('/native/commands/') ? 'native command'
   : f.includes('/bindings/') ? 'bindings'
@@ -100,9 +100,9 @@ const familyOf = (f: string) =>
   : f.includes('/library/') ? 'library'
   : 'other';
 
-// Derived per family, because a native opcode section and a library method are different shapes: pooled,
-// one family's majority silently rules the other, which is how INJECT looked broken for matching the
-// four other umbrella opcode cards exactly.
+// Derived per family, because a native opcode section and a library method are different shapes. Pooled,
+// one family's majority rules the other unnoticed: that is how INJECT looked broken for exactly matching the
+// four other umbrella opcode cards.
 function derived<T>(
   name: string,
   items: T[],
@@ -245,7 +245,7 @@ for (const f of files) {
   }
 }
 
-// ---- cell punctuation, against the PAGE's own majority ----
+// ---- cell punctuation, against each PAGE's majority ----
 // One page is 149 cells of lowercase fragments and internally consistent; another is full sentences with
 // two stragglers. Only the second is drift, so the majority has to be per page rather than global.
 interface Cell {

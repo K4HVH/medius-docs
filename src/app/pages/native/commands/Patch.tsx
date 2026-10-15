@@ -11,7 +11,7 @@ const Patch: Component = () => {
         <p>
           <A href="/native/commands/patch#patch"><code>PATCH</code></A> stores byte overwrites for the
           descriptors the clone serves at enumeration. The set persists in NVS under the real
-          device's VID:PID, and the clone serves the copy taken at its last{' '}
+          device's VID:PID. The clone serves the copy taken at its last{' '}
           <A href="/native/commands/patch#presentation">presentation</A>.
         </p>
         <pre class="diagram">{`  real device --USB3--> HOST chip
@@ -29,7 +29,7 @@ const Patch: Component = () => {
               <tr><th>Action</th><th>Value</th><th>Effect</th></tr>
             </thead>
             <tbody>
-              <tr><td><A href="/native/commands/patch#patch">store</A></td><td><code>0</code> to <code>4</code></td><td>add, overwrite or remove one patch in the stored set</td></tr>
+              <tr><td><A href="/native/commands/patch#patch">store</A></td><td><code>0</code>-<code>4</code></td><td>add, overwrite or remove one patch in the stored set</td></tr>
               <tr><td><A href="/native/commands/patch#apply">APPLY</A></td><td><code>0xFE</code></td><td>present the clone again with the stored set</td></tr>
               <tr><td><A href="/native/commands/patch#clear">CLEAR</A></td><td><code>0xFF</code></td><td>erase the set; a clone serving patches is presented again without them</td></tr>
             </tbody>
@@ -43,7 +43,7 @@ const Patch: Component = () => {
         <div class="callout callout--warning">
           <p>
             A stored set reaches the game PC only under{' '}
-            <A href="/native/commands/option#imperfect"><code>OPTION(IMPERFECT)</code></A>; see{' '}
+            <A href="/native/commands/option#imperfect"><code>OPTION(IMPERFECT)</code></A>. See{' '}
             <A href="/native/commands/patch#gate">the gate</A>.
           </p>
         </div>
@@ -67,7 +67,7 @@ const Patch: Component = () => {
               <tr><td>1</td><td><code>cfg</code></td><td><code>u8</code></td><td>configuration's position in capture order, <code>0</code> first</td></tr>
               <tr><td>2</td><td><code>index</code></td><td><code>u8</code></td><td>interface number for REPORT, string index for STRING</td></tr>
               <tr><td>3</td><td><code>offset</code></td><td><code>u16</code></td><td>first byte overwritten, counted from the descriptor's first byte; little-endian</td></tr>
-              <tr><td>5</td><td><code>bytes</code></td><td><code>u8[]</code></td><td>overwrite, 0 to 505 bytes, delimited by the frame <A href="/native/frame#layout"><code>LEN</code></A></td></tr>
+              <tr><td>5</td><td><code>bytes</code></td><td><code>u8[]</code></td><td>overwrite, 0-505 bytes, delimited by the frame <A href="/native/frame#layout"><code>LEN</code></A></td></tr>
             </tbody>
           </table>
         </div>
@@ -89,7 +89,7 @@ const Patch: Component = () => {
         <div class="api-response-label">KEY</div>
         <p>
           A patch is stored under <code>(section, cfg, index, offset)</code> exactly as sent, ignored
-          fields included, so send <code>0</code> in those.
+          fields included. Send <code>0</code> in the ignored fields.
         </p>
         <div class="table-scroll">
           <table class="api-params">
@@ -112,11 +112,11 @@ const Patch: Component = () => {
             </thead>
             <tbody>
               <tr><td>no device attached</td><td>the set is keyed on the attached device; a device the box refuses to clone still counts as attached</td></tr>
-              <tr><td>store payload under 5 bytes</td><td>the first five are the address</td></tr>
-              <tr><td><code>section</code> is <code>5</code> to <code>0xFD</code></td><td>five descriptor kinds, then APPLY and CLEAR</td></tr>
+              <tr><td>store payload &lt;5 bytes</td><td>the first five are the address</td></tr>
+              <tr><td><code>section</code> is <code>5</code>-<code>0xFD</code></td><td>five descriptor kinds, then APPLY and CLEAR</td></tr>
               <tr><td><code>bytes</code> longer than 505</td><td>the patch must fit its <A href="/native/commands/requests#patch-entry"><code>RESP(PATCH_ENTRY)</code></A> read-back in one frame</td></tr>
               <tr><td>a 17th key</td><td>16 patches per device; <A href="/native/commands/requests#patches"><code>RESP(PATCHES)</code></A> sets <code>FULL</code></td></tr>
-              <tr><td>the set's bytes would pass 1024</td><td>one pool holds every patch's bytes; <code>FULL</code> is set, and an overwrite that does not fit leaves the old patch in place</td></tr>
+              <tr><td>the set's bytes would pass 1024</td><td>one pool holds every patch's bytes. <code>FULL</code> is set, and an overwrite that does not fit leaves the old patch in place</td></tr>
               <tr><td>zero <code>bytes</code> at an unstored key</td><td>nothing to remove</td></tr>
             </tbody>
           </table>
@@ -125,8 +125,8 @@ const Patch: Component = () => {
         <p>
           A change is written to NVS at once and reaches the game PC at the clone's next{' '}
           <A href="/native/commands/patch#presentation">presentation</A>. A refused frame has no
-          reply: read <A href="/native/commands/requests#patches"><code>RESP(PATCHES)</code></A> for
-          the patch, or for <code>FULL</code>.
+          reply. To check, read <A href="/native/commands/requests#patches"><code>RESP(PATCHES)</code></A>:
+          the patch appears there, or <code>FULL</code> is set.
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <p>
@@ -155,7 +155,7 @@ const Patch: Component = () => {
 
       <DocSection id="apply" title="APPLY" caption="Present the clone again with the stored set">
         <p>
-          APPLY is a <code>PATCH</code> frame with <code>section</code> <code>0xFE</code>; the rest
+          APPLY is a <code>PATCH</code> frame with <code>section</code> <code>0xFE</code>. The rest
           of the payload is ignored.
         </p>
         <pre class="api-signature">PATCH  0x1D  ·  payload 1 byte</pre>
@@ -176,7 +176,7 @@ const Patch: Component = () => {
           When the stored set differs from the one the clone serves, the box{' '}
           <A href="/native/commands/patch#presentation">presents</A> the clone again with a copy of
           the stored set and runs the <A href="/native/commands/patch#ladder">checks</A>. An emptied
-          set presents it unpatched.
+          set presents the clone unpatched.
         </p>
         <div class="api-response-label">REFUSALS</div>
         <div class="table-scroll">
@@ -243,8 +243,8 @@ const Patch: Component = () => {
         <p>
           Either way <A href="/native/commands/requests#patches"><code>RESP(PATCHES)</code></A> then
           reads with <code>REFUSED</code> and <code>FULL</code> clear. With the real device unplugged,
-          CLEAR erases the key of the last device attached since boot, or nothing after a boot with
-          none attached.
+          CLEAR erases the key of the last device attached since boot, or nothing if no device has
+          attached since boot.
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <p>Erase the set:</p>
@@ -291,7 +291,7 @@ const Patch: Component = () => {
         </div>
         <p>
           <A href="/native/commands/requests#patches"><code>RESP(PATCHES)</code></A> lists the stored
-          set; its flags say whether the clone serves it.
+          set. Its flags say whether the clone serves it.
         </p>
         <div class="callout callout--info">
           <p>
@@ -311,7 +311,7 @@ const Patch: Component = () => {
       <DocSection id="sections" title="Sections" caption="Per-section behaviour">
         <p>
           A patch writes over bytes the descriptor already has, except STRING, which replaces the
-          string. One that would run past the descriptor's end is skipped whole, never truncated.
+          string. A patch that would run past the descriptor's end is skipped whole, never truncated.
         </p>
         <pre class="diagram">{`  device descriptor   00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F 10 11
   offset 12, 2 bytes                                      xx xx                  lands
@@ -323,9 +323,9 @@ const Patch: Component = () => {
             </thead>
             <tbody>
               <tr><td>DEVICE</td><td>Writes the served identity, which <A href="/native/commands/requests#device-info"><code>QUERY(DEVICE_INFO)</code></A> then reports. The set and every learned setting stay keyed on the real VID:PID. Byte 17, <code>bNumConfigurations</code>, is set to the captured configuration count after the patch lands.</td></tr>
-              <tr><td>CONFIG</td><td>Writes the served configuration, which the box then parses for its interfaces and endpoints, so a patched endpoint faces the same clone checks a native one does.</td></tr>
+              <tr><td>CONFIG</td><td>Writes the served configuration. The box then parses it for interfaces and endpoints, so a patched endpoint faces the same clone checks as a native one.</td></tr>
               <tr><td>REPORT</td><td>Writes the report descriptor before the box parses it, so <A href="/native/commands/inject"><code>INJECT</code></A>, <A href="/native/commands/lock"><code>LOCK</code></A> and the emitted report follow the patched layout.</td></tr>
-              <tr><td>STRING</td><td>Serves the bytes as the whole string, any length up to 126, one UTF-16 code unit per byte; a <code>0x00</code> byte ends it. Index <code>0</code>, the language list, is not patched.</td></tr>
+              <tr><td>STRING</td><td>Serves the bytes as the whole string, any length ≤126, one UTF-16 code unit per byte. A <code>0x00</code> byte ends it. Index <code>0</code>, the language list, is not patched.</td></tr>
               <tr><td>BOS</td><td>Writes the BOS descriptor, on a device that has one.</td></tr>
             </tbody>
           </table>
@@ -346,9 +346,10 @@ const Patch: Component = () => {
 
       <DocSection id="ladder" title="Checks" caption="What a patched clone must pass">
         <p>
-          A set that fails a check the real device passes without it is refused: the clone is presented
-          unpatched and one <A href="/native/commands/admin#log"><code>LOG</code></A> line names the
-          check. A device that fails without the set is refused as any device is.
+          If the real device passes a check unpatched but fails it with the set, the set is refused.
+          The clone is presented unpatched, and one{' '}
+          <A href="/native/commands/admin#log"><code>LOG</code></A> line names the check. A device that
+          fails unpatched is refused as any device is.
         </p>
         <pre class="diagram">{`  patched descriptors
         |
@@ -367,9 +368,9 @@ const Patch: Component = () => {
               <tr><th>Refused when</th><th>Why</th></tr>
             </thead>
             <tbody>
-              <tr><td>a clone check fails, such as an endpoint <code>wMaxPacketSize</code> above 64</td><td>the patched descriptors face the checks every device does</td></tr>
+              <tr><td>a clone check fails, such as an endpoint <code>wMaxPacketSize</code> &gt;64</td><td>the patched descriptors face the checks every device does</td></tr>
               <tr><td>a patch changes the device descriptor's <code>bLength</code> or <code>bDescriptorType</code>, or a configuration's or the BOS's <code>bLength</code>, <code>bDescriptorType</code> or <code>wTotalLength</code></td><td>the box serves these as written: a larger length reads the host past the descriptor, a smaller one hides its tail</td></tr>
-              <tr><td><code>bcdUSB</code> <code>0x0201</code> or above with no BOS</td><td>a host requests the BOS of any 2.01 device</td></tr>
+              <tr><td><code>bcdUSB</code> ≥<code>0x0201</code> with no BOS</td><td>a host requests the BOS of any 2.01 device</td></tr>
               <tr><td>a HID descriptor's <code>wDescriptorLength</code> differs from its served report descriptor, in any configuration</td><td>the game PC would ask for one length and get another</td></tr>
               <tr><td>an interrupt-IN endpoint of a HID interface, in the configuration in force, has a <code>wMaxPacketSize</code> below that interface's report</td><td>the report would not fit the packet the endpoint advertises</td></tr>
             </tbody>
@@ -377,10 +378,10 @@ const Patch: Component = () => {
         </div>
         <div class="api-response-label">REFUSED SET</div>
         <p>
-          The set stays stored with{' '}
-          <A href="/native/commands/requests#patches"><code>PATCHES</code></A> b2 set until it
-          changes, and <A href="/native/commands/patch#apply">APPLY</A> skips it until then. Change
-          or remove the failing patch and APPLY, or{' '}
+          The set stays stored, with{' '}
+          <A href="/native/commands/requests#patches"><code>PATCHES</code></A> b2 set, until it
+          changes. <A href="/native/commands/patch#apply">APPLY</A> skips it until then. Change or
+          remove the failing patch and APPLY, or{' '}
           <A href="/native/commands/patch#clear">CLEAR</A> the set.
         </p>
       </DocSection>
@@ -405,8 +406,8 @@ const Patch: Component = () => {
         </div>
         <div class="api-response-label">TOGGLE</div>
         <p>
-          A toggle <A href="/native/commands/patch#presentation">presents</A> the clone again when
-          that changes the set it serves. When the clone needs the opt-in for anything else, the
+          A toggle <A href="/native/commands/patch#presentation">presents</A> the clone again if
+          the toggle changes the set it serves. When the clone needs the opt-in for anything else, the
           device chip reboots and re-clones, as the{' '}
           <A href="/native/commands/option#imperfect">option</A> describes.
         </p>
@@ -436,7 +437,7 @@ RESET       a RESET carrying the NVS flag: the whole store`}</pre>
               <tr><th>Event</th><th>Effect</th></tr>
             </thead>
             <tbody>
-              <tr><td>the real device detaches</td><td>the clone, <code>PATCH_ON</code> and <code>REFUSED</code> go; the set stays stored and readable until another device attaches</td></tr>
+              <tr><td>the real device detaches</td><td>the clone, <code>PATCH_ON</code> and <code>REFUSED</code> go. The set stays stored and readable until another device attaches</td></tr>
               <tr><td>another device attaches</td><td>that device's set loads in its place, cloned or refused</td></tr>
             </tbody>
           </table>

@@ -1,11 +1,11 @@
 import { For, Show, type JSX } from 'solid-js';
 import { CopyLink } from './CopyLink';
 
-// A title as its words, an identifier at its capitals ("MediusCountersSnapshot") or after its underscores
-// ("allow_imperfect_clones"), so a narrow screen breaks it between them.
+// A title split into words, or an identifier split at its capitals ("MediusCountersSnapshot") or after its
+// underscores ("allow_imperfect_clones"), so a narrow screen can break it between the parts.
 const words = (title: string) => (/\s/.test(title) ? title.split(/(?<=\s)/) : title.split(/(?<=[a-z0-9])(?=[A-Z])|(?<=_)(?=.)/));
 
-// One section of a docs page: a ruled h2 with an optional caption. The rule lights while it is read.
+// One section of a docs page: a ruled h2 with an optional caption. The rule lights while the section is read.
 export function DocSection(props: { id?: string; title: string; caption?: string; aside?: JSX.Element; hidden?: boolean; children?: JSX.Element }) {
   return (
     <section class="doc-section" id={props.id} data-search-target={props.id ? '' : undefined} hidden={props.hidden}>

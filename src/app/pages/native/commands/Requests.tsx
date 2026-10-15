@@ -66,7 +66,7 @@ const Requests: Component = () => {
           The box replies with a <A href="/native/commands/requests#resp"><code>RESP</code></A>{' '}
           carrying the same <code>what</code> and the requested data. Besides <code>QUERY</code>, only{' '}
           <A href="/native/commands/update#update"><code>UPDATE</code></A> and{' '}
-          <A href="/native/commands/transfer#transfer"><code>TRANSFER</code></A> reply; every other
+          <A href="/native/commands/transfer#transfer"><code>TRANSFER</code></A> reply. Every other
           command is <A href="/native/injection#fire-and-forget">fire-and-forget</A>.
         </p>
         <p>
@@ -137,7 +137,7 @@ const Requests: Component = () => {
           The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
           <code>what = 0</code>: protocol version, firmware version, base <code>mac</code>, then a
           length-delimited ASCII <A href="/native/commands/option#name"><code>name</code></A> tail.
-          The tail is additive; an older box sends it empty.
+          The tail is additive. An older box sends it empty.
         </p>
         <pre class="api-signature">QUERY  what = 0  ·  RESP 11-byte header + name</pre>
         <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
@@ -218,8 +218,8 @@ const Requests: Component = () => {
               <tr><td>b2</td><td><code>0x04</code></td><td>the PC has set up the cloned mouse</td></tr>
               <tr><td>b3</td><td><code>0x08</code></td><td><A href="/native/injection">injection</A> is active</td></tr>
               <tr><td>b4</td><td><code>0x10</code></td><td><code>RATE_CONFIDENT</code>: a mouse is bound and the native-rate estimator window is full, so the <A href="/native/commands/requests#rate"><code>RATE</code></A> value is trustworthy</td></tr>
-              <tr><td>b5</td><td><code>0x20</code></td><td><code>LOCK_ON</code>: at least one input is off a full pass under <A href="/native/commands/lock"><code>LOCK</code></A>, blocked or merely weighed</td></tr>
-              <tr><td>b6</td><td><code>0x40</code></td><td><code>CATCH_ON</code>: the <A href="/native/commands/catch"><code>CATCH</code></A> subscription table is non-empty, so events are streaming; <A href="/native/commands/requests#catch"><code>QUERY(CATCH)</code></A> reads <em>what</em> is subscribed</td></tr>
+              <tr><td>b5</td><td><code>0x20</code></td><td><code>LOCK_ON</code>: a <A href="/native/commands/lock"><code>LOCK</code></A> scale on ≥1 input differs from a full pass (blocked or merely weighed)</td></tr>
+              <tr><td>b6</td><td><code>0x40</code></td><td><code>CATCH_ON</code>: the <A href="/native/commands/catch"><code>CATCH</code></A> subscription table is non-empty, so events are streaming. <A href="/native/commands/requests#catch"><code>QUERY(CATCH)</code></A> reads <em>what</em> is subscribed</td></tr>
               <tr><td>b7</td><td><code>0x80</code></td><td><code>KBD_ATT</code>: a keyboard is attached on the host chip, cloned and injectable</td></tr>
               <tr><td>b8</td><td><code>0x0100</code></td><td><code>REWRITE_ON</code>: the <A href="/native/commands/rewrite">rewrite rule</A> table is non-empty</td></tr>
               <tr><td>b9</td><td><code>0x0200</code></td><td><code>PATCH_ON</code>: the clone is serving a <A href="/native/commands/patch">descriptor-patch</A> set, as <A href="/native/commands/requests#patches"><code>PATCHES</code></A> b0</td></tr>
@@ -251,8 +251,8 @@ const Requests: Component = () => {
         <p>
           The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
           <code>what = 2</code>: the USB identity, kind, and product string read from the real
-          device, otherwise invisible to the control PC. Every field is zero with nothing cloned; a clone
-          with no HID interface reads <code>primary_kind</code> 0 with its identity filled in.
+          device, otherwise invisible to the control PC. Every field is zero with nothing cloned. A clone
+          with no HID interface reads <code>primary_kind</code> 0, with its identity filled in.
         </p>
         <pre class="api-signature">QUERY  what = 2  ·  RESP 11-byte header + product</pre>
         <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
@@ -269,8 +269,8 @@ const Requests: Component = () => {
               <tr><td>5</td><td><code>bcd_device</code></td><td><code>u16</code></td><td>bcdDevice, the device release</td></tr>
               <tr><td>7</td><td><code>bcd_usb</code></td><td><code>u16</code></td><td>bcdUSB, e.g. 0x0200 or 0x0201</td></tr>
               <tr><td>9</td><td><code>flags</code></td><td><code>u8</code></td><td>the bits below</td></tr>
-              <tr><td>10</td><td><code>primary_kind</code></td><td><code>u8</code></td><td>cloned device kind, from its HID report descriptors and Boot declarations: one carrying both kinds reads keyboard with a full key bitmap (unless it declares Boot for both) or a Boot keyboard alone, and mouse otherwise (below)</td></tr>
-              <tr><td>11..</td><td><code>product</code></td><td><code>ASCII</code></td><td>product string, filling the rest of the payload, with <code>?</code> for each character outside ASCII; in English when the real device lists it, else in its first language; may be empty</td></tr>
+              <tr><td>10</td><td><code>primary_kind</code></td><td><code>u8</code></td><td>cloned device kind (below), from its HID report descriptors and Boot declarations. A device carrying both kinds reads keyboard if it has a full key bitmap (unless it declares Boot for both) or declares Boot for the keyboard alone. Otherwise it reads mouse</td></tr>
+              <tr><td>11..</td><td><code>product</code></td><td><code>ASCII</code></td><td>product string, filling the rest of the payload, with <code>?</code> for each character outside ASCII. In English if the real device lists English, else in its first language. May be empty</td></tr>
             </tbody>
           </table>
         </div>
@@ -349,7 +349,7 @@ const Requests: Component = () => {
               <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x03</td></tr>
               <tr><td>1</td><td><code>n_buttons</code></td><td><code>u8</code></td><td>buttons the mouse report carries; the cap on an injectable or lockable button id</td></tr>
               <tr><td>2</td><td><code>axis_flags</code></td><td><code>u8</code></td><td>mouse axes, the bits below</td></tr>
-              <tr><td>3</td><td><code>n_hid</code></td><td><code>u8</code></td><td>cloned HID interfaces; &gt;1 = composite, 0 with nothing cloned or for a clone with no HID interface (a vendor-class pad), which <A href="#device-info"><code>DEVICE_INFO</code></A>'s identity tells apart</td></tr>
+              <tr><td>3</td><td><code>n_hid</code></td><td><code>u8</code></td><td>cloned HID interfaces. &gt;1 = composite. 0 with nothing cloned, or for a clone with no HID interface (a vendor-class pad); <A href="#device-info"><code>DEVICE_INFO</code></A>'s identity tells the two apart</td></tr>
               <tr><td>4</td><td><code>n_keys</code></td><td><code>u8</code></td><td>keycode-array slots, or 0xFF for NKRO; 0 = no keyboard</td></tr>
               <tr><td>5</td><td><code>kbd_flags</code></td><td><code>u8</code></td><td>keyboard, the bits below</td></tr>
               <tr><td>6</td><td><code>change_driven</code></td><td><code>u8</code></td><td>per class: b0 mouse (continuous, 0), b1 keyboard/media (change-driven, 1 when bound)</td></tr>
@@ -482,14 +482,14 @@ const Requests: Component = () => {
         </p>
         <p>
           A nonzero <code>tx_drops</code> or <code>tx_wedges</code> means native input was dropped
-          or stalled on the way to the PC; a nonzero <code>link_rx_drops</code> or{' '}
+          or stalled on the way to the PC. A nonzero <code>link_rx_drops</code> or{' '}
           <code>host_rx_drops</code> means a native report or injected delta was lost between the
           two chips.
         </p>
         <p>
-          <code>relay_drops</code> is counted apart from the native-input drop counters, so relayed
-          traffic lost doesn't read as lost native input. The eight narrowed
-          counters clamp at their max instead of wrapping; the three drop counts are full width.
+          <code>relay_drops</code> is counted apart from the native-input drop counters, so lost
+          relayed traffic doesn't read as lost native input. The eight narrowed counters clamp at
+          their max instead of wrapping. The three drop counts are full width.
         </p>
         <p>
           <code>session</code> counts releases of host-set state. A change since the last read
@@ -523,7 +523,7 @@ const Requests: Component = () => {
               <tr><td>15</td><td><code>config_count</code></td><td><code>u16</code></td><td>SET_CONFIGURATION events (re-enumerations)</td></tr>
               <tr><td>17</td><td><code>link_rx_drops</code></td><td><code>u32</code></td><td>host-chip input frames the device chip couldn't take off the link; should stay 0</td></tr>
               <tr><td>21</td><td><code>host_rx_drops</code></td><td><code>u32</code></td><td>the same count on the host chip, relayed over the link; should stay 0</td></tr>
-              <tr><td>25</td><td><code>relay_drops</code></td><td><code>u32</code></td><td>relayed traffic and commands that went no further, none of it native input: a vendor IN packet that found its endpoint's queue full of the control PC's <code>RAW</code> packets, or a native zero-length packet answering a poll the PC did not make (the one poll the box runs ahead of a suspended PC); an OUT packet the box had no room to queue, that failed three times on the real device's bus, or that a bus reset or <code>SET_INTERFACE</code> overtook; a <code>RAW</code> OUT packet with no room to wait; a relayed request the box could not queue; a flagged <code>MOVE</code> the motion batch could not take; any frame other than native input that either chip's link receive ring dropped; and a frame from the control PC its receive ring had no room for (one a frame), or an overrun of the control port's UART (one an overrun, however many frames it cost)</td></tr>
+              <tr><td>25</td><td><code>relay_drops</code></td><td><code>u32</code></td><td>relayed traffic and commands that went no further, none of it native input. IN: a vendor IN packet that found its endpoint's queue full of the control PC's <code>RAW</code> packets, or a native zero-length packet answering a poll the PC did not make (the one poll the box runs ahead of a suspended PC). OUT: a packet the box had no room to queue, that failed three times on the real device's bus, or that a bus reset or <code>SET_INTERFACE</code> overtook; a <code>RAW</code> OUT packet with no room to wait. Other: a relayed request the box could not queue; a flagged <code>MOVE</code> the motion batch could not take; any frame other than native input that either chip's link receive ring dropped; a frame from the control PC its receive ring had no room for (one per frame), or an overrun of the control port's UART (one per overrun, however many frames it cost)</td></tr>
               <tr><td>29</td><td><code>session</code></td><td><code>u16</code></td><td>releases of host-set state; wraps at 0xFFFF, so compare for inequality</td></tr>
             </tbody>
           </table>
@@ -543,7 +543,7 @@ const Requests: Component = () => {
           <A href="/native/commands/clip">clip</A> with its settings and triggers, and an{' '}
           <A href="/native/commands/led"><code>LED</code></A> override. The count is 0 at boot,
           announced by the <A href="/native/connection#hello">ready hello</A>. One release counts
-          once, however many of these it clears; a release of everything counts only if a command
+          once, however many of these it clears. A release of everything counts only if a command
           other than <code>QUERY</code> or <code>RESET</code> arrived since the last count.
         </p>
         <div class="table-scroll">
@@ -552,13 +552,13 @@ const Requests: Component = () => {
             <tbody>
               <tr><td><A href="/native/commands/admin#reset"><code>RESET</code></A></td><td>once</td></tr>
               <tr><td>the inter-chip link drops</td><td>once per outage</td></tr>
-              <tr><td>the real device detaches</td><td>once; the clone's teardown after the detach grace counts again only if a command arrived during the grace</td></tr>
+              <tr><td>the real device detaches</td><td>once. The clone's teardown after the detach grace counts again only if a command arrived during the grace</td></tr>
               <tr><td>another device attaches</td><td>once</td></tr>
               <tr><td>a <code>PATCH</code> <code>APPLY</code> or <code>CLEAR</code>, or an <A href="/native/commands/option#imperfect"><code>OPTION(IMPERFECT)</code></A> toggle, that <A href="/native/commands/patch#presentation">presents</A> the clone again</td><td>once</td></tr>
               <tr><td>an <A href="/native/commands/update">update</A> takes the clone down</td><td>once</td></tr>
-              <tr><td>control-PC <A href="/native/injection#safety">silence</A></td><td>once per silence, when it released anything</td></tr>
-              <tr><td><code>OPTION(IMPERFECT)</code> turned off</td><td>when it drops rewrite rules, consuming packet triggers or queued clip transfers; a re-clone it causes counts again</td></tr>
-              <tr><td>a configuration switch by the game PC that unbinds a role</td><td>when a host held a lock, an injected usage or owed motion on that role</td></tr>
+              <tr><td>control-PC <A href="/native/injection#safety">silence</A></td><td>once per silence, if it released anything</td></tr>
+              <tr><td><code>OPTION(IMPERFECT)</code> turned off</td><td>if it drops rewrite rules, consuming packet triggers or queued clip transfers. A re-clone it causes counts again</td></tr>
+              <tr><td>a configuration switch by the game PC that unbinds a role</td><td>if a host held a lock, an injected usage or owed motion on that role</td></tr>
               <tr><td>state the box refused on arrival: a rule with the opt-in off, a patch with no device attached</td><td>not counted</td></tr>
               <tr><td>a clear from the host: a whole-table <code>REWRITE</code> clear, a <code>CATCH</code> unsubscribe, <code>CLIP_CTRL</code> <code>CLEAR</code></td><td>not counted</td></tr>
             </tbody>
@@ -607,11 +607,11 @@ const Requests: Component = () => {
             </thead>
             <tbody>
               <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x06</td></tr>
-              <tr><td>1</td><td><code>n</code></td><td><code>u8</code></td><td>number of entries that follow, up to 85</td></tr>
+              <tr><td>1</td><td><code>n</code></td><td><code>u8</code></td><td>number of entries that follow, ≤85</td></tr>
               <tr><td>+</td><td><code>class</code></td><td><code>u8</code></td><td>per entry: 0=button 1=key 2=media 3=axis (as <A href="/native/commands/lock"><code>LOCK</code></A>)</td></tr>
               <tr><td>+</td><td><code>id</code></td><td><code>u16</code></td><td>weighed field id, or 0xFFFF for a whole-class blanket, little-endian</td></tr>
               <tr><td>+</td><td><code>direction</code></td><td><code>u8</code></td><td>direction, as <A href="/native/commands/lock"><code>LOCK</code></A></td></tr>
-              <tr><td>+</td><td><code>scale</code></td><td><code>i16</code></td><td>percent of the native value kept, little-endian, <code>-255 to 255</code> (as <A href="/native/commands/lock#scale"><code>LOCK</code></A>); <code>0</code> = blocked, above <code>100</code> amplifies, negative reverses</td></tr>
+              <tr><td>+</td><td><code>scale</code></td><td><code>i16</code></td><td>percent of the native value kept, little-endian, <code>-255 to 255</code> (as <A href="/native/commands/lock#scale"><code>LOCK</code></A>); <code>0</code> = blocked, &gt;<code>100</code> amplifies, negative reverses</td></tr>
             </tbody>
           </table>
         </div>
@@ -632,7 +632,7 @@ const Requests: Component = () => {
               <tr><td>A blanket key lock</td><td>One entry per blocked edge, <code>id = 0xFFFF</code>, direction <code>1</code> and/or <code>2</code>; never <code>0</code>.</td></tr>
               <tr><td>A media lock, blanket or specific</td><td>Direction <code>0</code>, always. Media has no edges.</td></tr>
               <tr><td>A relative direction in <A href="/native/commands/option#bearing">vector</A> mode</td><td>The effective scale, the lower of X's and Y's, on both axes.</td></tr>
-              <tr><td>Any momentary usage</td><td><code>scale</code> of <code>0</code> or <code>100</code> only; the box stores the block or pass it renders, not the number sent, and never a negative.</td></tr>
+              <tr><td>Any momentary usage</td><td><code>scale</code> of <code>0</code> or <code>100</code> only. The box stores the block or pass it renders, not the number sent, and never a negative.</td></tr>
               <tr><td>A reversed axis</td><td>Its negative scale, sign and all. A reader that takes the field as a <code>u8</code> sees <code>156</code> where the box holds <code>-100</code>, and takes a reversal for an amplification.</td></tr>
               <tr><td>A relative direction with no <A href="/native/commands/lock#bearing">bearing</A> live</td><td>Its stored scale, unchanged. A lapsed window, or an <A href="/native/commands/option#bearing"><code>OPTION(BEARING)</code></A> window of <code>0</code>, stops <code>with</code> and <code>against</code> weighing without clearing them, so an entry can report <code>40</code> while that axis passes untouched.</td></tr>
             </tbody>
@@ -645,17 +645,17 @@ const Requests: Component = () => {
               <tr><th>Order</th><th>Source</th><th>Max entries</th></tr>
             </thead>
             <tbody>
-              <tr><td>1</td><td>Mouse axes and buttons</td><td>48: 4 axes x 4 directions, plus 16 buttons x 2 edges. A button has no relative pair, so its other two slots are out of reach.</td></tr>
+              <tr><td>1</td><td>Mouse axes and buttons</td><td>48: 4 axes × 4 directions, plus 16 buttons × 2 edges. A button has no relative pair, so its other two slots are out of reach.</td></tr>
               <tr><td>2</td><td>The blanket key lock</td><td>2, one per blocked edge</td></tr>
               <tr><td>3</td><td>The blanket media lock</td><td>1</td></tr>
               <tr><td>4</td><td>Specific media usages</td><td>8, the whole media-lock table</td></tr>
-              <tr><td>5</td><td>Specific keys</td><td>the rest of the 85, so at least 26, one per blocked edge</td></tr>
+              <tr><td>5</td><td>Specific keys</td><td>the rest of the 85, so ≥26, one per blocked edge</td></tr>
             </tbody>
           </table>
         </div>
         <p>
-          The frame is the cap: <code>2 + 85 x 6</code> is exactly the 512-byte payload. Rows 1 to 4
-          are capped by the box's tables at 59 combined, so they always fit. Keyboard usages are the
+          The frame is the cap: <code>2 + 85 x 6</code> is exactly the 512-byte payload. The box's
+          tables cap rows 1-4 at 59 combined, so they always fit. Keyboard usages are the
           one unbounded class: 252 of them, two edges each.
         </p>
         <div class="callout callout--warning">
@@ -723,13 +723,13 @@ const Requests: Component = () => {
           </table>
         </div>
         <p>
-          The box-wide <code>dropped</code> counts every lost event; the per-entry one attributes them to a
+          The box-wide <code>dropped</code> counts every lost event. The per-entry one attributes them to a
           subscription.
         </p>
         <div class="api-response-label">CONFIRMATION</div>
         <p>
           <A href="/native/commands/catch#catch"><code>CATCH</code></A> is fire-and-forget, so this
-          reply is the only confirmation an entry landed. A refused entry is absent from the list;{' '}
+          reply is the only confirmation an entry landed. A refused entry is absent from the list.{' '}
           <code>flags</code> b0 marks a full 32-entry table as the reason. Library
           binding: <A href="/library/requests#query-catch"><code>query_catch</code></A>.
         </p>
@@ -755,14 +755,14 @@ const Requests: Component = () => {
               <tr><th>Field</th><th>Use</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>clk_delay_us</code></td><td>Round trip of the best exchange in the window; the offset is accurate to about half of it, a hard bound.</td></tr>
-              <tr><td><code>clk_rate_ppb</code></td><td>Extrapolates between exchanges, since two independent crystals drift a stale offset by up to 20&nbsp;µs per second. <code>INT32_MIN</code> means no fit yet, distinct from a fitted <code>0</code> (matched crystals).</td></tr>
+              <tr><td><code>clk_delay_us</code></td><td>Round trip of the best exchange in the window. The offset is accurate to about half of it, a hard bound.</td></tr>
+              <tr><td><code>clk_rate_ppb</code></td><td>Extrapolates between exchanges, since two independent crystals drift a stale offset by up to 20&nbsp;µs/s. <code>INT32_MIN</code> means no fit yet, distinct from a fitted <code>0</code> (matched crystals).</td></tr>
               <tr><td><code>clk_age_ms</code></td><td>Age of the exchange the offset <em>rests on</em>: the least-delayed one in the window, often older than the newest. <code>0xFFFF</code> marks "no estimate yet", which an offset of 0 alone can't tell from a true zero.</td></tr>
             </tbody>
           </table>
         </div>
         <p>
-          Applying the offset is optional; the <code>clk</code> byte on each event stays
+          Applying the offset is optional. The <code>clk</code> byte on each event stays
           authoritative.
         </p>
         <div class="api-response-label">EXAMPLE</div>
@@ -821,7 +821,7 @@ const Requests: Component = () => {
         <div class="api-response-label">IMPERFECT VALUE</div>
         <p>
           The <A href="/native/commands/option#imperfect"><code>IMPERFECT</code></A> opt-in (id 0) plus
-          two derived clone-status bytes. Each is <code>0</code> or <code>1</code>; a faithful clone
+          two derived clone-status bytes. Each is <code>0</code> or <code>1</code>. A faithful clone
           reads all-zero.
         </p>
         <div class="table-scroll">
@@ -831,7 +831,7 @@ const Requests: Component = () => {
             </thead>
             <tbody>
               <tr><td>2</td><td><code>allowed</code></td><td>the opt-in toggle; <code>1</code> = opted in</td></tr>
-              <tr><td>3</td><td><code>over_capacity</code></td><td>the attached device has more IN endpoints live at once than the box has transmit FIFOs (four), or more than six HID interfaces, or runs at high speed</td></tr>
+              <tr><td>3</td><td><code>over_capacity</code></td><td>the attached device has more IN endpoints live at once than the box has transmit FIFOs (four), has &gt;6 HID interfaces, or runs at high speed</td></tr>
               <tr><td>4</td><td><code>clone_imperfect</code></td><td>the live clone is imperfect: an opted-in device the box can't clone faithfully, a forced rate, or a descriptor-patch set it serves</td></tr>
             </tbody>
           </table>
@@ -927,9 +927,10 @@ const Requests: Component = () => {
           </table>
         </div>
         <p>
-          Nothing is rendered while <code>ready</code> reads <code>0</code>, which also covers a box
-          whose two chips have not yet agreed which holds the motion: motion is relayed and
-          injection takes the paced fill regardless of <code>mode</code>.
+          Nothing is rendered while <code>ready</code> reads <code>0</code>. It also reads{' '}
+          <code>0</code> while the box's two chips have not yet agreed which holds the motion. Until
+          then, motion is relayed and injection takes the paced fill, whatever <code>mode</code>{' '}
+          says.
         </p>
         <p>
           Library binding:{' '}
@@ -1020,13 +1021,13 @@ const Requests: Component = () => {
               <tr><td>+</td><td><code>action</code></td><td><code>u8</code></td><td>per trigger: the <A href="/native/commands/clip#ctrl"><code>CLIP_CTRL</code></A> op 0..5 (start/stop/pause/resume/restart/toggle)</td></tr>
               <tr><td>+</td><td><code>consume</code></td><td><code>u8</code></td><td>per trigger: 1 = lock the trigger usage while it stays active</td></tr>
               <tr><td>+</td><td><code>n_pkt</code></td><td><code>u8</code></td><td>config: number of <A href="/native/commands/clip#packet-triggers">packet triggers</A> that follow</td></tr>
-              <tr><td>+</td><td><code>class</code></td><td><code>u8</code></td><td>per packet trigger: the traffic class, 4 to 9</td></tr>
+              <tr><td>+</td><td><code>class</code></td><td><code>u8</code></td><td>per packet trigger: the traffic class, 4-9</td></tr>
               <tr><td>+</td><td><code>id</code></td><td><code>u16</code></td><td>per packet trigger: the class's address, 0xFFFF=any, little-endian</td></tr>
               <tr><td>+</td><td><code>dir</code></td><td><code>u8</code></td><td>per packet trigger: 0 both / 1 IN / 2 OUT</td></tr>
               <tr><td>+</td><td><code>action</code></td><td><code>u8</code></td><td>per packet trigger: the <code>CLIP_CTRL</code> op 0..5</td></tr>
               <tr><td>+</td><td><code>flags</code></td><td><code>u8</code></td><td>per packet trigger: b0 clear, b1 consume, b2 <code>RUN</code></td></tr>
               <tr><td>+</td><td><code>slen</code></td><td><code>u8</code></td><td>per packet trigger: the selector length</td></tr>
-              <tr><td>+</td><td><code>mlen</code></td><td><code>u8</code></td><td>per packet trigger: the match length, 0 to 16</td></tr>
+              <tr><td>+</td><td><code>mlen</code></td><td><code>u8</code></td><td>per packet trigger: the match length, 0-16</td></tr>
               <tr><td>+</td><td><code>hits</code></td><td><code>u16</code></td><td>per packet trigger: packets it matched as the top-ranked trigger, saturating, little-endian</td></tr>
               <tr><td>+</td><td><code>match</code>, <code>mask</code></td><td><code>u8[mlen]</code> each</td><td>per packet trigger: as set</td></tr>
             </tbody>
@@ -1054,8 +1055,8 @@ const Requests: Component = () => {
         <p>
           A packet trigger reads back as the{' '}
           <A href="/native/commands/clip#packet-triggers">command that set it</A> with{' '}
-          <code>hits</code> spliced in after <code>mlen</code> and bit0 (present) clear, so a host
-          replays one by setting bit0. The whole reply is at most 507 bytes, inside one frame.
+          <code>hits</code> spliced in after <code>mlen</code> and bit0 (present) clear. A host
+          replays it by setting bit0. The whole reply is ≤507 bytes, inside one frame.
         </p>
         <p>
           Library bindings:{' '}
@@ -1109,7 +1110,7 @@ const Requests: Component = () => {
           staged.
         </p>
         <p>
-          The only source of the host chip's version;{' '}
+          The only source of the host chip's version.{' '}
           <A href="/native/commands/requests#version"><code>VERSION</code></A> reports the device
           chip alone.
         </p>
@@ -1213,7 +1214,7 @@ const Requests: Component = () => {
               <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x0C</td></tr>
               <tr><td>1</td><td><code>flags</code></td><td><code>u8</code></td><td>state bits below</td></tr>
               <tr><td>2</td><td><code>gen</code></td><td><code>u8</code></td><td>moves when the table changes, not on an identical re-send; see <A href="/native/commands/rewrite#lifecycle">lifecycle</A></td></tr>
-              <tr><td>3</td><td><code>n</code></td><td><code>u8</code></td><td>number of rules that follow, up to 32</td></tr>
+              <tr><td>3</td><td><code>n</code></td><td><code>u8</code></td><td>number of rules that follow, ≤32</td></tr>
               <tr><td>+</td><td><code>cls</code></td><td><code>u8</code></td><td>per rule: the surface, as <A href="/native/commands/rewrite#rewrite"><code>REWRITE</code></A></td></tr>
               <tr><td>+</td><td><code>id</code></td><td><code>u16</code></td><td>class address, little-endian</td></tr>
               <tr><td>+</td><td><code>dir</code></td><td><code>u8</code></td><td><code>0</code> both, <code>1</code> IN, <code>2</code> OUT</td></tr>
@@ -1232,13 +1233,13 @@ const Requests: Component = () => {
               <tr><th>Bit</th><th>Mask</th><th>Set when</th></tr>
             </thead>
             <tbody>
-              <tr><td>b0</td><td><code>0x01</code></td><td><code>FULL</code>: the last add was refused for capacity, a 33rd rule or a payload the 2048-byte pool cannot hold, an overwrite included. The next change to the table clears it: an add, an overwrite, a removal or a clear. An identical re-send is no change, so a keepalive leaves it set</td></tr>
+              <tr><td>b0</td><td><code>0x01</code></td><td><code>FULL</code>: the last add was refused for capacity (a 33rd rule, or a payload the 2048-byte pool cannot hold, an overwrite included). The next change to the table clears it: an add, an overwrite, a removal or a clear. An identical re-send is no change, so a keepalive leaves it set</td></tr>
             </tbody>
           </table>
         </div>
         <div class="api-response-label">EFFECT</div>
         <p>
-          A line carries no match, mask or payload bytes; read those with{' '}
+          A line carries no match, mask or payload bytes. Read those with{' '}
           <A href="/native/commands/requests#rewrite-entry"><code>QUERY(REWRITE_ENTRY)</code></A>.{' '}
           <A href="/native/commands/requests#health"><code>HEALTH</code></A> sets{' '}
           <code>REWRITE_ON</code> (<code>0x0100</code>) while the list is non-empty.
@@ -1246,8 +1247,8 @@ const Requests: Component = () => {
         <p>
           The table is PC-owned session state on the{' '}
           <A href="/native/commands/rewrite#lifecycle">same lifecycle</A> as locks, so an empty
-          list can mean the box released it, which{' '}
-          <A href="/native/commands/requests#stats"><code>session</code></A> counts. Library binding:{' '}
+          list can mean the box released it.{' '}
+          <A href="/native/commands/requests#stats"><code>session</code></A> counts that release. Library binding:{' '}
           <A href="/library/advanced/rewrite#query-rewrite"><code>query_rewrite</code></A>.
         </p>
         <div class="api-response-label">EXAMPLE</div>
@@ -1313,7 +1314,7 @@ const Requests: Component = () => {
         <p>
           Past the first two bytes it is a{' '}
           <A href="/native/commands/rewrite#rewrite"><code>REWRITE</code></A> payload that
-          reinstalls the rule. An index at or past <code>n</code> gets no reply. Library binding:{' '}
+          reinstalls the rule. An index ≥<code>n</code> gets no reply. Library binding:{' '}
           <A href="/library/advanced/rewrite#query-rewrite-entry"><code>query_rewrite_entry</code></A>.
         </p>
         <div class="api-response-label">EXAMPLE</div>
@@ -1343,7 +1344,7 @@ const Requests: Component = () => {
           The <A href="/native/commands/requests#resp"><code>RESP</code></A> payload when{' '}
           <code>what = 14</code>: a stored{' '}
           <A href="/native/commands/patch"><code>PATCH</code></A> set summary, a three-byte header
-          then seven bytes per patch in set order; an overwrite moves a patch to the end.
+          then seven bytes per patch in set order. An overwrite moves a patch to the end.
         </p>
         <pre class="api-signature">QUERY  what = 14  ·  RESP 3 + 7n bytes</pre>
         <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
@@ -1356,7 +1357,7 @@ const Requests: Component = () => {
             <tbody>
               <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x0E</td></tr>
               <tr><td>1</td><td><code>flags</code></td><td><code>u8</code></td><td>state bits below</td></tr>
-              <tr><td>2</td><td><code>n</code></td><td><code>u8</code></td><td>number of patches that follow, up to 16</td></tr>
+              <tr><td>2</td><td><code>n</code></td><td><code>u8</code></td><td>number of patches that follow, ≤16</td></tr>
               <tr><td>+</td><td><code>section</code></td><td><code>u8</code></td><td>per patch, as <A href="/native/commands/patch#patch"><code>PATCH</code></A></td></tr>
               <tr><td>+</td><td><code>cfg</code></td><td><code>u8</code></td><td>configuration index</td></tr>
               <tr><td>+</td><td><code>index</code></td><td><code>u8</code></td><td>interface number (REPORT) or string index (STRING)</td></tr>
@@ -1373,23 +1374,24 @@ const Requests: Component = () => {
             </thead>
             <tbody>
               <tr><td>b0</td><td><code>0x01</code></td><td><code>APPLIED</code>: the clone is serving a non-empty patched set</td></tr>
-              <tr><td>b1</td><td><code>0x02</code></td><td><code>PENDING</code>: the stored set differs from the one the clone serves, in its patches, their bytes or their order: not yet applied, changed or emptied since, refused, or stored with the <A href="/native/commands/patch#gate">opt-in</A> off</td></tr>
-              <tr><td>b2</td><td><code>0x04</code></td><td><code>REFUSED</code>: the stored set failed a <A href="/native/commands/patch#ladder">check</A> at the clone's last presentation and has not changed since, so the clone serves the descriptors unpatched; the <A href="/native/commands/admin#log"><code>LOG</code></A> line names the check. A change to the set, <code>CLEAR</code>, a presentation that does not refuse it, or a detach clears it</td></tr>
-              <tr><td>b3</td><td><code>0x08</code></td><td><code>FULL</code>: the last add was refused for capacity, a 17th patch or bytes the 1024-byte pool cannot hold, an overwrite included; the next change to the set, or <code>CLEAR</code>, clears it</td></tr>
+              <tr><td>b1</td><td><code>0x02</code></td><td><code>PENDING</code>: the stored set differs from the one the clone serves (in its patches, their bytes or their order). Causes: not yet applied, changed or emptied since, refused, or stored with the <A href="/native/commands/patch#gate">opt-in</A> off</td></tr>
+              <tr><td>b2</td><td><code>0x04</code></td><td><code>REFUSED</code>: the stored set failed a <A href="/native/commands/patch#ladder">check</A> at the clone's last presentation and has not changed since, so the clone serves the descriptors unpatched. The <A href="/native/commands/admin#log"><code>LOG</code></A> line names the check. A change to the set, <code>CLEAR</code>, a presentation that does not refuse it, or a detach clears it</td></tr>
+              <tr><td>b3</td><td><code>0x08</code></td><td><code>FULL</code>: the last add was refused for capacity (a 17th patch, or bytes the 1024-byte pool cannot hold, an overwrite included). The next change to the set, or <code>CLEAR</code>, clears it</td></tr>
             </tbody>
           </table>
         </div>
         <div class="api-response-label">EFFECT</div>
         <p>
-          A line carries no patch bytes; read those with{' '}
+          A line carries no patch bytes. Read those with{' '}
           <A href="/native/commands/requests#patch-entry"><code>QUERY(PATCH_ENTRY)</code></A>.{' '}
           <A href="/native/commands/requests#health"><code>HEALTH</code></A> sets{' '}
           <code>PATCH_ON</code> (<code>0x0200</code>) while b0 is set.
         </p>
         <p>
-          The list is the stored set; the clone <A href="/native/commands/patch#presentation">serves</A>{' '}
-          the same one while b1 is clear, and none while b0 is clear. With the real device unplugged it
-          is the last attached device's set. Library binding:{' '}
+          The list is the stored set. The clone{' '}
+          <A href="/native/commands/patch#presentation">serves</A> the same set while b1 is clear, and
+          none while b0 is clear. With the real device unplugged, the list is the last attached
+          device's set. Library binding:{' '}
           <A href="/library/advanced/patch#query-patches"><code>query_patches</code></A>.
         </p>
         <div class="api-response-label">EXAMPLE</div>
@@ -1446,7 +1448,7 @@ const Requests: Component = () => {
         <p>
           Past the first two bytes it is a{' '}
           <A href="/native/commands/patch#patch"><code>PATCH</code></A> payload that restores the
-          patch. An entry at or past <code>n</code> gets no reply. Library binding:{' '}
+          patch. An entry ≥<code>n</code> gets no reply. Library binding:{' '}
           <A href="/library/advanced/patch#query-patch-entry"><code>query_patch_entry</code></A>.
         </p>
         <div class="api-response-label">EXAMPLE</div>
@@ -1487,7 +1489,7 @@ const Requests: Component = () => {
             <tbody>
               <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x10</td></tr>
               <tr><td>1</td><td><code>flags</code></td><td><code>u8</code></td><td>b0 = the table is full and an entry was refused</td></tr>
-              <tr><td>2</td><td><code>n</code></td><td><code>u8</code></td><td>number of entries that follow, up to 32</td></tr>
+              <tr><td>2</td><td><code>n</code></td><td><code>u8</code></td><td>number of entries that follow, ≤32</td></tr>
               <tr><td>+</td><td><code>op</code></td><td><code>u8</code></td><td>per entry: 0 remap, 1 swap (as <A href="/native/commands/transform#transform"><code>TRANSFORM</code></A>)</td></tr>
               <tr><td>+</td><td><code>sclass</code></td><td><code>u8</code></td><td>per entry: source class, 0=button 1=key 2=media 3=axis</td></tr>
               <tr><td>+</td><td><code>sid</code></td><td><code>u16</code></td><td>source id within the class, little-endian</td></tr>
@@ -1534,8 +1536,8 @@ const Requests: Component = () => {
         <p>
           The table is PC-owned session state on the{' '}
           <A href="/native/commands/transform#clearing">same lifecycle</A> as locks and the catch
-          subscription, so an empty list can mean the box released it, which{' '}
-          <A href="/native/commands/requests#stats"><code>session</code></A> counts. Library binding:{' '}
+          subscription, so an empty list can mean the box released it.{' '}
+          <A href="/native/commands/requests#stats"><code>session</code></A> counts that release. Library binding:{' '}
           <A href="/library/transform#query-transforms"><code>query_transforms</code></A>.
         </p>
         <div class="api-response-label">EXAMPLE</div>

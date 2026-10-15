@@ -1,5 +1,5 @@
-// A class, then a usage in it. The filter matches the hex id too, which is how an unnamed Consumer
-// usage gets picked.
+// A class, then a usage in it. The filter also matches the hex id, so an unnamed Consumer usage can be
+// picked.
 
 import { Index, Show, createMemo, createSignal } from 'solid-js';
 import { Chip } from '../../../components/display/Chip';
@@ -42,7 +42,7 @@ export const UsagePicker = (props: {
     const c = current();
     const q = filter().trim().toLowerCase();
     const out: { value: string; label: string }[] = [];
-    // The wildcard leads the list, but only while a filter matches it.
+    // The wildcard leads the list unless the filter excludes it.
     const blanket = c.blanketLabel ?? `Every ${c.label.toLowerCase()}`;
     if (c.blanket !== undefined && (!q || blanket.toLowerCase().includes(q))) out.push({ value: String(c.blanket), label: blanket });
     for (const u of c.table) {
@@ -53,8 +53,8 @@ export const UsagePicker = (props: {
     return out;
   });
 
-  // The cut is counted, or a truncated list reads as unaddressable. A selection the cut would drop is
-  // kept, last, so Enter still takes the first match.
+  // The footer counts what the cut hides, or the hidden usages would look unpickable. A selected option
+  // past the cut stays as the last entry, so Enter still takes the first match.
   const shown = createMemo(() => {
     const all = options();
     const head = all.slice(0, MAX_OPTIONS);
@@ -65,7 +65,8 @@ export const UsagePicker = (props: {
   });
   const cut = createMemo(() => Math.max(0, options().length - shown().length));
 
-  // First usage, never the wildcard: the box drops a blanket it doesn't implement with no reply.
+  // A new class starts on its first usage, never the wildcard: the box drops, with no error, a blanket it
+  // doesn't implement.
   const pickClass = (v: string) => {
     const c = props.classes.find((x) => String(x.value) === v);
     if (!c) return;

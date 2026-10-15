@@ -1,5 +1,5 @@
-// A tick is one native frame with a mouse cloned, else the OPTION(EMIT) fixed rate, else 1 ms. The
-// engine is soft state on a 1 s dead-man switch; the clip status poll is its keepalive.
+// With a mouse cloned, a tick is one native frame; without one, the OPTION(EMIT) fixed rate, else 1 ms.
+// The engine is soft state on a 1 s dead-man switch; the clip status poll is its keepalive.
 
 import { For, Index, Show, createEffect, createMemo, createSignal } from 'solid-js';
 import { A } from '@solidjs/router';
@@ -132,13 +132,13 @@ const RAW_DIRS = [
 
 // Codec refusals, in this card's field names.
 const FAULT_TEXT: Record<ClipEntryFault, string> = {
-  gap: 'A wait must be 1 to 65535 ticks.',
-  edges: `A tick must carry at most ${CLIP_EDGES_MAX} buttons or keys.`,
-  'raw-count': `A tick must carry at most ${CLIP_RAW_MAX} raw reports.`,
+  gap: 'A wait must be 1-65535 ticks.',
+  edges: `A tick must carry ≤${CLIP_EDGES_MAX} buttons or keys.`,
+  'raw-count': `A tick must carry ≤${CLIP_RAW_MAX} raw reports.`,
   empty: 'A tick must carry at least one field.',
   'raw-direction': 'Direction must be In or Out.',
   'transfer-data': 'Out data must be wLength bytes, and blank for a request that reads.',
-  'too-long': `A tick must encode to at most ${CLIP_ENTRY_MAX} bytes.`,
+  'too-long': `A tick must encode to ≤${CLIP_ENTRY_MAX} bytes.`,
 };
 
 const entryText = (e: ClipEntry): string => {
@@ -179,7 +179,7 @@ const PKT_FAULT_TEXT: Record<ClipPacketTriggerFault, string> = {
   direction: 'Direction must be Both, In or Out.',
   verb: 'That verb cannot be bound to a trigger.',
   'mask-length': 'Match and mask must be the same length.',
-  'match-length': `Match and mask must be at most ${CLIP_PKT_MATCH_MAX} bytes.`,
+  'match-length': `Match and mask must be ≤${CLIP_PKT_MATCH_MAX} bytes.`,
   'class-direction': 'Direction must be one the class carries.',
   'match-outside-mask': 'Every bit set in the match must be set in the mask too, or no packet can match.',
   'consume-control': 'Consume needs a class other than Control.',
@@ -192,7 +192,7 @@ const PKT_FAULT_TEXT: Record<ClipPacketTriggerFault, string> = {
   pool: `Packet triggers share ${CLIP_PKT_MATCH_POOL} match bytes. Remove one or shorten the match.`,
 };
 
-// A chip runs onto a second line past its panel's width, so direction and match go in the line below.
+// A chip wider than its panel wraps, so direction and match go in the line below it.
 const packetName = (t: ClipPacketTrigger): string => {
   const op = OPS.find((o) => o.op === t.action)?.name ?? `op ${t.action}`;
   return `${op} ${rewriteClassName(t.cls)} ${t.id === CATCH_ID_ANY ? 'any' : t.id}`;
@@ -277,7 +277,8 @@ const DeviceClip = () => {
   const [setup, setSetup] = createSignal<Record<string, string>>(SETUP_DEFAULT);
   const [outData, setOutData] = createSignal('');
   const setupType = () => parseNum(setup().type);
-  // Raw and transfer leave the picker with the opt-in; a kind picked while it was on falls back.
+  // Raw and transfer leave the picker when the opt-in goes off; a kind picked while it was on falls back
+  // to Move.
   const gated = (k: string) => k === 'raw' || k === 'transfer';
   const kindNow = () => (gated(kind()) && !allowed() ? 'move' : kind());
 
@@ -448,8 +449,8 @@ const DeviceClip = () => {
   };
 
   const setFlag = (id: number, on: boolean) => {
-    // The box keeps loop and replayable apart; clearing loop with replayable stops a hidden loop flag
-    // returning with it.
+    // The box stores loop and replayable separately. Clearing loop along with replayable stops a hidden
+    // loop flag coming back when replayable does.
     const dropLoop = id === CLIP_SET_RETAIN && !on && loopOn();
     const field =
       id === CLIP_SET_LOOP ? 'loop' : id === CLIP_SET_RETAIN ? 'retain' : id === CLIP_SET_RIDE ? 'ride' : null;
@@ -677,8 +678,8 @@ const DeviceClip = () => {
 
                   <Show when={state() === ClipState.Faulted}>
                     <div class="callout callout--danger" role="alert">
-                      An append was lost or the ring overran, so the box stopped the possibly misaligned
-                      stream. Only Clear recovers, discarding the clip.
+                      An append was lost or the ring overran, so the box stopped the stream (it may be
+                      misaligned). Only Clear recovers, and Clear discards the clip.
                     </div>
                   </Show>
 
@@ -732,7 +733,7 @@ const DeviceClip = () => {
                       onChange={(on) => setFlag(CLIP_SET_RIDE, on)}
                     />
                   </div>
-                  {/* Under the checkbox that turns riding on, so ticking it brings the warning in below it, not above
+                  {/* Under the riding checkbox, so ticking it brings the warning in below the checkbox, not above
                       every panel. */}
                   <Show when={render() && (cursorRides() || wheelRides())}>
                     <div class="callout callout--warning">
@@ -925,7 +926,7 @@ const DeviceClip = () => {
                   </Show>
                   <Show when={wontFit()}>
                     <div class="callout callout--warning">
-                      More than the ring has free.
+                      The unsent ticks need more than the ring has free.
                     </div>
                   </Show>
                   <div class="acts">
@@ -958,7 +959,7 @@ const DeviceClip = () => {
                   >
                     <Show when={(clip()?.triggers.length ?? 0) > 0}>
                       <p class="sublabel">
-                        Inputs ({clip()?.triggers.length ?? 0} of {CLIP_TRIG_MAX})
+                        Inputs ({clip()?.triggers.length ?? 0}/{CLIP_TRIG_MAX})
                       </p>
                       <div class="chips">
                         <Index each={clip()?.triggers ?? []}>
@@ -977,7 +978,7 @@ const DeviceClip = () => {
                     </Show>
                     <Show when={packets().length > 0}>
                       <p class="sublabel">
-                        Packets ({packets().length} of {CLIP_PKT_TRIG_MAX}, {pktBytes()} of {CLIP_PKT_MATCH_POOL} match
+                        Packets ({packets().length}/{CLIP_PKT_TRIG_MAX}, {pktBytes()}/{CLIP_PKT_MATCH_POOL} match
                         bytes)
                       </p>
                       <Index each={packets()}>
@@ -1091,7 +1092,7 @@ const DeviceClip = () => {
                       </div>
                     </div>
                     <p class="mut">
-                      Match and mask: same length, at most {CLIP_PKT_MATCH_MAX} bytes. Blank matches every
+                      Match and mask: same length, ≤{CLIP_PKT_MATCH_MAX} bytes. Blank matches every
                       packet on that address.
                     </p>
                   </Show>
@@ -1174,7 +1175,7 @@ const DeviceClip = () => {
                   </Show>
                   <Show when={onPacket() && pktReplacing()}>
                     <p class="mut">
-                      Already bound. A changed binding starts its run and its hits again.
+                      Already bound. A changed binding restarts its run and its hit count.
                     </p>
                   </Show>
                   <Refused panel="clip-triggers" />

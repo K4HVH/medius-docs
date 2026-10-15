@@ -48,7 +48,7 @@ const Method: Component = () => (
           <tbody>
             <tr><td>Firmware</td><td>Stock {RESULTS.firmware.stock}, Medius {RESULTS.firmware.medius}</td></tr>
             <tr><td>Real device</td><td>A USB device emulator on each box's USB3, presenting the same device and native reports to both</td></tr>
-            <tr><td>Hub</td><td>One Genesys Logic hub for both boxes. One box was tested at a time, the other's emulator presenting a silent mouse</td></tr>
+            <tr><td>Hub</td><td>One Genesys Logic hub for both boxes. One box was tested at a time. The other box's emulator presented a silent mouse</td></tr>
             <tr><td>PC</td><td>Linux</td></tr>
           </tbody>
         </table>
@@ -72,9 +72,9 @@ const Method: Component = () => (
             <tr><td>Range</td><td>Lowest to highest over the runs. The fainter part of a bar spans it</td></tr>
             <tr><td>Bar</td><td>Drawn to the largest value in its table, or in its row on the Overview</td></tr>
             <tr><td>Result</td><td>The box ahead, worked out from the values. The box behind is dimmed</td></tr>
-            <tr><td>Faithful</td><td>Where a test records the native behaviour, the box that matches it is ahead</td></tr>
+            <tr><td>Faithful</td><td>If a test records native behaviour, the box that matches it is ahead</td></tr>
             <tr><td>Equal</td><td>The two ranges overlap, or the outcomes match</td></tr>
-            <tr><td>Differs</td><td>The boxes behave differently, and neither is better or no test shows which is faithful</td></tr>
+            <tr><td>Differs</td><td>The boxes behave differently. Neither is better, or no test shows which is faithful</td></tr>
             <tr><td>Defect</td><td>A fault that reproduces, marked on its row and listed on the Overview</td></tr>
           </tbody>
         </table>

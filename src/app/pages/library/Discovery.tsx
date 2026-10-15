@@ -25,10 +25,10 @@ const Discovery: Component = () => {
         <p>
           Returns one <A href="/library/types/structs#box-info"><code>BoxInfo</code></A> per connected
           box: its <A href="/library/types/structs#version"><code>Version</code></A> (protocol, MAC,
-          name) and, on a box that speaks{' '}
-          <A href="/library/connection#zero-config"><code>PROTO_VER</code></A>, its cloned{' '}
-          <A href="/library/types/structs#device-info"><code>DeviceInfo</code></A>. A box on another
-          protocol is listed with <code>device</code> <code>None</code>, so one needing a{' '}
+          name) and its cloned{' '}
+          <A href="/library/types/structs#device-info"><code>DeviceInfo</code></A>. A box that doesn't
+          speak <A href="/library/connection#zero-config"><code>PROTO_VER</code></A> has{' '}
+          <code>device</code> <code>None</code>, so a box that needs a{' '}
           <A href="/dashboard/update">firmware update</A> still shows up.
         </p>
         <div class="api-response-label">EXAMPLE</div>
@@ -50,9 +50,9 @@ for b in Device::list() {
           Opens the box whose identity matches <code>id</code>: the device chip's MAC hex (
           <A href="/library/types/structs#version"><code>Version::mac_hex</code></A>) or the CH343{' '}
           <A href="/library/types/structs#port-info">serial</A>. Returns{' '}
-          <A href="/library/types/errors"><code>Error::BadProtoVer</code></A> when that box speaks
-          another protocol, <A href="/library/types/errors"><code>Error::NotFound</code></A> when none
-          matches.
+          <A href="/library/types/errors"><code>Error::BadProtoVer</code></A> if that box speaks
+          another protocol, or <A href="/library/types/errors"><code>Error::NotFound</code></A> if no
+          box matches.
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`use medius::{Device, Error};
@@ -70,9 +70,9 @@ match Device::open_by_id("123456789abc") {
         <p><span class="api-badge api-badge--responded">Blocks</span></p>
         <p>
           Opens the first box whose clone's{' '}
-          <A href="/library/types/enums#device-kind"><code>DeviceKind</code></A> is a mouse. With none,
-          a connected box on another protocol (its clone unread) returns{' '}
-          <A href="/library/types/errors"><code>Error::BadProtoVer</code></A>; with no such box,{' '}
+          <A href="/library/types/enums#device-kind"><code>DeviceKind</code></A> is a mouse. If no box
+          clones a mouse, a connected box on another protocol (its clone unread) gives{' '}
+          <A href="/library/types/errors"><code>Error::BadProtoVer</code></A>. With neither, it returns{' '}
           <A href="/library/types/errors"><code>Error::NotFound</code></A>.
         </p>
         <div class="api-response-label">EXAMPLE</div>
@@ -100,10 +100,10 @@ kbd_box.press(Key::A)?;`}</code></pre>
         <pre class="api-signature">fn find_where(pred: impl Fn(&amp;BoxInfo) -&gt; bool) -&gt; Result&lt;Device&gt;</pre>
         <p><span class="api-badge api-badge--responded">Blocks</span></p>
         <p>
-          The general form of the <code>find_*_box</code> helpers: opens the first box whose{' '}
+          The general form of the <code>find_*_box</code> helpers. Opens the first box whose{' '}
           <A href="/library/types/structs#box-info"><code>BoxInfo</code></A> satisfies <code>pred</code>,
           preferring one that speaks <code>PROTO_VER</code>. A match on another protocol returns{' '}
-          <A href="/library/types/errors"><code>Error::BadProtoVer</code></A>; no match is{' '}
+          <A href="/library/types/errors"><code>Error::BadProtoVer</code></A>, and no match returns{' '}
           <A href="/library/types/errors"><code>Error::NotFound</code></A>.
         </p>
         <div class="api-response-label">EXAMPLE</div>
@@ -117,13 +117,13 @@ let device = Device::find_where(|b| b.device.as_ref().is_some_and(|d| d.vid == 0
         <p>
           A box's identity is its device chip's base MAC (
           <A href="/library/types/structs#version"><code>Version::mac_hex</code></A>) plus the CH343{' '}
-          adapter's serial. Serial paths renumber on replug; the identity does not, so{' '}
+          adapter's serial. Serial paths renumber on replug, but the identity doesn't, so{' '}
           <A href="/library/discovery#open-by-id"><code>open_by_id</code></A> re-finds the same box.
         </p>
         <p>
-          Opening a box anchors <A href="/library/lifecycle#reconnect"><code>reconnect</code></A> to that
-          identity: an automatic reconnect re-finds the <em>same</em> physical box across renumbered
-          ports, and never adopts a different box, or this box once it speaks another protocol.
+          Opening a box ties <A href="/library/lifecycle#reconnect"><code>reconnect</code></A> to that
+          identity. An automatic reconnect re-finds the <em>same</em> physical box across renumbered
+          ports. It never adopts a different box, nor this box once it speaks another protocol.
         </p>
       </DocSection>
 
@@ -135,8 +135,8 @@ let device = Device::find_where(|b| b.device.as_ref().is_some_and(|d| d.vid == 0
         <p><span class="api-badge api-badge--responded">Blocks</span></p>
         <p>
           <A href="/library/features/async"><code>AsyncDevice</code></A> mirrors the discovery
-          constructors, which block on reading each box and on the handshake like their{' '}
-          <A href="/library/connection#async"><code>Device</code></A> counterparts;{' '}
+          constructors. Like their <A href="/library/connection#async"><code>Device</code></A>{' '}
+          counterparts, they block on reading each box and on the handshake.{' '}
           <A href="/library/requests#device-info"><code>device_info</code></A> is the awaitable query.
         </p>
         <div class="api-response-label">EXAMPLE</div>

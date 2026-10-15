@@ -1,10 +1,10 @@
 // Motion shared by every page. A page arrives in reading order: its header, then each block rising after
 // the one before it, a table row by row. What starts below the first screen is held back and rises the
-// first time it comes into view; at the page bottom whatever is still held shows.
+// first time it comes into view; at the page bottom, anything still held back shows.
 //
-// Arrival is the stylesheet's: a block is stamped with its delay and its scope marked `arriving`, so the
-// prerendered snapshot plays the same arrival and the app picks it up where the snapshot had it (see
-// takeover.ts). Stamping runs under reduced motion too; the stylesheet stills it there.
+// The stylesheet plays the arrival: each block is stamped with its delay and its scope marked `arriving`.
+// The prerendered snapshot then plays the same arrival, and the app picks it up where the snapshot left it
+// (see takeover.ts). Stamping runs under reduced motion too; the stylesheet stills it there.
 
 export const prefersReducedMotion = (): boolean =>
   typeof window !== 'undefined' &&
@@ -21,8 +21,8 @@ type Item = readonly [el: HTMLElement, delay: number];
 
 const isTable = (el: Element) => el.matches('table, .table-scroll, .vals');
 
-// A block rises whole; a table brings its rows in one after another. `moving` moves it, for this arrival
-// alone: a later arrival in the same scope leaves it still.
+// A block rises whole; a table brings its rows in one after another. `moving` animates it for this arrival
+// only: a later arrival in the same scope leaves it still.
 function stamp(el: HTMLElement, delay: number): void {
   el.style.setProperty('--d', `${Math.round(delay)}ms`);
   if (isTable(el)) {
@@ -32,7 +32,7 @@ function stamp(el: HTMLElement, delay: number): void {
   el.classList.add('moving');
 }
 
-// Takes a motion class off once its motion has played; a block moved again keeps it for the new motion.
+// Removes a motion class once its motion has played; a block moved again keeps the class for the new motion.
 const timers = new WeakMap<HTMLElement, ReturnType<typeof setTimeout>>();
 const settle = (els: HTMLElement[], cls: string) =>
   els.forEach((el) => {
@@ -45,10 +45,10 @@ export const inOrder = (els: Iterable<HTMLElement>, t0: number, step: number, ca
   [...els].map((el, i) => [el, t0 + Math.min(i, cap) * step] as const);
 
 const ends = new WeakMap<HTMLElement, ReturnType<typeof setTimeout>>();
-// When each scope's arrival began, so a block that comes late joins it where it is.
+// When each scope's arrival began, so a late block joins the arrival at its current point.
 const begun = new WeakMap<HTMLElement, number>();
 
-// `ms`: how long the scope stays arriving from now, the whole arrival unless it began before.
+// `ms`: how long from now the scope stays arriving (the whole arrival, unless it began earlier).
 export function arrive(scope: HTMLElement, items: Item[], ms = ARRIVAL_MS): void {
   const moving = items.filter(([el]) => !el.classList.contains('moving') && !el.classList.contains('rv-wait'));
   for (const [el, delay] of moving) stamp(el, delay);
@@ -61,15 +61,15 @@ export function arrive(scope: HTMLElement, items: Item[], ms = ARRIVAL_MS): void
 
 export const shown = (el: Element | null): el is HTMLElement => !!el && el.getClientRects().length > 0;
 
-// When a block brought in now starts: during its page's arrival, its turn after the header, or at once when
-// that turn is past; otherwise `alone` from now.
+// When a block brought in now starts. During its page's arrival: at its turn after the header, or at once if
+// that turn has passed. Otherwise: `alone` ms from now.
 export function turnIn(el: HTMLElement, alone = 60): number {
   const scope = el.closest<HTMLElement>('.arriving');
   return scope ? Math.max(0, 200 - (performance.now() - (begun.get(scope) ?? 0))) : alone;
 }
 
-// The blocks a page reads in, in order: a section, a panel, a list of releases or of steps, by its parts;
-// the header by what follows its title (the stylesheet moves the header's crumbs, title and aside).
+// A page's blocks, in reading order. A section, a panel, or a list of releases or steps counts by its parts;
+// the header counts by what follows its title (the stylesheet moves the header's crumbs, title and aside).
 const GROUPS = '.page-header, .doc-section, .doc-section > div[id], #changelog, .rels, .flow, .panels, .stack, .pn, .pb';
 export function blocksOf(root: ParentNode, skip = '.page-header__bar, .page-header__row, .ptabs, .pane'): HTMLElement[] {
   const out: HTMLElement[] = [];
@@ -82,18 +82,18 @@ export function blocksOf(root: ParentNode, skip = '.page-header__bar, .page-head
   return out;
 }
 
-// A page's blocks as a page arrives: after its header has begun, each a little after the one before,
-// counted from the first block in view, so a page opened deep (Back, a reload, a link to a section) fills
-// its screen first. Blocks above the screen are not moved.
+// A page's blocks as it arrives: after its header has begun, each a little after the one before, counted
+// from the first block in view, so a page opened partway down (Back, a reload, a link to a section) fills its
+// screen first. Blocks above the screen don't move.
 const inView = (blocks: HTMLElement[]) => blocks.filter((el) => el.getBoundingClientRect().bottom >= 0);
-// After the header's turn when the header shows; at once when the page opened past it.
+// After the header's turn if the header shows; at once if the page opened below it.
 const fromView = (page: HTMLElement, blocks: HTMLElement[]): Item[] => {
   const header = page.querySelector('.page-header');
   return inOrder(blocks, !header || header.getBoundingClientRect().bottom >= 0 ? 200 : 0, 55);
 };
 export const pageArrival = (page: HTMLElement): Item[] => fromView(page, inView(blocksOf(page)));
-// The arrival's blocks counted again from the first in view, after the page has jumped (to a hash, or to
-// where a reload left it, on the snapshot before the app takes over).
+// Recounts the arrival's blocks from the first in view, after the page has jumped (to a hash, or to where a
+// reload left it, on the snapshot before the app takes over).
 export function retime(page: HTMLElement): void {
   for (const [el, d] of fromView(page, inView(blocksOf(page)).filter((el) => el.classList.contains('moving'))))
     el.style.setProperty('--d', `${Math.round(d)}ms`);
@@ -160,9 +160,10 @@ export function armReveals(
 }
 
 // A block that appears on a state change (a refusal, a step, a connected box's panel contents) rises in.
-// Only the block itself: a chip or row redrawn inside one stays still, so a poll never sets it moving. A
+// Only the block itself rises: a chip or row redrawn inside it stays still, so a poll never sets it moving. A
 // page block a fetch delivers while the page is arriving joins the arrival. A tab brings in the panels inside it.
-// `n` takes its place in the arrival of the block `lead` heads: a step after it, started when it started.
+// join: `n` takes its place in the arrival of the block that `lead` heads, one step after `lead` and timed
+// from when `lead` started.
 function join(n: HTMLElement, lead: HTMLElement): void {
   const led = lead.getAnimations?.()[0];
   if (led?.playState === 'finished') {
@@ -172,7 +173,7 @@ function join(n: HTMLElement, lead: HTMLElement): void {
   }
   stamp(n, (parseFloat(lead.style.getPropertyValue('--d')) || 0) + 45);
   settle([n], 'moving');
-  // A heading not started yet (pending) starts on the same frame as `n`; one started gives its start.
+  // A heading not started yet (pending) starts on the same frame as `n`; a started one passes `n` its start.
   if (led && led.startTime !== null) queueMicrotask(() => n.getAnimations().forEach((a) => (a.startTime = led.startTime)));
 }
 
@@ -182,7 +183,7 @@ export function watchChanges(root: HTMLElement): () => void {
   if (typeof MutationObserver === 'undefined') return () => {};
   const added = (n: HTMLElement) => {
     if (n.closest('.rv-wait') || n.parentElement?.closest('.st-in')) return;
-    // A header or tab strip drawn again holds still; only the state at its right is news.
+    // A redrawn header or tab strip holds still; only the state at its right rises in as a change.
     if (n.matches('.page-header, .ptabs')) {
       const state = n.querySelector<HTMLElement>(':scope .page-header__aside');
       if (state && !root.classList.contains('arriving')) {
@@ -198,9 +199,9 @@ export function watchChanges(root: HTMLElement): () => void {
       n.classList.add('st-in');
       settle([n], 'st-in');
     } else if (n.matches(CHANGES) && !n.matches('.rb, .rt')) {
-      // Contents swapped into a panel or section while it arrives (a box's panel as the box connects) rise
-      // with its heading, in step, rather than showing before it; in a panel already in, or holding still,
-      // they are news.
+      // Contents swapped into a panel or section during its arrival (a box's panel as the box connects) rise
+      // in step with its heading instead of showing before it. In a panel that has already arrived, or is
+      // holding still, they rise in as a change.
       const block = n.parentElement?.closest('.pn, .doc-section');
       if (!block) return;
       const lead = block.querySelector<HTMLElement>(':scope > .ph.moving, :scope > .moving');

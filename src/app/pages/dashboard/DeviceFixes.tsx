@@ -9,9 +9,9 @@ import { type FixIO, type Offer, type Outcome, type Signals, allowImperfect, log
 
 const KEPT = 'medius.fixes.kept';
 
-// Offers put away with Dismiss, by device and fix, and Logitech mice the fix showed can't go
-// faster. Storage that throws (a private window) keeps them for this page alone; a device the box reads no
-// ids for is kept for this page alone too, since every such device reads the same.
+// Offers put away with Dismiss (by device and fix), and Logitech mice the fix showed can't go faster. If
+// storage throws (a private window), they are kept for this page only. So is a device the box reads no ids
+// for, since every such device has the same key.
 const remembered = new Set<string>();
 const kept = (): Set<string> => {
   try {
@@ -33,8 +33,8 @@ const keep = (k: string) => {
 const offerSlot = (s: Signals, o: Offer) => `${offerKey(s)}/${o.kind}${o.kind === 'imperfect' && o.update ? '-update' : ''}`;
 const tried = (s: Signals) => `${offerKey(s)}/logitech-tried`;
 
-// A fix under way or just done, kept per box so the panel going away (another page, the box answering
-// late) neither loses it nor lets a second one start beside it.
+// A fix under way or just done, kept per box. If the panel goes away (another page, or the box answering
+// late), the fix is not lost and a second one can't start beside it.
 interface Run {
   shown: Accessor<Offer | null>;
   setShown: Setter<Offer | null>;
@@ -205,7 +205,7 @@ export default function DeviceFixes() {
             </Match>
             <Match when={o().kind === 'razer'}>
               <p>
-                Set its highest polling rate in Razer Synapse with it plugged into the PC, then plug it back into the box.
+                Plug it into the PC, set its highest polling rate in Razer Synapse, then plug it back into the box.
               </p>
               <div class="acts">
                 <Button variant="secondary" onClick={() => dismiss(o())}>
@@ -214,7 +214,7 @@ export default function DeviceFixes() {
               </div>
             </Match>
           </Switch>
-          {/* There before it speaks, so a screen reader hears what it says. */}
+          {/* Rendered before it has text, so a screen reader announces the text. */}
           <p role="status" tabindex="-1" ref={status} classList={{ mut: run().running() }}>
             {run().result() ? said(run().result()!) : run().running() ? 'Restarting the box. This takes up to a minute.' : ''}
           </p>

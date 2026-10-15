@@ -71,7 +71,7 @@ g++ -std=c++17 app.cpp -I include -L lib -lmedius_capi -o app
 LD_LIBRARY_PATH=lib ./app        # macOS: DYLD_LIBRARY_PATH=lib ./app`}</code></pre>
         <p>
           On Linux add <code>-lpthread</code>. Link the static <code>libmedius_capi.a</code> to
-          skip the run-time path.
+          run without a loader path.
         </p>
 
         <div class="callout callout--info">
@@ -90,8 +90,8 @@ LD_LIBRARY_PATH=lib ./app        # macOS: DYLD_LIBRARY_PATH=lib ./app`}</code></
         <p>
           <A href="/bindings/c/api#module"><code>medius_version_string</code></A> and{' '}
           <A href="/bindings/c/api#module"><code>medius_abi_version</code></A> are pure library
-          calls. A printed version means header and library link and load. On a{' '}
-          <code>MEDIUS_ABI_VERSION</code> mismatch, call nothing else; rebuild against the header
+          calls. If the version prints, the header and library link and load. On a{' '}
+          <code>MEDIUS_ABI_VERSION</code> mismatch, call nothing else and rebuild against the header
           shipped with the library.
         </p>
         <pre><code class="language-c">{`// app.c

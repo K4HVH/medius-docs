@@ -4,7 +4,7 @@ import { prefersReducedMotion } from './motion';
 import { pagePath } from '../routes';
 
 const FADE_MS = 120;
-// A page's code not in after a minute is not coming (a stalled request): the page is loaded whole.
+// Page code not in after a minute (a stalled request) isn't coming: load the page in full instead.
 const CODE_MS = 60_000;
 
 export interface PageCode {
@@ -25,8 +25,8 @@ const within = (code: Promise<unknown>, ms: number) =>
 let latest = 0;
 // A flash in progress, which blocks navigation elsewhere (useLeaveFade is told of it).
 let blocked: Accessor<boolean> = () => false;
-// Offline, a navigation whose code did not come leaves the reader on the page shown: a whole load would
-// put the browser's error page in place of a page that reads.
+// Offline, a navigation whose code didn't arrive leaves the reader on the current page: a full load would
+// replace a readable page with the browser's error page.
 const offline = () => navigator.onLine === false;
 // Where the page fading out is going, so the chrome over every page (the site bar) changes with it.
 const [heading, setHeading] = createSignal<string | null>(null);
@@ -37,11 +37,11 @@ const showAgain = () => {
 };
 const lost = (path: string, e: unknown) => console.warn(`medius: the code of ${path} did not come (${String(e)})`);
 
-// A link to another page fades the page out first; the new page then arrives. A navigation to a page
-// whose code is not in yet waits for it too, the page faded meanwhile, so the page arrives whole; code
-// that fails (the site was deployed since) has the page loaded whole instead, once it shows again, so a
-// leave the reader refuses leaves it readable. Back and forward go at once here (holdHistory waits for
-// their code), as does a redirect. A navigation asked for during a flash is left to the flash's block.
+// A link to another page fades the current page out first; the new page then arrives. A navigation to a page
+// whose code isn't in yet also waits for that code, with the page faded meanwhile, so the new page arrives
+// complete. If the code fails (the site was deployed since), the page shows again before a full page load,
+// so it stays readable if the reader refuses to leave. Back and Forward go at once here (holdHistory waits
+// for their code), as does a redirect. A navigation asked for during a flash is left to the flash's block.
 // The held navigation goes on through the other listeners, so a flash that began during the wait still
 // holds the reader on the page, which then shows again.
 export function useLeaveFade(isBlocked: Accessor<boolean>, pages?: PageCode & { whole: (href: string) => void }): void {
@@ -108,11 +108,11 @@ export function useLeaveFade(isBlocked: Accessor<boolean>, pages?: PageCode & { 
   });
 }
 
-// Back and forward: the router shows the page at once, so a page whose code is not in waits for it here,
-// ahead of the router's listener (registered before it), and is handed on once the code is in. It acts
-// only once the app is up (`live`), and leaves a flash's block to refuse history as before. Offline, it
-// waits for the line to come back; a page whose code fails otherwise is loaded afresh, the address
-// already naming it.
+// Back and Forward: the router shows the page at once, so a page whose code isn't in waits for it here,
+// ahead of the router's listener (registered before it), and is handed on once the code arrives. This acts
+// only once the app is up (`live`), and leaves refusing history during a flash to the flash's block.
+// Offline, it waits for the connection to come back. Otherwise a page whose code fails is reloaded, since
+// the address already names it.
 export function holdHistory(pages: PageCode & { reload: () => void; live: () => boolean }): () => void {
   const root = document.documentElement;
   let passing = false;

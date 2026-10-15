@@ -31,7 +31,7 @@ export function DocsSidebar(props: {
   closeKey?: unknown;
   title?: string;
   boxes?: JSX.Element;
-  // Pages left out of the list: the dashboard's that the selected box doesn't take.
+  // Pages left out of the list: dashboard pages the selected box doesn't get.
   hide?: (path: string) => boolean;
 }) {
   const route = createMemo(() => routeFor(props.pathname));
@@ -52,7 +52,7 @@ export function DocsSidebar(props: {
   let side: HTMLElement | undefined;
   let mark: HTMLSpanElement | undefined;
   let bar: HTMLButtonElement | undefined;
-  // On a phone the pages open over the page, their links cascading in as on a wide screen's first load.
+  // On a phone the page list opens over the page, its links cascading in as on a wide screen's first load.
   const setPanel = (next: boolean) => {
     setOpen(next);
     lockPage('side', next);
@@ -73,12 +73,12 @@ export function DocsSidebar(props: {
   };
   const off = () => (props.disabled ? 'true' : undefined);
 
-  // The page's edge travels to the page picked, and the section's fill to the section; a list that
-  // changed whole takes the edge without travel. The links cascade in when the sidebar first shows and
-  // when a section brings a new list.
-  // The page's edge spans the page's link by layout, which a rising link leaves alone. The section's
-  // fill spans its cell inside the rules, to the fraction of a pixel, so no zoom lets it run over one: the
-  // switch moves as one, so measuring against it holds mid-rise too.
+  // The page's edge mark slides to the page picked, and the section switch's fill to the section picked. When
+  // the whole list changes, the edge jumps instead. The links cascade in when the sidebar first shows and when
+  // a section brings a new list.
+  // The edge is placed from the link's layout box, which a link's rise doesn't change. The section fill spans
+  // its cell inside the rules to a fraction of a pixel, so no zoom level lets it overrun a rule. The switch
+  // moves as one piece, so measuring against it holds mid-rise too.
   const place = (ind: HTMLElement | null | undefined, at: HTMLElement | null | undefined, instant: boolean) => {
     if (!ind) return;
     if (!at) {
@@ -116,7 +116,7 @@ export function DocsSidebar(props: {
     // A switch that comes or goes moves the search under it, so both join the new list's cascade.
     const switches = [...side.querySelectorAll('.sections')].map((n) => n.getAttribute('aria-label')).join('|');
     const top = switches !== shownSwitch ? '.sections, .search, ' : '';
-    // Still marked from the last cascade, they would keep their place in it and jump: they go again.
+    // Still marked from the last cascade, they would keep their old place in it and jump, so restart them.
     if (top && !first) {
       side.querySelectorAll<HTMLElement>('.sections, .search').forEach((el) => el.classList.remove('moving'));
       void side.offsetWidth;
@@ -139,7 +139,7 @@ export function DocsSidebar(props: {
     window.addEventListener('resize', again);
     const ro = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(again);
     side?.querySelectorAll('.sections a').forEach((a) => ro?.observe(a));
-    // Rows that come late (a remembered box) push the list down under the edge, which follows.
+    // Late rows (a remembered box) push the list down under the edge mark, so the mark follows.
     let frame = 0;
     const mo = typeof MutationObserver === 'undefined' ? null : new MutationObserver(() => {
       cancelAnimationFrame(frame);

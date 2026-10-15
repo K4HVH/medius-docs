@@ -44,7 +44,7 @@ const Install: Component = () => {
 
       <DocSection id="verify" title="Verify" caption="Print the version">
         <p>
-          A printed version means the library loaded. Next:{' '}
+          If the version prints, the library loaded. Next:{' '}
           <A href="/bindings/python/quickstart">first program</A>.
         </p>
         <pre><code class="language-bash">{`python -c "import medius; print(medius.version_string(), 'abi', medius.abi_version())"

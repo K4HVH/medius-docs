@@ -8,7 +8,7 @@ const Move: Component = () => {
     <>
       <PageHeader>
         <p>
-          <A href="/library/move#move"><code>move_axis</code></A> drives every relative axis; the rest
+          <A href="/library/move#move"><code>move_axis</code></A> drives every relative axis. The rest
           wrap it. Each call queues one{' '}
           <A href="/native/injection#fire-and-forget">fire-and-forget</A>{' '}
           <A href="/native/commands/move#move"><code>MOVE</code></A> frame.
@@ -50,11 +50,11 @@ const Move: Component = () => {
           </table>
         </div>
         <p>
-          Backs <A href="/native/commands/move#move"><code>MOVE</code></A>; the last two are its{' '}
-          <A href="/native/commands/move#flags">flags byte</A>. With{' '}
+          Backs <A href="/native/commands/move#move"><code>MOVE</code></A>, whose{' '}
+          <A href="/native/commands/move#flags">flags byte</A> holds the last two parameters. With{' '}
           <A href="/library/options#set-movement-riding">movement riding</A> off,{' '}
-          <code>Now</code> still skips spreading and rendering, and <code>Flush</code> and{' '}
-          <code>Discard</code> act on what those hold of earlier moves.
+          <code>Now</code> still skips spreading and rendering. <code>Flush</code> and{' '}
+          <code>Discard</code> then act on what spreading and rendering hold of earlier moves.
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`use medius::{Motion, MoveTiming, PendingMotion};
@@ -111,9 +111,9 @@ device.move_rel(0, -10)?;  // up`}</code></pre>
           </table>
         </div>
         <p>
-          <code>delta</code> spans the full <code>i16</code> range (<code>-32768 to 32767</code>) and
-          feeds the same <A href="/native/injection#state">accumulator</A> as cursor motion, pacing
-          large values across reports.
+          <code>delta</code> spans the full <code>i16</code> range (<code>-32768 to 32767</code>). It
+          feeds the same <A href="/native/injection#state">accumulator</A> as cursor motion, which
+          paces large values across reports.
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`device.wheel(3)?;   // up three notches
@@ -138,10 +138,10 @@ device.wheel(-1)?;  // down one notch`}</code></pre>
           </table>
         </div>
         <p>
-          <code>delta</code> spans the full <code>i16</code> range (<code>-32768 to 32767</code>) and
-          feeds the same <A href="/native/injection#state">accumulator</A> as the wheel, pacing large
-          values across reports. Only on a real device whose descriptor declares AC Pan; check{' '}
-          <A href="/library/requests#caps"><code>caps</code></A>.
+          <code>delta</code> spans the full <code>i16</code> range (<code>-32768 to 32767</code>). It
+          feeds the same <A href="/native/injection#state">accumulator</A> as the wheel, which paces
+          large values across reports. It works only on a real device whose descriptor declares AC Pan
+          (check <A href="/library/requests#caps"><code>caps</code></A>).
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`device.pan(3)?;   // pan right
@@ -168,9 +168,10 @@ device.pan(-1)?;  // pan left`}</code></pre>
           riding native motion, and held motion stays held.
         </p>
         <p>
-          The box emits a report for it on the first poll no native report can be ready for. A
-          native report that reaches the box first carries the delta instead, unless it already carries injected
-          motion while the real device leaves polls free; then the delta takes a separate poll.
+          The box emits a report for the delta on the first poll that no native report can be ready
+          for. If a native report reaches the box first, that report carries the delta. But if it
+          already carries injected motion and the real device leaves polls free, the delta takes a
+          separate poll.
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`device.set_movement_riding(Some(Duration::from_millis(20)))?;

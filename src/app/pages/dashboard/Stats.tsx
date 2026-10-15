@@ -11,7 +11,7 @@ const MAX_ROWS = 12;
 
 const num = (n: number) => n.toLocaleString();
 
-// Series are UTC days, so they are shown in UTC: a reader west of it would see the day before.
+// Series are UTC days, so dates show in UTC; a reader west of UTC would otherwise see the day before.
 const shortDate = (day: string) => {
   const d = new Date(`${day}T00:00:00Z`);
   return Number.isNaN(d.getTime()) ? day : d.toLocaleDateString(undefined, { day: 'numeric', month: 'short', timeZone: 'UTC' });
@@ -39,7 +39,7 @@ const RESULT: Record<keyof Omit<WeekFlashes, 'week'>, string> = {
   sent: 'Unconfirmed',
   failed: 'Failed',
 };
-// Flashes from the Flash page still record the page it replaced.
+// Flashes from the Flash page are still recorded under the page it replaced ('advanced').
 const PAGE: Record<string, string> = { update: 'Update', advanced: 'Flash', setup: 'Set up' };
 const ROUTE: Record<string, string> = { usb2: 'USB2', rom: 'ROM download' };
 const CHIPS: Record<string, string> = { both: 'Both chips', device: 'Main chip', host: 'Mouse-side chip' };
@@ -92,7 +92,7 @@ const Readout = (props: { n: number; label: string }) => (
   </div>
 );
 
-// A row per entry, to the scale of the largest named one. With `readout`, the figure over the bars is the
+// A row per entry, scaled to the largest named one. With `readout`, the figure over the bars is the
 // largest entry, or the row pointed at.
 const Bars = (props: { rows: Row[]; tone?: Record<string, string>; readout?: boolean }) => {
   const max = () => Math.max(0, ...props.rows.filter((r) => !r.rest).map((r) => r.n));
@@ -120,9 +120,9 @@ const Bars = (props: { rows: Row[]; tone?: Record<string, string>; readout?: boo
   );
 };
 
-// One column per entry, oldest first, each split into stacked parts. The last is still counting, so it
-// is drawn fainter and named by `now`. The figure over the columns is the last one, or the one pointed
-// at; with several parts, the legend gives that column's split.
+// One column per entry, oldest first, each split into stacked parts. The last column is still counting,
+// so it is drawn fainter and named by `now`. The figure over the columns is the last column's total, or
+// the pointed-at column's; with several parts, the legend gives that column's split.
 const Columns = (props: {
   keys: string[];
   parts: { name: string; cls: string; values: number[] }[];
@@ -218,7 +218,7 @@ const Summary = (props: { s: StatsSummary }) => {
     ['Active in 30 days', s().boxes.active30, num],
     ['Unique devices', s().devices.unique, num],
     ['Flashes', s().flashes.total, num],
-    // Rounded down, so 199 of 200 is not 100%.
+    // Rounded down, so 199/200 is not 100%.
     ['Success rate', s().flashes.total ? Math.floor((s().flashes.succeeded / s().flashes.total) * 100) : null, (n) => `${n}%`],
     ['Countries', s().countries.filter((c) => c.key !== 'unknown').length, num],
   ];

@@ -58,7 +58,7 @@ signs   +x right, +y down (screen-style), +z wheel up
 paced   a large move drains across frames; nothing is dropped`}</pre>
         <p>
           The box carries any remainder in its{' '}
-          <A href="/native/injection#state">accumulator</A>;{' '}
+          <A href="/native/injection#state">accumulator</A>.{' '}
           <A href="/native/commands/admin#reset"><code>RESET</code></A> zeroes it. Library binding:{' '}
           <A href="/library/move#move-rel"><code>move_rel</code></A>.
         </p>
@@ -124,8 +124,8 @@ paced   a large move drains across frames; nothing is dropped`}</pre>
 
       <DocSection id="pan" title="MOVE (pan)" caption="Horizontal scroll (AC Pan)">
         <p>
-          With <code>motion = 2</code>, <code>MOVE</code> drives AC Pan, horizontal scroll
-          (Consumer usage <code>0x0238</code>), by a relative amount.
+          With <code>motion = 2</code>, <code>MOVE</code> drives AC Pan (horizontal scroll,
+          Consumer usage <code>0x0238</code>) by a relative amount.
         </p>
         <pre class="api-signature">MOVE  0x01  ·  pan payload 4 bytes</pre>
         <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>

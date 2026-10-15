@@ -9,8 +9,9 @@ const Introduction: Component = () => {
     <>
       <PageHeader>
         <p>
-          The <a href="https://crates.io/crates/medius" target="_blank" rel="noreferrer"><code>medius</code></a> crate,
-          the official Rust client, injects input alongside a real mouse, keyboard, or combo over a USB-serial link.
+          The <a href="https://crates.io/crates/medius" target="_blank" rel="noreferrer"><code>medius</code></a> crate
+          is the official Rust client. Over a USB-serial link, it injects input alongside a real mouse, keyboard, or
+          combo.
         </p>
         <div class="table-scroll">
           <table class="api-params">

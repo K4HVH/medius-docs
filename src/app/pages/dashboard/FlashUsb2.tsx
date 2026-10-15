@@ -27,7 +27,7 @@ const same = (a: Semver | null, b: Semver | null) =>
   !!a && !!b && a.major === b.major && a.minor === b.minor && a.patch === b.patch;
 const fmtBytes = (n: number) => (n < 1024 ? `${n} B` : `${(n / 1024).toFixed(0)} KB`);
 
-// Flashes the selected box over USB2: the Update page's update, with any medius image.
+// Flashes the selected box over USB2: the Update page's update, with any Medius image.
 export const Usb2Flash = (props: { onBusy?: (busy: boolean) => void }) => {
   const dash = useDashboard();
   const navigate = useNavigate();

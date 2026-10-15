@@ -16,16 +16,16 @@ import { placeFor } from './places';
 import type { SearchIndex } from '../src/app/search/types';
 
 // An address inside a page (src/app/routes.ts addressFor), an item or a place, is answered with its page,
-// filled as the page is, under a head naming it: its title, description and card, noindex and no canonical,
-// and its stripe colour.
+// filled like the page itself, under a head naming the item: its title, description and card, noindex, no
+// canonical, and its stripe colour.
 export interface ItemSources {
   // The search index the build wrote, which names each place.
   index: () => SearchIndex | null;
   releases: () => Promise<FirmwareRelease[] | null>;
-  // The list read again, for a release published since it was read.
+  // Rereads the list, for a release published since the last read.
   refresh: () => Promise<FirmwareRelease[] | null>;
   stats: () => Promise<StatsSummary | null>;
-  // The longest a release is looked for, short of the server's 10 s request limit.
+  // The longest a release is looked for, inside the server's 10 s request limit.
   budgetMs?: number;
 }
 
@@ -62,8 +62,8 @@ function timer(budgetMs: number) {
   };
 }
 
-// Help's answers come before a place of the same id; on Devices and Changelog a place, read from the index
-// in hand, comes before a device or release, which may wait on the stats or GitHub.
+// Help's answers win over a place of the same id. On Devices and Changelog, a place (read from the index in
+// hand) wins over a device or release, which may wait on the stats or GitHub.
 async function find(item: Address, sources: ItemSources): Promise<Found> {
   const place = (): Found | null => {
     const at = placeFor(sources.index(), item.parent, item.id);
@@ -123,7 +123,7 @@ export async function cardFor(path: string, given: Partial<ItemSources> = {}): P
 
 const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
-// One tag for the key, where the first stood; theme-color stays ahead of the script that reads it.
+// Writes one tag for the key, in place of the first one, so theme-color stays ahead of the script that reads it.
 function setMeta(head: string, attr: 'name' | 'property', key: string, content: string, extra = ''): string {
   const tag = `<meta ${attr}="${key}" content="${esc(content)}"${extra}>`;
   const like = new RegExp(`<meta\\b[^>]*\\b${attr}="${key.replace(/[.:]/g, '\\$&')}"[^>]*>`, 'g');
@@ -165,7 +165,7 @@ function writeHead(html: string, path: string, parent: RouteInfo, found: { card:
   return head + html.slice(end);
 }
 
-// Null for a path that is no address inside a page. `snapshot` reads a prerendered page by its path ('/404'
+// Null for a path that isn't an address inside a page. `snapshot` reads a prerendered page by its path ('/404'
 // for the 404 page).
 export async function itemPage(
   path: string,
@@ -178,7 +178,7 @@ export async function itemPage(
   const item = addressFor(path);
   if (!item) return null;
   const found = await find(item, sources);
-  // A device leaves the list when the stats drop it or its name changes; the list is where it was.
+  // A device leaves the list when the stats drop it or its name changes; send the reader to the list.
   if (found === 'unknown' && item.kind === 'device') return { status: 302, html: '', location: item.parent };
   if (found === 'unknown') return { status: 404, html: (await snapshot('/404')) ?? 'Not Found' };
   const html = await snapshot(item.parent);

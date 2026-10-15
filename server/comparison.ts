@@ -1,5 +1,5 @@
 // The comparison in brief, for the Discord bot's summary: a few benchmarks with both boxes' values as the
-// site writes them, each box's defects, and every area's page for the rest.
+// site writes them, each box's defect count, and a link to every area's page for the rest.
 
 import { RESULTS, placeOf } from '../src/app/data/comparison';
 import { COMPARISON_PAGES } from '../src/app/data/comparison/pages';
@@ -8,8 +8,8 @@ import type { Box, FeatureRow, MeasureRow, OutcomeRow } from '../src/app/data/co
 import { routeFor } from '../src/app/routes';
 import { SITE } from '../src/app/site';
 
-// The benchmarks the summary shows, by row, named for readers who haven't seen the site. One is where
-// stock is ahead, as the comparison shows stock's wins beside Medius's.
+// The benchmarks the summary shows, by row, named for readers who haven't seen the site. One shows stock
+// ahead, since the comparison shows stock's wins beside Medius's.
 export const HIGHLIGHTS: { row: string; name: string }[] = [
   { row: 'pass-latency-p50-1000', name: 'Report latency, 1 kHz mouse' },
   { row: 'inj-lat-rest-1', name: 'Injected move latency, still mouse' },

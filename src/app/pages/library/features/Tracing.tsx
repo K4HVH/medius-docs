@@ -15,7 +15,7 @@ const Tracing: Component = () => {
         </p>
         <pre><code class="language-bash">cargo add medius --features tracing</code></pre>
         <p>
-          Off by default; off, the macros expand to nothing and cost nothing at runtime.
+          Off by default. When off, the macros expand to nothing and cost nothing at runtime.
         </p>
       </PageHeader>
 
@@ -59,8 +59,8 @@ const Tracing: Component = () => {
 
       <DocSection id="spans" title="connect span" caption="Spans wrap related events">
         <p>
-          The <code>connect</code> span wraps the handshake; retry and <code>connected</code> events
-          nest inside it. Its fields are the numbers{' '}
+          The <code>connect</code> span wraps the handshake, and the retry and <code>connected</code>{' '}
+          events nest inside it. The <code>connected</code> event carries the numbers{' '}
           <A href="/library/requests#version"><code>query_version</code></A> returns as a{' '}
           <A href="/library/types/structs#version"><code>Version</code></A>.
         </p>
@@ -80,9 +80,9 @@ const Tracing: Component = () => {
           frame keeps its <A href="/library/types/enums#log-level"><code>LogLevel</code></A> and the
           text the <A href="/library/diagnostics#logs"><code>logs</code></A> stream yields. A
           recovered link fires <code>reconnected</code> with <code>port</code> and{' '}
-          <code>reason</code>; <A href="/library/lifecycle#restart">session recovery</A> fires{' '}
-          <code>device chip restarted</code> for a boot and{' '}
-          <code>the box released the session</code> for a release.
+          <code>reason</code>. <A href="/library/lifecycle#restart">Session recovery</A> fires{' '}
+          <code>device chip restarted</code> after a boot and{' '}
+          <code>the box released the session</code> after a release.
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`// medius::transport=trace, one line per frame:
@@ -101,8 +101,8 @@ const Tracing: Component = () => {
           Add a subscriber alongside the feature, usually{' '}
           <a href="https://docs.rs/tracing-subscriber" target="_blank" rel="noreferrer"><code>tracing-subscriber</code></a>,
           whose <a href="https://docs.rs/tracing-subscriber/latest/tracing_subscriber/fmt/index.html" target="_blank" rel="noreferrer"><code>fmt</code></a>{' '}
-          subscriber writes lines to stderr; call <code>init()</code> once before opening. Without one,
-          every span and event is discarded.
+          subscriber writes lines to stderr. Call <code>init()</code> once before opening. Without a
+          subscriber, every span and event is discarded.
         </p>
         <pre><code class="language-bash">cargo add tracing-subscriber</code></pre>
         <div class="api-response-label">EXAMPLE</div>
@@ -133,7 +133,7 @@ tracing_subscriber::fmt()
 //   RUST_LOG=medius::transport=trace ./your-program   # every frame`}</code></pre>
         <div class="callout callout--warning">
           <p>
-            <code>medius::transport=trace</code> emits one line per frame in both directions; use it
+            <code>medius::transport=trace</code> emits one line per frame in both directions. Use it
             for wire-level bugs.
           </p>
         </div>

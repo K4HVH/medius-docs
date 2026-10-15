@@ -1,5 +1,5 @@
-// Addresses for one item on a page: a Help answer, a release, a device row. Each opens its parent page at
-// the item, and has a link card naming it; a #hash can't do the second, since it never reaches the server.
+// The address of one item on a page: a Help answer, a release or a device row. Each address opens its parent
+// page at the item and has a link card naming the item. A #hash can't carry a card: it never reaches the server.
 export type ItemKind = 'help' | 'release' | 'device';
 
 export interface Item {

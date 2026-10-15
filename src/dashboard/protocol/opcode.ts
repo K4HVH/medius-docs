@@ -2,9 +2,9 @@
 
 export const SOF = 0xa5;
 export const MAX_PAYLOAD = 512;
-// 9 is firmware 3.4.2: a 31-byte RESP(STATS) adding link_rx_drops and host_rx_drops (one per link
-// direction), relay_drops and session. 8 was 3.4.1: a 31-byte RESP(CLIP) prefix ending in the packet
-// trigger list, packet triggers on CLIP_TRIGGER, and vendor interrupt OUT matched as VEND_INTR.
+// Protocol 9 is firmware 3.4.2: a 31-byte RESP(STATS) adding link_rx_drops and host_rx_drops (one per
+// link direction), relay_drops and session. Protocol 8 was 3.4.1: a 31-byte RESP(CLIP) prefix ending in
+// the packet trigger list, packet triggers on CLIP_TRIGGER, and vendor interrupt OUT matched as VEND_INTR.
 export const PROTO_VER = 9;
 
 // The oldest wire this page will still open.
@@ -18,8 +18,8 @@ export const MOTION_CURSOR = 0;
 export const MOTION_WHEEL = 1;
 export const MOTION_PAN = 2; // AC Pan (horizontal scroll)
 
-// MOVE flags (§3.1): the per-command movement-riding override. Applied DISCARD, then FLUSH, then the
-// delta; FLUSH and DISCARD together contradict and the box refuses the frame.
+// MOVE flags (§3.1): the per-command movement-riding override. Applied in the order DISCARD, FLUSH, then
+// the delta. FLUSH with DISCARD is a contradiction, and the box refuses the frame.
 export const MV_F_NOW = 0x01;
 export const MV_F_FLUSH = 0x02;
 export const MV_F_DISCARD = 0x04;
@@ -33,7 +33,7 @@ export const Q_STATS = 5;
 export const Q_LOCKS = 6;
 // RESP(LOCKS) entry (§4.8): [class u8][id u16 LE][dir u8][scale i16 LE].
 export const LOCK_ENTRY_LEN = 6;
-// Most entries one RESP(LOCKS) carries (§4.8): 2 + 85 × 6 fills the payload. Not a table size.
+// Most entries one RESP(LOCKS) carries (§4.8): 2 + 85 x 6 fills the payload. Not a table size.
 export const LOCKS_MAX = 85;
 export const Q_CATCH = 7;
 // selector 8 retired (was Q_KBD_CAPS; folded into Q_CAPS = 3)

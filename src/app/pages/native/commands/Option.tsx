@@ -10,8 +10,8 @@ const Option: Component = () => {
     <>
       <PageHeader>
         <p>
-          One command (opcode <code>0x11</code>) sets every box-level toggle: an <code>id</code> byte
-          picks the option, the rest is its value. All persist in NVS, restore at boot, and are{' '}
+          One command (opcode <code>0x11</code>) sets every box-level toggle. An <code>id</code> byte
+          picks the option, and the rest is its value. All persist in NVS, restore at boot, and are{' '}
           <A href="/native/injection#fire-and-forget">fire-and-forget</A>. An unknown id is ignored.
         </p>
         <div class="table-scroll">
@@ -101,7 +101,7 @@ const Option: Component = () => {
             <thead><tr><th>Value</th><th>Effect</th></tr></thead>
             <tbody>
               <tr><td><code>0</code></td><td>Faithful-only: refuse a device the box can't clone faithfully <em>(default)</em></td></tr>
-              <tr><td><code>1</code></td><td>Clone the device anyway, every interface the box can serve byte-faithful, and admit the gated commands below</td></tr>
+              <tr><td><code>1</code></td><td>Clone the device anyway (every interface the box can serve byte-faithful), and admit the gated commands below</td></tr>
             </tbody>
           </table>
         </div>
@@ -114,37 +114,37 @@ const Option: Component = () => {
             <tbody>
               <tr><td>a device the box can't clone faithfully</td><td>Refused: no clone appears.</td></tr>
               <tr><td>a forced rate, <A href="/native/commands/option#emit"><code>EMIT</code></A>'s <code>force_hz</code></td><td>Not applied.</td></tr>
-              <tr><td><A href="/native/commands/rewrite#rewrite"><code>REWRITE</code></A></td><td>Discarded, except the whole-table clear; turning the opt-in off clears the table.</td></tr>
-              <tr><td><A href="/native/commands/patch#patch"><code>PATCH</code></A></td><td>Stored, not served; <code>APPLY</code> is ignored, and turning the opt-in off presents a patched clone again without its set.</td></tr>
+              <tr><td><A href="/native/commands/rewrite#rewrite"><code>REWRITE</code></A></td><td>Discarded, except the whole-table clear. Turning the opt-in off clears the table.</td></tr>
+              <tr><td><A href="/native/commands/patch#patch"><code>PATCH</code></A></td><td>Stored, not served. <code>APPLY</code> is ignored. Turning the opt-in off presents a patched clone again without its set.</td></tr>
               <tr><td><A href="/native/commands/transfer#transfer"><code>TRANSFER</code></A></td><td>Replied with status <code>0xFC</code>.</td></tr>
-              <tr><td><A href="/native/commands/raw#raw"><code>RAW</code></A>, and a clip's raw and transfer items</td><td>Discarded; turning the opt-in off drops queued clip transfers.</td></tr>
-              <tr><td>a <A href="/native/commands/clip#packet-triggers">clip packet trigger</A> that consumes</td><td>Refused, and turning the opt-in off removes the ones the box holds.</td></tr>
+              <tr><td><A href="/native/commands/raw#raw"><code>RAW</code></A>, and a clip's raw and transfer items</td><td>Discarded. Turning the opt-in off drops queued clip transfers.</td></tr>
+              <tr><td>a <A href="/native/commands/clip#packet-triggers">clip packet trigger</A> that consumes</td><td>Refused. Turning the opt-in off removes the ones the box holds.</td></tr>
             </tbody>
           </table>
         </div>
         <div class="callout callout--info">
           <p>
-            A device the box can't clone faithfully has more than four IN endpoints live at once, or more
-            than six HID interfaces; runs at high speed; has configurations the box did not capture; a
-            vendor bulk or isochronous endpoint; a setting carrying more endpoint descriptors than it
-            declares, where what fits is cloned and the rest left undriven; or a report descriptor
-            truncated or never captured.
+            A device the box can't clone faithfully has any of these: &gt;4 IN endpoints live at once;
+            &gt;6 HID interfaces; high speed; configurations the box did not capture; a vendor bulk or
+            isochronous endpoint; a setting carrying more endpoint descriptors than it declares (what
+            fits is cloned, the rest left undriven); a report descriptor truncated or never captured.
           </p>
           <p>
             The{' '}
             <a href="https://www.espressif.com/en/products/socs" target="_blank" rel="noreferrer">ESP32</a>-S3
-            has four transmit FIFOs for the IN endpoints besides endpoint 0, numbered anything up to 6, a
-            control endpoint above 0 counting as one.
+            has four transmit FIFOs for IN endpoints other than endpoint 0. Those endpoints can be
+            numbered up to 6, and a control endpoint above 0 counts as one.
           </p>
           <p>
-            With more live at once, the ones the box binds as mouse, keyboard and media keep a FIFO each, and
-            the rest share the others: a report on one of those can go a poll or more late while every shared
-            FIFO is in use.
+            With more live at once, the endpoints the box binds as mouse, keyboard and media keep a FIFO
+            each. The rest share the remaining FIFOs, so a report on a shared one can go ≥1 poll late
+            while every shared FIFO is in use.
           </p>
           <p>
-            Changing this with a device the box can't clone faithfully attached, or with a forced rate pending, reboots
-            the device chip to re-clone; otherwise the clone is presented again when the change
-            alters the <A href="/native/commands/patch#presentation">patch set</A> it serves.
+            If a device the box can't clone faithfully is attached, or a forced rate is pending,
+            changing this option reboots the device chip to re-clone. Otherwise, the clone is presented
+            again when the change alters the <A href="/native/commands/patch#presentation">patch set</A>{' '}
+            it serves.
           </p>
         </div>
         <p>
@@ -176,7 +176,7 @@ const Option: Component = () => {
             <thead><tr><th>Value</th><th>Effect</th></tr></thead>
             <tbody>
               <tr><td><code>0</code></td><td>Off: injected motion is emitted on native reports and the box's reports alike <em>(default)</em></td></tr>
-              <tr><td><code>N</code> ms</td><td>Injected cursor and wheel motion only rides a native motion report seen within <code>N</code> ms; no synthetic motion frame, and motion left unridden is dropped (never dumped on the next move)</td></tr>
+              <tr><td><code>N</code> ms</td><td>Injected cursor and wheel motion rides only a native motion report seen within <code>N</code> ms. No synthetic motion frame. Motion left unridden is dropped (never dumped on the next move)</td></tr>
             </tbody>
           </table>
         </div>
@@ -189,12 +189,12 @@ const Option: Component = () => {
             working: motion waits for a native motion report and is dropped if none comes.
           </p>
           <p>
-            Button, key, and media injection are unaffected, and a move can opt out per command
-            with the <A href="/native/commands/move#flags"><code>MOVE</code> flags</A>.
+            Button, key, and media injection are unaffected. A move can opt out per command with
+            the <A href="/native/commands/move#flags"><code>MOVE</code> flags</A>.
           </p>
           <p>
-            Changing the value drops whatever motion was held for a ride, and clears the standing{' '}
-            <A href="/native/commands/lock#bearing">bearing</A> with it, so every{' '}
+            Changing the value drops any motion held for a ride and clears the standing{' '}
+            <A href="/native/commands/lock#bearing">bearing</A>. Every{' '}
             <code>with</code> / <code>against</code> scale stops applying at that instant.
           </p>
         </div>
@@ -221,7 +221,7 @@ const Option: Component = () => {
       <DocSection id="emit" title="EMIT" caption="Injection pace and wire rate">
         <pre class="api-signature">id 2  ·  [mode u8][rate_hz u16 LE][force_hz u16 LE]</pre>
         <p>
-          Every <code>OPTION(EMIT)</code> writes all three fields; resend the ones to keep.
+          Every <code>OPTION(EMIT)</code> writes all three fields. Resend the ones to keep.
         </p>
         <div class="api-response-label">MODE</div>
         <div class="table-scroll">
@@ -239,7 +239,7 @@ const Option: Component = () => {
             Fixed snaps to <code>1000/n</code> Hz and caps at 1 kHz, so 1000, 500, 333 and 250 are exact
             (<code>0</code> means 1000).
           </p>
-          <p>The pace is a ceiling; the box emits only while injection is pending.</p>
+          <p>The pace is a ceiling. The box emits only while injection is pending.</p>
         </div>
         <div class="api-response-label">FORCE_HZ</div>
         <div class="table-scroll">
@@ -247,7 +247,7 @@ const Option: Component = () => {
             <thead><tr><th>Value</th><th>Effect</th></tr></thead>
             <tbody>
               <tr><td><code>0</code> <em>(default)</em></td><td>Serves the captured descriptor and polls the real device at the interval it declared</td></tr>
-              <tr><td>target Hz</td><td>Writes the longest power-of-two <code>bInterval</code> no longer than that rate's, so the rate is never slower than asked, onto every HID interrupt-IN endpoint of the served descriptor, and polls the real device at that same interval</td></tr>
+              <tr><td>target Hz</td><td>Writes a power-of-two <code>bInterval</code> onto every HID interrupt-IN endpoint of the served descriptor: 1000/<code>force_hz</code> ms rounded to the nearest millisecond, then down to a power of two (600 Hz gives 500 Hz). Polls the real device at that same interval</td></tr>
             </tbody>
           </table>
         </div>
@@ -260,9 +260,9 @@ const Option: Component = () => {
           </p>
           <p>
             Vendor interfaces, interrupt-OUT and isochronous endpoints keep the captured value. A
-            low-speed clone cannot express an interval below 10 ms and only powers of two are
-            offered, so its floor is <code>bInterval</code> 16 and any request above 62 Hz there
-            resolves to 62.
+            low-speed clone cannot express an interval &lt;10 ms, and only powers of two are offered.
+            Its floor is therefore <code>bInterval</code> 16, and any request &gt;62 Hz resolves to
+            62.
           </p>
         </div>
         <p>
@@ -310,9 +310,9 @@ const Option: Component = () => {
         <div class="callout callout--info">
           <p>
             The name pairs with the box{' '}
-            <A href="/native/commands/requests#version">MAC</A>, persisted in NVS with no reboot. It
-            is the ASCII tail of <A href="/native/commands/requests#version"><code>RESP(VERSION)</code></A>{' '}
-            after the MAC, read there rather than through{' '}
+            <A href="/native/commands/requests#version">MAC</A> and persists in NVS with no reboot.
+            Read it as the ASCII tail of <A href="/native/commands/requests#version"><code>RESP(VERSION)</code></A>{' '}
+            after the MAC, not through{' '}
             <A href="/native/commands/requests#options"><code>QUERY(OPTIONS)</code></A>.
           </p>
         </div>
@@ -363,8 +363,8 @@ const Option: Component = () => {
             A write that changes either field drops the standing{' '}
             <A href="/native/commands/lock#bearing">bearing</A> and the banked{' '}
             <A href="/native/commands/lock#scale">carry</A> on every mouse interface. With a{' '}
-            <code>with</code> / <code>against</code> scale live that is a visible step in the
-            emitted motion, so set the geometry before the scales, not between reports.
+            <code>with</code> / <code>against</code> scale live, the drop is a visible step in the
+            emitted motion. Set the geometry before the scales, not between reports.
           </p>
         </div>
         <p>
@@ -390,7 +390,7 @@ const Option: Component = () => {
       <DocSection id="render" title="RENDER" caption="Motion rendering texture">
         <pre class="api-signature">id 5  ·  [mode u8][full u8]</pre>
         <p>
-          Every <code>OPTION(RENDER)</code> writes both fields; resend the one to keep.
+          Every <code>OPTION(RENDER)</code> writes both fields. Resend the one to keep.
         </p>
         <div class="api-response-label">MODE</div>
         <div class="table-scroll">
@@ -433,18 +433,18 @@ const Option: Component = () => {
           <p>
             Rendering adds the smoother's group delay: 4 ms at <code>mode = 1</code>, 2.7 ms at{' '}
             <code>mode = 2</code>, none at <code>mode = 3</code>. With <code>full</code> at <code>1</code>,
-            native motion takes it plus 1 ms.
+            native motion gets that delay plus 1 ms.
           </p>
           <p>
-            A rendered report is bounded per axis by what the clone's cursor field holds, and by no less
-            than 127 counts. The model carries anything past that as debt into the reports after it.
+            Per axis, a rendered report carries at most what the clone's cursor field holds (a bound
+            never &lt;127 counts). The model carries anything past that as debt into later reports.
           </p>
         </div>
         <div class="callout callout--info">
           <p>
-            The <A href="/native/commands/option#emit">pace</A> caps the rendered rate, and the
-            model's debt carries what the cap coalesces. Buttons, the wheel and every other field are
-            relayed at native timing in both modes: the model renders cursor motion only.
+            The <A href="/native/commands/option#emit">pace</A> caps the rendered rate. The model's
+            debt carries what the cap coalesces. Buttons, the wheel and every other field are relayed
+            at native timing in both modes: the model renders cursor motion only.
           </p>
           <p>
             A <A href="/native/commands/move"><code>MOVE</code></A> carrying any flag takes the plain
@@ -454,14 +454,14 @@ const Option: Component = () => {
             with no flag.
           </p>
           <p>
-            Under <code>full</code> the rendered stream ignores{' '}
-            <A href="/native/commands/option#move-ride"><code>MOVE_RIDE</code></A>, whose pot then
-            holds native motion it never rides out. A clip's stream does too.
+            Under <code>full</code>, the rendered stream ignores{' '}
+            <A href="/native/commands/option#move-ride"><code>MOVE_RIDE</code></A>. Riding would hold
+            native motion and drop what it never rides out. A clip's stream ignores it too.
           </p>
           <p>
-            The profile is built from native reports and never persisted, so every boot starts
-            without one and arms from a window of native motion. <code>full</code> renders nothing while{' '}
-            <code>mode</code> is <code>0</code>, with no model in the path.
+            The profile is built from native reports and never persisted. Every boot starts without
+            one, and the profile arms from a window of native motion. <code>full</code> renders nothing
+            while <code>mode</code> is <code>0</code>, with no model in the path.
           </p>
         </div>
         <p>
@@ -496,7 +496,7 @@ const Option: Component = () => {
         <pre class="api-signature">id 6  ·  [percent u16 LE]</pre>
         <p>
           A host loop slower than the native report rate sends deltas worth several native reports.
-          The percent is the share of the command interval the box releases each delta across.
+          The percent is the share of the command interval over which the box releases each delta.
         </p>
         <div class="api-response-label">PERCENT</div>
         <div class="table-scroll">
@@ -506,19 +506,19 @@ const Option: Component = () => {
               <tr><td><code>0</code></td><td>The whole delta is emitted on the next report.</td></tr>
               <tr><td><code>1..99</code></td><td>Released across that share of the interval, with the rounding remainder at the end of the share.</td></tr>
               <tr><td><code>100</code> <em>(default)</em></td><td>Released evenly across one whole command interval.</td></tr>
-              <tr><td><code>101..65535</code></td><td>Released across longer than the interval, so each command arrives on a remainder and the box carries a standing backlog.</td></tr>
+              <tr><td><code>101..65535</code></td><td>Released over longer than the interval. Each command arrives on a remainder, so the box carries a standing backlog.</td></tr>
             </tbody>
           </table>
         </div>
         <pre class="diagram">{`a 250 Hz host on a 1000 Hz native rate: one MOVE of 8 every 4 ms, 12 ms of wire
 
   ms             0  1  2  3  4  5  6  7  8  9 10 11
-  percent = 0    8  .  .  .  8  .  .  .  8  .  .  .    one report per command, 4x the delta
+  percent = 0    8  .  .  .  8  .  .  .  8  .  .  .    one report per command, 4× the delta
   percent = 100  2  2  2  2  2  2  2  2  2  2  2  2    a report every ms at the native magnitude`}</pre>
         <p>
           The box learns the interval as the most common gap between{' '}
-          <A href="/native/commands/move"><code>MOVE</code></A> arrivals, so a burst doesn't move it
-          and a rate change is followed. Until it has one, and for commands more than about 32 ms
+          <A href="/native/commands/move"><code>MOVE</code></A> arrivals. A burst doesn't move it, and
+          a rate change is followed. Until the box has an interval, and for commands more than ~32 ms
           apart, the whole delta is emitted on the next report regardless of percent.
         </p>
         <div class="table-scroll">
@@ -526,17 +526,17 @@ const Option: Component = () => {
             <thead><tr><th>Aspect</th><th><code>percent = 0</code></th><th><code>percent = 100</code></th></tr></thead>
             <tbody>
               <tr><td>Delivered total</td><td>Exact</td><td>Exact</td></tr>
-              <tr><td>Added latency</td><td>None</td><td>Half the interval on average, about 4 ms at 125 Hz</td></tr>
+              <tr><td>Added latency</td><td>None</td><td>Half the interval on average (~4 ms at 125 Hz)</td></tr>
               <tr><td>Reports per command</td><td>One</td><td>Up to one per report the box emits in the interval, and never more than the delta's count</td></tr>
               <tr><td>Wheel motion</td><td>Not spread</td><td>Not spread: a detent is one unit</td></tr>
             </tbody>
           </table>
         </div>
         <p>
-          A loop at the native report rate keeps each command whole: it waits in a short queue and
-          is emitted alone on one report, no later than the first report after its interval ends. A
-          delta smaller than its interval's report count can't be split one count per report; it
-          is emitted once, part way through.
+          A loop at the native report rate keeps each command whole. The command waits in a short
+          queue and is emitted alone on one report, no later than the first report after its interval
+          ends. A delta smaller than its interval's report count can't be split one count per report.
+          It is emitted once, part way through.
         </p>
         <div class="callout callout--info">
           <p>
@@ -547,8 +547,8 @@ const Option: Component = () => {
           </p>
           <p>
             <code>SPREAD</code> and <A href="/native/commands/option#render"><code>RENDER</code></A>{' '}
-            compose independently. Under <code>full</code> rendering only injected motion is spread; native
-            motion already arrives at the native report rate.
+            compose independently. Under <code>full</code> rendering, only injected motion is spread.
+            Native motion already arrives at the native report rate.
           </p>
         </div>
         <p>

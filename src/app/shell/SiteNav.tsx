@@ -16,16 +16,16 @@ export const NAV_LINKS: { label: string; href: string; sections: Section[] }[] =
 
 const CHANGELOG = '/dashboard/changelog';
 
-// The bar across the top of every page, one for the whole site so a page change never redraws it. Over the
-// landing hero it stays clear until the page moves. It takes the look of the page a link is going to as
-// the page fades out, at the pace of that fade; a scroll on the landing changes it at a slower one.
+// The bar across the top of every page: one for the whole site, so a page change never redraws it. Over the
+// landing hero it stays clear until the page scrolls. As the old page fades out, the bar takes the look of
+// the page the link leads to, at the pace of that fade; a scroll on the landing changes it more slowly.
 export function SiteNav(props: { disabled?: boolean }) {
   const location = useLocation();
   const [open, setOpen] = createSignal(false);
   const [closing, setClosing] = createSignal(false);
   const hero = createMemo(() => (leavingFor() ?? location.pathname) === '/');
-  // The page a link is going to opens at its top, so the scroll of the one leaving has no say; the page
-  // shown is scrolled where scrollPlace knows it to be, even before it has scrolled there.
+  // The page a link leads to opens at its top, so the leaving page's scroll doesn't count. The page shown
+  // counts as scrolled to where scrollPlace says, even before it has scrolled there.
   const solid = () => open() || !hero() || (pageY() > 8 && leavingFor() === null);
   let bar: HTMLElement | undefined;
   let links: HTMLElement | undefined;

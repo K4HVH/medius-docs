@@ -1,5 +1,5 @@
-// Which elements a page marks for search become places (an entry in the index, with an address of the form
-// /page/id), as the index builder (extract.ts) and the page's links (shell/share.ts) both read them.
+// Which elements a page marks for search become places (an index entry with an address of the form /page/id).
+// The index builder (extract.ts) and the page's links (shell/share.ts) both decide it this way.
 
 export const TARGET = '[data-search-target][id]';
 const HEADING = 'h2, h3, h4';
@@ -21,8 +21,8 @@ export function heading(target: Element, all: Element[]): { el: Element | null; 
   return { el: h, title: clean(named ?? title), caption: cap?.textContent ? clean(cap.textContent) : undefined };
 }
 
-// What became of an element marked for search: an entry, folded into the page as its opening (the first
-// titled one, when titled as its page), or read into the entry around it for want of a title.
+// What became of an element marked for search: an entry; folded into the page as its opening (the first
+// titled element, if its title is the page's); or, lacking a title, read into the entry around it.
 export type Fate = 'entry' | 'folded' | 'untitled';
 
 export function sortMarked(root: Element, pageTitle: string) {

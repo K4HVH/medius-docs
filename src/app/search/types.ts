@@ -8,7 +8,7 @@ export interface IndexEntry {
   kind: EntryKind;
   // The site section it is filed under, as the sidebar names it.
   section: string;
-  // Where in that section it lives: the sidebar group, and for a part of a page the page.
+  // Where in that section it lives: the sidebar group, plus the page for a part of a page.
   crumb: string;
   caption?: string;
   text: string;

@@ -48,8 +48,8 @@ import { Panel, Panels, Stack } from '../../shell/Panel';
 import { Segmented } from '../../shell/Segmented';
 import { Select } from '../../shell/Select';
 
-// Byte presets cap capture at 16: every byte of a busy endpoint costs more shared control link than
-// a browser log can use.
+// Byte presets capture the first 16 bytes: every byte of a busy endpoint would cost more of the shared
+// control link than a browser log can use.
 const PRESETS: Record<string, CatchFilter[]> = {
   input: [
     filterWatchAxes(),
@@ -88,7 +88,7 @@ const CLASS_NAMES: Record<number, string> = {
   [CatchClass.Any]: 'everything',
 };
 
-// Classes 0 to 3 carry decoded events, no bytes, so no capture length.
+// Classes 0-3 carry decoded events, not bytes, so they take no capture length.
 const isInputClass = (cls: number) =>
   cls === CatchClass.Button ||
   cls === CatchClass.Key ||
@@ -144,8 +144,8 @@ const CONTROL_WORDS: Record<ControlStatus, string> = {
   [ControlStatus.Other]: ' handshake 3',
 };
 
-// Flags are per class: control keeps its handshake in the low two bits beside the rule bit, and a clip
-// transfer's whole byte is its status, always named, OK included.
+// Flags are per class. Control keeps its handshake in the low two bits beside the rule bit. A clip
+// transfer's whole flags byte is its status, always named, OK included.
 const trafficFlags = (t: TrafficEvent): string => {
   let out = '';
   const bits: string[] = [];
@@ -226,8 +226,8 @@ const DeviceEventCatch = () => {
 
   const catchState = () => (streaming() ? state() : null);
   const state = dash.poll('catch');
-  // Read once after subscribing: a poll in flight at Watch lands the previous empty table, which reads
-  // every entry as refused.
+  // Read once after subscribing. A poll in flight at Watch would land the previous, empty table, and
+  // every entry would read as refused.
   const [accepted, setAccepted] = createSignal<CatchEntry[] | null>(null);
   const [droppedByBox, setDroppedByBox] = createSignal(false);
 
@@ -267,8 +267,8 @@ const DeviceEventCatch = () => {
     dash.refreshPoll('catch');
   };
 
-  // A refused subscription goes back to Watch, so the log isn't left waiting on nothing, and drops
-  // any entries the box took before it refused one.
+  // A refused subscription goes back to Watch, so the log isn't left waiting on nothing. It also drops
+  // any entries the box took before the refusal.
   const cmd = createCommand();
   const watch = () =>
     cmd.run(() => {
@@ -344,8 +344,8 @@ const DeviceEventCatch = () => {
     (catchState()?.entries ?? []).reduce((n, e) => n + e.dropped, 0),
   );
 
-  // One baseline per clock domain, from its smallest stamp since Watch: the box drains four priority
-  // queues, so events arrive out of tap order. Events leaving the top of the log don't move it.
+  // One baseline per clock domain: its smallest stamp since Watch, because the box drains four priority
+  // queues and events arrive out of tap order. Events leaving the top of the log don't move a baseline.
   const baseline = createMemo(
     (prev: { at: Record<number, number>; moved: number }) => {
       const list = events();
@@ -366,8 +366,8 @@ const DeviceEventCatch = () => {
     { at: {}, moved: 0 },
   );
 
-  // A line keeps the text it was drawn with, so each is formatted once; a baseline moved back
-  // formats them all again, and the log is drawn again.
+  // Each line is formatted once and keeps its text. A baseline that moves back reformats every line and
+  // redraws the log.
   const moved = createMemo(() => baseline().moved);
   // Where the clipboard is refused, the log's text is selected for the reader to copy.
   const [copied, setCopied] = createSignal(false);
@@ -409,7 +409,8 @@ const DeviceEventCatch = () => {
       const ev = e[i].ev;
       if (ev.kind !== 'usages') continue;
       const c = snapshotClass(ev.snapshot);
-      // An all-released snapshot has no class byte: a button clear only while buttons are subscribed.
+      // An all-released snapshot has no class byte; it counts as a button clear only while buttons are
+      // subscribed.
       if (c === INJ_BTN || (c === null && watchingButtons)) return ev.snapshot;
     }
     return null;
@@ -555,7 +556,7 @@ const DeviceEventCatch = () => {
                 </Button>
               </div>
               <p class="sublabel">
-                Table ({custom().length} of {CATCH_TABLE_MAX})
+                Table ({custom().length}/{CATCH_TABLE_MAX})
               </p>
               <Show when={custom().length > 0} fallback={<p class="mut">No entries.</p>}>
                 <div class="chips">
@@ -606,14 +607,14 @@ const DeviceEventCatch = () => {
 
             <Show when={droppedByBox()}>
               <div class="callout callout--warning">
-                The box cleared the subscription: this page sent nothing for 1 s, which a background tab can
-                cause. Press Watch to restart.
+                The box cleared the subscription because this page sent nothing for 1 s (a background tab can
+                cause this). Press Watch to restart.
               </div>
             </Show>
 
             <Show when={streaming() && refused().length > 0}>
               <div class="callout callout--warning">
-                The box refused {refused().length} of {active().length} {active().length === 1 ? 'entry' : 'entries'}:{' '}
+                The box refused {refused().length}/{active().length} {active().length === 1 ? 'entry' : 'entries'}:{' '}
                 {refused().map(describe).join(', ')}.{' '}
                 <Show
                   when={catchState()?.tableFull}

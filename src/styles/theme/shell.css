@@ -52,8 +52,8 @@ html { scroll-padding-top: calc(var(--nav-h) + 24px); }
   .doc { padding: 36px var(--gutter) 24px; }
 }
 
-/* Nav: transparent over the landing hero, frosted once the page moves; a blue line tracks scroll. The
-   frost fades with the tint. A page change moves it at the pace of the page's fade (`routed`). */
+/* Nav: transparent over the landing hero, frosted once the page scrolls; a blue line tracks scroll. The
+   frost fades with the tint. A page change restyles the bar at the pace of the page's fade (`routed`). */
 .nav {
   position: fixed; top: env(safe-area-inset-top, 0px); left: 0; right: 0; z-index: 20;
   height: var(--nav-h); display: flex; align-items: center; gap: 40px; padding-inline: var(--gutter);
@@ -182,7 +182,7 @@ html { scroll-padding-top: calc(var(--nav-h) + 24px); }
 }
 .group a:hover { color: var(--text); text-decoration: none; }
 .group a[aria-current] { color: var(--text); }
-/* The page's edge travels to the page picked, and fades in with the sidebar's first arrival. */
+/* The page's edge mark slides to the page picked, and fades in with the sidebar's first arrival. */
 .side .mark {
   position: absolute; top: 0; left: 0; width: 0; height: 0; border-left: 2px solid var(--accent); opacity: 0;
   background: linear-gradient(90deg, rgba(0, 128, 255, 0.08), transparent 70%); pointer-events: none;
@@ -207,7 +207,7 @@ html { scroll-padding-top: calc(var(--nav-h) + 24px); }
     top: var(--nav-h); z-index: 16; padding: 0 var(--gutter); height: 49px; width: 100%;
     border: 0; border-bottom: 1px solid var(--line); background: var(--ground); color: var(--muted);
     cursor: pointer; text-align: left;
-    /* It comes with the docs' layout, as the sidebar's links cascade in on a wide screen. */
+    /* The bar fades in with the docs' layout, as the sidebar's links cascade in on a wide screen. */
     animation: fade 0.45s ease 0.08s both;
   }
   .docbar b { color: var(--text); font-weight: 500; }
@@ -247,17 +247,17 @@ html { scroll-padding-top: calc(var(--nav-h) + 24px); }
 .doc-caption { color: var(--dim); font-weight: 400; text-wrap: balance; }
 /* The last word wraps with the link icon, so the icon never starts a line alone. */
 .doc-last { white-space: nowrap; }
-/* The same option on the other side (the dashboard, the Guide), at the heading's right; a long title wraps
-   beside it, and a word too long to share the line with it puts the option on the line under, still at the right. */
+/* A link to the same option on the other side (the dashboard, the Guide), at the heading's right. A long title
+   wraps beside it; a word too long to share its line pushes the link to the line under, still at the right. */
 .doc-h2:has(> .cross) { align-items: center; }
 .doc-h2:has(> .cross) > .doc-t { flex: 1 1 0; min-width: min-content; }
 .doc-h2 > .cross { flex: none; margin-left: auto; }
 
-/* The link icon beside a place the site links to (shell/CopyLink.tsx): shown while its heading, label or
-   row is under the pointer, or while it has focus, and always where nothing hovers. It comes in as the
-   arrows in links move; Copied comes in beside it the same way, over whatever is there. Where the icon
+/* The link icon beside a linkable place (shell/CopyLink.tsx). It shows while its heading, label or row is
+   under the pointer or the icon has focus, and always on a device that can't hover. It moves in as the
+   arrows in links do; "Copied" comes in beside it the same way, over whatever is there. Where the icon
    shows only on hover, it takes no room in the line (its right margin gives back its width), so a heading
-   or a name wraps as it would without it; its vertical margins keep a small label's line as it was. */
+   or a name wraps as it would without it; its vertical margins leave a small label's line height as it was. */
 .cl {
   all: unset; box-sizing: border-box; position: relative; top: -2px; display: inline-grid; place-items: center;
   width: 24px; height: 24px; margin: -7px 0 -7px 6px; vertical-align: middle; line-height: 0; cursor: pointer;
@@ -274,8 +274,8 @@ html { scroll-padding-top: calc(var(--nav-h) + 24px); }
 .cl:not([data-said])::after { display: none; }
 .cl[data-side="left"]::after { left: auto; right: calc(100% + 2px); transform: translate(4px, -50%); }
 .cl[data-state]::after { opacity: 1; transform: translate(0, -50%); }
-/* A window as narrow as a phone shows it as a phone does, so a hidden icon never reaches past the page's
-   edge. In a table row it sits closer to its text, nearer that than the next column's. */
+/* A window as narrow as a phone shows the icon as a phone does, so a hidden icon never reaches past the
+   page's edge. In a table row the icon sits nearer its text than the next column's. */
 @media (hover: hover) and (min-width: 601px) {
   .cl { margin-right: -30px; opacity: 0; transform: translateX(-4px); }
   :hover > .cl, .doc-h2:hover .cl, tr:hover .cl, .cl:focus-visible, .cl[data-state] { opacity: 1; transform: none; }

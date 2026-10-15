@@ -12,12 +12,12 @@ export interface Loaded {
 }
 
 let pending: Promise<Loaded> | null = null;
-// The index once it is in, however it came: a panel that saw a fetch fail shows it when a later one lands.
+// The index once any fetch brings it: a panel that saw one fetch fail shows the index when a later one lands.
 const [loaded, setLoaded] = createSignal<Loaded | null>(null);
 export { loaded as indexLoaded };
 
-// Building the searcher is the longest piece of work here, so it waits for the next paint: a panel opened
-// as the index lands shows first, and what is typed meanwhile is searched once it is built.
+// Building the searcher is the longest piece of work here, so it waits for the next paint. A panel opened as
+// the index lands shows first, and anything typed meanwhile is searched once the searcher is built.
 const afterPaint = () =>
   new Promise<void>((r) => (typeof requestAnimationFrame === 'function' ? requestAnimationFrame(() => setTimeout(r, 0)) : setTimeout(r, 0)));
 
@@ -41,10 +41,9 @@ export function loadIndex(): Promise<Loaded> {
   return pending;
 }
 
-// Fetched ahead when a reader points at the search button (a touch on it too); opening search fetches it
-// in any case. Never when the browser asks to save data; after a failed fetch, not again for half a minute
-// (opening search still tries at once, and Retry). Never in the search pass, whose dev server would build
-// the index to answer it.
+// Prefetched when a reader hovers over or touches the search button; opening search fetches it anyway. Never
+// when the browser asks to save data. After a failed fetch, not again for 30 s (opening search and Retry still
+// try at once). Never in the search pass, whose dev server would build the index to answer it.
 let failedAt = -Infinity;
 export function prefetchIndex(): void {
   if ((globalThis as { __mediusSearchPass?: boolean }).__mediusSearchPass) return;

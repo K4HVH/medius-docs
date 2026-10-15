@@ -1,14 +1,13 @@
 import type { IndexEntry } from './types';
 import { type Fate, clean, sortMarked } from './places';
 
-// A rendered page as search entries: the page, each element marked `data-search-target` that carries a
-// title (sections, dashboard panels, anchors such as a Help answer), and on the dashboard each tab. An
-// entry's text is what it shows outside the entries nested in it, a block (or a flex or grid item) to a
-// line and a table row to a line; a diagram is read line by line, a code sample gives its names instead,
-// and a control its `data-search-text` (what it shows only when opened). A marked element with no title
-// gives its text to the tab or entry around it. On the dashboard only headings, labels, buttons, options,
-// paragraphs and the names of controls are read, since cells and fields hold the values of whichever box
-// is connected.
+// Turns a rendered page into search entries: the page, each titled element marked `data-search-target`
+// (sections, dashboard panels, anchors such as a Help answer), and each dashboard tab. An entry's text is
+// what it shows outside the entries nested in it, one line per block (or flex or grid item) and per table
+// row. A diagram is read line by line; a code sample gives its names instead, and a control its
+// `data-search-text` (what it shows only when opened). A marked element with no title gives its text to the
+// tab or entry around it. On the dashboard only headings, labels, buttons, options, paragraphs and control
+// names are read, since cells and fields hold the values of whichever box is connected.
 
 export interface PageInfo {
   path: string;
@@ -21,8 +20,8 @@ export interface PageInfo {
   app: boolean;
 }
 
-// The page header's crumbs and title are the page entry's already; what a page puts under them is read.
-// A number input's step buttons say the same on every panel.
+// The page header's crumbs and title already belong to the page entry; what the page puts under them is
+// read. A number input's step buttons say the same thing on every panel.
 const SKIP = 'svg, script, style, template, [aria-hidden="true"], [data-search-skip], .page-header__bar, .page-header__row h1, [role="tablist"], .number-input__stepper';
 const BLOCK = /^(P|DIV|SECTION|ARTICLE|ASIDE|NAV|HEADER|FOOTER|UL|OL|LI|DL|DT|DD|TABLE|THEAD|TBODY|TFOOT|CAPTION|H[1-6]|BLOCKQUOTE|FIGURE|FIGCAPTION|DETAILS|SUMMARY|LABEL|FIELDSET|LEGEND|FORM|BUTTON|SELECT|OPTION|PRE)$/;
 // What a dashboard page is read by: its headings, labels and controls, and the names of its controls.
@@ -116,8 +115,8 @@ function read(el: Element, stops: Set<Element>, labels: boolean): Read {
 }
 
 
-// Whether an element stands apart from its neighbours though its tag runs inline: a link in a row of
-// links laid out by flex or grid.
+// Whether an inline element still stands apart from its neighbours, as a link does in a row of links laid
+// out by flex or grid.
 const layouts = new WeakMap<Element, boolean>();
 function laidApart(e: Element): boolean {
   const parent = e.parentElement;
@@ -134,7 +133,7 @@ const crumb = (page: PageInfo, ...more: (string | undefined)[]) =>
 export type { Fate };
 
 export function extractPage(root: Element, page: PageInfo, record?: (id: string, fate: Fate, panel: boolean) => void): IndexEntry[] {
-  // The first titled section, when it is titled as its page, opens the page, and is read as part of it.
+  // If the first titled section has the page's title, it opens the page and is read as part of it.
   const { marked, heads, opening, targets, fate } = sortMarked(root, page.title);
   for (const t of marked) record?.(t.id, fate(t), t.matches('.pn'));
   const panes = [...root.querySelectorAll('[data-pane]')];
@@ -152,8 +151,8 @@ export function extractPage(root: Element, page: PageInfo, record?: (id: string,
     ...(r.code.size ? { code: [...r.code] } : {}),
   });
 
-  // A tab gets an entry unless a panel in it carries its name; what its pane holds outside any entry is
-  // its text, or the page's when it has none.
+  // A tab gets an entry unless a panel in it carries the tab's name. Its text is what its pane holds outside
+  // any entry; a tab without an entry leaves that text to the page.
   const tabEntries: IndexEntry[] = [];
   const kept = new Set<Element>();
   for (const pane of panes) {

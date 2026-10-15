@@ -24,9 +24,8 @@ const FLASH = { label: 'Flash', href: '/dashboard/flash' };
 const DISCORD = { label: 'Discord', href: LINKS.discord };
 
 // The Help page: the dashboard's messages, the Discord server's FAQ and the device fixes, by topic. The
-// answers stay plain text: the page's structured data carries them as written. Ids kept from the FAQ
-// page (software, why, controller, free, report, bsod, browsers, drivers, systems) keep its old links
-// landing.
+// answers stay plain text: the page's structured data carries them as written. The old FAQ page's ids
+// (software, why, controller, free, report, bsod, browsers, drivers, systems) stay, so its links still land.
 export const HELP: readonly HelpGroup[] = [
   {
     id: 'q-install',
@@ -104,7 +103,7 @@ export const HELP: readonly HelpGroup[] = [
       {
         id: 'no-options',
         q: 'My box has no Options',
-        a: 'Options shows on v3.2.0 and later, with what that firmware has. Update for the rest. A box older than v3.2.0 needs setting up once with the installer.',
+        a: 'Options shows on v3.2.0 and later, with the options your firmware has. Update to get the rest. A box older than v3.2.0 needs setting up once with the installer.',
         links: [{ label: 'Update', href: '/dashboard/update' }, SET_UP],
       },
       {
@@ -126,7 +125,7 @@ export const HELP: readonly HelpGroup[] = [
       {
         id: 'software',
         q: "Why doesn't my software work with Medius?",
-        a: "The control protocol (the commands software sends the box) differs from the stock MAKCU firmware's, so software written for the stock firmware needs Medius support from its developer. Libraries for Rust, Python, C and C++ are in the docs. The AI access page serves the docs to coding agents.",
+        a: "Medius uses a different control protocol (the commands software sends the box) from the stock MAKCU firmware. Software written for the stock firmware needs its developer to add Medius support. Libraries for Rust, Python, C and C++ are in the docs. The AI access page serves the docs to coding agents.",
         links: [
           { label: 'Rust library', href: '/library' },
           { label: 'Bindings', href: '/bindings' },
@@ -155,7 +154,7 @@ export const HELP: readonly HelpGroup[] = [
       {
         id: 'how-update',
         q: 'How does an update work?',
-        a: "With USB2 in this computer and USB1 and USB3 as they are, the Update page updates both chips, or either alone. Each chip writes the new firmware beside the one it runs, then boots it. The mouse-side chip's copy goes through the main chip. A chip whose new firmware won't run boots the one it ran before.",
+        a: "With USB2 in this computer and USB1 and USB3 as they are, the Update page updates both chips, or either alone. Each chip writes the new firmware beside its current one, then boots the new one. The mouse-side chip's copy goes through the main chip. If a chip's new firmware won't run, the chip boots its old firmware.",
       },
       {
         id: 'not-on-version',
@@ -190,7 +189,7 @@ export const HELP: readonly HelpGroup[] = [
       {
         id: 'bsod',
         q: 'My PC blue-screens',
-        a: "The Medius library fixed it in v3.4.2, so update the software you use with the box. With older software, uninstall the WCH CH343 driver that Windows Update installs and use Windows' built-in usbser.sys driver.",
+        a: "The Medius library fixed this in v3.4.2. Update the software you use with the box. For software on an older library, uninstall the WCH CH343 driver that Windows Update installs and use Windows' built-in usbser.sys driver.",
       },
     ],
   },

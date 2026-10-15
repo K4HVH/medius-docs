@@ -38,7 +38,7 @@ import { flashErrorText } from './flashText';
 
 export type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'lost' | 'flashing' | 'error';
 
-// A CATCH event and its box sequence, shared across all three frame types, so any gap is a drop.
+// A CATCH event and its box sequence number. All three frame types share the sequence, so any gap is a drop.
 export interface InputEventEntry {
   seq: number;
   ev: CatchEvent;
@@ -50,8 +50,8 @@ export interface UpdateRun {
   // The page that started the run, and the only one that shows its result.
   page: 'update' | 'advanced';
   outcome: 'running' | 'verified' | 'sent' | 'failed';
-  // Per chip sent, once verified: whether it decided on the other slot. A revert lands back on the slot
-  // it ran, whatever the versions say.
+  // For each chip sent, once verified: whether it decided on the other slot. A revert lands back on the
+  // slot it was running, whatever the versions say.
   landed?: { device?: boolean; host?: boolean };
 }
 
@@ -69,7 +69,7 @@ export interface BoxSession {
   link: Accessor<SerialLink | null>;
   name: Accessor<string | null>;
   present: Accessor<boolean>;
-  // Connected and not disconnected since: it reconnects whenever it is found.
+  // Connected and not disconnected since; a held box reconnects whenever it is found.
   held: Accessor<boolean>;
   probe: Accessor<Probe | null>;
   connect: () => Promise<void>;
@@ -571,7 +571,7 @@ export function createBoxSession(
     };
 
     // Reattaches whenever the box stops answering: a revert reboots the main chip, maybe onto the other
-    // control rate. No verdict by the deadline is no verification.
+    // control rate. No verdict by the deadline means the update is not verified.
     const awaitVerdict = async (p: SerialPort, hostExpected: boolean): Promise<Verdict> => {
       const deadline = Date.now() + CONFIRM_TIMEOUT_MS;
       const drop = async () => {
@@ -626,7 +626,7 @@ export function createBoxSession(
       if (!images.device && !images.host) return 'failed';
       const run = { device: images.device !== undefined, host: images.host !== undefined, page };
       const started = performance.now();
-      // Where each chip runs now: one that lands decides on the other slot.
+      // Where each chip runs now: a chip whose update lands decides on the other slot.
       let before: FirmwareInfo | null = null;
       const finish = <O extends 'verified' | 'sent' | 'failed'>(outcome: O, landed?: UpdateRun['landed']): O => {
         setUpdate({ ...run, outcome, ...(landed ? { landed } : {}) });

@@ -19,10 +19,10 @@ const Usage: Component = () => {
 
       <DocSection id="buttons" title="Button ids" caption="Mouse buttons (class = button)">
         <p>
-          A semantic id, bound at clone time to the mouse's buttons, shared by{' '}
+          A semantic id, bound to the mouse's buttons at clone time and shared by{' '}
           <A href="/native/commands/inject#button"><code>INJECT</code></A> and{' '}
-          <A href="/native/commands/lock#lock"><code>LOCK</code></A>. The first five are named;
-          each further declared button gets a numeric id, up to{' '}
+          <A href="/native/commands/lock#lock"><code>LOCK</code></A>. The first five are named.
+          Each further declared button gets a numeric id, up to{' '}
           <A href="/native/commands/requests#caps"><code>CAPS</code></A> <code>n_buttons</code>.
           An id past that count is a no-op, so read <code>n_buttons</code> first.
         </p>
@@ -52,7 +52,7 @@ const Usage: Component = () => {
           A HID Keyboard/Keypad usage from the{' '}
           <a href="https://www.usb.org/sites/default/files/hut1_5.pdf" target="_blank" rel="noreferrer">USB HID Usage Tables</a>{' '}
           (page 0x07). <code>0xE0</code>-<code>0xE7</code> are modifiers and fold into the
-          modifier byte; any other usage fills a keycode slot. Common ones:
+          modifier byte. Any other usage fills a keycode slot. Common ones:
         </p>
         <div class="table-scroll">
           <table class="api-params">

@@ -44,9 +44,9 @@
 /* Copied opens under the bar, never over a tab. */
 .ptabs > .cl::after, .ptabs > .cl[data-side]::after { left: auto; right: 0; top: calc(100% + 18px); transform: translateY(-4px); }
 .ptabs > .cl[data-state]::after { transform: none; }
-/* The tabs sit closer as the bar narrows, from 20px down to 10px a side, before it scrolls: the room left
-   by their letters (11px mono, 0.12em tracking, 0.04em spare for rounding) and the 32px icon, over the
-   sides that have padding. */
+/* The tabs sit closer as the bar narrows, from 20px down to 10px a side, before it scrolls. Each padded side
+   gets an equal share of the room left by their letters (11px mono, 0.12em tracking, 0.04em spare for
+   rounding) and the 32px icon. */
 .ptabs { container-type: inline-size; }
 .ptabs [role="tab"] {
   padding-inline: clamp(10px, calc((100cqw - 33px - var(--tab-chars) * 0.76em) / (2 * var(--tab-n) - 1)), 20px);
@@ -86,7 +86,7 @@
 /* What sits at a heading's right stays there on any screen; a long title wraps beside it. */
 .ph > h2 { min-width: 0; }
 .ph > :not(h2) { flex: none; }
-/* On the narrowest phones they go under the title instead, with no overlap to make them level. */
+/* On the narrowest phones those items wrap under the title instead, without the overlap that levels them. */
 @container doc (max-width: 340px) {
   .ph { flex-wrap: wrap; }
   .ph > :not(h2) { margin-block: 0; }
@@ -159,8 +159,8 @@
 .dd-z > span::before { content: attr(data-w); }
 /* A long list that filters has too many options to measure: one width, its value cut where it runs past. */
 .dd.dd--long { width: 18rem; }
-/* A block rising in is a separate layer, which an open list can't paint out of: the block with the list sits
-   over the next. */
+/* A block rising in is a separate layer, which an open list can't paint outside of, so the block holding the
+   list sits over the next one. */
 :is(.rb.moving, .st-in):has(.dd.open) { position: relative; z-index: 31; }
 .dd-b {
   width: 100%; height: 36px; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 12px;
@@ -424,8 +424,8 @@
 .page-header__aside p { margin: 0; }
 .safety { display: grid; justify-items: end; gap: 6px; }
 .safety-row { display: inline-flex; align-items: center; }
-/* The icon sits before the button, its margin giving back its width where it shows on hover alone, so the
-   button keeps to the edge the line under it ends at. Copied opens to its left. */
+/* The icon sits before the button, its margin giving back its width where it shows only on hover, so the
+   button stays at the edge where the line under it ends. Copied opens to its left. */
 .safety-row > .cl { margin: 0 6px 0 0; }
 .safety-row > .cl::after { left: auto; right: calc(100% + 2px); transform: translate(4px, -50%); }
 .safety-row > .cl[data-state]::after { transform: translate(0, -50%); }
@@ -552,7 +552,7 @@
 .pb pre.reply { max-height: 10rem; overflow: auto; margin: 0; }
 
 /* Stats. A chart's figure is what it stands at, or the column or row under the pointer; columns and bars
-   grow in when their panel arrives (motion.css) and ease to new values. Each part's colour is 3:1 or more against the ground. */
+   grow in when their panel arrives (motion.css) and ease to new values. Each part's colour has >=3:1 contrast against the ground. */
 .readout { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px 14px; }
 .readout b { font: 600 34px/1 var(--sans); letter-spacing: -0.025em; font-variant-numeric: tabular-nums; color: var(--text); }
 .readout span { color: var(--muted); }

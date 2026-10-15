@@ -16,7 +16,7 @@ const AiAccess: Component = () => {
       <DocSection id="markdown" title="Markdown twins" caption="Any page as Markdown">
         <p>
           Append <code>.md</code> to a doc URL, or send <code>Accept: text/markdown</code> to the page
-          URL. Links point at the other <code>.md</code> pages.
+          URL. Links in a twin point at the other <code>.md</code> pages.
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-bash">{`# .md twin

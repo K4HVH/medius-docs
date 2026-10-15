@@ -340,9 +340,9 @@ describe('DeviceEventCatch entries left out', () => {
   it('names one unknown address in the singular and several in the plural', async () => {
     mock.unknown = true;
     const one = await watching('Buttons');
-    await waitFor(() => expect(one.container.textContent).toMatch(/refused 1 of 1 entry: .*doesn't know that address\./));
+    await waitFor(() => expect(one.container.textContent).toMatch(/refused 1\/1 entry: .*doesn't know that address\./));
     cleanup();
     const many = await watching('All input');
-    await waitFor(() => expect(many.container.textContent).toMatch(/refused 4 of 4 entries: .*doesn't know those addresses\./));
+    await waitFor(() => expect(many.container.textContent).toMatch(/refused 4\/4 entries: .*doesn't know those addresses\./));
   });
 });

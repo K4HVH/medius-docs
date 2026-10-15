@@ -14,11 +14,11 @@ const NativeIntroduction: Component = () => {
         </p>
         <p>
           The box sits between a USB device and a PC. Native reports from the real device (mouse,
-          keyboard, or combo) are relayed unchanged while a program injects over a separate
+          keyboard, or combo) are relayed unchanged. A program injects over a separate
           USB-serial link: cursor and buttons for a mouse, keys and media for a keyboard.
         </p>
         <p>
-          Drive it from any language; the Rust <A href="/library">library</A> is the official client.
+          Drive it from any language. The Rust <A href="/library">library</A> is the official client.
         </p>
         <div class="table-scroll">
           <table class="api-params">
@@ -48,9 +48,13 @@ const NativeIntroduction: Component = () => {
               <tr>
                 <td>Delivery</td>
                 <td>
-                  Fire-and-forget;{' '}
+                  Fire-and-forget, except{' '}
                   <A href="/native/commands/requests#requests"><code>QUERY</code></A> →{' '}
-                  <A href="/native/commands/requests#resp"><code>RESP</code></A> is the only round-trip
+                  <A href="/native/commands/requests#resp"><code>RESP</code></A>,{' '}
+                  <A href="/native/commands/transfer#transfer"><code>TRANSFER</code></A> →{' '}
+                  <A href="/native/commands/transfer#transfer-resp"><code>TRANSFER_RESP</code></A> and{' '}
+                  <A href="/native/commands/update#update"><code>UPDATE</code></A> →{' '}
+                  <A href="/native/commands/update#resp"><code>UPDATE_RESP</code></A>
                 </td>
               </tr>
             </tbody>
@@ -71,14 +75,14 @@ const NativeIntroduction: Component = () => {
                 <td>
                   Check <code>proto_ver</code> in the{' '}
                   <A href="/native/commands/requests#version"><code>VERSION</code></A> reply during
-                  the <A href="/native/connection#handshake">handshake</A>; a value other than{' '}
-                  <code>9</code> is firmware these pages don't cover.
+                  the <A href="/native/connection#handshake">handshake</A>. A value other than{' '}
+                  <code>9</code> means firmware these pages don't cover.
                 </td>
               </tr>
               <tr>
                 <td>Wire format</td>
                 <td>
-                  <A href="/native/frame">Framed binary</A> from the first byte; no startup baud or
+                  <A href="/native/frame">Framed binary</A> from the first byte. No startup baud or
                   text mode.
                 </td>
               </tr>

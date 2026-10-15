@@ -6,8 +6,8 @@ export interface SegOption {
   disabled?: boolean;
 }
 
-// One choice from a few, side by side; the fill slides to the one picked. A radio group to assistive
-// technology: one tab stop, arrows move the choice.
+// One choice from a few, side by side; the fill slides to the one picked. Assistive technology sees a radio
+// group: one tab stop, and the arrows move the choice.
 export function Segmented(props: {
   name: string;
   value?: string;
@@ -22,8 +22,8 @@ export function Segmented(props: {
   let fill: HTMLSpanElement | undefined;
   let placed = false;
 
-  // The fill slides to a new pick; it jumps on its first placing and when the options change between a row
-  // and a column, where a slide would cross them.
+  // The fill slides to a new pick. It jumps instead on its first placing, and when the options switch between
+  // a row and a column, where a slide would cut across them.
   const place = (jump = false) => {
     const b = root?.querySelector<HTMLButtonElement>('button[aria-checked="true"]');
     if (!fill || !root?.offsetParent) return;
@@ -43,9 +43,9 @@ export function Segmented(props: {
       placed = true;
     }
   };
-  // Options that don't fit on one row stack in one column: measured as a row each time the room changes, and
-  // left as they are while hidden, when nothing has a place to measure. The class goes on outside Solid, since
-  // a measure inside an effect would read a row Solid hasn't drawn yet. Returns whether it changed.
+  // Options that don't fit on one row stack in one column. They are measured as a row each time the room
+  // changes, and left alone while hidden, when nothing has a size to measure. The class is set outside Solid,
+  // because a measure inside an effect would read a row Solid hasn't drawn yet. Returns whether it changed.
   const fit = (): boolean => {
     if (!root?.offsetParent) return false;
     const was = root.classList.contains('seg--col');
@@ -58,12 +58,12 @@ export function Segmented(props: {
   const lay = () => place(fit());
   createEffect(on(() => [props.value, props.options.length], () => requestAnimationFrame(lay)));
   onMount(() => {
-    // A column fills its row, so it never reports the room growing: the window does.
+    // A column fills its row, so the column never reports the room growing; the window's resize does.
     const resized = () => requestAnimationFrame(lay);
     addEventListener('resize', resized);
     onCleanup(() => removeEventListener('resize', resized));
     if (typeof ResizeObserver === 'undefined' || !root) return;
-    // A frame later, so the size the column changes isn't reported back inside this same delivery.
+    // One frame later, so the size change the column causes isn't reported back within the same delivery.
     const ro = new ResizeObserver(resized);
     ro.observe(root);
     onCleanup(() => ro.disconnect());

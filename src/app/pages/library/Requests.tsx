@@ -8,8 +8,8 @@ const Requests: Component = () => {
     <>
       <PageHeader id="requests-overview">
         <p>
-          Queries block, unlike the{' '}
-          <A href="/native/injection#fire-and-forget">fire-and-forget</A> calls: each sends one{' '}
+          Unlike the <A href="/native/injection#fire-and-forget">fire-and-forget</A> calls, queries
+          block. Each sends one{' '}
           <A href="/native/commands/requests#requests"><code>QUERY</code></A> frame and waits for one{' '}
           <A href="/native/commands/requests#resp"><code>RESP</code></A> frame back. They are{' '}
           <A href="/library/requests#version"><code>query_version</code></A>,{' '}
@@ -32,7 +32,7 @@ const Requests: Component = () => {
         <p><span class="api-badge api-badge--responded">Blocks</span></p>
 
         <p>
-          Returns a <A href="/library/types/structs#version"><code>Version</code></A>; the box's{' '}
+          Returns a <A href="/library/types/structs#version"><code>Version</code></A>. The box's{' '}
           <A href="/library/options#set-name">name</A> is its <code>name</code> field.
         </p>
 
@@ -48,7 +48,7 @@ println!("name {}", v.name);           // Loki`}</code></pre>
         <div class="callout callout--info">
           <p>
             <A href="/library/connection#open"><code>Device::find()</code></A> already runs a version
-            query in the handshake; <code>query_version</code> re-reads it.
+            query in the handshake. <code>query_version</code> re-reads it.
           </p>
         </div>
       </DocSection>
@@ -84,8 +84,8 @@ if h.link_up && h.mouse_attached && h.clone_configured {
           Returns a <A href="/library/types/structs#device-info"><code>DeviceInfo</code></A>: the{' '}
           <code>vid</code>, <code>pid</code>, USB version, a{' '}
           <A href="/library/types/enums#device-kind"><code>DeviceKind</code></A>, and the{' '}
-          <code>product</code> string the box read from the real device. Every field is zero or empty
-          with nothing cloned. <code>Display</code> prints <code>VVVV:PPPP product</code>.
+          <code>product</code> string the box read from the real device. With nothing cloned, every
+          field is zero or empty. <code>Display</code> prints <code>VVVV:PPPP product</code>.
         </p>
 
         <div class="api-response-label">EXAMPLE</div>
@@ -113,10 +113,10 @@ if d.vid == 0 {
           Returns a <A href="/library/types/structs#caps"><code>Caps</code></A>: a{' '}
           <A href="/library/types/structs#mouse-caps"><code>mouse</code></A> half, a{' '}
           <A href="/library/types/structs#kbd-caps"><code>keyboard</code></A> half, and the per-class
-          change-driven flags. An absent class reads all-zero; <code>has_mouse()</code> and{' '}
+          change-driven flags. An absent class reads all-zero. <code>has_mouse()</code> and{' '}
           <code>has_keyboard()</code> say which are bound. An{' '}
           <A href="/library/inject#inject"><code>inject</code></A> for a usage the clone lacks is
-          dropped with no error; check here first.
+          dropped with no error, so check here first.
         </p>
 
         <div class="api-response-label">EXAMPLE</div>
@@ -139,7 +139,7 @@ if caps.has_keyboard() && caps.keyboard.has_consumer {
 
         <p>
           Returns a <A href="/library/types/structs#rate"><code>Rate</code></A>.{' '}
-          <code>native_hz()</code> converts the period to hertz, <code>None</code> while{' '}
+          <code>native_hz()</code> converts the period to hertz. It returns <code>None</code> while{' '}
           <code>native_period_us</code> is <code>0</code> (not learned yet). <code>confident</code> is
           true once the estimator window is full.
         </p>
@@ -163,14 +163,14 @@ match r.native_hz() {
         <p>
           Returns a <A href="/library/types/structs#stats"><code>Stats</code></A>. Nonzero{' '}
           <code>tx_drops</code> or <code>tx_wedges</code> means native input was lost on the way to the
-          PC; nonzero <code>link_rx_drops</code> or <code>host_rx_drops</code> means it was lost between
+          PC. Nonzero <code>link_rx_drops</code> or <code>host_rx_drops</code> means it was lost between
           the box's two chips.
         </p>
         <p>
-          <code>relay_drops</code> counts relayed traffic and commands that went no further, none of it
-          native input. The narrowed counters saturate instead of wrapping; <code>link_rx_drops</code>,{' '}
-          <code>host_rx_drops</code> and <code>relay_drops</code> are full width. <code>session</code> moves each time the box releases some or all of what a host
-          set; the library watches it for <A href="/library/lifecycle#restart">session recovery</A>.
+          <code>relay_drops</code> counts relayed traffic and commands that went no further (none of it
+          native input). The narrowed counters saturate instead of wrapping. <code>link_rx_drops</code>,{' '}
+          <code>host_rx_drops</code> and <code>relay_drops</code> are full width. <code>session</code>{' '}
+          moves each time the box releases some or all of what a host set. The library watches it for <A href="/library/lifecycle#restart">session recovery</A>.
         </p>
 
         <div class="api-response-label">EXAMPLE</div>
@@ -196,12 +196,12 @@ if s.relay_drops > 0 {
         <p><span class="api-badge api-badge--responded">Blocks</span></p>
 
         <p>
-          Returns a <A href="/library/types/structs#locks"><code>Locks</code></A>, every direction{' '}
+          Returns a <A href="/library/types/structs#locks"><code>Locks</code></A>: every direction{' '}
           <A href="/library/lock#scale"><code>scale</code></A> currently weighs.{' '}
-          <code>scale_of(target, direction)</code> reads the percentage in effect;{' '}
-          <code>is_locked(target, direction)</code> reports a full block. What a
-          blanket, a media usage, and a vector-mode relative direction report is on{' '}
-          <A href="/library/types/structs#locks">Locks</A>.
+          <code>scale_of(target, direction)</code> reads the percentage in effect, and{' '}
+          <code>is_locked(target, direction)</code> reports a full block.{' '}
+          <A href="/library/types/structs#locks">Locks</A> lists what a blanket, a media usage, and a
+          vector-mode relative direction report.
         </p>
 
         <div class="api-response-label">EXAMPLE</div>
@@ -228,18 +228,18 @@ println!("opposing the injection at {}%", locks.scale_of(Axis::X, Direction::Aga
           two chips' timers.
         </p>
         <p>
-          <A href="/library/catch#catch-events"><code>catch_events</code></A> gets no reply, so
-          comparing the entries (the <code>class / id / direction / capture</code> the box accepted)
-          against the <A href="/library/types/structs#catch-filter">filters</A> sent is the only way to
-          confirm each was accepted.
+          <A href="/library/catch#catch-events"><code>catch_events</code></A> gets no reply, so the
+          only way to confirm each filter was accepted is to compare the entries (the{' '}
+          <code>class / id / direction / capture</code> the box accepted) with the{' '}
+          <A href="/library/types/structs#catch-filter">filters</A> sent.
         </p>
         <p>
-          A missing filter was refused; <code>table_full</code> says whether the 32-entry table was
-          full or the filter was malformed.
+          A missing filter was refused. <code>table_full</code> says whether the cause was a full
+          32-entry table or a malformed filter.
         </p>
 
         <p>
-          A lost event is charged to every entry it resolved against; drops on an entry mean the
+          A lost event counts against every entry it matched. Drops on an entry mean the
           subscription is too broad for the link.
         </p>
 
@@ -297,13 +297,12 @@ println!("{} free, {} played", s.free, s.played);`}</code></pre>
         <p><span class="api-badge api-badge--responded">Blocks</span></p>
 
         <p>
-          The config view of the{' '}
-          <A href="/native/commands/requests#clip"><code>QUERY(CLIP)</code></A> frame{' '}
-          <A href="/library/requests#clip-status"><code>query_status</code></A> reads, also on{' '}
-          <A href="/library/clip#handle"><code>ClipHandle</code></A>. Returns a{' '}
+          Also on <A href="/library/clip#handle"><code>ClipHandle</code></A>. Reads the config view of
+          the same <A href="/native/commands/requests#clip"><code>QUERY(CLIP)</code></A> frame as{' '}
+          <A href="/library/requests#clip-status"><code>query_status</code></A>. Returns a{' '}
           <A href="/library/types/structs#clip-settings"><code>ClipSettings</code></A>: auto-lock, loop,
-          retain, finalized flag, and both kinds of <A href="/library/clip#triggers">trigger</A> set,
-          each packet trigger with its <code>hits</code>. Every setting round-trips.
+          retain, ride, the finalized flag, and both <A href="/library/clip#triggers">trigger</A> sets
+          (each packet trigger with its <code>hits</code>). Every setting round-trips.
         </p>
 
         <div class="api-response-label">EXAMPLE</div>
@@ -319,12 +318,12 @@ println!("{} input triggers, {} packet triggers, loop={}",
         <pre class="api-signature">fn firmware_info(&self) -&gt; Result&lt;FirmwareInfo&gt;</pre>
         <p><span class="api-badge api-badge--responded">Blocks</span></p>
         <p>
-          Returns a <A href="/library/types/structs#firmware-info"><code>FirmwareInfo</code></A>,
-          backing <A href="/native/commands/requests#firmware"><code>QUERY(FIRMWARE)</code></A>;
-          the other firmware calls are on <A href="/library/update">Update</A>.
+          Returns a <A href="/library/types/structs#firmware-info"><code>FirmwareInfo</code></A>{' '}
+          (backs <A href="/native/commands/requests#firmware"><code>QUERY(FIRMWARE)</code></A>).
+          The other firmware calls are on <A href="/library/update">Update</A>.
         </p>
         <p>
-          The only call reporting the host chip's version;{' '}
+          It's the only call that reports the host chip's version.{' '}
           <A href="/library/requests#version"><code>query_version</code></A> reports the device chip
           alone.
         </p>
@@ -359,8 +358,8 @@ match fw.host {
 
         <p>
           With the <code>async</code> feature, <code>Device::into_async()</code> yields an{' '}
-          <A href="/library/features/async"><code>AsyncDevice</code></A> whose queries are futures;
-          other methods stay synchronous. Any executor drives them (no tokio), such as{' '}
+          <A href="/library/features/async"><code>AsyncDevice</code></A> whose queries are futures.
+          Other methods stay synchronous. Any executor drives them (no tokio needed), such as{' '}
           <a
             href="https://docs.rs/futures/latest/futures/executor/fn.block_on.html"
             target="_blank"

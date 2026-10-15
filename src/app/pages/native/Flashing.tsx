@@ -9,23 +9,25 @@ const Flashing: Component = () => {
       <PageHeader>
         <p>
           A box already running Medius updates over the control port with{' '}
-          <A href="/native/commands/update"><code>UPDATE</code></A>. This page is for a first install
-          and for a chip that can't: one never given the two-slot layout, or one whose app won't boot.
+          <A href="/native/commands/update"><code>UPDATE</code></A>. This page is for a first install,
+          and for a chip that can't update that way: one without the two-slot layout, or one whose app
+          won't boot.
         </p>
         <p>
-          While firmware runs, no button is needed:{' '}
+          While firmware runs, no button is needed.{' '}
           <A href="/native/commands/admin#reboot"><code>REBOOT</code></A> restarts a chip into ROM
-          download mode (a built-in serial loader), then a flashing tool writes the image.
+          download mode (a built-in serial loader), and a flashing tool writes the image.
         </p>
         <div class="callout callout--info">
           <p>
             Write the bootloader, partition table, app and a blank <code>otadata</code> together, or
-            the factory image, which contains all four.
+            the factory image (all four in one).
           </p>
           <p>
-            An app image alone keeps the chip's existing layout, and a one-slot chip replies{' '}
+            An app image alone keeps the chip's existing layout. A one-slot chip replies{' '}
             <code>NOSLOT</code> to <A href="/native/commands/update"><code>UPDATE</code></A>. The two
-            slots are a partition-table change: one flash from here per chip, once per box.
+            slots are a partition-table change, so each chip needs one flash from this page, once in
+            the box's life.
           </p>
         </div>
       </PageHeader>
@@ -49,7 +51,7 @@ const Flashing: Component = () => {
               <tr>
                 <td><A href="/native/architecture">Host chip</A></td>
                 <td><code>target = 1</code></td>
-                <td><code>USB3</code>; the device chip relays the reboot over the inter-chip link.</td>
+                <td><code>USB3</code>. The device chip relays the reboot over the inter-chip link.</td>
               </tr>
             </tbody>
           </table>
@@ -59,24 +61,24 @@ const Flashing: Component = () => {
       <DocSection id="version" title="Version scheme" caption="major.minor.patch">
         <p>
           Both chips carry the same firmware version, stamped into their app descriptors from one
-          source; binary and tag can't drift.
+          source. Binary and tag can't drift.
         </p>
         <p>
-          The <A href="/native/connection#handshake">protocol version</A> is a separate byte, the one
-          a host checks for compatibility; the firmware version identifies the build.{' '}
+          The <A href="/native/connection#handshake">protocol version</A> is a separate byte that a
+          host checks for compatibility. The firmware version identifies the build.{' '}
           <A href="/native/commands/requests#version"><code>QUERY(VERSION)</code></A> returns both.
         </p>
       </DocSection>
 
       <DocSection id="notes" title="Notes">
         <p>
-          A run reboot (<code>target = 2</code> or <code>3</code>) is the only software cold-reboot;{' '}
+          A run reboot (<code>target = 2</code> or <code>3</code>) is the only software cold-reboot.{' '}
           <code>DTR</code>/<code>RTS</code> aren't wired to reset on this board.
         </p>
         <p>
           After a download reboot the port stays in the ROM bootloader (plain ASCII the{' '}
-          <A href="/native/frame">frame decoder</A> ignores) until flashing finishes or a
-          power-cycle. Persisted per-box data survives an app reflash.
+          <A href="/native/frame">frame decoder</A> ignores) until flashing finishes or the
+          box is power-cycled. Persisted per-box data survives an app reflash.
         </p>
         <div class="callout callout--warning">
           <p>

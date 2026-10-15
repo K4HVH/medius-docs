@@ -13,8 +13,8 @@ const Transfer: Component = () => {
           <A href="/library/types/structs#transfer-outcome"><code>TransferOutcome</code></A>.
         </p>
         <p>
-          It crosses the inter-chip link on dedicated messages, one at a time, past every{' '}
-          <A href="/library/advanced/rewrite">rewrite rule</A>, and waits in the host chip's{' '}
+          It crosses the inter-chip link on dedicated messages, one at a time, bypassing every{' '}
+          <A href="/library/advanced/rewrite">rewrite rule</A>. It waits in the host chip's{' '}
           <A href="/native/commands/transfer#proxy">control queue</A> beside the game PC's requests.
         </p>
         <pre class="diagram">{`  real device            the box  (host chip  |  device chip = the clone)         game PC
@@ -28,8 +28,8 @@ const Transfer: Component = () => {
         <div class="callout callout--warning">
           <p>
             The advanced control layer needs{' '}
-            <A href="/library/options#allow-imperfect-clones"><code>allow_imperfect_clones</code></A>;
-            with it off, the box replies <code>Refused</code> without reaching the real device.
+            <A href="/library/options#allow-imperfect-clones"><code>allow_imperfect_clones</code></A>.
+            With it off, the box replies <code>Refused</code> and never reaches the real device.
           </p>
         </div>
       </PageHeader>
@@ -49,7 +49,7 @@ const Transfer: Component = () => {
           </table>
         </div>
         <p>
-          <code>Ok(_)</code> means the box replied; a{' '}
+          <code>Ok(_)</code> means the box replied. A{' '}
           <A href="/library/types/enums#transfer-status"><code>TransferStatus</code></A> other than{' '}
           <code>Ok</code> comes back inside the{' '}
           <A href="/library/types/structs#transfer-outcome"><code>TransferOutcome</code></A>, not as
@@ -58,7 +58,7 @@ const Transfer: Component = () => {
         <div class="callout callout--info">
           <p>
             <code>transfer</code> uses <code>DEFAULT_TRANSFER_TIMEOUT</code> (1.5&nbsp;s). The box gives
-            up after its ~800&nbsp;ms window; keep <code>transfer_timeout</code> at or above that.
+            up after ~800&nbsp;ms. Keep <code>transfer_timeout</code> ≥800&nbsp;ms.
           </p>
         </div>
         <div class="callout callout--warning">

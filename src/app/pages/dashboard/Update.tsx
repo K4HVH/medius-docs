@@ -16,7 +16,7 @@ type Stage = 'host' | 'device' | 'restart' | 'verify';
 
 const LABEL: Record<Which, string> = { both: 'Update both chips', main: 'Update main chip', mouse: 'Update mouse-side chip' };
 const STAGE_LABEL: Record<Stage, string> = { host: 'Mouse-side chip', device: 'Main chip', restart: 'Restart', verify: 'Verify' };
-// The mouse-side chip writes first: the main chip's running firmware relays its image.
+// The mouse-side chip writes first, because the main chip's running firmware relays the mouse-side image.
 const stagesFor = (device: boolean, host: boolean): Stage[] => [
   ...(host ? (['host'] as const) : []),
   ...(device ? (['device'] as const) : []),
@@ -24,9 +24,9 @@ const stagesFor = (device: boolean, host: boolean): Stage[] => [
   'verify',
 ];
 
-// The stage strip and the progress under it, while an update runs. Each chip's write counts from 0 to
-// 100%; between stages the filled line leaves to the right and the figure fades before the next count
-// starts; restarting and verifying are waits, a segment running the line.
+// The stage strip and the progress under it, while an update runs. Each chip's write counts 0-100%.
+// Between stages the filled line leaves to the right and the figure fades before the next count starts.
+// Restarting and verifying are waits: a segment runs along the line.
 const Progress = (props: { stages: Stage[] }) => {
   const dash = useDashboard();
   const stage = createMemo((): Stage | null => {
@@ -41,7 +41,7 @@ const Progress = (props: { stages: Stage[] }) => {
     const p = dash.updateProgress();
     return p?.phase === 'writing' && p.total ? Math.min(1, (p.written ?? 0) / p.total) : 0;
   };
-  // What shows: a stage keeps showing, full, for the changeover before the next one replaces it.
+  // The stage on screen: a finished stage stays, full, through the changeover before the next replaces it.
   const [shown, setShown] = createSignal<Stage | null>(stage());
   const [out, setOut] = createSignal(false);
   let timer: ReturnType<typeof setTimeout> | undefined;
@@ -105,8 +105,8 @@ export const Latest = () => {
   const [busy, setBusy] = createSignal(false);
   const [err, setErr] = createSignal<string | null>(null);
 
-  // A refresh mid-transfer wastes it on a half-written spare slot. The running slot is untouched and
-  // the box times the session out.
+  // A refresh mid-transfer wastes the transfer and leaves the spare slot half-written. The running slot
+  // is untouched, and the box times the session out.
   createEffect(() => {
     if (dash.status() !== 'flashing') return;
     const handler = (e: BeforeUnloadEvent) => {
@@ -142,7 +142,7 @@ export const Latest = () => {
     return matches(c ? { major: c.fwMajor, minor: c.fwMinor, patch: c.fwPatch } : null);
   };
   const hostOnRelease = () => matches(dash.firmwareInfo()?.host);
-  // A reverted chip still completes the handshake; only the version each chip asked reports proves
+  // A reverted chip still completes the handshake. Only the version each chip reports when asked proves
   // the update.
   const landed = () => {
     const r = run();
@@ -171,7 +171,7 @@ export const Latest = () => {
     </Show>
   );
 
-  // A result of the Flash page's stays for that page to show.
+  // A Flash page result stays for that page to show.
   const clearOwn = () => {
     if (dash.update()?.page === 'update') dash.clearUpdate();
   };
@@ -200,8 +200,8 @@ export const Latest = () => {
     try {
       const da = deviceAsset();
       const ha = hostAsset();
-      // Only the first is fixed by waiting. The other two name the choice that works, which is on
-      // the previous screen.
+      // Only the first goes away with waiting. The other two name the choice that works, on the
+      // previous screen.
       if (!latest() || (!da && !ha)) {
         setErr('No update available right now. Try again in a few minutes.');
         return;
@@ -227,7 +227,7 @@ export const Latest = () => {
   };
 
   const running = () => dash.status() === 'flashing';
-  // The box answers nothing while it restarts; the figure keeps the version it ran until the new one answers.
+  // The box doesn't answer while it restarts, so the figure keeps the old version until the new one answers.
   const shownVersion = createMemo<Version | null>((prev) => dash.version() ?? prev ?? null, null);
   const runStages = () => {
     const r = dash.update();
@@ -331,7 +331,7 @@ export const Latest = () => {
   );
 };
 
-// The latest release in one step. Any other image, by hand, is the Flash page's.
+// The latest release in one step. Any other image is flashed by hand on the Flash page.
 const Update = () => (
   <>
     <PageHeader />

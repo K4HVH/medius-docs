@@ -24,9 +24,9 @@ const Connection: Component = () => {
         <p><span class="api-badge api-badge--executed">No round-trip</span></p>
         <p>
           <code>open</code> and <code>find</code> block on the{' '}
-          <A href="/native/connection#handshake">handshake</A>. Auto-detect matches on{' '}
-          <A href="/native/transport">USB identity</A> (vid <code>0x1A86</code>, pid{' '}
-          <code>0x55D3</code>), the WCH CH343 bridge in every box.
+          <A href="/native/connection#handshake">handshake</A>. Auto-detect matches the{' '}
+          <A href="/native/transport">USB identity</A> of the WCH CH343 bridge in every box (vid{' '}
+          <code>0x1A86</code>, pid <code>0x55D3</code>).
         </p>
         <div class="api-response-label">FUNCTIONS</div>
         <div class="table-scroll">
@@ -118,8 +118,8 @@ println!("speaks protocol:   {}", PROTO_VER);                   // 9`}</code></p
         <p><span class="api-badge api-badge--executed">No round-trip</span></p>
         <p>
           Behind the <code>async</code> feature,{' '}
-          <A href="/library/features/async"><code>AsyncDevice</code></A> makes the queries futures;{' '}
-          <A href="/native/injection#fire-and-forget">fire-and-forget</A> calls stay synchronous.
+          <A href="/library/features/async"><code>AsyncDevice</code></A> makes the queries futures.{' '}
+          <A href="/native/injection#fire-and-forget">Fire-and-forget</A> calls stay synchronous.
         </p>
         <pre><code class="language-bash">cargo add medius --features async</code></pre>
         <div class="api-response-label">EXAMPLE</div>

@@ -85,7 +85,7 @@ const Overview: Component = () => {
               <tr><td><A href="/library/requests">Queries (version, health, caps)</A></td><td>yes</td><td>yes</td></tr>
               <tr><td><A href="/library/features/mock">Mock box (testing)</A></td><td>build flag</td><td>build flag</td></tr>
               <tr><td><A href="/library/update">Update firmware</A></td><td>yes</td><td>yes</td></tr>
-              <tr><td><A href="/library/features/async">Async</A></td><td colspan="2">sync only; build it on the stream timeouts (see each Streams page)</td></tr>
+              <tr><td><A href="/library/features/async">Async</A></td><td colspan="2">sync only; build async on the stream timeouts (see each Streams page)</td></tr>
             </tbody>
           </table>
         </div>

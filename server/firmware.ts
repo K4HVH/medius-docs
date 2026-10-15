@@ -60,10 +60,10 @@ interface GhRelease {
 
 // Fetch (or serve cached) the releases list, recording the .bin asset ids it
 // references. Returns the projected JSON body, or null on an upstream failure.
-// A failed list request is not retried for this long, so a GitHub outage costs one call a window.
+// A failed list request is not retried for this long, so a GitHub outage costs one call per window.
 const RELEASES_RETRY_MS = 30_000;
 let releasesFailedAt = 0;
-// Requests that ask while the list is read share the read.
+// Requests made while the list is being read share that read.
 let releasesLoading: Promise<string | null> | null = null;
 
 function loadReleases(): Promise<string | null> {
@@ -113,10 +113,10 @@ export async function getReleases(): Promise<FirmwareRelease[] | null> {
   return body ? (JSON.parse(body) as { releases: FirmwareRelease[] }).releases : null;
 }
 
-// The list as GitHub has it now, so a release linked the moment it is out (the release post) is found: read
-// again unless it was read in the last RELEASES_FRESH_MS (by the same request, as a rule). Tags no release
-// has can't make that happen more than once a RELEASES_RETRY_MS; in between, the list in hand. Null when the
-// read fails.
+// The list as GitHub has it now, so a release linked the moment it is out (the release post) is found. The
+// list is read again unless it was read in the last RELEASES_FRESH_MS (usually by the same request). Tags no
+// release has can't force a reread more than once per RELEASES_RETRY_MS; in between, the cached list is
+// returned. Null when the read fails.
 const RELEASES_FRESH_MS = 2_000;
 let refreshedAt = -Infinity;
 export async function refreshReleases(): Promise<FirmwareRelease[] | null> {

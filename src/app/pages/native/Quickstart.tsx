@@ -8,14 +8,14 @@ const Quickstart: Component = () => {
     <>
       <PageHeader>
         <p>
-          The box sits between a USB device and a PC. It clones the device and relays its reports while
-          a program injects over a USB-serial link: cursor and buttons for a mouse, keys and media for a
+          The box sits between a USB device and a PC. It clones the device and relays its reports. A
+          program injects over a USB-serial link: cursor and buttons for a mouse, keys and media for a
           keyboard.
         </p>
         <p>
           The box speaks in <A href="/native/frame">frames</A>, fixed-shape packets of one command
           each. Most are <A href="/native/injection#fire-and-forget">fire-and-forget</A>, with no
-          reply; <A href="/native/commands/requests#requests"><code>QUERY</code></A> gets one.
+          reply. <A href="/native/commands/requests#requests"><code>QUERY</code></A> gets one.
         </p>
       </PageHeader>
 
@@ -26,14 +26,14 @@ const Quickstart: Component = () => {
           <li><code>USB3</code> (mouse) → real mouse</li>
         </ul>
         <p>
-          The clone copies the mouse's USB identity, so the game PC enumerates the same device as a
+          The clone copies the mouse's USB identity, so the game PC enumerates the same device as on a
           direct connection.
         </p>
         <div class="callout callout--danger">
           <p>
             Never connect <code>USB1</code> and <code>USB3</code> to the same machine. The{' '}
             <code>USB3</code> 5V rail can't be pulled low in firmware, so the pair back-feeds
-            power, which can force a shutdown and drain the battery.
+            power. Back-fed power can force a shutdown and drain the battery.
           </p>
         </div>
       </DocSection>
@@ -41,7 +41,7 @@ const Quickstart: Component = () => {
       <DocSection id="open" title="Open the link" caption="Fixed baud, binary">
         <p>
           Open <code>/dev/ttyACM0</code> (Linux) or <code>COMx</code> (Windows) at{' '}
-          <A href="/native/transport#serial"><code>6,000,000</code> baud</A>, <code>8N1</code>, and send binary immediately; no{' '}
+          <A href="/native/transport#serial"><code>6,000,000</code> baud</A>, <code>8N1</code>, and send binary immediately. No{' '}
           <code>115200</code> handshake or baud-switch frame.
         </p>
         <p>
@@ -73,7 +73,7 @@ const Quickstart: Component = () => {
           <li>
             <A href="/native/frame#seq"><code>SEQ</code></A> is a caller-chosen number, incremented
             per frame. A <A href="/native/commands/requests#requests"><code>QUERY</code></A>'s{' '}
-            <A href="/native/commands/requests#resp"><code>RESP</code></A> echoes it; here{' '}
+            <A href="/native/commands/requests#resp"><code>RESP</code></A> echoes it. This example uses{' '}
             <code>0</code>.
           </li>
           <li>
@@ -104,7 +104,7 @@ port.write(frame)`}</code></pre>
           Payload: a <code>motion</code> byte (<code>0</code> = cursor), signed 16-bit{' '}
           <code>dx</code> then <code>dy</code>, and a{' '}
           <A href="/native/commands/move#flags"><code>flags</code></A> byte (<code>0</code> for a
-          plain move). <code>+x</code> is right, <code>+y</code> is down; the example moves 100
+          plain move). <code>+x</code> is right, <code>+y</code> is down. The example moves 100
           right, 0 down.
         </p>
         <p>

@@ -9,7 +9,7 @@ const Build: Component = () => {
       <PageHeader>
         <p>
           The <A href="/library/features/mock">mock</A> feature is compiled into the library, not
-          switched on from Python; enabling it means rebuilding the library.
+          switched on from Python. Enabling it means rebuilding the library.
         </p>
       </PageHeader>
 
@@ -39,7 +39,7 @@ const Build: Component = () => {
         <div class="callout callout--warning">
           <p>
             The <code><a href="https://pip.pypa.io" target="_blank" rel="noreferrer">pip</a> install medius</code>{' '}
-            wheel is built without it, and <code>MockBox()</code> raises{' '}
+            wheel is built without mock, and <code>MockBox()</code> raises{' '}
             <code><a href="https://docs.python.org/3/library/exceptions.html#RuntimeError" target="_blank" rel="noreferrer">RuntimeError</a></code> there.
             Gate on <code>if medius.HAS_MOCK:</code> first.
           </p>
@@ -59,7 +59,7 @@ export MEDIUS_LIB=$PWD/target/release/libmedius_capi.so
 python -c "import medius; print(medius.HAS_MOCK)"
 # True`}</code></pre>
         <p>
-          To include it in an installed wheel, build the library first; pip reuses it:
+          To include mock in an installed wheel, build the library first; pip reuses that build:
         </p>
         <pre><code class="language-bash">{`cargo build --release -p medius-capi --features mock
 MEDIUS_SKIP_CARGO=1 pip install ./bindings/python`}</code></pre>

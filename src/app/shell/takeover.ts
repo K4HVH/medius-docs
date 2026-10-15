@@ -1,6 +1,6 @@
 // The app replaces the prerendered snapshot while the snapshot's intro may still be playing. The app's copy
-// picks the intro up where the snapshot had it, rather than playing it again from the start. A canvas is
-// left alone: the snapshot's is blank, so its fade starts with the app.
+// picks up the intro where the snapshot left it, instead of replaying it from the start. A canvas is left
+// alone: the snapshot's is blank, so its fade starts with the app.
 const intro = (a: Animation) =>
   'animationName' in a &&
   a.effect?.getTiming().iterations !== Infinity &&
@@ -20,12 +20,12 @@ export function resumeIntro(elapsed: number, doc: Animated = document): void {
   for (const a of doc.getAnimations()) if (intro(a) && (Number(a.currentTime) || 0) < elapsed) a.currentTime = elapsed;
 }
 
-// A page drawn again while it arrives (a dashboard page whose box is found as it opens) takes the arrival
-// up where the page it replaces had it, as the app takes up the snapshot's: its blocks stamped as the
-// arrival stamped them, every motion started when the first one started. Once the arrival is over, a panel
-// drawn again that says the same holds still, and one whose contents changed keeps its heading still while
-// they come in (panelMotion.ts reads `data-still`). Called before the redraw; what it returns runs once the
-// new page is in.
+// A page redrawn during its arrival (a dashboard page whose box is found as it opens) picks up the arrival
+// where the replaced page left it, as the app does with the snapshot's: its blocks are stamped as before, and
+// every motion is timed from when the first arrival began. After the arrival, a redrawn panel with the same
+// text holds still; one whose contents changed keeps its heading still while the new contents come in
+// (panelMotion.ts reads `data-still`). Call this before the redraw; the function it returns runs once the new
+// page is in.
 const heading = (p: Element) => p.querySelector(':scope > .ph')?.textContent ?? '';
 export function carryArrival(page: HTMLElement | null): () => void {
   if (!page) return () => {};
@@ -41,7 +41,7 @@ export function carryArrival(page: HTMLElement | null): () => void {
   }
   const within: Animated = { getAnimations: () => page.getAnimations({ subtree: true }) };
   const at = introElapsed(within);
-  // Set as a start, not a time reached: a pending animation then keeps step through a long first frame.
+  // Stored as a start time, not as time elapsed, so a pending animation keeps step through a long first frame.
   const began = (document.timeline?.currentTime as number | null ?? performance.now()) - at;
   return () => {
     arrive(page, pageArrival(page), Math.max(0, ARRIVAL_MS - at));

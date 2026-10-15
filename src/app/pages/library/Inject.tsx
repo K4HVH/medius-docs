@@ -10,7 +10,7 @@ const Inject: Component = () => {
         <p>
           <A href="/library/inject#inject"><code>inject</code></A> drives every momentary input and
           takes any <A href="/library/types/structs#usage"><code>Usage</code></A> (button, key, or
-          media);{' '}
+          media).{' '}
           <A href="/library/inject#press"><code>press</code></A>,{' '}
           <A href="/library/inject#press"><code>release</code></A>, and{' '}
           <A href="/library/inject#press"><code>force_release</code></A> wrap it. Each call queues one <A href="/native/injection#fire-and-forget">fire-and-forget</A>{' '}
@@ -49,9 +49,9 @@ device.inject(MediaKey::VOLUME_UP, Action::Press)?; // media key`}</code></pre>
         <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
         <p>
           Wrappers over <A href="/library/inject#inject"><code>inject</code></A>, generic over any{' '}
-          <A href="/library/types/structs#usage"><code>Usage</code></A>. <code>press</code> holds it
-          down. <code>release</code> clears the box's press or force; a hold on the real device stays down.{' '}
-          <code>force_release</code> forces it up over a hold on the real device.
+          <A href="/library/types/structs#usage"><code>Usage</code></A>. <code>press</code> holds the
+          usage down. <code>release</code> clears the box's press or force; a hold on the real device stays down.{' '}
+          <code>force_release</code> forces the usage up, even over a hold on the real device.
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`use medius::{Button, Key};

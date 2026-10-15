@@ -50,7 +50,7 @@ export function OnThisPage(props: { pathname: string }) {
     spy();
   };
 
-  // Read with the page, so the list arrives with it; read again once its layout has settled.
+  // Scanned with the page, so the list arrives with it, and again once the layout has settled.
   createEffect(
     on(
       () => props.pathname,
@@ -71,7 +71,7 @@ export function OnThisPage(props: { pathname: string }) {
   );
   onMount(() => window.addEventListener('scroll', spy, { passive: true }));
   onCleanup(() => window.removeEventListener('scroll', spy));
-  // A section a filter hides leaves the list, and comes back with it.
+  // A section a filter hides leaves the list, and comes back when the filter shows it again.
   onMount(() => {
     const page = document.querySelector('.docs-page');
     if (!page || typeof MutationObserver === 'undefined') return;

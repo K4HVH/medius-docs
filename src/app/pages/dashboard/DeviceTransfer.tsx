@@ -10,7 +10,7 @@ import { createCommand } from './action';
 import { Panel } from '../../shell/Panel';
 import { SETUP_DEFAULT, SETUP_FIELDS, decodeSetup, outDataBlurb, parseHex, parseNum, toHex } from './hex';
 
-// No answer covers more than a silent device.
+// "No answer" covers more than a silent device.
 const STATUS_LABEL: Record<number, string> = {
   [TransferStatus.Ok]: 'OK',
   [TransferStatus.Refused]: 'Not sent',
@@ -21,7 +21,7 @@ const STATUS_LABEL: Record<number, string> = {
 const STATUS_BLURB: Record<number, string> = {
   [TransferStatus.Ok]: 'The device answered.',
   [TransferStatus.Refused]:
-    "The box didn't send it: the request was malformed, asked for more than 504 bytes, carried less Out data than its length, or met a full control queue.",
+    "The box didn't send it: the request was malformed, asked for >504 bytes, carried less Out data than its length, or met a full control queue.",
   [TransferStatus.Stall]: 'The device refused the request.',
   [TransferStatus.Nak]:
     "The device gave no answer within 0.5 s, the transfer failed, the device has no control endpoint with that number, the mouse-side chip did not answer within 0.8 s, or the PC has put the clone to sleep.",

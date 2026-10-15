@@ -8,8 +8,8 @@ const Lock: Component = () => {
     <>
       <PageHeader>
         <p>
-          A scale sets how much of one <em>native</em> input reaches the game PC;{' '}
-          <A href="/native/injection">injection</A> still drives that input unweighed.
+          A scale sets how much of one <em>native</em> input reaches the game PC.{' '}
+          <A href="/native/injection">Injection</A> still drives that input unweighed.
         </p>
         <pre class="diagram">{`  scale -100  native  <--   inverted
   scale 0     native  --X   blocked
@@ -44,21 +44,22 @@ const Lock: Component = () => {
             </thead>
             <tbody>
               <tr><td><code>target</code></td><td><code>impl Into&lt;<A href="/library/types/enums#lock-target">LockTarget</A>&gt;</code></td><td>An <A href="/library/types/enums#axis"><code>Axis</code></A> (X, Y, wheel, or pan) or any <A href="/library/types/structs#usage"><code>Usage</code></A> (button, key, or media).</td></tr>
-              <tr><td><code>direction</code></td><td><A href="/library/types/enums#direction"><code>Direction</code></A></td><td>A fixed sign or edge, or <code>With</code> / <code>Against</code> relative to the bearing. A relative direction on anything but an axis is <A href="/library/types/errors#errors"><code>Error::RelativeDirection</code></A>. Media has no edges, so an edge on it is sent as <code>Both</code>.</td></tr>
-              <tr><td><code>scale</code></td><td><code>i16</code></td><td>Percent of the native value kept. <code>LOCK_SCALE_BLOCK</code> (0) blocks, <code>LOCK_SCALE_PASS</code> (100) passes untouched, up to <code>LOCK_SCALE_MAX</code> (255) amplifies, and down to <code>LOCK_SCALE_MIN</code> (-255) reverses. Outside that is <A href="/library/types/errors#errors"><code>Error::LockScaleRange</code></A>.</td></tr>
+              <tr><td><code>direction</code></td><td><A href="/library/types/enums#direction"><code>Direction</code></A></td><td>A fixed sign or edge, or <code>With</code> / <code>Against</code> relative to the bearing. A relative direction on anything but an axis returns <A href="/library/types/errors#errors"><code>Error::RelativeDirection</code></A>. Media has no edges, so an edge on it is sent as <code>Both</code>.</td></tr>
+              <tr><td><code>scale</code></td><td><code>i16</code></td><td>Percent of the native value kept. <code>LOCK_SCALE_BLOCK</code> (0) blocks and <code>LOCK_SCALE_PASS</code> (100) passes untouched. Above 100 amplifies, up to <code>LOCK_SCALE_MAX</code> (255). Below 0 reverses, down to <code>LOCK_SCALE_MIN</code> (-255). Outside that range returns <A href="/library/types/errors#errors"><code>Error::LockScaleRange</code></A>.</td></tr>
             </tbody>
           </table>
         </div>
         <p>
-          A delta gets one fixed-direction scale times one relative one, so a block in either zeroes
-          the product. <code>With</code> and <code>Against</code> need a live bearing (
+          A delta is weighed by one fixed-direction scale times one relative scale, so a block in
+          either zeroes it. <code>With</code> and <code>Against</code> need a live bearing (
           <A href="/library/options#set-bearing"><code>set_bearing</code></A>). A momentary usage is one
-          bit: any scale under 100 locks it, and a negative is{' '}
+          bit: any scale &lt;100 locks it, and a negative returns{' '}
           <A href="/library/types/errors#errors"><code>Error::LockScaleUsage</code></A>.
         </p>
         <p>
-          The slot comes from the delta's sign before weighing: <code>Positive</code> at{' '}
-          <code>-100</code> turns rightward motion leftward and leaves leftward motion alone.
+          The delta's sign before weighing picks which direction's scale applies:{' '}
+          <code>Positive</code> at <code>-100</code> turns rightward motion leftward and leaves
+          leftward motion alone.
         </p>
         <div class="callout callout--info">
           <p>
@@ -154,8 +155,8 @@ device.unlock_axis(Axis::Wheel, Direction::Positive)?;`}</code></pre>
         <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
         <p>
           A <A href="/library/types/enums#blanket"><code>Blanket</code></A> weighs a whole input
-          group. <code>direction</code> reaches every member as it reaches one: <code>Keys</code> takes
-          an edge, and <code>Media</code>, having none, sends <code>Both</code>.
+          group. <code>direction</code> applies to every member as it would to one. <code>Keys</code>{' '}
+          takes an edge; <code>Media</code> has no edges, so it sends <code>Both</code>.
         </p>
         <p>
           <code>Blanket::Aim</code> addresses X and Y together in{' '}
@@ -175,9 +176,9 @@ device.scale_all(Blanket::Aim, Direction::Against, 40)?; // 40% of motion opposi
       <DocSection id="async" title="On AsyncDevice" caption="locks fire, query_locks awaits">
         <p>
           <A href="/library/features/async"><code>AsyncDevice</code></A> keeps every lock call
-          synchronous (<code>scale</code>, <code>lock</code>/<code>unlock</code>,{' '}
-          <code>scale_axis</code>, and <code>scale_all</code> with their lock and unlock pairs), with no
-          reply to await; <code>query_locks</code> is a future.
+          synchronous, with no reply to await: <code>scale</code>, <code>lock</code>/<code>unlock</code>,{' '}
+          <code>scale_axis</code>, and <code>scale_all</code> with their lock and unlock pairs.{' '}
+          <code>query_locks</code> is a future.
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`use futures::executor::block_on;

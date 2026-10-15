@@ -27,8 +27,8 @@ const paneOf = (id: string): string | null =>
 
 // A page's tabs: a sticky bar holding the strip, with a sliding mark and one tab stop (arrows, Home and End
 // move along it), and a link icon at its right end that copies the open tab's address. The address names the
-// open tab (/dashboard/options, or #options); a place inside a closed tab opens that tab
-// (/dashboard/emit-rate), and one that names a tab still disabled opens it once it is enabled.
+// open tab (/dashboard/options, or #options). An address naming a place inside a closed tab opens that tab
+// (/dashboard/emit-rate); one naming a disabled tab opens it once it is enabled.
 export function PageTabs(props: { id: string; tabs: Tab[]; children: JSX.Element }) {
   const location = useLocation();
   const navigate = useNavigate();
@@ -41,8 +41,8 @@ export function PageTabs(props: { id: string; tabs: Tab[]; children: JSX.Element
   let mark: HTMLSpanElement | undefined;
 
   let writePending = false;
-  // An element the address named, brought into view once its tab is open: the layout's jump finds it
-  // hidden, or not there yet on a page that fetches its content.
+  // An element the address named, scrolled into view once its tab is open. The layout's jump finds it hidden,
+  // or not there yet on a page that fetches its content.
   let target: string | null = null;
   // An id not on the page yet (a tab whose content waits for a box or a fetch) is looked for again as
   // content arrives, until the reader picks a tab.
@@ -73,7 +73,7 @@ export function PageTabs(props: { id: string; tabs: Tab[]; children: JSX.Element
     const key = named ? id : paneOf(id);
     target = named ? null : id;
     unfound = key ? null : id;
-    // A hash naming a tab is written as the tab's address, as a click writes it, now or once the tab opens.
+    // A hash naming a tab is rewritten as the tab's address (as a click would write it), now or once the tab opens.
     writePending = named && location.hash.length > 1;
     if (key && !open(key, writePending)) setPending(key);
   };
@@ -84,7 +84,7 @@ export function PageTabs(props: { id: string; tabs: Tab[]; children: JSX.Element
   // The address's place, kept while only its spelling changes (#id written as /page/id).
   const wanted = createMemo(() => landingId(location.pathname, location.hash));
   createEffect(on(wanted, (id) => queueMicrotask(() => fromId(id))));
-  // A tab named before it was enabled opens when it is; a tab disabled while open gives way to the first.
+  // A tab named before it was enabled opens once enabled; a tab disabled while open gives way to the first.
   createEffect(() => {
     const p = pending();
     // Not on Back or Forward: the write would cut short the return to where the reader was.
@@ -162,8 +162,8 @@ export function PageTabs(props: { id: string; tabs: Tab[]; children: JSX.Element
                 data-tab={t.key}
                 onClick={() => {
                   if (!open(t.key, true)) return;
-                  // From further down the page, the open tab starts at the top of its pane, under the stuck bar. The
-                  // bar's position can't say where that is: while stuck, it is always at its top.
+                  // Clicked further down the page, the open tab starts at the top of its pane, under the stuck bar.
+                  // The bar's position can't give that point: while stuck, the bar is always at the top.
                   const pane = document.getElementById(`pane-${props.id}-${t.key}`);
                   if (!pane || !bar) return;
                   const top = pane.getBoundingClientRect().top + window.scrollY - bar.offsetHeight - parseFloat(getComputedStyle(bar).top || '0');

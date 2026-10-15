@@ -54,8 +54,8 @@ export async function fetchReleases(): Promise<FirmwareRelease[]> {
   return data.releases;
 }
 
-// The release list for the pages that show it, one fetch kept a minute: the changelog arriving by a link
-// finds it fetched beside its code, and the page's fetch gets the same list.
+// The release list for the pages that show it, one fetch kept for a minute. The changelog, reached by a
+// link, finds the list fetched beside its code, and the page's fetch gets the same list.
 let kept: { at: number; list: Promise<FirmwareRelease[]> } | null = null;
 let inHand: FirmwareRelease[] | undefined;
 export function latestReleases(): Promise<FirmwareRelease[]> {
@@ -80,9 +80,9 @@ export async function downloadAsset(asset: FirmwareAsset): Promise<Uint8Array> {
     throw new Error(body?.error ?? `Download failed (${res.status}).`);
   }
   const bytes = new Uint8Array(await res.arrayBuffer());
-  // A flash's MD5 check is of the file as downloaded, which a short download passes, so the size is checked here.
+  // A flash's MD5 check covers the file as downloaded, so a short download would pass it; the size is checked here.
   if (asset.size && bytes.length !== asset.size) {
-    throw new Error(`Incomplete download (${bytes.length} of ${asset.size} bytes). Try again.`);
+    throw new Error(`Incomplete download (${bytes.length}/${asset.size} bytes). Try again.`);
   }
   return bytes;
 }

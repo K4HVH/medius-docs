@@ -1,4 +1,4 @@
-// The box drops every raw report while imperfect clones are off, so the controls hide then.
+// While imperfect clones are off the box drops every raw report, so the controls are hidden.
 
 import { A } from '@solidjs/router';
 import { Show, createSignal } from 'solid-js';

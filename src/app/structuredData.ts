@@ -7,8 +7,8 @@ const MEDIUS_ID = `${SITE}/#medius`;
 
 const abs = (path: string) => SITE + (path === '/' ? '/' : path);
 
-// The site and Medius, on every page. Medius is a plain Thing: a SoftwareApplication item is a rich-result
-// candidate Google wants a rating for, and Medius has none to give.
+// The site and Medius, on every page. Medius is a plain Thing: Google wants a rating for a SoftwareApplication
+// (a rich-result candidate), and Medius has none.
 function siteNodes(): object[] {
   return [
     {
@@ -31,11 +31,11 @@ function siteNodes(): object[] {
   ];
 }
 
-// An item's address is out of search and is no page but its parent's, so it carries the site's nodes alone.
+// An item's address is kept out of search and shows its parent page, so it carries only the site's nodes.
 export const itemJsonLd = (): object => ({ '@context': 'https://schema.org', '@graph': siteNodes() });
 
-// schema.org graph for one page. `faq`: the Help answers, which the Help page lists in its markup and
-// fetches only there.
+// schema.org graph for one page. `faq`: the Help answers, which only the Help page fetches and lists in its
+// markup.
 export function buildJsonLd(route: RouteInfo, lastmod?: string, faq?: readonly HelpItem[]): object {
   const url = abs(route.path);
   const graph = siteNodes();

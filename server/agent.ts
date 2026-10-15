@@ -90,7 +90,7 @@ export function markdownLink(mdPath: string): string {
   return `<${SITE}${mdPath.replace(/\.md$/, '')}>; rel="canonical", ${LLMS_LINK}`;
 }
 
-// Agent files that are not pages for a search result.
+// Agent files that shouldn't show as search results.
 export const NOINDEX_ARTIFACTS = /^\/(llms\.txt|llms-full\.txt|agent-index\.json|routes\.json)$/;
 export const DOC_CACHE = 'public, max-age=300, s-maxage=3600, stale-while-revalidate=86400';
 // The changelog and stats change without a deploy: cache them as briefly as their sources.
@@ -110,9 +110,9 @@ const HTML_HEADERS = {
 
 const LIVE_DOWN = { 'retry-after': '120', 'cache-control': 'no-store' };
 
-// A page the server fills: a live page never filled answers 503 with its snapshot, so crawlers retry
-// rather than index "Loading..."; a soft page always answers 200, filled as far as its sources allow.
-// Null for any other page.
+// A page the server fills. A live page that couldn't be filled answers 503 with its snapshot, so crawlers
+// retry instead of indexing "Loading...". A soft page always answers 200, filled as far as its sources
+// allow. Null for any other page.
 export async function livePage(
   path: string,
   snapshot: string,

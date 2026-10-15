@@ -31,11 +31,11 @@ const Streams: Component = () => {
 
       <DocSection id="subscribe" title="Subscribe" caption="Open an event or log stream">
         <p>
-          Both return a <A href="/bindings/c/types#errors"><code>MediusStatus</code></A> and write
-          an opaque handle through an out-param. A catch subscription is an array of{' '}
+          Both calls return a <A href="/bindings/c/types#errors"><code>MediusStatus</code></A> and
+          write an opaque handle through an out-param. A catch subscription is an array of{' '}
           <A href="/bindings/c/types#catch-filter"><code>MediusCatchFilter</code></A> entries from the{' '}
-          <A href="/bindings/c/api#catch-filters"><code>medius_catch_filter_*</code></A> helpers; the
-          call doesn't retain it, so it can live on the stack. Fields:{' '}
+          <A href="/bindings/c/api#catch-filters"><code>medius_catch_filter_*</code></A> helpers. The
+          call doesn't retain the array, so it can live on the stack. Fields:{' '}
           <A href="/bindings/c/types#catch-filter">Types &amp; errors</A>; classes:{' '}
           <A href="/bindings/c/types#catch-class"><code>MediusCatchClass</code></A>.
         </p>
@@ -80,8 +80,8 @@ medius_device_catch_events(dev, filters, 3, &events);`}</code></pre>
         </p>
         <div class="callout callout--info">
           <p>
-            Everything at full length exceeds what the control link carries; bulk goes undrained
-            under a busy mouse. Lower <code>capture</code> for headroom. Queue ranking and link
+            Every class at full length is more than the control link carries: under a busy mouse,
+            bulk goes undrained. Lower <code>capture</code> for headroom. Queue ranking and link
             budget: <A href="/native/commands/catch#delivery">Delivery</A>.
           </p>
         </div>
@@ -177,7 +177,7 @@ typedef struct MediusLogLine {          // from medius_log_stream_recv
         </div>
         <p>
           <A href="/native/architecture">Host-chip</A> stamps cover motion, usages,{' '}
-          <code>HID_IN</code> and IN traffic; device-chip stamps cover <code>HID_OUT</code>, OUT
+          <code>HID_IN</code> and native IN traffic. Device-chip stamps cover <code>HID_OUT</code>, OUT
           traffic, <code>CONTROL</code>, <code>EMIT</code>, <code>BUS</code> and <code>CLIP_TRANSFER</code>. The chips boot independently; a{' '}
           <A href="/bindings/c/streams#timeline"><code>MediusTimeline</code></A> puts both on your clock.
         </p>
@@ -315,8 +315,9 @@ medius_input_stream_free(input);`}</code></pre>
 
       <DocSection id="timeline" title="Timeline" caption="Put box stamps on this machine's clock">
         <p>
-          A catch stamp is microseconds on a chip's clock: it wraps every ~71.6 minutes and relates
-          to nothing on this machine. A <code>MediusTimeline</code> maps it.
+          A catch stamp is microseconds on a chip's clock. It wraps every ~71.6 minutes and relates
+          to no clock on this machine. A <code>MediusTimeline</code> maps it onto this machine's
+          clock.
         </p>
         <pre class="api-signature">{`struct MediusTimeline *medius_timeline_new(void);
 void     medius_timeline_free(struct MediusTimeline *t);
@@ -366,9 +367,9 @@ medius_timeline_free(tl);`}</code></pre>
 
       <DocSection id="close" title="Close" caption="End a stream another thread is receiving on">
         <p>
-          A close ends the stream for every clone, and a receive blocked on it in another thread
-          returns at once. Free the handle after that thread is done with it. Closing one log stream
-          leaves the others reading.
+          A close ends the stream for every clone. A receive blocked on it in another thread returns
+          at once. Free the handle after that thread is done with it. Closing one log stream leaves
+          the others reading.
         </p>
         <pre class="api-signature">{`void medius_event_stream_close(struct MediusEventStream *stream);
 void medius_input_stream_close(struct MediusInputStream *stream);

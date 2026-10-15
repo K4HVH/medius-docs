@@ -5,8 +5,8 @@ import { createServer } from 'vite';
 import { buildSearchIndex } from './lib/searchBuild';
 import { checkIndex, siteContext } from './lib/searchCheck';
 
-// The site's search index into dist/: built on a dev server (the dashboard's panels show only with the
-// dev build's fake box connected), then held to the checks; any failure stops the build.
+// Writes the site's search index into dist/. It is built on a dev server (the dashboard's panels show only
+// with the dev build's fake box connected), then checked; any failure stops the build.
 // A port no one holds; Vite reads 0 as no port at all.
 const port = await new Promise<number>((done) => {
   const probe = listen().listen(0, () => {

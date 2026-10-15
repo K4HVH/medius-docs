@@ -1,5 +1,5 @@
 // The Devices list as the Devices page shows it, for the Discord bot to post what's new: owners'
-// reports merged with every mouse and keyboard the usage stats saw on 2 or more boxes.
+// reports merged with every mouse and keyboard the usage stats saw on >=2 boxes.
 
 import { COMPAT } from '../src/app/data/compatibility';
 import { mergeCompat, withIds } from '../src/app/data/compatMerge';

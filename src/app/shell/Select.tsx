@@ -59,9 +59,9 @@ export function Select(props: {
     setKb(-1);
     if (refocus) button?.focus();
   };
-  // The list opens under the button, or over it when it doesn't fit below and does fit between the button and
-  // the bars stuck over the top of the page; fitting neither, it takes the roomier side and scrolls within it.
-  // Focusing it never scrolls the page from under the pointer.
+  // The list opens under the button. If it doesn't fit below but fits between the button and the bars stuck to
+  // the top of the page, it opens above. If it fits neither, it takes the roomier side and scrolls. Focusing it
+  // never scrolls the page from under the pointer.
   const show = () => {
     if (props.disabled) return;
     setUp(false);
@@ -78,7 +78,7 @@ export function Select(props: {
         if (need > below) {
           const upward = need <= above || above > below;
           setUp(upward);
-          // Never under three options' height, however little room there is.
+          // Never shorter than three options, however little room there is.
           if (need > (upward ? above : below)) setRoom(Math.max(120, upward ? above : below));
         }
       }
@@ -160,8 +160,8 @@ export function Select(props: {
           <path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.4" />
         </svg>
       </button>
-      {/* As wide as the longest option, so a pick never changes the width; a long list that filters is not. The
-          labels are drawn by CSS, so they are no text to search, read out or find. */}
+      {/* As wide as the longest option, so a pick never changes the width (a long list with a filter isn't). The
+          labels are drawn by CSS, so there's no text to search, read out or find. */}
       <Show when={!props.filter}>
         <span class="dd-z" aria-hidden="true">
           <Index each={props.options}>{(o) => <span data-w={o().note ? `${o().label} (${o().note})` : o().label} />}</Index>

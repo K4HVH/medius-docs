@@ -112,11 +112,11 @@ device.move_rel(5, 5)?;`}</code></pre>
 
         <p>
           The <code>with_*</code> builders set what each{' '}
-          <A href="/library/requests">query</A> returns; <code>set_*</code> changes a live fake's
+          <A href="/library/requests">query</A> returns. <code>set_*</code> changes a live fake's
           version or health mid-test.
         </p>
         <p>
-          The <A href="/library/types/structs">structs</A> they take are on the types page;{' '}
+          The <A href="/library/types/structs">structs</A> they take are on the types page.{' '}
           <A href="/library/types/structs#health"><code>Health::from_flags</code></A> builds one
           from the raw <code>u16</code> flags word.
         </p>
@@ -143,7 +143,7 @@ assert!(!device.query_health()?.mouse_attached);`}</code></pre>
         <p><span class="api-badge api-badge--executed">No round-trip</span></p>
         <pre class="api-signature">fn push_raw(&self, bytes: &[u8])</pre>
         <p><span class="api-badge api-badge--executed">No round-trip</span></p>
-        <pre class="api-signature">fn push_motion(&self, seq: u8, ts_us: u32, dx: i16, dy: i16, dz: i16)</pre>
+        <pre class="api-signature">fn push_motion(&self, seq: u8, ts_us: u32, dx: i16, dy: i16, dz: i16, dpan: i16)</pre>
         <p><span class="api-badge api-badge--executed">No round-trip</span></p>
         <pre class="api-signature">fn push_usages(&self, seq: u8, ts_us: u32, class: Class, direction: Direction, usages: &[Usage])</pre>
         <p><span class="api-badge api-badge--executed">No round-trip</span></p>
@@ -151,7 +151,7 @@ assert!(!device.query_health()?.mouse_attached);`}</code></pre>
         <p><span class="api-badge api-badge--executed">No round-trip</span></p>
 
         <p>
-          Each puts bytes on the inbound stream as if the box sent them; the three event calls
+          Each puts bytes on the inbound stream as if the box sent them. The three event calls
           share one <code>seq</code> counter, as on the wire.
         </p>
 
@@ -194,7 +194,7 @@ assert!(!device.query_health()?.mouse_attached);`}</code></pre>
         <p>
           The three event rows each name one{' '}
           <A href="/library/types/enums#catch-event"><code>CatchEvent</code></A> variant. A push records no
-          loss; exercise loss handling through <code>CatchState::dropped</code>.
+          loss. To exercise loss handling, use <code>CatchState::dropped</code>.
         </p>
 
         <div class="api-response-label">EXAMPLE</div>
@@ -318,12 +318,12 @@ mock.clear_recorded(); // next assertions start from an empty record`}</code></p
               <tr>
                 <td><code>with_clip_settings</code>, <code>set_clip_settings</code></td>
                 <td><code>MockBox</code>, nothing</td>
-                <td>Set the <A href="/library/types/structs#clip-settings"><code>ClipSettings</code></A> <code>query_config</code> replies with. Its packet triggers are bound in order, as <code>bind_packet</code> binds them, under the opt-in the mock holds when scripted; script the opt-in first for a consuming one.</td>
+                <td>Set the <A href="/library/types/structs#clip-settings"><code>ClipSettings</code></A> that <code>query_config</code> replies with. Its packet triggers are bound in order, as <code>bind_packet</code> binds them, under the opt-in the mock holds at that moment. For a consuming trigger, script the opt-in first.</td>
               </tr>
               <tr>
                 <td><code>clip_packet</code></td>
                 <td><code>(Option&lt;ClipAction&gt;, bool)</code></td>
-                <td>Run one packet through the <A href="/library/clip#packet-triggers">packet triggers</A>, as the box does. The most specific trigger the packet matches counts it in its <code>hits</code>. The action is <code>None</code> when no trigger matches, and when that trigger is <code>once_per_run</code> and the packet continues a run; the bool is whether that trigger consumes the packet.</td>
+                <td>Run one packet through the <A href="/library/clip#packet-triggers">packet triggers</A>, as the box does. The most specific trigger the packet matches counts it in its <code>hits</code>. The action is <code>None</code> if no trigger matches, or if the matching trigger is <code>once_per_run</code> and the packet continues a run. The bool is whether that trigger consumes the packet.</td>
               </tr>
             </tbody>
           </table>
@@ -337,8 +337,8 @@ mock.clear_recorded(); // next assertions start from an empty record`}</code></p
             <tbody>
               <tr><td><code>query_status</code></td><td>Replies with the scripted <A href="/library/types/structs#clip-status"><code>ClipStatus</code></A>.</td></tr>
               <tr><td><code>query_config</code></td><td>Replies with the scripted settings plus the mock's bound packet triggers, each with its <code>hits</code>.</td></tr>
-              <tr><td><code>bind_packet</code>, <code>unbind_packet</code></td><td>Add to or remove from the mock's packet triggers, through the box's checks, the 112-byte pool and the opt-in included, in the box's order.</td></tr>
-              <tr><td><code>clear_triggers</code></td><td>Clears both kinds; <code>reset</code> clears the whole clip config.</td></tr>
+              <tr><td><code>bind_packet</code>, <code>unbind_packet</code></td><td>Add to or remove from the mock's packet triggers, in the box's order. The box's checks apply, the 112-byte pool and the opt-in included.</td></tr>
+              <tr><td><code>clear_triggers</code></td><td>Clears both kinds. <code>reset</code> clears the whole clip config.</td></tr>
               <tr><td><code>set_imperfect_status</code>, <code>with_imperfect</code>, <code>allow_imperfect_clones</code></td><td>With the opt-in off, the mock drops its consuming packet triggers, as the box does.</td></tr>
               <tr><td><code>set_retain</code>, <code>finalize</code>, <code>bind</code>, <code>append</code>, the engine verbs</td><td>Recorded frames. The <code>query_config</code> and <code>query_status</code> replies stay as scripted.</td></tr>
             </tbody>
@@ -408,7 +408,7 @@ assert!(matches!(err, Error::BadProtoVer { got: 10 }));`}</code></pre>
 
         <p>
           Each drops the mock's session state as the box does (locks, held input, rewrite rules,
-          transforms, the clip and its config), keeps what it stores, and triggers the same{' '}
+          transforms, the clip and its config). Each keeps what the mock stores and triggers the same{' '}
           <A href="/library/lifecycle#restart">session recovery</A>.
         </p>
 
@@ -422,7 +422,7 @@ assert!(matches!(err, Error::BadProtoVer { got: 10 }));`}</code></pre>
               <tr>
                 <td><code>restart</code></td>
                 <td>A device-chip boot. A <code>RESET</code> with its store flag and <code>reboot(RebootTarget::DeviceRun)</code> restart the mock too.</td>
-                <td>The hello, now and again on the next frame the mock receives; <code>session</code> back at 0.</td>
+                <td>The hello, sent now and again on the next frame the mock receives. <code>session</code> goes back to 0.</td>
               </tr>
               <tr>
                 <td><code>link_lost</code></td>
@@ -431,20 +431,20 @@ assert!(matches!(err, Error::BadProtoVer { got: 10 }));`}</code></pre>
               </tr>
               <tr>
                 <td><code>detach</code></td>
-                <td>The real device detaching. With <code>back_within_grace</code> it re-attaches inside the 250 ms grace and the clone stays up; without, the clone is down until <code>attach</code>.</td>
-                <td><code>session</code> moving; the recovery waits for a clone.</td>
+                <td>The real device detaching. With <code>back_within_grace</code>, it re-attaches inside the 250 ms grace and the clone stays up. Without it, the clone is down until <code>attach</code>.</td>
+                <td><code>session</code> moving. The recovery waits for a clone.</td>
               </tr>
               <tr>
                 <td><code>attach</code></td>
-                <td>A real device attaching. A clone that was up is cloned again, which releases the session; one that was down comes up with nothing to release.</td>
+                <td>A real device attaching. If the clone was up, it is cloned again, which releases the session. If it was down, it comes up with nothing to release.</td>
                 <td>A clone for the recovery to re-send to.</td>
               </tr>
             </tbody>
           </table>
         </div>
         <p>
-          As on the box, <code>session</code> counts a release only when a command other than a{' '}
-          <code>QUERY</code> arrived since the last one.
+          As on the box, <code>session</code> counts a release only if a command other than a{' '}
+          <code>QUERY</code> arrived since it last counted one.
         </p>
 
         <div class="api-response-label">EXAMPLE</div>
@@ -483,11 +483,11 @@ assert_eq!(scale_x()?, 40);`}</code></pre>
             <tbody>
               <tr>
                 <td><code>refuse_next_activate</code></td>
-                <td>The next <A href="/native/commands/update#activate"><code>ACTIVATE</code></A> refused with <code>status</code>, the staged image kept.</td>
+                <td>The next <A href="/native/commands/update#activate"><code>ACTIVATE</code></A> refused with <code>status</code>. The staged image is kept.</td>
               </tr>
               <tr>
                 <td><code>reboot_after_activate</code></td>
-                <td>The reboot after each accepted activate: <code>unanswered</code> firmware queries get no reply, then the device chip reads on probation for the next <code>pending</code> queries.</td>
+                <td>The reboot after each accepted activate. The first <code>unanswered</code> firmware queries get no reply, and the device chip then reads on probation for the next <code>pending</code> queries.</td>
               </tr>
             </tbody>
           </table>

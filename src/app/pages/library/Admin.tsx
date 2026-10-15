@@ -47,7 +47,7 @@ device.reset()?;                // back to passthrough`}</code></pre>
               </tr>
               <tr>
                 <td>Library held-state</td>
-                <td>Cleared, so a later <A href="/library/lifecycle#reapply"><code>reapply</code></A> or <A href="/library/lifecycle#reconnect"><code>reconnect</code></A> re-asserts nothing, and the <A href="/library/lifecycle#restart">session release</A> the box counts for it restores nothing.</td>
+                <td>Cleared. A later <A href="/library/lifecycle#reapply"><code>reapply</code></A> or <A href="/library/lifecycle#reconnect"><code>reconnect</code></A> re-asserts nothing. The box counts the reset as a <A href="/library/lifecycle#restart">session release</A>, and recovery from it restores nothing.</td>
               </tr>
             </tbody>
           </table>
@@ -101,8 +101,8 @@ device.reset()?;                // drop all of the above, back to passthrough`}<
         <p>
           Sends one <A href="/native/commands/admin#reset"><code>RESET</code></A> frame with its NVS
           flag. The clone re-enumerates on the game PC. The control port stays enumerated through the
-          reboot, so the link stays up and queries time out until the box replies; poll one to know it
-          is back.
+          reboot, so the link stays up. Queries time out until the box replies, so poll one to know
+          it is back.
         </p>
 
         <div class="api-response-label">EXAMPLE</div>
@@ -113,9 +113,9 @@ device.reset()?;                // drop all of the above, back to passthrough`}<
         <pre class="api-signature">fn reboot(&self, target: RebootTarget) -&gt; Result&lt;()&gt;</pre>
         <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
         <p>
-          <A href="/library/types/enums#reboot-target"><code>RebootTarget</code></A> picks the chip and
-          whether it comes back running firmware or in download mode; its four variants and bytes are on{' '}
-          <A href="/library/types/enums">Types</A>, the wire layout on the native{' '}
+          <A href="/library/types/enums#reboot-target"><code>RebootTarget</code></A> picks the chip, and
+          whether it comes back running firmware or in download mode. Its four variants and bytes
+          are on <A href="/library/types/enums">Types</A>. The wire layout is on the native{' '}
           <A href="/native/commands/admin#reboot"><code>REBOOT</code></A> command.
         </p>
 
@@ -126,24 +126,24 @@ device.reboot(RebootTarget::DeviceRun)?;   // restart the device chip`}</code></
 
         <div class="callout callout--warning">
           <p>
-            A <code>Download</code> variant leaves the chip in ROM download mode, presenting no clone
-            and not replying on the control link until reflashed or power-cycled. Send one only to
-            flash.
+            A <code>Download</code> variant leaves the chip in ROM download mode until reflashed or
+            power-cycled. Meanwhile it presents no clone and doesn't reply on the control link. Send
+            one only to flash.
           </p>
         </div>
 
         <div class="callout callout--info">
           <p>
-            A rebooted device chip sends the ready hello, and the library re-sends what it holds once
-            the clone is back (<A href="/library/lifecycle#restart">session recovery</A>). A link that
-            drops meanwhile returns through the reader thread's auto-reconnect, or{' '}
+            A rebooted device chip sends the ready hello. Once the clone is back, the library re-sends
+            what it holds (<A href="/library/lifecycle#restart">session recovery</A>). If the link drops
+            meanwhile, the reader thread's auto-reconnect brings it back, or{' '}
             <A href="/library/lifecycle#reconnect"><code>reconnect</code></A> forces it.
           </p>
         </div>
         <p>
           A box already running Medius takes firmware over the open connection through the{' '}
-          <A href="/library/update">update</A> calls; a <code>Download</code> reboot is only for a
-          first install or a chip whose app will not boot.
+          <A href="/library/update">update</A> calls. A <code>Download</code> reboot is only for a
+          first install or a chip whose app won't boot.
         </p>
       </DocSection>
 

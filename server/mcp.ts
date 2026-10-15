@@ -84,7 +84,7 @@ function buildServer(): McpServer {
 
   server.tool('search_docs', {
     description:
-      'Search the Medius site: every page and section of the docs and the Guide, the dashboard, each firmware release and device report. Returns ranked results with the sentence that matched; follow up with get_page on a result\'s path for the full Markdown.',
+      'Search the Medius site: docs and Guide pages and sections, the dashboard, firmware releases and device reports. Returns ranked results, each with its matching sentence. Call get_page on a result\'s path for the full Markdown.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -107,7 +107,7 @@ function buildServer(): McpServer {
   // requires two tools named exactly `search` and `fetch` with these shapes.
   server.tool('search', {
     description:
-      'Search the Medius documentation and return matching pages and sections. Use the returned id with the fetch tool to read its page.',
+      'Search the Medius docs for matching pages and sections. Pass a result\'s id to fetch to read its page.',
     inputSchema: {
       type: 'object',
       properties: { query: { type: 'string', description: 'Search terms.' } },
@@ -143,7 +143,7 @@ function buildServer(): McpServer {
   });
 
   server.tool('fetch', {
-    description: "Fetch the full Markdown of one documentation page by its id (the id returned by search; a section's id gives its page).",
+    description: "Return the full Markdown of one docs page, by an id from search (a section's id returns its page).",
     inputSchema: {
       type: 'object',
       properties: { id: { type: 'string', description: 'An id returned by search (an address on the site).' } },

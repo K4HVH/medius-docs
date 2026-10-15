@@ -10,8 +10,8 @@ export interface Faces {
 
 type FaceName = keyof Faces;
 
-// One piece of text, placed: x is where it starts, y its baseline, width its measure and box the most it
-// may take.
+// One placed piece of text: x is where it starts, y its baseline, width its measured width, and box the
+// most it may take.
 export interface Run {
   text: string;
   face: FaceName;
@@ -128,7 +128,7 @@ export function layoutCard(c: CardContent, faces: Faces): CardLayout {
   const titleText = c.titleLines ? c.titleLines.slice(0, TITLE.lines).map((l) => clean('bold', l)) : clean('bold', c.title);
   const fitNow = () => fitTitle(faces.bold, titleText, { max: TITLE.max, min: TITLE.min, width: WIDE, lines: TITLE.lines, tracking: TITLE.tracking, room });
   let fit = fitNow();
-  // A list longer than the card holds loses items from its end.
+  // A list longer than the card can hold loses items from its end.
   while (items.length > 1 && !room(fit.size, fit.lines.length)) {
     items = items.slice(0, -1);
     listHeight = heightOf(items);

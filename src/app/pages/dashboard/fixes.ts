@@ -8,8 +8,8 @@ import {
   type Version,
 } from '../../../dashboard/protocol';
 
-// A setting the connected device needs, read off what the box reports about it. The fixes are the Devices
-// page's Device fixes, offered where the owner already is.
+// A setting the connected device needs, judged from what the box reports about the device. These are the
+// Devices page's Device fixes, offered where the owner already is.
 
 export interface Signals {
   version: Version | null;
@@ -35,32 +35,32 @@ const before = (v: Version, major: number, minor: number, patch: number) =>
 export function offerFor(s: Signals): Offer | null {
   const { version, device, imperfect, emit, rate } = s;
   if (!version || !imperfect) return null;
-  // A device the box refused reads no ids, so this one rests on the flags the box sets.
+  // The box reads no ids for a device it refused, so this offer rests on the box's flags.
   if (!imperfect.allowed && (imperfect.overCapacity || imperfect.cloneImperfect))
     return { kind: 'imperfect', update: imperfect.overCapacity && before(version, 3, 4, 4) };
   if (!device || device.kind !== DEVICE_KIND_MOUSE) return null;
   if (device.vid === LOGITECH && emit && emit.advertisedHz > 0 && emit.advertisedHz <= 125 && !emit.forceActive)
     return { kind: 'logitech', hz: emit.advertisedHz };
-  // Razer's 8K mice keep their rate as a divider of 8000 Hz: set to 1000 Hz on a PC, they run at 125 Hz
-  // through the box, which polls at most every millisecond.
+  // Razer's 8K mice store their rate as a divider of 8000 Hz. Set to 1000 Hz on a PC, they run at 125 Hz
+  // through the box (the box polls at most once a millisecond).
   if (device.vid === RAZER && rate?.confident && rate.nativePeriodUs >= 7000 && rate.nativePeriodUs <= 9000) return { kind: 'razer' };
   return null;
 }
 
-// What Dismiss puts an offer away under: the device, or one the box reads no ids for.
+// The key Dismiss files an offer under: the device's VID:PID, or 'unread' when the box reads no ids.
 export function offerKey(s: Signals): string {
   const d = s.device;
   const hex = (n: number) => n.toString(16).padStart(4, '0');
   return d && (d.vid || d.pid) ? `${hex(d.vid)}:${hex(d.pid)}` : 'unread';
 }
 
-// The box's side of a fix: reads return null when the box doesn't reply (it restarts as a setting takes),
-// and writes get no reply.
+// The box's side of a fix. A read returns null when the box doesn't reply (it restarts while a setting
+// takes effect); a write gets no reply.
 export interface FixIO {
   now(): number;
   sleep(ms: number): Promise<void>;
-  // Neither chip is on probation, as a restart then would roll a just-installed firmware back; null when
-  // the box doesn't answer.
+  // True when neither chip is on probation (a restart during probation rolls new firmware back); null
+  // when the box doesn't answer.
   confirmed(): Promise<boolean | null>;
   emit(): Promise<EmitPace | null>;
   imperfect(): Promise<ImperfectStatus | null>;
@@ -82,7 +82,7 @@ export type Outcome =
 
 const POLL_MS = 200;
 
-// Reads until `ok` holds or the time runs out; the last value read either way.
+// Reads until `ok` holds or the time runs out, and returns the last value read either way.
 async function waitFor<T>(io: FixIO, read: () => Promise<T | null>, ok: (v: T) => boolean, ms: number): Promise<{ hit: T | null; last: T | null }> {
   const end = io.now() + ms;
   let last: T | null = null;
@@ -97,7 +97,7 @@ async function waitFor<T>(io: FixIO, read: () => Promise<T | null>, ok: (v: T) =
   }
 }
 
-// A write, then reads until it shows, four times over: a write lost on the way gets no reply to say so.
+// Writes, then reads until the write shows; up to four tries, since a lost write gets no reply saying so.
 async function setUntil<T>(io: FixIO, write: () => Promise<void>, read: () => Promise<T | null>, ok: (v: T) => boolean): Promise<boolean> {
   for (let i = 0; i < 4; i++) {
     await write().catch(() => undefined);
@@ -123,7 +123,7 @@ async function confirmed(io: FixIO): Promise<'ok' | 'checking' | 'silent'> {
 const set = (e: EmitPace) => e.mode === EmitMode.Fixed && e.fixedHz === RATE_HZ && e.forceHz === RATE_HZ;
 
 // The Logitech fix, as medius-fw's tools/logitech_fix does it: injection paced at a fixed 1000 Hz, the wire rate forced
-// to 1000 Hz and imperfect clone on. A device that only goes slower forced keeps the rate it declares.
+// to 1000 Hz and imperfect clone on. A device that comes out slower when forced keeps its declared rate.
 export async function logitechFix(io: FixIO): Promise<Outcome> {
   const ready = await confirmed(io);
   if (ready !== 'ok') return { kind: ready };

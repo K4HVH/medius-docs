@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# Excludes node_modules rather than listing our own directories: the first version listed them, and
-# the two type errors sitting in tests/ were outside that list from the day it was written. The bun
-# and vite type packages disagree with each other about import.meta and hot, which is noise this
-# project did not cause and cannot fix.
+# Excludes node_modules instead of listing our own directories: the first version listed them and missed
+# the two type errors in tests/, which were outside that list from the day it was written. The bun and
+# vite type packages disagree about import.meta and hot; that noise isn't this project's and can't be
+# fixed here.
 set -uo pipefail
 cd "$(dirname "$0")/.."
-# Proved first, because a pipeline into grep swallows the status: a missing toolchain otherwise
-# reports "clean" and satisfies the whole gate. tsc's exit code cannot stand in for this, since
-# it is non-zero whenever the vendored type packages disagree, which is always.
+# Checked first, because a pipe into grep swallows the exit status: a missing toolchain would otherwise
+# report "clean" and pass the whole gate. tsc's exit code can't stand in for this check: the vendored
+# type packages always disagree, so it is always non-zero.
 if ! npx tsc --version >/dev/null 2>&1; then
     echo "typecheck: tsc will not run; is node_modules installed?"
     exit 1

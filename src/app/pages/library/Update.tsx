@@ -9,12 +9,12 @@ const Update: Component = () => {
       <PageHeader>
         <p>
           <A href="/library/update#stage-firmware"><code>stage_firmware</code></A> writes an image and{' '}
-          <A href="/library/update#activate-firmware"><code>activate_firmware</code></A> commits it;{' '}
+          <A href="/library/update#activate-firmware"><code>activate_firmware</code></A> commits it.{' '}
           <A href="/library/update#update-firmware"><code>update_firmware</code></A> does both for one
-          chip, <A href="/library/update#abort-update"><code>abort_update</code></A> discards a
+          chip. <A href="/library/update#abort-update"><code>abort_update</code></A> discards a
           transfer, and{' '}
           <A href="/library/update#wait-firmware-confirmed"><code>wait_firmware_confirmed</code></A>{' '}
-          waits out probation. They run over the open control link as{' '}
+          waits out probation. All run over the open control link as{' '}
           <A href="/native/commands/update"><code>UPDATE</code></A> frames, with no ROM download reboot.
         </p>
         <div class="callout callout--info">
@@ -67,9 +67,9 @@ device.activate_firmware()?;`}</code></pre>
         <pre class="api-signature">fn stage_firmware(&self, target: UpdateTarget, image: &amp;[u8], progress: &amp;mut dyn FnMut(UpdateProgress)) -&gt; Result&lt;u32&gt;</pre>
         <p><span class="api-badge api-badge--responded">Blocks</span></p>
         <p>
-          Blocks for the whole transfer, a few seconds per chip, while the clone is disconnected from
-          the game PC. A chip on probation refuses another update, so this waits for both to confirm
-          their booted image, else returns{' '}
+          Blocks for the whole transfer (a few seconds per chip). The clone is disconnected from the
+          game PC meanwhile. A chip on probation refuses another update, so this first waits for both
+          chips to confirm their booted image. If they don't, it returns{' '}
           <A href="/library/types/errors"><code>Error::Update</code></A> with{' '}
           <code>ON_PROBATION</code>.
         </p>
@@ -80,7 +80,7 @@ device.activate_firmware()?;`}</code></pre>
             </thead>
             <tbody>
               <tr><td><code>target</code></td><td><A href="/library/types/enums#update-target"><code>UpdateTarget</code></A></td><td>Which chip to write: <code>Device</code> or <code>Host</code>.</td></tr>
-              <tr><td><code>image</code></td><td><code>&amp;[u8]</code></td><td>The whole <code>.bin</code>. Larger than <code>slot_size</code> is refused with <code>TOO_BIG</code> before a byte is sent.</td></tr>
+              <tr><td><code>image</code></td><td><code>&amp;[u8]</code></td><td>The whole <code>.bin</code>. An image larger than <code>slot_size</code> is refused with <code>TOO_BIG</code> before any byte is sent.</td></tr>
               <tr><td><code>progress</code></td><td><code>&amp;mut dyn FnMut(</code><A href="/library/types/structs#update-progress"><code>UpdateProgress</code></A><code>)</code></td><td>Called once per acknowledged window, not once per chunk.</td></tr>
             </tbody>
           </table>
@@ -92,7 +92,7 @@ device.activate_firmware()?;`}</code></pre>
         <div class="callout callout--info">
           <p>
             A staged image is inert until{' '}
-            <A href="/library/update#activate-firmware"><code>activate_firmware</code></A>; a power cut
+            <A href="/library/update#activate-firmware"><code>activate_firmware</code></A>. A power cut
             in between boots the running firmware.
           </p>
         </div>
@@ -112,8 +112,8 @@ println!("\\nstaged {written} bytes, not yet booted");`}</code></pre>
         <pre class="api-signature">fn activate_firmware(&self) -&gt; Result&lt;()&gt;</pre>
         <p><span class="api-badge api-badge--responded">Blocks</span></p>
         <p>
-          Commits every staged image and reboots into it, host chip first, then reconnects: tens of
-          seconds when the host chip is involved. With nothing staged, returns{' '}
+          Commits every staged image, reboots into it (host chip first), then reconnects. This takes
+          tens of seconds when the host chip is involved. With nothing staged, it returns{' '}
           <A href="/library/types/errors"><code>Error::Update</code></A> with{' '}
           <code>NOTHING_STAGED</code>.
         </p>
@@ -123,8 +123,8 @@ println!("\\nstaged {written} bytes, not yet booted");`}</code></pre>
         </p>
         <div class="callout callout--warning">
           <p>
-            A refusal at the host chip leaves the device image staged and armed; the next call would
-            commit it alone, putting the chips on different versions. Retry the whole update, or{' '}
+            If the host chip refuses, the device image stays staged and armed. The next call would
+            commit it alone and leave the chips on different versions. Retry the whole update, or{' '}
             <A href="/library/update#abort-update"><code>abort_update</code></A> each staged target
             first.
           </p>
@@ -139,8 +139,8 @@ println!("now on ota_{} ({})", fw.device.slot, fw.device.state);`}</code></pre>
         <pre class="api-signature">fn abort_update(&self, target: UpdateTarget) -&gt; Result&lt;()&gt;</pre>
         <p><span class="api-badge api-badge--responded">Blocks</span></p>
         <p>
-          Drops what is staged or in flight for one target. The clone returns without a reboot; the
-          running slot is untouched. An abandoned session times out on the box after ten seconds.
+          Drops what is staged or in flight for one target. The clone returns without a reboot, and
+          the running slot is untouched. An abandoned session times out on the box after 10&nbsp;s.
         </p>
         <div class="table-scroll">
           <table class="api-params">
@@ -153,8 +153,9 @@ println!("now on ota_{} ({})", fw.device.slot, fw.device.state);`}</code></pre>
           </table>
         </div>
         <p>
-          Sent while an <A href="/native/commands/update#activate">activate</A> is waiting on the
-          host chip, it abandons that wait and disarms both chips whichever target it names.
+          If an <A href="/native/commands/update#activate">activate</A> is waiting on the host chip,{' '}
+          <code>abort_update</code> abandons that wait and disarms both chips, whichever target it
+          names.
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`use medius::UpdateTarget;
@@ -171,8 +172,8 @@ if let Err(e) = device.activate_firmware() {
         <p><span class="api-badge api-badge--responded">Blocks</span></p>
         <p>
           <A href="/library/update#stage-firmware"><code>stage_firmware</code></A> then{' '}
-          <A href="/library/update#activate-firmware"><code>activate_firmware</code></A>, for one chip;
-          both chips together need the two calls separately. If the activate refuses, the staged image
+          <A href="/library/update#activate-firmware"><code>activate_firmware</code></A>, for one chip.
+          To update both chips together, call the two separately. If the activate refuses, the staged image
           is cleared before the error returns.
         </p>
         <div class="table-scroll">
@@ -203,8 +204,8 @@ device.update_firmware(UpdateTarget::Device, &image, &mut |p| {
         <p>
           A chip on <A href="/native/commands/update#rollback">probation</A> refuses another update,
           so <code>stage_firmware</code> waits on this first. The device chip confirms after 10&nbsp;s
-          of running, the host chip on a clock exchange over the inter-chip link. It keeps asking
-          while the box reboots after an activate.
+          of running. The host chip confirms on a clock exchange over the inter-chip link. This call
+          keeps asking while the box reboots after an activate.
         </p>
         <div class="table-scroll">
           <table class="api-params">
@@ -230,8 +231,9 @@ println!("now on ota_{} ({})", fw.device.slot, fw.device.state);`}</code></pre>
         <p><span class="api-badge api-badge--responded">Blocks</span></p>
         <pre><code class="language-bash">cargo add medius --features async</code></pre>
         <p>
-          Each runs the synchronous transfer on a separate thread and resolves when it finishes, keeping
-          the crate runtime-agnostic. Dropping the future does not stop a transfer the box has begun.
+          Each runs the synchronous transfer on a separate thread and resolves when it finishes, so
+          the crate stays runtime-agnostic. Dropping the future doesn't stop a transfer the box has
+          begun.
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`use futures::executor::block_on;

@@ -8,17 +8,16 @@ const Rewrite: Component = () => {
     <>
       <PageHeader>
         <p>
-          A rule matches traffic and rewrites, answers, refuses, or drops it. It is addressed in the{' '}
-          <code>(class, id, direction)</code> space{' '}
-          <A href="/library/catch">catch</A> reads, in the write direction, narrowed by a masked head
-          compare.
+          A rule matches traffic and rewrites, answers, refuses, or drops it. Rules use the{' '}
+          <code>(class, id, direction)</code> address <A href="/library/catch">catch</A> reads, in the
+          write direction. A masked compare on the packet's head narrows the match.
         </p>
         <p>
-          Rules are session state: re-asserted on each keepalive, on reconnect and by{' '}
-          <A href="/library/lifecycle#restart">session recovery</A> like a{' '}
-          <A href="/library/lock"><code>lock</code></A>, and cleared on control-PC silence,{' '}
-          <A href="/library/admin#reset"><code>reset</code></A>, the real device detaching, an
-          inter-chip link loss, a re-clone, or the opt-in going off (native{' '}
+          Rules are session state, like a <A href="/library/lock"><code>lock</code></A>. The library
+          re-asserts them on each keepalive, on reconnect and by{' '}
+          <A href="/library/lifecycle#restart">session recovery</A>. The box clears them on control-PC
+          silence, <A href="/library/admin#reset"><code>reset</code></A>, the real device detaching,
+          an inter-chip link loss, a re-clone, or the opt-in going off (native{' '}
           <A href="/native/commands/rewrite#lifecycle">lifecycle</A>).
         </p>
         <pre class="diagram">{`  real device            the box  (host chip  |  device chip = the clone)         game PC
@@ -34,8 +33,8 @@ const Rewrite: Component = () => {
               on EP0 only the requests relayed to the real device reach [ CONTROL ]`}</pre>
         <p>
           A packet reaches the clip's{' '}
-          <A href="/library/clip#packet-triggers">packet triggers</A> ahead of the table, and one a
-          trigger consumes reaches no rule. <A href="/library/catch#traffic">Catch</A> marks a packet
+          <A href="/library/clip#packet-triggers">packet triggers</A> before the rule table. A packet
+          a trigger consumes reaches no rule. <A href="/library/catch#traffic">Catch</A> marks a packet
           a rule acted on (<A href="/library/types/structs#traffic-event"><code>rule_acted</code></A>).
         </p>
         <div id="hid-in-motion" class="callout callout--warning">
@@ -48,14 +47,14 @@ const Rewrite: Component = () => {
         <div class="callout callout--warning">
           <p>
             The advanced control layer needs{' '}
-            <A href="/library/options#allow-imperfect-clones"><code>allow_imperfect_clones</code></A>;
-            with it off, <code>set_rewrite</code> returns{' '}
+            <A href="/library/options#allow-imperfect-clones"><code>allow_imperfect_clones</code></A>.
+            With it off, <code>set_rewrite</code> returns{' '}
             <A href="/library/types/errors#errors"><code>Error::ImperfectRequired</code></A>.
           </p>
         </div>
         <p>
           <code>set_rewrite</code>, <code>remove_rewrite</code>, and <code>clear_rewrite</code> are{' '}
-          <A href="/native/injection#fire-and-forget">fire-and-forget</A>;{' '}
+          <A href="/native/injection#fire-and-forget">fire-and-forget</A>.{' '}
           <A href="/library/advanced/rewrite#query-rewrite"><code>query_rewrite</code></A> reads back
           what the box holds.
         </p>
@@ -75,7 +74,7 @@ const Rewrite: Component = () => {
           </table>
         </div>
         <p>
-          Rules are keyed by <code>(class, id, direction, match, mask)</code>; setting an existing key
+          Rules are keyed by <code>(class, id, direction, match, mask)</code>. Setting an existing key
           overwrites the rule, resets its hits and moves it to the end of the table. The crate checks
           the box's limits before sending.
         </p>
@@ -86,7 +85,7 @@ const Rewrite: Component = () => {
               <tr><th>Limit</th><th>Past it</th></tr>
             </thead>
             <tbody>
-              <tr><td>2048 payload bytes across every held rule (<code>REWRITE_PAYLOAD_POOL</code>), checked first; an overwrite gives back the bytes it replaces</td><td><A href="/library/types/errors#errors"><code>Error::RewritePoolFull</code></A></td></tr>
+              <tr><td>2048 payload bytes across every held rule (<code>REWRITE_PAYLOAD_POOL</code>), checked first. An overwrite frees the bytes of the rule it replaces.</td><td><A href="/library/types/errors#errors"><code>Error::RewritePoolFull</code></A></td></tr>
               <tr><td>32 rules (<code>REWRITE_MAX_ENTRIES</code>), for a new key</td><td><A href="/library/types/errors#errors"><code>Error::RewriteTableFull</code></A></td></tr>
             </tbody>
           </table>
@@ -113,8 +112,8 @@ device.set_rewrite(
         <pre class="api-signature">fn remove_rewrite(&self, rule: &RewriteRule) -&gt; Result&lt;()&gt;</pre>
         <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
         <p>
-          Drops the rule keyed by this rule's <code>(class, id, direction, match, mask)</code>; its{' '}
-          <code>action</code> and <code>payload</code> are ignored. A no-op when no such rule is held.
+          Drops the rule with this rule's <code>(class, id, direction, match, mask)</code> key,
+          ignoring its <code>action</code> and <code>payload</code>. A no-op if no such rule is held.
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`let rule = RewriteRule::new(RewriteClass::Emit, 1, Direction::IN, RewriteAction::Drop);
@@ -126,8 +125,8 @@ device.remove_rewrite(&rule)?; // the same key, dropped`}</code></pre>
         <pre class="api-signature">fn clear_rewrite(&self) -&gt; Result&lt;()&gt;</pre>
         <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
         <p>
-          Drops the whole table, and the crate's held rules whatever the opt-in, so a reconnect never
-          re-asserts a cleared rule.
+          Drops the whole table. Whatever the opt-in, it also drops the crate's held rules, so a
+          reconnect never re-asserts a cleared rule.
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`device.clear_rewrite()?;`}</code></pre>
@@ -139,8 +138,8 @@ device.remove_rewrite(&rule)?; // the same key, dropped`}</code></pre>
         <p>
           Returns a <A href="/library/types/structs#rewrite-table"><code>RewriteTable</code></A>: a
           full flag, a generation counter, and a row per rule without its match, mask, or payload
-          bytes. The full flag means the box refused the last new rule or overwrite for room; the next
-          table change or a clear resets it.
+          bytes. The full flag means the box refused the last new rule or overwrite for lack of room.
+          The next table change or a clear resets it.
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`let table = device.query_rewrite()?;
@@ -181,7 +180,7 @@ for i in 0..table.entries.len() as u8 {
       <DocSection id="async" title="On AsyncDevice" caption="set_rewrite and the queries await; remove and clear fire">
         <p>
           <A href="/library/features/async"><code>AsyncDevice</code></A> makes{' '}
-          <code>set_rewrite</code> a future, awaiting the opt-in check before sending;{' '}
+          <code>set_rewrite</code> a future that awaits the opt-in check before sending.{' '}
           <code>query_rewrite</code> and <code>query_rewrite_entry</code> are futures too.{' '}
           <code>remove_rewrite</code> and <code>clear_rewrite</code> carry no opt-in check and stay
           synchronous.

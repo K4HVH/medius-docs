@@ -26,8 +26,8 @@ const RootLayout: Component<{ children?: JSX.Element }> = (props) => {
   );
 };
 
-// A page and the places on it (`/page/id`, routes.ts addressFor) are one route, so moving between them keeps
-// the page mounted; an address the server answered with the 404 page shows that page.
+// A page and the places on it (`/page/id`, routes.ts addressFor) share one route, so moving between them keeps
+// the page mounted. An address the server answered with its 404 page shows the 404 page.
 const AtPage: Component<RouteSectionProps> = (props) => <Dynamic component={pageAt(props.location.pathname)} {...props} />;
 
 const App: Component = () => {

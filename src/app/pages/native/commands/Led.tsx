@@ -65,8 +65,8 @@ const Led: Component = () => {
           In <code>auto</code> (the default), each chip's LED shows that chip's state.
         </p>
         <p>
-          Device chip: solid with link, mouse, and clone all up; slow blink with the link up but the
-          mouse or clone missing; off with no link.
+          Device chip: solid with link, mouse, and clone all up. Slow blink with the link up but the
+          mouse or clone missing. Off with no link.
         </p>
         <p>
           Host chip: solid while the mouse streams, off otherwise.
@@ -78,7 +78,7 @@ const Led: Component = () => {
           <A href="/native/commands/admin#reset"><code>RESET</code></A>, or inter-chip link loss.
         </p>
         <p>
-          Invisible to the game PC: a host or both override travels only the inter-chip link.
+          Invisible to the game PC: a host or both override travels only over the inter-chip link.
           Library binding:{' '}
           <A href="/library/led#led"><code>led</code></A>.
         </p>

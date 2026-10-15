@@ -5,7 +5,7 @@ const cell = (figures: HomeFigures | null, key: keyof HomeFigures) => {
   return v === undefined ? '' : figureText(key, v);
 };
 
-// The strip under the hero. The server fills the live cells in the raw HTML; one whose source is down
+// The strip under the hero. The server fills the live cells in the raw HTML. A cell whose source is down
 // stays empty.
 export function Vitals(props: { figures: HomeFigures | null }) {
   return (

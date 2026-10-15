@@ -467,7 +467,7 @@ describe('DeviceClip draft ticks', () => {
     fireEvent.input(getByLabelText('Bytes (hex)'), { target: { value: 'aa'.repeat(507) } });
     fireEvent.click(button(container, 'Add'));
     await settle();
-    expect((await findByRole('alert')).textContent).toBe('A tick must encode to at most 512 bytes.');
+    expect((await findByRole('alert')).textContent).toBe('A tick must encode to ≤512 bytes.');
     expect(draftChips(container).some((c) => c.startsWith('Raw'))).toBe(false);
 
     // The largest one that fits goes in, and the refusal clears.
@@ -746,7 +746,7 @@ describe('DeviceClip packet triggers', () => {
     type(container, 'clip-pkt-match', 'aa'.repeat(17));
     type(container, 'clip-pkt-mask', 'ff'.repeat(17));
     await bind(container);
-    expect(alert(container)).toBe('Match and mask must be at most 16 bytes.');
+    expect(alert(container)).toBe('Match and mask must be ≤16 bytes.');
     expect(bound()).toEqual([]);
     type(container, 'clip-pkt-match', 'aa'.repeat(16));
     type(container, 'clip-pkt-mask', 'ff'.repeat(16));
@@ -887,7 +887,7 @@ describe('DeviceClip packet triggers', () => {
       packet({ id: i, consume: false, match: new Uint8Array(16).fill(i), mask: new Uint8Array(16).fill(0xff) }),
     );
     const { container, queryByText } = await mount({ packetTriggers: held });
-    expect(queryByText(/Packets \(7 of 8, 112 of 112 match\s+bytes\)/)).toBeTruthy();
+    expect(queryByText(/Packets \(7\/8, 112\/112 match\s+bytes\)/)).toBeTruthy();
     type(container, 'clip-pkt-match', '07');
     type(container, 'clip-pkt-mask', 'ff');
     await bind(container);
@@ -918,7 +918,7 @@ describe('DeviceClip packet triggers', () => {
     await settle();
     expect(button(container, 'Replace').disabled).toBe(false);
     expect(queryByText('All 8 slots are used. Remove one first.')).toBeNull();
-    expect(queryByText(/Already bound\. A changed binding starts its run/)).toBeTruthy();
+    expect(queryByText(/Already bound\. A changed binding restarts its run/)).toBeTruthy();
     fireEvent.click(button(container, 'Replace'));
     await settle();
     expect(bound().map((t) => t.id)).toEqual([3]);
@@ -960,8 +960,8 @@ describe('DeviceClip packet triggers', () => {
     expect(chipText).toContain('Start HID in 2');
     expect(chipText).toContain('Toggle vendor interrupt any');
     expect(chipText).toContain('Stop control 0');
-    expect(queryByText('Inputs (1 of 8)')).toBeTruthy();
-    expect(queryByText(/Packets \(3 of 8, 4 of 112 match\s+bytes\)/)).toBeTruthy();
+    expect(queryByText('Inputs (1/8)')).toBeTruthy();
+    expect(queryByText(/Packets \(3\/8, 4\/112 match\s+bytes\)/)).toBeTruthy();
 
     const rows = [...container.querySelectorAll('[data-packet-trigger]')].map((r) => ({
       chips: [...r.querySelectorAll('.chip__label')].map((e) => e.textContent),

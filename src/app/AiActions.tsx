@@ -13,7 +13,7 @@ export default function AiActions() {
   const location = useLocation();
   const navigate = useNavigate();
   const isDoc = () => /^\/(native|library|bindings|ai)(\/|$)/.test(location.pathname);
-  // The page's twin: a place on a page has no twin.
+  // The page's Markdown twin (a place on a page has none, so it takes the page's).
   const mdPath = () => pagePath(location.pathname.replace(/\/+$/, '') || '/') + '.md';
   const mdUrl = () => SITE + mdPath();
 
@@ -44,7 +44,7 @@ export default function AiActions() {
   const onKey = (e: KeyboardEvent) => {
     if (e.key === 'Escape') close();
   };
-  // The menu is fixed where it opened; once the page moves, it no longer sits under its button.
+  // The menu is fixed where it opened. Once the page scrolls, the menu no longer sits under its button.
   const onScroll = () => open() && close();
   document.addEventListener('pointerdown', onDocPointer);
   document.addEventListener('keydown', onKey);

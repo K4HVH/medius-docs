@@ -10,7 +10,7 @@ const GuideTesting: Component = () => {
         <p>
           The <A href="/library/features/mock"><code>mock</code></A> feature backs a{' '}
           <A href="/library/connection"><code>Device</code></A> with a{' '}
-          <A href="/library/features/mock"><code>MockBox</code></A>;{' '}
+          <A href="/library/features/mock"><code>MockBox</code></A>.{' '}
           <A href="/library/features/mock#inspect"><code>recorded_frames</code></A> returns the queued
           frames.
         </p>
@@ -62,7 +62,7 @@ fn logs_reach_the_stream() {
       <DocSection id="mock-async" title="Testing async code" caption="MockBox behind an AsyncDevice">
         <p>
           Mock an <code>AsyncDevice</code> with <code>Device::with_mock</code> then{' '}
-          <A href="/library/features/async"><code>into_async</code></A>;{' '}
+          <A href="/library/features/async"><code>into_async</code></A>.{' '}
           <A href="/library/guides/calls#block-on"><code>block_on</code></A> drives the futures with no
           async runtime. A <A href="/library/features/mock"><code>silent</code></A> box never replies, so a
           query resolves to{' '}

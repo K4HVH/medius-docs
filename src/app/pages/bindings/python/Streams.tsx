@@ -25,15 +25,15 @@ const Streams: Component = () => {
    │                 │ logs()                ─▶│  LogStream  │ ─▶ recv() ─▶ LogLine
    └─────────────────┘                         └─────────────┘`}</pre>
         <p>
-          The first two read the same subscription: <code>catch_events</code> returns the box's
-          held-usage snapshots; <A href="/bindings/python/streams#input"><code>input_events</code></A>{' '}
-          diffs them into press and release edges.
+          <code>catch_events</code> returns the box's held-usage snapshots.{' '}
+          <A href="/bindings/python/streams#input"><code>input_events</code></A> reads the same
+          subscription and diffs the snapshots into press and release edges.
         </p>
         <div class="callout callout--info">
           <p>
             Every stream is a{' '}
             <a href="https://docs.python.org/3/reference/datamodel.html#context-managers" target="_blank" rel="noreferrer">context manager</a>{' '}
-            and iterable: <code>with</code> releases the subscription on exit, and{' '}
+            and an iterable. <code>with</code> releases the subscription on exit, and{' '}
             <code>for item in stream:</code> drains it until <A href="/library/lifecycle">the link drops</A>.
           </p>
         </div>
@@ -78,22 +78,22 @@ CatchFilter.everything()                # every class, every id, one table entry
         </p>
         <div class="callout callout--warning">
           <p>
-            Subscribing checks the filters locally and raises <code>CatchTableFullError</code> when
-            this process's subscriptions together need more than the box's 32 entries,{' '}
+            Subscribing checks the filters locally first. It raises <code>CatchTableFullError</code>{' '}
+            when this process's subscriptions together need &gt;32 entries (the box's table),{' '}
             <code>CaptureNotApplicableError</code> for a capture on an input class, and{' '}
             <code>EmptySubscriptionError</code> for no filters.
           </p>
           <p>
-            A <em>box</em>-side refusal gets no reply (
-            <A href="/native/injection#fire-and-forget">fire-and-forget</A>);{' '}
+            A <em>box</em>-side refusal gets no reply (subscribing is{' '}
+            <A href="/native/injection#fire-and-forget">fire-and-forget</A>).{' '}
             <A href="/bindings/python/api#queries"><code>dev.query_catch()</code></A> reads back what
-            it holds in <A href="/bindings/python/types#catchstate"><code>CatchState.entries</code></A>.
+            the box holds in <A href="/bindings/python/types#catchstate"><code>CatchState.entries</code></A>.
           </p>
         </div>
         <div class="callout callout--info">
           <p>
-            Everything at full length exceeds what the control link carries; a busy mouse leaves a
-            bulk trace undrained. Queue ranking and link budget:{' '}
+            Every class at full length is more than the control link carries: under a busy mouse, a
+            bulk trace goes undrained. Queue ranking and link budget:{' '}
             <A href="/native/commands/catch#delivery">Delivery</A>.
           </p>
         </div>
@@ -116,7 +116,7 @@ CatchFilter.everything()                # every class, every id, one table entry
               <tr><td><code>recv_timeout(ms)</code></td><td><code>Optional[CatchEvent]</code></td><td>Waits up to <code>ms</code> milliseconds; <code>None</code> on timeout.</td></tr>
               <tr><td><code>for ev in stream:</code></td><td>yields each item</td><td>Loops on <code>recv()</code>; ends when the link drops or the stream closes (no exception).</td></tr>
               <tr><td><code>clone()</code></td><td><code>EventStream</code></td><td>A second handle to the same subscription; the queue is shared. <code>EventStream</code> and <code>LogStream</code> only.</td></tr>
-              <tr><td><code>is_connected</code></td><td><code>bool</code></td><td>Whether the box still delivers; a <code>None</code> from <code>try_recv()</code> or <code>recv_timeout()</code> can't tell.</td></tr>
+              <tr><td><code>is_connected</code></td><td><code>bool</code></td><td>Whether the box still delivers. A <code>None</code> from <code>try_recv()</code> or <code>recv_timeout()</code> can't tell a closed stream from an empty one.</td></tr>
               <tr><td><code>close()</code> / <code>with stream:</code></td><td>none</td><td>End the stream for every handle on it and free this one. A <code>recv()</code> blocked in another thread raises <code>DisconnectedError</code> at once. Automatic on <code>with</code> exit; garbage collection frees one handle and leaves the stream open for the others.</td></tr>
             </tbody>
           </table>
@@ -261,7 +261,7 @@ print("box-wide dropped:", st.dropped, " clock age:", st.clock.age_ms)`}</code><
         <p>
           The box reports a held-usage snapshot per report;{' '}
           <A href="/bindings/python/api#streams"><code>dev.input_events(filters)</code></A> diffs
-          each against what it holds and yields the edges.
+          each against the stream's held set and yields the edges.
         </p>
         <div class="table-scroll">
           <table class="api-params">
@@ -295,14 +295,14 @@ with Device.find() as dev:
 
       <DocSection id="timeline" title="Timeline" caption="Put box stamps on this machine's clock">
         <p>
-          A catch stamp is microseconds on a chip's clock: it wraps every ~71.6 minutes and relates
-          to no clock here. <code>Timeline</code> maps it onto one.
+          A catch stamp is microseconds on a chip's clock. It wraps every ~71.6 minutes and relates
+          to no clock on this machine. <code>Timeline</code> maps it onto this machine's clock.
         </p>
         <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Member</th><th>Returns</th><th>Does</th></tr></thead>
             <tbody>
-              <tr><td><code>observe(event, now_ns=None)</code></td><td><A href="/bindings/python/types#stamped"><code>Stamped</code></A></td><td>Place one <A href="/bindings/python/types#catchevent"><code>CatchEvent</code></A> or <A href="/bindings/python/types#inputevent"><code>InputEvent</code></A> on this machine's clock; the two order together. <code>now_ns</code> defaults to <a href="https://docs.python.org/3/library/time.html#time.monotonic_ns" target="_blank" rel="noreferrer"><code>time.monotonic_ns()</code></a>.</td></tr>
+              <tr><td><code>observe(event, now_ns=None)</code></td><td><A href="/bindings/python/types#stamped"><code>Stamped</code></A></td><td>Place one <A href="/bindings/python/types#catchevent"><code>CatchEvent</code></A> or <A href="/bindings/python/types#inputevent"><code>InputEvent</code></A> on this machine's clock; both kinds order on one timeline. <code>now_ns</code> defaults to <a href="https://docs.python.org/3/library/time.html#time.monotonic_ns" target="_blank" rel="noreferrer"><code>time.monotonic_ns()</code></a>.</td></tr>
               <tr><td><code>reset(domain)</code></td><td>none</td><td>Forget one <A href="/bindings/python/types#clockdomain"><code>ClockDomain</code></A>'s rollover count and measured floor, for a chip that rebooted.</td></tr>
               <tr><td><code>samples(domain)</code></td><td><code>int</code></td><td>Events observed for a domain; the floor is a minimum over these.</td></tr>
             </tbody>

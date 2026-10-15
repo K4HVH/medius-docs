@@ -11,7 +11,7 @@ const GuideConnection: Component = () => {
           <A href="/library/connection#open"><code>find</code></A> opens the first match. With several
           boxes, <code>find_medius</code> lists every match as a{' '}
           <A href="/library/types/structs#port-info"><code>PortInfo</code></A> (<code>path</code>,{' '}
-          <code>vid</code>, <code>pid</code>) without opening;{' '}
+          <code>vid</code>, <code>pid</code>) without opening any. Then{' '}
           <A href="/library/connection#open"><code>open</code></A> the chosen one.
         </p>
         <div class="api-response-label">EXAMPLE</div>
@@ -30,8 +30,8 @@ let dev = Device::open(&port.path)?;`}</code></pre>
       <DocSection id="threading" title="Threading and Clone" caption="Share one connection across threads">
         <p>
           <A href="/library/connection"><code>Device</code></A> is <code>Send + Sync</code> and clones
-          cheaply (an <a href="https://doc.rust-lang.org/std/sync/struct.Arc.html" target="_blank" rel="noreferrer"><code>Arc</code></a> inside),
-          so one connection serves any number of threads; a clone shares the open port.
+          cheaply (an <a href="https://doc.rust-lang.org/std/sync/struct.Arc.html" target="_blank" rel="noreferrer"><code>Arc</code></a> inside).
+          One connection serves any number of threads, and every clone shares the open port.
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`use std::thread;
@@ -45,8 +45,8 @@ handle.join().unwrap()?;`}</code></pre>
 
       <DocSection id="concurrency" title="Concurrent queries" caption="join and cloning across tasks">
         <p>
-          <A href="/library/features/async"><code>AsyncDevice</code></A> clones the same way, across
-          tasks;{' '}
+          <A href="/library/features/async"><code>AsyncDevice</code></A> clones the same way across
+          tasks.{' '}
           <a href="https://docs.rs/futures/latest/futures/future/fn.join.html" target="_blank" rel="noreferrer"><code>futures::future::join</code></a>{' '}
           awaits queries together.
         </p>
@@ -60,22 +60,23 @@ let h = h?;
 println!("{v}, link_up={}", h.link_up);`}</code></pre>
         <div class="callout callout--info">
           <p>
-            Only the queries need <code>.await</code>; mutators stay synchronous on either handle.
+            Only the queries need <code>.await</code>. Mutators stay synchronous on either handle.
           </p>
         </div>
       </DocSection>
 
       <DocSection id="keepalive" title="Keepalive and holds" caption="Holds past the silence window">
         <p>
-          The box clears every injected input and pending move once no frame arrives for its{' '}
-          <A href="/native/injection#safety">silence window</A>.
+          If no frame arrives for the{' '}
+          <A href="/native/injection#safety">silence window</A>, the box clears every injected input
+          and pending move.
         </p>
         <p>
-          A <code>Device</code> holds overrides past it: a background thread
-          (<code>medius-keepalive</code>) sends{' '}
+          A <code>Device</code> keeps overrides past the window. While anything is held, its
+          background thread (<code>medius-keepalive</code>) sends{' '}
           <A href="/native/commands/requests#stats"><code>QUERY(STATS)</code></A> every{' '}
-          <code>DEFAULT_KEEPALIVE_CADENCE</code> (500 ms) while anything is held, and re-sends held
-          catch subscriptions, rewrite rules and transforms.
+          <code>DEFAULT_KEEPALIVE_CADENCE</code> (500 ms). Each tick also re-sends held catch
+          subscriptions, rewrite rules and transforms.
         </p>
         <div class="table-scroll">
           <table class="api-params">
@@ -83,9 +84,9 @@ println!("{v}, link_up={}", h.link_up);`}</code></pre>
               <tr><th>State</th><th>Behaviour</th></tr>
             </thead>
             <tbody>
-              <tr><td>Override held</td><td>Keepalive thread runs; the reply's <A href="/library/types/structs#stats"><code>session</code></A> counter says whether the box released the session.</td></tr>
+              <tr><td>Override held</td><td>Keepalive thread runs. The reply's <A href="/library/types/structs#stats"><code>session</code></A> counter shows whether the box released the session.</td></tr>
               <tr><td>Clip held</td><td>Keepalive thread runs while a <A href="/library/clip#clip">clip</A> is loaded (from <code>append</code> to <code>clear</code>), a clip setting is off its default, or a trigger of either kind is bound.</td></tr>
-              <tr><td>Idle</td><td>No <code>QUERY(STATS)</code> ticks. A <A href="/library/lifecycle#restart">device-chip restart</A> still starts a recovery: <code>QUERY(CAPS)</code> every 50 ms, every 500 ms after the first 5 s, until the box has a clone, then one <code>QUERY(STATS)</code> and one <code>QUERY(CLIP)</code>.</td></tr>
+              <tr><td>Idle</td><td>No <code>QUERY(STATS)</code> ticks. A <A href="/library/lifecycle#restart">device-chip restart</A> still starts a recovery: <code>QUERY(CAPS)</code> every 50 ms (every 500 ms after the first 5 s) until the box has a clone, then one <code>QUERY(STATS)</code> and one <code>QUERY(CLIP)</code>.</td></tr>
             </tbody>
           </table>
         </div>
@@ -100,11 +101,11 @@ device.reset()?;`}</code></pre>
         <p>
           An <em>override</em> is an input the box holds down or up, set by{' '}
           <A href="/library/inject#inject"><code>press</code></A> or{' '}
-          <A href="/library/inject#inject"><code>force_release</code></A>; the library keeps a
-          copy. <A href="/library/lifecycle#reapply"><code>reapply</code></A> and{' '}
-          <A href="/library/lifecycle#reconnect"><code>reconnect</code></A> restore it after a dropped
-          link; the library restores it itself after a device-chip restart or a{' '}
-          <A href="/library/lifecycle#restart">released session</A>.
+          <A href="/library/inject#inject"><code>force_release</code></A>. The library keeps a copy.
+          After a dropped link, <A href="/library/lifecycle#reapply"><code>reapply</code></A> and{' '}
+          <A href="/library/lifecycle#reconnect"><code>reconnect</code></A> restore it. After a
+          device-chip restart or a <A href="/library/lifecycle#restart">released session</A>, the
+          library restores it itself.
         </p>
       </DocSection>
 
