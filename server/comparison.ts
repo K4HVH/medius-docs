@@ -57,10 +57,14 @@ function summary() {
   return { firmware: RESULTS.firmware, url: `${SITE}/comparison`, areas, defects };
 }
 
+// The results are fixed for a deploy, so the summary is built once, on its first request.
+let body: string | undefined;
+
 export async function handleComparisonApi(req: Request): Promise<Response | null> {
   if (new URL(req.url).pathname !== '/api/comparison') return null;
   if (req.method !== 'GET') return new Response(JSON.stringify({ error: 'Use GET.' }), { status: 405, headers: { 'content-type': 'application/json' } });
-  return new Response(JSON.stringify(summary()), {
+  body ??= JSON.stringify(summary());
+  return new Response(body, {
     status: 200,
     headers: { 'content-type': 'application/json', 'cache-control': 'public, max-age=60' },
   });
