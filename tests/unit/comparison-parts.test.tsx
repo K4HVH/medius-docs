@@ -52,9 +52,9 @@ describe('a measure', () => {
     expect(widths(medius)[1]).toBeCloseTo(((1.02 - 1.01) / 64.3) * 100, 5);
   });
 
-  it('counts of a total as "of", with the result from their fractions', () => {
+  it('counts of a total as N/M, with the result from their fractions', () => {
     const [, stock, medius, res] = cells(rowOf(section(0), 'Fresh clone'));
-    expect([stock.textContent, medius.textContent]).toEqual(['0 of 3', '3 of 3']);
+    expect([stock.textContent, medius.textContent]).toEqual(['0/3', '3/3']);
     expect(res.querySelector('.status')!.textContent).toBe('Medius');
   });
 

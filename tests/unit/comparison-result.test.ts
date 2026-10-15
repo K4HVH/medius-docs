@@ -74,8 +74,8 @@ describe('showValue', () => {
   it('leaves a word unit to the table label, singular or plural', () => {
     expect(showValue(v(43), 'reports')).toBe('43');
     expect(showValue(v(1), 'reports')).toBe('1');
-    expect(showValue(of(0, 3), 'tries')).toBe('0 of 3');
-    expect(showValue(of(118, 12871), 'moves')).toBe('118 of 12,871');
+    expect(showValue(of(0, 3), 'tries')).toBe('0/3');
+    expect(showValue(of(118, 12871), 'moves')).toBe('118/12,871');
   });
 
   it('writes both ends of a range to the same decimals', () => {
