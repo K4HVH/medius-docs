@@ -297,7 +297,7 @@ export enum TransferStatus {
   Ok = 0x00,
   Refused = 0xfc, // not sent: opt-in off, malformed, wLength > 504, short OUT data, or the control queue full
   Stall = 0xfd, // the device protocol-STALLed the request
-  Nak = 0xfe, // no answer: device timeout or bus failure, an undeclared control endpoint, or the host chip silent
+  Nak = 0xfe, // no answer: device timeout or bus failure, an undeclared control endpoint, the host chip silent, or the clone suspended
   NoDevice = 0xff, // no device is attached
 }
 

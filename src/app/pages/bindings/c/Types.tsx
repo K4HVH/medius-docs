@@ -834,7 +834,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
               <tr><td><code>mouse_attached</code></td><td><code>uint8_t</code></td><td>A real mouse is plugged in.</td></tr>
               <tr><td><code>clone_configured</code></td><td><code>uint8_t</code></td><td>The PC has set up the cloned mouse.</td></tr>
               <tr><td><code>injection_active</code></td><td><code>uint8_t</code></td><td>At least one injected button or move is held.</td></tr>
-              <tr><td><code>rate_confident</code></td><td><code>uint8_t</code></td><td>The native-rate estimator window is full.</td></tr>
+              <tr><td><code>rate_confident</code></td><td><code>uint8_t</code></td><td>A mouse is bound and the native-rate estimator window is full.</td></tr>
               <tr><td><code>lock_on</code></td><td><code>uint8_t</code></td><td>At least one input is off a full pass: blocked, or merely weighed.</td></tr>
               <tr><td><code>catch_on</code></td><td><code>uint8_t</code></td><td>A catch subscription is streaming.</td></tr>
               <tr><td><code>kbd_attached</code></td><td><code>uint8_t</code></td><td>A keyboard is attached, cloned, and injectable.</td></tr>
@@ -987,12 +987,12 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
               <tr><td><code>tx_merges</code></td><td><code>uint16_t</code></td><td>Backed-up reports merged instead of queued.</td></tr>
               <tr><td><code>tx_maxdepth</code></td><td><code>uint8_t</code></td><td>Deepest the TX queue has reached.</td></tr>
               <tr><td><code>tx_wedges</code></td><td><code>uint8_t</code></td><td>Wedged-endpoint recoveries.</td></tr>
-              <tr><td><code>wakeups</code></td><td><code>uint16_t</code></td><td>Remote-wakeups issued.</td></tr>
+              <tr><td><code>wakeups</code></td><td><code>uint16_t</code></td><td>Remote wakeups the clone signalled to the game PC, for the real device or an injection.</td></tr>
               <tr><td><code>reset_count</code></td><td><code>uint16_t</code></td><td>USB bus resets seen.</td></tr>
               <tr><td><code>config_count</code></td><td><code>uint16_t</code></td><td>SET_CONFIGURATION events (re-enumerations).</td></tr>
               <tr><td><code>link_rx_drops</code></td><td><code>uint32_t</code></td><td>Input frames the device chip could not take off the link from the host chip (should stay 0).</td></tr>
               <tr><td><code>host_rx_drops</code></td><td><code>uint32_t</code></td><td>The same count on the host chip, relayed over the link (should stay 0).</td></tr>
-              <tr><td><code>relay_drops</code></td><td><code>uint32_t</code></td><td>Relayed traffic and commands that went no further, none of it native input: a vendor IN packet that found its endpoint's queue full of the control PC's <code>RAW</code> packets, or a device's zero-length packet answering a poll the PC did not make (the one poll the box runs ahead of a suspended PC); an OUT packet the box could not queue, that failed three times on the device's bus, or that a bus reset or <code>SET_INTERFACE</code> overtook; a relayed request or a flagged <code>MOVE</code> the box could not queue; and any frame other than native input that either chip's link receive ring dropped.</td></tr>
+              <tr><td><code>relay_drops</code></td><td><code>uint32_t</code></td><td>Relayed traffic and commands that went no further, none of it native input: a vendor IN packet that found its endpoint's queue full of the control PC's <code>RAW</code> packets, or a device's zero-length packet answering a poll the PC did not make (the one poll the box runs ahead of a suspended PC); an OUT packet the box had no room to queue, that failed three times on the device's bus, or that a bus reset or <code>SET_INTERFACE</code> overtook; a <code>RAW</code> OUT packet with no room to wait; a relayed request the box could not queue; a flagged <code>MOVE</code> the motion batch could not take; any frame other than native input that either chip's link receive ring dropped; and a frame from the control PC its receive ring had no room for (one a frame), or an overrun of the control port's UART (one an overrun, however many frames it cost).</td></tr>
               <tr><td><code>session</code></td><td><code>uint16_t</code></td><td>Times the box released some or all of the session state a host set. 0 at boot; it wraps, so compare for inequality. The library watches it for <A href="/library/lifecycle#restart">session recovery</A>.</td></tr>
             </tbody>
           </table>
@@ -1726,7 +1726,7 @@ medius_clip_unbind_packet(clip, &held);   /* by key */`}</code></pre>
               <tr><td><code>MEDIUS_TRANSFER_STATUS_OK</code></td><td><code>0x00</code></td><td>Completed; data is in <code>data</code>.</td></tr>
               <tr><td><code>MEDIUS_TRANSFER_STATUS_REFUSED</code></td><td><code>0xFC</code></td><td>The box refused it before the device: opt-in off, malformed, <code>wLength</code> above 504 or the OUT data shorter than it, or the host chip's control queue full.</td></tr>
               <tr><td><code>MEDIUS_TRANSFER_STATUS_STALL</code></td><td><code>0xFD</code></td><td>The device STALLed.</td></tr>
-              <tr><td><code>MEDIUS_TRANSFER_STATUS_NAK</code></td><td><code>0xFE</code></td><td>The device did not finish within 500 ms or the transfer failed on the bus, the endpoint is undeclared, or no answer crossed the link within 800 ms.</td></tr>
+              <tr><td><code>MEDIUS_TRANSFER_STATUS_NAK</code></td><td><code>0xFE</code></td><td>The device did not finish within 500 ms or the transfer failed on the bus, the endpoint is undeclared, no answer crossed the link within 800 ms, or the game PC has the clone suspended, and the device with it.</td></tr>
               <tr><td><code>MEDIUS_TRANSFER_STATUS_NO_DEVICE</code></td><td><code>0xFF</code></td><td>No device attached on the host chip.</td></tr>
             </tbody>
           </table>

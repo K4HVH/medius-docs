@@ -201,6 +201,11 @@ const Raw: Component = () => {
           has the last one whole, and for a tenth of a second after one reaches the clone too late for its poll,
           up to three seconds while late ones keep coming.
         </p>
+        <p>
+          A device's STALL on an interrupt or bulk IN reaches the game PC after the reports sent before it.
+          The endpoint stays halted until the PC's <code>CLEAR_FEATURE(HALT)</code>, which reaches the
+          device; the box never clears it.
+        </p>
         <div class="callout callout--warning">
           <p>
             A bulk IN transfer longer than the queue's free slots reaches the game PC truncated. At{' '}
