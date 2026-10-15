@@ -1,23 +1,23 @@
 // @vitest-environment node
 import { expect, it } from 'vitest';
-import { handleComparisonApi } from '../../server/comparison';
-import { RESULTS } from '../../src/app/data/comparison';
+import { HIGHLIGHTS, handleComparisonApi } from '../../server/comparison';
+import { RESULTS, placeOf } from '../../src/app/data/comparison';
 import { COMPARISON_PAGES } from '../../src/app/data/comparison/pages';
-import { resultOf } from '../../src/app/data/comparison/result';
+import { resultOf, showValue } from '../../src/app/data/comparison/result';
+import type { FeatureRow, MeasureRow, OutcomeRow } from '../../src/app/data/comparison/types';
 import { addressFor, routeFor } from '../../src/app/routes';
 
 const SITE = 'https://medius.k4tech.net';
 
-interface Count {
-  medius: number;
-  stock: number;
-  same: number;
+interface Cell {
+  text: string;
+  code?: boolean;
 }
 interface Body {
   firmware: { stock: string; medius: string };
   url: string;
-  total: Count;
-  areas: (Count & { title: string; url: string })[];
+  highlights: { name: string; stock: Cell; medius: Cell; result: string | null }[];
+  areas: { title: string; url: string }[];
   defects: { stock: number; medius: number; url: string };
 }
 
@@ -28,46 +28,37 @@ const read = async () => {
   return (await r!.json()) as Body;
 };
 
-// Every stock-against-Medius row of a page's categories, with which box is ahead.
-const results = (categories: string[]) =>
-  RESULTS.categories
-    .filter((c) => categories.includes(c.id))
-    .flatMap((c) => c.sections.flatMap((s) => s.tables.flatMap((t) => (t.kind === 'settings' ? [] : t.rows.map((r) => ({ id: r.id, result: resultOf(t, r) }))))));
-
 it('carries the firmware each box ran and the address of Overview', async () => {
   const body = await read();
   expect(body.firmware).toEqual(RESULTS.firmware);
   expect(body.url).toBe(`${SITE}/comparison`);
 });
 
-it('counts, for each area page in order, the results each box is ahead in and those that are the same', async () => {
+it('gives each benchmark both values as the site writes them, and which box is ahead', async () => {
+  const { highlights } = await read();
+  expect(highlights.map((h) => h.name)).toEqual(HIGHLIGHTS.map((h) => h.name));
+  for (const [i, { row }] of HIGHLIGHTS.entries()) {
+    const { table, row: r } = placeOf(row)!;
+    expect(highlights[i]!.result).toBe(resultOf(table, r));
+    for (const box of ['stock', 'medius'] as const) {
+      const shown =
+        table.kind === 'measure' ? showValue((r as MeasureRow)[box], table.unit) : table.kind === 'outcome' ? (r as OutcomeRow)[box].is : ((r as FeatureRow)[box] ?? 'No');
+      expect(highlights[i]![box].text).toBe(shown);
+    }
+  }
+  expect(highlights[0]).toMatchObject({ medius: { text: '1.07 ms' }, result: 'medius' });
+});
+
+it('shows a benchmark where stock is ahead beside those where Medius is', async () => {
+  const results = (await read()).highlights.map((h) => h.result);
+  expect(results).toContain('stock');
+  expect(results).toContain('medius');
+});
+
+it("links every area's page, in Overview's order", async () => {
   const { areas } = await read();
   const pages = COMPARISON_PAGES.filter((p) => p.categories.length > 0);
-  expect(areas.map((a) => a.url)).toEqual(pages.map((p) => `${SITE}${p.path}`));
-  for (const [i, p] of pages.entries()) {
-    const rows = results(p.categories).filter((r) => r.id !== 'software-discord-members');
-    expect(areas[i]).toEqual({
-      title: routeFor(p.path)!.title,
-      url: `${SITE}${p.path}`,
-      medius: rows.filter((r) => r.result === 'medius').length,
-      stock: rows.filter((r) => r.result === 'stock').length,
-      same: rows.filter((r) => r.result === 'equal').length,
-    });
-  }
-});
-
-it('totals the areas', async () => {
-  const { areas, total } = await read();
-  for (const k of ['medius', 'stock', 'same'] as const) expect(total[k]).toBe(areas.reduce((n, a) => n + a[k], 0));
-  expect(total.medius + total.stock).toBeGreaterThan(0);
-});
-
-it("leaves the Discord members row out: whoever reads it there is on Discord already", async () => {
-  const software = (await read()).areas.find((a) => a.url.endsWith('/software'))!;
-  const rows = results(['software']);
-  const members = rows.find((r) => r.id === 'software-discord-members')!;
-  expect(members.result).toBe('stock');
-  expect(software.stock).toBe(rows.filter((r) => r.result === 'stock').length - 1);
+  expect(areas).toEqual(pages.map((p) => ({ title: routeFor(p.path)!.title, url: `${SITE}${p.path}` })));
 });
 
 it("counts each box's defects, with the address of the list", async () => {
