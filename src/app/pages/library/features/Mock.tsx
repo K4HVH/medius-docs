@@ -470,6 +470,41 @@ while device.counters().restarts == 0 {
 }
 assert_eq!(scale_x()?, 40);`}</code></pre>
       </DocSection>
+
+      <DocSection id="update" title="Firmware updates" caption="refuse_next_activate, reboot_after_activate">
+        <pre class="api-signature">fn refuse_next_activate(&self, status: UpdateStatus)</pre>
+        <pre class="api-signature">fn reboot_after_activate(&self, unanswered: u32, pending: u32)</pre>
+        <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Name</th><th>Simulates</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>refuse_next_activate</code></td>
+                <td>The next <A href="/native/commands/update#activate"><code>ACTIVATE</code></A> refused with <code>status</code>, the staged image kept.</td>
+              </tr>
+              <tr>
+                <td><code>reboot_after_activate</code></td>
+                <td>The reboot after each accepted activate: <code>unanswered</code> firmware queries go unanswered, then the device chip reads on probation for the next <code>pending</code> queries.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`use medius::{Device, MockBox, UpdateStatus, UpdateTarget};
+
+let image = vec![0u8; 4096];
+let mock = MockBox::new();
+let device = Device::with_mock(mock.clone());
+mock.refuse_next_activate(UpdateStatus::LINK_DOWN);
+assert!(device.update_firmware(UpdateTarget::Host, &image, &mut |_| {}).is_err());
+
+mock.reboot_after_activate(1, 2);
+device.update_firmware(UpdateTarget::Device, &image, &mut |_| {})?;
+assert!(!device.wait_firmware_confirmed()?.any_pending());`}</code></pre>
+      </DocSection>
     </>
   );
 };

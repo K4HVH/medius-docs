@@ -214,10 +214,13 @@ medius_device_free(dev);`}</code></pre>
               <tr><td><code>medius_device_stage_firmware(dev, target, image, len, progress, user)</code></td><td>Write <code>len</code> bytes into <code>target</code>'s spare slot (0 = device chip, 1 = host chip). Inert until activated; <code>progress</code> may be <code>NULL</code>.</td></tr>
               <tr><td><code>medius_device_activate_firmware(dev)</code></td><td>Commit every staged image and reboot into it. Blocks while the host chip reboots and comes back.</td></tr>
               <tr><td><code>medius_device_abort_update(dev, target)</code></td><td>Throw a staged or in-flight transfer away.</td></tr>
+              <tr><td><code>medius_device_update_firmware(dev, target, image, len, progress, user)</code></td><td>Stage one image and activate it. A refused activate aborts the staged image before the error returns.</td></tr>
+              <tr><td><code>medius_device_wait_firmware_confirmed(dev, MediusFirmwareInfo *out)</code></td><td>Block until neither chip is on <A href="/native/commands/update#rollback">probation</A>, asking while the box reboots after an activate. After 55&nbsp;s: <code>MEDIUS_STATUS_ERR_UPDATE</code> if a chip is still on probation, <code>MEDIUS_STATUS_ERR_QUERY_TIMEOUT</code> if the box has not answered.</td></tr>
+              <tr><td><code>medius_last_error_update(MediusUpdateError *out)</code></td><td>After <code>MEDIUS_STATUS_ERR_UPDATE</code>, write the refused op and its status to <code>out</code> (<A href="/bindings/c/types#update-error"><code>MediusUpdateError</code></A>); <code>false</code> if the thread's last error was not an update error.</td></tr>
             </tbody>
           </table>
         </div>
-        <pre class="api-signature">typedef void (*MediusUpdateProgress)(void *user, size_t sent, size_t total);</pre>
+        <pre class="api-signature">void (*progress)(void *user, uintptr_t sent, uintptr_t total)</pre>
       </DocSection>
 
       <DocSection id="streams" title="Streams" caption="Subscribe to live input and logs">
@@ -252,16 +255,21 @@ MediusStatus medius_device_input_events(MediusDevice *dev,
               <tr><td><code>medius_event_stream_try_recv(stream, MediusCatchEvent *out)</code></td><td>Next buffered event; returns <code>false</code> if none (never blocks).</td></tr>
               <tr><td><code>medius_event_stream_recv_timeout(stream, uint64_t timeout_ms, MediusCatchEvent *out)</code></td><td>Block up to <code>timeout_ms</code>; <code>false</code> on timeout or close.</td></tr>
               <tr><td><code>medius_event_stream_dropped(stream)</code></td><td>Events dropped because the consumer fell behind.</td></tr>
+              <tr><td><code>medius_event_stream_is_connected(stream)</code></td><td>Whether the box still delivers; a <code>false</code> from <code>_try_recv</code> or <code>_recv_timeout</code> can't tell.</td></tr>
+              <tr><td><code>medius_event_stream_close(stream)</code></td><td>End the subscription for every clone. A receive blocked on it in another thread returns at once. Free the handle once no thread uses it.</td></tr>
               <tr><td><code>medius_device_input_events(dev, const MediusCatchFilter *filters, uintptr_t n_filters, MediusInputStream **out)</code></td><td>Subscribe to decoded press/release edges. Every filter must name an input class and cover both edges. See <A href="/bindings/c/streams#input">Decoded input</A>.</td></tr>
               <tr><td><code>medius_input_stream_recv</code> / <code>_try_recv</code> / <code>_recv_timeout(stream, …, MediusInputEvent *out)</code></td><td>Pull the next <A href="/bindings/c/types#input-event"><code>MediusInputEvent</code></A> (block / non-block / timed).</td></tr>
               <tr><td><code>medius_input_stream_held(stream, MediusClass class_, MediusUsage *out, uintptr_t cap)</code></td><td>Write that class's held usages into <code>out</code>; returns how many there are.</td></tr>
               <tr><td><code>medius_input_stream_dropped(stream)</code> / <code>medius_input_stream_free(stream)</code></td><td>Events lost behind a slow consumer / release the handle. There is no input-stream clone.</td></tr>
+              <tr><td><code>medius_input_stream_is_connected(stream)</code> / <code>_close(stream)</code></td><td>As for an event stream.</td></tr>
               <tr><td><code>medius_timeline_new()</code> / <code>_free(t)</code></td><td>Open / release a <A href="/bindings/c/streams#timeline">timeline</A> that maps box stamps onto your own clock.</td></tr>
               <tr><td><code>medius_timeline_observe(t, const MediusCatchEvent *ev, uint64_t now_ns, MediusStamped *out)</code></td><td>Place one event on the caller's monotonic scale, unwrapped past the 32-bit rollover.</td></tr>
+              <tr><td><code>medius_timeline_observe_input(t, const MediusInputEvent *ev, uint64_t now_ns, MediusStamped *out)</code></td><td>The same for an input-stream event. One timeline orders events from both streams.</td></tr>
               <tr><td><code>medius_timeline_reset(t, MediusClockDomain domain)</code> / <code>_samples(t, domain)</code></td><td>Forget a rebooted chip's rollover count and floor / how many events that domain has fed in.</td></tr>
               <tr><td><code>medius_device_logs(MediusDevice *dev, MediusLogStream **out)</code></td><td>Open the device log-line stream.</td></tr>
               <tr><td><code>medius_log_stream_clone</code> / <code>medius_log_stream_free</code></td><td>Clone / free a log-stream handle.</td></tr>
               <tr><td><code>medius_log_stream_recv</code> / <code>try_recv</code> / <code>recv_timeout(stream, …, MediusLogLine *out)</code></td><td>Pull the next <A href="/bindings/c/types#log-line"><code>MediusLogLine</code></A> (block / non-block / timed).</td></tr>
+              <tr><td><code>medius_log_stream_is_connected(stream)</code> / <code>_close(stream)</code></td><td>As for an event stream. Closing one log stream leaves the others reading.</td></tr>
             </tbody>
           </table>
         </div>
@@ -505,7 +513,7 @@ medius_clip_frame_free(f);`}</code></pre>
               <tr><td><code>medius_default_query_timeout_ms()</code></td><td>The default query reply wait, in ms.</td></tr>
               <tr><td><code>medius_default_transfer_timeout_ms()</code></td><td>The default control-transfer reply wait, in ms.</td></tr>
               <tr><td><code>medius_default_keepalive_cadence_ms()</code></td><td>The default <A href="/library/guides/connection#keepalive">keepalive</A> interval, in ms.</td></tr>
-              <tr><td><code>medius_abi_version()</code></td><td>The C ABI version of the loaded library, bumped on any breaking header change; currently <code>9</code>. Compare it with the header's <code>MEDIUS_ABI_VERSION</code> once at <A href="/bindings/c#verify">start-up</A>; on a mismatch the struct layouts differ, so call nothing else and rebuild against the header shipped with that library.</td></tr>
+              <tr><td><code>medius_abi_version()</code></td><td>The C ABI version of the loaded library, bumped on any breaking header change; currently <code>10</code>. Compare it with the header's <code>MEDIUS_ABI_VERSION</code> once at <A href="/bindings/c#verify">start-up</A>; on a mismatch the struct layouts differ, so call nothing else and rebuild against the header shipped with that library.</td></tr>
               <tr><td><code>medius_version_string()</code></td><td>The crate version as a static NUL-terminated string.</td></tr>
             </tbody>
           </table>
@@ -538,6 +546,11 @@ medius_clip_frame_free(f);`}</code></pre>
               <tr><td><code>medius_mock_detach(MediusMockBox *mock, bool back_within_grace)</code></td><td>Simulate the real device detaching: the mock releases the session. With <code>back_within_grace</code> the device re-attaches inside the 250 ms grace and the clone stays up; without, the clone is down until <code>medius_mock_attach</code>.</td></tr>
               <tr><td><code>medius_mock_attach(MediusMockBox *mock)</code></td><td>Simulate a device attaching: a clone that was up is cloned again, which releases the session. See <A href="/library/features/mock#restart">restart and release</A>.</td></tr>
               <tr><td><code>medius_mock_silent(MediusMockBox *mock)</code></td><td>Stop answering queries for timeout tests (still records).</td></tr>
+              <tr><td><code>medius_mock_set_emit_pace(mock, uint8_t mode, uint16_t hz, uint16_t force_hz)</code></td><td>Set the pacing the mock reports; <code>hz</code> matters only for <code>MEDIUS_EMIT_MODE_FIXED</code>, <code>force_hz</code> 0 is unforced.</td></tr>
+              <tr><td><code>medius_mock_set_advertised_hz(mock, uint16_t hz)</code></td><td>Set the rate the mock's clone advertises unforced; 0 is no clone.</td></tr>
+              <tr><td><code>medius_mock_set_transfer_reply(mock, uint8_t status, const uint8_t *data, uintptr_t len)</code></td><td>Set the reply to a <code>TRANSFER</code> while the opt-in is on; with it off the mock refuses. A status other than OK carries no data.</td></tr>
+              <tr><td><code>medius_mock_refuse_next_activate(mock, uint8_t status)</code></td><td>Refuse the next <code>ACTIVATE</code> with <code>status</code>, keeping what is staged.</td></tr>
+              <tr><td><code>medius_mock_reboot_after_activate(mock, uint32_t unanswered, uint32_t pending)</code></td><td>After each accepted activate, leave <code>unanswered</code> firmware queries unanswered, then report the device chip on probation for the next <code>pending</code> queries.</td></tr>
               <tr><td><code>medius_mock_push_raw(mock, const uint8_t *bytes, uintptr_t len)</code></td><td>Inject raw inbound bytes, as if the box sent them.</td></tr>
               <tr><td><code>medius_mock_push_log(mock, MediusLogLevel level, const char *text)</code></td><td>Push a LOG line onto the device's log stream.</td></tr>
               <tr><td><code>medius_mock_push_motion(mock, uint8_t seq, uint32_t ts_us, MediusMotionEvent event)</code></td><td>Push a <A href="/bindings/c/types#motion-event"><code>MediusMotionEvent</code></A> as a <code>Motion</code> catch event.</td></tr>

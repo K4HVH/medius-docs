@@ -101,7 +101,7 @@ CatchFilter.everything()                # every class, every id, one table entry
 
       <DocSection id="receive" title="Receive" caption="Blocking, polling, timed, and iterated reads">
         <p>
-          Every stream has these four reads plus <code>close()</code>. Shown for <code>EventStream</code>{' '}
+          Every stream has these four reads plus <code>is_connected</code> and <code>close()</code>. Shown for <code>EventStream</code>{' '}
           (yielding <A href="/bindings/python/types#catchevent"><code>CatchEvent</code></A>);{' '}
           <code>InputStream</code> and <code>LogStream</code> yield{' '}
           <A href="/bindings/python/types#inputevent"><code>InputEvent</code></A> and{' '}
@@ -111,15 +111,31 @@ CatchFilter.everything()                # every class, every id, one table entry
           <table class="api-params">
             <thead><tr><th>Method</th><th>Returns</th><th>Behaviour</th></tr></thead>
             <tbody>
-              <tr><td><code>recv()</code></td><td><code>CatchEvent</code></td><td>Blocks for the next item. Raises <A href="/bindings/python/types#subclasses"><code>DisconnectedError</code></A> when the link drops.</td></tr>
+              <tr><td><code>recv()</code></td><td><code>CatchEvent</code></td><td>Blocks for the next item. Raises <A href="/bindings/python/types#subclasses"><code>DisconnectedError</code></A> when the link drops or the stream is closed.</td></tr>
               <tr><td><code>try_recv()</code></td><td><code>Optional[CatchEvent]</code></td><td>Returns immediately; <code>None</code> if nothing is queued.</td></tr>
               <tr><td><code>recv_timeout(ms)</code></td><td><code>Optional[CatchEvent]</code></td><td>Waits up to <code>ms</code> milliseconds; <code>None</code> on timeout.</td></tr>
-              <tr><td><code>for ev in stream:</code></td><td>yields each item</td><td>Loops on <code>recv()</code>; ends cleanly when the link drops (no exception).</td></tr>
+              <tr><td><code>for ev in stream:</code></td><td>yields each item</td><td>Loops on <code>recv()</code>; ends cleanly when the link drops or the stream closes (no exception).</td></tr>
               <tr><td><code>clone()</code></td><td><code>EventStream</code></td><td>A second handle to the same subscription; the queue is shared. <code>EventStream</code> and <code>LogStream</code> only.</td></tr>
-              <tr><td><code>close()</code> / <code>with stream:</code></td><td>none</td><td>Release the subscription. Automatic on <code>with</code> exit and GC.</td></tr>
+              <tr><td><code>is_connected</code></td><td><code>bool</code></td><td>Whether the box still delivers; a <code>None</code> from <code>try_recv()</code> or <code>recv_timeout()</code> can't tell.</td></tr>
+              <tr><td><code>close()</code> / <code>with stream:</code></td><td>none</td><td>End the stream for every handle on it and free this one. A <code>recv()</code> blocked in another thread raises <code>DisconnectedError</code> at once. Automatic on <code>with</code> exit; garbage collection frees one handle and leaves the stream open for the others.</td></tr>
             </tbody>
           </table>
         </div>
+        <div class="api-response-label">CLOSE FROM ANOTHER THREAD</div>
+        <pre><code class="language-python">{`import threading
+from medius import CatchFilter, Device
+
+def read(events):
+    for ev in events:          # ends when the stream closes
+        print(ev)
+
+with Device.find() as dev:
+    events = dev.catch_events(CatchFilter.everything())
+    reader = threading.Thread(target=read, args=(events,))
+    reader.start()
+    ...
+    events.close()             # the loop ends at once
+    reader.join()`}</code></pre>
         <p><code>InputStream</code> has no <code>clone()</code>; open a second one instead.</p>
       </DocSection>
 
@@ -251,7 +267,7 @@ print("box-wide dropped:", st.dropped, " clock age:", st.clock.age_ms)`}</code><
           <table class="api-params">
             <thead><tr><th>Member</th><th>Returns</th><th>Does</th></tr></thead>
             <tbody>
-              <tr><td><code>recv()</code> / <code>try_recv()</code> / <code>recv_timeout(ms)</code></td><td><A href="/bindings/python/types#inputevent"><code>InputEvent</code></A></td><td>as on <code>EventStream</code>.</td></tr>
+              <tr><td><code>recv()</code> / <code>try_recv()</code> / <code>recv_timeout(ms)</code></td><td><A href="/bindings/python/types#inputevent"><code>InputEvent</code></A></td><td>as on <code>EventStream</code>. Receives run one at a time; <code>try_recv()</code> returns <code>None</code> while another thread receives.</td></tr>
               <tr><td><code>held(input_class)</code></td><td><code>List[Usage]</code></td><td>Which usages of one <A href="/bindings/python/types#class"><code>Class</code></A> this stream currently holds.</td></tr>
               <tr><td><code>dropped</code></td><td><code>int</code></td><td>Events the queue shed before you read them.</td></tr>
             </tbody>
@@ -286,7 +302,7 @@ with Device.find() as dev:
           <table class="api-params">
             <thead><tr><th>Member</th><th>Returns</th><th>Does</th></tr></thead>
             <tbody>
-              <tr><td><code>observe(event, now_ns=None)</code></td><td><A href="/bindings/python/types#stamped"><code>Stamped</code></A></td><td>Place one <A href="/bindings/python/types#catchevent"><code>CatchEvent</code></A> on this machine's clock. <code>now_ns</code> defaults to <a href="https://docs.python.org/3/library/time.html#time.monotonic_ns" target="_blank" rel="noreferrer"><code>time.monotonic_ns()</code></a>.</td></tr>
+              <tr><td><code>observe(event, now_ns=None)</code></td><td><A href="/bindings/python/types#stamped"><code>Stamped</code></A></td><td>Place one <A href="/bindings/python/types#catchevent"><code>CatchEvent</code></A> or <A href="/bindings/python/types#inputevent"><code>InputEvent</code></A> on this machine's clock; the two order together. <code>now_ns</code> defaults to <a href="https://docs.python.org/3/library/time.html#time.monotonic_ns" target="_blank" rel="noreferrer"><code>time.monotonic_ns()</code></a>.</td></tr>
               <tr><td><code>reset(domain)</code></td><td>none</td><td>Forget one <A href="/bindings/python/types#clockdomain"><code>ClockDomain</code></A>'s rollover count and measured floor, for a chip that rebooted.</td></tr>
               <tr><td><code>samples(domain)</code></td><td><code>int</code></td><td>Events observed for a domain; the floor is a minimum over these.</td></tr>
             </tbody>

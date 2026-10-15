@@ -61,10 +61,12 @@ const Usage: Component = () => {
              │
              ├─ == OK ──▶ the out-param is valid, carry on
              └─ != OK ──▶ medius_last_error_message(buf, cap)   text (this thread)
-                          medius_last_error_proto_ver()         byte (BadProtoVer only)`}</pre>
+                          medius_last_error_proto_ver()         byte (BadProtoVer only)
+                          medius_last_error_update(&out)        op + status (ErrUpdate only)`}</pre>
         <div class="api-response-label">READING THE DETAIL</div>
         <pre class="api-signature">{`uintptr_t medius_last_error_message(char *buf, uintptr_t cap);
-uint8_t   medius_last_error_proto_ver(void);`}</pre>
+uint8_t   medius_last_error_proto_ver(void);
+bool      medius_last_error_update(MediusUpdateError *out);`}</pre>
         <pre><code class="language-c">{`MediusDevice *dev = NULL;
 if (medius_device_find(&dev) != MEDIUS_STATUS_OK) {
     char buf[256];
@@ -76,7 +78,11 @@ if (medius_device_find(&dev) != MEDIUS_STATUS_OK) {
           <A href="/bindings/c/api#module"><code>medius_last_error_message</code></A> returns the full message length in bytes (excluding
           the NUL); retry with a larger buffer on truncation.{' '}
           <A href="/bindings/c/api#module"><code>medius_last_error_proto_ver</code></A> returns the offending version byte after a{' '}
-          <code>BadProtoVer</code>, else <code>0</code>.
+          <code>BadProtoVer</code>, else <code>0</code>.{' '}
+          <A href="/bindings/c/api#update"><code>medius_last_error_update</code></A> writes the refused
+          update op and status after <code>MEDIUS_STATUS_ERR_UPDATE</code> (
+          <A href="/bindings/c/types#update-error"><code>MediusUpdateError</code></A>), else returns{' '}
+          <code>false</code>.
         </p>
         <div class="callout callout--warning">
           <p>
@@ -88,7 +94,8 @@ if (medius_device_find(&dev) != MEDIUS_STATUS_OK) {
           <p>
             A device call returns{' '}
             <code>MEDIUS_STATUS_ERR_DISCONNECTED</code> once the link drops, and a stream's blocking{' '}
-            <code>recv</code> returns it when the stream closes (after a reset or link loss). Recover
+            <code>recv</code> returns it when the stream closes (after a reset, link loss or{' '}
+            <code>medius_*_stream_close</code>). Recover
             with <A href="/bindings/c/api#led-admin-options"><code>medius_device_reconnect</code></A> or by re-opening (see{' '}
             <A href="/library/lifecycle">Lifecycle</A>).
           </p>
@@ -181,11 +188,17 @@ MediusDevice *worker = medius_device_clone(dev);  /* same link, ref-counted */
 
 medius_device_free(worker);   /* drop one owner */
 medius_device_free(dev);      /* last owner -> joins the background threads */`}</code></pre>
+        <p>
+          A clip builder, clip frame or timeline takes calls from one thread at a time; every other
+          handle takes them from several at once. Free a handle only when no other thread is using
+          it: to stop a thread blocked in a receive, close the stream, let the receive return, then
+          free it.
+        </p>
         <div class="callout callout--info">
           <p>
             <code>clone(NULL)</code> returns <code>NULL</code> and every <code>*_free(NULL)</code> is
             a no-op, so cleanup needs no null checks. A stream unsubscribes when its last handle is
-            freed.
+            freed, or at once on <code>medius_*_stream_close</code>.
           </p>
           <p>
             Catch events and log lines are fixed-size structs written into your buffer, with nothing

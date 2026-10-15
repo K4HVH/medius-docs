@@ -30,7 +30,7 @@ const Diagnostics: Component = () => {
         <pre><code class="language-rust">{`for line in device.logs() {
     println!("[{:?}] {}", line.level, line.text);
 }
-// ends when the link drops`}</code></pre>
+// ends when the link drops or the stream closes`}</code></pre>
 
         <div class="callout callout--info">
           <p>
@@ -60,7 +60,7 @@ const Diagnostics: Component = () => {
                 <td>
                   Waits for the next line. <code>Err</code> is{' '}
                   <A href="/library/types/errors"><code>Error::Disconnected</code></A> once the link
-                  is gone.
+                  is gone or the stream is closed.
                 </td>
               </tr>
               <tr>
@@ -91,7 +91,25 @@ const Diagnostics: Component = () => {
                 <td><code>for line in stream</code></td>
                 <td><code>LogLine</code></td>
                 <td>Yes</td>
-                <td>Blocking <code>IntoIterator</code>; yields each line until the link closes.</td>
+                <td>Blocking <code>IntoIterator</code>; yields each line until the link or the stream closes.</td>
+              </tr>
+              <tr>
+                <td><code>is_connected()</code></td>
+                <td><code>bool</code></td>
+                <td>No</td>
+                <td>Whether the box still delivers to this stream; a <code>None</code> from <code>try_recv</code> or <code>recv_timeout</code> can't tell.</td>
+              </tr>
+              <tr>
+                <td><code>close()</code></td>
+                <td><code>()</code></td>
+                <td>No</td>
+                <td>End this stream and its clones. A receive blocked on it returns at once, as does every later one; other <code>LogStream</code>s go on reading.</td>
+              </tr>
+              <tr>
+                <td><code>closer()</code></td>
+                <td><A href="/library/catch#stream-closer"><code>StreamCloser</code></A></td>
+                <td>No</td>
+                <td>A handle that closes the stream from another thread.</td>
               </tr>
             </tbody>
           </table>
