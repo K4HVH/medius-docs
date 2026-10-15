@@ -61,7 +61,7 @@ describe('helpCard', () => {
     const c = helpCard(item);
     expect(c.crumb).toBe('Guide / Help');
     expect(c.title).toBe(item.q);
-    expect(c.description).toBe("Each chip's download mode is in ROM, so a flash that stops partway never locks the chip out.");
+    expect(c.description).toBe("Each chip's download mode is in ROM (memory no flash can overwrite), so a flash that stops partway never locks the chip out.");
     expect(c.address).toBe(`medius.k4tech.net/guide/help/${item.id}`);
     expect(c.fact).toEqual(['MAKCU', 'firmware']);
   });

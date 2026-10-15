@@ -17,9 +17,9 @@ const Catch: Component = () => {
         </p>
         <p>
           A subscription is a table of{' '}
-          <A href="/library/types/structs#catch-filter"><code>CatchFilter</code></A> entries, addressed like
-          a <A href="/library/lock"><code>lock</code></A>; the address is the filter, down to one endpoint, since vendor bulk alone measures ~250&nbsp;KiB/s
-          on a 6&nbsp;Mbaud control link.
+          <A href="/library/types/structs#catch-filter"><code>CatchFilter</code></A> entries, each addressed
+          like a <A href="/library/lock"><code>lock</code></A>. Vendor bulk alone measures ~250&nbsp;KiB/s
+          on a 6&nbsp;Mbaud control link, so a filter narrows down to one endpoint.
         </p>
       </PageHeader>
 
@@ -27,8 +27,8 @@ const Catch: Component = () => {
         <pre class="api-signature">fn input_events(&self, filters: impl IntoIterator&lt;Item = CatchFilter&gt;) -&gt; Result&lt;InputStream&gt;</pre>
         <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
         <p>
-          The box sends held-usage <em>snapshots</em>; this diffs them into edges, so watching a key
-          is a match.
+          The box sends held-usage <em>snapshots</em>; <code>input_events</code> diffs them into
+          edges.
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`use medius::{Device, CatchFilter, Input, Key};
@@ -83,8 +83,8 @@ while let Ok(CatchEvent::Traffic(t)) = events.recv() {
           The keepalive re-asserts the table; it survives a{' '}
           <A href="/library/lifecycle#reconnect">reconnect</A> and a{' '}
           <A href="/library/lifecycle#restart">session recovery</A>. The box clears it on control-PC
-          silence, <A href="/library/admin#reset"><code>reset</code></A> (which ends the stream), link
-          loss, device detach, and a re-clone. The wire layout is on the native{' '}
+          silence, <A href="/library/admin#reset"><code>reset</code></A> (which ends the stream), inter-chip
+          link loss, the real device detaching, and a re-clone. The wire layout is on the native{' '}
           <A href="/native/commands/catch#catch"><code>CATCH</code></A> command.
         </p>
       </DocSection>
@@ -114,7 +114,7 @@ while let Ok(CatchEvent::Traffic(t)) = events.recv() {
               <tr><td><code>recv_timeout(dur)</code></td><td><code>Option&lt;InputEvent&gt;</code></td><td>Block up to <code>dur</code>, counting a wait for another thread's receive; <code>None</code> on timeout.</td></tr>
               <tr><td><code>recv_async().await</code></td><td><code>Result&lt;InputEvent&gt;</code></td><td>Await the next edge (<code>async</code> feature). Takes <code>&amp;mut self</code>.</td></tr>
               <tr><td><code>is_connected()</code></td><td><code>bool</code></td><td>Whether the box is still delivering; <code>try_recv</code> and <code>recv_timeout</code> return <code>None</code> for both "nothing yet" and "nothing ever again".</td></tr>
-              <tr><td><code>held(class)</code></td><td><code>Vec&lt;Usage&gt;</code></td><td>What this stream holds for one class.</td></tr>
+              <tr><td><code>held(class)</code></td><td><code>Vec&lt;Usage&gt;</code></td><td>Usages held in one class, as this stream tracked them.</td></tr>
               <tr><td><code>dropped()</code></td><td><code>u64</code></td><td>Events lost host-side because this consumer fell behind.</td></tr>
               <tr><td><code>close()</code></td><td><code>()</code></td><td>End the subscription. Every receive blocked on it returns at once, as does every later one; queued events are dropped.</td></tr>
               <tr><td><code>closer()</code></td><td><A href="/library/catch#stream-closer"><code>StreamCloser</code></A></td><td>A handle that closes the stream from another thread.</td></tr>
@@ -221,7 +221,7 @@ for event in &device.catch_events([filter])? {
         <p>
           What <code>flags</code> carries per class is on{' '}
           <A href="/library/types/structs#traffic-event"><code>TrafficEvent</code></A>;{' '}
-          <code>control_status()</code>, <code>rule_acted()</code>, <code>transfer_status()</code>,
+          <code>control_status()</code>, <code>rule_acted()</code>, <code>transfer_status()</code>,{' '}
           <code>zlp()</code>, <code>bulk_end_of_transfer()</code> and{' '}
           <A href="/library/types/enums#bus-event"><code>bus_event()</code></A> read it.
         </p>
@@ -243,7 +243,7 @@ for event in &device.catch_events([filter])? {
           <table class="api-params">
             <thead><tr><th>Domain</th><th>Stamped</th><th>Covers</th></tr></thead>
             <tbody>
-              <tr><td><code>ClockDomain::HostChip</code></td><td>in USB interrupt context, the instant the real device's transfer completed</td><td>motion, usages, <code>HidIn</code>, the device's vendor IN</td></tr>
+              <tr><td><code>ClockDomain::HostChip</code></td><td>in USB interrupt context, the instant the real device's transfer completed</td><td>motion, usages, <code>HidIn</code>, native vendor IN</td></tr>
               <tr><td><code>ClockDomain::DeviceChip</code></td><td>at the tap on the device chip</td><td><code>HidOut</code>, every OUT direction, a <A href="/library/advanced/raw">raw</A> vendor IN packet, <code>Control</code>, <code>Emit</code>, <code>Bus</code>, <code>ClipTransfer</code></td></tr>
             </tbody>
           </table>
@@ -278,8 +278,8 @@ for ev in input.by_ref().take(20) {
       <DocSection id="async" title="On AsyncDevice" caption="Subscribing fires, the stream awaits">
         <p>
           <A href="/library/features/async"><code>AsyncDevice</code></A> keeps{' '}
-          <code>catch_events</code> and <code>input_events</code> synchronous; the streams offer{' '}
-          <code>recv_async().await</code>; <code>query_catch</code> is a future.
+          <code>catch_events</code> and <code>input_events</code> synchronous, and the streams offer{' '}
+          <code>recv_async().await</code>. <code>query_catch</code> is a future.
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`use medius::{AsyncDevice, CatchFilter, Key};

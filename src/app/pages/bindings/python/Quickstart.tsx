@@ -8,7 +8,7 @@ const Quickstart: Component = () => {
     <>
       <PageHeader>
         <p>
-          One file: find the <A href="/native/hardware">box</A>, move, click, read one physical
+          One file: find the <A href="/native/hardware">box</A>, move, click, read one native
           event. Install with <a href="https://pip.pypa.io" target="_blank" rel="noreferrer">pip</a>{' '}
           (<code>pip install medius</code>, see <A href="/bindings/python">Install</A>). What each
           call does is in the <A href="/library">Rust Library</A> and{' '}
@@ -42,7 +42,7 @@ try:
         with dev.catch_events(CatchFilter.everything()) as stream:  # subscribe to everything
             event = stream.recv_timeout(5000)                      # one event, or None after 5 s
             if event is None:
-                print("no physical input within 5 s")
+                print("no native input within 5 s")
             elif event.motion:
                 m = event.motion
                 print(f"motion  dx={m.dx} dy={m.dy} wheel={m.dz}")
@@ -123,8 +123,8 @@ except NotFoundError:
 # firmware 3.4.6, proto 9
 # motion  dx=8 dy=-3 wheel=0`}</code></pre>
         <p>
-          The <code>motion</code> line needs a physical mouse move or click within 5 s.{' '}
-          <code>CatchFilter.everything()</code> covers every class, so a device with busy vendor
+          The last line needs a move or click on the real mouse within 5 s.{' '}
+          <code>CatchFilter.everything()</code> covers every class, so a real device with busy vendor
           endpoints can print a <code>traffic</code> line first; narrow it with{' '}
           <code>CatchFilter.watch_axes()</code>.
         </p>
@@ -143,7 +143,7 @@ except NotFoundError:
               <tr><td><A href="/bindings/python/streams"><code>stream.recv()</code></A></td><td>blocks forever</td><td>raises <A href="/bindings/python/types#subclasses"><code>DisconnectedError</code></A></td></tr>
               <tr><td><A href="/bindings/python/streams"><code>stream.recv_timeout(ms)</code></A></td><td>returns <code>None</code> after <code>ms</code></td><td>returns <code>None</code> (same as a timeout)</td></tr>
               <tr><td><A href="/bindings/python/streams"><code>stream.try_recv()</code></A></td><td>returns <code>None</code> at once</td><td>returns <code>None</code> (same as empty)</td></tr>
-              <tr><td><code>for ev in stream:</code></td><td>blocks for each</td><td>loop ends cleanly</td></tr>
+              <tr><td><code>for ev in stream:</code></td><td>blocks for each</td><td>loop ends without raising</td></tr>
             </tbody>
           </table>
         </div>
@@ -160,7 +160,7 @@ except NotFoundError:
         </p>
         <p>
           <A href="/bindings/python/streams#input"><code>dev.input_events()</code></A> yields press
-          and release edges directly, with no snapshot diffing.
+          and release edges, with no snapshot diffing.
         </p>
       </DocSection>
 
@@ -178,7 +178,7 @@ except NotFoundError:
             <tbody>
               <tr><td><code>find()</code> with no box present</td><td><A href="/bindings/python/types#subclasses"><code>NotFoundError</code></A></td></tr>
               <tr><td>a <code>query_*</code> gets no reply in time</td><td><A href="/bindings/python/types#subclasses"><code>QueryTimeoutError</code></A></td></tr>
-              <tr><td>the box speaks a different protocol</td><td><A href="/bindings/python/types#subclasses"><code>BadProtoVerError</code></A> (check <code>.proto_ver</code>)</td></tr>
+              <tr><td>the box runs a different protocol version</td><td><A href="/bindings/python/types#subclasses"><code>BadProtoVerError</code></A> (check <code>.proto_ver</code>)</td></tr>
               <tr><td>a stream read after the link drops</td><td><A href="/bindings/python/types#subclasses"><code>DisconnectedError</code></A></td></tr>
               <tr><td>any other failure</td><td>a <A href="/bindings/python/types#errors"><code>MediusError</code></A> subclass</td></tr>
             </tbody>
@@ -210,8 +210,8 @@ except NotFoundError:
           </table>
         </div>
         <p>
-          <A href="/bindings/python/api#connect"><code>dev.clone()</code></A> returns another handle to the same link; the connection lives
-          until the last handle is freed. See <A href="/library/lifecycle">Lifecycle</A> and the{' '}
+          <A href="/bindings/python/api#connect"><code>dev.clone()</code></A> returns another handle to the same link; the connection stays
+          open until the last handle is freed. See <A href="/library/lifecycle">Lifecycle</A> and the{' '}
           <A href="/library/guides/connection#keepalive">keepalive</A> thread.
         </p>
       </DocSection>

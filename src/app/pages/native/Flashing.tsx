@@ -49,7 +49,7 @@ const Flashing: Component = () => {
               <tr>
                 <td><A href="/native/architecture">Host chip</A></td>
                 <td><code>target = 1</code></td>
-                <td>Its own USB connection; the device relays the reboot over the inter-chip link.</td>
+                <td><code>USB3</code>; the device chip relays the reboot over the inter-chip link.</td>
               </tr>
             </tbody>
           </table>

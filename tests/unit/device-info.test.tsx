@@ -173,7 +173,7 @@ describe('DeviceInfo: an imperfect clone of a normal device', () => {
 
     const { findByText, queryByText } = render(() => <DeviceInfo />);
     await findByText('Full clone');
-    await findByText(/not an exact copy/i);
+    await findByText('Imperfect clone');
     expect(queryByText('Yes')).toBeNull();
   });
 });

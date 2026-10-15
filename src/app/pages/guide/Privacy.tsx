@@ -17,7 +17,7 @@ const Privacy: Component = () => (
 
     <DocSection id="site" title="Site">
       <p>
-        The site sets no cookies. Cloudflare carries every request, so it sees your IP address. The server holds your
+        The site sets no cookies. Cloudflare carries every request, so it receives your IP address. The server holds your
         IP address in memory for up to 10 minutes to rate-limit requests. Everything the site saves for you stays in
         your browser.
       </p>
@@ -28,7 +28,7 @@ const Privacy: Component = () => (
         The dashboard always reports each box it connects to, the device the box clones and each flash, for the
         totals on <A href="/dashboard/stats">Stats</A> and the list on <A href="/guide/compatibility">Devices</A>. The
         server records the Box ID as a keyed hash, when the box connected, firmware and protocol versions, operating
-        system and browser, country, the device's USB ID, kind and name, and each flash's details and result. Records
+        system and browser, country, the cloned device's USB ID, kind and name, and each flash's details and result. Records
         are kept until you have them deleted.
       </p>
     </DocSection>

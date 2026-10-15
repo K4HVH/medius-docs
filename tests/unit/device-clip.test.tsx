@@ -280,14 +280,14 @@ describe('DeviceClip settings', () => {
     // clip silently rideable (or not) with the box and the checkbox disagreeing.
     mock.setClip(status());
     const { container } = render(() => <DeviceClip />);
-    const ride = box(container, 'Motion rides a real report');
+    const ride = box(container, 'Motion rides a native report');
     expect(ride.checked).toBe(false);
     fireEvent.click(ride);
     await settle();
     expect(mock.sets).toEqual([{ id: CLIP_SET_RIDE, value: 1 }]);
     // The tick follows the box's readback once it agrees, not the click.
     mock.setClip(status({ ride: true }));
-    expect(box(container, 'Motion rides a real report').checked).toBe(true);
+    expect(box(container, 'Motion rides a native report').checked).toBe(true);
   });
 
   it('masks the autolock scope to the bits the box defines', async () => {
@@ -355,7 +355,7 @@ describe('DeviceClip draft ticks', () => {
     await settle();
     fireEvent.click(button(container, 'Add'));
     await settle();
-    expect(draftChips(container)).toContain('pan 1');
+    expect(draftChips(container)).toContain('Pan 1');
     expect(await sent(container)).toEqual([{ kind: 'tick', pan: 1 }]);
   });
 
@@ -428,7 +428,7 @@ describe('DeviceClip draft ticks', () => {
     expect(shownIn(container, 'Tick')).toBe('Move');
     fireEvent.click(button(container, 'Add'));
     await settle();
-    expect(draftChips(container)).toContain('move 10,0');
+    expect(draftChips(container)).toContain('Move 10,0');
   });
 
   it('builds a raw report tick from the endpoint, direction and hex bytes', async () => {
@@ -442,7 +442,7 @@ describe('DeviceClip draft ticks', () => {
     await settle();
     fireEvent.click(button(container, 'Add'));
     await settle();
-    expect(draftChips(container)).toContain('raw out 1, 3 B');
+    expect(draftChips(container)).toContain('Raw out 1, 3 B');
     expect(await sent(container)).toEqual([
       { kind: 'tick', raw: [{ ep: 1, dir: Direction.Negative, bytes: new Uint8Array([0x10, 0xff, 0x05]) }] },
     ]);
@@ -468,13 +468,13 @@ describe('DeviceClip draft ticks', () => {
     fireEvent.click(button(container, 'Add'));
     await settle();
     expect((await findByRole('alert')).textContent).toBe('A tick must encode to at most 512 bytes.');
-    expect(draftChips(container).some((c) => c.startsWith('raw'))).toBe(false);
+    expect(draftChips(container).some((c) => c.startsWith('Raw'))).toBe(false);
 
     // The largest one that fits goes in, and the refusal clears.
     fireEvent.input(getByLabelText('Bytes (hex)'), { target: { value: 'aa'.repeat(506) } });
     fireEvent.click(button(container, 'Add'));
     await settle();
-    expect(draftChips(container)).toContain('raw in 1, 506 B');
+    expect(draftChips(container)).toContain('Raw in 1, 506 B');
     expect(container.querySelector('[role=alert]')).toBeNull();
   });
 
@@ -491,7 +491,7 @@ describe('DeviceClip draft ticks', () => {
     fireEvent.input(getByLabelText('Out data (hex)'), { target: { value: '04 01' } });
     fireEvent.click(button(container, 'Add'));
     await settle();
-    expect(draftChips(container)).toContain('transfer out 0, 2 B');
+    expect(draftChips(container)).toContain('Transfer out 0, 2 B');
     expect(await sent(container)).toEqual([
       {
         kind: 'tick',
@@ -536,7 +536,7 @@ describe('DeviceClip draft ticks', () => {
     fireEvent.click(button(container, 'Add'));
     await settle();
     expect((await findByRole('alert')).textContent).toBe('Out data must be hex.');
-    expect(draftChips(container).some((c) => c.startsWith('transfer'))).toBe(false);
+    expect(draftChips(container).some((c) => c.startsWith('Transfer'))).toBe(false);
   });
 });
 
@@ -918,7 +918,7 @@ describe('DeviceClip packet triggers', () => {
     await settle();
     expect(button(container, 'Replace').disabled).toBe(false);
     expect(queryByText('All 8 slots are used. Remove one first.')).toBeNull();
-    expect(queryByText(/Already bound; binding again replaces it, and a change starts its run/)).toBeTruthy();
+    expect(queryByText(/Already bound\. A changed binding starts its run/)).toBeTruthy();
     fireEvent.click(button(container, 'Replace'));
     await settle();
     expect(bound().map((t) => t.id)).toEqual([3]);
@@ -1201,7 +1201,7 @@ describe('DeviceClip clip status', () => {
     mock.setUnreadable(true);
     const { container, queryByText } = render(() => <DeviceClip />);
     const text = container.textContent ?? '';
-    expect(text).toContain('This box\'s firmware sends clip status in an older layout than this dashboard reads.');
+    expect(text).toContain('This box\'s firmware is too old for clip playback on this page.');
     expect(text).toContain('Update the firmware to use clip playback.');
     expect(container.querySelector('a')?.getAttribute('href')).toBe('/dashboard/update');
     for (const empty of ['Idle', 'B free', 'B loaded', 'No triggers bound.', 'Reading...']) {
@@ -1219,7 +1219,7 @@ describe('DeviceClip clip status', () => {
     mock.setUnreadable(false);
     mock.setClip(status({ state: ClipState.Playing }));
     await settle();
-    expect(container.textContent).not.toContain('older layout');
+    expect(container.textContent).not.toContain('too old for clip playback');
     expect(queryByText('Playing')).toBeTruthy();
   });
 

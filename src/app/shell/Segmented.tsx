@@ -45,7 +45,7 @@ export function Segmented(props: {
   };
   // Options that don't fit on one row stack in one column: measured as a row each time the room changes, and
   // left as they are while hidden, when nothing has a place to measure. The class goes on outside Solid, since
-  // a measure inside an effect would read a row Solid hasn't drawn yet. Says whether it changed.
+  // a measure inside an effect would read a row Solid hasn't drawn yet. Returns whether it changed.
   const fit = (): boolean => {
     if (!root?.offsetParent) return false;
     const was = root.classList.contains('seg--col');
@@ -96,8 +96,8 @@ export function Segmented(props: {
       onKeyDown={onKey}
     >
       <span class="seg__fill" ref={fill} aria-hidden="true" />
-      {/* By place, not by object: a poll hands the same options anew, and new buttons would drop the focus
-          and the pointer's hover. */}
+      {/* By place, not by object: a poll returns the same options as new objects, and new buttons would drop
+          the focus and the pointer's hover. */}
       <Index each={props.options}>
         {(o, i) => {
           const checked = () => o().value === props.value;

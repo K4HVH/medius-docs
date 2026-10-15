@@ -79,7 +79,7 @@ const Clip: Component = () => {
             <tr><td><code>0x12</code></td><td><A href="/native/commands/clip#append"><code>CLIP_APPEND</code></A></td><td>PC→box</td><td>append a batch of entries to the ring</td></tr>
             <tr><td><code>0x13</code></td><td><A href="/native/commands/clip#ctrl"><code>CLIP_CTRL</code></A></td><td>PC→box</td><td>drive the playback engine (start, stop, pause, ...)</td></tr>
             <tr><td><code>0x14</code></td><td><A href="/native/commands/clip#set"><code>CLIP_SET</code></A></td><td>PC→box</td><td>set a clip setting (auto-lock, loop, retain, ride)</td></tr>
-            <tr><td><code>0x15</code></td><td><A href="/native/commands/clip#trigger"><code>CLIP_TRIGGER</code></A></td><td>PC→box</td><td>bind a physical edge or a matched packet to an engine verb</td></tr>
+            <tr><td><code>0x15</code></td><td><A href="/native/commands/clip#trigger"><code>CLIP_TRIGGER</code></A></td><td>PC→box</td><td>bind a native edge or a matched packet to an engine verb</td></tr>
           </tbody>
         </table>
         </div>
@@ -159,9 +159,9 @@ const Clip: Component = () => {
               <tr><th>Action</th><th>Value</th><th>Effect</th></tr>
             </thead>
             <tbody>
-              <tr><td>soft-release</td><td><code>0</code></td><td>Drop the override; a physical hold stays active.</td></tr>
+              <tr><td>soft-release</td><td><code>0</code></td><td>Drop the override; a hold on the real device stays active.</td></tr>
               <tr><td>press</td><td><code>1</code></td><td>Force the usage active.</td></tr>
-              <tr><td>force-release</td><td><code>2</code></td><td>Force it inactive, masking a physical hold too.</td></tr>
+              <tr><td>force-release</td><td><code>2</code></td><td>Force the usage inactive, masking a hold on the real device too.</td></tr>
             </tbody>
           </table>
         </div>
@@ -185,7 +185,7 @@ const Clip: Component = () => {
             <tbody>
               <tr><td><code>0</code></td><td>motion</td><td>cursor moves</td></tr>
               <tr><td><code>1</code></td><td>Left press</td><td>left button down</td></tr>
-              <tr><td><code>2-4</code></td><td>gap 3</td><td>nothing sent (NAK); left stays down</td></tr>
+              <tr><td><code>2-4</code></td><td>gap 3</td><td>nothing emitted (NAK); left stays down</td></tr>
               <tr><td><code>5</code></td><td>Left release</td><td>left button up</td></tr>
               <tr><td><code>6</code></td><td>motion</td><td>cursor moves</td></tr>
               <tr><td><code>7</code></td><td>key <code>A</code> press</td><td><code>A</code> down</td></tr>
@@ -229,7 +229,7 @@ const Clip: Component = () => {
               <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
             </thead>
             <tbody>
-              <tr><td>0</td><td><code>ep</code></td><td><code>u8</code></td><td><code>0</code> = EP0, or a control endpoint the device declares</td></tr>
+              <tr><td>0</td><td><code>ep</code></td><td><code>u8</code></td><td><code>0</code> = EP0, or a control endpoint the real device declares</td></tr>
               <tr><td>1</td><td><code>setup</code></td><td><code>u8[8]</code></td><td>setup packet</td></tr>
               <tr><td>9</td><td><code>data</code></td><td><code>u8[]</code></td><td>OUT data: <code>wLength</code> bytes when bit 7 of the first setup byte (the request type) is clear, absent when it is set</td></tr>
             </tbody>
@@ -269,7 +269,7 @@ const Clip: Component = () => {
         <p>
           The clip releases its held input on <code>STOP</code>, its natural end, a loop wrap,{' '}
           <code>RESTART</code>, <code>CLEAR</code>, a fault and a hard stop. A native report or a later
-          raw report that reaches the wire first replaces the raw bytes.
+          raw report emitted first replaces the raw bytes.
         </p>
         <div class="api-response-label">EXAMPLE ENTRIES</div>
         <p>
@@ -390,7 +390,7 @@ const Clip: Component = () => {
         <p>
           Ops <code>0</code>-<code>5</code> (<code>START</code> through <code>TOGGLE</code>) double as the{' '}
           <code>action</code> byte a <A href="/native/commands/clip#trigger"><code>CLIP_TRIGGER</code></A> fires
-          on a physical edge or a <A href="/native/commands/clip#packet-triggers">matched packet</A>;{' '}
+          on a native edge or a <A href="/native/commands/clip#packet-triggers">matched packet</A>;{' '}
           <code>CLEAR</code> and <code>FINALIZE</code> are host-only.
         </p>
         <div class="api-response-label">STATE</div>
@@ -422,16 +422,14 @@ const Clip: Component = () => {
         <pre class="diagram">{`STOP        an explicit STOP or CLEAR op
 silence     a full 1 s of control-PC silence
 RESET       a RESET command
-detach      the cloned device unplugs
+detach      the real device unplugs
 link loss   the inter-chip link drops
 re-clone    the box clones a device again`}</pre>
         <p>
           Each halts playback and releases the clip's lock; a hard stop (<code>silence</code>,{' '}
           <A href="/native/commands/admin#reset"><code>RESET</code></A>, detach, link loss,{' '}
           <A href="/native/commands/patch#presentation">re-clone</A>) also clears the ring, settings
-          and trigger set, which a host reloads. The{' '}
-          <A href="/native/injection#safety">1&nbsp;s silence auto-clear</A> applies to a clip like
-          any other injection.
+          and trigger set, which a host reloads.
         </p>
         <p>A hard stop moves the <A href="/native/commands/requests#stats"><code>session</code></A> count.</p>
         <p>Library binding: <A href="/library/clip"><code>Device::clip()</code></A>.</p>
@@ -477,7 +475,7 @@ re-clone    the box clones a device again`}</pre>
               <tr><th>id</th><th>Setting</th><th>value</th><th>Effect</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>0</code></td><td><code>autolock</code></td><td>class bitmask</td><td>the physical-input classes <code>START</code> locks while playing (below)</td></tr>
+              <tr><td><code>0</code></td><td><code>autolock</code></td><td>class bitmask</td><td>the native-input classes <code>START</code> locks while playing (below)</td></tr>
               <tr><td><code>1</code></td><td><code>loop</code></td><td><code>0</code> / <code>1</code></td><td>a finalized clip replays from the head instead of ending</td></tr>
               <tr><td><code>2</code></td><td><code>retain</code></td><td><code>0</code> / <code>1</code></td><td>keep entries after playing so <code>START</code> / <code>RESTART</code> can replay them</td></tr>
               <tr><td><code>3</code></td><td><code>ride</code></td><td><code>0</code> / <code>1</code></td><td>the clip's motion waits to ride a native report; <code>0</code> (the default) plays it on the box's clock (below)</td></tr>
@@ -506,7 +504,7 @@ re-clone    the box clones a device again`}</pre>
         <p>
           A clip's motion bypasses <A href="/native/commands/option#move-ride">movement riding</A> by
           default, so it plays on the box's clock; <code>ride</code> puts it back on the ride,
-          additive to physical motion and dropped while the mouse is still.
+          additive to native motion and dropped while the mouse is still.
         </p>
         <p>
           While <A href="/native/commands/option#render">rendering</A> is on with a profile armed, a
@@ -535,11 +533,11 @@ re-clone    the box clones a device again`}</pre>
         />
       </DocSection>
 
-      <DocSection id="trigger" title="CLIP_TRIGGER" caption="Bind a physical edge or a matched packet to an engine verb">
+      <DocSection id="trigger" title="CLIP_TRIGGER" caption="Bind a native edge or a matched packet to an engine verb">
         <p>
           Fires a <A href="/native/commands/clip#ctrl"><code>CLIP_CTRL</code></A> verb on the box from a
-          physical edge (as <A href="/native/commands/catch"><code>CATCH</code></A> reports it) or a
-          matched packet, with no host round-trip, so even the first emitted frame is box-timed.
+          native edge (as <A href="/native/commands/catch"><code>CATCH</code></A> reports it) or a
+          matched packet, with no host round-trip, so even the first emitted report is box-timed.
         </p>
         <p>
           Triggers are a{' '}
@@ -583,8 +581,8 @@ re-clone    the box clones a device again`}</pre>
             <thead><tr><th>Edge</th><th>Value</th><th>Fires on</th></tr></thead>
             <tbody>
               <tr><td>both</td><td><code>0</code></td><td>press and release</td></tr>
-              <tr><td>press</td><td><code>1</code></td><td>the physical press</td></tr>
-              <tr><td>release</td><td><code>2</code></td><td>the physical release</td></tr>
+              <tr><td>press</td><td><code>1</code></td><td>the native press</td></tr>
+              <tr><td>release</td><td><code>2</code></td><td>the native release</td></tr>
             </tbody>
           </table>
         </div>
@@ -600,7 +598,7 @@ re-clone    the box clones a device again`}</pre>
         </div>
         <div class="api-response-label">KINDS</div>
         <pre class="diagram">{`  class 0..2, 0xFF                          class 4..9
-  a physical edge                           a packet on a traffic surface
+  a native edge                             a packet on a traffic surface
   button, key, media                        HID_IN, HID_OUT, VEND_INTR, VEND_BULK, CONTROL, EMIT
           |                                         |
           v                                         v
@@ -684,8 +682,8 @@ re-clone    the box clones a device again`}</pre>
         <table class="api-params">
           <thead><tr><th>Class</th><th>Value</th><th>Carries</th><th>Head</th></tr></thead>
           <tbody>
-            <tr><td><code>HID_IN</code></td><td><code>4</code></td><td>IN</td><td>the device's report as it arrived, ahead of any rewrite</td></tr>
-            <tr><td><code>HID_OUT</code></td><td><code>5</code></td><td>OUT</td><td>a report the PC writes to the device</td></tr>
+            <tr><td><code>HID_IN</code></td><td><code>4</code></td><td>IN</td><td>the native report as it arrived, ahead of any rewrite</td></tr>
+            <tr><td><code>HID_OUT</code></td><td><code>5</code></td><td>OUT</td><td>a report the PC writes to the real device</td></tr>
             <tr><td><code>VEND_INTR</code></td><td><code>6</code></td><td>IN, OUT</td><td>a relayed vendor interrupt packet</td></tr>
             <tr><td><code>VEND_BULK</code></td><td><code>7</code></td><td>IN, OUT</td><td>a relayed vendor bulk packet</td></tr>
             <tr><td><code>CONTROL</code></td><td><code>8</code></td><td>IN, OUT</td><td>a control request: the 8 setup bytes, then the first 8 OUT data bytes</td></tr>
@@ -732,7 +730,7 @@ re-clone    the box clones a device again`}</pre>
               <tr><td>surfaces</td><td>A trigger sees a packet at every surface a <A href="/native/commands/rewrite">rewrite rule</A> does, ahead of it. The two are independent: one packet can run a verb and then match a rule.</td></tr>
               <tr><td>rank</td><td>Only the most specific trigger a packet matches acts on it, ranked in the rewrite table's order: an exact <code>id</code> over <code>0xFFFF</code>, more masked bits over fewer, a named <code>dir</code> over both, then the earlier one. One verb runs per packet.</td></tr>
               <tr><td>tick</td><td>The verb runs on the frame clock's next tick, within one frame of the matching packet (1&nbsp;ms at the default pace), and one that starts the clip plays its first entry on that tick.</td></tr>
-              <tr><td>consume</td><td>A consumed <code>HID_IN</code> report is the whole report, so a release edge in it reaches the PC with the next report. Consuming needs <A href="/native/commands/option#imperfect"><code>OPTION(IMPERFECT)</code></A>: turning it off removes the consuming triggers. A trigger that only watches works with it off.</td></tr>
+              <tr><td>consume</td><td>A consumed <code>HID_IN</code> report is the whole report, so a release edge in it is emitted with the next report. Consuming needs <A href="/native/commands/option#imperfect"><code>OPTION(IMPERFECT)</code></A>: turning it off removes the consuming triggers. A trigger that only watches works with it off.</td></tr>
               <tr><td>catch</td><td><A href="/native/commands/catch#traffic-event"><code>CATCH</code></A> reports a consumed <code>HID_IN</code> or OUT packet, whose taps sit ahead of the triggers. A consumed vendor IN packet or emitted report goes unreported.</td></tr>
               <tr><td>run</td><td>With <code>RUN</code>, a device that repeats a held state every poll fires once per hold; the release is a second trigger matching the released bytes. The first <code>slen</code> match bytes select the stream within the address (a report ID) and the rest are the condition. A packet that fails the selector leaves the run as it was.</td></tr>
               <tr><td>first packet</td><td>A run starts on the first matching packet the trigger sees. A trigger whose condition already holds when it is set fires on the next packet, so one matching the at-rest bytes of a device that reports every poll fires once when it is set.</td></tr>

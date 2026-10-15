@@ -135,7 +135,7 @@ export const CapabilitiesPanel = () => {
                       </Row>
                       <Show when={imp().overCapacity || imp().cloneImperfect}>
                         <Row label="Reason">
-                          {imp().overCapacity ? 'Over box capacity, or high speed' : 'Not an exact copy'}
+                          {imp().overCapacity ? 'Over box capacity, or high speed' : 'Imperfect clone'}
                         </Row>
                       </Show>
                       <Show when={device() && isCloned(device()!)}>

@@ -490,7 +490,7 @@ describe('The Advanced tab of Control', () => {
     fireEvent.click(getByText('Run'));
     await findByText('No answer');
     expect(getByText(/no control endpoint with that number/)).toBeTruthy();
-    expect(getByText(/host chip did not answer within 0\.8 s/)).toBeTruthy();
+    expect(getByText(/mouse-side chip did not answer within 0\.8 s/)).toBeTruthy();
     expect(queryByText('NAK')).toBeNull();
   });
 });

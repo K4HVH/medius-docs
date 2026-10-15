@@ -15,7 +15,7 @@ const Move: Component = () => {
         </p>
         <div class="table-scroll">
           <table class="api-params">
-            <thead><tr><th>Drive a...</th><th>Rides a real move</th><th>Next report</th></tr></thead>
+            <thead><tr><th>Drive a...</th><th>Rides native motion</th><th>Next report</th></tr></thead>
             <tbody>
               <tr><td>cursor</td><td><A href="/library/move#move-rel"><code>move_rel</code></A></td><td><A href="/library/move#move-rel-now"><code>move_rel_now</code></A></td></tr>
               <tr><td>wheel</td><td><A href="/library/move#wheel"><code>wheel</code></A></td><td><A href="/library/move#wheel-now"><code>wheel_now</code></A></td></tr>
@@ -24,7 +24,7 @@ const Move: Component = () => {
           </table>
         </div>
         <p>
-          The right-hand column puts the whole delta on the box's next mouse report, whatever{' '}
+          The right-hand calls emit the whole delta on the box's next mouse report, whatever{' '}
           <A href="/library/options#set-movement-riding">movement riding</A>,{' '}
           <A href="/library/options#set-spread">spreading</A> and{' '}
           <A href="/library/options#set-render">rendering</A> are set to.{' '}
@@ -44,8 +44,8 @@ const Move: Component = () => {
             </thead>
             <tbody>
               <tr><td><code>motion</code></td><td><A href="/library/types/enums#motion"><code>Motion</code></A></td><td>Axis and delta: <code>Cursor {'{'} dx, dy {'}'}</code>, <code>Wheel(dz)</code>, or <code>Pan(dz)</code>.</td></tr>
-              <tr><td><code>timing</code></td><td><A href="/library/types/enums#move-timing"><code>MoveTiming</code></A></td><td>Wait for a real move, or emit on the next report.</td></tr>
-              <tr><td><code>pending</code></td><td><A href="/library/types/enums#pending-motion"><code>PendingMotion</code></A></td><td>What happens to motion already held for a real move.</td></tr>
+              <tr><td><code>timing</code></td><td><A href="/library/types/enums#move-timing"><code>MoveTiming</code></A></td><td>Ride native motion, or emit on the next report.</td></tr>
+              <tr><td><code>pending</code></td><td><A href="/library/types/enums#pending-motion"><code>PendingMotion</code></A></td><td>Keep, flush or discard motion already held for a ride.</td></tr>
             </tbody>
           </table>
         </div>
@@ -65,7 +65,7 @@ device.move_axis(Motion::Wheel(1), MoveTiming::Ride, PendingMotion::Keep)?;
 device.move_axis(Motion::Cursor { dx: 5, dy: 0 }, MoveTiming::Now, PendingMotion::Flush)?;`}</code></pre>
       </DocSection>
 
-      <DocSection id="move-rel" title="move_rel" caption="Relative cursor movement">
+      <DocSection id="move-rel" title="move_rel" caption="Relative cursor motion">
         <pre class="api-signature">fn move_rel(&self, dx: i16, dy: i16) -&gt; Result&lt;()&gt;</pre>
         <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
         <p>
@@ -83,8 +83,9 @@ device.move_axis(Motion::Cursor { dx: 5, dy: 0 }, MoveTiming::Now, PendingMotion
           </table>
         </div>
         <p>
-          The OS pointer speed and acceleration curve scale counts to pixels. Both span the full{' '}
-          <code>i16</code> range (<code>-32768 to 32767</code>).
+          <code>dx</code> and <code>dy</code> span the full <code>i16</code> range
+          (<code>-32768 to 32767</code>). The OS pointer speed and acceleration curve scale counts to
+          pixels.
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`device.move_rel(20, 20)?;  // right and down
@@ -139,7 +140,7 @@ device.wheel(-1)?;  // down one notch`}</code></pre>
         <p>
           <code>delta</code> spans the full <code>i16</code> range (<code>-32768 to 32767</code>) and
           feeds the same <A href="/native/injection#state">accumulator</A> as the wheel, pacing large
-          values across reports. Only on a device whose descriptor declares AC Pan; check{' '}
+          values across reports. Only on a real device whose descriptor declares AC Pan; check{' '}
           <A href="/library/requests#caps"><code>caps</code></A>.
         </p>
         <div class="api-response-label">EXAMPLE</div>
@@ -147,7 +148,7 @@ device.wheel(-1)?;  // down one notch`}</code></pre>
 device.pan(-1)?;  // pan left`}</code></pre>
       </DocSection>
 
-      <DocSection id="move-rel-now" title="move_rel_now" caption="Cursor movement that bypasses riding">
+      <DocSection id="move-rel-now" title="move_rel_now" caption="Cursor motion that bypasses riding">
         <pre class="api-signature">fn move_rel_now(&self, dx: i16, dy: i16) -&gt; Result&lt;()&gt;</pre>
         <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
         <div class="table-scroll">
@@ -164,16 +165,16 @@ device.pan(-1)?;  // pan left`}</code></pre>
         <p>
           <A href="/library/move#move-rel"><code>move_rel</code></A> with{' '}
           <code>MoveTiming::Now</code>: the delta is emitted on the box's next mouse report instead of
-          waiting for a real move, and held motion stays held.
+          riding native motion, and held motion stays held.
         </p>
         <p>
           The box emits a report for it on the first poll no native report can be ready for. A
           native report that reaches the box first carries the delta instead, unless it already carries injected
-          motion while the mouse leaves polls free; then the delta takes a separate poll.
+          motion while the real device leaves polls free; then the delta takes a separate poll.
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`device.set_movement_riding(Some(Duration::from_millis(20)))?;
-device.move_rel(100, 0)?;      // waits for a real move, dropped without one
+device.move_rel(100, 0)?;      // rides native motion, dropped without it
 device.move_rel_now(100, 0)?;  // emits either way`}</code></pre>
       </DocSection>
 
@@ -217,7 +218,7 @@ device.move_rel_now(100, 0)?;  // emits either way`}</code></pre>
         <pre><code class="language-rust">{`device.pan_now(-1)?;  // one step left, on the next report`}</code></pre>
       </DocSection>
 
-      <DocSection id="flush-motion" title="flush_motion" caption="Send what riding holds">
+      <DocSection id="flush-motion" title="flush_motion" caption="Emit what riding holds">
         <pre class="api-signature">fn flush_motion(&self) -&gt; Result&lt;()&gt;</pre>
         <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
         <div class="api-response-label">EFFECT</div>
@@ -226,13 +227,13 @@ device.move_rel_now(100, 0)?;  // emits either way`}</code></pre>
             <thead><tr><th>Accumulator</th><th>After flush</th></tr></thead>
             <tbody>
               <tr><td>Riding</td><td>Emptied into the immediate accumulator, regardless of the ride window. Emits no motion itself.</td></tr>
-              <tr><td>Immediate</td><td>Gains that amount, sent on the box's next mouse report.</td></tr>
+              <tr><td>Immediate</td><td>Gains that amount, emitted on the box's next mouse report.</td></tr>
             </tbody>
           </table>
         </div>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`for _ in 0..10 {
-    device.move_rel(4, 0)?;   // accumulates, waiting for a real move
+    device.move_rel(4, 0)?;   // accumulates, waiting for native motion
 }
 device.flush_motion()?;       // 40 counts, now`}</code></pre>
       </DocSection>
@@ -246,7 +247,7 @@ device.flush_motion()?;       // 40 counts, now`}</code></pre>
             <thead><tr><th>State</th><th>After discard</th></tr></thead>
             <tbody>
               <tr><td>Riding accumulator</td><td>Zeroed; never reaches the game PC.</td></tr>
-              <tr><td>Immediate accumulator</td><td>Untouched, so a move sent with <code>MoveTiming::Now</code> still lands.</td></tr>
+              <tr><td>Immediate accumulator</td><td>Untouched, so a move sent with <code>MoveTiming::Now</code> is still emitted.</td></tr>
               <tr><td><A href="/native/commands/lock#bearing">Bearing</A></td><td>Cleared, so every <code>With</code> / <code>Against</code> scale stops applying until the box injects again.</td></tr>
             </tbody>
           </table>
@@ -255,13 +256,13 @@ device.flush_motion()?;       // 40 counts, now`}</code></pre>
           Unlike <A href="/library/admin#reset"><code>reset</code></A>, no held usage or lock is released.
         </p>
         <div class="api-response-label">EXAMPLE</div>
-        <pre><code class="language-rust">{`device.move_rel(400, 0)?;   // queued, then superseded
+        <pre><code class="language-rust">{`device.move_rel(400, 0)?;   // queued
 device.discard_motion()?;   // it never reaches the game PC`}</code></pre>
       </DocSection>
 
-      <DocSection id="async" title="On AsyncDevice" caption="Movement stays synchronous">
+      <DocSection id="async" title="On AsyncDevice" caption="Motion stays synchronous">
         <p>
-          <A href="/library/features/async"><code>AsyncDevice</code></A> keeps every movement verb
+          <A href="/library/features/async"><code>AsyncDevice</code></A> keeps every motion verb
           synchronous: no <code>.await</code>, same signatures.{' '}
           <a href="https://docs.rs/futures/latest/futures/executor/fn.block_on.html" target="_blank" rel="noreferrer"><code>block_on</code></a>{' '}
           is only for async queries.

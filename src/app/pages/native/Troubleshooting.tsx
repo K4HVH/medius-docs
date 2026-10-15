@@ -9,7 +9,7 @@ const Troubleshooting: Component = () => {
       <PageHeader>
         <p>
           Every message is a <A href="/native/frame"><code>frame</code></A> (one packet on the
-          wire). Most commands are{' '}
+          serial link). Most commands are{' '}
           <A href="/native/injection#fire-and-forget">fire-and-forget</A>, with no reply;{' '}
           <A href="/native/commands/requests#requests"><code>QUERY</code></A> asks for box state and
           gets one <A href="/native/commands/requests#resp"><code>RESP</code></A> frame.
@@ -29,43 +29,37 @@ const Troubleshooting: Component = () => {
           </li>
           <li>Another process holds the port; only one can open it.</li>
           <li>Not a Medius box, or the wrong port.</li>
-          <li>Port opened after both hellos fired.</li>
         </ul>
         <p>
-          The hello is an unsolicited{' '}
+          The <A href="/native/connection#hello">hello</A> is an unsolicited{' '}
           <A href="/native/commands/requests#version"><code>RESP(VERSION)</code></A> at boot and on
           the first frame received. Missing it costs nothing: send{' '}
-          <A href="/native/commands/requests#version"><code>QUERY(VERSION)</code></A>. See{' '}
-          <A href="/native/connection#hello">ready hello</A>.
+          <A href="/native/commands/requests#version"><code>QUERY(VERSION)</code></A>.
         </p>
       </DocSection>
 
       <DocSection id="no-injection" title="Injection does nothing" caption="Check HEALTH first">
         <p>
-          <A href="/native/injection">Injection</A> is input added on top of the mouse's
-          passthrough (movement, buttons, scroll). If it has no effect, send{' '}
+          <A href="/native/injection">Injection</A> is input added on top of native input (motion,
+          buttons, scroll). If it has no effect, send{' '}
           <A href="/native/commands/requests#health"><code>QUERY(HEALTH)</code></A> and read the{' '}
           <code>flags</code> word (<code>u16</code>, little-endian).
         </p>
         <p>
           The box merges injection only once <code>LINK_UP</code>, <code>MOUSE_ATTACHED</code> (a
           mouse on <A href="/native/hardware"><code>USB3</code></A>), and{' '}
-          <code>CLONE_CONFIGURED</code> (the PC enumerated the clone) are all set. Full flags word
-          on <A href="/native/commands/requests#health">HEALTH</A>.
+          <code>CLONE_CONFIGURED</code> (the PC enumerated the clone) are all set.
         </p>
       </DocSection>
 
       <DocSection id="button-stuck-release" title="Held button releases" caption="Silence auto-clear">
-        <p>
-          The box clears all injection when the program goes quiet, so input can't stick.
-        </p>
         <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Event</th><th>Effect</th></tr>
             </thead>
             <tbody>
-              <tr><td>Silence timeout (default <code>1000 ms</code> with no valid inbound frame)</td><td>Drops every held button and pending move, returns to plain passthrough.</td></tr>
+              <tr><td><A href="/native/injection#safety">Silence timeout</A> (default <code>1000 ms</code> with no valid inbound frame)</td><td>Drops every held button and pending move, returns to passthrough.</td></tr>
               <tr><td>Any frame passing its <A href="/native/frame#crc">checksum</A> (including a <A href="/native/commands/requests#requests"><code>QUERY</code></A>)</td><td>Resets the timer.</td></tr>
             </tbody>
           </table>
@@ -75,11 +69,6 @@ const Troubleshooting: Component = () => {
           <A href="/native/commands/requests#health"><code>QUERY(HEALTH)</code></A> is enough), or
           use <A href="/library/guides/connection#keepalive">the library's keepalive</A>.
         </p>
-        <div class="callout callout--info">
-          <p>
-            Safety state machine on <A href="/native/injection#safety">Injection</A>.
-          </p>
-        </div>
       </DocSection>
 
       <DocSection id="shutdown" title="Machine shuts off or drains battery" caption="USB1 and USB3 on the same machine">
@@ -102,13 +91,13 @@ const Troubleshooting: Component = () => {
         </div>
       </DocSection>
 
-      <DocSection id="port-gone" title="Serial port gone after REBOOT" caption="Chip in ROM download mode">
+      <DocSection id="port-gone" title="No reply after REBOOT" caption="Chip in ROM download mode">
         <p>
-          A download <A href="/native/commands/admin#reboot"><code>REBOOT</code></A>{' '}
-          (<code>target</code> <code>0</code> or <code>1</code>) puts a chip in ROM download mode,
-          removing its running firmware and the serial port it provides. Flash the chip or
-          power-cycle the box to restore the port. See{' '}
-          <A href="/native/flashing">Flashing</A>.
+          A download <A href="/native/commands/admin#reboot"><code>REBOOT</code></A> puts a chip in ROM
+          download mode and stops its firmware. With <code>target</code> <code>0</code> the CH343 port
+          stays, but the device chip's ROM is on it instead of Medius; with <code>1</code> the host chip
+          stops reading the real device.{' '}
+          <A href="/native/flashing">Flash</A> the chip, or power-cycle the box to run the firmware again.
         </p>
       </DocSection>
 
@@ -118,7 +107,7 @@ const Troubleshooting: Component = () => {
           diagnostic frame (box to PC). If none arrive, check:
         </p>
         <ul>
-          <li>No control PC attached; <A href="/native/commands/admin#log"><code>LOG</code></A> is emitted only while one is.</li>
+          <li>No control PC attached; <A href="/native/commands/admin#log"><code>LOG</code></A> is sent only while one is.</li>
           <li>Logged before first contact; that output is dropped, not buffered.</li>
           <li>Early ROM-bootloader output, plain ASCII the frame decoder ignores.</li>
         </ul>

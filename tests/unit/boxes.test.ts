@@ -223,7 +223,7 @@ describe('box registry', () => {
     serial.unplug(ports[0]);
     release();
     expect(await run).toBe('failed');
-    expect(s.error()).toBe('The box went away partway through.');
+    expect(s.error()).toBe('The box disconnected partway through.');
     serial.plug(new FakePort(b));
     await ready();
     await vi.advanceTimersByTimeAsync(REATTACH_MS);

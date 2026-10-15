@@ -18,8 +18,9 @@ const Requests: Component = () => {
           <A href="/library/requests#caps"><code>caps</code></A>,{' '}
           <A href="/library/requests#query-rate"><code>query_rate</code></A>,{' '}
           <A href="/library/requests#query-stats"><code>query_stats</code></A>,{' '}
-          <A href="/library/requests#query-locks"><code>query_locks</code></A>, and{' '}
-          <A href="/library/requests#query-catch"><code>query_catch</code></A>, plus{' '}
+          <A href="/library/requests#query-locks"><code>query_locks</code></A>,{' '}
+          <A href="/library/requests#query-catch"><code>query_catch</code></A>, and{' '}
+          <A href="/library/requests#firmware-info"><code>firmware_info</code></A>, plus{' '}
           <A href="/library/requests#clip-status"><code>query_status</code></A> and{' '}
           <A href="/library/requests#clip-config"><code>query_config</code></A> on the{' '}
           <A href="/library/clip#handle">clip handle</A>.
@@ -60,7 +61,7 @@ println!("name {}", v.name);           // Loki`}</code></pre>
           Returns a <A href="/library/types/structs#health"><code>Health</code></A>, eleven booleans from
           one <code>u16</code> flags word. <code>link_up</code>, <code>mouse_attached</code>, and{' '}
           <code>clone_configured</code> must all be true for{' '}
-          <A href="/native/injection">injection</A> to emit.
+          <A href="/native/injection">injected input</A> to be emitted.
         </p>
 
         <div class="api-response-label">EXAMPLE</div>
@@ -104,7 +105,7 @@ if d.vid == 0 {
 }`}</code></pre>
       </DocSection>
 
-      <DocSection id="caps" title="caps" caption="Feature-detect the whole device">
+      <DocSection id="caps" title="caps" caption="Feature-detect the clone">
         <pre class="api-signature">fn caps(&self) -&gt; Result&lt;Caps&gt;</pre>
         <p><span class="api-badge api-badge--responded">Blocks</span></p>
 
@@ -114,7 +115,7 @@ if d.vid == 0 {
           <A href="/library/types/structs#kbd-caps"><code>keyboard</code></A> half, and the per-class
           change-driven flags. An absent class reads all-zero; <code>has_mouse()</code> and{' '}
           <code>has_keyboard()</code> say which are bound. An{' '}
-          <A href="/library/inject#inject"><code>inject</code></A> for a usage the device lacks is
+          <A href="/library/inject#inject"><code>inject</code></A> for a usage the clone lacks is
           dropped with no error; check here first.
         </p>
 
@@ -161,14 +162,14 @@ match r.native_hz() {
 
         <p>
           Returns a <A href="/library/types/structs#stats"><code>Stats</code></A>. Nonzero{' '}
-          <code>tx_drops</code> or <code>tx_wedges</code> means native input slipped on the way to the
+          <code>tx_drops</code> or <code>tx_wedges</code> means native input was lost on the way to the
           PC; nonzero <code>link_rx_drops</code> or <code>host_rx_drops</code> means it was lost between
           the box's two chips.
         </p>
         <p>
           <code>relay_drops</code> counts relayed traffic and commands that went no further, none of it
-          native input. The narrowed counters saturate instead of wrapping; the three drop counts are
-          full width. <code>session</code> moves each time the box releases some or all of what a host
+          native input. The narrowed counters saturate instead of wrapping; <code>link_rx_drops</code>,{' '}
+          <code>host_rx_drops</code> and <code>relay_drops</code> are full width. <code>session</code> moves each time the box releases some or all of what a host
           set; the library watches it for <A href="/library/lifecycle#restart">session recovery</A>.
         </p>
 
@@ -209,7 +210,7 @@ if s.relay_drops > 0 {
 let device = Device::find()?;
 let locks = device.query_locks()?;
 if locks.is_locked(Axis::X, Direction::Both) {
-    println!("horizontal motion is frozen");
+    println!("horizontal motion is blocked");
 }
 println!("opposing the injection at {}%", locks.scale_of(Axis::X, Direction::Against));`}</code></pre>
       </DocSection>
@@ -332,7 +333,7 @@ println!("{} input triggers, {} packet triggers, loop={}",
 println!("device {}", fw.device);
 match fw.host {
     Some(h) => println!("host {h}"),
-    None => println!("host chip not answering"),
+    None => println!("host chip not replying"),
 }`}</code></pre>
       </DocSection>
 

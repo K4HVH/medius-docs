@@ -280,7 +280,7 @@ describe('Control page', () => {
     const armed = { mode: RenderMode.Despiked, full: false, ready: true };
     const rendered = mount(stub({ moveRide: 20, render: armed }));
     expect((await rendered.findByText(/Movement riding is on/)).textContent).toMatch(/rendering motion/);
-    expect(rendered.container.textContent).toMatch(/Wheel and pan motion rides a real report/);
+    expect(rendered.container.textContent).toMatch(/Wheel and pan motion rides a native report/);
     cleanup();
 
     // Full rendering takes the rendered stream off the ride, so an armed profile alone warns of nothing.

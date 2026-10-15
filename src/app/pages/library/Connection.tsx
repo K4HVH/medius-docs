@@ -12,7 +12,7 @@ const Connection: Component = () => {
           <A href="/native/connection">handshake</A>, and starts the background threads in one call.
           Dropping the last handle <A href="/library/guides/connection#release">releases the port</A>.
         </p>
-        <p>See also: <A href="/library/guides/connection#choosing-a-port">choosing a port</A>, <A href="/library/guides/connection#threading">threading</A>, <A href="/library/guides/connection#keepalive">keepalive &amp; teardown</A>, and the box <A href="/native/connection#handshake">handshake</A>.</p>
+        <p>See also: <A href="/library/guides/connection#choosing-a-port">choosing a port</A>, <A href="/library/guides/connection#threading">threading</A>, and <A href="/library/guides/connection#keepalive">keepalive &amp; teardown</A>.</p>
       </PageHeader>
 
       <DocSection id="open" title="Open a device" caption="Auto-detect, or a known path">
@@ -65,7 +65,7 @@ let dev = Device::open("/dev/ttyACM0")?;`}</code></pre>
 
       <DocSection id="zero-config" title="Zero config" caption="Three read-only values">
         <p>
-          Nothing to configure. Two defaults bound the{' '}
+          Two defaults bound the{' '}
           <A href="/native/commands/requests#requests"><code>QUERY</code></A> wait and the keepalive
           timer.
         </p>
@@ -95,7 +95,7 @@ let dev = Device::open("/dev/ttyACM0")?;`}</code></pre>
         </div>
         <p>
           <code>PROTO_VER</code> is the{' '}
-          <A href="/native/frame#layout"><code>control protocol</code></A> version this build speaks.
+          <A href="/native/frame#layout">control protocol</A> version this build speaks.
           A box reporting anything else is refused at the{' '}
           <A href="/native/connection#handshake">handshake</A>.
         </p>

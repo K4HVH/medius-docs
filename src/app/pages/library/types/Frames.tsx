@@ -27,7 +27,7 @@ const Frames: Component = () => {
               <tr>
                 <td><code>Move</code></td>
                 <td><code>0x01</code></td>
-                <td>Motion-tagged cursor or wheel movement (PC to box).</td>
+                <td>Cursor or wheel motion, tagged by axis (PC to box).</td>
               </tr>
               <tr>
                 <td><code>Inject</code></td>
@@ -57,7 +57,7 @@ const Frames: Component = () => {
               <tr>
                 <td><code>Log</code></td>
                 <td><code>0x08</code></td>
-                <td>Unsolicited device diagnostics (box to PC).</td>
+                <td>Unsolicited box diagnostics (box to PC).</td>
               </tr>
               <tr>
                 <td><code>Led</code></td>
@@ -67,7 +67,7 @@ const Frames: Component = () => {
               <tr>
                 <td><code>Lock</code></td>
                 <td><code>0x0A</code></td>
-                <td>Weigh a physical input: block, pass, or amplify (PC to box).</td>
+                <td>Weigh a native input: block, pass, or amplify (PC to box).</td>
               </tr>
               <tr>
                 <td><code>Catch</code></td>
@@ -92,7 +92,7 @@ const Frames: Component = () => {
               <tr>
                 <td><code>ClipAppend</code></td>
                 <td><code>0x12</code></td>
-                <td>Append buffered-clip entries to the device ring; seq = append seq (PC to box).</td>
+                <td>Append buffered-clip entries to the box's clip ring; seq = append seq (PC to box).</td>
               </tr>
               <tr>
                 <td><code>ClipCtrl</code></td>
@@ -107,7 +107,7 @@ const Frames: Component = () => {
               <tr>
                 <td><code>ClipTrigger</code></td>
                 <td><code>0x15</code></td>
-                <td>Bind a physical edge or a matched packet to a clip engine verb (PC to box).</td>
+                <td>Bind a native edge or a matched packet to a clip engine verb (PC to box).</td>
               </tr>
               <tr>
                 <td><code>TrafficEvent</code></td>

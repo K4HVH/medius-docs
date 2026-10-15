@@ -9,7 +9,7 @@ const Patch: Component = () => {
       <PageHeader>
         <p>
           A descriptor patch overwrites bytes in what the clone presents at enumeration, keyed by{' '}
-          <code>(section, cfg, index, offset)</code> and persisted per device (VID:PID) in the box's NVS.
+          <code>(section, cfg, index, offset)</code> and persisted per real device (VID:PID) in the box's NVS.
         </p>
         <p>
           A patch is configuration, not session state like a{' '}
@@ -18,7 +18,7 @@ const Patch: Component = () => {
           <A href="/library/admin#factory-reset"><code>factory_reset</code></A>. The box stores a
           patch whatever the opt-in and applies the stored set only under it.
         </p>
-        <pre class="diagram">{`  native device          the box  (host chip  |  device chip = the clone)         game PC
+        <pre class="diagram">{`  real device            the box  (host chip  |  device chip = the clone)         game PC
 
   descriptors -------------------->  [ descriptor patches ]  -----enumerate---->  device descriptor
                                        overwrite what the                         configuration
@@ -43,7 +43,7 @@ const Patch: Component = () => {
             <tbody>
               <tr><td><A href="/library/advanced/patch#apply-patch"><code>apply_patch</code></A></td><td>The stored set, when it differs from the one the clone serves.</td></tr>
               <tr><td><A href="/library/options#allow-imperfect-clones"><code>allow_imperfect_clones</code></A> changing the set the clone serves</td><td>Turned on: the stored set, unless the box refused it. Turned off: no patches, when the clone serves some.</td></tr>
-              <tr><td>The device attaching</td><td>The stored set, under the opt-in.</td></tr>
+              <tr><td>The real device attaching</td><td>The stored set, under the opt-in.</td></tr>
               <tr><td><A href="/library/advanced/patch#clear-patch"><code>clear_patch</code></A></td><td>No patches, when the clone serves some.</td></tr>
             </tbody>
           </table>
@@ -75,7 +75,7 @@ const Patch: Component = () => {
         <p>
           Patches are keyed by <code>(section, cfg, index, offset)</code>: setting an existing key
           overwrites the patch and moves it to the end of the set, unless it holds those bytes
-          already; empty <code>bytes</code> removes it. The set belongs to the attached device, so a
+          already; empty <code>bytes</code> removes it. The set belongs to the attached real device, so a
           patch stored with none attached is dropped.
         </p>
         <p>
@@ -99,7 +99,8 @@ device.apply_patch()?;`}</code></pre>
         <pre class="api-signature">fn apply_patch(&self) -&gt; Result&lt;()&gt;</pre>
         <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
         <p>
-          Re-presents the clone with the stored patch set: one unplug/replug to the game PC. Gated on{' '}
+          Re-presents the clone with the stored patch set (native{' '}
+          <A href="/native/commands/patch#apply">APPLY</A>): one unplug/replug to the game PC. Gated on{' '}
           <A href="/library/options#allow-imperfect-clones"><code>allow_imperfect_clones</code></A>;
           with the opt-in off it returns{' '}
           <A href="/library/types/errors#errors"><code>Error::ImperfectRequired</code></A>.
@@ -111,25 +112,24 @@ device.apply_patch()?;`}</code></pre>
               <tr><th>Stored set</th><th>Box action</th></tr>
             </thead>
             <tbody>
-              <tr><td>Differs from the set the clone serves (<A href="/library/types/structs#patch-set"><code>pending</code></A>)</td><td>Re-presents the clone with it, a re-clone that releases the session. An emptied set serves the device unpatched, and one that fails a check is served unpatched with <code>refused</code> set.</td></tr>
+              <tr><td>Differs from the set the clone serves (<A href="/library/types/structs#patch-set"><code>pending</code></A>)</td><td>Re-presents the clone with it, a re-clone that releases the session. An emptied set re-presents the clone unpatched, and one that fails a check is served unpatched with <code>refused</code> set.</td></tr>
               <tr><td>The set the clone serves</td><td>Nothing.</td></tr>
               <tr><td>Refused, and unchanged since</td><td>Nothing, though it reads <code>pending</code>: change the set, or clear it.</td></tr>
-              <tr><td>Any, with no device attached</td><td>Nothing.</td></tr>
+              <tr><td>Any, with no real device attached</td><td>Nothing.</td></tr>
             </tbody>
           </table>
         </div>
-        <p>See the native <A href="/native/commands/patch#apply">APPLY</A>.</p>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`device.allow_imperfect_clones(true)?;
 device.apply_patch()?; // the clone replugs and re-presents patched`}</code></pre>
       </DocSection>
 
-      <DocSection id="clear-patch" title="clear_patch" caption="Erase this device's stored set">
+      <DocSection id="clear-patch" title="clear_patch" caption="Erase the stored set">
         <pre class="api-signature">fn clear_patch(&self) -&gt; Result&lt;()&gt;</pre>
         <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
         <p>
-          Erases every patch stored for this device (VID:PID); with the device unplugged, the set of
-          the last device attached since boot.
+          Erases every patch stored for this real device (VID:PID) or, with it unplugged, for the last
+          one attached since boot (native <A href="/native/commands/patch#clear">CLEAR</A>).
         </p>
         <div class="api-response-label">EFFECT</div>
         <div class="table-scroll">
@@ -143,7 +143,6 @@ device.apply_patch()?; // the clone replugs and re-presents patched`}</code></pr
             </tbody>
           </table>
         </div>
-        <p>See the native <A href="/native/commands/patch#clear">CLEAR</A>.</p>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`device.clear_patch()?;`}</code></pre>
       </DocSection>
@@ -159,7 +158,7 @@ device.apply_patch()?; // the clone replugs and re-presents patched`}</code></pr
         <pre><code class="language-rust">{`let set = device.query_patches()?;
 println!("{} patches, applied={} pending={}", set.entries.len(), set.applied, set.pending);
 if set.refused {
-    eprintln!("the set failed a check and the device is served unpatched; the box log names it");
+    eprintln!("the set failed a check, so the clone is unpatched; the box log names it");
 }`}</code></pre>
       </DocSection>
 

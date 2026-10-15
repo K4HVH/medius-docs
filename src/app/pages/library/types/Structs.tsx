@@ -59,7 +59,7 @@ println!("{v} (protocol {}, box {}, name {})", v.proto_ver, v.mac_hex(), v.name)
             <tbody>
               <tr><td><code>link_up</code></td><td><code>bool</code></td><td>The link to the host chip is up.</td></tr>
               <tr><td><code>mouse_attached</code></td><td><code>bool</code></td><td>A real mouse is plugged in.</td></tr>
-              <tr><td><code>clone_configured</code></td><td><code>bool</code></td><td>The PC has set up the cloned mouse.</td></tr>
+              <tr><td><code>clone_configured</code></td><td><code>bool</code></td><td>The game PC has configured the clone.</td></tr>
               <tr><td><code>injection_active</code></td><td><code>bool</code></td><td>The box is holding at least one injected button or move.</td></tr>
               <tr><td><code>rate_confident</code></td><td><code>bool</code></td><td>A mouse is bound and the native-rate estimator window is full, so <A href="/library/types/structs#rate"><code>Rate</code></A> is trustworthy.</td></tr>
               <tr><td><code>lock_on</code></td><td><code>bool</code></td><td>At least one input is off a full pass, whether <A href="/library/lock#lock"><code>lock</code></A>ed or merely <A href="/library/lock#scale"><code>scale</code></A>d.</td></tr>
@@ -97,8 +97,8 @@ assert_eq!(h.to_flags(), 0b0000_0011); // round-trips to the same word`}</code><
               <tr><td><code>bcd_usb</code></td><td><code>u16</code></td><td>USB version (bcdUSB), e.g. <code>0x0200</code>.</td></tr>
               <tr><td><code>has_serial</code></td><td><code>bool</code></td><td>The clone serves a serial string.</td></tr>
               <tr><td><code>has_bos</code></td><td><code>bool</code></td><td>The clone serves a BOS descriptor.</td></tr>
-              <tr><td><code>kind</code></td><td><A href="/library/types/enums#device-kind"><code>DeviceKind</code></A></td><td>The device's primary kind, from its HID report descriptors.</td></tr>
-              <tr><td><code>product</code></td><td><code>String</code></td><td>The product string the device serves, in ASCII with <code>?</code> for each character outside it (empty when it serves none).</td></tr>
+              <tr><td><code>kind</code></td><td><A href="/library/types/enums#device-kind"><code>DeviceKind</code></A></td><td>The real device's primary kind, from its HID report descriptors.</td></tr>
+              <tr><td><code>product</code></td><td><code>String</code></td><td>The product string the real device serves, in ASCII with <code>?</code> for each character outside it (empty when it serves none).</td></tr>
             </tbody>
           </table>
         </div>
@@ -113,11 +113,11 @@ assert_eq!(d.to_string(), "046D:C08B G502"); // Display is VVVV:PPPP product
 assert!(d.is_cloned());
 assert!(!DeviceInfo::default().is_cloned()); // nothing cloned`}</code></pre>
       </DocSection>
-      <DocSection id="caps" title="Caps" caption="Whole device, mouse and keyboard">
+      <DocSection id="caps" title="Caps" caption="Whole clone, mouse and keyboard">
         <p>
           Everything one <A href="/library/requests#caps"><code>caps()</code></A> query returns.{' '}
           <code>has_mouse()</code> / <code>has_keyboard()</code> report which are bound;{' '}
-          <code>is_composite()</code> is true when the device has more than one HID interface.
+          <code>is_composite()</code> is true when the clone has more than one HID interface.
         </p>
         <div class="table-scroll">
           <table class="api-params">
@@ -133,7 +133,7 @@ assert!(!DeviceInfo::default().is_cloned()); // nothing cloned`}</code></pre>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`let caps = device.caps()?;
 if caps.has_keyboard() && caps.keyboard.has_consumer {
-    // media injection works on this device
+    // media injection works on this clone
 }
 println!("{} mouse buttons", caps.mouse.n_buttons);`}</code></pre>
       </DocSection>
@@ -194,18 +194,19 @@ assert_eq!(r.native_hz(), Some(1000.0));`}</code></pre>
           decoded from the 31-byte <A href="/native/commands/requests#stats"><code>RESP(STATS)</code></A>.
         </p>
         <p>
-          Nonzero <code>tx_drops</code> or <code>tx_wedges</code> means native input slipped on the
-          way to the PC; nonzero <code>link_rx_drops</code> or <code>host_rx_drops</code> means it was
-          lost between the box's two chips; <code>relay_drops</code> is relayed traffic and commands that went no further, not lost native input. The
-          narrowed fields saturate instead of wrapping; the three drop counts are full width, and{' '}
-          <code>session</code> wraps.
+          Nonzero <code>tx_drops</code> or <code>tx_wedges</code> means native input was lost on the
+          way to the PC. Nonzero <code>link_rx_drops</code> or <code>host_rx_drops</code> means it was
+          lost between the box's two chips. <code>relay_drops</code> is relayed traffic and commands
+          that went no further, not lost native input. The narrowed fields saturate instead of
+          wrapping; <code>link_rx_drops</code>, <code>host_rx_drops</code> and <code>relay_drops</code>{' '}
+          are full width, and <code>session</code> wraps.
         </p>
         <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>inject_emits</code></td><td><code>u32</code></td><td>Pure-injection reports emitted.</td></tr>
-              <tr><td><code>tx_drops</code></td><td><code>u16</code></td><td>Reports the clone's IN queue could not hold, so the game PC never saw them (should stay 0).</td></tr>
+              <tr><td><code>tx_drops</code></td><td><code>u16</code></td><td>Reports the clone's IN queue could not hold, so the game PC never received them (should stay 0).</td></tr>
               <tr><td><code>tx_merges</code></td><td><code>u16</code></td><td>Backed-up reports merged instead of queued.</td></tr>
               <tr><td><code>tx_maxdepth</code></td><td><code>u8</code></td><td>Deepest the TX queue has reached.</td></tr>
               <tr><td><code>tx_wedges</code></td><td><code>u8</code></td><td>Wedged-endpoint recoveries.</td></tr>
@@ -214,8 +215,8 @@ assert_eq!(r.native_hz(), Some(1000.0));`}</code></pre>
               <tr><td><code>config_count</code></td><td><code>u16</code></td><td>SET_CONFIGURATION events (re-enumerations).</td></tr>
               <tr><td><code>link_rx_drops</code></td><td><code>u32</code></td><td>Input frames the device chip could not take off the link from the host chip (should stay 0).</td></tr>
               <tr><td><code>host_rx_drops</code></td><td><code>u32</code></td><td>The same count on the host chip, relayed over the link (should stay 0).</td></tr>
-              <tr><td><code>relay_drops</code></td><td><code>u32</code></td><td>Relayed traffic and commands that went no further, none of it native input: a vendor IN packet that found its endpoint's queue full of the control PC's <code>RAW</code> packets, or a device's zero-length packet answering a poll the PC did not make (the one poll the box runs ahead of a suspended PC); an OUT packet the box had no room to queue, that failed three times on the device's bus, or that a bus reset or <code>SET_INTERFACE</code> overtook; a <code>RAW</code> OUT packet with no room to wait; a relayed request the box could not queue; a flagged <code>MOVE</code> the motion batch could not take; any frame other than native input that either chip's link receive ring dropped; and a frame from the control PC its receive ring had no room for (one a frame), or an overrun of the control port's UART (one an overrun, however many frames it cost).</td></tr>
-              <tr><td><code>session</code></td><td><code>u16</code></td><td>Releases of some or all of the session state a host set: held input, locks, subscriptions, rules, transforms, the clip, and an LED override, which the library does not hold or re-send. 0 at boot; wraps, so compare for inequality. The library watches it for <A href="/library/lifecycle#restart">session recovery</A>; the native <A href="/native/commands/requests#stats"><code>RESP(STATS)</code></A> lists what counts.</td></tr>
+              <tr><td><code>relay_drops</code></td><td><code>u32</code></td><td>Relayed traffic and commands that went no further, none of it native input: a vendor IN packet that found its endpoint's queue full of the control PC's <code>RAW</code> packets, or a native zero-length packet answering a poll the PC did not make (the one poll the box runs ahead of a suspended PC); an OUT packet the box had no room to queue, that failed three times on the real device's bus, or that a bus reset or <code>SET_INTERFACE</code> overtook; a <code>RAW</code> OUT packet with no room to wait; a relayed request the box could not queue; a flagged <code>MOVE</code> the motion batch could not take; any frame other than native input that either chip's link receive ring dropped; and a frame from the control PC its receive ring had no room for (one a frame), or an overrun of the control port's UART (one an overrun, however many frames it cost).</td></tr>
+              <tr><td><code>session</code></td><td><code>u16</code></td><td>Releases of some or all of the session state a host set: held input, locks, subscriptions, rules, transforms, the clip, and an LED override. The library re-sends all but the LED override. 0 at boot; wraps, so compare for inequality. The library watches it for <A href="/library/lifecycle#restart">session recovery</A>; the native <A href="/native/commands/requests#stats"><code>RESP(STATS)</code></A> lists what counts.</td></tr>
             </tbody>
           </table>
         </div>
@@ -232,7 +233,7 @@ assert_eq!(r.native_hz(), Some(1000.0));`}</code></pre>
             <thead><tr><th>Method</th><th>Returns</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>entries()</code></td><td><code>&amp;[<A href="/library/types/structs#lock-entry">LockEntry</A>]</code></td><td>Every weighed direction, one entry each, across specific targets and whole-class blankets.</td></tr>
-              <tr><td><code>scale_of(target, dir)</code></td><td><code>i16</code></td><td>Percent of the physical value kept there; 100 when nothing weighs it, and where entries overlap it reports the lowest, a reversing (negative) one being lower than any pass. <code>Both</code> reports the lowest across every direction, which is not the figure a delta meets: it picks up one from each pair, multiplied.</td></tr>
+              <tr><td><code>scale_of(target, dir)</code></td><td><code>i16</code></td><td>Percent of the native value kept there; 100 when nothing weighs it, and where entries overlap it reports the lowest, a reversing (negative) one being lower than any pass. <code>Both</code> reports the lowest across every direction, which is not the figure a delta meets: it picks up one from each pair, multiplied.</td></tr>
               <tr><td><code>is_locked(target, dir)</code></td><td><code>bool</code></td><td>Whether it is blocked outright. A direction merely weighed is not locked. <code>Both</code> asks about the two fixed signs; ask for a relative one by name.</td></tr>
               <tr><td><code>from_entries(Vec&lt;LockEntry&gt;)</code></td><td><code>Locks</code></td><td>Build one from entries, for tests and the <A href="/library/features/mock"><code>MockBox</code></A>.</td></tr>
             </tbody>
@@ -245,7 +246,7 @@ assert_eq!(r.native_hz(), Some(1000.0));`}</code></pre>
               <tr><td>A blanket key lock</td><td>One entry per blocked edge, never <code>Both</code>.</td></tr>
               <tr><td>A media lock, blanket or specific</td><td>Direction <code>Both</code>, always. Media has no edges.</td></tr>
               <tr><td>A relative direction under <A href="/library/types/enums#bearing-mode"><code>BearingMode::Vector</code></A></td><td>The effective scale, the lower of X's and Y's, on both axes.</td></tr>
-              <tr><td>85 entries reached</td><td>The rest is absent, with nothing marking it. See the native <A href="/native/commands/requests#locks"><code>LOCKS</code></A> budget.</td></tr>
+              <tr><td>85 entries reached</td><td>The rest is absent, with nothing marking it (native <A href="/native/commands/requests#locks"><code>LOCKS</code></A> budget).</td></tr>
             </tbody>
           </table>
         </div>
@@ -254,7 +255,7 @@ assert_eq!(r.native_hz(), Some(1000.0));`}</code></pre>
 
 let locks = device.query_locks()?;
 if locks.is_locked(Axis::X, Direction::Positive) {
-    // physical +X is zeroed
+    // native +X is zeroed
 }
 if locks.is_locked(Button::LEFT, Direction::Negative) {
     // a left-click is latched down: the release edge is blocked
@@ -275,7 +276,7 @@ println!("{}%", locks.scale_of(Axis::X, Direction::Against));`}</code></pre>
             <tbody>
               <tr><td><code>scope</code></td><td><A href="/library/types/enums#lock-scope"><code>LockScope</code></A></td><td>A specific axis or usage, or a whole-class blanket.</td></tr>
               <tr><td><code>direction</code></td><td><A href="/library/types/enums#direction"><code>Direction</code></A></td><td>Which direction of it this entry weighs.</td></tr>
-              <tr><td><code>scale</code></td><td><code>i16</code></td><td>Percent of the physical value kept, signed: a negative one reverses what it keeps. A momentary usage is one bit, so the box stores the block or pass it renders: never between them, never negative.</td></tr>
+              <tr><td><code>scale</code></td><td><code>i16</code></td><td>Percent of the native value kept, signed: a negative one reverses what it keeps. A momentary usage is one bit, so the box stores the block or pass it applies: never between them, never negative.</td></tr>
             </tbody>
           </table>
         </div>
@@ -293,7 +294,7 @@ println!("{}%", locks.scale_of(Axis::X, Direction::Against));`}</code></pre>
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>window</code></td><td><code>Option&lt;Duration&gt;</code></td><td>How long an axis holds the direction of its last injected delta. <code>None</code> is off, so <code>With</code> and <code>Against</code> are inert whatever their scale.</td></tr>
-              <tr><td><code>mode</code></td><td><code>BearingMode</code></td><td><code>PerAxis</code>: each axis reads its sign. <code>Vector</code>: the physical delta is projected onto the injected direction, and the relative scale weighs only the part along it.</td></tr>
+              <tr><td><code>mode</code></td><td><code>BearingMode</code></td><td><code>PerAxis</code>: each axis reads its sign. <code>Vector</code>: the native delta is projected onto the injected direction, and the relative scale weighs only the part along it.</td></tr>
             </tbody>
           </table>
         </div>
@@ -316,7 +317,7 @@ println!("{}%", locks.scale_of(Axis::X, Direction::Against));`}</code></pre>
               <tr><td><code>CatchFilter::watch_class(class)</code></td><td>Every usage in one <A href="/library/types/enums#class"><code>Class</code></A>.</td></tr>
               <tr><td><code>CatchFilter::watch_axes()</code></td><td>Every axis.</td></tr>
               <tr><td><code>CatchFilter::all_input()</code></td><td>All four input classes, as a <code>[CatchFilter; 4]</code>.</td></tr>
-              <tr><td><code>CatchFilter::traffic(class, id)</code></td><td>One id in a <A href="/library/types/enums#traffic-class"><code>TrafficClass</code></A>: an endpoint, an interface, an endpoint number.</td></tr>
+              <tr><td><code>CatchFilter::traffic(class, id)</code></td><td>One id in a <A href="/library/types/enums#traffic-class"><code>TrafficClass</code></A>: an interface or endpoint number.</td></tr>
               <tr><td><code>CatchFilter::traffic_class(class)</code></td><td>Every id in one traffic class, a blanket.</td></tr>
               <tr><td><code>CatchFilter::everything()</code></td><td>Every class, every id, both directions.</td></tr>
             </tbody>
@@ -370,11 +371,11 @@ let stream = device.catch_events([
 // Dropping the stream clears the whole table.
 drop(stream);`}</code></pre>
       </DocSection>
-      <DocSection id="motion-event" title="MotionEvent" caption="One physical relative-axis event">
+      <DocSection id="motion-event" title="MotionEvent" caption="One native relative-axis event">
         <p>
           The payload of a{' '}
           <A href="/library/types/enums#catch-event"><code>CatchEvent::Motion</code></A>, read off an{' '}
-          <A href="/library/catch#event-stream"><code>EventStream</code></A>. The physical delta at the
+          <A href="/library/catch#event-stream"><code>EventStream</code></A>. The native delta at the
           merge point, <em>before</em> lock suppression or injection, so a locked or injected axis still
           reports it.
         </p>
@@ -382,11 +383,11 @@ drop(stream);`}</code></pre>
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>ts_us</code></td><td><code>u32</code></td><td>When the device's report arrived, in box microseconds; <A href="/library/catch#timestamps">Catch timestamps</A> explains the clock.</td></tr>
-              <tr><td><code>clock</code></td><td><A href="/library/types/enums#clock-domain"><code>ClockDomain</code></A></td><td>Which chip's timer <code>ts_us</code> came from. Always <code>HostChip</code> here: physical motion is stamped on the host chip as the real device's transfer completes.</td></tr>
-              <tr><td><code>dx</code></td><td><code>i16</code></td><td>X movement this report (right positive).</td></tr>
-              <tr><td><code>dy</code></td><td><code>i16</code></td><td>Y movement this report (down positive).</td></tr>
-              <tr><td><code>dz</code></td><td><code>i16</code></td><td>Wheel movement this report (up positive).</td></tr>
+              <tr><td><code>ts_us</code></td><td><code>u32</code></td><td>When the native report arrived, in box microseconds; <A href="/library/catch#timestamps">Catch timestamps</A> explains the clock.</td></tr>
+              <tr><td><code>clock</code></td><td><A href="/library/types/enums#clock-domain"><code>ClockDomain</code></A></td><td>Which chip's timer <code>ts_us</code> came from. Always <code>HostChip</code> here: native motion is stamped on the host chip as the real device's transfer completes.</td></tr>
+              <tr><td><code>dx</code></td><td><code>i16</code></td><td>X motion this report (right positive).</td></tr>
+              <tr><td><code>dy</code></td><td><code>i16</code></td><td>Y motion this report (down positive).</td></tr>
+              <tr><td><code>dz</code></td><td><code>i16</code></td><td>Wheel motion this report (up positive).</td></tr>
               <tr><td><code>dpan</code></td><td><code>i16</code></td><td>AC Pan (horizontal scroll) this report (right positive).</td></tr>
             </tbody>
           </table>
@@ -400,7 +401,7 @@ if let CatchEvent::Motion(m) = stream.recv()? {
 }`}</code></pre>
       </DocSection>
 
-      <DocSection id="usage-snapshot" title="UsageSnapshot" caption="One physical held-usage snapshot">
+      <DocSection id="usage-snapshot" title="UsageSnapshot" caption="One native held-usage snapshot">
         <p>
           The payload of a{' '}
           <A href="/library/types/enums#catch-event"><code>CatchEvent::Usages</code></A>: every held{' '}
@@ -412,7 +413,7 @@ if let CatchEvent::Motion(m) = stream.recv()? {
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>ts_us</code></td><td><code>u32</code></td><td>When the device's report arrived, in box microseconds; <A href="/library/catch#timestamps">Catch timestamps</A> explains the clock.</td></tr>
+              <tr><td><code>ts_us</code></td><td><code>u32</code></td><td>When the native report arrived, in box microseconds; <A href="/library/catch#timestamps">Catch timestamps</A> explains the clock.</td></tr>
               <tr><td><code>clock</code></td><td><A href="/library/types/enums#clock-domain"><code>ClockDomain</code></A></td><td>Which chip's timer <code>ts_us</code> came from. Always <code>HostChip</code>: a held-usage snapshot is taken where the real device's report lands.</td></tr>
               <tr><td><code>usages</code></td><td><code>Vec&lt;<A href="/library/types/structs#usage">Usage</A>&gt;</code></td><td>The held usages, one class per event.</td></tr>
             </tbody>
@@ -450,8 +451,8 @@ if let CatchEvent::Usages(s) = stream.recv()? {
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>ts_us</code></td><td><code>u32</code></td><td>The report's arrival stamp, in the stamping chip's microseconds.</td></tr>
-              <tr><td><code>clock</code></td><td><A href="/library/types/enums#clock-domain"><code>ClockDomain</code></A></td><td>Always <code>HostChip</code> for physical input.</td></tr>
-              <tr><td><code>input</code></td><td><A href="/library/types/enums#input"><code>Input</code></A></td><td>What happened.</td></tr>
+              <tr><td><code>clock</code></td><td><A href="/library/types/enums#clock-domain"><code>ClockDomain</code></A></td><td>Always <code>HostChip</code> for native input.</td></tr>
+              <tr><td><code>input</code></td><td><A href="/library/types/enums#input"><code>Input</code></A></td><td>The decoded edge or motion.</td></tr>
             </tbody>
           </table>
         </div>
@@ -500,7 +501,7 @@ for ev in device.input_events(CatchFilter::all_input())? {
         </div>
         <p>
           One event frame carries at most 180 bytes, so <code>Capture::Whole</code> still truncates
-          a longer packet, and still says so.
+          a longer packet, and <code>truncated()</code> reports it.
         </p>
         <div class="table-scroll">
           <table class="api-params">
@@ -528,7 +529,7 @@ for ev in device.input_events(CatchFilter::all_input())? {
             <thead><tr><th><code>Control</code> data</th><th>Holds</th></tr></thead>
             <tbody>
               <tr><td>IN</td><td>The reply the game PC received: after a <code>ReplyPatch</code> or <code>ReplyReplace</code> rule, or an <code>Answer</code> rule's payload.</td></tr>
-              <tr><td>OUT</td><td>The data stage the game PC sent, before a <code>Patch</code> or <code>Replace</code> rule rewrote it for the device.</td></tr>
+              <tr><td>OUT</td><td>The data stage the game PC sent, before a <code>Patch</code> or <code>Replace</code> rule rewrote it for the real device.</td></tr>
             </tbody>
           </table>
         </div>
@@ -580,7 +581,7 @@ if let CatchEvent::Traffic(t) = stream.recv()? {
           </table>
         </div>
         <p>
-          Injecting a button the device declares but never itself wires is descriptor-faithful: the
+          Injecting a button the real device declares but never wires is descriptor-faithful: the
           box drives the full declared count, and one past it is a no-op.
         </p>
       </DocSection>
@@ -679,7 +680,7 @@ assert_eq!(vol_up.usage(), custom.usage());`}</code></pre>
               <tr><td><code>n_keys</code></td><td><code>u8</code></td><td>Keycode-array slots, or <code>0xFF</code> for an NKRO bitmap.</td></tr>
               <tr><td><code>nkro</code></td><td><code>bool</code></td><td>The keyboard reports an NKRO bitmap.</td></tr>
               <tr><td><code>has_consumer</code></td><td><code>bool</code></td><td>A Consumer collection is present (media keys injectable).</td></tr>
-              <tr><td><code>has_system</code></td><td><code>bool</code></td><td>A system-control collection is present (passthrough-only).</td></tr>
+              <tr><td><code>has_system</code></td><td><code>bool</code></td><td>A system-control collection is present (relayed only).</td></tr>
               <tr><td><code>has_report_id</code></td><td><code>bool</code></td><td>The keyboard report sits behind a HID report ID.</td></tr>
             </tbody>
           </table>
@@ -740,8 +741,8 @@ println!("{} dropped box-wide", c.dropped);`}</code></pre>
         </div>
         <p>
           The box-wide count on <A href="/library/types/structs#catch-state"><code>CatchState</code></A>{' '}
-          shows events are being lost; this one shows which entry. Vendor bulk drops first, by{' '}
-          <A href="/library/catch#event-stream">design</A>.
+          shows events are being lost; this one shows which entry. Vendor bulk drops first: its{' '}
+          <A href="/library/catch#event-stream">queue</A> drains last.
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`let c = device.query_catch()?;
@@ -932,9 +933,9 @@ for t in &table.entries {
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>allowed</code></td><td><code>bool</code></td><td>The opt-in toggle; cloning a device the box can't clone exactly is allowed.</td></tr>
-              <tr><td><code>over_capacity</code></td><td><code>bool</code></td><td>The attached device has more IN endpoints live at once than the box has transmit FIFOs (four), or more than six HID interfaces, or runs at high speed.</td></tr>
-              <tr><td><code>clone_imperfect</code></td><td><code>bool</code></td><td>The live clone is not an exact copy: an opted-in device the box can't clone exactly, a forced rate, or an applied patch set.</td></tr>
+              <tr><td><code>allowed</code></td><td><code>bool</code></td><td>The opt-in toggle: a real device the box can't clone faithfully is cloned anyway.</td></tr>
+              <tr><td><code>over_capacity</code></td><td><code>bool</code></td><td>The attached real device has more IN endpoints live at once than the box has transmit FIFOs (four), or more than six HID interfaces, or runs at high speed.</td></tr>
+              <tr><td><code>clone_imperfect</code></td><td><code>bool</code></td><td>The live clone is imperfect: an opted-in real device the box can't clone faithfully, a forced rate, or an applied patch set.</td></tr>
             </tbody>
           </table>
         </div>
@@ -968,7 +969,7 @@ for t in &table.entries {
             <tbody>
               <tr><td><code>mode</code></td><td><A href="/library/types/enums#render-mode"><code>RenderMode</code></A></td><td>Rendering texture; <code>Off</code> is the paced fill.</td></tr>
               <tr><td><code>full</code></td><td><code>bool</code></td><td>Whether native motion is rendered instead of relayed.</td></tr>
-              <tr><td><code>ready</code></td><td><code>bool</code></td><td>Whether a profile has armed for the attached device. Nothing is rendered until it has.</td></tr>
+              <tr><td><code>ready</code></td><td><code>bool</code></td><td>Whether a profile has armed for the attached real device. Nothing is rendered until it has.</td></tr>
             </tbody>
           </table>
         </div>
@@ -1034,7 +1035,7 @@ for t in &table.entries {
             <tbody>
               <tr><td><code>port</code></td><td><A href="/library/types/structs#port-info"><code>PortInfo</code></A></td><td>The control port (path and CH343 serial).</td></tr>
               <tr><td><code>version</code></td><td><A href="/library/types/structs#version"><code>Version</code></A></td><td>The firmware version and control protocol, with the box MAC and <A href="/library/options#set-name">name</A>.</td></tr>
-              <tr><td><code>device</code></td><td><code>Option&lt;<A href="/library/types/structs#device-info">DeviceInfo</A>&gt;</code></td><td>The device it clones. <code>None</code> for a box whose <code>version.proto_ver</code> isn't <A href="/library/connection#zero-config"><code>PROTO_VER</code></A>; opening that box returns <A href="/library/types/errors"><code>Error::BadProtoVer</code></A>.</td></tr>
+              <tr><td><code>device</code></td><td><code>Option&lt;<A href="/library/types/structs#device-info">DeviceInfo</A>&gt;</code></td><td>The real device it clones. <code>None</code> for a box whose <code>version.proto_ver</code> isn't <A href="/library/connection#zero-config"><code>PROTO_VER</code></A>; opening that box returns <A href="/library/types/errors"><code>Error::BadProtoVer</code></A>.</td></tr>
             </tbody>
           </table>
         </div>
@@ -1063,12 +1064,12 @@ for t in &table.entries {
               <tr><td><code>frames_rx</code></td><td><code>u64</code></td><td>Frames received from the box.</td></tr>
               <tr><td><code>crc_drops</code></td><td><code>u64</code></td><td>Inbound frames dropped on a bad <A href="/native/frame#crc">checksum</A>.</td></tr>
               <tr><td><code>reconnects</code></td><td><code>u64</code></td><td>Times the library reopened the port.</td></tr>
-              <tr><td><code>restarts</code></td><td><code>u64</code></td><td>Device-chip restarts the library recovered from by re-sending the state it holds. A session release, counted in <A href="/library/types/structs#stats"><code>Stats::session</code></A>, leaves it alone. See <A href="/library/lifecycle#restart">session recovery</A>.</td></tr>
+              <tr><td><code>restarts</code></td><td><code>u64</code></td><td>Device-chip restarts the library <A href="/library/lifecycle#restart">recovered</A> from by re-sending the state it holds. A session release, counted in <A href="/library/types/structs#stats"><code>Stats::session</code></A>, leaves it alone.</td></tr>
             </tbody>
           </table>
         </div>
       </DocSection>
-      <DocSection id="logstream" title="LogStream" caption="Receiver for the device LOG stream">
+      <DocSection id="logstream" title="LogStream" caption="Receiver for the box LOG stream">
         <p>
           Receives the box's <A href="/native/commands/admin#log"><code>LOG</code></A> frames as{' '}
           <A href="/library/types/structs#log-line"><code>LogLine</code></A> values off a local channel, from{' '}
@@ -1094,8 +1095,8 @@ for t in &table.entries {
               <tr><td><code>loop_</code></td><td><code>bool</code></td><td>Playback restarts from the top instead of stopping at the end.</td></tr>
               <tr><td><code>retain</code></td><td><code>bool</code></td><td>The buffered content survives a stop, so a restart replays it instead of needing a fresh append.</td></tr>
               <tr><td><code>finalized</code></td><td><code>bool</code></td><td>The clip is sealed: no more appends, ready to replay as a fixed sequence.</td></tr>
-              <tr><td><code>ride</code></td><td><code>bool</code></td><td>The clip's motion waits for a real move under <A href="/library/options#set-movement-riding">movement riding</A>; <code>false</code> (the default) plays it on the box's clock.</td></tr>
-              <tr><td><code>triggers</code></td><td><code>Vec&lt;<A href="/library/types/structs#clip-trigger">ClipTrigger</A>&gt;</code></td><td>The bound input triggers (up to 8), each firing a playback action on a physical edge.</td></tr>
+              <tr><td><code>ride</code></td><td><code>bool</code></td><td>The clip's motion waits for native motion under <A href="/library/options#set-movement-riding">movement riding</A>; <code>false</code> (the default) plays it on the box's clock.</td></tr>
+              <tr><td><code>triggers</code></td><td><code>Vec&lt;<A href="/library/types/structs#clip-trigger">ClipTrigger</A>&gt;</code></td><td>The bound input triggers (up to 8), each firing a playback action on a native edge.</td></tr>
               <tr><td><code>packet_triggers</code></td><td><code>Vec&lt;<A href="/library/types/structs#clip-packet-trigger-entry">ClipPacketTriggerEntry</A>&gt;</code></td><td>The bound packet triggers (up to 8), in the order the box holds them, each with its hit count.</td></tr>
             </tbody>
           </table>
@@ -1112,7 +1113,7 @@ for e in &cfg.packet_triggers {
 
       <DocSection id="clip-trigger" title="ClipTrigger" caption="One input binding that drives a clip">
         <p>
-          One physical-input binding for a clip, handed to{' '}
+          One native-input binding for a clip, handed to{' '}
           <A href="/library/clip#triggers"><code>ClipHandle::bind</code></A>. The box keeps up to 8,
           keyed by usage and edge.
         </p>
@@ -1198,7 +1199,7 @@ handle.bind_packet(&held)?;`}</code></pre>
           The clip ring depth and playback counters from{' '}
           <A href="/library/requests#clip-status"><code>ClipHandle::query_status()</code></A>. Pace top-ups off{' '}
           <code>free</code>; a <A href="/library/types/enums#clip-state"><code>ClipState::Faulted</code></A>{' '}
-          state means re-sync (stop, then rebuild).
+          state means re-sync (clear, then rebuild).
         </p>
         <div class="table-scroll">
           <table class="api-params">
@@ -1212,8 +1213,8 @@ handle.bind_packet(&held)?;`}</code></pre>
               <tr><td><code>underruns</code></td><td><code>u16</code></td><td>Underrun episodes (the ring ran dry mid-playback).</td></tr>
               <tr><td><code>overruns</code></td><td><code>u16</code></td><td>Appends dropped because the ring was full.</td></tr>
               <tr><td><code>seq_gaps</code></td><td><code>u16</code></td><td>Append-sequence gaps seen (a dropped append frame).</td></tr>
-              <tr><td><code>xfers</code></td><td><code>u16</code></td><td>Clip <A href="/library/clip#frame">transfers</A> the device completed.</td></tr>
-              <tr><td><code>xfer_errs</code></td><td><code>u16</code></td><td>Clip transfers that ended any other way: a refusal, no reply, no room in the box's queue, or dropped behind one the device did not reply to.</td></tr>
+              <tr><td><code>xfers</code></td><td><code>u16</code></td><td>Clip <A href="/library/clip#frame">transfers</A> the real device completed.</td></tr>
+              <tr><td><code>xfer_errs</code></td><td><code>u16</code></td><td>Clip transfers that ended any other way: a refusal, no reply, no room in the box's queue, or dropped behind one the real device did not reply to.</td></tr>
               <tr><td><code>gated</code></td><td><code>u16</code></td><td>Raw reports and transfers the box discarded because the imperfect-clone opt-in was off.</td></tr>
               <tr><td><code>held</code></td><td><code>Vec&lt;<A href="/library/types/structs#usage">Usage</A>&gt;</code></td><td>The usages the clip is holding down, buttons, keys, and media in one list like a <A href="/library/types/structs#usage-snapshot"><code>UsageSnapshot</code></A>; test one with <code>is_held(usage)</code>.</td></tr>
             </tbody>
@@ -1250,7 +1251,7 @@ handle.bind_packet(&held)?;`}</code></pre>
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>device</code></td><td><A href="/library/types/structs#chip-firmware"><code>ChipFirmware</code></A></td><td>The PC-facing chip.</td></tr>
-              <tr><td><code>host</code></td><td><code>Option&lt;<A href="/library/types/structs#chip-firmware">ChipFirmware</A>&gt;</code></td><td><code>None</code> when the host chip has not answered over the inter-chip link.</td></tr>
+              <tr><td><code>host</code></td><td><code>Option&lt;<A href="/library/types/structs#chip-firmware">ChipFirmware</A>&gt;</code></td><td><code>None</code> when the host chip has not replied over the inter-chip link.</td></tr>
               <tr><td><code>slot_size</code></td><td><code>u32</code></td><td>Usable bytes in a spare slot; the same on both chips.</td></tr>
               <tr><td><code>device_staged</code></td><td><code>bool</code></td><td>An image is written and waiting to be activated.</td></tr>
               <tr><td><code>host_staged</code></td><td><code>bool</code></td><td>The same, for the host chip.</td></tr>
@@ -1300,19 +1301,19 @@ handle.bind_packet(&held)?;`}</code></pre>
               <tr><td><code>request</code></td><td><code>u8</code></td><td><code>bRequest</code>: the request code.</td></tr>
               <tr><td><code>value</code></td><td><code>u16</code></td><td><code>wValue</code>: request-specific.</td></tr>
               <tr><td><code>index</code></td><td><code>u16</code></td><td><code>wIndex</code>: request-specific, often an interface or endpoint.</td></tr>
-              <tr><td><code>length</code></td><td><code>u16</code></td><td><code>wLength</code>: the data-stage length. For an IN request, how many bytes to read back (the device may return fewer); for an OUT request, the length of the data passed.</td></tr>
+              <tr><td><code>length</code></td><td><code>u16</code></td><td><code>wLength</code>: the data-stage length. For an IN request, how many bytes to read back (the real device may return fewer); for an OUT request, the length of the data passed.</td></tr>
             </tbody>
           </table>
         </div>
-        <pre class="diagram">{`  byte   0            1          2   3         4   5         6   7
+        <pre class="diagram">{`  byte   0            1          2   3     4   5     6   7
         +------------+----------+---------+---------+---------+
         |request_type| request  |  value  |  index  | length  |
-        | bmRequest  | bRequest  | wValue  | wIndex  | wLength |
+        | bmRequest  | bRequest | wValue  | wIndex  | wLength |
         +------------+----------+---------+---------+---------+
-                                  <-- LE -> <-- LE -> <-- LE ->`}</pre>
+                                 <-- LE -> <-- LE -> <-- LE ->`}</pre>
         <p>
-          <code>Setup::new</code> builds one from its five fields; <code>is_in</code> reads the
-          direction bit; <code>to_bytes</code> gives the eight wire bytes (<code>&lt;BBHHH&gt;</code>,
+          <code>Setup::new</code> builds one from its five fields, and <code>is_in</code> reads the
+          direction bit. <code>to_bytes</code> gives the eight wire bytes (<code>&lt;BBHHH&gt;</code>,
           little-endian).
         </p>
         <div class="api-response-label">EXAMPLE</div>
@@ -1323,7 +1324,7 @@ let setup = Setup::new(0x80, 0x06, 0x0100, 0x0000, 18);
 assert!(setup.is_in());
 assert_eq!(setup.to_bytes(), [0x80, 0x06, 0x00, 0x01, 0x00, 0x00, 0x12, 0x00]);`}</code></pre>
       </DocSection>
-      <DocSection id="transfer-outcome" title="TransferOutcome" caption="Device reply: status and any IN data">
+      <DocSection id="transfer-outcome" title="TransferOutcome" caption="Native reply: status and any IN data">
         <pre class="api-signature">struct TransferOutcome {'{'} status: TransferStatus, data: Vec&lt;u8&gt; {'}'}</pre>
         <p>
           What <A href="/library/advanced/transfer#transfer"><code>transfer</code></A> returns. A
@@ -1335,7 +1336,7 @@ assert_eq!(setup.to_bytes(), [0x80, 0x06, 0x00, 0x01, 0x00, 0x00, 0x12, 0x00]);`
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>status</code></td><td><A href="/library/types/enums#transfer-status"><code>TransferStatus</code></A></td><td>How the transfer ended.</td></tr>
-              <tr><td><code>data</code></td><td><code>Vec&lt;u8&gt;</code></td><td>The IN data the device returned. Empty for an OUT transfer, a STALL, or no data.</td></tr>
+              <tr><td><code>data</code></td><td><code>Vec&lt;u8&gt;</code></td><td>The IN data the real device returned. Empty for an OUT transfer, a STALL, or no data.</td></tr>
             </tbody>
           </table>
         </div>
@@ -1392,7 +1393,7 @@ assert_eq!(setup.to_bytes(), [0x80, 0x06, 0x00, 0x01, 0x00, 0x00, 0x12, 0x00]);`
             </thead>
             <tbody>
               <tr><td><code>table_full</code></td><td><code>bool</code></td><td>The box refused the last new rule or overwrite for room: all 32 entries in use (<code>REWRITE_MAX_ENTRIES</code>), or no space left in the 2048-byte payload pool (<code>REWRITE_PAYLOAD_POOL</code>). The next change to the table, or a clear, resets it; an identical re-send leaves it. <A href="/library/advanced/rewrite#set-rewrite"><code>set_rewrite</code></A> checks both limits before it sends.</td></tr>
-              <tr><td><code>generation</code></td><td><code>u8</code></td><td>Goes up by one on a change to the table, or a clear or silence that empties it; an identical re-send leaves it. <code>reset</code>, detach, link loss, re-clone and opt-in off return it to 0. The crate's keepalive re-sends every held rule whatever it reads. See the native <A href="/native/commands/rewrite#lifecycle">lifecycle</A>.</td></tr>
+              <tr><td><code>generation</code></td><td><code>u8</code></td><td>Goes up by one on a change to the table, or a clear or silence that empties it; an identical re-send leaves it. <code>reset</code>, detach, link loss, re-clone and opt-in off return it to 0. The crate's keepalive re-sends every held rule whatever it reads (native <A href="/native/commands/rewrite#lifecycle">lifecycle</A>).</td></tr>
               <tr><td><code>entries</code></td><td><code>Vec&lt;<A href="/library/types/structs#rewrite-entry">RewriteEntry</A>&gt;</code></td><td>One row per rule, in table order, not the most-specific-first order the box selects a match by. An overwrite moves a rule to the end.</td></tr>
             </tbody>
           </table>
@@ -1465,14 +1466,14 @@ assert_eq!(setup.to_bytes(), [0x80, 0x06, 0x00, 0x01, 0x00, 0x00, 0x12, 0x00]);`
             <tbody>
               <tr><td><code>applied</code></td><td>The clone serves a non-empty patched set: the one it was presented with, which a later store leaves alone until the next presentation.</td></tr>
               <tr><td><code>pending</code></td><td>The stored set differs from the one the clone serves, in its patches, bytes or order: not applied yet, changed or emptied since, refused, or held back because the opt-in is off.</td></tr>
-              <tr><td><code>refused</code></td><td>The stored set failed a clone or <A href="/native/commands/patch#ladder">consistency check</A> when the clone was last presented with it and is unchanged since, so the device is served unpatched; the box log names the check. A set change, a clear, a presentation that passes or a detach resets it. A device that fails unpatched is refused with it clear.</td></tr>
+              <tr><td><code>refused</code></td><td>The stored set failed a clone or <A href="/native/commands/patch#ladder">consistency check</A> when the clone was last presented with it and is unchanged since, so the clone serves the real device's descriptors unpatched; the box log names the check. A set change, a clear, a presentation that passes or a detach resets it. A real device that fails unpatched is refused with it clear.</td></tr>
               <tr><td><code>table_full</code></td><td>The box refused the last new patch or overwrite for room: 16 patches in use (<code>PATCH_MAX_ENTRIES</code>), or no space left in the 1024-byte pool. The next change to the set, or a clear, resets it.</td></tr>
             </tbody>
           </table>
         </div>
         <pre class="diagram">{`  set_patch --> stored set          (NVS, per VID:PID; pending while it differs from the served set)
                     |
-                    |  apply_patch, the opt-in turning on, the device attaching
+                    |  apply_patch, the opt-in turning on, the real device attaching
                     v
                 presented --- checks pass ---> applied   (the clone serves the patched set)
                     |

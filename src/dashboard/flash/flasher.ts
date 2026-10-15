@@ -148,7 +148,7 @@ export async function flashStock(params: FlashStockParams): Promise<void> {
   }
 }
 
-// Flash a chip already in ROM download on its native USB port.
+// Flash a chip already in ROM download over its USB port.
 export async function flashNativePort(params: FlashNativeParams): Promise<void> {
   const { port, image, kind, onProgress, onMac } = params;
   const invalid = validateImage(image, kind);

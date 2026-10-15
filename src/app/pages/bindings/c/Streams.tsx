@@ -60,7 +60,7 @@ MediusStatus medius_device_logs(struct MediusDevice *dev,
         </div>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-c">{`MediusCatchFilter filters[3] = {
-    /* every physical button and axis, in full */
+    /* every native button and axis, in full */
     medius_catch_filter_watch_class(MEDIUS_CLASS_BUTTON),
     medius_catch_filter_watch_axes(),
     /* plus one vendor endpoint's IN traffic, first 16 bytes of each packet */
@@ -97,7 +97,7 @@ medius_device_catch_events(dev, filters, 3, &events);`}</code></pre>
         </p>
         <div class="table-scroll">
           <table class="api-params">
-            <thead><tr><th>Function</th><th>Returns</th><th>Blocks?</th></tr></thead>
+            <thead><tr><th>Function</th><th>Returns</th><th>Blocking</th></tr></thead>
             <tbody>
               <tr><td><code>medius_event_stream_recv(stream, &amp;out)</code></td><td><code>MediusStatus</code> (<code>MEDIUS_STATUS_ERR_DISCONNECTED</code> on close)</td><td>Yes, until the next event</td></tr>
               <tr><td><code>medius_event_stream_try_recv(stream, &amp;out)</code></td><td><code>bool</code> (<code>false</code> if the queue is empty)</td><td>No, returns at once</td></tr>
@@ -142,7 +142,7 @@ medius_device_catch_events(dev, filters, 3, &events);`}</code></pre>
     union MediusCatchEventData data;    // read the arm for kind
 } MediusCatchEvent;
 
-struct MediusMotionEvent { int16_t dx, dy, dz; };   // cursor + wheel deltas
+struct MediusMotionEvent { int16_t dx, dy, dz, pan; };   // cursor, wheel and pan deltas
 
 struct MediusUsageEvent {               // one class's held usages
     MediusClass class_;                 // BUTTON / KEY / MEDIA
@@ -169,7 +169,7 @@ typedef struct MediusLogLine {          // from medius_log_stream_recv
           <table class="api-params">
             <thead><tr><th>When <code>kind</code> is</th><th>Read</th><th>Fields</th></tr></thead>
             <tbody>
-              <tr><td><code>MEDIUS_CATCH_EVENT_KIND_MOTION</code></td><td><code>data.motion</code></td><td><code>dx</code>, <code>dy</code>, <code>dz</code> (cursor and wheel deltas)</td></tr>
+              <tr><td><code>MEDIUS_CATCH_EVENT_KIND_MOTION</code></td><td><code>data.motion</code></td><td><code>dx</code>, <code>dy</code>, <code>dz</code>, <code>pan</code> (cursor, wheel and AC Pan deltas)</td></tr>
               <tr><td><code>MEDIUS_CATCH_EVENT_KIND_USAGES</code></td><td><code>data.usages</code></td><td><code>usages[0..n]</code>, each a class-tagged <code>MediusUsage</code></td></tr>
               <tr><td><code>MEDIUS_CATCH_EVENT_KIND_TRAFFIC</code></td><td><code>data.traffic</code></td><td><code>class_</code>, <code>id</code>, <code>direction</code>, <code>flags</code>, and <code>bytes[0..len]</code> of a <code>true_len</code>-byte packet</td></tr>
             </tbody>
@@ -187,7 +187,7 @@ typedef struct MediusLogLine {          // from medius_log_stream_recv
             <thead><tr><th>Helper</th><th>Does</th></tr></thead>
             <tbody>
               <tr><td><code>medius_usage_event_is_held(&amp;ev.data.usages, usage)</code></td><td><code>bool</code>: true if that usage (button, key, or media) is held.</td></tr>
-              <tr><td><code>medius_traffic_event_truncated(&amp;ev.data.traffic)</code></td><td><code>bool</code>: true if <code>len &lt; true_len</code>, meaning the matching entry's <code>capture</code> cut the packet. It separates a cut packet from a short one.</td></tr>
+              <tr><td><code>medius_traffic_event_truncated(&amp;ev.data.traffic)</code></td><td><code>bool</code>: true if <code>len &lt; true_len</code>, meaning the matching entry's <code>capture</code> cut the packet.</td></tr>
               <tr><td><code>medius_event_stream_dropped(stream)</code></td><td><code>uint64_t</code>: events dropped because the consumer fell behind (host-side back-pressure).</td></tr>
             </tbody>
           </table>
@@ -196,7 +196,7 @@ typedef struct MediusLogLine {          // from medius_log_stream_recv
           <p>
             <code>medius_event_stream_dropped</code> counts what <em>your</em> consumer lost.{' '}
             <A href="/bindings/c/types#catch-state"><code>MediusCatchState</code></A> counts what the
-            box shed before the wire: a box-wide total and a per-entry count, which names the
+            box dropped before sending: a box-wide total and a per-entry count, which names the
             expensive subscription.
           </p>
         </div>

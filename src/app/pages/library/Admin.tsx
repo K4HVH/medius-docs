@@ -109,7 +109,7 @@ device.reset()?;                // drop all of the above, back to passthrough`}<
         <pre><code class="language-rust">{`device.factory_reset()?;        // back to a box that has learned nothing`}</code></pre>
       </DocSection>
 
-      <DocSection id="reboot" title="reboot" caption="Restart or download-mode one of the two chips">
+      <DocSection id="reboot" title="reboot" caption="Restart a chip, or boot it to download mode">
         <pre class="api-signature">fn reboot(&self, target: RebootTarget) -&gt; Result&lt;()&gt;</pre>
         <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
         <p>
@@ -134,7 +134,7 @@ device.reboot(RebootTarget::DeviceRun)?;   // restart the device chip`}</code></
 
         <div class="callout callout--info">
           <p>
-            A rebooted device chip sends the box's hello, and the library re-sends what it holds once
+            A rebooted device chip sends the ready hello, and the library re-sends what it holds once
             the clone is back (<A href="/library/lifecycle#restart">session recovery</A>). A link that
             drops meanwhile returns through the reader thread's auto-reconnect, or{' '}
             <A href="/library/lifecycle#reconnect"><code>reconnect</code></A> forces it.

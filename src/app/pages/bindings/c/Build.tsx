@@ -59,8 +59,8 @@ cc app.c -DMEDIUS_FEATURE_MOCK \\
           build the <a href="https://github.com/K4HVH/medius" target="_blank" rel="noreferrer">crate</a>{' '}
           with the{' '}
           <a href="https://rustup.rs" target="_blank" rel="noreferrer">Rust toolchain</a>{' '}
-          (<code>cargo build -p medius-capi --release</code> writes them under{' '}
-          <code>target/release/</code>).
+          (<code>cargo build -p medius-capi --release</code> writes the library to{' '}
+          <code>target/release/</code>; the header is <code>medius-capi/include/medius.h</code>).
         </p>
         <pre class="diagram">{`  compile  ──▶  needs your code + medius.h
   link     ──▶  adds libmedius_capi
@@ -135,9 +135,8 @@ LD_LIBRARY_PATH=target/release ./hello
         <div class="callout callout--info">
           <p>
             No <a href="https://vcpkg.io" target="_blank" rel="noreferrer">vcpkg</a> or{' '}
-            <a href="https://conan.io" target="_blank" rel="noreferrer">Conan</a> port (both build
-            from source without a Rust toolchain). Use the prebuilt tarball or build{' '}
-            <code>medius-capi</code> from source. Python uses the{' '}
+            <a href="https://conan.io" target="_blank" rel="noreferrer">Conan</a> port: both build
+            from source, and neither supplies a Rust toolchain. Python uses the{' '}
             <A href="/bindings/python/build#packaging">prebuilt wheel</A>.
           </p>
         </div>

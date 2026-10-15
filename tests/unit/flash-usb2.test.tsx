@@ -310,7 +310,7 @@ describe('Advanced over USB2', () => {
     dropOn(mouse, app('stock_fw', '3.4.5'));
     await waitFor(() => expect(r.container.textContent).toContain("This is the mouse-side chip's image."));
     expect(r.container.textContent).not.toMatch(/would run/);
-    expect(r.container.textContent).toContain("This isn't medius firmware. Flash it over USB3.");
+    expect(r.container.textContent).toContain("This isn't Medius firmware. Flash it over USB3.");
     expect(flashButton(r)).toBeDisabled();
   });
 
@@ -321,7 +321,7 @@ describe('Advanced over USB2', () => {
     const [main, mouse] = inputs(r);
     dropOn(main, DEVICE_345);
     dropOn(mouse, app('stock_fw', '1.0.0'));
-    await waitFor(() => expect(r.container.textContent).toContain("This isn't medius firmware."));
+    await waitFor(() => expect(r.container.textContent).toContain("This isn't Medius firmware."));
     expect(flashButton(r)).toBeDisabled();
     await chips(r, /^Main chip$/);
     // The main chip alone at 3.4.5 over a 3.4.2 mouse-side chip splits them.
@@ -341,7 +341,7 @@ describe('Advanced over USB2', () => {
     await chips(r, /^Main chip$/);
     await waitFor(() =>
       expect(r.container.textContent).toContain(
-        "The main chip would run v3.4.5 and the mouse-side chip v3.4.2. If they can't talk to each other, the mouse stops working and the mouse-side chip can only be flashed over USB3.",
+        "The main chip would run v3.4.5 and the mouse-side chip v3.4.2. If they can't talk to each other, your mouse stops working and the mouse-side chip can only be flashed over USB3.",
       ),
     );
     expect(flashButton(r)).toBeDisabled();
@@ -439,7 +439,7 @@ describe('Advanced over USB2', () => {
     flashButton(r).click();
     await waitFor(() =>
       expect(r.container.textContent).toContain(
-        `This box speaks protocol ${PROTO_VER + 1} and this page protocol ${PROTO_VER}, so the page can flash it but not control it.`,
+        "This box speaks a different protocol from this page, so the page can flash it but not control it.",
       ),
     );
   });

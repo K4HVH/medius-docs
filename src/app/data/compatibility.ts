@@ -25,7 +25,7 @@ export const COMPAT: readonly CompatEntry[] = [
   { name: 'ATK X1 NK 8K', kind: 'mouse', verdict: 'works', reported: 'v3.4.5' },
   { name: 'ATK Y9 Ultimate', kind: 'mouse', verdict: 'works', reported: 'v3.2.0' },
   { name: 'ATK Zero 8K', kind: 'mouse', verdict: 'works', reported: 'v2.2.1' },
-  { name: 'Attack Shark R5 Ultra', kind: 'mouse', verdict: 'partial', note: "Over wireless, the vendor's app can't see it", reported: 'v3.0.1' },
+  { name: 'Attack Shark R5 Ultra', kind: 'mouse', verdict: 'partial', note: "Over wireless, the vendor's app can't detect it", reported: 'v3.0.1' },
   { name: 'Attack Shark V3 PRO', kind: 'mouse', verdict: 'works', reported: 'v3.1.0' },
   { name: 'Attack Shark X3', kind: 'mouse', verdict: 'works', reported: 'v3.2.1' },
   { name: 'Attack Shark X8SE', kind: 'mouse', verdict: 'works', reported: 'v3.2.0' },

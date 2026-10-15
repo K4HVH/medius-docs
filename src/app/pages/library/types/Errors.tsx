@@ -56,10 +56,10 @@ const Errors: Component = () => {
               <tr>
                 <td><code>BadProtoVer {'{'} got {'}'}</code></td>
                 <td>
-                  The box replied with a <code>proto_ver</code> other than <code>9</code>, carried in{' '}
-                  <code>got</code>. The{' '}
+                  The box replied to the <A href="/library/connection">handshake</A> with a{' '}
+                  <code>proto_ver</code> other than <code>9</code>, carried in <code>got</code>. The{' '}
                   <A href="/library/discovery">discovery</A> openers return it for a matched box on
-                  another protocol. See the <A href="/library/connection">handshake</A>.
+                  another protocol.
                 </td>
               </tr>
               <tr>
@@ -71,7 +71,7 @@ const Errors: Component = () => {
               </tr>
               <tr>
                 <td><code>Disconnected</code></td>
-                <td>The device disconnected.</td>
+                <td>The box disconnected.</td>
               </tr>
               <tr>
                 <td><code>FrameTooLong</code></td>

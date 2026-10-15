@@ -40,9 +40,9 @@ const Update: Component = () => {
         </div>
         <p>
           <code>otadata</code> sits above the slots so <code>nvs</code> keeps its offset, and the box
-          name, options and learned baselines survive the one flash that installs this layout. A box
-          without the layout replies <code>NOSLOT</code>; see{' '}
-          <A href="/native/flashing">Flashing</A>.
+          name, options and learned baselines survive the one{' '}
+          <A href="/native/flashing">flash</A> that installs this layout. A box without the layout
+          replies <code>NOSLOT</code>.
         </p>
       </PageHeader>
 
@@ -76,7 +76,7 @@ const Update: Component = () => {
           A target can be staged and activated later; both chips may be staged before one{' '}
           <A href="/native/commands/update#activate"><code>ACTIVATE</code></A> commits them
           together. <A href="/native/commands/requests#firmware"><code>QUERY(FIRMWARE)</code></A>{' '}
-          reads what each chip runs. Each op below has an example. Library binding:{' '}
+          reads what each chip runs. Library binding:{' '}
           <A href="/library/update#update-firmware"><code>update_firmware</code></A>.
         </p>
       </DocSection>
@@ -107,8 +107,8 @@ const Update: Component = () => {
           <A href="/library/update#stage-firmware"><code>stage_firmware</code></A>.
         </p>
         <p>
-          The erase runs up front: a 64 KB block erase disables the cache for tens of milliseconds,
-          more than any receive buffer on either wire can absorb mid-stream.
+          The erase runs up front: a 64 KB block erase disables the cache for 50 to 100 ms, more
+          than any receive buffer on either link can absorb mid-stream.
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <p>Open a 364784-byte device-chip image (<code>size</code> is <code>0x000590F0</code>):</p>
@@ -176,7 +176,7 @@ const Update: Component = () => {
         </div>
         <p>
           A sender ignoring its credit overruns the smaller hop, and the lost chunk leaves the
-          window one short: nothing acknowledges it, and the session dies on
+          window one short: nothing acknowledges it, and the session ends on
           the idle timer with the sender still waiting. Library binding:{' '}
           <A href="/library/update#stage-firmware"><code>stage_firmware</code></A>.
         </p>
@@ -386,7 +386,7 @@ const Update: Component = () => {
               <tr><td><code>TOOBIG</code></td><td><code>0x12</code></td><td>slot size</td><td>The declared size does not fit, or a chunk overran it.</td></tr>
               <tr><td><code>SEQGAP</code></td><td><code>0x13</code></td><td>expected <code>seq</code></td><td>A chunk out of order; the session is dropped.</td></tr>
               <tr><td><code>WRITEFAIL</code></td><td><code>0x14</code></td><td>error code</td><td>The flash write failed.</td></tr>
-              <tr><td><code>BADSHA</code></td><td><code>0x15</code></td><td><code>0</code></td><td>The image is not what the digest promised.</td></tr>
+              <tr><td><code>BADSHA</code></td><td><code>0x15</code></td><td><code>0</code></td><td>The image does not match the digest.</td></tr>
               <tr><td><code>BADIMAGE</code></td><td><code>0x16</code></td><td>error code</td><td>The bytes are not a bootable image.</td></tr>
               <tr><td><code>LINKDOWN</code></td><td><code>0x17</code></td><td><code>0</code></td><td>The host chip was addressed and the inter-chip link is down.</td></tr>
               <tr><td><code>TIMEOUT</code></td><td><code>0x18</code></td><td><code>0</code></td><td>The host chip did not come back on the new image.</td></tr>
@@ -441,7 +441,7 @@ const Update: Component = () => {
         </div>
         <p>
           The host chip's image arrives over the link, its only way back, so one that runs but can't
-          talk must revert by itself.
+          use the link must revert by itself.
         </p>
         <p>
           Measured on hardware: an image that panics in its entry point is back on the old slot in
@@ -475,7 +475,7 @@ const Update: Component = () => {
           </table>
         </div>
         <p>
-          A status may be added; read one you don't know as a refusal. The dashboard connects to any
+          A status may be added; a client reads an unknown one as a refusal. The dashboard connects to any
           box on protocol 5 or later, and can update but not control a box on another protocol.
         </p>
       </DocSection>

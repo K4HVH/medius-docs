@@ -40,7 +40,7 @@ device.reapply()?; // re-assert the held override, e.g. after a box reset`}</cod
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`// The no-op case: reset clears every override, so reapply sends nothing.
 device.reset()?;
-device.reapply()?; // sends nothing`}</code></pre>
+device.reapply()?;`}</code></pre>
 
         <div class="callout callout--info">
           <p>
@@ -61,17 +61,17 @@ device.reapply()?; // sends nothing`}</code></pre>
 
         <p>
           The reader thread auto-reconnects on any read error; call this only to force a rescan. It
-          blocks while rescanning and reopening the port, errors if the box can't be found or opened,
-          and never waits on a box reply.
+          blocks while it rescans, reopens the port and reads the box's version reply to match its
+          MAC, and errors if the box can't be found or opened.
         </p>
         <p>On each call:</p>
         <ol>
           <li>
-            Rescans for the box by USB identity, vendor ID <code>0x1A86</code> and product ID{' '}
-            <code>0x55D3</code> (see <A href="/native/transport">Transport</A>).
+            Rescans for the box by <A href="/native/transport">USB identity</A>: vendor ID{' '}
+            <code>0x1A86</code>, product ID <code>0x55D3</code>.
           </li>
           <li>
-            Reopens the port. A box that answers on another protocol, as after a reflash, is{' '}
+            Reopens the port. A box on another protocol, as after a reflash, returns{' '}
             <A href="/library/types/errors"><code>Error::BadProtoVer</code></A> and stays
             disconnected.
           </li>
@@ -126,8 +126,8 @@ assert!(after > before);`}</code></pre>
           <table class="api-params">
             <thead><tr><th>Trigger</th><th>Detected by</th></tr></thead>
             <tbody>
-              <tr><td>A device-chip restart</td><td>The box's <A href="/native/connection#hello">ready hello</A>, unasked, on a link the box has already answered.</td></tr>
-              <tr><td>A session release: a <code>RESET</code> the library did not send, the link between the box's chips dropping, the device detaching, a re-clone (<A href="/library/advanced/patch#apply-patch"><code>apply_patch</code></A>, <A href="/library/advanced/patch#clear-patch"><code>clear_patch</code></A>, an <A href="/library/options#allow-imperfect-clones">opt-in</A> toggle that re-presents the clone, another device), a configuration switch by the game PC that unbinds a role, control-PC silence, the opt-in turned off</td><td><code>Stats::session</code> moving. The keepalive reads it each tick while anything is held, and every 20 ms for 5 s after <code>apply_patch</code>, <code>clear_patch</code> or <code>allow_imperfect_clones</code>.</td></tr>
+              <tr><td>A device-chip restart</td><td>The box's <A href="/native/connection#hello">ready hello</A>, unasked, after the handshake.</td></tr>
+              <tr><td>A session release: a <code>RESET</code> the library did not send, the inter-chip link dropping, the real device detaching, a re-clone (<A href="/library/advanced/patch#apply-patch"><code>apply_patch</code></A>, <A href="/library/advanced/patch#clear-patch"><code>clear_patch</code></A>, an <A href="/library/options#allow-imperfect-clones">opt-in</A> toggle that re-presents the clone, another real device), a configuration switch by the game PC that unbinds a role, control-PC silence, the opt-in turned off</td><td><code>Stats::session</code> moving. The keepalive reads it each tick while anything is held, and every 20 ms for 5 s after <code>apply_patch</code>, <code>clear_patch</code> or <code>allow_imperfect_clones</code>.</td></tr>
               <tr><td>The library's <A href="/library/admin#reset"><code>reset</code></A></td><td>Counted by the box; the library holds nothing after it, so nothing is re-sent.</td></tr>
             </tbody>
           </table>

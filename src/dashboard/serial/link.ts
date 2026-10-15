@@ -291,7 +291,7 @@ export async function requestMediusPort(): Promise<SerialPort> {
   });
 }
 
-// Open a chooser filtered to an ESP32-S3 in ROM download mode (native USB).
+// Open a chooser filtered to an ESP32-S3 in ROM download mode, over the chip's USB port.
 export async function requestRomPort(): Promise<SerialPort> {
   if (!isWebSerialSupported()) {
     throw new Error('Web Serial is not supported in this browser');
@@ -313,7 +313,7 @@ export class SerialLink {
   // Replies that beat their waiter; dropping them loses refusals raised inside a credit window.
   private updateBacklog: UpdateResp[] = [];
   private seq = 1;
-  // CLIP_APPEND's own sequence; see `clipAppend`.
+  // CLIP_APPEND's separate SEQ; see `clipAppend`.
   private clipSeq = 0;
   private opened = false;
   private closing = false;
@@ -464,7 +464,7 @@ export class SerialLink {
     return this.send(encode(FrameType.Led, this.nextSeq(), ledPayload(target, mode, level)));
   }
 
-  // Weigh physical input on a target and direction (§3.8).
+  // Weigh native input on a target and direction (§3.8).
   scale(target: LockTarget, direction: Direction, scale: number): Promise<void> {
     // Only an axis has a bearing; the box treats a relative direction differently per class elsewhere.
     if (target.cls !== LockClass.Axis && (direction === Direction.With || direction === Direction.Against)) {
@@ -616,7 +616,7 @@ export class SerialLink {
     return resp.render;
   }
 
-  // Share of the command interval an injected delta is released across (§3.13). 0 = next report;
+  // Share of the command interval an injected delta is released across (§3.10). 0 = next report;
   // above 100 overlaps. Persisted.
   setSpread(percent: number): Promise<void> {
     return this.send(encode(FrameType.Option, this.nextSeq(), spreadPayload(percent)));
@@ -1016,7 +1016,7 @@ export class SerialLink {
       return;
     }
     if (f.ty === FrameType.TransferResp) {
-      // Its own opcode, correlated by the SEQ that echoes the TRANSFER.
+      // A separate opcode, correlated by the SEQ that echoes the TRANSFER.
       const w = this.transferWaiters.get(f.seq);
       if (w) {
         clearTimeout(w.timer);
@@ -1141,7 +1141,7 @@ export class SerialLink {
     body: Uint8Array,
     timeoutMs: number,
   ): Promise<UpdateResp> {
-    // Anything queued for THIS op answers an earlier command and would read as a fresh success.
+    // Anything already queued for this op answers an earlier command and would read as a fresh success.
     this.updateBacklog = this.updateBacklog.filter((r) => r.op !== op);
     const frame = new Uint8Array(2 + body.length);
     frame[0] = op;

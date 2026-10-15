@@ -37,8 +37,8 @@ fn press_queues_an_inject() {
 
       <DocSection id="logs-without-hardware" title="Logs in tests" caption="Push log lines with a MockBox">
         <p>
-          <code>push_log</code> on a <code>MockBox</code> emits a{' '}
-          <A href="/native/commands/admin#log"><code>LOG</code></A> frame that surfaces on{' '}
+          <code>push_log</code> on a <code>MockBox</code> sends a{' '}
+          <A href="/native/commands/admin#log"><code>LOG</code></A> frame that arrives on{' '}
           <A href="/library/diagnostics#logs"><code>logs()</code></A> like a real one.
         </p>
         <div class="api-response-label">EXAMPLE</div>

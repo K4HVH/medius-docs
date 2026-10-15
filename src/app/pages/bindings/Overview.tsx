@@ -8,15 +8,15 @@ const Overview: Component = () => {
     <>
       <PageHeader>
         <p>
-          A <A href="/native/hardware">medius box</A> sits between a mouse and a PC: the mouse passes
-          through untouched, and your program <A href="/native/injection">injects input</A> over a{' '}
+          A <A href="/native/hardware">Medius box</A> sits between a mouse and a PC: it relays native
+          reports untouched, and your program <A href="/native/injection">injects input</A> over a{' '}
           <A href="/native/transport">USB-serial link</A>.
         </p>
         <p>
-          The bindings write that program in <A href="/bindings/c">C / C++</A> or{' '}
+          With the bindings, that program is <A href="/bindings/c">C / C++</A> or{' '}
           <A href="/bindings/python">Python</A> instead of{' '}
-          <a href="https://crates.io/crates/medius" target="_blank" rel="noreferrer">Rust</a>, with
-          the same bytes on the wire.
+          <a href="https://crates.io/crates/medius" target="_blank" rel="noreferrer">Rust</a> and
+          sends the same frames.
         </p>
         <pre class="diagram">{`        your program   ( C / C++ / Python )
                        │
@@ -29,7 +29,7 @@ const Overview: Component = () => {
         └──────────────┬──────────────┘
                        │   6 Mbaud USB-serial frames
         ┌──────────────▼──────────────┐
-        │       the medius box        │   ▶ mouse + game PC
+        │       the Medius box        │   ▶ mouse + game PC
         └─────────────────────────────┘`}</pre>
         <div class="callout callout--info">
           <p>
@@ -42,7 +42,7 @@ const Overview: Component = () => {
         </div>
       </PageHeader>
 
-      <DocSection id="pick" title="Languages" caption="Same capabilities, different ergonomics">
+      <DocSection id="pick" title="Languages" caption="Install, errors and cleanup per language">
         <div class="table-scroll">
           <table class="api-params">
             <thead>
@@ -68,7 +68,7 @@ const Overview: Component = () => {
         </div>
       </DocSection>
 
-      <DocSection id="coverage" title="Coverage" caption="Every feature in every language">
+      <DocSection id="coverage" title="Coverage" caption="Capability per language">
         <div class="table-scroll">
           <table class="api-params">
             <thead>
@@ -78,7 +78,7 @@ const Overview: Component = () => {
               <tr><td><A href="/library/connection">Connect, find, clone the link</A></td><td>yes</td><td>yes</td></tr>
               <tr><td><A href="/library/move">Move &amp; wheel</A></td><td>yes</td><td>yes</td></tr>
               <tr><td><A href="/library/inject">Inject buttons, keys, media</A></td><td>yes</td><td>yes</td></tr>
-              <tr><td><A href="/library/lock">Lock physical input</A></td><td>yes</td><td>yes</td></tr>
+              <tr><td><A href="/library/lock">Lock native input</A></td><td>yes</td><td>yes</td></tr>
               <tr><td><A href="/library/catch">Catch live input (streams)</A></td><td>yes</td><td>yes</td></tr>
               <tr><td><A href="/library/clip">Buffered clip playback</A></td><td>yes</td><td>yes</td></tr>
               <tr><td><A href="/library/options">Options &amp; LED</A></td><td>yes</td><td>yes</td></tr>

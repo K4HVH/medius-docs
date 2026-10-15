@@ -51,7 +51,7 @@ describe('a ROM flash that fails', () => {
 
   it('says the box went away when the device is lost', async () => {
     fail.error = new DOMException('The device has been lost.', 'NetworkError');
-    expect(await stock()).toBe("The box went away partway through. The main chip may not start until it's flashed again. Replug it with the button held, then try again.");
+    expect(await stock()).toBe("The box disconnected partway through. The main chip may not start until it's flashed again. Replug it with the button held, then try again.");
   });
 
   it('keeps the action of a wrong chip and of a part that is not the box', async () => {

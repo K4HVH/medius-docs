@@ -14,8 +14,8 @@ const Update: Component = () => {
           chip, <A href="/library/update#abort-update"><code>abort_update</code></A> discards a
           transfer, and{' '}
           <A href="/library/update#wait-firmware-confirmed"><code>wait_firmware_confirmed</code></A>{' '}
-          waits out probation. No ROM download reboot, no second port; the wire is{' '}
-          <A href="/native/commands/update"><code>UPDATE</code></A>.
+          waits out probation. They run over the open control link as{' '}
+          <A href="/native/commands/update"><code>UPDATE</code></A> frames, with no ROM download reboot.
         </p>
         <div class="callout callout--info">
           <p>
@@ -27,7 +27,7 @@ const Update: Component = () => {
         <div class="table-scroll">
           <table class="api-params">
             <thead>
-              <tr><th>Update a...</th><th>Write</th><th>Write and commit</th></tr>
+              <tr><th>Target</th><th>Write</th><th>Write and commit</th></tr>
             </thead>
             <tbody>
               <tr>
@@ -211,7 +211,7 @@ device.update_firmware(UpdateTarget::Device, &image, &mut |p| {
             <thead><tr><th>After 55&nbsp;s</th><th>Returns</th></tr></thead>
             <tbody>
               <tr><td>A chip still on probation</td><td><A href="/library/types/errors"><code>Error::Update</code></A>: op 0 (begin), <code>ON_PROBATION</code></td></tr>
-              <tr><td>No answer from the box</td><td><A href="/library/types/errors"><code>Error::QueryTimeout</code></A></td></tr>
+              <tr><td>No reply from the box</td><td><A href="/library/types/errors"><code>Error::QueryTimeout</code></A></td></tr>
             </tbody>
           </table>
         </div>

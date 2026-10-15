@@ -606,8 +606,8 @@ const DeviceEventCatch = () => {
 
             <Show when={droppedByBox()}>
               <div class="callout callout--warning">
-                The box cleared the subscription after 1 s with no control frame, which a backgrounded tab
-                can cause. Press Watch to restart.
+                The box cleared the subscription: this page sent nothing for 1 s, which a background tab can
+                cause. Press Watch to restart.
               </div>
             </Show>
 

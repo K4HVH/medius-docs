@@ -50,15 +50,15 @@ device.inject(MediaKey::VOLUME_UP, Action::Press)?; // media key`}</code></pre>
         <p>
           Wrappers over <A href="/library/inject#inject"><code>inject</code></A>, generic over any{' '}
           <A href="/library/types/structs#usage"><code>Usage</code></A>. <code>press</code> holds it
-          down; <code>release</code> clears the box's press or force, leaving a physical hold down;{' '}
-          <code>force_release</code> forces it up over a physical press.
+          down. <code>release</code> clears the box's press or force; a hold on the real device stays down.{' '}
+          <code>force_release</code> forces it up over a hold on the real device.
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`use medius::{Button, Key};
 
 device.press(Button::LEFT)?;          // held down
-device.release(Button::LEFT)?;        // box press cleared; a physical hold stays
-device.force_release(Key::LEFT_GUI)?; // forced up over a physical hold`}</code></pre>
+device.release(Button::LEFT)?;        // box press cleared; a hold on the real device stays
+device.force_release(Key::LEFT_GUI)?; // forced up over a hold on the real device`}</code></pre>
       </DocSection>
 
       <DocSection id="async" title="On AsyncDevice" caption="Same calls, still synchronous">

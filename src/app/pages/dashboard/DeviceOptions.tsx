@@ -1,5 +1,5 @@
-// Each control reads its value back from the box until touched. A hardcoded default here once made
-// Apply reconfigure a box that looked unchanged.
+// Each control reads its value back from the box until touched: a hardcoded default would make Apply
+// reconfigure a box that looks unchanged.
 import { Show, createSignal } from 'solid-js';
 import { Button } from '../../../components/inputs/Button';
 import { Chip } from '../../../components/display/Chip';
@@ -295,8 +295,8 @@ const DeviceOptions = (props: { proto?: number }) => {
       <Panel id="imperfect-clone" title="Imperfect clone" aside={<GuideLink id="imperfect-clone" />}>
         <p>
           {has(PROTO_VER)
-            ? 'Clones a device the box can\'t copy exactly, and unlocks the Advanced tab on Control.'
-            : 'Clones a device the box can\'t copy exactly.'}
+            ? 'Clones a device the box can\'t copy faithfully, and unlocks the Advanced tab on Control.'
+            : 'Clones a device the box can\'t copy faithfully.'}
         </p>
         <div class="acts">
           <Button variant="primary" disabled={cmd.busy()} onClick={() => allowImperfect(true)}>
@@ -587,7 +587,7 @@ const DeviceOptions = (props: { proto?: number }) => {
           <p class="mut">
             {forceOn()
               ? 'The clone declares the rate you pick.'
-              : "The clone declares the device's rate."}
+              : 'The clone declares the native poll rate.'}
           </p>
         </div>
         <div class="acts">

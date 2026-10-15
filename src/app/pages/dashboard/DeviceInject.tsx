@@ -337,8 +337,8 @@ const DeviceInject = () => {
             >
               <Show when={dropped()}>
                 <div class="callout callout--warning">
-                  The box cleared every injected hold after 1 s with no control frame, which a backgrounded
-                  tab can cause.
+                  The box cleared every injected hold: this page sent nothing for 1 s, which a background tab
+                  can cause.
                 </div>
               </Show>
               <Show

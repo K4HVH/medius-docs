@@ -36,12 +36,12 @@ const Rewrite: Component = () => {
             <tr><th>Name</th><th>Value</th><th><code>id</code> is</th><th>Carries</th><th>Head</th></tr>
           </thead>
           <tbody>
-            <tr><td><code>HID_IN</code></td><td><code>4</code></td><td>an interface number; <code>0xFFFF</code> = every HID interface</td><td>IN</td><td>the device's report as it arrived, report ID first</td></tr>
-            <tr><td><code>HID_OUT</code></td><td><code>5</code></td><td>an endpoint number; <code>0xFFFF</code> = every HID interrupt-OUT endpoint</td><td>OUT</td><td>a report the PC writes to the device</td></tr>
+            <tr><td><code>HID_IN</code></td><td><code>4</code></td><td>an interface number; <code>0xFFFF</code> = every HID interface</td><td>IN</td><td>the native report as it arrived, report ID first</td></tr>
+            <tr><td><code>HID_OUT</code></td><td><code>5</code></td><td>an endpoint number; <code>0xFFFF</code> = every HID interrupt-OUT endpoint</td><td>OUT</td><td>a report the PC writes to the real device</td></tr>
             <tr><td><code>VEND_INTR</code></td><td><code>6</code></td><td>an endpoint number; <code>0xFFFF</code> = every vendor interrupt endpoint</td><td>IN, OUT</td><td>a relayed vendor interrupt packet</td></tr>
             <tr><td><code>VEND_BULK</code></td><td><code>7</code></td><td>an endpoint number; <code>0xFFFF</code> = every vendor bulk endpoint</td><td>IN, OUT</td><td>a relayed vendor bulk packet</td></tr>
             <tr><td><code>CONTROL</code></td><td><code>8</code></td><td>an endpoint number, <code>0</code> = EP0; <code>0xFFFF</code> = every control endpoint</td><td>IN, OUT</td><td>the 8 SETUP bytes, then the first 8 OUT data bytes</td></tr>
-            <tr><td><code>EMIT</code></td><td><code>9</code></td><td>an endpoint number; <code>0xFFFF</code> = every cloned HID interrupt-IN endpoint</td><td>IN</td><td>the report going on the wire</td></tr>
+            <tr><td><code>EMIT</code></td><td><code>9</code></td><td>an endpoint number; <code>0xFFFF</code> = every cloned HID interrupt-IN endpoint</td><td>IN</td><td>the report as emitted</td></tr>
             <tr><td><code>ANY</code></td><td><code>0xFF</code></td><td>not compared</td><td>IN, OUT</td><td>the head at each surface a packet crosses, so a mouse report meets the rule at <code>HID_IN</code> and again at <code>EMIT</code></td></tr>
           </tbody>
         </table>
@@ -117,7 +117,7 @@ const Rewrite: Component = () => {
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <p>
-          Drop every report the clone emits on endpoint 1, the device's zero-length packets too:{' '}
+          Drop every report the clone emits on endpoint 1, native zero-length packets too:{' '}
           <code>cls = 9</code>, <code>id = 1</code>, <code>dir = 1</code>, <code>action = 1</code>{' '}
           (<code>DROP</code>), <code>mlen = 0</code>, which matches every packet:
         </p>
@@ -187,7 +187,7 @@ const Rewrite: Component = () => {
               <tr><td><code>ANSWER</code></td><td><code>4</code></td><td><code>CONTROL</code>. The box completes the request itself.</td></tr>
               <tr><td><code>STALL</code></td><td><code>5</code></td><td><code>CONTROL</code>. The request ends in a STALL handshake.</td></tr>
               <tr><td><code>NAK</code></td><td><code>6</code></td><td><code>CONTROL</code>. EP0 NAKs until the PC times out; a control endpoint above 0 STALLs.</td></tr>
-              <tr><td><code>REPLY_PATCH</code></td><td><code>7</code></td><td><code>CONTROL</code>. Writes the payload into the device's IN reply at <code>off</code>, unapplied past the reply's end.</td></tr>
+              <tr><td><code>REPLY_PATCH</code></td><td><code>7</code></td><td><code>CONTROL</code>. Writes the payload into the native IN reply at <code>off</code>, unapplied past the reply's end.</td></tr>
               <tr><td><code>REPLY_REPLACE</code></td><td><code>8</code></td><td><code>CONTROL</code>. The IN reply becomes the payload, cut to <code>wLength</code>.</td></tr>
             </tbody>
           </table>
@@ -195,7 +195,7 @@ const Rewrite: Component = () => {
         <div class="api-response-label">CONTROL</div>
         <p>
           On <code>CONTROL</code> an action depends on the request's direction. The reply actions
-          apply only when the device completed the request.
+          apply only when the real device completed the request.
         </p>
         <div class="table-scroll">
           <table class="api-params">
@@ -204,18 +204,18 @@ const Rewrite: Component = () => {
             </thead>
             <tbody>
               <tr><td><code>PASS</code></td><td>proxied unchanged</td><td>proxied unchanged</td></tr>
-              <tr><td><code>PATCH</code></td><td>proxied unchanged</td><td>the data stage is patched at <code>off</code> before the device gets it</td></tr>
+              <tr><td><code>PATCH</code></td><td>proxied unchanged</td><td>the data stage is patched at <code>off</code> before the real device gets it</td></tr>
               <tr><td><code>REPLACE</code></td><td>proxied unchanged</td><td>the payload overwrites the start of the data stage; <code>wLength</code> is kept</td></tr>
               <tr><td><code>ANSWER</code></td><td>the payload is the reply, cut to <code>wLength</code></td><td>the status stage is ACKed and the data goes no further</td></tr>
               <tr><td><code>STALL</code>, <code>NAK</code></td><td>refused</td><td>refused</td></tr>
-              <tr><td><code>REPLY_PATCH</code>, <code>REPLY_REPLACE</code></td><td>the device's reply is rewritten</td><td>proxied unchanged</td></tr>
+              <tr><td><code>REPLY_PATCH</code>, <code>REPLY_REPLACE</code></td><td>the native reply is rewritten</td><td>proxied unchanged</td></tr>
             </tbody>
           </table>
         </div>
         <div class="callout callout--info">
           <p>
-            On EP0 the table matches class and vendor requests, and the standard requests the clone passes
-            to the device: an interface's <code>GET_DESCRIPTOR</code> for a class descriptor other than the HID
+            On EP0 the table matches class and vendor requests, and the standard requests the clone relays
+            to the real device: an interface's <code>GET_DESCRIPTOR</code> for a class descriptor other than the HID
             and report descriptors, and, while the clone is configured, a device qualifier or other-speed
             configuration the box did not keep.
           </p>
@@ -293,9 +293,9 @@ const Rewrite: Component = () => {
             <tbody>
               <tr><td><A href="/native/commands/clip#packet-triggers">packet triggers</A></td><td>A packet can fire a trigger and then match a rule. A report a trigger consumes reaches no rule and counts no hit.</td></tr>
               <tr><td><code>HID_IN</code></td><td>Buttons, keys, media and a secondary mouse's report are read from the rewritten bytes by <A href="/native/commands/lock"><code>LOCK</code></A>, <A href="/native/commands/transform#order"><code>TRANSFORM</code></A> and injection. A <code>DROP</code> removes the native report; injection still emits on the frame clock.</td></tr>
-              <tr><td><code>EMIT</code></td><td>Acts last, on native, injected and rendered reports and a clip's entries. A rewritten report that carries no event against the last one sent is suppressed, unless the device reports every poll.</td></tr>
+              <tr><td><code>EMIT</code></td><td>Acts last, on native, injected and rendered reports and a clip's entries. A rewritten report that carries no event against the last one emitted is suppressed, unless the real device reports every poll.</td></tr>
               <tr><td><A href="/native/commands/raw"><code>RAW</code></A></td><td>Goes straight to the endpoint, past every rule and trigger, as a clip's <A href="/native/commands/clip#items">raw items</A> do.</td></tr>
-              <tr><td><A href="/native/commands/transfer"><code>TRANSFER</code></A></td><td>Runs on dedicated messages to the device, past every rule.</td></tr>
+              <tr><td><A href="/native/commands/transfer"><code>TRANSFER</code></A></td><td>Runs on dedicated messages to the real device, past every rule.</td></tr>
             </tbody>
           </table>
         </div>

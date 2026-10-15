@@ -29,12 +29,12 @@ const Options: Component = () => {
         </div>
       </PageHeader>
 
-      <DocSection id="allow-imperfect-clones" title="allow_imperfect_clones" caption="Clone anyway, and admit the advanced control layer">
+      <DocSection id="allow-imperfect-clones" title="allow_imperfect_clones" caption="Clone anyway, and enable the advanced control layer">
         <pre class="api-signature">fn allow_imperfect_clones(&self, allow: bool) -&gt; Result&lt;()&gt;</pre>
         <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
         <p>
-          By default the box refuses a device it can't clone exactly; <code>true</code> clones it
-          anyway, as close to the device as the box can make it. Changing it with such a device{' '}
+          By default the box refuses a real device it can't clone faithfully; <code>true</code> clones
+          it anyway, as an imperfect clone. Changing it with such a device{' '}
           <em>attached</em>, or a forced rate pending, reboots the device chip to re-clone.
           Otherwise the clone re-presents only when the change alters the{' '}
           <A href="/library/advanced/patch">patch set</A> it serves: turned on, a stored set the box
@@ -54,10 +54,10 @@ const Options: Component = () => {
         <div class="table-scroll">
           <table class="api-params">
             <thead>
-              <tr><th>What</th><th>Opt-in off</th></tr>
+              <tr><th>Feature</th><th>Opt-in off</th></tr>
             </thead>
             <tbody>
-              <tr><td>a device the box can't clone exactly</td><td>Refused: no clone appears.</td></tr>
+              <tr><td>a real device the box can't clone faithfully</td><td>Refused: no clone appears.</td></tr>
               <tr><td>a forced rate, <A href="/library/options#set-emit-pace"><code>set_emit_pace</code></A>'s <code>force_hz</code></td><td>Not applied.</td></tr>
               <tr><td><A href="/library/advanced/rewrite">rewrite rules</A></td><td><code>set_rewrite</code> returns <A href="/library/types/errors#errors"><code>ImperfectRequired</code></A>; <code>clear_rewrite</code> still runs, and turning the opt-in off clears the table.</td></tr>
               <tr><td><A href="/library/advanced/patch">descriptor patches</A></td><td>Stored, not applied; <code>apply_patch</code> returns <code>ImperfectRequired</code>.</td></tr>
@@ -69,10 +69,10 @@ const Options: Component = () => {
         </div>
         <div class="callout callout--info">
           <p>
-            A device the box can't clone exactly has more than four IN endpoints live at once, or more
-            than six HID interfaces; runs at high speed; has configurations the box did not capture; a
-            vendor bulk or isochronous endpoint; a setting carrying more endpoint descriptors than it
-            declares, where what fits is cloned and the rest left undriven; or a report descriptor
+            A real device the box can't clone faithfully has more than four IN endpoints live at once,
+            or more than six HID interfaces; runs at high speed; or has configurations the box did not
+            capture, a vendor bulk or isochronous endpoint, a setting carrying more endpoint descriptors
+            than it declares (what fits is cloned and the rest left undriven), or a report descriptor
             truncated or never captured.
           </p>
         </div>
@@ -95,8 +95,8 @@ device.allow_imperfect_clones(true)?;   // re-clones if the attached device need
         <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
         <p>
           <code>Some(window)</code> turns riding on: injected cursor and wheel motion ride a native
-          cursor-motion report seen within <code>window</code>, with no synthetic motion frame.
-          Motion unridden past the window is dropped, not dumped on the next move.{' '}
+          cursor-motion report received within <code>window</code>, with no synthetic motion frame.
+          Motion unridden past the window is dropped, not emitted on the next move.{' '}
           <code>None</code> (the default) is off.
         </p>
         <p>
@@ -139,15 +139,16 @@ device.set_movement_riding(None)?;                             // back to gaples
         <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
         <p>
           <code>force_hz</code> writes a <code>bInterval</code> onto every HID interrupt-IN endpoint
-          the clone serves and polls the device at it, so a mouse declaring 125 Hz can run at 1 kHz.
-          It snaps to <code>1000/n</code> Hz, and a low-speed clone floors at <code>bInterval</code> 16 (62 Hz).
+          the clone serves and polls the real device at it, so a mouse declaring 125 Hz can run at 1 kHz.
+          It resolves to a power-of-two <code>bInterval</code>, never slower than the rate asked for, and
+          a low-speed clone floors at <code>bInterval</code> 16 (62 Hz).
         </p>
         <div class="callout callout--warning">
           <p>
             A forced rate applies only with{' '}
             <A href="/library/options#allow-imperfect-clones"><code>allow_imperfect_clones</code></A>{' '}
             on, because the descriptor stops matching the real device. Changing the resolved interval
-            re-clones the box, which drops the control port for a few seconds.
+            re-clones the box: the device chip reboots, and queries time out for a few seconds.
           </p>
         </div>
         <div class="table-scroll">
@@ -157,7 +158,7 @@ device.set_movement_riding(None)?;                             // back to gaples
             </thead>
             <tbody>
               <tr><td><code>pace</code></td><td><A href="/library/types/enums#emit-pace"><code>EmitPace</code></A></td><td>Rate ceiling for injected motion.</td></tr>
-              <tr><td><code>force_hz</code></td><td><code>Option&lt;u16&gt;</code></td><td>The rate the clone advertises and the box polls the device at; <code>None</code> leaves the native interval.</td></tr>
+              <tr><td><code>force_hz</code></td><td><code>Option&lt;u16&gt;</code></td><td>The rate the clone advertises and the box polls the real device at; <code>None</code> leaves the native interval.</td></tr>
             </tbody>
           </table>
         </div>
@@ -262,7 +263,7 @@ device.set_bearing(None, BearingMode::PerAxis)?; // and off again`}</code></pre>
         <p>
           <code>Off</code> is the paced fill: one frame per{' '}
           <A href="/library/options#set-emit-pace">emit-rate</A> tick while injection is pending. The
-          other three push motion through an{' '}
+          other three render motion through an{' '}
           <a href="https://github.com/optima-manent/ABCurves" target="_blank" rel="noreferrer">ABCurves</a>{' '}
           model (MIT) fitted live from native reports, and differ only in the smoother the
           model is fed.
@@ -274,7 +275,7 @@ device.set_bearing(None, BearingMode::PerAxis)?; // and off again`}</code></pre>
         </p>
         <div class="callout callout--warning">
           <p>
-            Rendering adds the smoother's group delay: 4 ms stock, 2.7 ms de-spiked, none unsmoothed. With{' '}
+            Rendering adds the smoother's group delay: 4 ms <code>Stock</code>, 2.7 ms <code>Despiked</code>, none <code>Unsmoothed</code>. With{' '}
             <code>full</code> on, native motion takes it plus 1 ms.{' '}
             <A href="/library/move#move-rel-now"><code>move_rel_now</code></A>,{' '}
             <A href="/library/move#flush-motion"><code>flush_motion</code></A> and{' '}
@@ -313,8 +314,8 @@ device.set_render(RenderMode::Off, false)?;        // renderer out of the path, 
         <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
         <p>
           A command loop slower than the native report rate sends deltas worth several native
-          reports. <code>percent</code> is the share of the command interval the box releases each
-          across: <code>0</code> puts the whole delta on the next report, <code>100</code> spreads it
+          reports. <code>percent</code> is the share of the command interval the box spreads each delta
+          across: <code>0</code> emits the whole delta on the next report, <code>100</code> spreads it
           evenly over one interval, and above <code>100</code> carries a standing backlog.
         </p>
         <div class="table-scroll">
@@ -355,8 +356,8 @@ device.set_spread(0)?;     // off: the whole delta on the next report`}</code></
         <p>
           Returns an{' '}
           <A href="/library/types/structs#imperfect-status"><code>ImperfectStatus</code></A>: the
-          opt-in toggle, whether the attached device is over-capacity, and whether the live clone is
-          not an exact copy.
+          opt-in toggle, whether the attached real device is over-capacity, and whether the live
+          clone is imperfect.
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`use medius::Device;
@@ -393,8 +394,8 @@ match device.query_movement_riding()? {
           Returns an{' '}
           <A href="/library/types/structs#emit-pace-status"><code>EmitPaceStatus</code></A>{' '}
           with the pace and the rates. <code>advertised_hz</code> is the clone's current rate: native
-          while nothing is forced, the forced rate once something is, keeping no record of what the
-          device declared before the force.
+          while nothing is forced, the forced rate once something is, keeping no record of the native rate
+          before the force.
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`use medius::{Device, EmitPace};
@@ -412,8 +413,8 @@ println!("the clone advertises {} Hz", status.advertised_hz);`}</code></pre>
         <p><span class="api-badge api-badge--responded">Blocks</span></p>
         <p>
           Returns the configured{' '}
-          <A href="/library/types/structs#bearing"><code>Bearing</code></A>: the window and how the
-          box reads it.
+          <A href="/library/types/structs#bearing"><code>Bearing</code></A>: the window and the
+          mode.
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`use medius::Device;
@@ -439,7 +440,7 @@ if bearing.is_live() {
 
 let device = Device::find()?;
 let status = device.query_render()?;
-println!("{:?}, own motion rendered: {}", status.mode, status.full);
+println!("{:?}, native motion rendered: {}", status.mode, status.full);
 if !status.ready {
     println!("move the mouse: nothing is rendered until a profile arms");
 }`}</code></pre>
@@ -451,7 +452,7 @@ if !status.ready {
         <p>
           Returns a <A href="/library/types/structs#spread-status"><code>SpreadStatus</code></A>.{' '}
           <code>span_us</code> is <code>0</code> while <code>percent</code> is <code>0</code>, until
-          the box has learned the host's command period, and while the box's two chips have not yet
+          the box has learned the command interval, and while the box's two chips have not yet
           agreed which holds the motion; in each case the whole delta is emitted on the next report.
         </p>
         <div class="api-response-label">EXAMPLE</div>
@@ -461,7 +462,7 @@ let device = Device::find()?;
 let status = device.query_spread()?;
 println!("{}% over {} us", status.percent, status.span_us);
 if status.span_us == 0 {
-    println!("send a few moves: the command period is not learned yet");
+    println!("send a few moves: the command interval is not learned yet");
 }`}</code></pre>
       </DocSection>
 
@@ -470,7 +471,7 @@ if status.span_us == 0 {
           <A href="/library/features/async"><code>AsyncDevice</code></A> keeps the setters
           fire-and-forget (no await) and makes <code>query_imperfect</code>,{' '}
           <code>query_movement_riding</code>, <code>query_bearing</code>,{' '}
-          <code>query_emit_pace</code>, and <code>query_render</code> futures.
+          <code>query_emit_pace</code>, <code>query_render</code>, and <code>query_spread</code> futures.
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`use std::time::Duration;

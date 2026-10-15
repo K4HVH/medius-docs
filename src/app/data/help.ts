@@ -41,7 +41,7 @@ export const HELP: readonly HelpGroup[] = [
       {
         id: 'flash-stopped',
         q: 'A flash stopped partway',
-        a: "Each chip's download mode is in ROM, so a flash that stops partway never locks the chip out. Hold the button again, plug the port back in and press Install.",
+        a: "Each chip's download mode is in ROM (memory no flash can overwrite), so a flash that stops partway never locks the chip out. Hold the button again, plug the port back in and press Install.",
       },
       {
         id: 'which-computer',
@@ -51,7 +51,7 @@ export const HELP: readonly HelpGroup[] = [
       {
         id: 'browsers',
         q: "This browser can't talk to your box",
-        a: 'Open the page in Chrome or Edge on a computer. The dashboard reaches the box through Web Serial.',
+        a: 'Open the page in Chrome or Edge on a computer. The dashboard reaches the box through Web Serial (browser access to serial ports).',
       },
       {
         id: 'insecure',
@@ -72,7 +72,7 @@ export const HELP: readonly HelpGroup[] = [
       },
       { id: 'not-answering', q: "The box isn't answering", a: 'Check USB1 is plugged in too.' },
       { id: 'one-more-click', q: 'The browser needs one more click before it asks', a: 'Press Retry.' },
-      { id: 'in-use', q: 'Another tab or program has this box open', a: 'Close it. One program at a time holds the box.' },
+      { id: 'in-use', q: 'Another tab or program has this box open', a: 'Close it. Only one program at a time can have the box open.' },
       { id: 'unreadable', q: "This computer can't read from the box", a: 'Unplug USB2 and plug it back in.' },
     ],
   },
@@ -126,7 +126,7 @@ export const HELP: readonly HelpGroup[] = [
       {
         id: 'software',
         q: "Why doesn't my software work with Medius?",
-        a: "The control protocol differs from the stock MAKCU firmware's, so software written for the stock firmware needs Medius support from its developer. Libraries for Rust, Python, C and C++ are in the docs, and the AI access page serves the docs to coding agents.",
+        a: "The control protocol (the commands software sends the box) differs from the stock MAKCU firmware's, so software written for the stock firmware needs Medius support from its developer. Libraries for Rust, Python, C and C++ are in the docs. The AI access page serves the docs to coding agents.",
         links: [
           { label: 'Rust library', href: '/library' },
           { label: 'Bindings', href: '/bindings' },
@@ -149,7 +149,7 @@ export const HELP: readonly HelpGroup[] = [
       {
         id: 'too-old',
         q: 'Too old to update from here',
-        a: 'One-click update needs v3.2.0 or later. Set the box up once with the installer; then it updates in one click.',
+        a: 'One-click update needs v3.2.0 or later. Set the box up once with the installer. After that it updates in one click.',
         links: [SET_UP],
       },
       {
@@ -166,13 +166,13 @@ export const HELP: readonly HelpGroup[] = [
       {
         id: 'newer-protocol',
         q: 'Newer firmware',
-        a: 'This box speaks a newer protocol than this page. Reload the page; the Flash page can still flash it.',
+        a: 'This box speaks a newer protocol than this page. Reload the page. The Flash page can still flash it.',
         links: [FLASH],
       },
       {
         id: 'older-version',
         q: 'How do I go back to an older version?',
-        a: "On the Flash page, choose Older release and pick the version. Over USB2 both chips take it at once; with a chip's button held, flash the main chip, then the mouse-side chip. Versions before v3.2.0 aren't listed: this page can't connect to a box running one. A factory image also clears your settings.",
+        a: "On the Flash page, choose Older release and pick the version. Over USB2 both chips take it at once. With a chip's button held, flash the main chip, then the mouse-side chip. Versions before v3.2.0 aren't listed: this page can't connect to a box running one. With Image set to Factory, the flash also clears your settings.",
         links: [FLASH],
       },
       {
@@ -201,7 +201,7 @@ export const HELP: readonly HelpGroup[] = [
       {
         id: 'why',
         q: 'Why use Medius?',
-        a: 'It clones your mouse or keyboard to the PC byte for byte, keyboards and media keys included, and gives developers an open protocol with tools the stock firmware lacks, such as motion mirroring.',
+        a: 'It clones your mouse or keyboard to the PC byte for byte, media keys included. It gives developers an open protocol with tools the stock firmware lacks, such as motion mirroring.',
         links: [{ label: 'Native API', href: '/native' }],
       },
       { id: 'free', q: 'Is Medius free?', a: 'Yes, and it stays free, updates included.' },

@@ -336,13 +336,13 @@ export const Out = Direction.Negative; // PC to device
 // The id sentinel that blanket-locks a whole class (§3.8), e.g. every button or every key.
 export const LOCK_ID_ALL = 0xffff;
 
-// LOCK scale (§3.8): the percent of the physical value the box keeps on that direction.
+// LOCK scale (§3.8): the percent of the native value the box keeps on that direction.
 export const LOCK_SCALE_BLOCK = 0;
 export const LOCK_SCALE_PASS = 100;
 export const LOCK_SCALE_MAX = 255;
 export const LOCK_SCALE_MIN = -255;
 
-// OPTION(BEARING) geometry (§3.12): how the box compares physical motion against its injection.
+// OPTION(BEARING) geometry (§3.12): how the box compares native motion against its injection.
 export enum BearingMode {
   PerAxis = 0,
   Vector = 1,
@@ -382,7 +382,7 @@ export const lockKey = (usage: number): LockTarget => ({ cls: LockClass.Key, id:
 export const lockMedia = (usage: number): LockTarget => ({ cls: LockClass.Media, id: usage });
 export const lockBlanket = (cls: LockClass): LockTarget => ({ cls, id: LOCK_ID_ALL });
 
-// One weighed direction (§4.8): a target, which direction of it, and how much of the physical value
+// One weighed direction (§4.8): a target, which direction of it, and how much of the native value
 // survives.
 export interface LockEntry {
   cls: LockClass;
@@ -396,7 +396,7 @@ export interface Locks {
   entries: LockEntry[];
 }
 
-// The percent of the physical value kept on a target and direction; LOCK_SCALE_PASS when nothing
+// The percent of the native value kept on a target and direction; LOCK_SCALE_PASS when nothing
 // weighs it.
 export function scaleOf(locks: Locks, target: LockTarget, direction: Direction): number {
   // A whole-class blanket covers every usage of its class, so an entry at LOCK_ID_ALL counts for a
@@ -592,7 +592,7 @@ export interface UsageSnapshot {
 // proxied control transactions, clone emits, bus lifecycle, and clip control transfers.
 export interface TrafficEvent {
   tsUs: number;
-  // Host chip: the device's IN traffic and the input classes. Device chip, at the tap: OUT traffic, a
+  // Host chip: the real device's IN traffic and the input classes. Device chip, at the tap: OUT traffic, a
   // vendor IN packet RAW or a clip put there, control, clip transfers, emit and bus.
   clk: ClockDomain;
   cls: CatchClass;
@@ -721,7 +721,7 @@ export interface CatchState {
 }
 
 // RESP(OPTIONS, IMPERFECT) (§4.14): the opt-in, an over-capacity or high-speed device, and a live
-// clone that is not an exact copy (an opted-in device, a forced rate, or an applied patch set).
+// clone that is not faithful (an opted-in device, a forced rate, or an applied patch set).
 export interface ImperfectStatus {
   allowed: boolean;
   overCapacity: boolean;
@@ -1024,7 +1024,7 @@ export const samePacketTrigger = (a: ClipPacketTrigger, b: ClipPacketTrigger): b
   a.cls === b.cls && a.id === b.id && a.dir === b.dir && sameBytes(a.match, b.match) && sameBytes(a.mask, b.mask);
 
 export type ClipPacketTriggerFault =
-  | 'class' // not one of the six traffic surfaces
+  | 'class' // not one of the six traffic classes
   | 'direction' // not Both, In or Out
   | 'verb' // past Toggle
   | 'mask-length' // match and mask differ in length
@@ -1115,7 +1115,7 @@ export interface LogLine {
   text: string;
 }
 
-/** What the bootloader thinks of the image a chip is running (§4.16). */
+/** The bootloader's state for the image a chip is running (§4.16). */
 export enum ImageState {
   New = 0,
   PendingVerify = 1,

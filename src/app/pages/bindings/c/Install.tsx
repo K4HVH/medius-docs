@@ -17,9 +17,8 @@ const Install: Component = () => {
 
       <DocSection id="download" title="Download" caption="Release archive per platform">
         <p>
-          Download your platform's file from the{' '}
-          <a href="https://github.com/K4HVH/medius/releases" target="_blank" rel="noreferrer">Releases page</a>{' '}
-          and unzip it.
+          Each platform's archive is on the{' '}
+          <a href="https://github.com/K4HVH/medius/releases" target="_blank" rel="noreferrer">Releases page</a>.
         </p>
         <div class="table-scroll">
           <table class="api-params">
@@ -48,7 +47,7 @@ const Install: Component = () => {
           In the project's <strong>Properties</strong> (same for C and C++):
         </p>
         <ol>
-          <li>Under <strong>C/C++ → General → Additional Include Directories</strong>, add the unzipped <code>include\</code> folder.</li>
+          <li>Under <strong>C/C++ → General → Additional Include Directories</strong>, add the unpacked <code>include\</code> folder.</li>
           <li>Under <strong>Linker → General → Additional Library Directories</strong>, add the <code>lib\</code> folder.</li>
           <li>Under <strong>Linker → Input → Additional Dependencies</strong>, add <code>medius_capi.dll.lib</code>.</li>
           <li>Copy <code>medius_capi.dll</code> next to your built <code>.exe</code> (or onto your <code>PATH</code>).</li>
@@ -91,7 +90,7 @@ LD_LIBRARY_PATH=lib ./app        # macOS: DYLD_LIBRARY_PATH=lib ./app`}</code></
         <p>
           <A href="/bindings/c/api#module"><code>medius_version_string</code></A> and{' '}
           <A href="/bindings/c/api#module"><code>medius_abi_version</code></A> are pure library
-          calls. A printed version means header and library are wired in. On a{' '}
+          calls. A printed version means header and library link and load. On a{' '}
           <code>MEDIUS_ABI_VERSION</code> mismatch, call nothing else; rebuild against the header
           shipped with the library.
         </p>
@@ -138,7 +137,7 @@ printf("firmware %u.%u.%u\\n", v.fw_major, v.fw_minor, v.fw_patch);
 
 medius_device_free(dev);`}</code></pre>
         <p>
-          Every call returns a <A href="/bindings/c/types#errors"><code>MediusStatus</code></A>.{' '}
+          Every fallible call returns a <A href="/bindings/c/types#errors"><code>MediusStatus</code></A>.{' '}
           <A href="/bindings/c/usage#errors">Calls &amp; errors</A> covers the failure text; the{' '}
           <A href="/bindings/c/api">API index</A> lists every call.
         </p>
