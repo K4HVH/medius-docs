@@ -2334,7 +2334,7 @@
               "label": "Interval a high-speed mouse's clone declares",
               "key": "Device",
               "outcomes": [
-                "The device's bInterval 4",
+                "Native bInterval 4",
                 "1 ms"
               ],
               "ranked": false,
@@ -2357,7 +2357,7 @@
                     ]
                   },
                   "medius": {
-                    "is": "The device's bInterval 4",
+                    "is": "Native bInterval 4",
                     "src": [
                       {
                         "file": "device_matrix_medius_samehub_fix4.json",
@@ -2693,14 +2693,14 @@
         {
           "id": "devices-endpoint-data",
           "title": "Data through every endpoint",
-          "about": "Each device streams a counter on every IN endpoint in turn, at the rate it declares, and the PC reads it through usbfs with eight transfers queued. An endpoint the clone has but that delivers nothing, or under 95% of the device's rate, counts as sending nothing. Medius as it ships, imperfect clones off.",
+          "about": "Each device streams a counter on every IN endpoint in turn, at the rate it declares, and the PC reads it through usbfs with eight transfers queued. An endpoint the clone has but that delivers nothing, or under 95% of the native rate, counts as sending nothing. Medius as it ships, imperfect clones off.",
           "tables": [
             {
               "kind": "outcome",
               "label": "Endpoints delivering",
               "key": "Device",
               "outcomes": [
-                "Every endpoint at the device's rate",
+                "Every endpoint at the native rate",
                 "Not cloned",
                 "An endpoint sends nothing"
               ],
@@ -2709,7 +2709,7 @@
                   "id": "devices-ep-data-vendorintr",
                   "label": "Vendor interrupt IN",
                   "stock": {
-                    "is": "Every endpoint at the device's rate",
+                    "is": "Every endpoint at the native rate",
                     "src": [
                       {
                         "file": "iface_data_stock_samehub.json",
@@ -2718,7 +2718,7 @@
                     ]
                   },
                   "medius": {
-                    "is": "Every endpoint at the device's rate",
+                    "is": "Every endpoint at the native rate",
                     "src": [
                       {
                         "file": "iface_data_medius_samehub_fix4.json",
@@ -2731,7 +2731,7 @@
                   "id": "devices-ep-data-vendintrep-0x84",
                   "label": "Vendor IN numbered 0x84",
                   "stock": {
-                    "is": "Every endpoint at the device's rate",
+                    "is": "Every endpoint at the native rate",
                     "src": [
                       {
                         "file": "iface_data_stock_samehub.json",
@@ -2740,7 +2740,7 @@
                     ]
                   },
                   "medius": {
-                    "is": "Every endpoint at the device's rate",
+                    "is": "Every endpoint at the native rate",
                     "src": [
                       {
                         "file": "iface_data_medius_samehub_fix4.json",
@@ -2753,7 +2753,7 @@
                   "id": "devices-ep-data-vendintrep-0x85",
                   "label": "Vendor IN numbered 0x85",
                   "stock": {
-                    "is": "Every endpoint at the device's rate",
+                    "is": "Every endpoint at the native rate",
                     "src": [
                       {
                         "file": "iface_data_stock_samehub.json",
@@ -2762,7 +2762,7 @@
                     ]
                   },
                   "medius": {
-                    "is": "Every endpoint at the device's rate",
+                    "is": "Every endpoint at the native rate",
                     "src": [
                       {
                         "file": "iface_data_medius_samehub_fix4.json",
@@ -2775,7 +2775,7 @@
                   "id": "devices-ep-data-vendintrep-0x86",
                   "label": "Vendor IN numbered 0x86",
                   "stock": {
-                    "is": "Every endpoint at the device's rate",
+                    "is": "Every endpoint at the native rate",
                     "src": [
                       {
                         "file": "iface_data_stock_samehub.json",
@@ -2784,7 +2784,7 @@
                     ]
                   },
                   "medius": {
-                    "is": "Every endpoint at the device's rate",
+                    "is": "Every endpoint at the native rate",
                     "src": [
                       {
                         "file": "iface_data_medius_samehub_fix4.json",
@@ -2819,7 +2819,7 @@
                   "id": "devices-ep-data-altsetting",
                   "label": "Vendor IN in an alternate setting",
                   "stock": {
-                    "is": "Every endpoint at the device's rate",
+                    "is": "Every endpoint at the native rate",
                     "src": [
                       {
                         "file": "iface_data_stock_samehub.json",
@@ -2828,7 +2828,7 @@
                     ]
                   },
                   "medius": {
-                    "is": "Every endpoint at the device's rate",
+                    "is": "Every endpoint at the native rate",
                     "src": [
                       {
                         "file": "iface_data_medius_samehub_fix4.json",
@@ -2841,7 +2841,7 @@
                   "id": "devices-ep-data-cdcnotify",
                   "label": "CDC notification endpoint",
                   "stock": {
-                    "is": "Every endpoint at the device's rate",
+                    "is": "Every endpoint at the native rate",
                     "src": [
                       {
                         "file": "iface_data_stock_samehub.json",
@@ -2850,7 +2850,7 @@
                     ]
                   },
                   "medius": {
-                    "is": "Every endpoint at the device's rate",
+                    "is": "Every endpoint at the native rate",
                     "src": [
                       {
                         "file": "iface_data_medius_samehub_fix4.json",
@@ -2863,7 +2863,7 @@
                   "id": "devices-ep-data-hidtwoin",
                   "label": "HID interface with two INs",
                   "stock": {
-                    "is": "Every endpoint at the device's rate",
+                    "is": "Every endpoint at the native rate",
                     "src": [
                       {
                         "file": "iface_data_stock_samehub.json",
@@ -2872,7 +2872,7 @@
                     ]
                   },
                   "medius": {
-                    "is": "Every endpoint at the device's rate",
+                    "is": "Every endpoint at the native rate",
                     "src": [
                       {
                         "file": "iface_data_medius_samehub_fix4.json",
@@ -2885,7 +2885,7 @@
                   "id": "devices-ep-data-vendbulkhigh",
                   "label": "Vendor bulk IN numbered 0x85",
                   "stock": {
-                    "is": "Every endpoint at the device's rate",
+                    "is": "Every endpoint at the native rate",
                     "src": [
                       {
                         "file": "iface_data_stock_samehub.json",
@@ -2907,7 +2907,7 @@
                   "id": "devices-ep-data-hidbulkin",
                   "label": "HID interface with a bulk IN",
                   "stock": {
-                    "is": "Every endpoint at the device's rate",
+                    "is": "Every endpoint at the native rate",
                     "src": [
                       {
                         "file": "iface_data_stock_samehub.json",
@@ -2929,7 +2929,7 @@
                   "id": "devices-ep-data-vendorbulk-1000-0",
                   "label": "Vendor bulk pair",
                   "stock": {
-                    "is": "Every endpoint at the device's rate",
+                    "is": "Every endpoint at the native rate",
                     "src": [
                       {
                         "file": "iface_data_stock_samehub.json",
@@ -2973,7 +2973,7 @@
                   "id": "devices-ep-data-two-high-in",
                   "label": "Two high-numbered INs beside a mouse",
                   "stock": {
-                    "is": "Every endpoint at the device's rate",
+                    "is": "Every endpoint at the native rate",
                     "src": [
                       {
                         "file": "iface_data_stock_samehub.json",
@@ -2990,7 +2990,7 @@
                     ]
                   },
                   "medius": {
-                    "is": "Every endpoint at the device's rate",
+                    "is": "Every endpoint at the native rate",
                     "src": [
                       {
                         "file": "iface_data_medius_samehub_fix4.json",
@@ -3127,7 +3127,7 @@
                   "id": "devices-ep-data-ten-interfaces",
                   "label": "Ten interfaces",
                   "stock": {
-                    "is": "Every endpoint at the device's rate",
+                    "is": "Every endpoint at the native rate",
                     "src": [
                       {
                         "file": "iface_data_stock_samehub.json",
@@ -3144,7 +3144,7 @@
                     ]
                   },
                   "medius": {
-                    "is": "Every endpoint at the device's rate",
+                    "is": "Every endpoint at the native rate",
                     "src": [
                       {
                         "file": "iface_data_medius_samehub_fix4.json",
@@ -3165,7 +3165,7 @@
                   "id": "devices-ep-data-high-interface",
                   "label": "Vendor interface numbered 12",
                   "stock": {
-                    "is": "Every endpoint at the device's rate",
+                    "is": "Every endpoint at the native rate",
                     "src": [
                       {
                         "file": "iface_data_stock_samehub.json",
@@ -3174,7 +3174,7 @@
                     ]
                   },
                   "medius": {
-                    "is": "Every endpoint at the device's rate",
+                    "is": "Every endpoint at the native rate",
                     "src": [
                       {
                         "file": "iface_data_medius_samehub_fix4.json",
@@ -3187,7 +3187,7 @@
                   "id": "devices-ep-data-xinput",
                   "label": "XInput pad, four INs",
                   "stock": {
-                    "is": "Every endpoint at the device's rate",
+                    "is": "Every endpoint at the native rate",
                     "src": [
                       {
                         "file": "iface_data_stock_samehub.json",
@@ -3208,7 +3208,7 @@
                     ]
                   },
                   "medius": {
-                    "is": "Every endpoint at the device's rate",
+                    "is": "Every endpoint at the native rate",
                     "src": [
                       {
                         "file": "iface_data_medius_samehub_fix4.json",
@@ -3290,7 +3290,7 @@
               "label": "Endpoints delivering, Medius with imperfect clones on",
               "key": "Device",
               "outcomes": [
-                "Every endpoint at the device's rate",
+                "Every endpoint at the native rate",
                 "Not cloned",
                 "An endpoint sends nothing"
               ],
@@ -3299,7 +3299,7 @@
                   "id": "devices-ep-data-imp-vendorintr",
                   "label": "Vendor interrupt IN",
                   "stock": {
-                    "is": "Every endpoint at the device's rate",
+                    "is": "Every endpoint at the native rate",
                     "src": [
                       {
                         "file": "iface_data_stock_samehub.json",
@@ -3308,7 +3308,7 @@
                     ]
                   },
                   "medius": {
-                    "is": "Every endpoint at the device's rate",
+                    "is": "Every endpoint at the native rate",
                     "src": [
                       {
                         "file": "iface_data_medius_samehub_fix5_imperfect.json",
@@ -3321,7 +3321,7 @@
                   "id": "devices-ep-data-imp-vendintrep-0x84",
                   "label": "Vendor IN numbered 0x84",
                   "stock": {
-                    "is": "Every endpoint at the device's rate",
+                    "is": "Every endpoint at the native rate",
                     "src": [
                       {
                         "file": "iface_data_stock_samehub.json",
@@ -3330,7 +3330,7 @@
                     ]
                   },
                   "medius": {
-                    "is": "Every endpoint at the device's rate",
+                    "is": "Every endpoint at the native rate",
                     "src": [
                       {
                         "file": "iface_data_medius_samehub_fix5_imperfect.json",
@@ -3343,7 +3343,7 @@
                   "id": "devices-ep-data-imp-vendintrep-0x85",
                   "label": "Vendor IN numbered 0x85",
                   "stock": {
-                    "is": "Every endpoint at the device's rate",
+                    "is": "Every endpoint at the native rate",
                     "src": [
                       {
                         "file": "iface_data_stock_samehub.json",
@@ -3352,7 +3352,7 @@
                     ]
                   },
                   "medius": {
-                    "is": "Every endpoint at the device's rate",
+                    "is": "Every endpoint at the native rate",
                     "src": [
                       {
                         "file": "iface_data_medius_samehub_fix5_imperfect.json",
@@ -3365,7 +3365,7 @@
                   "id": "devices-ep-data-imp-vendintrep-0x86",
                   "label": "Vendor IN numbered 0x86",
                   "stock": {
-                    "is": "Every endpoint at the device's rate",
+                    "is": "Every endpoint at the native rate",
                     "src": [
                       {
                         "file": "iface_data_stock_samehub.json",
@@ -3374,7 +3374,7 @@
                     ]
                   },
                   "medius": {
-                    "is": "Every endpoint at the device's rate",
+                    "is": "Every endpoint at the native rate",
                     "src": [
                       {
                         "file": "iface_data_medius_samehub_fix5_imperfect.json",
@@ -3409,7 +3409,7 @@
                   "id": "devices-ep-data-imp-altsetting",
                   "label": "Vendor IN in an alternate setting",
                   "stock": {
-                    "is": "Every endpoint at the device's rate",
+                    "is": "Every endpoint at the native rate",
                     "src": [
                       {
                         "file": "iface_data_stock_samehub.json",
@@ -3418,7 +3418,7 @@
                     ]
                   },
                   "medius": {
-                    "is": "Every endpoint at the device's rate",
+                    "is": "Every endpoint at the native rate",
                     "src": [
                       {
                         "file": "iface_data_medius_samehub_fix5_imperfect.json",
@@ -3431,7 +3431,7 @@
                   "id": "devices-ep-data-imp-cdcnotify",
                   "label": "CDC notification endpoint",
                   "stock": {
-                    "is": "Every endpoint at the device's rate",
+                    "is": "Every endpoint at the native rate",
                     "src": [
                       {
                         "file": "iface_data_stock_samehub.json",
@@ -3440,7 +3440,7 @@
                     ]
                   },
                   "medius": {
-                    "is": "Every endpoint at the device's rate",
+                    "is": "Every endpoint at the native rate",
                     "src": [
                       {
                         "file": "iface_data_medius_samehub_fix5_imperfect.json",
@@ -3453,7 +3453,7 @@
                   "id": "devices-ep-data-imp-hidtwoin",
                   "label": "HID interface with two INs",
                   "stock": {
-                    "is": "Every endpoint at the device's rate",
+                    "is": "Every endpoint at the native rate",
                     "src": [
                       {
                         "file": "iface_data_stock_samehub.json",
@@ -3462,7 +3462,7 @@
                     ]
                   },
                   "medius": {
-                    "is": "Every endpoint at the device's rate",
+                    "is": "Every endpoint at the native rate",
                     "src": [
                       {
                         "file": "iface_data_medius_samehub_fix5_imperfect.json",
@@ -3475,7 +3475,7 @@
                   "id": "devices-ep-data-imp-vendbulkhigh",
                   "label": "Vendor bulk IN numbered 0x85",
                   "stock": {
-                    "is": "Every endpoint at the device's rate",
+                    "is": "Every endpoint at the native rate",
                     "src": [
                       {
                         "file": "iface_data_stock_samehub.json",
@@ -3484,7 +3484,7 @@
                     ]
                   },
                   "medius": {
-                    "is": "Every endpoint at the device's rate",
+                    "is": "Every endpoint at the native rate",
                     "src": [
                       {
                         "file": "iface_data_medius_samehub_fix5_imperfect.json",
@@ -3497,7 +3497,7 @@
                   "id": "devices-ep-data-imp-hidbulkin",
                   "label": "HID interface with a bulk IN",
                   "stock": {
-                    "is": "Every endpoint at the device's rate",
+                    "is": "Every endpoint at the native rate",
                     "src": [
                       {
                         "file": "iface_data_stock_samehub.json",
@@ -3506,7 +3506,7 @@
                     ]
                   },
                   "medius": {
-                    "is": "Every endpoint at the device's rate",
+                    "is": "Every endpoint at the native rate",
                     "src": [
                       {
                         "file": "iface_data_medius_samehub_fix5_imperfect.json",
@@ -3519,7 +3519,7 @@
                   "id": "devices-ep-data-imp-vendorbulk-1000-0",
                   "label": "Vendor bulk pair",
                   "stock": {
-                    "is": "Every endpoint at the device's rate",
+                    "is": "Every endpoint at the native rate",
                     "src": [
                       {
                         "file": "iface_data_stock_samehub.json",
@@ -3528,7 +3528,7 @@
                     ]
                   },
                   "medius": {
-                    "is": "Every endpoint at the device's rate",
+                    "is": "Every endpoint at the native rate",
                     "src": [
                       {
                         "file": "iface_data_medius_samehub_fix5_imperfect.json",
@@ -3563,7 +3563,7 @@
                   "id": "devices-ep-data-imp-two-high-in",
                   "label": "Two high-numbered INs beside a mouse",
                   "stock": {
-                    "is": "Every endpoint at the device's rate",
+                    "is": "Every endpoint at the native rate",
                     "src": [
                       {
                         "file": "iface_data_stock_samehub.json",
@@ -3580,7 +3580,7 @@
                     ]
                   },
                   "medius": {
-                    "is": "Every endpoint at the device's rate",
+                    "is": "Every endpoint at the native rate",
                     "src": [
                       {
                         "file": "iface_data_medius_samehub_fix5_imperfect.json",
@@ -3626,7 +3626,7 @@
                     ]
                   },
                   "medius": {
-                    "is": "Every endpoint at the device's rate",
+                    "is": "Every endpoint at the native rate",
                     "src": [
                       {
                         "file": "iface_data_medius_samehub_fix5_imperfect.json",
@@ -3684,7 +3684,7 @@
                     ]
                   },
                   "medius": {
-                    "is": "Every endpoint at the device's rate",
+                    "is": "Every endpoint at the native rate",
                     "src": [
                       {
                         "file": "iface_data_medius_samehub_fix5_imperfect.json",
@@ -3717,7 +3717,7 @@
                   "id": "devices-ep-data-imp-ten-interfaces",
                   "label": "Ten interfaces",
                   "stock": {
-                    "is": "Every endpoint at the device's rate",
+                    "is": "Every endpoint at the native rate",
                     "src": [
                       {
                         "file": "iface_data_stock_samehub.json",
@@ -3734,7 +3734,7 @@
                     ]
                   },
                   "medius": {
-                    "is": "Every endpoint at the device's rate",
+                    "is": "Every endpoint at the native rate",
                     "src": [
                       {
                         "file": "iface_data_medius_samehub_fix5_imperfect.json",
@@ -3755,7 +3755,7 @@
                   "id": "devices-ep-data-imp-high-interface",
                   "label": "Vendor interface numbered 12",
                   "stock": {
-                    "is": "Every endpoint at the device's rate",
+                    "is": "Every endpoint at the native rate",
                     "src": [
                       {
                         "file": "iface_data_stock_samehub.json",
@@ -3764,7 +3764,7 @@
                     ]
                   },
                   "medius": {
-                    "is": "Every endpoint at the device's rate",
+                    "is": "Every endpoint at the native rate",
                     "src": [
                       {
                         "file": "iface_data_medius_samehub_fix5_imperfect.json",
@@ -3777,7 +3777,7 @@
                   "id": "devices-ep-data-imp-xinput",
                   "label": "XInput pad, four INs",
                   "stock": {
-                    "is": "Every endpoint at the device's rate",
+                    "is": "Every endpoint at the native rate",
                     "src": [
                       {
                         "file": "iface_data_stock_samehub.json",
@@ -3798,7 +3798,7 @@
                     ]
                   },
                   "medius": {
-                    "is": "Every endpoint at the device's rate",
+                    "is": "Every endpoint at the native rate",
                     "src": [
                       {
                         "file": "iface_data_medius_samehub_fix5_imperfect.json",
@@ -3848,7 +3848,7 @@
                     ]
                   },
                   "medius": {
-                    "is": "Every endpoint at the device's rate",
+                    "is": "Every endpoint at the native rate",
                     "src": [
                       {
                         "file": "iface_data_medius_samehub_fix5_imperfect.json",
@@ -7897,7 +7897,7 @@
         {
           "id": "pass-device-pc",
           "title": "Real device to PC",
-          "about": "A real device stalling its endpoint, one answering polls with empty packets, and a vendor interface streaming a counter.",
+          "about": "A real device stalling its endpoint, one replying to polls with empty packets, and a vendor interface streaming a counter.",
           "tables": [
             {
               "kind": "outcome",
@@ -10389,7 +10389,7 @@
         {
           "id": "inj-reports-emitted",
           "title": "Extra reports",
-          "about": "Reports each box sent while injecting: alongside a 1 kHz mouse that moves in every report, in a steady stream of moves into a still mouse, and beside a mouse reporting at 1 kHz or 125 Hz. A 1 kHz mouse sends about 2,500 reports in 2.5 s, a 125 Hz one about 312.",
+          "about": "Reports each box emitted while injecting: alongside a 1 kHz mouse that moves in every report, in a steady stream of moves into a still mouse, and beside a mouse reporting at 1 kHz or 125 Hz. A 1 kHz mouse sends about 2,500 reports in 2.5 s, a 125 Hz one about 312.",
           "tables": [
             {
               "kind": "measure",
@@ -17934,7 +17934,7 @@
                       }
                     ]
                   },
-                  "note": "Medius lets a press already under way finish before the lock blocks the button, so the PC never sees a release the device didn't send"
+                  "note": "Medius lets a press already under way finish before the lock blocks the button, so the PC never receives a release the real device didn't report"
                 },
                 {
                   "id": "input-lock2-key-on",
@@ -17987,7 +17987,7 @@
                       }
                     ]
                   },
-                  "note": "Medius lets a press already under way finish before the lock blocks the button, so the PC never sees a release the device didn't send"
+                  "note": "Medius lets a press already under way finish before the lock blocks the button, so the PC never receives a release the real device didn't report"
                 },
                 {
                   "id": "input-lock2-key-held-on",
@@ -18326,7 +18326,7 @@
         },
         {
           "id": "input-box-timed",
-          "title": "Clicks and typing the box times",
+          "title": "Clicks and typing timed by the box",
           "about": "Ten 50 ms clicks and a 30-character string, timed by the box (stock km.click and km.string, a Medius clip) against the same clicks sent by the PC, read off the PC's USB bus. Five runs each.",
           "tables": [
             {
@@ -21115,7 +21115,7 @@
       "rows": [
         "pass-pc-config"
       ],
-      "text": "When the PC switches the clone's configuration, stock reconnects the clone instead of passing the switch to the real device: 3 of 3 tries."
+      "text": "When the PC switches the clone's configuration, stock reconnects the clone instead of relaying the switch to the real device: 3 of 3 tries."
     },
     {
       "id": "link-stock-parser-jam",
