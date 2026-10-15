@@ -30,7 +30,7 @@ const Api: Component = () => {
               <tr><td><code>Device.open(path)</code></td><td>Open a serial path and <A href="/native/connection#handshake">handshake</A>.</td></tr>
               <tr><td><code>Device.find()</code></td><td>Open the first box found, or raise <A href="/bindings/python/types#subclasses"><code>NotFoundError</code></A>.</td></tr>
               <tr><td><code>dev.clone()</code></td><td>Another handle to the same link.</td></tr>
-              <tr><td><code>dev.close()</code></td><td>Free the handle. Called automatically by a <a href="https://docs.python.org/3/reference/datamodel.html#context-managers" target="_blank" rel="noreferrer"><code>with</code></a> block and on GC.</td></tr>
+              <tr><td><code>dev.close()</code></td><td>Free the handle once no call on it is running; a call in another thread ends first. Called automatically by a <a href="https://docs.python.org/3/reference/datamodel.html#context-managers" target="_blank" rel="noreferrer"><code>with</code></a> block and on GC.</td></tr>
               <tr><td><code>with Device.find() as dev:</code></td><td>Context manager that closes the link on block exit.</td></tr>
             </tbody>
           </table>
@@ -185,7 +185,7 @@ const Api: Component = () => {
         <p>
           See <A href="/library/update">Firmware update</A>. Staging blocks for the whole transfer
           and calls <code>progress(sent, total)</code> as windows are acknowledged; a refusal raises{' '}
-          <A href="/bindings/python/types#errors"><code>UpdateError</code></A>.
+          <A href="/bindings/python/types#updateerror"><code>UpdateError</code></A>.
         </p>
         <div class="table-scroll">
           <table class="api-params">
@@ -194,7 +194,8 @@ const Api: Component = () => {
               <tr><td><code>dev.stage_firmware(target, image, progress=None)</code></td><td>Write one image into that chip's spare slot, without booting it. <code>target</code> is an <A href="/bindings/python/types#updatetarget"><code>UpdateTarget</code></A>.</td></tr>
               <tr><td><code>dev.activate_firmware()</code></td><td>Commit everything staged and boot into it, host chip first.</td></tr>
               <tr><td><code>dev.abort_update(target)</code></td><td>Throw a staged or in-flight transfer away.</td></tr>
-              <tr><td><code>dev.update_firmware(target, image, progress=None)</code></td><td>Stage one image and activate it in a single call.</td></tr>
+              <tr><td><code>dev.update_firmware(target, image, progress=None)</code></td><td>Stage one image and activate it in a single call. A refused activate aborts the staged image before <code>UpdateError</code> is raised.</td></tr>
+              <tr><td><code>dev.wait_firmware_confirmed()</code></td><td><A href="/bindings/python/types#firmwareinfo"><code>FirmwareInfo</code></A> once neither chip is on <A href="/native/commands/update#rollback">probation</A>, asking while the box reboots after an activate. After 55&nbsp;s it raises <code>UpdateError</code> if a chip is still on probation, <code>QueryTimeoutError</code> if the box has not answered.</td></tr>
             </tbody>
           </table>
         </div>
@@ -346,6 +347,7 @@ b.transfer(0, Setup(0x21, 0x09, 0x0300, 0, 2), bytes([0x04, 0x01]))`}</code></pr
               <tr><td><code>MockBox()</code></td><td>A fresh mock that records every frame and answers queries. A context manager: <code>with MockBox() as mock:</code> frees it on exit, as <code>mock.close()</code> does.</td></tr>
               <tr><td><code>mock.open()</code></td><td>A <A href="/bindings/python/api#connect"><code>Device</code></A> over the mock, after the handshake.</td></tr>
               <tr><td><code>mock.with_device()</code></td><td>A <code>Device</code> over the mock, with no handshake.</td></tr>
+              <tr><td><code>Device.open_mock(mock)</code> / <code>Device.with_mock(mock)</code></td><td>The same two, named as in Rust.</td></tr>
               <tr><td><code>mock.clone()</code></td><td>Another handle to the same mock state.</td></tr>
             </tbody>
           </table>
@@ -367,6 +369,8 @@ b.transfer(0, Setup(0x21, 0x09, 0x0300, 0, 2), bytes([0x04, 0x01]))`}</code></pr
               <tr><td><code>mock.detach(back_within_grace=False)</code></td><td>Simulate the real device detaching: the mock releases the session. With <code>back_within_grace</code> the device re-attaches inside the 250 ms grace and the clone stays up; without, the clone is down until <code>attach()</code>.</td></tr>
               <tr><td><code>mock.attach()</code></td><td>Simulate a device attaching: a clone that was up is cloned again, which releases the session. See <A href="/library/features/mock#restart">restart and release</A>.</td></tr>
               <tr><td><code>mock.silent()</code></td><td>Stop answering queries, for timeout tests. One-way; frames are still recorded.</td></tr>
+              <tr><td><code>mock.refuse_next_activate(status)</code></td><td>Refuse the next <code>ACTIVATE</code> with update status <code>status</code>, keeping what is staged.</td></tr>
+              <tr><td><code>mock.reboot_after_activate(unanswered, pending)</code></td><td>After each accepted activate, leave <code>unanswered</code> firmware queries unanswered, then report the device chip on probation for the next <code>pending</code> queries.</td></tr>
               <tr><td><code>mock.push_raw(data)</code>, <code>push_log(level, text)</code>, <code>push_motion</code>, <code>push_usages</code>, <code>push_traffic</code></td><td>Put bytes, a log line or a catch event on the inbound stream, as the box sends them.</td></tr>
             </tbody>
           </table>

@@ -976,6 +976,24 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
         </div>
       </DocSection>
 
+      <DocSection id="update-error" title="MediusUpdateError" caption="The update op the box refused, and why">
+        <p>
+          From <A href="/bindings/c/api#update"><code>medius_last_error_update</code></A> after{' '}
+          <code>MEDIUS_STATUS_ERR_UPDATE</code>. A confirm that ran out of time gives op 0 and{' '}
+          <code>0x1B</code>, the refusal the next update would meet.
+        </p>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>op</code></td><td><code>uint8_t</code></td><td>0 begin, 1 data, 2 end, 3 abort, 4 activate.</td></tr>
+              <tr><td><code>status</code></td><td><code>uint8_t</code></td><td>The <A href="/native/commands/update#resp">update status</A>, such as <code>0x1B</code> for a chip on probation.</td></tr>
+              <tr><td><code>arg</code></td><td><code>uint32_t</code></td><td>The status argument; what it holds depends on the status.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </DocSection>
+
       <DocSection id="stats" title="MediusStats" caption="Box-side delivery / telemetry counters">
         <p>From <A href="/bindings/c/api#queries"><code>medius_device_query_stats</code></A>. Nonzero <code>tx_drops</code> or <code>tx_wedges</code> means the player's input slipped on the way to the PC; nonzero <code>link_rx_drops</code> or <code>host_rx_drops</code> means it was lost between the box's two chips. <code>relay_drops</code> is relayed traffic and commands that went no further, not lost native input.</p>
         <div class="table-scroll">

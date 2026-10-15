@@ -12,7 +12,8 @@ const Catch: Component = () => {
           edges; <A href="/library/catch#catch-events"><code>catch_events</code></A> yields the raw
           frames underneath. Input is observed before any{' '}
           <A href="/library/lock"><code>lock</code></A> suppression or{' '}
-          <A href="/library/inject">injection</A>. Dropping the stream unsubscribes.
+          <A href="/library/inject">injection</A>. Dropping the stream, or <code>close()</code>,
+          unsubscribes.
         </p>
         <p>
           A subscription is a table of{' '}
@@ -37,7 +38,7 @@ for ev in device.input_events([CatchFilter::watch(Key::F)])? {
     match ev.input {
         Input::Press(u) => println!("down {u:?}"),
         Input::Release(u) => println!("up {u:?}"),
-        Input::Motion { dx, dy, dz } => println!("moved {dx},{dy},{dz}"),
+        Input::Motion { dx, dy, dz, pan } => println!("moved {dx},{dy},{dz},{pan}"),
     }
 }`}</code></pre>
         <p>
@@ -91,9 +92,10 @@ while let Ok(CatchEvent::Traffic(t)) = events.recv() {
 
       <DocSection id="input-stream" title="InputStream" caption="Receive decoded edges">
         <p>
-          Returned by <A href="/library/catch#input-events"><code>input_events</code></A>. It holds the
-          per-class held sets it diffs, so it takes <code>&mut self</code>, and one report can yield
-          several <A href="/library/types/enums#input"><code>Input</code></A> values. It is an{' '}
+          Returned by <A href="/library/catch#input-events"><code>input_events</code></A>. One report
+          can yield several <A href="/library/types/enums#input"><code>Input</code></A> values, so
+          receives run one at a time; <code>held</code>, <code>dropped</code> and{' '}
+          <code>is_connected</code> never wait for one. It is <code>Sync</code> and an{' '}
           <code>Iterator</code>.
         </p>
         <p>
@@ -108,12 +110,14 @@ while let Ok(CatchEvent::Traffic(t)) = events.recv() {
             </thead>
             <tbody>
               <tr><td><code>recv()</code></td><td><code>Result&lt;InputEvent&gt;</code></td><td>Block until the next edge.</td></tr>
-              <tr><td><code>try_recv()</code></td><td><code>Option&lt;InputEvent&gt;</code></td><td>The next decoded edge, or <code>None</code> (never blocks).</td></tr>
-              <tr><td><code>recv_timeout(dur)</code></td><td><code>Option&lt;InputEvent&gt;</code></td><td>Block up to <code>dur</code>; <code>None</code> on timeout.</td></tr>
-              <tr><td><code>recv_async().await</code></td><td><code>Result&lt;InputEvent&gt;</code></td><td>Await the next edge (<code>async</code> feature).</td></tr>
+              <tr><td><code>try_recv()</code></td><td><code>Option&lt;InputEvent&gt;</code></td><td>The next decoded edge, or <code>None</code> if none is queued or another thread is receiving (never blocks).</td></tr>
+              <tr><td><code>recv_timeout(dur)</code></td><td><code>Option&lt;InputEvent&gt;</code></td><td>Block up to <code>dur</code>, counting a wait for another thread's receive; <code>None</code> on timeout.</td></tr>
+              <tr><td><code>recv_async().await</code></td><td><code>Result&lt;InputEvent&gt;</code></td><td>Await the next edge (<code>async</code> feature). Takes <code>&amp;mut self</code>.</td></tr>
               <tr><td><code>is_connected()</code></td><td><code>bool</code></td><td>Whether the box is still delivering; <code>try_recv</code> and <code>recv_timeout</code> return <code>None</code> for both "nothing yet" and "nothing ever again".</td></tr>
-              <tr><td><code>held(class)</code></td><td><code>&amp;[Usage]</code></td><td>What this stream holds for one class.</td></tr>
+              <tr><td><code>held(class)</code></td><td><code>Vec&lt;Usage&gt;</code></td><td>What this stream holds for one class.</td></tr>
               <tr><td><code>dropped()</code></td><td><code>u64</code></td><td>Events lost host-side because this consumer fell behind.</td></tr>
+              <tr><td><code>close()</code></td><td><code>()</code></td><td>End the subscription. Every receive blocked on it returns at once, as does every later one; queued events are dropped.</td></tr>
+              <tr><td><code>closer()</code></td><td><A href="/library/catch#stream-closer"><code>StreamCloser</code></A></td><td>A handle that closes the stream from another thread.</td></tr>
             </tbody>
           </table>
         </div>
@@ -122,7 +126,8 @@ while let Ok(CatchEvent::Traffic(t)) = events.recv() {
       <DocSection id="event-stream" title="EventStream" caption="Receive raw events">
         <p>
           Returned by <A href="/library/catch#catch-events"><code>catch_events</code></A>. Clones share
-          the queue; the subscription ends when the stream and every clone drop.
+          the queue; the subscription ends when the stream and every clone drop, or on{' '}
+          <code>close()</code>.
         </p>
         <div class="table-scroll">
           <table class="api-params">
@@ -138,6 +143,8 @@ while let Ok(CatchEvent::Traffic(t)) = events.recv() {
               <tr><td><code>stream()</code></td><td><code>impl Stream</code></td><td>The same queue as a <code>futures</code> stream (<code>async</code> feature).</td></tr>
               <tr><td><code>is_connected()</code></td><td><code>bool</code></td><td>Whether the box is still delivering; a <code>None</code> from the two above can't tell.</td></tr>
               <tr><td><code>dropped()</code></td><td><code>u64</code></td><td>Events lost host-side because this consumer fell behind.</td></tr>
+              <tr><td><code>close()</code></td><td><code>()</code></td><td>End the subscription for this stream and every clone. Every receive blocked on it returns at once, as does every later one; queued events are dropped.</td></tr>
+              <tr><td><code>closer()</code></td><td><A href="/library/catch#stream-closer"><code>StreamCloser</code></A></td><td>A handle that closes the stream from another thread.</td></tr>
             </tbody>
           </table>
         </div>
@@ -165,6 +172,32 @@ while let Ok(CatchEvent::Traffic(t)) = events.recv() {
   VendorBulk                   -->  [ queue 3 ]  --+
 
   each queue drains fully before the next`}</pre>
+      </DocSection>
+
+      <DocSection id="stream-closer" title="StreamCloser" caption="Close a stream from another thread">
+        <pre class="api-signature">fn closer(&self) -&gt; StreamCloser</pre>
+        <pre class="api-signature">fn close(&self)</pre>
+        <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+        <p>
+          From <code>InputStream</code>, <code>EventStream</code> or{' '}
+          <A href="/library/diagnostics#logs"><code>LogStream</code></A>, for a thread that holds none
+          of its handles. Its <code>close()</code> ends the stream as the stream's{' '}
+          <code>close()</code> does. It holds the stream weakly, so it keeps no subscription alive and
+          does nothing once every handle has dropped. It is <code>Clone</code>.
+        </p>
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`use medius::{CatchFilter, Device};
+
+let device = Device::find()?;
+let input = device.input_events(CatchFilter::all_input())?;
+let closer = input.closer();
+let reader = std::thread::spawn(move || {
+    for ev in input {
+        println!("{ev:?}");
+    }
+});
+closer.close(); // the loop ends at once
+reader.join().unwrap();`}</code></pre>
       </DocSection>
 
       <DocSection id="traffic" title="Traffic" caption="Truncation, control transactions, bus events">

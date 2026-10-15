@@ -996,6 +996,7 @@ LockTarget.media(media)   -> LockTarget`}</pre>
                 <tr><td><code>slot_size</code></td><td><code>int</code></td><td>usable bytes in a spare slot, the same on both chips</td></tr>
                 <tr><td><code>device_staged</code></td><td><code>bool</code></td><td>an image is written and waiting to be activated</td></tr>
                 <tr><td><code>host_staged</code></td><td><code>bool</code></td><td>the same, for the host chip</td></tr>
+                <tr><td><code>any_pending()</code></td><td><code>bool</code></td><td>either chip has not confirmed the image it booted, so an update is refused</td></tr>
               </tbody>
             </table>
           </div>
@@ -1631,7 +1632,7 @@ except MediusError as e:     # any other failure
                 <tr><td><code>QueryTimeoutError</code></td><td><code>ERR_QUERY_TIMEOUT</code></td></tr>
                 <tr><td><code>DisconnectedError</code></td><td><code>ERR_DISCONNECTED</code></td></tr>
                 <tr><td><code>FrameTooLongError</code></td><td><code>ERR_FRAME_TOO_LONG</code></td></tr>
-                <tr><td><code>UpdateError</code></td><td><code>ERR_UPDATE</code></td></tr>
+                <tr><td><A href="/bindings/python/types#updateerror"><code>UpdateError</code></A></td><td><code>ERR_UPDATE</code></td></tr>
                 <tr><td><code>InvalidArgError</code></td><td><code>ERR_INVALID_ARG</code></td></tr>
                 <tr><td><code>PanicError</code></td><td><code>ERR_PANIC</code></td></tr>
                 <tr><td><code>CatchTableFullError</code></td><td><code>ERR_CATCH_TABLE_FULL</code></td></tr>
@@ -1703,6 +1704,20 @@ except MediusError as e:     # any other failure
               the base <code>MediusError</code>.
             </p>
           </div>
+        </Anchor>
+
+        <Anchor id="updateerror" label="UpdateError (MediusError)">
+          <div class="table-scroll">
+            <table class="api-params">
+              <thead><tr><th>Attribute</th><th>Type</th><th>Meaning</th></tr></thead>
+              <tbody>
+                <tr><td><code>op</code></td><td><code>int | None</code></td><td>the refused op: 0 begin, 1 data, 2 end, 3 abort, 4 activate; 0 after a confirm that ran out of time</td></tr>
+                <tr><td><code>update_status</code></td><td><code>int | None</code></td><td>the box's <A href="/native/commands/update#resp">update status</A> for it, such as <code>0x1B</code> for a chip on probation</td></tr>
+                <tr><td><code>arg</code></td><td><code>int | None</code></td><td>the status argument</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p>All three are <code>None</code> when the library raised it without a detail from the box.</p>
         </Anchor>
 
         <Anchor id="status" label="Status">

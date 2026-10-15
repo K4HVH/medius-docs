@@ -11,8 +11,10 @@ const Update: Component = () => {
           <A href="/library/update#stage-firmware"><code>stage_firmware</code></A> writes an image and{' '}
           <A href="/library/update#activate-firmware"><code>activate_firmware</code></A> commits it;{' '}
           <A href="/library/update#update-firmware"><code>update_firmware</code></A> does both for one
-          chip, and <A href="/library/update#abort-update"><code>abort_update</code></A> discards a
-          transfer. No ROM download reboot, no second port; the wire is{' '}
+          chip, <A href="/library/update#abort-update"><code>abort_update</code></A> discards a
+          transfer, and{' '}
+          <A href="/library/update#wait-firmware-confirmed"><code>wait_firmware_confirmed</code></A>{' '}
+          waits out probation. No ROM download reboot, no second port; the wire is{' '}
           <A href="/native/commands/update"><code>UPDATE</code></A>.
         </p>
         <div class="callout callout--info">
@@ -195,11 +197,36 @@ device.update_firmware(UpdateTarget::Device, &image, &mut |p| {
 })?;`}</code></pre>
       </DocSection>
 
+      <DocSection id="wait-firmware-confirmed" title="wait_firmware_confirmed" caption="Block until neither chip is on probation">
+        <pre class="api-signature">fn wait_firmware_confirmed(&self) -&gt; Result&lt;FirmwareInfo&gt;</pre>
+        <p><span class="api-badge api-badge--responded">Blocks</span></p>
+        <p>
+          A chip on <A href="/native/commands/update#rollback">probation</A> refuses another update,
+          so <code>stage_firmware</code> waits on this first. The device chip confirms after 10&nbsp;s
+          of running, the host chip on a clock exchange over the inter-chip link. It keeps asking
+          while the box reboots after an activate.
+        </p>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>After 55&nbsp;s</th><th>Returns</th></tr></thead>
+            <tbody>
+              <tr><td>A chip still on probation</td><td><A href="/library/types/errors"><code>Error::Update</code></A>: op 0 (begin), <code>ON_PROBATION</code></td></tr>
+              <tr><td>No answer from the box</td><td><A href="/library/types/errors"><code>Error::QueryTimeout</code></A></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`device.update_firmware(UpdateTarget::Device, &image, &mut |_| {})?;
+let fw = device.wait_firmware_confirmed()?;
+println!("now on ota_{} ({})", fw.device.slot, fw.device.state);`}</code></pre>
+      </DocSection>
+
       <DocSection id="async" title="On AsyncDevice" caption="Same calls, awaitable">
         <pre class="api-signature">async fn stage_firmware(&self, target: UpdateTarget, image: &amp;[u8], progress: &amp;mut dyn FnMut(UpdateProgress)) -&gt; Result&lt;u32&gt;</pre>
         <pre class="api-signature">async fn activate_firmware(&self) -&gt; Result&lt;()&gt;</pre>
         <pre class="api-signature">async fn abort_update(&self, target: UpdateTarget) -&gt; Result&lt;()&gt;</pre>
         <pre class="api-signature">async fn update_firmware(&self, target: UpdateTarget, image: &amp;[u8], progress: &amp;mut dyn FnMut(UpdateProgress)) -&gt; Result&lt;()&gt;</pre>
+        <pre class="api-signature">async fn wait_firmware_confirmed(&self) -&gt; Result&lt;FirmwareInfo&gt;</pre>
         <p><span class="api-badge api-badge--responded">Blocks</span></p>
         <pre><code class="language-bash">cargo add medius --features async</code></pre>
         <p>

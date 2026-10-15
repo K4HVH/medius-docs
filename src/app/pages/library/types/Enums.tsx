@@ -181,7 +181,7 @@ let trace = device.catch_events([
       </DocSection>
 
       <DocSection id="input" title="Input" caption="One decoded input edge">
-        <pre class="api-signature">enum Input {'{'} Press(Usage), Release(Usage), Motion {'{'} dx: i16, dy: i16, dz: i16, dpan: i16 {'}'} {'}'}</pre>
+        <pre class="api-signature">enum Input {'{'} Press(Usage), Release(Usage), Motion {'{'} dx: i16, dy: i16, dz: i16, pan: i16 {'}'} {'}'}</pre>
         <p>
           What <A href="/library/catch#input-events"><code>input_events</code></A> yields, wrapped in
           an <A href="/library/types/structs#input-event"><code>InputEvent</code></A> with its

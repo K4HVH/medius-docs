@@ -23,6 +23,7 @@ const Streams: Component = () => {
   medius_log_stream_recv(stream, &line)                 ──  the same, for logs
           │
           ▼   loop until MEDIUS_STATUS_ERR_DISCONNECTED
+              (medius_*_stream_close from another thread ends it)
   medius_event_stream_free(stream)                      ──  unsubscribe
   medius_input_stream_free(stream)                      ──  the same, decoded
   medius_log_stream_free(stream)                        ──  the same, for logs`}</pre>
@@ -53,6 +54,7 @@ MediusStatus medius_device_logs(struct MediusDevice *dev,
               <tr><td><code>medius_device_logs(dev, &amp;out)</code></td><td>Open the device LOG channel. See <A href="/library/diagnostics">Logs</A>.</td></tr>
               <tr><td><code>medius_event_stream_clone(stream)</code> / <code>medius_log_stream_clone(stream)</code></td><td>Another handle to the same subscription. Null in &rarr; null out.</td></tr>
               <tr><td><code>medius_event_stream_free(stream)</code> / <code>medius_log_stream_free(stream)</code></td><td>Release a handle (unsubscribes when the last clone drops). Null is a no-op.</td></tr>
+              <tr><td><code>medius_event_stream_close(stream)</code> / <code>medius_input_stream_close(stream)</code> / <code>medius_log_stream_close(stream)</code></td><td>End the stream for every clone; see <A href="/bindings/c/streams#close">Close</A>. Null is a no-op.</td></tr>
             </tbody>
           </table>
         </div>
@@ -88,8 +90,9 @@ medius_device_catch_events(dev, filters, 3, &events);`}</code></pre>
       <DocSection id="receive" title="Receive" caption="Blocking, polling, and timed reads">
         <p>
           Loop a receive call until it returns <code>MEDIUS_STATUS_ERR_DISCONNECTED</code> (the
-          stream closes after a <A href="/library/admin">reset</A> or{' '}
-          <A href="/library/connection">link loss</A>). Each call writes one event through{' '}
+          stream closes after a <A href="/library/admin">reset</A>,{' '}
+          <A href="/library/connection">link loss</A> or a{' '}
+          <A href="/bindings/c/streams#close">close</A>). Each call writes one event through{' '}
           <code>*out</code>.
         </p>
         <div class="table-scroll">
@@ -99,6 +102,7 @@ medius_device_catch_events(dev, filters, 3, &events);`}</code></pre>
               <tr><td><code>medius_event_stream_recv(stream, &amp;out)</code></td><td><code>MediusStatus</code> (<code>MEDIUS_STATUS_ERR_DISCONNECTED</code> on close)</td><td>Yes, until the next event</td></tr>
               <tr><td><code>medius_event_stream_try_recv(stream, &amp;out)</code></td><td><code>bool</code> (<code>false</code> if the queue is empty)</td><td>No, returns at once</td></tr>
               <tr><td><code>medius_event_stream_recv_timeout(stream, timeout_ms, &amp;out)</code></td><td><code>bool</code> (<code>false</code> on timeout or close)</td><td>Up to <code>timeout_ms</code></td></tr>
+              <tr><td><code>medius_event_stream_is_connected(stream)</code></td><td><code>bool</code> (<code>false</code> once the stream has closed)</td><td>No, returns at once</td></tr>
             </tbody>
           </table>
         </div>
@@ -110,6 +114,7 @@ medius_device_catch_events(dev, filters, 3, &events);`}</code></pre>
               <tr><td><code>medius_log_stream_recv(stream, &amp;out)</code></td><td><code>MediusStatus</code> (<code>MEDIUS_STATUS_ERR_DISCONNECTED</code> on close)</td></tr>
               <tr><td><code>medius_log_stream_try_recv(stream, &amp;out)</code></td><td><code>bool</code> (<code>false</code> if none queued)</td></tr>
               <tr><td><code>medius_log_stream_recv_timeout(stream, timeout_ms, &amp;out)</code></td><td><code>bool</code> (<code>false</code> on timeout or close)</td></tr>
+              <tr><td><code>medius_log_stream_is_connected(stream)</code></td><td><code>bool</code> (<code>false</code> once the stream has closed)</td></tr>
             </tbody>
           </table>
         </div>
@@ -262,10 +267,12 @@ medius_event_stream_free(events);`}</code></pre>
             <thead><tr><th>Function</th><th>Does</th></tr></thead>
             <tbody>
               <tr><td><code>medius_input_stream_recv(stream, &amp;out)</code></td><td>Block for the next <A href="/bindings/c/types#input-event"><code>MediusInputEvent</code></A>; <code>MEDIUS_STATUS_ERR_DISCONNECTED</code> on close.</td></tr>
-              <tr><td><code>medius_input_stream_try_recv(stream, &amp;out)</code></td><td><code>bool</code>: the next queued event, or <code>false</code> (never blocks).</td></tr>
+              <tr><td><code>medius_input_stream_try_recv(stream, &amp;out)</code></td><td><code>bool</code>: the next queued event, or <code>false</code> if none is queued or another thread is receiving (never blocks).</td></tr>
               <tr><td><code>medius_input_stream_recv_timeout(stream, timeout_ms, &amp;out)</code></td><td><code>bool</code>: <code>false</code> on timeout or close.</td></tr>
               <tr><td><code>medius_input_stream_held(stream, class_, out, cap)</code></td><td>Write that class's held usages into <code>out[0..cap]</code>; returns the count, which exceeds <code>cap</code> when the buffer was short.</td></tr>
               <tr><td><code>medius_input_stream_dropped(stream)</code></td><td><code>uint64_t</code>: events the subscription dropped behind a slow consumer.</td></tr>
+              <tr><td><code>medius_input_stream_is_connected(stream)</code></td><td><code>bool</code>: <code>false</code> once the stream has closed.</td></tr>
+              <tr><td><code>medius_input_stream_close(stream)</code></td><td>End the stream; a receive blocked on it returns at once. See <A href="/bindings/c/streams#close">Close</A>.</td></tr>
               <tr><td><code>medius_input_stream_free(stream)</code></td><td>Release the handle; null is a no-op. No clone: the stream owns the held sets it diffs.</td></tr>
             </tbody>
           </table>
@@ -315,6 +322,8 @@ medius_input_stream_free(input);`}</code></pre>
 void     medius_timeline_free(struct MediusTimeline *t);
 bool     medius_timeline_observe(struct MediusTimeline *t, const MediusCatchEvent *ev,
                                  uint64_t now_ns, MediusStamped *out);
+bool     medius_timeline_observe_input(struct MediusTimeline *t, const MediusInputEvent *ev,
+                                       uint64_t now_ns, MediusStamped *out);
 void     medius_timeline_reset(struct MediusTimeline *t, MediusClockDomain domain);
 uint64_t medius_timeline_samples(struct MediusTimeline *t, MediusClockDomain domain);`}</pre>
         <p>
@@ -327,6 +336,7 @@ uint64_t medius_timeline_samples(struct MediusTimeline *t, MediusClockDomain dom
             <thead><tr><th>Call</th><th>Does</th></tr></thead>
             <tbody>
               <tr><td><code>medius_timeline_observe(t, &amp;ev, now_ns, &amp;out)</code></td><td>Place one event; <code>false</code> on a null argument.</td></tr>
+              <tr><td><code>medius_timeline_observe_input(t, &amp;ev, now_ns, &amp;out)</code></td><td>The same for a <A href="/bindings/c/types#input-event"><code>MediusInputEvent</code></A>. One timeline orders events from both kinds of stream.</td></tr>
               <tr><td><code>medius_timeline_reset(t, domain)</code></td><td>Forget that domain's rollover count and measured floor, for a chip that rebooted.</td></tr>
               <tr><td><code>medius_timeline_samples(t, domain)</code></td><td>Events observed for a domain. The floor is a minimum over these, so a handful is a loose estimate.</td></tr>
             </tbody>
@@ -352,6 +362,35 @@ while (medius_event_stream_recv(events, &ev) == MEDIUS_STATUS_OK) {
        MediusCountersSnapshot.restarts): call medius_timeline_reset(tl, domain) */
 }
 medius_timeline_free(tl);`}</code></pre>
+      </DocSection>
+
+      <DocSection id="close" title="Close" caption="End a stream another thread is receiving on">
+        <p>
+          A close ends the stream for every clone, and a receive blocked on it in another thread
+          returns at once. Free the handle after that thread is done with it. Closing one log stream
+          leaves the others reading.
+        </p>
+        <pre class="api-signature">{`void medius_event_stream_close(struct MediusEventStream *stream);
+void medius_input_stream_close(struct MediusInputStream *stream);
+void medius_log_stream_close(struct MediusLogStream *stream);`}</pre>
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-c">{`#include <pthread.h>
+
+static void *reader(void *arg) {
+    MediusEventStream *events = arg;
+    MediusCatchEvent ev;
+    while (medius_event_stream_recv(events, &ev) == MEDIUS_STATUS_OK) {
+        /* ... */
+    }
+    return NULL;                        /* MEDIUS_STATUS_ERR_DISCONNECTED */
+}
+
+pthread_t t;
+pthread_create(&t, NULL, reader, events);
+/* ... */
+medius_event_stream_close(events);      /* the blocked recv returns at once */
+pthread_join(t, NULL);
+medius_event_stream_free(events);       /* no thread is using it now */`}</code></pre>
       </DocSection>
 
       <DocSection id="async" title="No async" caption="Build async on the non-blocking reads">
