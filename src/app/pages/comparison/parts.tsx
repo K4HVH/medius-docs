@@ -4,7 +4,7 @@ import { PageHeader } from '../../shell/PageHeader';
 import { DocSection } from '../../shell/DocSection';
 import { RESULTS, categoryOf, defectAddress } from '../../data/comparison';
 import { pageFor } from '../../data/comparison/pages';
-import { resultOf, showValue, span, type Result } from '../../data/comparison/result';
+import { isCommand, resultOf, showValue, span, type Result } from '../../data/comparison/result';
 import type { Box, Defect, FeatureRow, MeasureRow, OutcomeRow, PairRow, Section, SettingsTable, Table, Value } from '../../data/comparison/types';
 
 export const BOX: Record<Box, string> = { stock: 'Stock', medius: 'Medius' };
@@ -38,8 +38,6 @@ const Bar = (props: { v: Value; max: number }) => {
 };
 
 const valueOf = (item: Item, box: Box) => (item.row as MeasureRow)[box];
-// A command as the API spells it is code; a tool's or a site's name is words.
-const COMMAND = /^(km\.[a-z_0-9]+(\(\))?|[A-Z][A-Z0-9_]+(\([A-Z_]+\))?)$/;
 
 // A box's cell: a measure's value and its bar, an outcome's word, or a feature's command (as code) or tool
 // (in words). The box that's behind is dimmed; where the two match, or neither is better, both stand.
@@ -63,7 +61,7 @@ const PairCell = (props: { item: Item; box: Box; result: Result; max: number }) 
       ) : t.kind === 'outcome' ? (
         (props.item.row as OutcomeRow)[props.box].is
       ) : feature() ? (
-        COMMAND.test(feature()!) ? <code>{feature()}</code> : feature()
+        isCommand(feature()!) ? <code>{feature()}</code> : feature()
       ) : (
         'No'
       )}

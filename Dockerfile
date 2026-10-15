@@ -65,6 +65,7 @@ COPY --from=builder --chown=bunuser:nodejs /app/src/dashboard/firmware/notes.ts 
 COPY --from=builder --chown=bunuser:nodejs /app/src/app/data/compatibility.ts /app/src/app/data/compatibility.ts
 COPY --from=builder --chown=bunuser:nodejs /app/src/app/data/compatMerge.ts /app/src/app/data/compatMerge.ts
 COPY --from=builder --chown=bunuser:nodejs /app/src/app/data/homeFigures.ts /app/src/app/data/homeFigures.ts
+COPY --from=builder --chown=bunuser:nodejs /app/src/app/data/comparison /app/src/app/data/comparison
 COPY --from=builder --chown=bunuser:nodejs /app/src/app/search /app/src/app/search
 COPY --from=builder --chown=bunuser:nodejs /app/node_modules/mcp-lite /app/node_modules/mcp-lite
 COPY --from=builder --chown=bunuser:nodejs /app/node_modules/@resvg /app/node_modules/@resvg
