@@ -14,6 +14,10 @@ const InRoute = () => {
   );
 };
 
+// A UTC day as the page shows it, in the locale the test runs under.
+const shortDay = (day: string) =>
+  new Date(`${day}T00:00:00Z`).toLocaleDateString(undefined, { day: 'numeric', month: 'short', timeZone: 'UTC' });
+
 const weeks = (n: number, at: (i: number) => number = () => 0) =>
   Array.from({ length: 26 }, (_, i) => ({ key: `2026-04-${String(i + 1).padStart(2, '0')}`, n: i < n ? at(i) : 0 }));
 
@@ -222,11 +226,13 @@ describe('Stats page', () => {
     const cols = pn.querySelectorAll('.cols > span');
     expect(cols).toHaveLength(26);
     fireEvent.pointerEnter(cols[3]);
-    expect(readout()).toEqual(['6', '4 Apr']);
+    expect(readout()).toEqual(['6', shortDay('2026-04-04')]);
     expect(legend()).toEqual(['Verified 5', 'Written (ROM download) 0', 'Reverted 1', 'Unconfirmed 0', 'Failed 0']);
     fireEvent.pointerLeave(pn.querySelector('.cols')!);
     expect(readout()).toEqual(['31', 'This week']);
-    expect(pn.querySelector('.cols')!.getAttribute('aria-label')).toBe('Flashes per week, 1 Apr to this week, peak 31');
+    expect(pn.querySelector('.cols')!.getAttribute('aria-label')).toBe(
+      `Flashes per week, ${shortDay('2026-04-01')} to this week, peak 31`,
+    );
   });
 
   it('reads the largest entry over the firmware bars, and the row pointed at instead', async () => {
