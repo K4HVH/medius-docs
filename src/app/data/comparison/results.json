@@ -21072,7 +21072,7 @@
     {
       "id": "pass-inject-reads",
       "box": "stock",
-      "text": "While injecting, even at 10 moves/s, stock reads a 1 kHz mouse moving at a varying speed only ~430-500 times/s.",
+      "text": "While injecting, even at 10 moves/s, stock reads a 1 kHz mouse whose speed varies only ~430-500 times/s.",
       "rows": [
         "pass-inject-varying"
       ]
