@@ -42,8 +42,8 @@ export interface Boxes {
   start: () => void;
   entries: Accessor<BoxEntry[]>;
   selected: Accessor<BoxEntry | null>;
-  // Which dashboard pages the selection takes: a Medius box's (Device, Control, Update), or Set up for anything
-  // else; null while a port this browser knows is still being checked and may be the box.
+  // Which dashboard pages the selection gets: 'medius' for a Medius box's (Device, Control, Update), 'other' for
+  // Set up; null while a port this browser knows is still being checked and may be the box.
   selectedKind: Accessor<'medius' | 'other' | null>;
   // The selected session, else a blank one whose Connect opens the chooser.
   scope: Accessor<BoxSession>;
@@ -178,7 +178,7 @@ export function createBoxes(deps: BoxesDeps): Boxes {
     if (wasSelected) choosing(into.key);
   };
 
-  // False: the port goes to the entry that owns the box which answered on it.
+  // False when the port belongs to another entry: the one owning the box that answered on it.
   const seen = (s: BoxSession, port: SerialPort, pr: Probe): boolean => {
     const self = bySession(s);
     const mac = boxId(versionOf(pr));
@@ -350,7 +350,7 @@ export function createBoxes(deps: BoxesDeps): Boxes {
     const e = byPort(port);
     if (!e) return { ok: false, verdict: { kind: 'other', message: 'The port went away' } };
     choosing(e.key);
-    // The probe just ran: a port it found no box on keeps its verdict, rather than wait through a second check.
+    // The probe just ran, so a port with no box keeps that verdict instead of waiting through a second check.
     if (e.session.probe()?.kind === 'box') await open(e.session);
     return { ok: true, entry: e };
   };
@@ -402,7 +402,7 @@ export function createBoxes(deps: BoxesDeps): Boxes {
     );
   });
 
-  // Ports this browser may use, listed once at start: before then nothing is told.
+  // Set once the ports this browser may use are listed at start; until then the kind is unknown (null).
   const [scanned, setScanned] = createSignal(false);
   const selectedKind = createMemo((): 'medius' | 'other' | null => {
     if (!scanned()) return null;
@@ -483,7 +483,7 @@ export function createBoxes(deps: BoxesDeps): Boxes {
     window.addEventListener('focus', onFocus);
     window.addEventListener('storage', onStorage);
     document.addEventListener('visibilitychange', onVisible);
-    // Without Web Serial nothing is found or ruled out: the selection is never told, and every page stays.
+    // Without Web Serial nothing is found or ruled out: the selection's kind stays unknown, and every page stays.
     if (!deps.serial) return;
     void (async () => {
       let ports: SerialPort[] = [];

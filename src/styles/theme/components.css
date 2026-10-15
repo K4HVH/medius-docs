@@ -69,7 +69,7 @@
   white-space: normal;
   transition: none;
 }
-/* A value longer than the panel runs onto another line, never cut: the lamp stays by the first. */
+/* A value longer than the panel runs onto another line, never cut: the lamp stays by the first line. */
 :root .chip .chip__label { white-space: normal; overflow: visible; overflow-wrap: anywhere; }
 :root .chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 :root .chip::before { content: ""; flex: none; align-self: flex-start; width: 6px; height: 6px; margin-top: 5px; background: var(--dim); transition: background 0.25s; }
@@ -109,8 +109,8 @@
 /* Menus: square panels without shadows. */
 .menu { background: #0a0a0a; border-color: var(--line-2); box-shadow: none; }
 
-/* The box list in the sidebar reads like the page links beside it, its selected box marked by a white edge:
-   blue marks the page you are on. */
+/* The box list in the sidebar reads like the page links beside it, its selected box marked by a white edge
+   (blue marks the page you're on). */
 .side .box-tabs { gap: 0; }
 .side .box-tabs .tabs__tab {
   padding: 6px 24px 6px 22px;

@@ -19,14 +19,14 @@ const Catch: Component = () => {
           addressed like a <A href="/native/commands/lock"><code>LOCK</code></A>.
         </p>
         <p>
-          While subscribed the box pushes a{' '}
+          While subscribed, the box pushes a{' '}
           <A href="/native/commands/catch#motion-event"><code>MOTION_EVENT</code></A> for cursor
           motion, the wheel, and pan, a{' '}
           <A href="/native/commands/catch#usage-event"><code>USAGE_EVENT</code></A> for buttons, keys
           and media, and a{' '}
           <A href="/native/commands/catch#traffic-event"><code>TRAFFIC_EVENT</code></A> for everything
           byte-oriented. Subscribing is{' '}
-          <A href="/native/injection#fire-and-forget">fire-and-forget</A>; the box streams until
+          <A href="/native/injection#fire-and-forget">fire-and-forget</A>. The box streams until
           unsubscribed.
         </p>
         <div class="api-response-label">TAP POINTS</div>
@@ -42,7 +42,7 @@ const Catch: Component = () => {
                            before the lock scale   from RAW or a clip raw entry
                            and before injection`}</pre>
         <p>
-          Addressing is the filter: the control link runs at 6&nbsp;Mbaud and vendor bulk alone
+          Addressing is the filter. The control link runs at 6&nbsp;Mbaud, and vendor bulk alone
           measures ~250&nbsp;KiB/s through the box, so every class at once can't be delivered.
         </p>
       </PageHeader>
@@ -72,8 +72,8 @@ const Catch: Component = () => {
         </div>
         <div class="api-response-label">ADDRESS CLASSES</div>
         <p>
-          Classes 0 to 3 are the <A href="/native/commands/lock"><code>LOCK</code></A> classes; 4
-          and up are byte-oriented traffic.
+          Classes 0-3 are the <A href="/native/commands/lock"><code>LOCK</code></A> classes. Classes
+          ≥4 are byte-oriented traffic.
         </p>
         <div class="table-scroll">
           <table class="api-params">
@@ -101,7 +101,7 @@ const Catch: Component = () => {
         <div class="table-scroll">
           <table class="api-params">
             <thead>
-              <tr><th>Value</th><th>Input classes (0 to 3)</th><th>Traffic classes (4 to 11)</th></tr>
+              <tr><th>Value</th><th>Input classes (0-3)</th><th>Traffic classes (4-11)</th></tr>
             </thead>
             <tbody>
               <tr><td><code>0</code> <code>BOTH</code></td><td>press and release</td><td>IN and OUT</td></tr>
@@ -176,8 +176,8 @@ const Catch: Component = () => {
 
       <DocSection id="matching" title="Table" caption="Matching, capacity, refusals">
         <p>
-          An exact <code>(class, id)</code> entry ranks above a class blanket, which ranks above{' '}
-          <code>class = 0xFF</code>; ties go to the earlier entry. The highest-ranked entry supplies the{' '}
+          Rank: an exact <code>(class, id)</code> entry, then a class blanket, then{' '}
+          <code>class = 0xFF</code>. Ties go to the earlier entry. The highest-ranked entry supplies the{' '}
           <code>snaplen</code>.
         </p>
         <pre class="diagram">{`  table (insertion order)
@@ -201,7 +201,7 @@ const Catch: Component = () => {
     +- class = ANY?         #0  HIT  --> snaplen 16`}</pre>
         <div class="api-response-label">CAPACITY</div>
         <p>
-          The table holds <strong>32</strong> entries. No reply: a refused entry is absent from{' '}
+          The table holds <strong>32</strong> entries. No reply. A refused entry is absent from{' '}
           <A href="/native/commands/requests#catch"><code>RESP(CATCH)</code></A>, whose header
           carries the table-full flag.
         </p>
@@ -223,13 +223,13 @@ const Catch: Component = () => {
           A subscription is PC-owned state, cleared by control-PC silence (the ~1&nbsp;s timeout), a{' '}
           <A href="/native/commands/admin#reset"><code>RESET</code></A>, a mouse detach, a{' '}
           <A href="/native/commands/patch#presentation">re-clone</A>, inter-chip link loss, or an
-          explicit unsubscribe. Every clear but the unsubscribe moves the{' '}
+          explicit unsubscribe. Every clear except the unsubscribe moves the{' '}
           <A href="/native/commands/requests#stats"><code>session</code></A> count.
         </p>
         <p>
-          The library holds an open table past the silence timeout with its injection keepalive,
-          re-asserting the whole table after the box clears it and across a control-link reconnect;
-          the library's <code>RESET</code> ends the event stream.
+          The library's injection keepalive holds an open table past the silence timeout. The library
+          re-asserts the whole table after the box clears it and across a control-link reconnect. The
+          library's <code>RESET</code> ends the event stream.
         </p>
         <p>
           The HEALTH <A href="/native/commands/requests#health"><code>CATCH_ON</code></A> bit means
@@ -250,7 +250,7 @@ const Catch: Component = () => {
             </thead>
             <tbody>
               <tr><td><code>0</code></td><td>the <strong>host</strong> chip, in USB interrupt context, when the real device's transfer completed</td><td><code>MOTION</code> / <code>USAGE</code>, <code>HID_IN</code>, the real device's <code>VEND_INTR</code> / <code>VEND_BULK</code> IN</td></tr>
-              <tr><td><code>1</code></td><td>the <strong>device</strong> chip, at the tap</td><td><code>HID_OUT</code>, both OUT directions, a vendor IN packet from <A href="/native/commands/raw#catch"><code>RAW</code></A> or a <A href="/native/commands/clip#items">clip raw entry</A>, <code>CONTROL</code>, <code>CLIP_XFER</code>, <code>EMIT</code>, <code>BUS</code></td></tr>
+              <tr><td><code>1</code></td><td>the <strong>device</strong> chip, at the tap</td><td><code>HID_OUT</code>, <code>VEND_INTR</code>/<code>VEND_BULK</code> OUT, a vendor IN packet from <A href="/native/commands/raw#catch"><code>RAW</code></A> or a <A href="/native/commands/clip#items">clip raw entry</A>, <code>CONTROL</code>, <code>CLIP_XFER</code>, <code>EMIT</code>, <code>BUS</code></td></tr>
             </tbody>
           </table>
         </div>
@@ -258,9 +258,9 @@ const Catch: Component = () => {
           Both clocks are box-local, unrelated to any control-PC clock.
         </p>
         <p>
-          Each wraps every ~71.6 minutes (a 32-bit microsecond counter) and returns to zero when
-          that chip reboots, so a value below the previous one is a wrap, a reboot, or a domain
-          change.
+          Each clock wraps every ~71.6 minutes (a 32-bit microsecond counter) and returns to zero
+          when its chip reboots. A value below the previous one is therefore a wrap, a reboot, or a
+          domain change.
         </p>
         <pre class="diagram">{`  clk = 0   HID_IN  ts_us = 1286497017   (host chip)
   clk = 0   HID_IN  ts_us = 1286544017   (host chip)
@@ -280,8 +280,8 @@ const Catch: Component = () => {
         <p>
           Divide a gap by{' '}
           <A href="/native/commands/requests#rate"><code>RESP(RATE)</code></A>'s{' '}
-          <code>poll_period_us</code> for a poll count, but only where its{' '}
-          <A href="/native/commands/requests#rate"><code>CHANGE_DRIVEN</code></A> flag is clear: a
+          <code>poll_period_us</code> for a poll count, only if its{' '}
+          <A href="/native/commands/requests#rate"><code>CHANGE_DRIVEN</code></A> flag is clear. A
           change-driven device's idle polls carry no report and can't be counted.
         </p>
       </DocSection>
@@ -299,8 +299,8 @@ const Catch: Component = () => {
           each event is sent, so it orders a mixed stream.
         </p>
         <p>
-          <code>SEQ</code> doesn't detect drops: events drop before the stamp, so it runs gapless;
-          losses are in{' '}
+          <code>SEQ</code> doesn't detect drops: events drop before the stamp, so <code>SEQ</code>{' '}
+          runs gapless. Losses are counted in{' '}
           <A href="/native/commands/requests#catch"><code>RESP(CATCH)</code></A>.
         </p>
         <pre class="api-signature">MOTION_EVENT  0x0C  ·  payload 13 bytes</pre>
@@ -346,9 +346,9 @@ const Catch: Component = () => {
 
       <DocSection id="usage-event" title="USAGE_EVENT" caption="One native held-usage snapshot, box → PC">
         <p>
-          While a <code>BTN</code>, <code>KEY</code>, or <code>MEDIA</code> subscription is active
-          the box pushes a <code>USAGE_EVENT</code> when that class changes: a class-tagged snapshot
-          of the usages currently held.{' '}
+          While a <code>BTN</code>, <code>KEY</code>, or <code>MEDIA</code> subscription is active,
+          the box pushes a <code>USAGE_EVENT</code> when that class changes. The event is a
+          class-tagged snapshot of the usages currently held.{' '}
           <A href="/native/frame#opcodes">Opcode</A> <code>0x0F</code>.
         </p>
         <p>
@@ -375,11 +375,11 @@ const Catch: Component = () => {
         </div>
         <div class="api-response-label">SNAPSHOT</div>
         <p>
-          Each entry is 3 bytes and the snapshot is <code>n</code> of them, all one class, since
+          Each entry is 3 bytes, and the snapshot is <code>n</code> of them. All are one class, since
           one native report is one class.
         </p>
         <p>
-          Only held usages that match the table appear; with none, no event is sent.
+          Only held usages that match the table appear. If none match, no event is sent.
         </p>
         <p>
           A snapshot lists what is currently <em>held</em>, so the release of a usage is the
@@ -387,12 +387,13 @@ const Catch: Component = () => {
           "all keys released" are the same bytes.
         </p>
         <p>
-          The box resolves each usage against its entry's direction, but while any other subscriber
-          holds a wider entry it sends one on both edges, and only <code>dir</code> tells the two apart.
+          The box resolves each usage against its entry's direction. While another subscriber holds a
+          wider entry, though, the box sends an event on both edges, and only <code>dir</code> tells
+          them apart.
         </p>
         <p>
           Route by <strong>class</strong>, not by the usages present, and diff successive snapshots
-          for the usages of interest; matching on present usages misses the release edge while
+          for the usages of interest. Matching on present usages misses the release edge while
           another subscription's usage is held.
         </p>
         <div class="api-response-label">EXAMPLE</div>
@@ -418,7 +419,7 @@ const Catch: Component = () => {
       <DocSection id="traffic-event" title="TRAFFIC_EVENT" caption="Byte-oriented class traffic, box → PC">
         <p>
           One frame type carries every{' '}
-          <A href="/native/commands/catch#catch">traffic class</A>, 4 to 11.{' '}
+          <A href="/native/commands/catch#catch">traffic class</A>, 4-11.{' '}
           <A href="/native/frame#opcodes">Opcode</A> <code>0x16</code>.
         </p>
         <pre class="api-signature">TRAFFIC_EVENT  0x16  ·  payload 12 + n bytes</pre>
@@ -456,7 +457,7 @@ const Catch: Component = () => {
               <tr><th>Class</th><th><code>flags</code></th></tr>
             </thead>
             <tbody>
-              <tr><td><code>HID_IN</code>, <code>EMIT</code></td><td>b1 zero-length packet, on a HID endpoint also one that ended the report after the event's bytes; b7 <A href="/native/commands/catch#rules"><code>RULE</code></A></td></tr>
+              <tr><td><code>HID_IN</code>, <code>EMIT</code></td><td>b1 zero-length packet (on a HID endpoint, also one that ended the report after the event's bytes); b7 <A href="/native/commands/catch#rules"><code>RULE</code></A></td></tr>
               <tr><td><code>HID_OUT</code>, <code>VEND_INTR</code></td><td>b1 zero-length packet, b7 <code>RULE</code></td></tr>
               <tr><td><code>VEND_BULK</code></td><td>b0 end-of-transfer, b1 zero-length packet, b7 <code>RULE</code></td></tr>
               <tr><td><code>CONTROL</code></td><td>b0-b1 the handshake the game PC received: <code>0</code> OK, <code>1</code> STALL, <code>2</code> NAK until the host gave up (endpoint 0 only); b7 <code>RULE</code></td></tr>
@@ -468,14 +469,14 @@ const Catch: Component = () => {
         <div class="api-response-label">ZERO-LENGTH PACKETS</div>
         <p>
           An event is one packet, except a <code>HID_IN</code> or <code>EMIT</code> event on a HID
-          endpoint: that one carries a report of up to 64 bytes whole, however many packets it took. A
+          endpoint. That event carries a report of ≤64 bytes whole, however many packets it took. A
           longer report comes a packet at a time.
         </p>
         <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Device sends</th><th>Events</th></tr></thead>
             <tbody>
-              <tr><td>a report it ends with a zero-length packet</td><td>one event carrying the report's bytes, b1 set: the PC's read ends only at the packet</td></tr>
+              <tr><td>a report it ends with a zero-length packet</td><td>one event carrying the report's bytes, b1 set: the PC's read ends only at the zero-length packet</td></tr>
               <tr><td>a zero-length packet alone, its answer to a poll it had nothing for</td><td>one event of no bytes, b1 set, in <code>HID_IN</code> as it came and in <code>EMIT</code> as the PC took it</td></tr>
               <tr><td>a zero-length packet whose poll went to a report from the box</td><td>its <code>HID_IN</code> event, and no <code>EMIT</code> event</td></tr>
               <tr><td>a zero-length packet answering a poll the PC missed: what the real device sent before it still waits for the PC</td><td>its <code>HID_IN</code> event, and no <code>EMIT</code> event</td></tr>
@@ -497,7 +498,7 @@ const Catch: Component = () => {
           stage's direction.
         </p>
         <p>
-          It is the transaction as the game PC received it, the same on every control endpoint. A
+          The event is the transaction as the game PC received it, the same on every control endpoint. A
           request served from the box's value cache still produces an event.
         </p>
         <pre class="diagram">{`  bytes = A1 01 00 01 00 00 08 00   01 00 00 00 00 00 00 00
@@ -512,7 +513,7 @@ const Catch: Component = () => {
               <tr><td>setup</td><td>The 8 setup bytes, from byte 0 of <code>bytes</code>.</td></tr>
               <tr><td>IN data</td><td>The reply the PC received: after a <code>REPLY_PATCH</code> or <code>REPLY_REPLACE</code> <A href="/native/commands/rewrite#actions">rule</A>, or an <code>ANSWER</code>'s payload.</td></tr>
               <tr><td>OUT data</td><td>The data stage the PC sent, before a <code>PATCH</code> or <code>REPLACE</code> rule rewrote it for the real device.</td></tr>
-              <tr><td>b0-b1</td><td>The handshake the PC got. A request a rule refused reads STALL, or NAK for a <code>NAK</code> rule on endpoint 0; a failed request above endpoint 0 reads STALL, as the clone STALLs it there.</td></tr>
+              <tr><td>b0-b1</td><td>The handshake the PC got. A request a rule refused reads STALL (NAK for a <code>NAK</code> rule on endpoint 0). A failed request above endpoint 0 reads STALL, since the clone STALLs it there.</td></tr>
             </tbody>
           </table>
         </div>
@@ -523,10 +524,10 @@ const Catch: Component = () => {
               <tr><th>Transaction</th><th>Why</th></tr>
             </thead>
             <tbody>
-              <tr><td>a standard request on endpoint 0, such as <code>GET_DESCRIPTOR</code> or <code>SET_CONFIGURATION</code></td><td>the clone serves it itself, and a configuration or interface change still raises a <code>BUS</code> event. Some standard requests are relayed to the real device and raise a <code>CONTROL</code> event: an interface's <code>GET_DESCRIPTOR</code> for a class descriptor other than the HID and report descriptors, and, while the clone is configured, a device qualifier or other-speed configuration the box did not keep (one too long for it, or at an index past 0)</td></tr>
+              <tr><td>a standard request on endpoint 0, such as <code>GET_DESCRIPTOR</code> or <code>SET_CONFIGURATION</code></td><td>the clone serves it itself, and a configuration or interface change still raises a <code>BUS</code> event. Some standard requests are relayed to the real device and raise a <code>CONTROL</code> event: an interface's <code>GET_DESCRIPTOR</code> for a class descriptor other than the HID and report descriptors. While the clone is configured, so does a device qualifier or other-speed configuration the box did not keep (one too long for it, or at an index past 0)</td></tr>
               <tr><td>a string the box did not keep</td><td>the clone asks the real device for it directly, with no event</td></tr>
               <tr><td>one a bus reset cut short</td><td>it never completed</td></tr>
-              <tr><td>on endpoint 0, a request with an OUT data stage past 2048 bytes; above endpoint 0, any data stage past 2048 bytes</td><td>the box STALLs it before proxying it</td></tr>
+              <tr><td>on endpoint 0, a request with an OUT data stage &gt;2048 bytes; above endpoint 0, any data stage &gt;2048 bytes</td><td>the box STALLs it before proxying it</td></tr>
               <tr><td>a request a new SETUP on its endpoint replaced, or, above endpoint 0, one the box had no room to queue</td><td>the box abandons it</td></tr>
             </tbody>
           </table>
@@ -538,7 +539,7 @@ const Catch: Component = () => {
           <code>CONTROL</code>'s shape: <code>bytes</code> is <code>[setup 8][IN data]</code>.
         </p>
         <p>
-          Only a transfer the box sent raises an event; the rest are counted in{' '}
+          Only a transfer the box sent raises an event. The rest are counted in{' '}
           <A href="/native/commands/requests#clip"><code>RESP(CLIP)</code></A>.
         </p>
         <div class="api-response-label">BUS EVENT KINDS</div>
@@ -548,7 +549,7 @@ const Catch: Component = () => {
         </p>
         <p>
           The same events drive <A href="/native/commands/requests#health">HEALTH</A> bits and{' '}
-          <A href="/native/commands/requests#stats">STATS</A> counters; here they carry a timestamp
+          <A href="/native/commands/requests#stats">STATS</A> counters. Here they carry a timestamp
           and their place in the stream.
         </p>
         <div class="table-scroll">
@@ -649,7 +650,7 @@ const Catch: Component = () => {
           Flags bit 7, <code>RULE</code>, marks a packet a{' '}
           <A href="/native/commands/rewrite">rewrite rule</A> acted on at the event's class:
           changed its bytes, dropped it, answered it or refused it. A <code>PASS</code>, or a{' '}
-          <code>PATCH</code> that changed no byte, leaves it clear.
+          <code>PATCH</code> that changed no byte, leaves the bit clear.
         </p>
         <pre class="diagram">{`  packet
      |
@@ -669,7 +670,7 @@ const Catch: Component = () => {
               <tr><td><code>HID_IN</code></td><td>the native report as it arrived</td><td>a rule then changed or dropped it</td></tr>
               <tr><td><code>HID_OUT</code>, <code>VEND_INTR</code> / <code>VEND_BULK</code> OUT</td><td>what the PC sent</td><td>a rule then changed or dropped it on its way to the real device</td></tr>
               <tr><td><code>VEND_INTR</code> / <code>VEND_BULK</code> IN</td><td>what the PC receives</td><td>a rule changed it; a packet a rule drops raises no event</td></tr>
-              <tr><td><code>EMIT</code></td><td>the emitted report</td><td>a rule changed the report, or a report merged into it; never on a vendor endpoint, whose rules act at <code>VEND_INTR</code> and <code>VEND_BULK</code>; a dropped report raises no event</td></tr>
+              <tr><td><code>EMIT</code></td><td>the emitted report</td><td>a rule changed the report, or a report merged into it. Never on a vendor endpoint, whose rules act at <code>VEND_INTR</code> and <code>VEND_BULK</code>. A dropped report raises no event</td></tr>
               <tr><td><code>CONTROL</code></td><td>the transaction the PC received, on every control endpoint</td><td>a rule rewrote its data, answered it or refused it</td></tr>
             </tbody>
           </table>

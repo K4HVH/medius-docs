@@ -1,5 +1,5 @@
-// A patch is stored with imperfect clones off too; only Apply waits for the opt-in. The clone serves
-// the set it last enumerated with, which the applied and pending flags compare against the store.
+// A patch is stored even with imperfect clones off; only Apply waits for the opt-in. The clone serves
+// the set it last enumerated with; the applied and pending flags compare that set with the store.
 
 import { A } from '@solidjs/router';
 import { Index, Show, createSignal } from 'solid-js';
@@ -31,7 +31,7 @@ const SECTION_BLURB: Record<number, string> = {
   [PatchSection.Device]: 'Offset into the 18-byte device descriptor.',
   [PatchSection.Config]: 'Offset into the whole configuration, interfaces and endpoints included.',
   [PatchSection.Report]: "Offset into that interface's report descriptor.",
-  [PatchSection.String]: 'The bytes replace the whole string, one character each, up to 127. A 00 byte ends it early.',
+  [PatchSection.String]: 'The bytes (≤126, one per character) replace the whole string. A 00 byte ends the string early.',
   [PatchSection.Bos]: 'Offset into the BOS descriptor.',
 };
 
@@ -39,7 +39,7 @@ const usesCfg = (s: PatchSection | null) => s === PatchSection.Config || s === P
 const usesIndex = (s: PatchSection | null) => s === PatchSection.Report || s === PatchSection.String;
 const usesOffset = (s: PatchSection | null) => s !== PatchSection.String;
 
-// A chip runs onto a second line past its panel's width, so a patch names only what addresses it.
+// A chip wider than its panel wraps, so a patch's chip names only what addresses the patch.
 const describe = (e: PatchInfo): string => {
   const narrow: string[] = [];
   if (e.section === PatchSection.Report) narrow.push(`cfg ${e.cfg}`, `interface ${e.index}`);
@@ -81,8 +81,8 @@ const DevicePatch = () => {
   const pending = () => patches()?.pending === true;
   const refused = () => patches()?.refused === true;
 
-  // The box ignores an Apply of the set already served or of an unchanged refused set, so the button
-  // says why.
+  // The box ignores Apply when the clone already serves the set, or the set was refused and is unchanged,
+  // so the button says why.
   const applyWhy = (): string | null => {
     if (!allowed()) return "Applying needs imperfect clones, on Device's Options tab.";
     if (refused()) return 'This set failed a check. Change it, then apply.';
@@ -91,14 +91,14 @@ const DevicePatch = () => {
     return null;
   };
 
-  // Clear all stays live while anything is on the clone, stored or not.
+  // Clear all stays enabled while anything is stored, applied or refused.
   const clearable = () => entries().length > 0 || applied() || refused();
 
   // Refused sets and sets waiting on the opt-in get a callout instead.
   const stateLine = (): string | null => {
     if (refused() || !allowed()) return null;
     if (applied() && !pending()) return 'The clone carries this set.';
-    if (applied() && entries().length === 0) return 'The clone still carries the removed patches. Apply or Clear all takes them off.';
+    if (applied() && entries().length === 0) return 'The clone still carries the removed patches. Apply or Clear all removes them.';
     if (applied()) return 'The clone carries an earlier version of this set. Apply to update it.';
     if (pending()) return 'Not on the clone yet. Apply to put it on.';
     return null;
@@ -192,13 +192,13 @@ const DevicePatch = () => {
         </Show>
         <Show when={refused()}>
           <div class="callout callout--warning">
-            This set failed a check, so the clone runs without it and the device log names the check.
+            This set failed a check, so the clone runs without it. The device log names the check.
             Change the set and apply, or clear it.
           </div>
         </Show>
 
         <p class="sublabel">
-          Stored <span data-search-skip>({entries().length} of {PATCHES_MAX})</span>
+          Stored <span data-search-skip>({entries().length}/{PATCHES_MAX})</span>
         </p>
         <Show
           when={entries().length > 0}

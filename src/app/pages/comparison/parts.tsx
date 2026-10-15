@@ -14,16 +14,16 @@ const RESULT: Record<Exclude<Result, null>, string> = { stock: 'Stock', medius: 
 export interface Item {
   table: Exclude<Table, SettingsTable>;
   row: PairRow;
-  // On a page that gathers rows from several tables: what the row compares, in place of its label, and the
-  // label under it.
+  // On a page gathering rows from several tables: what the row compares, shown in place of its label, with
+  // the label under it.
   head?: JSX.Element;
   sub?: string;
 }
 
-// A value's bar on the stats page's track: solid to the low end of its range and fainter on to the high
-// end, to the scale of the largest value it is drawn beside.
+// A value's bar on the stats page's track: solid to the low end of its range, fainter on to the high end,
+// scaled to the largest value beside it.
 const Bar = (props: { v: Value; max: number }) => {
-  // A value above zero always shows: no bar is drawn under 1.5% of its track.
+  // A value above zero always shows: its bar is >=1.5% of the track.
   const at = (x: number) => (props.max > 0 && x > 0 ? Math.max(1.5, Math.min(100, (x / props.max) * 100)) : 0);
   const lo = () => at(span(props.v)[0]);
   const hi = () => at(span(props.v)[1]);
@@ -40,7 +40,7 @@ const Bar = (props: { v: Value; max: number }) => {
 const valueOf = (item: Item, box: Box) => (item.row as MeasureRow)[box];
 
 // A box's cell: a measure's value and its bar, an outcome's word, or a feature's command (as code) or tool
-// (in words). The box that's behind is dimmed; where the two match, or neither is better, both stand.
+// (in words). The box behind is dimmed. Where the two match or neither is better, neither is dimmed.
 const PairCell = (props: { item: Item; box: Box; result: Result; max: number }) => {
   // Behind the other box, or level with it on the worst outcome a table has.
   const worst = () => {
@@ -70,7 +70,7 @@ const PairCell = (props: { item: Item; box: Box; result: Result; max: number }) 
 };
 
 // Stock against Medius, a row per condition: what was varied, each box's value, and which box is ahead.
-// Bars share one scale across a table, or, where the rows come from several tables, a scale per row.
+// Bars share one scale per table, or one per row where the rows come from several tables.
 export const PairTable = (props: { key: string; commands?: Record<Box, string>; items: Item[]; scale: 'table' | 'row'; defects: Defect[] }) => {
   const ranked = () => props.items.some((i) => resultOf(i.table, i.row) !== null);
   const measures = () => props.items.filter((i) => i.table.kind === 'measure');

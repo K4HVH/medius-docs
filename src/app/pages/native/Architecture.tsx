@@ -22,8 +22,8 @@ const Architecture: Component = () => {
               <tr>
                 <td>Host chip</td>
                 <td>
-                  Reads the mouse on <code>USB3</code> and sets the mouse's four relative axes: what
-                  injected <A href="/native/commands/move">motion</A> comes to, and when it is
+                  Reads the mouse on <code>USB3</code>. Sets the mouse's four relative axes: how much
+                  injected <A href="/native/commands/move">motion</A> they carry, and when it is
                   emitted.
                 </td>
               </tr>
@@ -37,8 +37,8 @@ const Architecture: Component = () => {
               <tr>
                 <td>Link</td>
                 <td>
-                  Carries each report and the motion riding with it one way, and the PC's requests
-                  for the mouse the other.
+                  Host chip to device chip: each report and the motion riding with it. Device chip to
+                  host chip: the PC's requests for the mouse.
                 </td>
               </tr>
             </tbody>

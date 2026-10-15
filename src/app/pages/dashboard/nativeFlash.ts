@@ -29,8 +29,8 @@ export interface NativeFlash {
   clear: () => void;
 }
 
-// The flasher's code arrives on first use. A chunk that won't load (a deploy since the page opened) reached no
-// chip.
+// The flasher's code loads on first use. If its chunk won't load (a deploy since the page opened), nothing
+// reached a chip.
 class FlasherNotLoaded extends Error {
   constructor() {
     super("The flasher didn't load. Reload the page, then try again.");
@@ -47,8 +47,8 @@ export function createNativeFlash(report?: StatsSink): NativeFlash {
   const [running, setRunning] = createSignal(false);
   const [wrongChip, setWrongChip] = createSignal<{ found: FlashChip; sure: boolean } | null>(null);
 
-  // One write over ROM download, with its progress and error kept here, and counted. A failure once the erase or
-  // the write began leaves the chip without firmware that starts; either firmware puts that right.
+  // One write over ROM download, counted, with its progress and error kept here. A failure after the erase or
+  // the write began leaves the chip with no firmware that starts, until either firmware is flashed.
   const run = async (
     chip: FlashChip | null,
     write: (hooks: { onProgress: (p: FlashProgress) => void; onMac: (m: string | null) => void }) => Promise<void>,

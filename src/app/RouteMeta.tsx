@@ -51,15 +51,15 @@ function setJsonLd(data: object): void {
   el.textContent = JSON.stringify(data);
 }
 
-// The address bar stays black; the stripe colour an unfurler reads waits in data-embed, and the prerender
-// puts it in content for the snapshot (src/index.html sets it back before the page paints).
+// The address bar stays black. The stripe colour a link unfurler reads is kept in data-embed; the prerender
+// copies it into content for the snapshot (src/index.html sets it back to black before the page paints).
 function setThemeColor(colour: string): void {
   upsertMeta('name', 'theme-color', '#000000');
   document.head.querySelector('meta[name="theme-color"]')!.setAttribute('data-embed', colour);
 }
 
-// The parts of the head written per page, so the head the server wrote for an item's address can be kept
-// and put back.
+// The head elements written per page. Listing them lets the head the server wrote for an item's address be
+// kept and put back.
 const WRITTEN = [
   'meta[name="description"]',
   'link[rel="canonical"]',
@@ -96,7 +96,8 @@ function putBack(kept: Kept): void {
   }
 }
 
-// An address inside a page with no head from the server (reached in the app) takes its page's, out of search.
+// An address inside a page that the server sent no head for (reached in the app) takes its page's head,
+// marked noindex.
 function write(route: RouteInfo, item: string | null): void {
   const title = documentTitle(route);
   const indexed = route.index && !item;
@@ -141,8 +142,8 @@ export default function RouteMeta() {
     if (kept) return putBack(kept);
     const route = routeFor(item ? item.parent : path) ?? NOT_FOUND;
     write(route, item ? path : null);
-    // Help marks its answers up; their text comes with the Help page, so it is fetched only there. Without
-    // them the page keeps the graph above.
+    // The Help page adds its answers to the graph. Their text ships with the Help page, so it is fetched only
+    // there; without it, the page keeps the graph written above.
     if (route.path === '/guide/help' && !item)
       void import('./data/help').then(
         ({ HELP_ITEMS }) => {

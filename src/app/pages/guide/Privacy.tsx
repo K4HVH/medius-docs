@@ -10,7 +10,7 @@ const Privacy: Component = () => (
       <p>
         K4TECH runs this site and Clanker, the bot in the Medius{' '}
         <a href={LINKS.discord} target="_blank" rel="noreferrer">Discord server</a>. It keeps the data below to run
-        them, on the lawful basis of legitimate interests, and sells none of it. Cloudflare and Discord process some of
+        them, on the lawful basis of legitimate interests. None of it is sold. Cloudflare and Discord process some of
         it in the US, under the Data Privacy Framework.
       </p>
     </PageHeader>
@@ -25,8 +25,8 @@ const Privacy: Component = () => (
 
     <DocSection id="usage-stats" title="Usage stats">
       <p>
-        The dashboard always reports each box it connects to, the device the box clones and each flash, for the
-        totals on <A href="/dashboard/stats">Stats</A> and the list on <A href="/guide/compatibility">Devices</A>. The
+        The dashboard always reports each box it connects to, the device the box clones and each flash. The reports
+        feed the totals on <A href="/dashboard/stats">Stats</A> and the list on <A href="/guide/compatibility">Devices</A>. The
         server records the Box ID as a keyed hash, when the box connected, firmware and protocol versions, operating
         system and browser, country, the cloned device's USB ID, kind and name, and each flash's details and result. Records
         are kept until you have them deleted.
@@ -35,8 +35,8 @@ const Privacy: Component = () => (
 
     <DocSection id="discord-bot" title="Discord bot">
       <p>
-        The bot reads the server's messages to moderate it. Staff read device reports through it for the Devices
-        list, and keep nothing about who posted them.
+        The bot reads the server's messages to moderate the server. Staff read device reports through the bot for the
+        Devices list, and keep nothing about who posted them.
       </p>
       <div class="table-scroll">
         <table class="api-params names">

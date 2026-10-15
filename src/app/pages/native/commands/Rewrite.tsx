@@ -49,15 +49,15 @@ const Rewrite: Component = () => {
         <div class="callout callout--warning">
           <p>
             Rules need <A href="/native/commands/option#imperfect"><code>OPTION(IMPERFECT)</code></A>.
-            Otherwise the box discards every <code>REWRITE</code> but the whole-table clear; turning
-            it off empties the table.
+            Otherwise the box discards every <code>REWRITE</code> except the whole-table clear.
+            Turning the opt-in off empties the table.
           </p>
         </div>
       </PageHeader>
 
       <DocSection id="rewrite" title="REWRITE" caption="Install, overwrite, or remove one rule">
         <p>
-          A rule is keyed by <code>(cls, id, dir, mlen, match, mask)</code>; setting one whose key
+          A rule is keyed by <code>(cls, id, dir, mlen, match, mask)</code>. Setting a rule whose key
           exists overwrites it. <A href="/native/frame#opcodes">Opcode</A> <code>0x1C</code>.
         </p>
         <pre class="api-signature">REWRITE  0x1C  ·  payload 9 + 2 x mlen + plen bytes</pre>
@@ -94,16 +94,16 @@ const Rewrite: Component = () => {
               <tr><th>Refused when</th><th>Why</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>OPTION(IMPERFECT)</code> off, for any frame but the whole-table clear</td><td>the advanced layer needs the opt-in</td></tr>
+              <tr><td><code>OPTION(IMPERFECT)</code> off, for any frame except the whole-table clear</td><td>the advanced layer needs the opt-in</td></tr>
               <tr><td>frame shorter than <code>9 + 2 x mlen</code></td><td>malformed</td></tr>
               <tr><td><code>11 + 2 x mlen + plen</code> above 512</td><td>a rule's <A href="/native/commands/requests#rewrite-entry">readback</A> must fit in one frame</td></tr>
               <tr><td><code>cls</code> is not <code>4</code>-<code>9</code> or <code>0xFF</code></td><td>other classes carry no packet</td></tr>
               <tr><td><code>dir</code> above <code>2</code></td><td>a packet travels IN or OUT</td></tr>
-              <tr><td><code>mlen</code> above <code>16</code></td><td>the head compare reads at most 16 bytes</td></tr>
+              <tr><td><code>mlen</code> above <code>16</code></td><td>the head compare reads ≤16 bytes</td></tr>
               <tr><td>action invalid on <code>cls</code></td><td>the <A href="/native/commands/rewrite#actions">action table</A> lists each action's classes</td></tr>
               <tr><td><code>off + plen</code> of a <code>PATCH</code> or <code>REPLY_PATCH</code> passes 64 on a report class or <code>ANY</code>, or 2056 on <code>CONTROL</code></td><td>the write lands past the largest packet the surface carries</td></tr>
-              <tr><td>a <code>REPLACE</code> payload above 64 bytes on a report class or <code>ANY</code></td><td>a report is at most 64 bytes</td></tr>
-              <tr><td>all rule payloads would pass 2048 bytes</td><td>one shared pool; an overwrite is costed with its old payload returned, and a refused one keeps the old rule; <A href="/native/commands/requests#rewrite"><code>RESP(REWRITE)</code></A> sets its full flag</td></tr>
+              <tr><td>a <code>REPLACE</code> payload &gt;64 bytes on a report class or <code>ANY</code></td><td>a report is ≤64 bytes</td></tr>
+              <tr><td>all rule payloads would pass 2048 bytes</td><td>one shared pool. An overwrite is costed with its old payload returned, and a refused overwrite keeps the old rule. <A href="/native/commands/requests#rewrite"><code>RESP(REWRITE)</code></A> sets its full flag</td></tr>
               <tr><td>a 33rd rule</td><td>nothing is evicted; <A href="/native/commands/requests#rewrite"><code>RESP(REWRITE)</code></A> sets its full flag</td></tr>
               <tr><td><code>state = 0</code> with no rule under that key</td><td>nothing to remove</td></tr>
             </tbody>
@@ -182,11 +182,11 @@ const Rewrite: Component = () => {
             <tbody>
               <tr><td><code>PASS</code></td><td><code>0</code></td><td>Any class. The packet passes unchanged, and a broader rule it outranks doesn't act.</td></tr>
               <tr><td><code>DROP</code></td><td><code>1</code></td><td>Report classes. The packet is dropped.</td></tr>
-              <tr><td><code>PATCH</code></td><td><code>2</code></td><td>Any class. Writes the payload at <code>off</code> and keeps the length; a write past the packet's end is left unapplied.</td></tr>
+              <tr><td><code>PATCH</code></td><td><code>2</code></td><td>Any class. Writes the payload at <code>off</code> and keeps the length. A write past the packet's end is left unapplied.</td></tr>
               <tr><td><code>REPLACE</code></td><td><code>3</code></td><td>Any class. A report becomes the payload, length included.</td></tr>
               <tr><td><code>ANSWER</code></td><td><code>4</code></td><td><code>CONTROL</code>. The box completes the request itself.</td></tr>
               <tr><td><code>STALL</code></td><td><code>5</code></td><td><code>CONTROL</code>. The request ends in a STALL handshake.</td></tr>
-              <tr><td><code>NAK</code></td><td><code>6</code></td><td><code>CONTROL</code>. EP0 NAKs until the PC times out; a control endpoint above 0 STALLs.</td></tr>
+              <tr><td><code>NAK</code></td><td><code>6</code></td><td><code>CONTROL</code>. EP0 NAKs until the PC times out. A control endpoint above 0 STALLs.</td></tr>
               <tr><td><code>REPLY_PATCH</code></td><td><code>7</code></td><td><code>CONTROL</code>. Writes the payload into the native IN reply at <code>off</code>, unapplied past the reply's end.</td></tr>
               <tr><td><code>REPLY_REPLACE</code></td><td><code>8</code></td><td><code>CONTROL</code>. The IN reply becomes the payload, cut to <code>wLength</code>.</td></tr>
             </tbody>
@@ -214,13 +214,13 @@ const Rewrite: Component = () => {
         </div>
         <div class="callout callout--info">
           <p>
-            On EP0 the table matches class and vendor requests, and the standard requests the clone relays
-            to the real device: an interface's <code>GET_DESCRIPTOR</code> for a class descriptor other than the HID
-            and report descriptors, and, while the clone is configured, a device qualifier or other-speed
-            configuration the box did not keep.
+            On EP0, the table matches class and vendor requests, plus the standard requests the clone
+            relays to the real device. Those are an interface's <code>GET_DESCRIPTOR</code> for a class
+            descriptor other than the HID and report descriptors, and (while the clone is configured) a
+            device qualifier or other-speed configuration the box did not keep.
           </p>
           <p>
-            The clone serves every other standard request itself; change a descriptor with{' '}
+            The clone serves every other standard request itself. To change a descriptor, use{' '}
             <A href="/native/commands/patch"><code>PATCH</code></A>. A control endpoint above 0
             passes every request to the table.
           </p>
@@ -260,7 +260,7 @@ const Rewrite: Component = () => {
           <p>
             An overwrite moves the rule to the end of the table with its hits at 0, so an
             equal-ranked rule installed earlier now outranks it. A remove or an overwrite shifts
-            every later rule down one index; re-read the list before a{' '}
+            every later rule down one index. Re-read the list before a{' '}
             <A href="/native/commands/requests#rewrite-entry"><code>QUERY(REWRITE_ENTRY)</code></A>.
           </p>
         </div>
@@ -292,8 +292,8 @@ const Rewrite: Component = () => {
             </thead>
             <tbody>
               <tr><td><A href="/native/commands/clip#packet-triggers">packet triggers</A></td><td>A packet can fire a trigger and then match a rule. A report a trigger consumes reaches no rule and counts no hit.</td></tr>
-              <tr><td><code>HID_IN</code></td><td>Buttons, keys, media and a secondary mouse's report are read from the rewritten bytes by <A href="/native/commands/lock"><code>LOCK</code></A>, <A href="/native/commands/transform#order"><code>TRANSFORM</code></A> and injection. A <code>DROP</code> removes the native report; injection still emits on the frame clock.</td></tr>
-              <tr><td><code>EMIT</code></td><td>Acts last, on native, injected and rendered reports and a clip's entries. A rewritten report that carries no event against the last one emitted is suppressed, unless the real device reports every poll.</td></tr>
+              <tr><td><code>HID_IN</code></td><td>Buttons, keys, media and a secondary mouse's report are read from the rewritten bytes by <A href="/native/commands/lock"><code>LOCK</code></A>, <A href="/native/commands/transform#order"><code>TRANSFORM</code></A> and injection. A <code>DROP</code> removes the native report. Injection still emits on the frame clock.</td></tr>
+              <tr><td><code>EMIT</code></td><td>Acts last, on native, injected and rendered reports and a clip's entries. A rewritten report with no change from the last one emitted is suppressed, unless the real device reports every poll.</td></tr>
               <tr><td><A href="/native/commands/raw"><code>RAW</code></A></td><td>Goes straight to the endpoint, past every rule and trigger, as a clip's <A href="/native/commands/clip#items">raw items</A> do.</td></tr>
               <tr><td><A href="/native/commands/transfer"><code>TRANSFER</code></A></td><td>Runs on dedicated messages to the real device, past every rule.</td></tr>
             </tbody>
@@ -309,10 +309,10 @@ const Rewrite: Component = () => {
         <div class="api-response-label">CATCH</div>
         <p>
           Each <A href="/native/commands/catch#traffic-event"><code>CATCH</code></A> tap sits at a
-          fixed side of the table, and flags bit 7 marks a packet a rule acted on: changed, dropped,
-          answered or refused. A <code>PASS</code> leaves it clear. A{' '}
+          fixed side of the table. Flags bit 7 marks a packet a rule acted on: changed, dropped,
+          answered or refused. A <code>PASS</code> leaves the bit clear. A{' '}
           <code>CONTROL</code> event is the transaction the game PC received, on every control
-          endpoint; each class is in <A href="/native/commands/catch#rules">rules and taps</A>.
+          endpoint. <A href="/native/commands/catch#rules">Rules and taps</A> lists each class.
         </p>
       </DocSection>
 
@@ -335,7 +335,7 @@ opt-in off  OPTION(IMPERFECT) turned off`}</pre>
           re-asserts its held rules on keepalive and across a control-link reconnect, as for{' '}
           <A href="/native/commands/lock"><code>LOCK</code></A>.
         </p>
-        <p>Every clear here but remove and clear moves the <A href="/native/commands/requests#stats"><code>session</code></A> count.</p>
+        <p>Every clear here except remove and clear moves the <A href="/native/commands/requests#stats"><code>session</code></A> count.</p>
         <div class="api-response-label">GEN</div>
         <div class="table-scroll">
           <table class="api-params">
@@ -353,7 +353,7 @@ opt-in off  OPTION(IMPERFECT) turned off`}</pre>
         <div class="api-response-label">READBACK</div>
         <p>
           <A href="/native/commands/requests#rewrite"><code>QUERY(REWRITE)</code></A> returns{' '}
-          <code>gen</code>, the full flag and a line per rule;{' '}
+          <code>gen</code>, the full flag and a line per rule.{' '}
           <A href="/native/commands/requests#rewrite-entry"><code>QUERY(REWRITE_ENTRY)</code></A>{' '}
           returns one rule in this frame's shape.{' '}
           <A href="/native/commands/requests#health"><code>HEALTH</code></A> sets{' '}

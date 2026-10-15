@@ -138,7 +138,7 @@ export function Board(props: {
     };
     const cycle = motion === 'unplug' ? pull : press;
     if (motion === 'draw') el.classList.add('pre');
-    // Entries that come together are in the order they happened: the last is the board as it is now.
+    // Entries delivered together are in order, so the last one is the board's current state.
     const io = new IntersectionObserver(
       (entries) => {
         const e = entries[entries.length - 1];
@@ -267,7 +267,7 @@ export function Board(props: {
   );
 }
 
-// The board with its caption, and on a narrow screen a list of where each cable goes under it.
+// The board with its caption and, on a narrow screen, a list under it of where each cable goes.
 export function BoardFigure(props: Parameters<typeof Board>[0]) {
   const items = () => PORTS.map((p) => ({ port: p, spec: props.ports[p] })).filter((x) => x.spec?.label);
   return (

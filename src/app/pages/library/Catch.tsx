@@ -9,7 +9,7 @@ const Catch: Component = () => {
       <PageHeader>
         <p>
           <A href="/library/catch#input-events"><code>input_events</code></A> yields press and release
-          edges; <A href="/library/catch#catch-events"><code>catch_events</code></A> yields the raw
+          edges. <A href="/library/catch#catch-events"><code>catch_events</code></A> yields the raw
           frames underneath. Input is observed before any{' '}
           <A href="/library/lock"><code>lock</code></A> suppression or{' '}
           <A href="/library/inject">injection</A>. Dropping the stream, or <code>close()</code>,
@@ -19,7 +19,7 @@ const Catch: Component = () => {
           A subscription is a table of{' '}
           <A href="/library/types/structs#catch-filter"><code>CatchFilter</code></A> entries, each addressed
           like a <A href="/library/lock"><code>lock</code></A>. Vendor bulk alone measures ~250&nbsp;KiB/s
-          on a 6&nbsp;Mbaud control link, so a filter narrows down to one endpoint.
+          on a 6&nbsp;Mbaud control link, so a filter can narrow to one endpoint.
         </p>
       </PageHeader>
 
@@ -27,7 +27,7 @@ const Catch: Component = () => {
         <pre class="api-signature">fn input_events(&self, filters: impl IntoIterator&lt;Item = CatchFilter&gt;) -&gt; Result&lt;InputStream&gt;</pre>
         <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
         <p>
-          The box sends held-usage <em>snapshots</em>; <code>input_events</code> diffs them into
+          The box sends held-usage <em>snapshots</em>. <code>input_events</code> diffs them into
           edges.
         </p>
         <div class="api-response-label">EXAMPLE</div>
@@ -42,9 +42,9 @@ for ev in device.input_events([CatchFilter::watch(Key::F)])? {
     }
 }`}</code></pre>
         <p>
-          Every filter must name an input class and cover both edges; anything else is{' '}
-          <A href="/library/types/errors">refused</A>. Without the release edge a fresh press can't be
-          told from a chord; to watch presses, match on <code>Input::Press</code>.
+          Every filter must name an input class and cover both edges. Anything else is{' '}
+          <A href="/library/types/errors">refused</A>. Without the release edge, a fresh press can't be
+          told from a chord. To watch presses, match on <code>Input::Press</code>.
         </p>
       </DocSection>
 
@@ -80,7 +80,7 @@ while let Ok(CatchEvent::Traffic(t)) = events.recv() {
 }
 // dropping \`events\` unsubscribes`}</code></pre>
         <p>
-          The keepalive re-asserts the table; it survives a{' '}
+          The keepalive re-asserts the table. It survives a{' '}
           <A href="/library/lifecycle#reconnect">reconnect</A> and a{' '}
           <A href="/library/lifecycle#restart">session recovery</A>. The box clears it on control-PC
           silence, <A href="/library/admin#reset"><code>reset</code></A> (which ends the stream), inter-chip
@@ -94,12 +94,12 @@ while let Ok(CatchEvent::Traffic(t)) = events.recv() {
         <p>
           Returned by <A href="/library/catch#input-events"><code>input_events</code></A>. One report
           can yield several <A href="/library/types/enums#input"><code>Input</code></A> values, so
-          receives run one at a time; <code>held</code>, <code>dropped</code> and{' '}
-          <code>is_connected</code> never wait for one. It is <code>Sync</code> and an{' '}
+          receives run one at a time. <code>held</code>, <code>dropped</code> and{' '}
+          <code>is_connected</code> never wait for a receive. It is <code>Sync</code> and an{' '}
           <code>Iterator</code>.
         </p>
         <p>
-          It reports only the usages <em>this</em> subscription addressed: the box's one table is the
+          It reports only the usages <em>this</em> subscription addressed. The box's one table is the
           union of every subscription in the process, and the decoder filters the wider snapshots back
           down.
         </p>
@@ -111,12 +111,12 @@ while let Ok(CatchEvent::Traffic(t)) = events.recv() {
             <tbody>
               <tr><td><code>recv()</code></td><td><code>Result&lt;InputEvent&gt;</code></td><td>Block until the next edge.</td></tr>
               <tr><td><code>try_recv()</code></td><td><code>Option&lt;InputEvent&gt;</code></td><td>The next decoded edge, or <code>None</code> if none is queued or another thread is receiving (never blocks).</td></tr>
-              <tr><td><code>recv_timeout(dur)</code></td><td><code>Option&lt;InputEvent&gt;</code></td><td>Block up to <code>dur</code>, counting a wait for another thread's receive; <code>None</code> on timeout.</td></tr>
+              <tr><td><code>recv_timeout(dur)</code></td><td><code>Option&lt;InputEvent&gt;</code></td><td>Block up to <code>dur</code>, including any wait for another thread's receive. <code>None</code> on timeout.</td></tr>
               <tr><td><code>recv_async().await</code></td><td><code>Result&lt;InputEvent&gt;</code></td><td>Await the next edge (<code>async</code> feature). Takes <code>&amp;mut self</code>.</td></tr>
-              <tr><td><code>is_connected()</code></td><td><code>bool</code></td><td>Whether the box is still delivering; <code>try_recv</code> and <code>recv_timeout</code> return <code>None</code> for both "nothing yet" and "nothing ever again".</td></tr>
+              <tr><td><code>is_connected()</code></td><td><code>bool</code></td><td>Whether the box is still delivering. <code>try_recv</code> and <code>recv_timeout</code> return <code>None</code> for both "nothing yet" and "nothing ever again".</td></tr>
               <tr><td><code>held(class)</code></td><td><code>Vec&lt;Usage&gt;</code></td><td>Usages held in one class, as this stream tracked them.</td></tr>
               <tr><td><code>dropped()</code></td><td><code>u64</code></td><td>Events lost host-side because this consumer fell behind.</td></tr>
-              <tr><td><code>close()</code></td><td><code>()</code></td><td>End the subscription. Every receive blocked on it returns at once, as does every later one; queued events are dropped.</td></tr>
+              <tr><td><code>close()</code></td><td><code>()</code></td><td>End the subscription. Every blocked receive returns at once, and so does every later one. Queued events are dropped.</td></tr>
               <tr><td><code>closer()</code></td><td><A href="/library/catch#stream-closer"><code>StreamCloser</code></A></td><td>A handle that closes the stream from another thread.</td></tr>
             </tbody>
           </table>
@@ -126,7 +126,7 @@ while let Ok(CatchEvent::Traffic(t)) = events.recv() {
       <DocSection id="event-stream" title="EventStream" caption="Receive raw events">
         <p>
           Returned by <A href="/library/catch#catch-events"><code>catch_events</code></A>. Clones share
-          the queue; the subscription ends when the stream and every clone drop, or on{' '}
+          the queue. The subscription ends when the stream and every clone drop, or on{' '}
           <code>close()</code>.
         </p>
         <div class="table-scroll">
@@ -141,16 +141,16 @@ while let Ok(CatchEvent::Traffic(t)) = events.recv() {
               <tr><td><code>iter() / try_iter()</code></td><td><code>impl Iterator</code></td><td>Blocking, or drain what is buffered. The stream is itself an <code>Iterator</code>.</td></tr>
               <tr><td><code>recv_async().await</code></td><td><code>Result&lt;CatchEvent&gt;</code></td><td>Await the next event (<code>async</code> feature), runtime-agnostic.</td></tr>
               <tr><td><code>stream()</code></td><td><code>impl Stream</code></td><td>The same queue as a <code>futures</code> stream (<code>async</code> feature).</td></tr>
-              <tr><td><code>is_connected()</code></td><td><code>bool</code></td><td>Whether the box is still delivering; a <code>None</code> from the two above can't tell.</td></tr>
+              <tr><td><code>is_connected()</code></td><td><code>bool</code></td><td>Whether the box is still delivering. A <code>None</code> from <code>try_recv</code> or <code>recv_timeout</code> can't tell.</td></tr>
               <tr><td><code>dropped()</code></td><td><code>u64</code></td><td>Events lost host-side because this consumer fell behind.</td></tr>
-              <tr><td><code>close()</code></td><td><code>()</code></td><td>End the subscription for this stream and every clone. Every receive blocked on it returns at once, as does every later one; queued events are dropped.</td></tr>
+              <tr><td><code>close()</code></td><td><code>()</code></td><td>End the subscription for this stream and every clone. Every blocked receive returns at once, and so does every later one. Queued events are dropped.</td></tr>
               <tr><td><code>closer()</code></td><td><A href="/library/catch#stream-closer"><code>StreamCloser</code></A></td><td>A handle that closes the stream from another thread.</td></tr>
             </tbody>
           </table>
         </div>
         <p>
           Each event is a <A href="/library/types/enums#catch-event"><code>CatchEvent</code></A>{' '}
-          variant; <code>class()</code>, <code>id()</code>, <code>direction()</code>,{' '}
+          variant. <code>class()</code>, <code>id()</code>, <code>direction()</code>,{' '}
           <code>ts_us()</code>, <code>clock()</code> and <code>bytes()</code> read the same fields
           on any of them.
         </p>
@@ -162,8 +162,8 @@ while let Ok(CatchEvent::Traffic(t)) = events.recv() {
           </p>
         </div>
         <p>
-          The box drains through strict-priority queues, so under a busy mouse vendor bulk can go
-          entirely undrained: the control link can't carry bulk plus input.
+          The box drains through strict-priority queues. Under a busy mouse, vendor bulk can go
+          entirely undrained, since the control link can't carry bulk plus input.
         </p>
         <pre class="diagram">{`  Button Key Media Axis Bus    -->  [ queue 0 ]  --+
   HidIn HidOut                                     |
@@ -179,10 +179,10 @@ while let Ok(CatchEvent::Traffic(t)) = events.recv() {
         <pre class="api-signature">fn close(&self)</pre>
         <p><span class="api-badge api-badge--executed">No round-trip</span></p>
         <p>
-          From <code>InputStream</code>, <code>EventStream</code> or{' '}
+          Get one from <code>InputStream</code>, <code>EventStream</code> or{' '}
           <A href="/library/diagnostics#logs"><code>LogStream</code></A>, for a thread that holds none
-          of its handles. Its <code>close()</code> ends the stream as the stream's{' '}
-          <code>close()</code> does. It holds the stream weakly, so it keeps no subscription alive and
+          of the stream's handles. Its <code>close()</code> works like the stream's{' '}
+          <code>close()</code>. It holds the stream weakly, so it keeps no subscription alive and
           does nothing once every handle has dropped. It is <code>Clone</code>.
         </p>
         <div class="api-response-label">EXAMPLE</div>
@@ -203,7 +203,7 @@ reader.join().unwrap();`}</code></pre>
       <DocSection id="traffic" title="Traffic" caption="Truncation, control transactions, bus events">
         <p>
           A <A href="/library/types/structs#traffic-event"><code>TrafficEvent</code></A> carries the
-          address, the bytes, and <code>true_len</code>, the length before capture cut it. Only{' '}
+          address, the bytes, and <code>true_len</code> (the length before capture cut it). Only{' '}
           <code>truncated()</code> tells a trimmed packet from a short one.
         </p>
         <div class="api-response-label">EXAMPLE</div>
@@ -219,8 +219,8 @@ for event in &device.catch_events([filter])? {
     }
 }`}</code></pre>
         <p>
-          What <code>flags</code> carries per class is on{' '}
-          <A href="/library/types/structs#traffic-event"><code>TrafficEvent</code></A>;{' '}
+          <A href="/library/types/structs#traffic-event"><code>TrafficEvent</code></A> lists what{' '}
+          <code>flags</code> carries per class.{' '}
           <code>control_status()</code>, <code>rule_acted()</code>, <code>transfer_status()</code>,{' '}
           <code>zlp()</code>, <code>bulk_end_of_transfer()</code> and{' '}
           <A href="/library/types/enums#bus-event"><code>bus_event()</code></A> read it.

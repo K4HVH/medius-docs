@@ -69,8 +69,8 @@ async function main(): Promise<void> {
   // keeps the links to the code of the page it shows, which the browser then fetches beside the shell.
   await page.addInitScript(() => {
     window.requestIdleCallback = () => 0;
-    // The port scan goes unanswered as the API calls do: no box is found or ruled out, so a dashboard page is
-    // snapshot where it is rather than sent to the page a selection takes.
+    // The port scan goes unanswered, like the API calls: no box is found or ruled out, so a dashboard page is
+    // snapshotted where it is instead of being sent to the page the selection gets.
     if (navigator.serial) navigator.serial.getPorts = () => new Promise(() => {});
   });
   // Unanswered API calls hold the changelog and stats on the "Loading..." block the server fills.
@@ -152,8 +152,8 @@ async function main(): Promise<void> {
       process.stdout.write(`  ${route.path} -> ${route.path}.html + ${route.path}.md\n`);
     }
 
-    // Served for unknown URLs with status 404. Taken before Home's: sirv keeps the size index.html had
-    // at startup, so a page loaded after Home rewrites it arrives cut short.
+    // Served for unknown URLs with status 404. Taken before Home's: sirv keeps the size index.html had at
+    // startup, so a page loaded after Home rewrites index.html arrives cut short.
     await page.goto(`http://localhost:${PORT}/__not_found__`, { waitUntil: 'load', timeout: 30000 });
     await page.waitForSelector(`${CONTENT} h1`, { timeout: 20000 });
     await page.evaluate(
@@ -164,7 +164,7 @@ async function main(): Promise<void> {
     await page.evaluate(() => {
       const asked = document.querySelector('.req span:nth-child(2)');
       if (asked) asked.textContent = '';
-      // An item's address the server knows nothing of gets this page, and the app keeps it (lazyPages.ts).
+      // An item address the server doesn't know gets this page, and the app keeps showing it (lazyPages.ts).
       document.documentElement.setAttribute('data-not-found', '');
     });
     await page.evaluate(embedColour);

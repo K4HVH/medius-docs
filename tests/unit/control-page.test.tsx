@@ -207,7 +207,7 @@ describe('Control page', () => {
     // labelled "release the keys" would be a trap next to a live event stream. RESET keeps the stored
     // descriptor patches, which sit on this page too.
     const { findByText } = mount();
-    expect(await findByText('Resets every control here but patches')).toBeTruthy();
+    expect(await findByText('Resets every control here except patches')).toBeTruthy();
   });
 
   it('says what Clear everything did on the line under it, so the header never grows', async () => {

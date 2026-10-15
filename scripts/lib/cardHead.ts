@@ -1,6 +1,6 @@
-// The head a link unfurler reads, checked: one of each tag, the large card at its size and type, the stripe
-// colour in theme-color ahead of the script that blacks it out, and the address and title of the page it is
-// on. `url` null: a page out of search, which names no address.
+// Checks the head a link unfurler reads: one of each tag, the large card at its size and type, the stripe
+// colour in theme-color ahead of the script that blacks it out, and the page's address and title. `url`
+// null: a page kept out of search, which names no address.
 
 export interface CardHead {
   image: string;

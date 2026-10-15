@@ -3,23 +3,23 @@ import { crc32 } from 'node:zlib';
 import { canonical } from './stock/canon';
 import { clientOf } from './client';
 
-// MAKCU's stock firmware for the Flash page: read from MAKCU's signed catalog on request (makcu.com lets no
-// other site's page read it), checked as makcu-toolkit 1.15.20 checks it, and passed on unstored.
+// MAKCU's stock firmware for the Flash page: read from MAKCU's signed catalog on request (makcu.com blocks
+// other sites' pages from reading it), checked as makcu-toolkit 1.15.20 checks it, and passed on unstored.
 
 const ROOTS = ['https://makcu.com/devinfo', 'https://makcu.15-204-2-173.sslip.io/devinfo'];
 // The catalog's signing key, as makcu-toolkit carries it.
 export const MAKCU_KEY = '2fc038fdabd2a997cbb80c056da05edf81ea49ddde247d5a8b8fa099871812ca';
-// The newest repair flash this page performs: the one the toolkit has at 1.15.20 (as at 1.13.4: erase, the
-// pair package at 0x4000, the port's bootloader at 0x0, the same image checks).
+// The newest repair flash this page performs: the toolkit's at 1.15.20 (same as at 1.13.4: erase, the pair
+// package at 0x4000, the port's bootloader at 0x0, the same image checks).
 const TOOLKIT = [1, 15, 20];
 const CATALOG_MAX = 2 * 1024 * 1024;
-// Inside Bun's 10 s for a request: both addresses for the catalog, then a file.
+// Timeouts inside Bun's 10 s request limit: one per catalog address, then one for a file.
 const CATALOG_MS = 4_000;
 const FILE_MS = 8_000;
-// The catalog and each file checked, kept in memory this long: requests that come together share a read.
+// How long the checked catalog and each checked file stay in memory, so requests arriving together share a read.
 const FRESH_MS = 60_000;
 const FAILED_MS = 10_000;
-// Requests an address may make in a window, so the relay can't be turned on makcu.com.
+// Requests one address may make per window, so the relay can't be turned against makcu.com.
 const SHARE = 30;
 const SHARE_MS = 10 * 60_000;
 const ADDRESSES = 10_000;
@@ -31,8 +31,8 @@ export interface StockFile {
   sha256: string;
 }
 
-// Nothing but the build's id is passed on from the catalog's text, and only in its "v4.094" shape: the
-// rest (notes, labels) are MAKCU's words about MAKCU's firmware.
+// Only the build's id is passed on from the catalog's text, and only in its "v4.094" shape. The rest (notes,
+// labels) is MAKCU's wording about MAKCU's firmware.
 export interface StockOffer {
   build: StockFile & { id: string };
   usb1: StockFile;
@@ -182,7 +182,7 @@ export interface StockDeps {
   key: string;
 }
 
-// The body, read until it passes `max` bytes, when it is dropped.
+// The body, or null once it passes `max` bytes (the read is then dropped).
 async function capped(res: Response, max: number): Promise<Uint8Array<ArrayBuffer> | null> {
   const declared = Number(res.headers.get('content-length'));
   if (declared > max) {
@@ -218,14 +218,14 @@ type Got = { bytes: Uint8Array<ArrayBuffer> } | { error: string };
 const json = (status: number, body: unknown) =>
   new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json', 'cache-control': 'no-store' } });
 
-// `ip`: the connection's address, which the server gives. Cloudflare's address for the visitor comes before it;
-// with neither, nothing is limited. A new address waits while 10,000 are held.
+// `ip`: the connection's address, from the server. Cloudflare's visitor address takes precedence over it; with
+// neither, nothing is limited. A new address waits while 10,000 are held.
 export function createStock(deps: StockDeps = { fetch: (u, i) => fetch(u, i), now: Date.now, key: MAKCU_KEY }) {
   let kept: { at: number; read: Promise<Read> } | null = null;
   const files = new Map<string, { at: number; got: Promise<Got> }>();
   const shares = new Map<string, { from: number; n: number }>();
 
-  // An https answer only, redirects included.
+  // Accepts only an https answer, redirects included.
   const get = async (url: string, ms: number) => {
     const res = await deps.fetch(url, { headers: { 'user-agent': AGENT, 'cache-control': 'no-cache' }, signal: AbortSignal.timeout(ms), redirect: 'follow' });
     if (res.url && !res.url.startsWith('https://')) throw new Error('left https');
@@ -257,7 +257,7 @@ export function createStock(deps: StockDeps = { fetch: (u, i) => fetch(u, i), no
     return failed;
   };
 
-  // A failed read is kept 10 s, not the minute a good one is.
+  // A failed read is kept for 10 s, a good one for a minute.
   const catalog = (): Promise<Read> => {
     if (!kept || deps.now() - kept.at >= FRESH_MS) {
       const k = { at: deps.now(), read: readCatalog() };
@@ -318,7 +318,7 @@ export function createStock(deps: StockDeps = { fetch: (u, i) => fetch(u, i), no
     if (!s && shares.size >= ADDRESSES) return false;
     const share = { from: now, n: 1 };
     shares.set(key, share);
-    // Dropped when its share ends, asked again or not: the privacy page says 10 minutes.
+    // Dropped when its share ends, whether the address asked again or not: the privacy page says 10 minutes.
     setTimeout(() => shares.get(key) === share && shares.delete(key), SHARE_MS).unref();
     return true;
   };

@@ -31,9 +31,9 @@ const Led: Component = () => {
           </table>
         </div>
         <p>
-          <code>Auto</code>, control-PC silence,{' '}
-          <A href="/library/admin#reset"><code>reset</code></A>, or inter-chip link loss returns an
-          override to the status display. Each chip's status patterns are on the native{' '}
+          An override returns to the status display on <code>Auto</code>, control-PC silence,{' '}
+          <A href="/library/admin#reset"><code>reset</code></A>, or inter-chip link loss. Each chip's
+          status patterns are on the native{' '}
           <A href="/native/commands/led#led"><code>LED</code></A> command.
         </p>
         <div class="api-response-label">EXAMPLE</div>

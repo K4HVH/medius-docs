@@ -15,13 +15,13 @@ export function Stack(props: { children: JSX.Element; wide?: boolean }) {
   );
 }
 
-// One block of a dashboard page: the docs section heading and its rule, then the content. A tab holding
-// one panel gives it no title: the tab names it. `aside` sits at the heading's right (a count, a button).
+// One block of a dashboard page: the docs section heading and its rule, then the content. A panel alone in a
+// tab has no title; the tab names it. `aside` sits at the heading's right (a count, a button).
 export function Panel(props: {
   id?: string;
   title?: string;
-  // Shown only in one state of the box (an old firmware, events streaming), so never a search result: a
-  // link to it would land where it is not.
+  // Shown only in one box state (an old firmware, events streaming), so never a search result: a link to it
+  // would land where the panel isn't.
   transient?: boolean;
   aside?: JSX.Element;
   wide?: boolean;

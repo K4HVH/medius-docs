@@ -25,16 +25,16 @@ const NO_STATS: StatsSummary = {
   browsers: [],
 };
 
-// The search index of the site a dev server at `base` serves: its search pass run in headless Chromium,
-// the server's API kept from GitHub and the stats store, then the hand-kept words and links. With it, what
-// the pass saw on each page, for the checks.
+// Builds the search index of the site served at `base`: the search pass runs in headless Chromium, with the
+// server's API kept away from GitHub and the stats store, then the hand-kept words and links are added. Also
+// returns what the pass saw on each page, for the checks.
 export async function buildSearchIndex(base: string): Promise<{ index: SearchIndex; rendered: Pass['rendered'] }> {
   const browser = await chromium.launch();
   try {
     const page = await browser.newPage({ reducedMotion: 'reduce', viewport: { width: 1440, height: 900 } });
     const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(e.message));
-    // A page whose code did not come is loaded afresh by the app, which ends the pass as a dev reload does.
+    // If a page's code doesn't arrive, the app reloads the page, which ends the pass as a dev reload does.
     page.on('console', (m) => m.type() === 'warning' && /did not come/.test(m.text()) && errors.push(m.text()));
     // The stats answer empty; the rest go unanswered, as in the prerender, so a page holds its loading
     // state, which it marks as not for search.

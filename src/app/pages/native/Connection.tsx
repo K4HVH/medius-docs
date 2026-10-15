@@ -49,7 +49,7 @@ const Connection: Component = () => {
         </div>
         <div class="callout callout--warning">
           <p>
-            The check is mandatory. Firmware 3.1.x and earlier report <code>4</code>, where{' '}
+            The check is mandatory. Firmware 3.1.x and earlier report <code>4</code>. In proto 4,{' '}
             <A href="/native/commands/lock#lock"><code>LOCK</code></A>'s last byte is a state
             (<code>1</code> = lock, <code>0</code> = unlock), not a{' '}
             <A href="/native/commands/lock#scale">scale</A>.
@@ -90,7 +90,7 @@ const Connection: Component = () => {
             </thead>
             <tbody>
               <tr><td>Power-on</td><td>Once, as the device chip boots, before any other frame.</td></tr>
-              <tr><td>First contact</td><td>Once, on the device chip's first valid frame after boot, ahead of that frame's reply. A program opening the port after another has sent a frame gets neither hello and sends <code>QUERY(VERSION)</code>.</td></tr>
+              <tr><td>First contact</td><td>Once, on the first valid frame after boot, before that frame's reply. If another program has already sent a frame, a program opening the port gets neither hello and sends <code>QUERY(VERSION)</code>.</td></tr>
             </tbody>
           </table>
         </div>
@@ -100,7 +100,7 @@ const Connection: Component = () => {
   device chip restarts      -->  hello at boot, and again on the next frame`}</pre>
         <p>
           The hello carries <A href="/native/frame#seq"><code>SEQ=0</code></A> and the same payload
-          as a queried reply. One arriving mid-session means the device chip restarted and lost its
+          as a queried reply. A hello mid-session means the device chip restarted and lost its
           session state, such as <A href="/native/commands/lock">locks</A> and{' '}
           <A href="/native/commands/rewrite#lifecycle">rewrite rules</A>.
         </p>

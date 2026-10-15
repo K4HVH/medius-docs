@@ -32,8 +32,8 @@ async function open(port: SerialPort): Promise<{ rom: Rom; size: number | null }
   }
 }
 
-// MAKCU's repair flash, as makcu-toolkit does it: the whole chip erased, MAKCU's package at 0x4000, then the
-// chip's bootloader at 0x0, last, so a write that stops leaves a chip that doesn't boot rather than a
+// MAKCU's repair flash, as makcu-toolkit does it: erase the whole chip, write MAKCU's package at 0x4000, then
+// the chip's bootloader at 0x0 last. A write that stops partway then leaves a chip that doesn't boot, not a
 // bootloader with no package to load.
 const STOCK_PACKAGE_ADDR = 0x4000;
 const STOCK_BOOT_ROOM = STOCK_PACKAGE_ADDR;
@@ -56,8 +56,8 @@ async function flashNames(rom: Rom): Promise<{ chip: FlashChip; sure: boolean } 
   return null;
 }
 
-// A range erased in 64 KiB regions, one command and answer each, as makcu-toolkit erases a chip from 1.11.10: one
-// whole-chip erase left the chip's USB silent for 10 to 20 s and Windows dropped the port ("Serial data stream
+// Erases a range in 64 KiB regions, one command and answer each, as makcu-toolkit does from 1.11.10. A single
+// whole-chip erase left the chip's USB silent for 10-20 s, and Windows dropped the port ("Serial data stream
 // stopped"). A blank region is skipped; every region must read back blank.
 const REGION = 0x10000;
 const SECTOR = 0x1000;
@@ -81,9 +81,9 @@ async function eraseRange(rom: Rom, from: number, to: number, onErased?: (bytes:
   }
 }
 
-// Where the chip's partition table puts otadata, when it puts ota_0 where an application is written. The
-// bootloader boots the slot otadata names, which after a USB2 update can be ota_1; with otadata blank it boots
-// ota_0, as after a factory image, whose blank stretch covers otadata.
+// Where the chip's partition table puts otadata, if it puts ota_0 at the application address. The bootloader
+// boots the slot otadata names, which can be ota_1 after a USB2 update. With otadata blank it boots ota_0, as
+// after a factory image (whose blank stretch covers otadata).
 async function otadata(rom: Rom): Promise<[number, number] | null> {
   const t = await rom.readFlash(PARTITION_TABLE_OFFSET, 0xc00);
   let ota0 = false;

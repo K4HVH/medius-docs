@@ -210,7 +210,7 @@ function updateReason(op: number, status: number, arg: number): string {
     // Usually the op the box expected; a short END carries the bytes missing, a bad chunk its limit.
     case 0x1a:
       if (op === 0x02 && arg > 0) return `the image ended ${arg} bytes short.`;
-      if (op === 0x01 && arg === OTA_CHUNK) return `a chunk was not 1 to ${arg} bytes.`;
+      if (op === 0x01 && arg === OTA_CHUNK) return `a chunk was outside 1-${arg} bytes.`;
       return `out of order. The box wanted op ${arg}.`;
     case 0x1b: return 'a chip is still verifying its new firmware. Try again in a few seconds.';
     case 0x1c: return 'refused before writing, so anything staged is untouched.';
@@ -353,8 +353,8 @@ export class SerialLink {
     for (let i = 0; i < HANDSHAKE_ATTEMPTS; i++) {
       try {
         const version = await this.queryVersion(HANDSHAKE_TIMEOUT_MS);
-        // Below MIN_PROTO_VER there is no UPDATE to reach. From it on a box connects, for updating
-        // unless it speaks this page's wire.
+        // Below MIN_PROTO_VER there is no UPDATE to reach. From MIN_PROTO_VER on a box connects, and is
+        // update-only unless it speaks this page's wire.
         if (!canUpdate(version)) throw new BadProtoVerError(version);
         return version;
       } catch (e) {
@@ -362,7 +362,7 @@ export class SerialLink {
         // No later attempt reads anything either.
         if (this.readFailed) throw new UnreadablePortError();
         // A timeout often means a prior client left the box's decoder wedged mid-frame; flush it and
-        // retry. Firmware drops a stale partial frame by itself after 50 ms, except 3.4.0 to 3.4.3, where only
+        // retry. Firmware drops a stale partial frame by itself after 50 ms, except 3.4.0-3.4.3, where only
         // this flush clears it.
         await this.flushPeerDecoder();
       }
@@ -617,7 +617,7 @@ export class SerialLink {
   }
 
   // Share of the command interval an injected delta is released across (§3.10). 0 = next report;
-  // above 100 overlaps. Persisted.
+  // >100 overlaps. Persisted.
   setSpread(percent: number): Promise<void> {
     return this.send(encode(FrameType.Option, this.nextSeq(), spreadPayload(percent)));
   }
@@ -1077,8 +1077,8 @@ export class SerialLink {
     new DataView(begin.buffer).setUint32(0, image.length, true);
     begin.set(digest, 4);
     let ready = await this.updateOp(OTA_OP_BEGIN, target, begin, UPDATE_OP_TIMEOUT_MS);
-    // Only one client holds the port, so a session already open on this target was left by one that went
-    // away mid-transfer (a pulled cable), and the box would hold it for its 10 s idle timer. Drop it.
+    // Only one client holds the port, so a session already open on this target was left by a client that
+    // went away mid-transfer (a pulled cable). The box would hold it for its 10 s idle timer, so drop it.
     if (ready.status === UPD_BUSY) {
       await this.abortUpdate(target).catch(() => undefined);
       ready = await this.updateOp(OTA_OP_BEGIN, target, begin, UPDATE_OP_TIMEOUT_MS);
@@ -1191,7 +1191,7 @@ export class SerialLink {
       w.reject(err);
     }
     this.transferWaiters.clear();
-    // Or an in-flight op sits out its 20 to 60 s timeout after the port is gone.
+    // Fail every update waiter now, or an in-flight op sits out its 20-60 s timeout after the port is gone.
     for (const w of this.updateWaiters.values()) w(null, err);   // the real cause, not a supersession
     this.updateWaiters.clear();
     this.updateBacklog.length = 0;

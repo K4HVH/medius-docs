@@ -1,5 +1,5 @@
-// The box drops a rule while imperfect clones are off, so the controls hide then. Removal keys on
-// match and mask, which the summary lacks, so a rule is read back in full first.
+// While imperfect clones are off the box drops every rule, so the controls are hidden. Removal is keyed
+// on match and mask, which the summary lacks, so a rule is read back in full first.
 
 import { Index, Show, createMemo, createSignal } from 'solid-js';
 import { A } from '@solidjs/router';
@@ -53,7 +53,7 @@ const CONTROL_ACTION_BLURB: Partial<Record<number, string>> = {
 };
 const classBlurb = (cls: number): string =>
   cls === CatchClass.HidIn
-    ? `${TRAFFIC_CLASS_BLURB[cls]} Rewrite mouse motion at Emit: the box recomputes it on any report it changes.`
+    ? `${TRAFFIC_CLASS_BLURB[cls]} Rewrite mouse motion at Emit: the box recomputes motion on any report it changes.`
     : TRAFFIC_CLASS_BLURB[cls];
 const actionBlurb = (cls: number, a: RewriteAction): string =>
   (cls === CatchClass.Control ? CONTROL_ACTION_BLURB[a] : undefined) ?? ACTION_BLURB[a];
@@ -82,7 +82,7 @@ const carriesPayload = (a: RewriteAction): boolean =>
 const readsOffset = (a: RewriteAction): boolean =>
   a === RewriteAction.Patch || a === RewriteAction.ReplyPatch;
 
-// A chip runs onto a second line past its panel's width, so match and payload lengths stay out of the name.
+// A chip wider than its panel wraps, so match and payload lengths stay out of the name.
 const describe = (e: RewriteRuleInfo): string => {
   const where = e.id === CATCH_ID_ANY ? 'any' : e.id;
   const head = `${displayName(rewriteActionName(e.action))} ${rewriteClassName(e.cls)} ${where} ${trafficDirWord(e.dir)}`;
@@ -228,7 +228,7 @@ const DeviceRewrite = () => {
             </div>
           </div>
           <p class="mut">
-            Match and mask: same length, at most {REWRITE_MATCH_MAX} bytes. Blank matches every
+            Match and mask: same length, ≤{REWRITE_MATCH_MAX} bytes. Blank matches every
             packet on that address.
           </p>
 
@@ -267,7 +267,7 @@ const DeviceRewrite = () => {
           </Show>
 
           <p class="sublabel">
-            Active ({entries().length} of {REWRITE_TAB_MAX})
+            Active ({entries().length}/{REWRITE_TAB_MAX})
           </p>
           <Show when={entries().length > 0} fallback={<p class="mut" data-search-skip>None.</p>}>
             <div class="chips">

@@ -16,7 +16,7 @@ const Usage: Component = () => {
 
       <DocSection id="calls" title="Fire-and-forget vs blocking" caption="Call-kind badges">
         <p>
-          Both return a <A href="/bindings/c/types#errors"><code>MediusStatus</code></A>; the{' '}
+          Both kinds return a <A href="/bindings/c/types#errors"><code>MediusStatus</code></A>; the{' '}
           <A href="/bindings/c/api">API index</A> badges each call.
         </p>
         <div class="table-scroll">
@@ -80,9 +80,8 @@ if (medius_device_find(&dev) != MEDIUS_STATUS_OK) {
           <A href="/bindings/c/api#module"><code>medius_last_error_proto_ver</code></A> returns the offending version byte after a{' '}
           <code>BadProtoVer</code>, else <code>0</code>.{' '}
           <A href="/bindings/c/api#update"><code>medius_last_error_update</code></A> writes the refused
-          update op and status after <code>MEDIUS_STATUS_ERR_UPDATE</code> (
-          <A href="/bindings/c/types#update-error"><code>MediusUpdateError</code></A>), else returns{' '}
-          <code>false</code>.
+          update op and status (<A href="/bindings/c/types#update-error"><code>MediusUpdateError</code></A>)
+          after <code>MEDIUS_STATUS_ERR_UPDATE</code>, else returns <code>false</code>.
         </p>
         <div class="callout callout--warning">
           <p>
@@ -93,7 +92,7 @@ if (medius_device_find(&dev) != MEDIUS_STATUS_OK) {
         <div class="callout callout--info">
           <p>
             A device call returns{' '}
-            <code>MEDIUS_STATUS_ERR_DISCONNECTED</code> once the link drops, and a stream's blocking{' '}
+            <code>MEDIUS_STATUS_ERR_DISCONNECTED</code> once the link drops. A stream's blocking{' '}
             <code>recv</code> returns it when the stream closes (after a reset, link loss or{' '}
             <code>medius_*_stream_close</code>). Recover
             with <A href="/bindings/c/api#led-admin-options"><code>medius_device_reconnect</code></A> or by re-opening (see{' '}
@@ -189,10 +188,10 @@ MediusDevice *worker = medius_device_clone(dev);  /* same link, ref-counted */
 medius_device_free(worker);   /* drop one owner */
 medius_device_free(dev);      /* last owner -> joins the background threads */`}</code></pre>
         <p>
-          A clip builder, clip frame or timeline takes calls from one thread at a time; every other
-          handle takes them from several at once. Free a handle only when no other thread is using
-          it: to stop a thread blocked in a receive, close the stream, let the receive return, then
-          free it.
+          A clip builder, clip frame or timeline takes calls from one thread at a time. Every other
+          handle takes calls from several threads at once. Free a handle only when no other thread
+          is using it. To stop a thread blocked in a receive: close the stream, let the receive
+          return, then free the stream.
         </p>
         <div class="callout callout--info">
           <p>

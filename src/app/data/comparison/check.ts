@@ -1,5 +1,5 @@
-// The faults medius-fw's tools/compare/results_check.py reports, for the site's copy: every one, or none.
-// The evidence itself stays in medius-fw, so refs are checked for shape here and read there.
+// The faults medius-fw's tools/compare/results_check.py reports, checked on the site's copy: every one, or
+// none. The evidence stays in medius-fw, so refs are checked for shape here and resolved there.
 
 const ID = /^[a-z0-9][a-z0-9-]*$/;
 // What counts as blank: the same characters as the Python check, so both read a string alike.
@@ -199,7 +199,7 @@ export function checkResults(d: unknown): string[] {
           if (kind === 'measure' && isObj(r.stock) && isObj(r.medius)) {
             const [s, m] = [r.stock, r.medius];
             if ('of' in s !== 'of' in m) fault(rw, 'of must be on both cells or neither');
-            // A range's refs are its runs; a sum's are its parts, so only ranges must match.
+            // A range cites one ref per run, a sum cites its parts, so only ranges need matching counts.
             if (('lo' in s || 'lo' in m) && Array.isArray(s.src) && Array.isArray(m.src) && s.src.length !== m.src.length)
               fault(rw, `the boxes cite ${s.src.length} and ${m.src.length} runs: each box gets the same number`);
           }

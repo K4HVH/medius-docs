@@ -54,8 +54,8 @@ const SPIFLASH_RDID = 0x9f;
 
 const RAM_BLOCK = 0x1800;
 const USB_OTG_RAM_BLOCK = 0x800;
-// Each block of a write holds this much of the file, so a 2 MB image counts in steps under 1% and blank padding,
-// which compresses to almost nothing, counts at the pace it is written. The stub takes blocks of up to 16 KiB.
+// Each block of a write holds this much of the file. A 2 MB image then counts in steps <1%, and blank padding
+// (which compresses to almost nothing) counts at the pace it is written. The stub takes blocks of <=16 KiB.
 const WRITE_PIECE = 0x2000;
 const WRITE_BLOCK_MAX = 0x4000;
 const READ_PACKET = 0x1000;
@@ -65,7 +65,7 @@ const SYNC_MS = 100;
 const SYNC_TRIES = 10;
 const MD5_MS_PER_MB = 8000;
 // The stub programs 32 KiB at a time, so an answer can wait on 32 KiB written and a 64 KiB block or eight sectors
-// erased: about 3.6 s at the flash's rated slowest.
+// erased: ~3.6 s at the flash's rated slowest.
 const WRITE_BLOCK_MS = 6000;
 const ERASE_FLASH_MS = 120_000;
 const perMb = (msPerMb: number, bytes: number) => Math.max(WAIT_MS, Math.round((msPerMb * bytes) / 1e6));
@@ -284,9 +284,9 @@ export class Rom {
     return hex(a.body);
   }
 
-  // A refusal is left to the MD5 the caller checks after. An answer names no address, so one that comes late
-  // is waited for once more and the command never sent again: a second command's answer would be taken for
-  // the first's.
+  // A refusal is left to the caller's MD5 check afterwards. An answer names no address, so a late one is
+  // waited for once more and the command is never resent: a second command's answer would be taken for the
+  // first's.
   async eraseRegion(at: number, size: number): Promise<void> {
     await this.send(OP.ERASE_REGION, words(at, size));
     try {

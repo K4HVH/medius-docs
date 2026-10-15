@@ -94,8 +94,8 @@ motion: dx=12 dy=-4 dz=0`}</code></pre>
         <div class="callout callout--info">
           <p>
             <A href="/bindings/c/api#streams"><code>medius_event_stream_recv</code></A> blocks until
-            the filters match an event; with this entry, a native mouse motion. Polling, more
-            classes and event loops are on <A href="/bindings/c/streams">Streams</A>.
+            the filters match an event (here, a native mouse motion). Polling, more classes and
+            event loops are on <A href="/bindings/c/streams">Streams</A>.
           </p>
         </div>
       </DocSection>

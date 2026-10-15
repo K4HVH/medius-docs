@@ -90,8 +90,8 @@ export class NotTheBox extends Error {
   }
 }
 
-// `sure`: Medius's image or the box's MAC named the chip. MAKCU's bootloader names it less surely: a stock
-// flash of the wrong chip puts the other port's there, so the owner is asked rather than refused.
+// `sure`: Medius's image or the box's MAC named the chip. MAKCU's bootloader is less certain: a stock flash
+// of the wrong chip leaves the other port's bootloader there. So the owner is asked rather than refused.
 export class WrongChipError extends Error {
   constructor(
     readonly found: FlashChip,

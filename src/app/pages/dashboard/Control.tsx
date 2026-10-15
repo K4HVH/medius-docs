@@ -30,7 +30,7 @@ const TABS = [
   { key: 'advanced', label: 'Advanced' },
 ];
 
-// Everything here but the Advanced tab's patches is momentary: the box drops it after 1 s of
+// Everything here except the Advanced tab's patches is momentary: the box drops it after 1 s of
 // control-link silence. Persistent options live on the Device page.
 const Control = () => {
   const dash = useDashboard();
@@ -67,7 +67,7 @@ const Control = () => {
               {/* One line: what it clears, what it did, or why it didn't, so the header never changes height. */}
               <Switch
                 fallback={
-                  <p class="sub2">Resets every control here but patches</p>
+                  <p class="sub2">Resets every control here except patches</p>
                 }
               >
                 <Match when={cmd.error()}>

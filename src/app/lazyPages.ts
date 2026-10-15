@@ -6,19 +6,19 @@ import { latestReleases } from '../dashboard/firmware/client';
 import { addressFor } from './routes';
 import { lostPath } from './served';
 
-// Each page's code, fetched when the page is first wanted: a reader of one page downloads that page and
-// the shell, not the whole site. The router fetches a page's code when a link to it is pointed at,
-// focused or touched, and a navigation waits for it (shell/leave.ts), so a page always shows whole.
+// Each page's code is fetched when the page is first wanted, so a reader of one page downloads that page and
+// the shell, not the whole site. The router fetches a page's code when a link to it is hovered, focused or
+// touched. A navigation waits for the code (shell/leave.ts), so a page always shows complete.
 
 export type LazyPage = Component<RouteSectionProps> & { preload: () => Promise<unknown> };
 
 type PageModule = { default: Component<RouteSectionProps> };
 
-// The pages whose code is in: a navigation to any other waits for its code (see shell/leave.ts).
+// Pages whose code has arrived. A navigation to any other page waits for its code (see shell/leave.ts).
 const loaded = new Set<LazyPage>();
-// Solid's `lazy` keeps a failed fetch for good, so the page's code is fetched here, again after a failure,
-// and handed to `lazy` once it is in, which then renders the page in the same moment. A fetch no one waits
-// on (a hover, the idle fetch of the next pages) fails quietly.
+// Solid's `lazy` keeps a failed fetch for good. So the page's code is fetched here (again after a failure)
+// and handed to `lazy` once it arrives; `lazy` then renders the page at once. A fetch nothing waits on (a
+// hover, the idle fetch of the next pages) fails quietly.
 export const lazyPage = (load: () => Promise<PageModule>): LazyPage => {
   let fetching: Promise<PageModule> | undefined;
   const fetch = () =>
@@ -38,14 +38,14 @@ export const lazyPage = (load: () => Promise<PageModule>): LazyPage => {
   return p;
 };
 const page = lazyPage;
-// A page that shows code comes with the highlighter, so its code is highlighted as it first shows.
+// A page that shows code comes with the highlighter, so its code is highlighted from the first paint.
 const codePage = (load: () => Promise<PageModule>): LazyPage =>
   page(() => Promise.all([load(), loadHighlighter()]).then(([m]) => m));
-// A dashboard page comes with the box runtime, so it renders with its boxes in place.
+// A dashboard page comes with the box runtime, so it renders with the box list in place.
 const dashboard = (load: () => Promise<PageModule>): LazyPage =>
   page(() => Promise.all([load(), loadRuntime()]).then(([m]) => m));
-// The changelog comes with its releases when they come within a moment, so it arrives with them in place;
-// a slow list arrives after the page.
+// The changelog waits briefly for its release list, so it usually arrives with the releases in place. A
+// slower list arrives after the page.
 const withReleases = (load: () => Promise<PageModule>): LazyPage =>
   dashboard(() => Promise.all([load(), Promise.race([latestReleases().catch(() => {}), new Promise((r) => setTimeout(r, 800))])]).then(([m]) => m));
 
@@ -150,11 +150,11 @@ export const PAGES: Record<string, LazyPage> = {
 
 export const NotFoundPage = page(() => import('./pages/NotFound'));
 
-// The table's key for a path, matched as the router matches it: any case, no repeated or trailing slash.
+// A path's key in PAGES, normalised the way the router matches: any case, no repeated or trailing slash.
 export const pageKey = (path: string): string => path.toLowerCase().replace(/\/{2,}/g, '/').replace(/(.)\/$/, '$1');
 
-// The page at `path`. An address inside a page shows that page, or the 404 page where the server knew no
-// such item or place.
+// The page at `path`. An address inside a page shows that page, or the 404 page if the server knew no such
+// item or place.
 export const pageAt = (path: string): LazyPage => {
   const key = pageKey(path);
   const at = addressFor(key);
@@ -162,8 +162,8 @@ export const pageAt = (path: string): LazyPage => {
   return PAGES[key] ?? NotFoundPage;
 };
 
-// The page at `path`, its code fetched. The app's first render waits on it, so the app takes over the
-// prerendered snapshot in one step, never through an empty page.
+// Fetches the code of the page at `path`. The app's first render waits for it, so the app replaces the
+// prerendered snapshot in one step, never showing an empty page.
 export const preloadPage = (path: string): Promise<unknown> => pageAt(path).preload();
 
 export const pageLoaded = (path: string): boolean => loaded.has(pageAt(path));

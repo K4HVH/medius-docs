@@ -17,7 +17,7 @@ export interface FillSources {
   home?: () => Promise<HomeFigures>;
 }
 
-// The changelog waits up to 5 s for releases it has never had, short of the server's 10 s request limit.
+// The changelog waits up to 5 s for releases it has never had, inside the server's 10 s request limit.
 export const FILL_SOURCES: FillSources = { releases: () => liveReleases(5_000), stats: getStatsSummary, home: () => getHomeFigures() };
 
 const esc = (s: string) =>
@@ -58,7 +58,7 @@ const groups = (list: CommitGroup[]) =>
     .join('') +
   '</div>';
 
-// As Changelog.tsx draws a release, with the commits in a <details> that opens where no script runs.
+// A release as Changelog.tsx draws it, with the commits in a <details> that opens without script.
 function releaseHtml(r: FirmwareRelease): string {
   const { notes, commits } = splitRelease(r.notes);
   const listed = commits ? groupCommits(commits) : null;
@@ -157,7 +157,7 @@ function compatHtml(html: string, stats: StatsSummary): string {
   return html.replace(/(<tbody[^>]*\sdata-fill="compat"[^>]*>)[\s\S]*?(<\/tbody>)/, (_m, open: string, close: string) => open + rows + close);
 }
 
-// Text in a table cell, read as text: a name from the stats can hold Markdown or HTML.
+// Escapes text for a Markdown table cell: a name from the stats can hold Markdown or HTML.
 const text = (s: string) => s.replace(/[\\`*_[\]<>|]/g, (c) => (c === '<' ? '&lt;' : c === '>' ? '&gt;' : `\\${c}`));
 
 // The built twin's device table, rewritten with the merged rows in the shape the build writes.
@@ -172,9 +172,9 @@ function compatMarkdown(md: string, stats: StatsSummary): string {
   return md.replace(/^(\| Device \|.*\n\|[- |]+\|\n)(?:\|.*\n?)*/m, (_m, head: string) => head + rows.join('\n') + '\n');
 }
 
-// The page with its live block filled, the last good copy while the source is down, or null when the
-// source has never answered. The landing and compatibility pages always come back: what their sources
-// can't give stays as prerendered. Any other page comes back unchanged.
+// The page with its live block filled, the last good copy while the source is down, or null if the source
+// has never answered. The landing and compatibility pages always return a page, with anything their sources
+// can't give left as prerendered. Any other page returns unchanged.
 export async function fillPage(
   path: string,
   html: string,

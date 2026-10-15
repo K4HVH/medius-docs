@@ -33,21 +33,21 @@ const OTHER: Record<FlashChip, FlashChip> = { device: 'host', host: 'device' };
 const isUserCancel = (e: unknown) => e instanceof DOMException && e.name === 'NotFoundError';
 const fmtBytes = (n: number) => (n < 1024 ? `${n} B` : `${(n / 1024).toFixed(0)} KB`);
 
-// Any image by hand: to the selected box over USB2 when it runs Medius, or to either chip in ROM download over
-// USB1 or USB3, which works on any box, a dead one included.
+// Any image, by hand: over USB2 to the selected box when it runs Medius, or in ROM download to either chip over
+// USB1 or USB3 (this works on any box, even a dead one).
 const ManualFlash = () => {
   const native = useNativeFlash();
   const boxes = useBoxes();
-  // The selected box, read through the registry: inside BoxScope a box coming or going would remount the
-  // page and lose a ROM flash half set up, which unplugging USB2 for it does.
+  // The selected box, read through the registry. Inside BoxScope a box coming or going would remount the
+  // page and lose a half-set-up ROM flash, and unplugging USB2 for the ROM flash does exactly that.
   const dash = () => boxes.scope();
-  // USB2 reaches a box running Medius, and is the way in while it is connected or a USB2 flash is under way, until
-  // Via says otherwise; anything else is flashed with its button held.
+  // USB2 reaches a box running Medius. It is the route while the box is connected or a USB2 flash is under way,
+  // until Via says otherwise. Anything else is flashed with its button held.
   const [picked, setPicked] = createSignal<'usb2' | 'rom' | null>(null);
   const usb2 = () => boxes.selectedKind() === 'medius';
   const live = () => ['connected', 'connecting', 'flashing'].includes(dash().status()) || dash().update()?.page === 'advanced';
-  // A box that doesn't run Medius keeps its button-held flash when the list falls back to another box, which
-  // unplugging its USB2 to hold the button does.
+  // A box not running Medius keeps the button-held route when the list falls back to another box (which
+  // unplugging its USB2 to hold the button causes).
   createEffect(() => {
     if (boxes.selectedKind() === 'other' && untrack(picked) === null) setPicked('rom');
   });
@@ -59,7 +59,7 @@ const ManualFlash = () => {
   const [source, setSource] = createSignal<'release' | 'older' | 'upload' | 'stock'>('release');
   const fromRelease = () => source() === 'release' || source() === 'older';
   const { releases, release, earlier, where, VersionField } = createReleaseChoice(() => source() === 'older');
-  // MAKCU's catalog, read once MAKCU stock is picked; the chips flashed with it on this visit.
+  // MAKCU's catalog, read once MAKCU stock is picked.
   const [stock, { refetch: readStock }] = createResource(() => source() === 'stock' || null, fetchStockCatalog);
   const stockBuild = () => {
     try {
@@ -77,7 +77,7 @@ const ManualFlash = () => {
   const [done, setDone] = createSignal(false);
   const [busy, setBusy] = createSignal(false);
   const [err, setErr] = createSignal<string | null>(null);
-  // Apart from `err`, so a chip switch clears the flash failure but keeps the file refusal.
+  // Separate from `err`, so a chip switch clears the flash failure but keeps the file refusal.
   const [fileErr, setFileErr] = createSignal<string | null>(null);
   // FileUpload calls onError, then onChange, for one selection (a mixed drop included), so onFiles
   // must not clear that rejection.
@@ -133,7 +133,7 @@ const ManualFlash = () => {
         setImage(new Uint8Array(b));
       })
       .catch(() => {
-        // `pick` doesn't move with Source, so a slow read can land after the upload path, with no
+        // `pick` doesn't move with Source, so a slow read can land after Source has left File, with no
         // picker left to point at.
         if (mine !== pick || source() !== 'upload') return;
         setImage(null);
@@ -141,8 +141,8 @@ const ManualFlash = () => {
       });
   };
 
-  // Via is drawn once, over both forms, so switching it keeps it and the focus on it. It stands until the flash
-  // it chose is done: the ROM form's done screens, or a USB2 update that verified or came back connected.
+  // Via is drawn once, above both forms, so switching route keeps the field and its focus. It shows until the
+  // chosen flash is done: the ROM form's done screens, or a USB2 update that verified or came back connected.
   const usb2Run = () => {
     const r = dash().update();
     return r?.page === 'advanced' ? r : null;
@@ -180,9 +180,10 @@ const ManualFlash = () => {
         ? !!image() && validationError() === null
         : !!asset() && !releases.loading;
 
-  // `anyway`: the chip the owner said to flash though MAKCU's bootloader on it names the other.
+  // `anyway`: the chip the owner said to flash even though MAKCU's bootloader on it names the other chip.
   let anyway: FlashChip | null = null;
-  // Taken at the first flash: the box flashed is one that answers after it, unless it is the box selected then.
+  // Taken at the first flash. The flashed box is one that starts answering after it, unless it is the box
+  // selected at the time.
   let at: { before: Snapshot; key: string | null } | null = null;
   const flash = async () => {
     setErr(null);
@@ -237,7 +238,7 @@ const ManualFlash = () => {
     }
   };
 
-  // The other chip, from the same source; a file picked was the first chip's.
+  // The other chip, from the same source; a picked file was the first chip's, so it is cleared.
   const flashOther = () => {
     setChip(OTHER[chip()]);
     setFiles([]);
@@ -255,8 +256,8 @@ const ManualFlash = () => {
     setDone(false);
   };
 
-  // Straight to the box selected at the first flash when it runs Medius; otherwise the box just flashed is connected
-  // first, as the one that answers now.
+  // Straight to the box selected at the first flash if it runs Medius. Otherwise the box just flashed is
+  // connected first, as the one that answers now.
   const [finding, setFinding] = createSignal(false);
   const [found, setFound] = createSignal<ConnectVerdict | null>(null);
   const toBox = async () => {
@@ -398,7 +399,7 @@ const ManualFlash = () => {
                 <Show when={source() === 'older'}>
                   <VersionField disabled={busy()} />
                 </Show>
-                {/* Under Source, so picking MAKCU stock, which has no image to choose, takes nothing away above it. */}
+                {/* Below Source, so picking MAKCU stock (no image to choose) removes nothing above Source. */}
                 <Show when={source() !== 'stock'}>
                   {choice(
                     'Image',

@@ -61,8 +61,8 @@ const Inject: Component = () => {
             </thead>
             <tbody>
               <tr><td>press</td><td><code>1</code></td><td>Force the usage active regardless of native state.</td></tr>
-              <tr><td>soft-release</td><td><code>0</code></td><td>Drop the override (press or force-release); a hold on the real device stays active.</td></tr>
-              <tr><td>force-release</td><td><code>2</code></td><td>Force the usage inactive, masking a hold on the real device too; used by the <A href="/native/injection#safety">safety auto-clear</A>.</td></tr>
+              <tr><td>soft-release</td><td><code>0</code></td><td>Drop the override (press or force-release). A hold on the real device stays active.</td></tr>
+              <tr><td>force-release</td><td><code>2</code></td><td>Force the usage inactive, masking a hold on the real device too. The <A href="/native/injection#safety">safety auto-clear</A> uses it.</td></tr>
             </tbody>
           </table>
         </div>
@@ -88,7 +88,7 @@ no click   no firmware click or chord; send a press, then a
 RESET      releases every override at once`}</pre>
         <div class="callout callout--warning">
           <p>
-            A usage the cloned device can't report reaches no report field; check{' '}
+            If the cloned device can't report a usage, injecting it changes no report field. Check{' '}
             <A href="/native/commands/requests#caps"><code>CAPS</code></A> first.
           </p>
         </div>
@@ -100,13 +100,13 @@ RESET      releases every override at once`}</pre>
           With <code>class = 0</code>, <code>id</code> is a semantic{' '}
           <A href="/native/commands/usage#buttons">button id</A>: 0=Left, 1=Right, 2=Middle,
           3=Side1, 4=Side2, then numeric ids up to the{' '}
-          <A href="/native/commands/requests#caps"><code>CAPS</code></A> count. The five named are
-          bound at clone time to the mouse's buttons; the override sets that button's bit in the
+          <A href="/native/commands/requests#caps"><code>CAPS</code></A> count. The five named ids are
+          bound to the mouse's buttons at clone time. The override sets that button's bit in the
           emitted report.
         </p>
         <p>
-          Injecting a declared but unwired button is descriptor-faithful: the box drives the full
-          declared button count. An id past that count reaches no report field, like an unmapped
+          Injecting a declared but unwired button is descriptor-faithful: the box drives every
+          declared button. An id past the declared count reaches no report field, like an unmapped
           key.
         </p>
         <p>
@@ -133,12 +133,12 @@ RESET      releases every override at once`}</pre>
         <p>
           With <code>class = 1</code>, <code>id</code> is a{' '}
           <A href="/native/commands/usage#keycodes">HID keyboard usage</A>.{' '}
-          <code>0xE0</code>-<code>0xE7</code> fold into the modifier byte; anything else fills a
+          <code>0xE0</code>-<code>0xE7</code> fold into the modifier byte. Anything else fills a
           keycode slot (or sets its NKRO bit) in the emitted report.
         </p>
         <p>
-          Native keys keep their slots, so injection never evicts them; past the
-          board's rollover limit the box emits <code>ErrorRollOver</code>, as the board does. A keycode
+          Native keys keep their slots, so injection never evicts them. Past the
+          board's rollover limit, the box emits <code>ErrorRollOver</code>, as the board does. A keycode
           the cloned board can't report is a no-op. Library bindings:{' '}
           <A href="/library/inject#inject"><code>inject</code> / <code>press</code> / <code>release</code> / <code>force_release</code></A>.
         </p>
@@ -165,7 +165,7 @@ RESET      releases every override at once`}</pre>
           Volume Up), merged onto the cloned keyboard's Consumer report.
         </p>
         <p>
-          A no-op unless the board declares a Consumer collection (the{' '}
+          Has an effect only if the board declares a Consumer collection (the{' '}
           <A href="/native/commands/requests#caps"><code>CAPS</code></A> <code>CONSUMER</code>{' '}
           flag). Library bindings:{' '}
           <A href="/library/inject#inject"><code>inject</code> / <code>press</code> / <code>release</code> / <code>force_release</code></A>.

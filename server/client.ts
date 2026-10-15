@@ -1,5 +1,5 @@
-// A client's address as the rate limits count it. One home network hands out a whole IPv6 /64, so that is one
-// client.
+// A client's address as the rate limits count it. One home network gets a whole IPv6 /64, so a /64 counts as
+// one client.
 export const clientOf = (ip: string): string => {
   const a = ip.split('%')[0].toLowerCase();
   if (!a.includes(':')) return a;

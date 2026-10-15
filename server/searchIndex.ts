@@ -40,8 +40,8 @@ export function builtIndex(dir: string): SearchIndex | null {
   return built?.file === file ? built.index : null;
 }
 
-// What the live sources hold now, and a key that changes only when that does: each source answers with a
-// new object every minute, whatever it holds.
+// What the live sources hold now, and a key that changes only when their contents do (each source returns a
+// new object every minute, even when nothing changed).
 interface Live {
   releases: FirmwareRelease[] | null;
   summary: StatsSummary | null;
@@ -74,8 +74,8 @@ export async function liveSearcher(dir: string, sources: SearchSources = LIVE): 
 // The last answer, kept while its index and what the sources hold stay the same.
 let last: { base: SearchIndex; key: string; body: string; etag: string } | null = null;
 
-// A browser keeps the index five minutes; half a minute when a source had nothing to give, so the
-// releases or devices it lacks come soon. `cache` sets the rule instead (the dev server keeps nothing).
+// A browser caches the index for 5 min, or 30 s when a source returned nothing, so the missing releases or
+// devices arrive soon. `cache` overrides this (the dev server caches nothing).
 export async function serveIndex(req: Request, base: SearchIndex, sources: SearchSources = LIVE, opts: { cache?: string } = {}): Promise<Response> {
   const live = await read(sources);
   if (last?.base !== base || last.key !== live.key) {
@@ -84,7 +84,7 @@ export async function serveIndex(req: Request, base: SearchIndex, sources: Searc
   }
   const cache = opts.cache ?? (live.releases && live.summary ? 'public, max-age=300' : 'public, max-age=30');
   const headers = { 'cache-control': cache, etag: last.etag, 'x-robots-tag': 'noindex' };
-  // Any tag the browser holds, weak (a proxy that compresses marks it so) or one of several, or any at all.
+  // Matches any tag the browser holds: weak (a compressing proxy marks it so), one of several, or `*`.
   const held = req.headers.get('if-none-match');
   const etag = last.etag;
   if (held && (held.trim() === '*' || held.split(',').some((t) => t.trim().replace(/^W\//, '') === etag)))

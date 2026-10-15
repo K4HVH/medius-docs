@@ -1,9 +1,10 @@
 import { addressFor, pagePath, placeAddress, routeFor } from '../routes';
 import { TARGET, sortMarked } from '../search/places';
 
-// The address a link to an element on the page shares, read as search reads the page (search/places.ts):
-// a place's address when search lists it as one; the page's when it opens the page (its header, or the
-// section folded into it); a device row's or release's item address; otherwise the page and the hash.
+// The address a link to an element on the page shares, judged the way search reads the page
+// (search/places.ts): a place's address if search lists it as a place; the page's if the element opens the
+// page (its header, or the section folded into it); the item address of a device row or release; otherwise
+// the page and the hash.
 export function shareAddress(el: Element | null, id: string, pathname: string): string {
   const page = pagePath(pathname);
   const route = routeFor(page);

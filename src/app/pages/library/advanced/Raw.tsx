@@ -15,9 +15,9 @@ const Raw: Component = () => {
         <p>
           The write is stateless: the next native report overwrites it. <code>raw</code> bypasses the{' '}
           <A href="/library/advanced/rewrite">rewrite rules</A> and the clip's{' '}
-          <A href="/library/clip#packet-triggers">packet triggers</A>. No native report carries a raw{' '}
-          <code>IN</code> report, so on an endpoint the real device reports on at every poll it takes a
-          separate poll, within two native reports.
+          <A href="/library/clip#packet-triggers">packet triggers</A>. A raw <code>IN</code> report
+          takes a poll of its own, since no native report carries it. If the real device reports on
+          that endpoint at every poll, the raw report is emitted within two native reports.
         </p>
         <pre class="diagram">{`  real device            the box  (host chip  |  device chip = the clone)         game PC
 
@@ -50,9 +50,9 @@ const Raw: Component = () => {
               <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>ep</code></td><td><code>u8</code></td><td>Cloned endpoint number, 0 to 15.</td></tr>
-              <tr><td><code>direction</code></td><td><A href="/library/types/enums#direction"><code>Direction</code></A></td><td><code>IN</code> emits toward the game PC, <code>OUT</code> writes to the real device. Any other is <A href="/library/types/errors#errors"><code>Error::RawDirection</code></A>.</td></tr>
-              <tr><td><code>bytes</code></td><td><code>&amp;[u8]</code></td><td>The report, sent as given, at most 510 bytes. An interrupt report fits one packet; a bulk payload is split, per <A href="/library/advanced/raw#size">packet size</A>.</td></tr>
+              <tr><td><code>ep</code></td><td><code>u8</code></td><td>Cloned endpoint number, 0-15.</td></tr>
+              <tr><td><code>direction</code></td><td><A href="/library/types/enums#direction"><code>Direction</code></A></td><td><code>IN</code> emits toward the game PC, <code>OUT</code> writes to the real device. Any other value returns <A href="/library/types/errors#errors"><code>Error::RawDirection</code></A>.</td></tr>
+              <tr><td><code>bytes</code></td><td><code>&amp;[u8]</code></td><td>The report, sent as given, ≤510 bytes. An interrupt report must fit one packet. A bulk payload is split per <A href="/library/advanced/raw#size">packet size</A>.</td></tr>
             </tbody>
           </table>
         </div>
@@ -69,16 +69,16 @@ device.raw(1, Direction::IN, &[0x00, 0x01, 0x00, 0x00])?;  // one report on inte
           <table class="api-params">
             <thead><tr><th>Endpoint type</th><th>Over the limit</th></tr></thead>
             <tbody>
-              <tr><td>Interrupt</td><td>Dropped box-side past one packet (the endpoint's <code>wMaxPacketSize</code>), <code>IN</code> or <code>OUT</code>. On a HID <code>IN</code> endpoint, a packet that fills <code>wMaxPacketSize</code> short of the endpoint's largest Input report is followed by a zero-length packet, as a native report of that length is, so the PC's read ends with it.</td></tr>
-              <tr><td>Bulk</td><td>Split at <code>wMaxPacketSize</code> in either direction and ended with a short packet, or a zero-length packet when the payload is an exact multiple of it.</td></tr>
+              <tr><td>Interrupt</td><td>Dropped by the box if longer than one packet (the endpoint's <code>wMaxPacketSize</code>), <code>IN</code> or <code>OUT</code>. On a HID <code>IN</code> endpoint whose largest Input report is longer than <code>wMaxPacketSize</code>, a full packet gets a zero-length packet after it (as a native report of that length does), so the PC's read ends there.</td></tr>
+              <tr><td>Bulk</td><td>Split at <code>wMaxPacketSize</code> in either direction. A short packet ends the payload, or a zero-length packet if the payload is an exact multiple of <code>wMaxPacketSize</code>.</td></tr>
             </tbody>
           </table>
         </div>
         <div class="callout callout--info">
           <p>
-            An advanced control layer frame carries up to 512 payload bytes (the{' '}
-            <A href="/native/frame#layout">frame limit</A>), the size of the C and Python buffers
-            (<code>MEDIUS_MAX_DEV_PAYLOAD</code>). <code>raw</code> spends two on endpoint and
+            An advanced control layer frame carries ≤512 payload bytes (the{' '}
+            <A href="/native/frame#layout">frame limit</A>). The C and Python buffers
+            (<code>MEDIUS_MAX_DEV_PAYLOAD</code>) are the same size. <code>raw</code> spends two on endpoint and
             direction, leaving 510. The wire layout is on the native{' '}
             <A href="/native/commands/raw#packets"><code>RAW</code></A> command.
           </p>
@@ -87,10 +87,10 @@ device.raw(1, Direction::IN, &[0x00, 0x01, 0x00, 0x00])?;  // one report on inte
 
       <DocSection id="vs-inject" title="Raw vs injection" caption="Bytes or semantic input">
         <p>
-          A standard input in the native report belongs in{' '}
+          For a standard input in the native report, use{' '}
           <A href="/library/inject"><code>inject</code></A> and{' '}
-          <A href="/library/move"><code>move_rel</code></A>, which describe an input for the box to
-          render into a faithful report; <code>raw</code> sends bytes untouched.
+          <A href="/library/move"><code>move_rel</code></A>. They describe an input that the box
+          renders into a faithful report. <code>raw</code> sends bytes untouched.
         </p>
         <div class="table-scroll">
           <table class="api-params">
@@ -114,7 +114,7 @@ device.raw(1, Direction::IN, &[0x00, 0x01, 0x00, 0x00])?;  // one report on inte
         <p>
           <A href="/library/advanced/rewrite#set-rewrite"><code>set_rewrite</code></A> and{' '}
           <A href="/library/advanced/patch#apply-patch"><code>apply_patch</code></A> read the opt-in
-          before sending; <code>raw</code> runs per report, so it sends without reading the opt-in.
+          before sending. <code>raw</code> runs per report, so it sends without reading the opt-in.
         </p>
         <div class="table-scroll">
           <table class="api-params">
@@ -126,7 +126,7 @@ device.raw(1, Direction::IN, &[0x00, 0x01, 0x00, 0x00])?;  // one report on inte
         </div>
         <p>
           The opt-in is a persistent <A href="/library/options">box option</A>, read back with{' '}
-          <A href="/library/options#query-imperfect"><code>query_imperfect</code></A>; the native{' '}
+          <A href="/library/options#query-imperfect"><code>query_imperfect</code></A>. The native{' '}
           <A href="/native/commands/option#imperfect"><code>OPTION(IMPERFECT)</code></A> sets the same
           gate.
         </p>
@@ -135,7 +135,7 @@ device.raw(1, Direction::IN, &[0x00, 0x01, 0x00, 0x00])?;  // one report on inte
       <DocSection id="async" title="On AsyncDevice" caption="raw is a future over the same send">
         <p>
           <A href="/library/features/async"><code>AsyncDevice</code></A> makes <code>raw</code> a
-          future; the send stays fire-and-forget.
+          future. The send stays fire-and-forget.
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`use futures::executor::block_on;

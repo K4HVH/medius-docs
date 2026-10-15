@@ -35,7 +35,7 @@ const Diagnostics: Component = () => {
         <div class="callout callout--info">
           <p>
             The box sends <A href="/native/commands/admin#log"><code>LOG</code></A> frames only
-            while the control link is up; with no control PC they are dropped, not buffered.
+            while the control link is up. With no control PC, they are dropped, not buffered.
           </p>
         </div>
       </DocSection>
@@ -97,13 +97,13 @@ const Diagnostics: Component = () => {
                 <td><code>is_connected()</code></td>
                 <td><code>bool</code></td>
                 <td>No</td>
-                <td>Whether the box still delivers to this stream; a <code>None</code> from <code>try_recv</code> or <code>recv_timeout</code> can't tell.</td>
+                <td>Whether the box still delivers to this stream. A <code>None</code> from <code>try_recv</code> or <code>recv_timeout</code> can't tell you this.</td>
               </tr>
               <tr>
                 <td><code>close()</code></td>
                 <td><code>()</code></td>
                 <td>No</td>
-                <td>End this stream and its clones. A receive blocked on it returns at once, as does every later one; other <code>LogStream</code>s go on reading.</td>
+                <td>Ends this stream and its clones. A blocked receive returns at once, and so does every later one. Other <code>LogStream</code>s keep reading.</td>
               </tr>
               <tr>
                 <td><code>closer()</code></td>
@@ -116,8 +116,8 @@ const Diagnostics: Component = () => {
         </div>
 
         <p>
-          <code>try_iter()</code> or <code>try_recv()</code> for a per-frame loop;{' '}
-          <code>recv()</code> or the blocking iterator for a dedicated log thread.
+          Use <code>try_iter()</code> or <code>try_recv()</code> in a per-frame loop, and{' '}
+          <code>recv()</code> or the blocking iterator on a dedicated log thread.
         </p>
 
         <div class="api-response-label">EXAMPLE</div>
@@ -137,7 +137,7 @@ if let Some(line) = stream.recv_timeout(Duration::from_millis(50)) {
 
         <div class="callout callout--warning">
           <p>
-            The channel buffers 1024 lines and evicts the oldest, uncounted, when full.
+            The channel buffers 1024 lines. When full, it evicts the oldest line, uncounted.
           </p>
         </div>
       </DocSection>
@@ -149,10 +149,10 @@ if let Some(line) = stream.recv_timeout(Duration::from_millis(50)) {
         </p>
 
         <p>
-          A <code>Copy</code> snapshot of five totals that only climb, zeroed at process start:
-          rising <code>crc_drops</code> means a flaky cable, <code>reconnects</code> counts port
-          reopens after a dropped link, and <code>restarts</code> counts device-chip restarts the
-          library <A href="/library/lifecycle#restart">recovered</A> from. Fields on{' '}
+          A <code>Copy</code> snapshot of five totals that only climb, zeroed at process start.
+          Rising <code>crc_drops</code> means a flaky cable. <code>reconnects</code> counts port
+          reopens after a dropped link. <code>restarts</code> counts device-chip restarts the
+          library <A href="/library/lifecycle#restart">recovered</A> from. Fields are on{' '}
           <A href="/library/types/structs#counters-snapshot"><code>CountersSnapshot</code></A>.
         </p>
 

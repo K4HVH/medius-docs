@@ -117,8 +117,8 @@ const emitLabel = (e: EmitPace): string => {
   return base;
 };
 
-// `proto`: the box's protocol. A box on older firmware gets the options it has; Render and Spread came with
-// protocol 6, and Control's Advanced tab only on the current one.
+// `proto`: the box's protocol. A box on older firmware gets the options it has. Render and Spread came with
+// protocol 6; Control's Advanced tab needs the current one.
 const DeviceOptions = (props: { proto?: number }) => {
   const dash = useDashboard();
   const has = (proto: number) => (props.proto ?? PROTO_VER) >= proto;
@@ -324,7 +324,7 @@ const DeviceOptions = (props: { proto?: number }) => {
       <Panel id="movement-riding" title="Movement riding" aside={<GuideLink id="movement-riding" />}>
         <p>
           Injected motion waits up to the window for the next native report and rides it. Motion still
-          waiting is dropped.
+          waiting when the window ends is dropped.
         </p>
         <div class="acts">
           <div class="fw-s">

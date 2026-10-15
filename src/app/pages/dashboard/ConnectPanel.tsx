@@ -11,7 +11,7 @@ import { WiringPorts } from './PortDiagram';
 export const BAD_BROWSER = "This browser can't talk to your box. Open this page in Chrome.";
 export const BAD_CONTEXT = "This page isn't secure. Open it again from the link you were given.";
 
-// Why a port a page tried to connect isn't a box that connected, in the connect card's words where it has them.
+// Why a port a page tried didn't connect as a box, in the connect card's words where the card has them.
 const NOT_CONNECTED: Partial<Record<ConnectVerdict['kind'], string>> = {
   silent: "That port isn't a Medius box. Pick another, or install Medius.",
   'old-firmware': "That box's firmware is too old to connect. Install Medius.",
@@ -37,7 +37,7 @@ export const ConnectView = (props: ConnectViewProps) => {
   const navigate = useNavigate();
   const boxes = useBoxes();
   const setup = () => (props.onSetup ? props.onSetup() : navigate('/dashboard/setup'));
-  // On a box's page, a new box is set up from Add box: Set up is not a box's page.
+  // From a box's page, a new box goes through Add box first, since Set up belongs to no box.
   const newBox = () => {
     if (!props.onSetup) boxes.select(NEW_BOX);
     setup();
@@ -62,8 +62,8 @@ export const ConnectView = (props: ConnectViewProps) => {
     </Button>
   );
 
-  // Callers mount this inside a panel. Without a usable port the reason leads, as every other failure's
-  // does, and the wiring stays under it with no Connect.
+  // Callers mount this inside a panel. Without a usable port the reason leads, as for every other
+  // failure, with the wiring under it and no Connect.
   if (!props.supported || !props.secure)
     return (
       <div class="cv">

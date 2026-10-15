@@ -3,7 +3,7 @@ import { type FirmwareRelease, fetchReleases, olderReleases } from '../../../das
 import { releaseDay } from '../../../dashboard/firmware/notes';
 import { Select } from '../../shell/Select';
 
-// The release a flash by hand takes: the latest, or an older one picked by its version.
+// The release a flash by hand uses: the latest, or an older one picked by version.
 export function createReleaseChoice(older: () => boolean) {
   const [releases] = createResource(fetchReleases);
   // A rejected resource re-throws on every read, render included, and there is no ErrorBoundary:

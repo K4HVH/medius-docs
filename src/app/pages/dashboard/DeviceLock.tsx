@@ -1,5 +1,5 @@
-// Lock and Unlock are the ends of one signed scale; the sign inverts an axis. With, against and
-// reversal are offered on axes only: one bit has no bearing and nothing to reverse.
+// Lock and Unlock are 0% and 100% on one signed scale; a negative scale inverts an axis. With, against
+// and reversal are offered on axes only: a one-bit input has no bearing and nothing to reverse.
 
 import { Index, Show, createMemo, createSignal } from 'solid-js';
 import { A } from '@solidjs/router';
@@ -44,8 +44,8 @@ const BLANKET_NAMES: Record<number, string> = {
   [LockClass.Axis]: 'axes',
 };
 
-// An axis locks by sign, a button or key by edge. Both, and media (which the box suppresses whole and
-// reports at Both), get no direction word.
+// An axis locks by sign, a button or key by edge. Both gets no direction word, and neither does media
+// (the box suppresses media whole and reports it at Both).
 const dirName = (cls: number, d: Direction): string => {
   if (cls === LockClass.Media || d === Direction.Both) return '';
   if (d === Direction.With) return 'with injection';
@@ -97,7 +97,7 @@ const DeviceLock = () => {
       }
     });
 
-  // One chip per weighed (target, direction) the box reports, whoever set it; a blanket key lock
+  // One chip per weighed (target, direction) the box reports, whoever set it. A blanket key lock
   // arrives as one entry per blocked edge.
   const active = createMemo(() =>
     (locks()?.entries ?? ([] as LockEntry[])).map((e) => {
@@ -119,8 +119,8 @@ const DeviceLock = () => {
   const isAxis = () => target().cls === LockClass.Axis;
   const isMedia = () => target().cls === LockClass.Media;
 
-  // A new class can lack the selected direction, and an unmatched radio keeps sending the old byte,
-  // so fall back to Both.
+  // A new class may lack the selected direction, and a radio with no matching option keeps sending the
+  // old byte. So fall back to Both.
   const chooseTarget = (v: UsageValue) => {
     setTarget(v);
     if (v.cls === LockClass.Media || (v.cls !== LockClass.Axis && isRelativeDirection(dir()))) {

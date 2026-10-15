@@ -60,8 +60,8 @@ const Async: Component = () => {
               <tr>
                 <td><code>into_async</code></td>
                 <td>
-                  Reinterprets an open <A href="/library/connection"><code>Device</code></A>, at zero
-                  cost over the same <code>Link</code> core; no new connection.
+                  Reinterprets an open <A href="/library/connection"><code>Device</code></A> at zero
+                  cost, over the same <code>Link</code> core. No new connection.
                 </td>
               </tr>
               <tr>
@@ -131,7 +131,7 @@ let device = Device::find()?.into_async();`}</code></pre>
           </table>
         </div>
         <p>
-          Every other query resolves the same way; the full list is on{' '}
+          Every other query resolves the same way. The full list is on{' '}
           <A href="/library/requests#async"><code>Requests</code></A>.
         </p>
 

@@ -16,8 +16,8 @@ export const COMPARISON_PAGES: ComparisonPage[] = [
   { path: '/comparison/method', categories: [], own: ['rig', 'rules', 'layers', 'data'] },
 ];
 
-// The rows Overview leads each area with, by page: chosen, so an area's lead results include where stock
-// is ahead as well as where Medius is.
+// The rows Overview leads each area with, by page. They're picked so an area's lead results show where
+// stock is ahead as well as where Medius is.
 export const KEY_ROWS: Record<string, string[]> = {
   '/comparison/devices': ['devices-data-wooting', 'devices-interval-mouse-10', 'devices-report-768-2047', 'devices-ep0-hid-descriptor'],
   '/comparison/passthrough': ['pass-seq-1000', 'pass-latency-p50-1000', 'pass-latency-p50-125', 'pass-inject-varying', 'pass-pc-config', 'pass-dev-stall'],

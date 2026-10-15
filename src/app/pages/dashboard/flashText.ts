@@ -8,13 +8,13 @@ const WAIT: Partial<Record<FlashPhase, string>> = {
   verifying: 'Verifying',
 };
 
-// A flash's figure: the count of a phase that has one, 100 once done, else none.
+// A flash's percentage: from the byte count of a phase that has one, 100 once done, else none.
 export function flashPercent(p: FlashProgress | null | undefined): number | undefined {
   if ((p?.phase === 'writing' || p?.phase === 'erasing') && p.total) return Math.round(((p.written ?? 0) / p.total) * 100);
   return p?.phase === 'done' ? 100 : undefined;
 }
 
-// What shows in place of the figure while a phase counts nothing: its name over a running segment.
+// Shown instead of the percentage while a phase has no count: the phase's name over a running segment.
 export function flashWait(p: FlashProgress | null | undefined): string | null {
   return flashPercent(p) === undefined ? (WAIT[p?.phase ?? 'connecting'] ?? 'Connecting') : null;
 }

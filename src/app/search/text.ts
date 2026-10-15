@@ -1,16 +1,16 @@
 import type { IndexEntry } from './types';
 
-// Words and how they meet: shared by the site search, the agent search and the Help and Devices filters.
+// Word matching shared by the site search, the agent search and the Help and Devices filters.
 
 // Words too common to tell entries apart: a question's small words, and the name every page carries. A
-// query of nothing else keeps them.
+// query made only of these keeps them.
 export const COMMON = new Set(
   'a an the is are am be i my me to do does did doesnt dont not how why what when where can cant it its of on in for with and or this that will wont so at from by your you should would there over into onto via about through under without as than then if but medius'.split(' '),
 );
 
-// A word without its ending, so a word and its other forms meet: entries and entry, classes and class,
-// moving and moves and move. A number or a version keeps its form. Kept per word: a search asks again
-// for every entry.
+// A word without its ending, so a word and its other forms match: entries and entry, classes and class,
+// moving and moves and move. A number or a version keeps its form. Cached per word, since a search asks
+// again for every entry.
 const stems = new Map<string, string>();
 const cutEnding = (w: string): string => {
   if (w.length <= 3 || /\d/.test(w)) return w;
@@ -32,7 +32,7 @@ export const stem = (w: string) => {
   return s;
 };
 
-// Whether `w` is `t` by another ending. Never a common word, so notes never meets not.
+// Whether `w` is `t` with another ending. Never for a common word, so notes never matches not.
 export const sameStem = (w: string, t: string) => w === t || (stem(w) === stem(t) && !COMMON.has(w));
 
 // One insertion, deletion, substitution or swap of neighbours.
@@ -48,7 +48,7 @@ export const oneOff = (a: string, b: string): boolean => {
   return long.slice(i + 1) === short.slice(i);
 };
 
-// Whether a slip may stand for this word: never a number, never a short word.
+// Whether this word may be matched through a slip (one typo): never a number, never a short word.
 export const slips = (w: string) => w.length >= 4 && !/\d/.test(w);
 
 export interface Part {
@@ -59,7 +59,7 @@ export interface Part {
 
 // A run of letters, digits and underscores, with the words a code name is made of: `move_rel` and
 // `MoveRel` both hold move and rel. A contraction (can't) is one word, read without its apostrophe, and a
-// version (v3.4.4) one token.
+// version (v3.4.4) is one token.
 export interface Token {
   start: number;
   end: number;
@@ -75,7 +75,7 @@ const CODE_NAME = /_|[a-z0-9][A-Z]|[A-Z][A-Z][a-z]/;
 
 export function tokenize(s: string): Token[] {
   const out: Token[] = [];
-  // Micro (µ) reads as u, as the site's microseconds are typed: µs, us. One letter for one, so places hold.
+  // Micro (µ) reads as u, as microseconds are typed (µs, us). One letter replaces one, so positions hold.
   for (const m of s.replace(/[\u00b5\u03bc]/g, 'u').matchAll(RAW)) {
     const raw = m[0];
     const at = m.index!;
@@ -100,8 +100,8 @@ export function tokenize(s: string): Token[] {
 // stay whole.
 const UNIT = /^(\d+)(hz|khz|mhz|ms|us|baud|kbaud|mbaud|kb|mb)$/;
 
-// Every form a token is found by: itself, its parts, and its parts run together; a version without its v,
-// and a number and its unit apart.
+// Every form a token is found by: itself, its parts, and its parts joined; a version without its v; a
+// number and its unit split.
 export function forms(t: Token): string[] {
   if (!t.parts.length) {
     if (/^v\d/.test(t.whole)) return [t.whole, t.whole.slice(1)];
@@ -135,13 +135,13 @@ const wordsOf = (s: string) =>
 
 export function parseQuery(q: string): Query {
   const phrases: Query['phrases'] = [];
-  // A keyboard's curly quotes quote as well as straight ones.
+  // Curly quotes from a keyboard work as quotes too.
   const loose = lower(q.replace(/[\u201c\u201d]/g, '"')).replace(/"([^"]*)("|$)/g, (_, inner: string, end: string) => {
     const w = wordsOf(inner);
     if (w.length) phrases.push({ words: w, closed: end === '"' });
     return ` ${inner} `;
   });
-  // A query reads no more than its first sixteen words. A word said twice stays twice: v3.4.4 is three.
+  // A query reads no more than its first sixteen words. A word typed twice counts twice.
   const all = wordsOf(loose);
   const kept = all.filter((w) => !COMMON.has(w));
   return { words: (kept.length ? kept : all).slice(0, MAX_WORDS), phrases, typing: /[A-Za-z0-9_]$/.test(q) };
@@ -149,12 +149,12 @@ export function parseQuery(q: string): Query {
 
 export const queryWords = (q: string) => parseQuery(q).words;
 
-// Whether a word of a text answers a word of a query: the same word, a word it begins, or the same word
-// by another ending.
+// Whether a text word matches a query word: the same word, a word it begins, or the same word with another
+// ending.
 export const meets = (w: string, t: string) => w.startsWith(t) || sameStem(w, t);
 
-// `text` cut where words of the query (or the words a search took for them) match, for marking: a word
-// named whole or begun, a part of a code name, or the part of a word another form of it shares.
+// `text` split where query words (or the words a search read them as) match, for marking: a word matched
+// whole or by its start, a part of a code name, or the part of a word that another form of it shares.
 export function marks(text: string, terms: string[] | string): { text: string; hit: boolean }[] {
   const ts = typeof terms === 'string' ? queryWords(terms) : terms.map(lower);
   const out: { text: string; hit: boolean }[] = [];
@@ -173,7 +173,7 @@ export function marks(text: string, terms: string[] | string): { text: string; h
     return n;
   };
   let from = 0;
-  // `n` letters from `start`, an apostrophe inside them (isn't) going with them.
+  // Marks `n` letters from `start`; an apostrophe inside them (isn't) goes with them.
   const light = (start: number, n: number) => {
     let end = start;
     for (let k = 0; k < n && end < text.length; end++) if (text[end] !== "'" && text[end] !== '\u2019') k++;
@@ -198,7 +198,8 @@ export function marks(text: string, terms: string[] | string): { text: string; h
 
 const formsOf = (s: string) => tokenize(lower(s)).flatMap(forms);
 
-// Whether a text holds every word of a query, each by start, ending or one slip. An empty query holds.
+// Whether a text holds every query word, each by its start, another ending or one slip. An empty query
+// always matches.
 export function matches(text: string, query: string): boolean {
   const ts = queryWords(query);
   if (!ts.length) return true;
@@ -207,7 +208,7 @@ export function matches(text: string, query: string): boolean {
   return ts.every((t) => ws.some((w) => meets(w, t) || (slips(t) && oneOff(w, t)) || (/^\d+$/.test(t) && w.includes(t))));
 }
 
-// A sentence ends at its stop, or at the end of its line: a table row or a heading is one too.
+// A sentence ends at its full stop or at the end of its line, so a table row or a heading is one too.
 const SENTENCE = /(?<=[.!?])\s+|\s*\n\s*/;
 const WIDTH = 150;
 
@@ -222,8 +223,8 @@ const sentencesOf = (e: IndexEntry) => {
   return s;
 };
 
-// The sentence of an entry that holds the most of the words, cut to about 150 characters around the
-// first; its caption, or else its first sentence, when the text holds none of them.
+// The entry's sentence holding the most query words, cut to ~150 characters around the first match. If no
+// sentence holds any of them: the caption, or else the first sentence.
 export function snippet(entry: IndexEntry, terms: string[]): string {
   const ts = terms.map(lower);
   const { lines: sentences, low } = sentencesOf(entry);
@@ -251,7 +252,8 @@ export function snippet(entry: IndexEntry, terms: string[]): string {
       at = first;
     }
   }
-  // A release's date and a device's verdict show where it lives, so they never stand for what it says.
+  // A release's date and a device's verdict already show in the result's location line, so they never stand
+  // in for its text.
   const told = entry.kind === 'release' || entry.kind === 'device' ? undefined : entry.caption;
   if (!most) return told ?? cut(sentences[0] ?? '', 0);
   return cut(best, at);

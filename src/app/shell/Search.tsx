@@ -8,10 +8,10 @@ import { routeFor, sectionLabel, type RouteInfo } from '../routes';
 import { lockPage, modKey } from './panel';
 import { prefersReducedMotion } from './motion';
 
-// The site search: every page, section and panel of the site, each release and device report, best match
-// first, by section. Empty, it offers what was opened last and the main pages, which need no index; the
-// index comes when the search first opens. The arrows move a blue edge through the list, as the sidebar's
-// moves through the pages; Enter opens the result, Ctrl or Cmd with Enter opens it in a new tab.
+// The site search: every page, section and panel of the site, and each release and device report, best match
+// first, grouped by section. With an empty box it offers recent picks and the main pages, which need no index;
+// the index is fetched when search first opens. The arrows move a blue edge through the list, as the sidebar's
+// edge moves through the pages. Enter opens the result; Ctrl+Enter or Cmd+Enter opens it in a new tab.
 
 const RECENT = 'medius.search.recent';
 const PAGES = ['/guide', '/guide/compatibility', '/guide/help', '/dashboard', '/dashboard/control', '/dashboard/update', '/dashboard/flash', '/native', '/library', '/bindings', '/dashboard/changelog'];
@@ -19,9 +19,9 @@ const CLOSE_MS = 150;
 // Results the list shows: more than a screen, and few enough to redraw on every keystroke.
 const SHOWN = 24;
 
-// What the list shows: its sections in order, each one's entries, the words each was found by, and for a
-// page offered when the box is empty, what it is. Entries are the objects the index holds, so a row that stays
-// from one keystroke to the next keeps its place on the page.
+// What the list shows: its sections in order, each section's entries, the words each entry matched, and a
+// description of each page offered when the box is empty. Entries are the objects the index holds, so a row
+// that survives from one keystroke to the next keeps its place on the page.
 interface List {
   sections: string[];
   rows: Map<string, IndexEntry[]>;
@@ -41,9 +41,9 @@ const pageOf = (r: RouteInfo): IndexEntry => {
   return e;
 };
 
-// A pick is kept whole, so it is offered before the index comes, and dropped once the index lacks it. A
-// pick kept by the search before this one is its address and title in one string: it is offered once the
-// index can name it, and kept anew then.
+// A pick is stored whole, so it can be offered before the index arrives; it is dropped once the index lacks
+// it. The previous search stored a pick as its address and title in one string: such a pick is offered once
+// the index can resolve it, and is then stored again in the new form.
 const save = (picks: IndexEntry[]) =>
   localStorage.setItem(RECENT, JSON.stringify(picks.slice(0, 5).map(({ path, title, kind, section, crumb, caption }) => ({ path, title, kind, section, crumb, caption }))));
 const readRecent = (index: Loaded | null): IndexEntry[] => {
@@ -71,11 +71,11 @@ const keepRecent = (e: IndexEntry) => {
   try {
     save([e, ...readRecent(null).filter((r) => r.path !== e.path)]);
   } catch {
-    // A browser that keeps nothing offers no recent results.
+    // A browser that stores nothing offers no recent results.
   }
 };
 
-// Where a result lives; a release or device report adds its date or verdict, and an empty box's list the
+// Where a result lives. A release or device report adds its date or verdict; the empty box's list adds the
 // section too.
 const place = (e: IndexEntry, withSection: boolean): string => {
   const where = [withSection ? e.section : '', e.crumb].filter(Boolean).join(' / ');
@@ -89,7 +89,7 @@ const Marked = (p: { text: string; terms: string[] }) => (
 export function Search(props: { open: boolean; onClose: () => void; onPick: (path: string) => void }) {
   const [query, setQuery] = createSignal('');
   const [at, setAt] = createSignal(0);
-  // Shut until the open effect runs, which notes where focus goes back to: the panel may mount opened.
+  // Closed until the open effect runs and notes where focus returns to (the panel may mount already open).
   const [shown, setShown] = createSignal(false);
   const [closing, setClosing] = createSignal(false);
   const [opening, setOpening] = createSignal(false);
@@ -156,7 +156,7 @@ export function Search(props: { open: boolean; onClose: () => void; onPick: (pat
     return at;
   });
 
-  // The edge goes to the result in focus: straight there when the list itself changed.
+  // The edge moves to the result in focus; it jumps straight there when the list itself changed.
   const placeEdge = (instant: boolean) => {
     const o = list?.querySelector<HTMLElement>(`#srch-o-${at()}`);
     if (!mark || !o) {
@@ -173,7 +173,7 @@ export function Search(props: { open: boolean; onClose: () => void; onPick: (pat
     }
     o.scrollIntoView({ block: 'nearest' });
   };
-  // A new query starts at its best result; the same query's list redrawn (the index arriving under the
+  // A new query starts at its best result. A redraw of the same query's list (the index arriving under the
   // pages offered) keeps the result in focus.
   let listed: string | null = null;
   createEffect(
@@ -193,7 +193,7 @@ export function Search(props: { open: boolean; onClose: () => void; onPick: (pat
       (open) => {
         clearTimeout(timer);
         if (open) {
-          // Opened again while still closing, the panel never left the page: focus goes back by hand.
+          // Reopened while still closing, the panel never left the page, so focus is put back by hand.
           const again = shown();
           if (!again) back = document.activeElement;
           setClosing(false);
@@ -234,7 +234,7 @@ export function Search(props: { open: boolean; onClose: () => void; onPick: (pat
     props.onPick(e.path);
   };
 
-  // The keys it handles stop here, so a panel underneath (the phone's pages) never takes them too.
+  // Keys handled here stop here, so a panel underneath (the phone's page list) never gets them too.
   const onKey = (e: KeyboardEvent) => {
     if (e.isComposing) return;
     const n = flat().length;

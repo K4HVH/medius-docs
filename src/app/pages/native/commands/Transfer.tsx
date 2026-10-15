@@ -10,7 +10,7 @@ const Transfer: Component = () => {
       <PageHeader>
         <p>
           <A href="/native/commands/transfer#transfer"><code>TRANSFER</code></A> runs one USB control
-          transfer on the real device from the control PC;{' '}
+          transfer on the real device from the control PC.{' '}
           <A href="/native/commands/transfer#transfer-resp"><code>TRANSFER_RESP</code></A> returns the
           result: a descriptor, a string, a vendor value, or the handshake that ended it.
         </p>
@@ -55,13 +55,13 @@ const Transfer: Component = () => {
               <tr><td>2</td><td><code>bRequest</code></td><td><code>u8</code></td><td>request code</td></tr>
               <tr><td>3</td><td><code>wValue</code></td><td><code>u16</code></td><td>little-endian</td></tr>
               <tr><td>5</td><td><code>wIndex</code></td><td><code>u16</code></td><td>little-endian</td></tr>
-              <tr><td>7</td><td><code>wLength</code></td><td><code>u16</code></td><td>data stage length, little-endian, at most <code>504</code></td></tr>
+              <tr><td>7</td><td><code>wLength</code></td><td><code>u16</code></td><td>data stage length, little-endian, ≤<code>504</code></td></tr>
               <tr><td>9..</td><td><code>data</code></td><td><code>u8[]</code></td><td>OUT only: the first <code>wLength</code> bytes are the data stage</td></tr>
             </tbody>
           </table>
         </div>
         <p>
-          Offsets 1 to 8 are the setup packet exactly as the real device receives it, never rewritten
+          Offsets 1-8 are the setup packet exactly as the real device receives it, never rewritten
           or retried.
         </p>
         <div class="api-response-label">DATA STAGE</div>
@@ -81,7 +81,7 @@ const Transfer: Component = () => {
         <div class="callout callout--warning">
           <p>
             A <code>SET_CONFIGURATION</code> or <code>SET_INTERFACE</code> sent here changes only the
-            real device; the clone and the endpoints the host chip polls stay as the game PC set
+            real device. The clone, and the endpoints the host chip polls, stay as the game PC set
             them.
           </p>
         </div>
@@ -92,7 +92,7 @@ const Transfer: Component = () => {
               <tr><th>When</th><th>Sends</th></tr>
             </thead>
             <tbody>
-              <tr><td>payload under 9 bytes</td><td>nothing; frame discarded</td></tr>
+              <tr><td>payload &lt;9 bytes</td><td>nothing; frame discarded</td></tr>
               <tr><td><A href="/native/commands/option#imperfect">opt-in</A> off</td><td><code>0xFC</code></td></tr>
               <tr><td><code>wLength</code> above <code>504</code></td><td><code>0xFC</code></td></tr>
               <tr><td>OUT request with fewer than <code>wLength</code> data bytes</td><td><code>0xFC</code></td></tr>
@@ -234,8 +234,8 @@ const Transfer: Component = () => {
             <tbody>
               <tr><td>Native reply, host chip</td><td>500 ms, then <code>0xFE</code>.</td></tr>
               <tr><td>Link reply, device chip</td><td>800 ms, then <code>0xFE</code>.</td></tr>
-              <tr><td>Frames held while one runs</td><td>63 frames, the running one included, or just under 16 KiB of payload; a frame past either is dropped.</td></tr>
-              <tr><td>Injection silence timer</td><td>Restarts when the frame is read and again when a reply arrives; an 800 ms timeout leaves it counting from the frame.</td></tr>
+              <tr><td>Frames held while one runs</td><td>63 frames (the running one included), or just under 16 KiB of payload. A frame past either limit is dropped.</td></tr>
+              <tr><td>Injection silence timer</td><td>Restarts when the frame is read and again when a reply arrives. An 800 ms timeout leaves it counting from the frame.</td></tr>
             </tbody>
           </table>
         </div>
@@ -243,14 +243,15 @@ const Transfer: Component = () => {
           <p>
             Every other command waits behind a running <code>TRANSFER</code>, including{' '}
             <A href="/native/commands/move#move"><code>MOVE</code></A> and{' '}
-            <A href="/native/commands/inject#inject"><code>INJECT</code></A>; keep transfers out of
+            <A href="/native/commands/inject#inject"><code>INJECT</code></A>. Keep transfers out of
             time-critical streams.
           </p>
         </div>
         <div class="callout callout--info">
           <p>
-            An <code>0xFE</code> from the 800 ms window leaves the request queued on the host chip;
-            it can still reach the real device after the reply, and its late result is dropped.
+            An <code>0xFE</code> from the 800 ms window leaves the request queued on the host chip.
+            The request can still reach the real device after the reply, and its late result is
+            dropped.
           </p>
         </div>
       </DocSection>

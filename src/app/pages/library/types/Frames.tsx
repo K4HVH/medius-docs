@@ -27,7 +27,7 @@ const Frames: Component = () => {
               <tr>
                 <td><code>Move</code></td>
                 <td><code>0x01</code></td>
-                <td>Cursor or wheel motion, tagged by axis (PC to box).</td>
+                <td>Cursor, wheel or pan motion, tagged by axis (PC to box).</td>
               </tr>
               <tr>
                 <td><code>Inject</code></td>
@@ -77,7 +77,7 @@ const Frames: Component = () => {
               <tr>
                 <td><code>MotionEvent</code></td>
                 <td><code>0x0C</code></td>
-                <td>An unsolicited relative-axis catch event, dx/dy/dz (box to PC).</td>
+                <td>An unsolicited relative-axis catch event, dx/dy/dz/pan (box to PC).</td>
               </tr>
               <tr>
                 <td><code>UsageEvent</code></td>
@@ -124,6 +124,36 @@ const Frames: Component = () => {
                 <td><code>0x18</code></td>
                 <td>The reply to one update op (box to PC).</td>
               </tr>
+              <tr>
+                <td><code>Raw</code></td>
+                <td><code>0x19</code></td>
+                <td>Raw bytes on a cloned endpoint (PC to box).</td>
+              </tr>
+              <tr>
+                <td><code>Transfer</code></td>
+                <td><code>0x1A</code></td>
+                <td>One control transfer against the real device (PC to box).</td>
+              </tr>
+              <tr>
+                <td><code>TransferResp</code></td>
+                <td><code>0x1B</code></td>
+                <td>The native reply to a <code>Transfer</code> (box to PC).</td>
+              </tr>
+              <tr>
+                <td><code>Rewrite</code></td>
+                <td><code>0x1C</code></td>
+                <td>Add, overwrite or remove one rewrite rule (PC to box).</td>
+              </tr>
+              <tr>
+                <td><code>Patch</code></td>
+                <td><code>0x1D</code></td>
+                <td>Store, apply or clear a descriptor patch (PC to box).</td>
+              </tr>
+              <tr>
+                <td><code>Transform</code></td>
+                <td><code>0x1E</code></td>
+                <td>Add, overwrite or remove one field transform (PC to box).</td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -169,13 +199,13 @@ assert!(FrameType::try_from(0xFF).is_err());
 // Variant -> byte always works.
 assert_eq!(u8::from(FrameType::Log), 0x08);
 
-// Read a decoded frame by field: a MOTION_EVENT at ts_us=1000 carrying dx=5, dy=-5, dz=1.
-let frame = DecodedFrame { ty: FrameType::MotionEvent, seq: 7, payload: vec![0xE8, 3, 0, 0, 5, 0, 0xFB, 0xFF, 1, 0] };
+// Read a decoded frame by field: a MOTION_EVENT at ts_us=1000, host chip clock, carrying dx=5, dy=-5, dz=1, pan=0.
+let frame = DecodedFrame { ty: FrameType::MotionEvent, seq: 7, payload: vec![0xE8, 3, 0, 0, 0, 5, 0, 0xFB, 0xFF, 1, 0, 0, 0] };
 println!("{:?} seq={} {} bytes", frame.ty, frame.seq, frame.payload.len());`}</code></pre>
 
         <div class="callout callout--info">
           <p>
-            The wire layout is on the <A href="/native/frame">frame</A> page;{' '}
+            The wire layout is on the <A href="/native/frame">frame</A> page.{' '}
             <A href="/library/requests">Requests</A> and{' '}
             <A href="/library/diagnostics">Diagnostics</A> cover everyday work.
           </p>

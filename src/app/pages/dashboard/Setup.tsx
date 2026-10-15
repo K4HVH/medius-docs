@@ -28,8 +28,8 @@ const Setup = () => {
   const [installed, setInstalled] = createSignal<BoxEntry | null>(null);
   const [finding, setFinding] = createSignal(false);
   const [found, setFound] = createSignal<ConnectVerdict | null>(null);
-  // A box that runs Medius already, picked in the chooser: the one pick a browser needs before it sees a port. A
-  // Medius box connects and takes its pages (DocsLayout); anything else is said here.
+  // A box already running Medius, picked in the chooser (a browser sees a port only after one pick). A Medius
+  // box connects and takes its pages (DocsLayout); any other result is shown here.
   const [linking, setLinking] = createSignal(false);
   const [linked, setLinked] = createSignal<ConnectVerdict | null>(null);
   const link = async () => {
@@ -43,7 +43,7 @@ const Setup = () => {
       setLinking(false);
     }
   };
-  // Taken at the first install: the box installed is one that answers after it.
+  // Taken at the first install, so the installed box is one that starts answering after it.
   let before: Snapshot | null = null;
 
   // A rejected resource re-throws on every read, render included, and there is no ErrorBoundary:

@@ -2,11 +2,11 @@ import { createComputed, createSignal, on } from 'solid-js';
 import { useLocation } from '@solidjs/router';
 import { landingId } from '../routes';
 
-// Where the reader was on each page of this tab's history. Back and Forward return there, a reload too; a
-// new page opens at its top, or at its hash, which the page lands on itself. The app restores within the
-// page, since the browser did it before the app had drawn the page it went to; across a reload or a return
-// from another site the browser does it, before any script runs. Places are kept per history entry (the
-// router's depth, and the path) for the life of the tab.
+// Where the reader was on each page of this tab's history. Back, Forward and a reload return there; a new
+// page opens at its top, or at its hash (the page lands on that itself). Within the app, the app restores
+// the place, because the browser would restore it before the app had drawn the page. Across a reload or a
+// return from another site, the browser restores it, before any script runs. Places are kept per history
+// entry (the router's depth and the path) for the life of the tab.
 
 const KEY = 'medius.scroll';
 const read = (): Record<string, number> => {
@@ -21,7 +21,7 @@ let places: Record<string, number> = {};
 let fromHistory = false;
 // The first page's opening, decided at boot (keepPlaces), before the app draws over the snapshot.
 let booted = false;
-// While a place is being restored, the scroll the page is held at on the way is not its place.
+// While a place is being restored, the scroll positions passed on the way aren't saved as the page's place.
 let settling = false;
 let stopSettling = () => {};
 let saving: ReturnType<typeof setTimeout> | undefined;
@@ -37,7 +37,7 @@ const keep = () => {
     try {
       sessionStorage.setItem(KEY, JSON.stringify(places));
     } catch {
-      // Kept for this page's life alone.
+      // Kept only for this page's life.
     }
   }, 200);
 };
@@ -54,8 +54,8 @@ export const openedByHistory = back;
 // How far the page shown is scrolled, known as the page changes and before it has scrolled there.
 export const pageY = y;
 
-// A page change, decided before the page draws: Back or Forward to a place, else the top or the hash, or the
-// item or place an address inside a page names.
+// Decides where a page opens, before it draws: Back or Forward returns to the kept place; otherwise the top,
+// the hash, or the item or place an address inside a page names.
 export function decideOpening(hash: string): number | null {
   stopSettling();
   const traversed = fromHistory;
@@ -66,8 +66,8 @@ export function decideOpening(hash: string): number | null {
   setBack(traversed);
   setOpening(at);
   if (at !== null) setY(at);
-  // A page opened by a link writes its place once the router has named its entry, though it never scrolls,
-  // so an entry an earlier visit left at that depth never lends it its place.
+  // A page opened by a link saves its place once the router has named its entry, even if it never scrolls.
+  // Otherwise an entry an earlier visit left at that depth would lend it a stale place.
   if (!traversed) setTimeout(keep, 0);
   return at;
 }
@@ -130,8 +130,8 @@ export function keepPlaces(): () => void {
   };
 }
 
-// Each page change decided before the page draws (in the app's root), so the page and the bar over it
-// agree from its first frame.
+// Decides each page change before the page draws (in the app's root), so the page and the bar over it agree
+// from the first frame.
 export function useScrollPlace(): void {
   const location = useLocation();
   createComputed(

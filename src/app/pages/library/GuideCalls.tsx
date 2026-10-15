@@ -33,9 +33,9 @@ let c = device.counters();       // no round-trip: local snapshot, nothing on th
         <p>
           With the <A href="/library/features/async"><code>async</code></A> feature, the{' '}
           <A href="/native/commands/requests#requests"><code>QUERY</code></A> methods are{' '}
-          <code>async fn</code>s, each awaiting its{' '}
-          <A href="/native/commands/requests#resp"><code>RESP</code></A>;{' '}
-          <A href="/library/requests#async">Requests</A> lists them. Every other method is{' '}
+          <code>async fn</code>s that await their{' '}
+          <A href="/native/commands/requests#resp"><code>RESP</code></A> (listed on{' '}
+          <A href="/library/requests#async">Requests</A>). Every other method is{' '}
           <A href="/native/injection#fire-and-forget">fire-and-forget</A> and stays synchronous.
         </p>
       </DocSection>
@@ -53,7 +53,7 @@ let v = block_on(device.query_version())?;
 println!("{v}");`}</code></pre>
         <div class="callout callout--info">
           <p>
-            Inside an async <code>main</code>, <code>.await</code> the same future instead; it runs
+            Inside an async <code>main</code>, <code>.await</code> the same future instead. It runs
             unchanged under{' '}
             <a href="https://tokio.rs" target="_blank" rel="noreferrer"><code>tokio</code></a>,{' '}
             <a href="https://crates.io/crates/async-std" target="_blank" rel="noreferrer"><code>async-std</code></a>, or{' '}
@@ -65,7 +65,7 @@ println!("{v}");`}</code></pre>
       <DocSection id="timeouts" title="Query timeout" caption="Default timeout and QueryTimeout">
         <p>
           A query, sync or async, waits{' '}
-          <A href="/library/connection#zero-config"><code>DEFAULT_QUERY_TIMEOUT</code></A> (1 second),
+          <A href="/library/connection#zero-config"><code>DEFAULT_QUERY_TIMEOUT</code></A> (1&nbsp;s),
           then returns <code>Err(Error::QueryTimeout)</code>.
         </p>
         <div class="api-response-label">EXAMPLE</div>
@@ -85,7 +85,7 @@ println!("{v}");`}</code></pre>
       <DocSection id="smooth-motion" title="Smooth motion" caption="Subdivide the delta, pace the steps">
         <p>
           <A href="/library/move#move-rel"><code>move_rel</code></A> applies its delta at once. To
-          spread it over time, send smaller steps about one per millisecond.
+          spread it over time, send smaller steps ~1&nbsp;ms apart.
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`use std::thread::sleep;
@@ -117,9 +117,9 @@ device.press(Button::LEFT)?;
 thread::sleep(Duration::from_millis(20));
 device.release(Button::LEFT)?;`}</code></pre>
         <p>
-          <A href="/library/admin#reset"><code>reset</code></A> drops every override at once; a held
-          press is re-asserted on reconnect via{' '}
-          <A href="/library/lifecycle#reapply"><code>reapply</code></A>.
+          <A href="/library/admin#reset"><code>reset</code></A> drops every override at once.{' '}
+          <A href="/library/lifecycle#reapply"><code>reapply</code></A> re-asserts a held press on
+          reconnect.
         </p>
       </DocSection>
     </>

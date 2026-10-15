@@ -28,13 +28,13 @@ const Raw: Component = () => {
           Standard inputs belong in{' '}
           <A href="/native/commands/inject#inject"><code>INJECT</code></A> and{' '}
           <A href="/native/commands/move#move"><code>MOVE</code></A>, which the box renders into a
-          faithful report; <code>RAW</code> is for bytes no semantic field describes.
+          faithful report. <code>RAW</code> is for bytes no semantic field describes.
         </p>
         <div class="callout callout--warning">
           <p>
             <code>RAW</code> runs only under{' '}
             <A href="/native/commands/option#imperfect"><code>OPTION(IMPERFECT)</code></A>. Otherwise
-            the box discards the frame with no reply, and discards a{' '}
+            the box discards the frame with no reply. It also discards a{' '}
             <A href="/native/commands/clip#items">clip raw item</A>, counted in{' '}
             <A href="/native/commands/requests#clip"><code>gated</code></A>.
           </p>
@@ -57,7 +57,7 @@ const Raw: Component = () => {
             <tbody>
               <tr><td>0</td><td><code>ep_num</code></td><td><code>u8</code></td><td>endpoint number; low four bits used</td></tr>
               <tr><td>1</td><td><code>dir</code></td><td><code>u8</code></td><td><code>1</code> IN, <code>2</code> OUT (the <A href="/native/commands/lock"><code>LOCK</code></A> direction byte)</td></tr>
-              <tr><td>2</td><td><code>bytes</code></td><td><code>u8[]</code></td><td>packet, verbatim; delimited by the frame <A href="/native/frame#layout"><code>LEN</code></A>, so at most 510 bytes</td></tr>
+              <tr><td>2</td><td><code>bytes</code></td><td><code>u8[]</code></td><td>packet, verbatim; delimited by the frame <A href="/native/frame#layout"><code>LEN</code></A>, so ≤510 bytes</td></tr>
             </tbody>
           </table>
         </div>
@@ -80,7 +80,7 @@ const Raw: Component = () => {
               <tr><th>Refused when</th><th>Why</th></tr>
             </thead>
             <tbody>
-              <tr><td>payload under 2 bytes</td><td>no endpoint address</td></tr>
+              <tr><td>payload &lt;2 bytes</td><td>no endpoint address</td></tr>
               <tr><td>clone not yet configured by the game PC</td><td>clone endpoints are unarmed until the PC's <code>SET_CONFIGURATION</code></td></tr>
               <tr><td><code>dir</code> is not <code>1</code> or <code>2</code></td><td>only <code>1</code> (IN) and <code>2</code> (OUT) name an address</td></tr>
               <tr><td>IN: no cloned HID or vendor IN endpoint <code>ep_num</code></td><td>the box writes only IN endpoints it cloned</td></tr>
@@ -91,7 +91,7 @@ const Raw: Component = () => {
         </div>
         <div class="api-response-label">EFFECT</div>
         <p>
-          The bytes reach the endpoint as given. <code>RAW</code> has no reply; an{' '}
+          The bytes reach the endpoint as given. <code>RAW</code> has no reply. An{' '}
           <A href="/native/commands/raw#catch"><code>EMIT</code></A> subscription shows an IN packet
           as the game PC reads it.
         </p>
@@ -150,8 +150,8 @@ const Raw: Component = () => {
 
       <DocSection id="packets" title="Packet size" caption="Per transfer type">
         <p>
-          An OUT packet is the endpoint's <code>wMaxPacketSize</code> on the wire, as IN; the
-          inter-chip relay carries a bulk payload in pieces of at most 64 bytes.
+          On the wire, OUT packets follow the endpoint's <code>wMaxPacketSize</code>, as IN packets
+          do. The inter-chip relay carries a bulk payload in pieces of ≤64 bytes.
         </p>
         <div class="table-scroll">
           <table class="api-params">
@@ -159,9 +159,9 @@ const Raw: Component = () => {
               <tr><th>Aspect</th><th><code>dir = 1</code>, IN</th><th><code>dir = 2</code>, OUT</th></tr>
             </thead>
             <tbody>
-              <tr><td>Interrupt</td><td>one packet, at most the endpoint's <code>wMaxPacketSize</code> and at most 64 bytes; on a HID endpoint, one of exactly <code>wMaxPacketSize</code> is ended by a ZLP when the endpoint's largest Input report is longer, as a native report of that length is</td><td>one packet, at most the endpoint's <code>wMaxPacketSize</code></td></tr>
+              <tr><td>Interrupt</td><td>one packet, at most the endpoint's <code>wMaxPacketSize</code> and 64 bytes. On a HID endpoint, a packet of exactly <code>wMaxPacketSize</code> is ended by a ZLP when the endpoint's largest Input report is longer, as a native report of that length is</td><td>one packet, at most the endpoint's <code>wMaxPacketSize</code></td></tr>
               <tr><td>Bulk</td><td colspan="2">split at <code>wMaxPacketSize</code></td></tr>
-              <tr><td>Bulk end</td><td colspan="2">a short packet, or a zero-length packet (ZLP) when the payload is an exact multiple of <code>wMaxPacketSize</code>; an empty <code>bytes</code> sends one ZLP</td></tr>
+              <tr><td>Bulk end</td><td colspan="2">a short packet, or a zero-length packet (ZLP) when the payload is an exact multiple of <code>wMaxPacketSize</code>. An empty <code>bytes</code> sends one ZLP</td></tr>
             </tbody>
           </table>
         </div>
@@ -183,28 +183,28 @@ const Raw: Component = () => {
               <tr><th>Name</th><th>Behaviour</th></tr>
             </thead>
             <tbody>
-              <tr><td>HID IN, 8 reports</td><td>drops the oldest native zero-length packet when full, counted in <code>relay_drops</code>; else the oldest native report, else the oldest <code>RAW</code> one, counted in <A href="/native/commands/requests#stats"><code>tx_drops</code></A></td></tr>
+              <tr><td>HID IN, 8 reports</td><td>when full, drops the oldest native zero-length packet, counted in <code>relay_drops</code>. Failing that, the oldest native report, then the oldest <code>RAW</code> one, counted in <A href="/native/commands/requests#stats"><code>tx_drops</code></A></td></tr>
               <tr><td>vendor interrupt IN, 8 packets</td><td>drops the oldest packet when full, counted in <A href="/native/commands/requests#stats"><code>relay_drops</code></A></td></tr>
-              <tr><td>vendor bulk IN, 8 packets</td><td>drops the new packet when full, counted in <code>relay_drops</code>. The box polls the real device's bulk IN only while fewer than 8 packets are queued or armed, <code>RAW</code> ones included, so only a <code>RAW</code> packet finds it full</td></tr>
-              <tr><td>OUT relay, 16 packets across all endpoints</td><td>each waits its turn behind the real device's two-packet hold, as the PC's writes do, and the PC's writes to that endpoint wait behind it (one the clone had already taken a read for goes first); one past 16 is dropped, counted in <code>relay_drops</code></td></tr>
+              <tr><td>vendor bulk IN, 8 packets</td><td>drops the new packet when full, counted in <code>relay_drops</code>. The box polls the real device's bulk IN only while &lt;8 packets are queued or armed (<code>RAW</code> ones included), so only a <code>RAW</code> packet finds the queue full</td></tr>
+              <tr><td>OUT relay, 16 packets across all endpoints</td><td>each waits its turn behind the real device's two-packet hold, as the PC's writes do. The PC's writes to that endpoint wait behind it, except one the clone had already taken a read for, which goes first. A packet past 16 is dropped, counted in <code>relay_drops</code></td></tr>
             </tbody>
           </table>
         </div>
         <p>
-          Native reports take at most one place in an interrupt IN queue: the box polls the real
-          device only as the PC takes what the last poll brought, so the rest of the queue is room for{' '}
-          <code>RAW</code> reports. A native bulk stream takes as many places as the PC leaves unread, all 8 at
-          most.
+          Native reports take ≤1 place in an interrupt IN queue. The box polls the real device only
+          as the PC takes what the last poll brought, so the rest of the queue is room for{' '}
+          <code>RAW</code> reports. A native bulk stream takes as many places as the PC leaves unread,
+          up to all 8.
         </p>
         <p>
-          An interrupt endpoint's native reports take two places where the next report is fetched before the PC
-          has the last one whole, and for a tenth of a second after one reaches the clone too late for its poll,
-          up to three seconds while late ones keep coming.
+          An interrupt endpoint's native reports take two places in two cases: while the next report
+          is fetched before the PC has the last one whole, and for 100 ms after a report reaches the
+          clone too late for its poll (up to 3 s while late reports keep coming).
         </p>
         <p>
           A native STALL on an interrupt or bulk IN reaches the game PC after the reports sent before it.
           The endpoint stays halted until the PC's <code>CLEAR_FEATURE(HALT)</code>, which is relayed to
-          the real device; the box never clears it.
+          the real device. The box never clears it.
         </p>
         <div class="callout callout--warning">
           <p>
@@ -220,9 +220,9 @@ const Raw: Component = () => {
           the next native report replaces it.
         </p>
         <p>
-          A <code>RAW</code> report takes a separate poll; no native report carries it. On an
-          endpoint the real device reports on every poll, it is emitted after at most two native
-          reports.
+          A <code>RAW</code> report takes a separate poll. No native report carries it. On an
+          endpoint the real device reports on every poll, the <code>RAW</code> report is emitted
+          after ≤2 native reports.
         </p>
         <pre class="diagram">{`  native report   [ btn 0 ]                            [ btn 0 ]
   RAW, dir = 1                  [ btn 1 ]
@@ -245,7 +245,7 @@ const Raw: Component = () => {
             </thead>
             <tbody>
               <tr><td>report merging</td><td>sums motion between other queued reports and keeps each <code>RAW</code> report whole, byte for byte</td></tr>
-              <tr><td>change suppression</td><td>records a <code>RAW</code> report shaped like the mouse, keyboard or media report the box injects into as the last report emitted, the baseline for injected frames</td></tr>
+              <tr><td>change suppression</td><td>if a <code>RAW</code> report is shaped like the mouse, keyboard or media report the box injects into, it becomes the last report emitted, the baseline for injected frames</td></tr>
             </tbody>
           </table>
         </div>
@@ -269,7 +269,7 @@ const Raw: Component = () => {
             </thead>
             <tbody>
               <tr><td>the game PC reads a <code>RAW</code> report off a HID IN endpoint</td><td><A href="/native/commands/catch#catch"><code>EMIT</code></A> (<code>9</code>), <code>dir = 1</code></td></tr>
-              <tr><td>a <code>RAW</code> packet enters a vendor IN queue</td><td><A href="/native/commands/catch#catch"><code>VEND_INTR</code></A> (<code>6</code>) or <A href="/native/commands/catch#catch"><code>VEND_BULK</code></A> (<code>7</code>), <code>dir = 1</code>, stamped <A href="/native/commands/catch#clocks"><code>clk = 1</code></A> by the device chip; an empty packet carries the ZLP <A href="/native/commands/catch#traffic-event">flag</A>, and bulk the end-of-transfer flag too</td></tr>
+              <tr><td>a <code>RAW</code> packet enters a vendor IN queue</td><td><A href="/native/commands/catch#catch"><code>VEND_INTR</code></A> (<code>6</code>) or <A href="/native/commands/catch#catch"><code>VEND_BULK</code></A> (<code>7</code>), <code>dir = 1</code>, stamped <A href="/native/commands/catch#clocks"><code>clk = 1</code></A> by the device chip. An empty packet carries the ZLP <A href="/native/commands/catch#traffic-event">flag</A>, and on bulk the end-of-transfer flag too</td></tr>
               <tr><td>the game PC reads a <code>RAW</code> packet off a vendor IN endpoint, an empty one with the ZLP flag</td><td><code>EMIT</code> (<code>9</code>), <code>dir = 1</code></td></tr>
             </tbody>
           </table>

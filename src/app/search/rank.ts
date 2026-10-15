@@ -1,25 +1,26 @@
 import type { IndexEntry } from './types';
 import { COMMON, forms, oneOff, parseQuery, sameStem, slips, stem, tokenize, type Query } from './text';
 
-// The site search's order. First the entries holding every word of the query, in any field; then, for a
-// query of two words or more, those missing up to half of them that hold one in their title, keywords
-// or caption. Within each, a word counts by where it falls: the title (or a hand-kept keyword, another
-// name for the place), the caption, where the entry lives (its section, page and address), its code, its
-// text. A title keeps the old order: the whole title, then its first word, the start of it, a later word,
-// the start of one, part of one; a start counts for the share of the word typed. A longer query held
-// whole by the title, or by the title and where the entry lives, counts for more again. A word of the
-// text counts for more the rarer it is across the site (BM25), and more beside the query's next word. At
-// an equal score a page comes before a part of one, and the Guide and the dashboard before the rest.
+// The site search's order. First come the entries holding every word of the query, in any field. Then, for a
+// query of >=2 words, entries missing up to half of the words that hold one in their title, keywords or
+// caption. Within each group, a word counts by the field it falls in: the title (or a hand-kept keyword,
+// another name for the place), the caption, where the entry lives (its section, page and address), its code,
+// its text. In the title the old order holds: the whole title, then its first word, the start of the first
+// word, a later word, the start of a later word, part of a word. A start counts by the share of the word
+// typed. A longer query found whole in the title, or in the title and where the entry lives, scores higher
+// still. A text word counts more the rarer it is across the site (BM25), and more when next to the query's
+// next word. On equal scores a page comes before a part of a page, and the Guide and the dashboard before
+// the rest.
 //
-// A word the site never uses is tried as each site word one slip away, and a synonym group stands for any
-// of its members; an entry found only that way scores less. The last word, while typed, may be the start
-// of one. No section takes more than five places, so the next section's best shows early, and no page
-// more than three.
+// A word the site never uses is tried as each site word one slip (one typo) away, and a synonym group stands
+// for any of its members; an entry found only that way scores less. The last word, while being typed, may be
+// the start of a word. No section takes more than five places, so the next section's best shows early, and
+// no page more than three.
 
 export interface Hit {
   entry: IndexEntry;
   score: number;
-  // The words the hit was found by, for marking: a slip or a synonym brings the word it was taken for.
+  // The words the hit matched, for marking; a match through a slip or a synonym gives the word it was read as.
   terms: string[];
 }
 
@@ -43,7 +44,7 @@ const CODE = 24;
 const TEXT = 6;
 const CLOSE = 12;
 const ALL = 250;
-// Other readings of one query, at most: each costs another search.
+// At most this many other readings of one query; each costs another search.
 const MAX_READINGS = 6;
 // What a match through a synonym, or through a slip, is worth against a direct one.
 const SYNONYM = 0.8;
@@ -54,12 +55,12 @@ const OWNERS: Record<string, number> = { Guide: 20, Dashboard: 20 };
 
 interface Field {
   flat: string;
-  // Each form of each word, its stem, and whether it leads the field: its first word that is not a small
-  // one, or the first part of that word's code name.
+  // Each form of each word, its stem, and whether it leads the field (the field's first word that isn't a
+  // small one, or the first part of that word's code name).
   words: { w: string; s: string; first: boolean }[];
   // Every form at once, to rule a field out before reading it word by word.
   blob: string;
-  // A field that is one code name: its parts, which query words may run together into.
+  // A field that is one code name: its parts, so query words naming them in order match the whole field.
   parts?: string[];
 }
 
@@ -88,16 +89,17 @@ function field(s: string): Field {
   return { flat: toks.map((t) => t.whole).join(' '), words, blob: words.map((x) => x.w).join(' '), parts };
 }
 
-// How well `t` falls in a field, and how much of the word it found the query has typed: 6 all of it, 5 its
-// first word, 4 the start of its first word or that word by another ending, 3 a later word, 2 the start or
-// another form of one, 1 inside a word, 0 nowhere. A start counts in proportion to the share typed, never
-// under a quarter. Every match holds the word's stem, so a field without it is passed over at once.
+// How well `t` matches a field, and what share of the matched word the query has typed. Levels: 6 the whole
+// field, 5 its first word, 4 the start of its first word or that word with another ending, 3 a later word,
+// 2 the start or another form of a later word, 1 inside a word, 0 nowhere. A start counts in proportion to
+// the share typed, never below a quarter. Every match contains the word's stem, so a field without the stem
+// is skipped at once.
 const NONE: [number, number] = [0, 0];
 function level(f: Field, t: string, st = stem(t)): [number, number] {
   if (!f.flat) return NONE;
   if (f.flat === t) return [6, 1];
   if (t.includes(' ')) {
-    // Words that are the parts of a one-word field's code name, in order, name all of it: move rel.
+    // Query words that are the parts of a one-word field's code name, in order, match the whole field (move rel).
     if (f.parts && f.parts.join(' ') === t) return [6, 1];
     const i = ` ${f.flat} `.indexOf(` ${t} `);
     if (i === 0) return [4, 1];
@@ -137,7 +139,7 @@ const holds = (f: Field, p: { words: string[]; closed: boolean }) =>
 
 export function createSearcher(entries: readonly IndexEntry[], extra: { synonyms?: string[][] } = {}): Searcher {
   const prepared: Prepared[] = [];
-  // Every form of every word of the texts, with where it stands: entry and place, in turn.
+  // Every form of every text word, with where it stands: pairs of entry index and position.
   const postings = new Map<string, number[]>();
   // How many entries hold each form anywhere, for choosing among slips.
   const reach = new Map<string, number>();
@@ -223,8 +225,8 @@ export function createSearcher(entries: readonly IndexEntry[], extra: { synonyms
       .sort((a, b) => reach.get(b)! - reach.get(a)!)
       .slice(0, 3);
 
-  // Where each entry's text holds `t`: the word, the word by another ending, and while typed its start
-  // (from three letters: shorter starts are in nearly every text).
+  // Where each entry's text holds `t`: the word, the word with another ending, and, while `t` is being typed,
+  // words starting with it (from three letters; shorter starts are in nearly every text).
   const inText = (t: string, prefix: boolean): Map<number, number[]> => {
     const ws = new Set([t, ...[...(byStem.get(stem(t)) ?? [])].filter((w) => sameStem(w, t))]);
     if (prefix && t.length >= 3) for (const w of startsWith(t)) ws.add(w);
@@ -250,7 +252,7 @@ export function createSearcher(entries: readonly IndexEntry[], extra: { synonyms
     const st = ts.map(stem);
     const out = new Map<number, { s: number; missed: number }>();
     prepared.forEach((p, i) => {
-      // An entry that cannot hold enough of the words is passed over before it is read.
+      // An entry that can't hold enough of the words is skipped before it is read.
       let can = 0;
       for (let k = 0; k < ts.length; k++) if (where[k].has(i) || p.blob.includes(st[k])) can++;
       if (!can || can < ts.length - miss) return;
@@ -274,7 +276,7 @@ export function createSearcher(entries: readonly IndexEntry[], extra: { synonyms
         const code = p.code.has(t) ? CODE * rarity(t) : prefix && p.codeList.some((w) => w.startsWith(t)) ? CODE / 4 : 0;
         const at = where[k].get(i);
         const tf = at?.length ?? 0;
-        // A word found only inside another (port in Supported) is not held.
+        // A word found only inside another word (port in Supported) doesn't count as held.
         if (l < 2 && c < 2 && r < 2 && !code && !tf) {
           missed++;
           return;
@@ -283,7 +285,7 @@ export function createSearcher(entries: readonly IndexEntry[], extra: { synonyms
         const bm25 = tf ? (idf[k] * tf * (K1 + 1)) / (tf + K1 * (1 - B + (B * p.len) / avg)) : 0;
         s += weigh(T_LABEL, lt) + T_CAP[c] + weigh(T_CRUMB, lr) + code + TEXT * bm25;
       });
-      // Every word of a longer query in the title, or in the title and the place it lives.
+      // Bonus when every word of a longer query is in the title, or in the title and where the entry lives.
       if (ts.length >= 2 && titled && placed === ts.length) s += ALL;
       if (missed > miss || (missed && !named) || (missed === ts.length)) return;
       for (let k = 1; k < ts.length; k++) {

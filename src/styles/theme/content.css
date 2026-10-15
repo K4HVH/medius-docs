@@ -110,8 +110,8 @@ pre code[class*='language-'] { font: inherit; color: #bdbdbd; }
 .token.comment, .token.prolog, .token.doctype, .token.cdata { color: #6e798a; font-style: italic; }
 
 /* A place a search result or a link lands on: a blue outline that holds, then fades. A table row lights from
-   within instead, its first cell barred as on hover: an outline outside the row is cut by the table's scroll
-   box. Reduced motion stops the fade, and the mark goes when the class does (DocsLayout). */
+   within instead, its first cell barred as on hover, since the table's scroll box would cut an outline
+   outside the row. Reduced motion stops the fade; the mark then goes when DocsLayout removes the class. */
 @keyframes search-highlight-ring {
   0%, 55% { outline-color: var(--accent); }
   100% { outline-color: transparent; }
@@ -212,7 +212,7 @@ tr.search-highlight > td:first-child { box-shadow: inset 2px 0 var(--accent); an
 .filter .n { color: var(--muted); white-space: nowrap; }
 .filter .n b { display: inline-block; min-width: 2ch; text-align: right; font: 500 15px/1 var(--mono); color: var(--text); }
 .doc p.none { margin: 0; padding: 16px; color: var(--muted); }
-/* Alone under a filter, rather than inside the table it empties. */
+/* The no-match line, alone under a filter rather than inside the table the filter empties. */
 .docs-page > p.none { margin-top: 32px; padding: 0; }
 .doc p.src { margin-top: 12px; font-size: 13.5px; color: var(--dim); }
 /* A link outside a docs section, drawn as one inside it is. */
@@ -367,13 +367,13 @@ a.status:hover { color: var(--text); }
 .meter .t { position: relative; }
 .meter .t i { position: absolute; top: 0; bottom: 0; left: 0; }
 .meter .t i.hi { opacity: 0.35; }
-/* The commands each box was sent: in the column heads, and on a phone, whose rows hide the heads, under the
-   table's label. */
+/* The commands each box was sent: in the column heads, or on a phone (where the rows hide the heads) under
+   the table's label. */
 .pair-cmds { display: none; margin: 0 0 10px; color: var(--dim); }
 .pair-cmds code { margin-right: 14px; font: 500 11.5px/1 var(--mono); text-transform: none; letter-spacing: 0; color: var(--muted); }
 
-/* A table that stacks when narrow: each row's first cell leads, a cell with a data-label gets a line under it,
-   named, and any other sits at the right of the first line. The headers stay for a screen reader, out of
+/* A table that stacks when narrow: each row's first cell leads, a cell with a data-label gets a named line
+   under it, and any other cell sits at the right of the first line. The headers stay for a screen reader, out of
    sight, and the names aren't read twice. The device list stacks on a phone; a comparison table when its box
    is narrow. */
 @media (max-width: 700px) {

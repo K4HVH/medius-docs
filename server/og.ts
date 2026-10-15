@@ -5,10 +5,10 @@ import { loadFace } from '../src/app/card/layout';
 import { type Faces, cardSvg } from '../src/app/card/svg';
 
 // Link cards at /og/{page}.png (home at /og/index.png), drawn on first request and kept by the hash of
-// what they show. An address carrying that hash names one drawing for good; any other is kept five minutes.
+// what they show. An address carrying that hash always names the same drawing; any other is cached for 5 min.
 const IMMUTABLE = 'public, max-age=31536000, immutable';
 const SHORT = 'public, max-age=300';
-// About 200 KB a drawing; a redraw takes about 0.1 s.
+// ~200 KB per drawing; a redraw takes ~0.1 s.
 const KEPT = 100;
 
 let faces: Faces | undefined;
@@ -31,7 +31,7 @@ interface Renderer {
   next: number;
 }
 
-// One renderer thread a process, kept on globalThis so a copy of this module loaded again (the dev server
+// One renderer thread per process, kept on globalThis so a copy of this module loaded again (the dev server
 // reloads its config) uses it too. A thread that stops fails the drawings sent to it, and the next drawing
 // starts another.
 const renderer: Renderer = ((globalThis as Record<symbol, Renderer>)[Symbol.for('medius.og.renderer')] ??= { next: 0 });
@@ -71,8 +71,8 @@ export async function drawCard(c: CardContent): Promise<Uint8Array<ArrayBuffer>>
 }
 
 // Drawings are kept by what they show (cardKey), never by the hash in their address. Requests for one card
-// while it is drawn share the drawing. The oldest drawing goes once KEPT are held; a card whose words change
-// (a stats count) leaves its old drawing behind.
+// while it is being drawn share the drawing. Once KEPT drawings are held, the oldest goes; a card whose words
+// change (a stats count) leaves its old drawing behind.
 function draw(c: CardContent, key: string): Promise<Uint8Array<ArrayBuffer>> {
   let png = drawn.get(key);
   if (png) {

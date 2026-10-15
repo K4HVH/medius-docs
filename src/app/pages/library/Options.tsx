@@ -10,7 +10,7 @@ const Options: Component = () => {
         <p>
           Seven box settings, each set and read separately, all persisted in NVS across a reboot. The
           wire contract is on the native <A href="/native/commands/option"><code>OPTION</code></A>{' '}
-          command; <A href="/library/admin#factory-reset"><code>factory_reset</code></A> returns all
+          command. <A href="/library/admin#factory-reset"><code>factory_reset</code></A> returns all
           seven to their defaults.
         </p>
         <div class="table-scroll">
@@ -33,12 +33,11 @@ const Options: Component = () => {
         <pre class="api-signature">fn allow_imperfect_clones(&self, allow: bool) -&gt; Result&lt;()&gt;</pre>
         <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
         <p>
-          By default the box refuses a real device it can't clone faithfully; <code>true</code> clones
-          it anyway, as an imperfect clone. Changing it with such a device{' '}
-          <em>attached</em>, or a forced rate pending, reboots the device chip to re-clone.
-          Otherwise the clone re-presents only when the change alters the{' '}
-          <A href="/library/advanced/patch">patch set</A> it serves: turned on, a stored set the box
-          has not refused; turned off, a set it is serving.
+          By default the box refuses a real device it can't clone faithfully. <code>true</code> clones
+          it anyway, as an imperfect clone. If such a device is <em>attached</em>, or a forced rate is
+          pending, a change reboots the device chip to re-clone. Otherwise the clone re-presents only
+          if the change alters the <A href="/library/advanced/patch">patch set</A> it serves: turning
+          the opt-in on with a stored set the box hasn't refused, or off while it serves a set.
         </p>
         <div class="table-scroll">
           <table class="api-params">
@@ -59,27 +58,27 @@ const Options: Component = () => {
             <tbody>
               <tr><td>a real device the box can't clone faithfully</td><td>Refused: no clone appears.</td></tr>
               <tr><td>a forced rate, <A href="/library/options#set-emit-pace"><code>set_emit_pace</code></A>'s <code>force_hz</code></td><td>Not applied.</td></tr>
-              <tr><td><A href="/library/advanced/rewrite">rewrite rules</A></td><td><code>set_rewrite</code> returns <A href="/library/types/errors#errors"><code>ImperfectRequired</code></A>; <code>clear_rewrite</code> still runs, and turning the opt-in off clears the table.</td></tr>
-              <tr><td><A href="/library/advanced/patch">descriptor patches</A></td><td>Stored, not applied; <code>apply_patch</code> returns <code>ImperfectRequired</code>.</td></tr>
+              <tr><td><A href="/library/advanced/rewrite">rewrite rules</A></td><td><code>set_rewrite</code> returns <A href="/library/types/errors#errors"><code>ImperfectRequired</code></A>. <code>clear_rewrite</code> still runs, and turning the opt-in off clears the table.</td></tr>
+              <tr><td><A href="/library/advanced/patch">descriptor patches</A></td><td>Stored, not applied. <code>apply_patch</code> returns <code>ImperfectRequired</code>.</td></tr>
               <tr><td><A href="/library/advanced/transfer">control transfers</A></td><td>Replied <code>Refused</code>.</td></tr>
-              <tr><td><A href="/library/advanced/raw">raw reports</A>, and a clip's raw and transfer items</td><td>Dropped by the box; turning the opt-in off drops queued clip transfers.</td></tr>
-              <tr><td>a <A href="/library/clip#packet-triggers">clip packet trigger</A> that consumes</td><td>Refused by the box; turning the opt-in off removes held ones.</td></tr>
+              <tr><td><A href="/library/advanced/raw">raw reports</A>, and a clip's raw and transfer items</td><td>Dropped by the box. Turning the opt-in off drops queued clip transfers.</td></tr>
+              <tr><td>a <A href="/library/clip#packet-triggers">clip packet trigger</A> that consumes</td><td>Refused by the box. Turning the opt-in off removes held ones.</td></tr>
             </tbody>
           </table>
         </div>
         <div class="callout callout--info">
           <p>
-            A real device the box can't clone faithfully has more than four IN endpoints live at once,
-            or more than six HID interfaces; runs at high speed; or has configurations the box did not
-            capture, a vendor bulk or isochronous endpoint, a setting carrying more endpoint descriptors
-            than it declares (what fits is cloned and the rest left undriven), or a report descriptor
+            The box can't clone a real device faithfully if it: has &gt;4 IN endpoints live at once or
+            &gt;6 HID interfaces; runs at high speed; has configurations the box didn't capture; has a
+            vendor bulk or isochronous endpoint; has a setting carrying more endpoint descriptors than
+            it declares (what fits is cloned, the rest left undriven); or has a report descriptor
             truncated or never captured.
           </p>
         </div>
         <div class="callout callout--warning">
           <p>
             A change that reboots the device chip or re-presents the clone drops the box's session
-            state and a loaded clip; the library re-sends what it holds once the new clone is up (
+            state and a loaded clip. The library re-sends what it holds once the new clone is up (
             <A href="/library/lifecycle#restart">session recovery</A>).
           </p>
         </div>
@@ -94,14 +93,14 @@ device.allow_imperfect_clones(true)?;   // re-clones if the attached device need
         <pre class="api-signature">fn set_movement_riding(&self, window: Option&lt;Duration&gt;) -&gt; Result&lt;()&gt;</pre>
         <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
         <p>
-          <code>Some(window)</code> turns riding on: injected cursor and wheel motion ride a native
-          cursor-motion report received within <code>window</code>, with no synthetic motion frame.
-          Motion unridden past the window is dropped, not emitted on the next move.{' '}
+          <code>Some(window)</code> turns riding on. Injected cursor and wheel motion then ride a
+          native cursor-motion report received within <code>window</code>, with no synthetic motion
+          frame. Motion still unridden after the window is dropped, not emitted on the next move.{' '}
           <code>None</code> (the default) is off.
         </p>
         <p>
-          The window rounds to whole milliseconds, a non-zero <code>Some</code> is at least 1 ms,
-          and it clamps to 65535 ms.
+          The window rounds to whole milliseconds and clamps to 65535 ms. A non-zero{' '}
+          <code>Some</code> is ≥1 ms.
         </p>
         <p>
           While riding is on, idle injection (motion while the mouse is still) needs{' '}
@@ -139,9 +138,11 @@ device.set_movement_riding(None)?;                             // back to gaples
         <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
         <p>
           <code>force_hz</code> writes a <code>bInterval</code> onto every HID interrupt-IN endpoint
-          the clone serves and polls the real device at it, so a mouse declaring 125 Hz can run at 1 kHz.
-          It resolves to a power-of-two <code>bInterval</code>, never slower than the rate asked for, and
-          a low-speed clone floors at <code>bInterval</code> 16 (62 Hz).
+          the clone serves, and the box polls the real device at that interval. A mouse declaring
+          125 Hz can then run at 1 kHz. The rate resolves to a power-of-two <code>bInterval</code>:
+          1000/<code>force_hz</code> ms rounded to the nearest millisecond, then down to a power of
+          two (600 Hz gives 500 Hz). A low-speed clone floors at <code>bInterval</code> 16
+          (62 Hz).
         </p>
         <div class="callout callout--warning">
           <p>
@@ -158,7 +159,7 @@ device.set_movement_riding(None)?;                             // back to gaples
             </thead>
             <tbody>
               <tr><td><code>pace</code></td><td><A href="/library/types/enums#emit-pace"><code>EmitPace</code></A></td><td>Rate ceiling for injected motion.</td></tr>
-              <tr><td><code>force_hz</code></td><td><code>Option&lt;u16&gt;</code></td><td>The rate the clone advertises and the box polls the real device at; <code>None</code> leaves the native interval.</td></tr>
+              <tr><td><code>force_hz</code></td><td><code>Option&lt;u16&gt;</code></td><td>The rate the clone advertises and the box polls the real device at. <code>None</code> keeps the native <code>bInterval</code>.</td></tr>
             </tbody>
           </table>
         </div>
@@ -176,7 +177,7 @@ device.set_emit_pace(EmitPace::Learned, None)?;       // back to the default`}</
         <p>
           Sets the box's name, the readable partner to its{' '}
           <A href="/library/discovery#identity">MAC</A>. The firmware keeps the leading printable-ASCII
-          run, capped at 32 bytes; an empty string clears it. It reads back on{' '}
+          run, capped at 32 bytes. An empty string clears the name. It reads back on{' '}
           <A href="/library/types/structs#version"><code>Version::name</code></A>.
         </p>
         <div class="table-scroll">
@@ -185,7 +186,7 @@ device.set_emit_pace(EmitPace::Learned, None)?;       // back to the default`}</
               <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>name</code></td><td><code>&amp;str</code></td><td>The new name, 1 to 32 printable ASCII characters.</td></tr>
+              <tr><td><code>name</code></td><td><code>&amp;str</code></td><td>The new name, 1-32 printable ASCII characters.</td></tr>
             </tbody>
           </table>
         </div>
@@ -201,7 +202,7 @@ let name = device.query_version()?.name;  // read it back off Version`}</code></
         <pre class="api-signature">fn clear_name(&self) -&gt; Result&lt;()&gt;</pre>
         <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
         <p>
-          Clears the custom name; the box reverts to the <code>Medius-XXXX</code> default derived
+          Clears the custom name. The box reverts to the <code>Medius-XXXX</code> default derived
           from its MAC.
         </p>
         <div class="api-response-label">EXAMPLE</div>
@@ -215,11 +216,12 @@ device.clear_name()?;                  // back to "Medius-XXXX"`}</code></pre>
         <pre class="api-signature">fn set_bearing(&self, window: Option&lt;Duration&gt;, mode: BearingMode) -&gt; Result&lt;()&gt;</pre>
         <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
         <p>
-          Sets the <A href="/native/commands/lock#bearing">bearing</A>, the direction the box is
-          injecting, which <code>Direction::With</code> and <code>Direction::Against</code> weigh
-          against in <A href="/library/lock#scale"><code>scale</code></A>. Each axis holds the
-          direction of its last injected delta for <code>window</code> past the last one still owed,
-          then has none and both relative directions stop applying.
+          Sets the <A href="/native/commands/lock#bearing">bearing</A>: the direction the box is
+          injecting. <code>Direction::With</code> and <code>Direction::Against</code> in{' '}
+          <A href="/library/lock#scale"><code>scale</code></A> weigh against it. Each axis holds the
+          direction of its last injected delta until <code>window</code> passes with no injected
+          motion still owed. Then the axis has no bearing, and both relative directions stop
+          applying.
         </p>
         <div class="table-scroll">
           <table class="api-params">
@@ -227,7 +229,7 @@ device.clear_name()?;                  // back to "Medius-XXXX"`}</code></pre>
               <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>window</code></td><td><code>Option&lt;Duration&gt;</code></td><td><code>Some</code> with the hold window, or <code>None</code> to turn the bearing off, leaving the relative directions inert whatever their scale.</td></tr>
+              <tr><td><code>window</code></td><td><code>Option&lt;Duration&gt;</code></td><td><code>Some</code> with the hold window, or <code>None</code> to turn the bearing off. With it off, the relative directions do nothing, whatever their scale.</td></tr>
               <tr><td><code>mode</code></td><td><A href="/library/types/enums#bearing-mode"><code>BearingMode</code></A></td><td><code>PerAxis</code> or <code>Vector</code>.</td></tr>
             </tbody>
           </table>
@@ -239,12 +241,12 @@ device.clear_name()?;                  // back to "Medius-XXXX"`}</code></pre>
         <div class="callout callout--warning">
           <p>
             <A href="/library/types/enums#bearing-mode"><code>Vector</code></A> weighs a report
-            twice: block <code>Y</code> negative while the injection runs diagonally and a purely
+            twice. If <code>Y</code> negative is blocked while the injection runs diagonally, a purely
             horizontal flick can come out with its vertical share removed.
           </p>
           <p>
-            A change to either field drops the standing bearing and the box's banked fractions, a
-            visible step while a relative scale is live.
+            A change to either field drops the standing bearing and the box's banked fractions. While
+            a relative scale is live, this shows as a visible step.
           </p>
         </div>
         <div class="api-response-label">EXAMPLE</div>
@@ -265,27 +267,28 @@ device.set_bearing(None, BearingMode::PerAxis)?; // and off again`}</code></pre>
           <A href="/library/options#set-emit-pace">emit-rate</A> tick while injection is pending. The
           other three render motion through an{' '}
           <a href="https://github.com/optima-manent/ABCurves" target="_blank" rel="noreferrer">ABCurves</a>{' '}
-          model (MIT) fitted live from native reports, and differ only in the smoother the
-          model is fed.
+          model (MIT) fitted live from native reports. They differ only in the smoother that feeds the
+          model.
         </p>
         <p>
-          <code>full</code> picks what the model renders: injected motion alone, or joined with the
-          native cursor delta taken out of the relayed report, as one stream. Buttons, the wheel and
+          <code>full</code> picks what the model renders: injected motion alone, or injected and native
+          cursor motion as one stream (the native delta is taken out of the relayed report). Buttons,
+          the wheel and
           every other field stay relayed either way.
         </p>
         <div class="callout callout--warning">
           <p>
             Rendering adds the smoother's group delay: 4 ms <code>Stock</code>, 2.7 ms <code>Despiked</code>, none <code>Unsmoothed</code>. With{' '}
-            <code>full</code> on, native motion takes it plus 1 ms.{' '}
+            <code>full</code> on, native motion gets that delay +1 ms.{' '}
             <A href="/library/move#move-rel-now"><code>move_rel_now</code></A>,{' '}
             <A href="/library/move#flush-motion"><code>flush_motion</code></A> and{' '}
-            <A href="/library/move#discard-motion"><code>discard_motion</code></A> skip the model for
-            the paced path, and with <code>full</code> on the rendered stream ignores{' '}
+            <A href="/library/move#discard-motion"><code>discard_motion</code></A> skip the model and
+            take the paced path. With <code>full</code> on, the rendered stream ignores{' '}
             <A href="/library/options#set-movement-riding">movement riding</A>.
           </p>
           <p>
             The renderer stays out of the path until a profile arms, and while <code>mode</code> is{' '}
-            <code>Off</code>:{' '}
+            <code>Off</code>.{' '}
             <A href="/library/options#query-render"><code>query_render</code></A> reports both.
           </p>
         </div>
@@ -295,8 +298,8 @@ device.set_bearing(None, BearingMode::PerAxis)?; // and off again`}</code></pre>
               <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>mode</code></td><td><A href="/library/types/enums#render-mode"><code>RenderMode</code></A></td><td>Rendering texture; the box boots at <code>Despiked</code>.</td></tr>
-              <tr><td><code>full</code></td><td><code>bool</code></td><td>Render native motion instead of relaying it; the box boots with it off.</td></tr>
+              <tr><td><code>mode</code></td><td><A href="/library/types/enums#render-mode"><code>RenderMode</code></A></td><td>Rendering texture. The box boots at <code>Despiked</code>.</td></tr>
+              <tr><td><code>full</code></td><td><code>bool</code></td><td>Render native motion instead of relaying it. The box boots with it off.</td></tr>
             </tbody>
           </table>
         </div>
@@ -314,9 +317,9 @@ device.set_render(RenderMode::Off, false)?;        // renderer out of the path, 
         <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
         <p>
           A command loop slower than the native report rate sends deltas worth several native
-          reports. <code>percent</code> is the share of the command interval the box spreads each delta
-          across: <code>0</code> emits the whole delta on the next report, <code>100</code> spreads it
-          evenly over one interval, and above <code>100</code> carries a standing backlog.
+          reports. <code>percent</code> is the share of the command interval that the box spreads each
+          delta across. <code>0</code> emits the whole delta on the next report. <code>100</code>{' '}
+          spreads it evenly over one interval. Above <code>100</code> carries a standing backlog.
         </p>
         <div class="table-scroll">
           <table class="api-params">
@@ -324,15 +327,15 @@ device.set_render(RenderMode::Off, false)?;        // renderer out of the path, 
               <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>percent</code></td><td><code>u16</code></td><td>Share of the command interval, in percent; the box boots at <code>100</code>.</td></tr>
+              <tr><td><code>percent</code></td><td><code>u16</code></td><td>Share of the command interval, in percent. The box boots at <code>100</code>.</td></tr>
             </tbody>
           </table>
         </div>
         <div class="callout callout--warning">
           <p>
-            Spreading adds half the interval of latency on average, about 4 ms on a 125 Hz loop. The
-            delivered total never changes; a loop at the native report rate keeps each command whole,
-            alone on one report.
+            On average, spreading adds half the command interval of latency (~4 ms on a 125 Hz loop).
+            The delivered total never changes. A loop at the native report rate keeps each command
+            whole, alone on one report.
           </p>
           <p>
             <A href="/library/move#move-rel-now"><code>move_rel_now</code></A>,{' '}
@@ -393,9 +396,9 @@ match device.query_movement_riding()? {
         <p>
           Returns an{' '}
           <A href="/library/types/structs#emit-pace-status"><code>EmitPaceStatus</code></A>{' '}
-          with the pace and the rates. <code>advertised_hz</code> is the clone's current rate: native
-          while nothing is forced, the forced rate once something is, keeping no record of the native rate
-          before the force.
+          with the pace and the rates. <code>advertised_hz</code> is the clone's current rate: the
+          native rate while nothing is forced, otherwise the forced rate. It keeps no record of the
+          native rate from before the force.
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`use medius::{Device, EmitPace};
@@ -431,9 +434,9 @@ if bearing.is_live() {
         <p><span class="api-badge api-badge--responded">Blocks</span></p>
         <p>
           Returns a <A href="/library/types/structs#render-status"><code>RenderStatus</code></A>.{' '}
-          <code>ready</code> is false until a profile arms, and while the box's two chips have not
-          yet agreed which holds the motion; until then motion is relayed and injection takes the
-          paced fill whatever <code>mode</code> says.
+          <code>ready</code> is false until a profile arms, and while the box's two chips haven't yet
+          agreed which one holds the motion. Until then, motion is relayed and injection takes the
+          paced fill, whatever <code>mode</code> says.
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`use medius::Device;
@@ -451,9 +454,10 @@ if !status.ready {
         <p><span class="api-badge api-badge--responded">Blocks</span></p>
         <p>
           Returns a <A href="/library/types/structs#spread-status"><code>SpreadStatus</code></A>.{' '}
-          <code>span_us</code> is <code>0</code> while <code>percent</code> is <code>0</code>, until
-          the box has learned the command interval, and while the box's two chips have not yet
-          agreed which holds the motion; in each case the whole delta is emitted on the next report.
+          <code>span_us</code> is <code>0</code> in three cases: while <code>percent</code> is{' '}
+          <code>0</code>, until the box has learned the command interval, and while the box's two
+          chips haven't yet agreed which one holds the motion. In each case the whole delta is emitted
+          on the next report.
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`use medius::Device;

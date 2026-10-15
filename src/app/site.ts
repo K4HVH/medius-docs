@@ -1,6 +1,6 @@
 export const SITE = 'https://medius.k4tech.net';
 
-// The landing's claim, a line each; the home page's link card sets it the same way.
+// The landing's claim, one entry per line; the home page's link card breaks it the same way.
 export const CLAIM = ['Replacement firmware', 'for the MAKCU box.'] as const;
 
 export const LINKS = {
@@ -16,18 +16,18 @@ export const LIVE_PATHS: ReadonlySet<string> = new Set(['/dashboard/changelog', 
 // Pages the server fills in per request where it can, and serves as prerendered when it can't.
 export const SOFT_FILL_PATHS: ReadonlySet<string> = new Set(['/', '/guide/compatibility']);
 
-// Pages that moved, each to where its content lives now: the server replies to the old path with a 301
-// there, and the app follows a stale link the same way.
+// Pages that moved, mapped to where their content lives now. The server answers the old path with a 301 to
+// the new one, and the app follows a stale link the same way.
 export const MOVED: Readonly<Record<string, string>> = {
-  // A place is named by its hash, which a browser keeps over the old address's (a Location with none takes the
-  // old one); the page writes the place's address once it lands.
+  // The new address names the place by its hash. A browser uses a Location's hash over the old address's (a
+  // Location without one keeps the old hash). Once the page lands, it writes the place's address.
   '/dashboard/advanced-control': '/dashboard/control#advanced',
   '/dashboard/advanced': '/dashboard/flash',
-  // An anchor on the old page carries over where the new one keeps it (the FAQ's answers).
+  // An anchor on the old page carries over if the new page has it too (the FAQ's answers).
   '/guide/update': '/guide/help#q-update',
   '/guide/faq': '/guide/help',
   '/guide/troubleshooting': '/guide/help',
   '/guide/device-fixes': '/guide/compatibility#fixes',
-  // The address a privacy policy is looked for at, and the one the Discord bot's listing names.
+  // Where people look for a privacy policy, and the address the Discord bot's listing names.
   '/privacy': '/guide/privacy',
 };

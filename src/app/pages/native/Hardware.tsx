@@ -9,7 +9,7 @@ const Hardware: Component = () => {
       <PageHeader id="ports">
         <p>
           Inside are two <a href="https://www.espressif.com/en/products/socs" target="_blank" rel="noreferrer">ESP32</a>-S3 microcontrollers and a <a href="https://www.wch-ic.com/products/CH343.html" target="_blank" rel="noreferrer"><code>CH343</code></a> USB-serial bridge. A
-          program speaks only to the <code>CH343</code> serial port; the two chips share an internal
+          program speaks only to the <code>CH343</code> serial port. The two chips share an internal
           20 Mbaud link, separate from the 6 Mbaud control link.
         </p>
         <div class="table-scroll">
@@ -26,8 +26,8 @@ const Hardware: Component = () => {
                 <td><code>USB1</code></td>
                 <td>Game PC</td>
                 <td>
-                  The clone (<A href="/native/architecture">device chip</A>), copying the mouse's
-                  USB identity so the PC enumerates the same device as a direct connection.
+                  The clone (<A href="/native/architecture">device chip</A>). It copies the mouse's
+                  USB identity, so the PC enumerates the same device as on a direct connection.
                 </td>
               </tr>
               <tr>
@@ -52,7 +52,7 @@ const Hardware: Component = () => {
           </p>
           <p>
             The <code>USB3</code> 5V rail can't be pulled low in firmware, so the pair back-feeds
-            power, which can force a shutdown or drain the battery.
+            power. Back-fed power can force a shutdown or drain the battery.
           </p>
         </div>
       </DocSection>
@@ -70,11 +70,11 @@ const Hardware: Component = () => {
             <tbody>
               <tr>
                 <td><code>USB2</code> (control), or the program stops</td>
-                <td>After <code>1 s</code> of silence the box clears all <A href="/native/injection">injection</A> and returns to passthrough; the mouse keeps working.</td>
+                <td>After <code>1 s</code> of silence the box clears all <A href="/native/injection">injection</A> and returns to passthrough. The mouse keeps working.</td>
               </tr>
               <tr>
                 <td><code>USB1</code> (clone)</td>
-                <td>An ordinary device detach on the game PC; the box drops its injection state.</td>
+                <td>An ordinary device detach on the game PC. The box drops its injection state.</td>
               </tr>
               <tr>
                 <td><code>USB3</code> (mouse)</td>
@@ -88,8 +88,8 @@ const Hardware: Component = () => {
           <A href="/native/injection#safety">silence timeout</A>, send{' '}
           <A href="/native/commands/admin#reset"><code>RESET</code></A> before unplugging (library:{' '}
           <A href="/library/admin#reset"><code>reset</code></A>). Dropping the{' '}
-          <A href="/library/guides/connection#release"><code>Device</code></A> stops its threads;
-          the same timeout then clears the box. Port order otherwise doesn't matter.
+          <A href="/library/guides/connection#release"><code>Device</code></A> stops its threads.
+          The silence timeout then clears the box. Port order otherwise doesn't matter.
         </p>
         <div class="callout callout--warning">
           <p>

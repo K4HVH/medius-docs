@@ -93,8 +93,8 @@ const Devices: Component = () => {
         </Show>
       </div>
       <p class="src">
-        Owners' reports from Discord, and every mouse and keyboard the usage stats recorded on 2 or more boxes.
-        The Reported column gives the latest release on the day of the report.
+        Owners' reports from Discord, and every mouse and keyboard the usage stats recorded on ≥2 boxes. Reported
+        is the latest release on the day of the report.
       </p>
 
       <DocSection id="limits" title="Limits">

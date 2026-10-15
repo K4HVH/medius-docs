@@ -10,7 +10,7 @@
     "evdev": "Input events, timed by the kernel as the HID driver handles each report",
     "hidraw": "Each report byte for byte, timed when the reading program wakes",
     "host": "The PC's clock, read by the test program when it writes a command, or when the clone connects or disconnects",
-    "emulator": "Native reports as the emulator queued them, on its clock, placed on the bus clock through its control link's packets (usbmon) to within ±95 µs"
+    "emulator": "When the emulator queued each native report, on its clock, mapped to the bus clock to within ±95 µs by its control link's packets (usbmon)"
   },
   "categories": [
     {
@@ -20,7 +20,7 @@
         {
           "id": "devices-shapes",
           "title": "Cloned devices",
-          "about": "Both boxes got the same 57 emulated devices, one box at a time behind one hub, Medius with imperfect clones off, as it ships.",
+          "about": "Both boxes got the same 57 emulated devices, one box at a time behind one hub. Medius had imperfect clones off, as it ships.",
           "tables": [
             {
               "kind": "outcome",
@@ -1698,7 +1698,7 @@
             },
             {
               "kind": "measure",
-              "label": "Time from the device appearing to its clone configured, min to max",
+              "label": "Time from device appearing to clone configured, min to max",
               "key": "Devices",
               "unit": "s",
               "better": "lower",
@@ -2251,7 +2251,7 @@
                 },
                 {
                   "id": "devices-interval-xinput",
-                  "label": "XInput pad with intervals of 2 to 64 ms",
+                  "label": "XInput pad with 2-64 ms intervals",
                   "stock": {
                     "is": "Native interval",
                     "src": [
@@ -2275,7 +2275,7 @@
             },
             {
               "kind": "outcome",
-              "label": "Reports the PC gets a second",
+              "label": "Reports/s reaching the PC",
               "key": "Device",
               "outcomes": [
                 "Native rate",
@@ -2303,7 +2303,7 @@
                       }
                     ]
                   },
-                  "note": "Native rate: 125 a second"
+                  "note": "Native rate: 125/s"
                 },
                 {
                   "id": "devices-poll-reports-8ms-behind-8ms",
@@ -2331,7 +2331,7 @@
             },
             {
               "kind": "outcome",
-              "label": "Interval a high-speed mouse's clone declares",
+              "label": "Interval the clone declares for a high-speed mouse",
               "key": "Device",
               "outcomes": [
                 "Native bInterval 4",
@@ -2341,7 +2341,7 @@
               "rows": [
                 {
                   "id": "devices-interval-hs-mouse",
-                  "label": "High-speed mouse declaring bInterval 4, 1 ms at high speed",
+                  "label": "High-speed mouse declaring bInterval 4 (1 ms at high speed)",
                   "note": "Both clones run at full speed, where the PC reads bInterval 4 as 4 ms",
                   "stock": {
                     "is": "1 ms",
@@ -2377,7 +2377,7 @@
         {
           "id": "devices-imperfect",
           "title": "Medius with imperfect clones on",
-          "about": "The devices Medius doesn't clone as it ships, given to Medius again with imperfect clones on. Stock has no such setting, so its column repeats the results above.",
+          "about": "The devices Medius refuses as it ships, given to it again with imperfect clones on. Stock has no such setting, so its column repeats the results above.",
           "tables": [
             {
               "kind": "outcome",
@@ -2693,7 +2693,7 @@
         {
           "id": "devices-endpoint-data",
           "title": "Data through every endpoint",
-          "about": "Each device streams a counter on every IN endpoint in turn, at the rate it declares, and the PC reads it through usbfs with eight transfers queued. An endpoint the clone has but that delivers nothing, or under 95% of the native rate, counts as sending nothing. Medius as it ships, imperfect clones off.",
+          "about": "Each device streams a counter on every IN endpoint in turn, at its declared rate. The PC reads each endpoint through usbfs with eight transfers queued. A cloned endpoint delivering <95% of the native rate counts as sending nothing. Medius as it ships, imperfect clones off.",
           "tables": [
             {
               "kind": "outcome",
@@ -3880,7 +3880,7 @@
         {
           "id": "devices-report-size",
           "title": "Large report descriptors",
-          "about": "A mouse whose report descriptor was padded to sizes from 256 to 2,047 bytes.",
+          "about": "A mouse with its report descriptor padded to 256-2,047 bytes.",
           "tables": [
             {
               "kind": "outcome",
@@ -3939,7 +3939,7 @@
                 },
                 {
                   "id": "devices-report-513-700",
-                  "label": "513 to 700 bytes",
+                  "label": "513-700 bytes",
                   "stock": {
                     "is": "Doesn't load",
                     "src": [
@@ -4001,7 +4001,7 @@
                 },
                 {
                   "id": "devices-report-768-2047",
-                  "label": "768 to 2,047 bytes",
+                  "label": "768-2,047 bytes",
                   "stock": {
                     "is": "Doesn't load",
                     "src": [
@@ -4228,7 +4228,7 @@
         {
           "id": "devices-endpoint-0",
           "title": "Endpoint 0 replies",
-          "about": "The PC's standard, class and vendor requests to each clone, each reply checked against the native reply. Reply times are not ranked: the native time, which a faithful clone matches, isn't measured.",
+          "about": "The PC sent standard, class and vendor requests to each clone, and each reply was checked against the native reply. Reply times aren't ranked: a faithful clone matches the native reply time, which isn't measured.",
           "tables": [
             {
               "kind": "outcome",
@@ -6081,7 +6081,7 @@
           "tables": [
             {
               "kind": "measure",
-              "label": "Reports more than 10% early or late, in 15 s",
+              "label": "Reports >10% early or late, in 15 s",
               "key": "Mouse",
               "unit": "intervals",
               "better": "lower",
@@ -6220,7 +6220,7 @@
             },
             {
               "kind": "measure",
-              "label": "Gaps longer than one and a half reports, in 15 s",
+              "label": "Gaps >1.5× the report interval, in 15 s",
               "key": "Mouse",
               "unit": "gaps",
               "better": "lower",
@@ -6359,7 +6359,7 @@
             },
             {
               "kind": "measure",
-              "label": "Reports more than 10% early or late, in 2 minutes",
+              "label": "Reports >10% early or late, in 2 minutes",
               "key": "Mouse",
               "unit": "intervals",
               "better": "lower",
@@ -6392,7 +6392,7 @@
             },
             {
               "kind": "measure",
-              "label": "Gaps longer than one and a half reports, in 2 minutes",
+              "label": "Gaps >1.5× the report interval, in 2 minutes",
               "key": "Mouse",
               "unit": "gaps",
               "better": "lower",
@@ -6425,7 +6425,7 @@
             },
             {
               "kind": "measure",
-              "label": "Keyboard reports more than 10% early or late, in 15 s",
+              "label": "Keyboard reports >10% early or late, in 15 s",
               "key": "Keyboard",
               "unit": "intervals",
               "better": "lower",
@@ -6503,7 +6503,7 @@
         {
           "id": "pass-latency",
           "title": "Report latency",
-          "about": "Each native report is timed from the emulator queuing it to the PC receiving the clone's copy, with the emulator 1,000 ppm slow so its reports land at every point between polls. Plugged straight into a PC, a native report waits half the native interval on average.",
+          "about": "Each native report is timed from the emulator queuing it to the PC receiving the clone's copy. The emulator runs 1,000 ppm slow, so its reports land at every point between polls. Plugged straight into a PC, a native report waits half the native interval on average (4 ms for a 125 Hz mouse).",
           "tables": [
             {
               "kind": "measure",
@@ -6658,7 +6658,7 @@
                       }
                     ]
                   },
-                  "note": "Stock's clone declares 1 ms where the native interval is 8 ms (Poll interval)"
+                  "note": "Stock's clone declares 1 ms, the mouse 8 ms (see Poll interval)"
                 }
               ]
             },
@@ -7135,12 +7135,12 @@
         {
           "id": "pass-inject",
           "title": "Reads while injecting",
-          "about": "The emulated mouse sends its next report only once the box has read the last, so the count is how often the box read it. A 1 kHz mouse gives 15,500 reports in 15.5 s and 5,500 in 5.5 s.",
+          "about": "The emulated mouse sends its next report only after the box reads the last one, so the count is how often the box read the mouse. Read every millisecond, a 1 kHz mouse gives 15,500 reports in 15.5 s and 5,500 in 5.5 s.",
           "tables": [
             {
               "kind": "measure",
               "label": "Reports read from a 1 kHz mouse in about 15.5 s",
-              "key": "Box",
+              "key": "Load",
               "unit": "reports",
               "better": "higher",
               "layer": "wire",
@@ -7152,7 +7152,7 @@
               "rows": [
                 {
                   "id": "pass-inject-varying",
-                  "label": "Injecting 1,000 moves a second",
+                  "label": "Injecting 1,000 moves/s",
                   "stock": {
                     "lo": 7133,
                     "hi": 7201,
@@ -7221,7 +7221,7 @@
                 },
                 {
                   "id": "pass-inject-count-1000",
-                  "label": "1,000 a second",
+                  "label": "1,000/s",
                   "stock": {
                     "value": 6877,
                     "src": [
@@ -7243,7 +7243,7 @@
                 },
                 {
                   "id": "pass-inject-count-500",
-                  "label": "500 a second",
+                  "label": "500/s",
                   "stock": {
                     "value": 5238,
                     "src": [
@@ -7265,7 +7265,7 @@
                 },
                 {
                   "id": "pass-inject-count-125",
-                  "label": "125 a second",
+                  "label": "125/s",
                   "stock": {
                     "value": 7020,
                     "src": [
@@ -7302,7 +7302,7 @@
               "rows": [
                 {
                   "id": "pass-inject-sine-1000",
-                  "label": "1,000 a second",
+                  "label": "1,000/s",
                   "stock": {
                     "lo": 7180,
                     "hi": 7227,
@@ -7334,7 +7334,7 @@
                 },
                 {
                   "id": "pass-inject-sine-500",
-                  "label": "500 a second",
+                  "label": "500/s",
                   "stock": {
                     "lo": 6965,
                     "hi": 7028,
@@ -7366,7 +7366,7 @@
                 },
                 {
                   "id": "pass-inject-sine-125",
-                  "label": "125 a second",
+                  "label": "125/s",
                   "stock": {
                     "lo": 7190,
                     "hi": 7287,
@@ -7400,7 +7400,7 @@
             },
             {
               "kind": "measure",
-              "label": "Reports read from a 1 kHz mouse in 15.5 s, injecting 1,000 moves a second",
+              "label": "Reports read from a 1 kHz mouse in 15.5 s, injecting 1,000 moves/s",
               "key": "Mouse",
               "unit": "reports",
               "better": "higher",
@@ -7490,7 +7490,7 @@
               "rows": [
                 {
                   "id": "pass-inject-slow-10",
-                  "label": "10 moves a second",
+                  "label": "10 moves/s",
                   "stock": {
                     "value": 3003,
                     "src": [
@@ -7512,7 +7512,7 @@
                 },
                 {
                   "id": "pass-inject-slow-30",
-                  "label": "30 moves a second",
+                  "label": "30 moves/s",
                   "stock": {
                     "value": 3010,
                     "src": [
@@ -7534,7 +7534,7 @@
                 },
                 {
                   "id": "pass-inject-slow-move0",
-                  "label": "1,000 zero-count moves a second",
+                  "label": "1,000 zero-count moves/s",
                   "stock": {
                     "value": 5496,
                     "src": [
@@ -7556,7 +7556,7 @@
                 },
                 {
                   "id": "pass-inject-slow-query",
-                  "label": "100 queries a second",
+                  "label": "100 queries/s",
                   "stock": {
                     "value": 5500,
                     "src": [
@@ -7969,7 +7969,7 @@
                 },
                 {
                   "id": "pass-dev-vendor",
-                  "label": "Vendor stream at 1,000 packets a second",
+                  "label": "Vendor stream at 1,000 packets/s",
                   "stock": {
                     "is": "Reaches the PC",
                     "src": [
@@ -9660,12 +9660,12 @@
         {
           "id": "inj-stream-lag",
           "title": "Delay in a stream of moves",
-          "about": "A steady stream of one-count moves for 2 s into a still mouse, each count matched to its command: the delay from command to count, each box on its default smoothing.",
+          "about": "A steady 2 s stream of one-count moves into a still mouse, each box on its default smoothing. Each count is matched to its command and timed from it.",
           "tables": [
             {
               "kind": "measure",
               "label": "Delay of each count in a steady stream, p50",
-              "key": "Moves a second",
+              "key": "Moves/s",
               "unit": "ms",
               "better": "lower",
               "stat": "p50",
@@ -9839,7 +9839,7 @@
         {
           "id": "inj-settings",
           "title": "Smoothing settings",
-          "about": "Each box's smoothing settings, measured the same way: 40 single moves into a still mouse, and 100 one-count moves 150 to 250 ms apart into a mouse moving at 1 kHz, timed on the PC's USB bus.",
+          "about": "Each box's smoothing settings, measured the same way on the PC's USB bus: 40 single moves into a still mouse, and 100 one-count moves 150-250 ms apart into a moving 1 kHz mouse.",
           "tables": [
             {
               "kind": "settings",
@@ -10389,7 +10389,7 @@
         {
           "id": "inj-reports-emitted",
           "title": "Extra reports",
-          "about": "Reports each box emitted while injecting: alongside a 1 kHz mouse that moves in every report, in a steady stream of moves into a still mouse, and beside a mouse reporting at 1 kHz or 125 Hz. A 1 kHz mouse sends about 2,500 reports in 2.5 s, a 125 Hz one about 312.",
+          "about": "Reports each box emitted while injecting: beside a 1 kHz mouse moving in every report, in a steady stream of moves into a still mouse, and beside a mouse reporting at 1 kHz or 125 Hz. A 1 kHz mouse sends ~2,500 reports in 2.5 s, a 125 Hz one ~312.",
           "tables": [
             {
               "kind": "measure",
@@ -10453,7 +10453,7 @@
               "rows": [
                 {
                   "id": "inj-box-only-sine-1000",
-                  "label": "1,000 moves a second",
+                  "label": "1,000 moves/s",
                   "stock": {
                     "value": 5220,
                     "src": [
@@ -10707,7 +10707,7 @@
                 },
                 {
                   "id": "inj-box-only-sine-500",
-                  "label": "500 moves a second",
+                  "label": "500 moves/s",
                   "stock": {
                     "value": 3902,
                     "src": [
@@ -10961,7 +10961,7 @@
                 },
                 {
                   "id": "inj-box-only-sine-125",
-                  "label": "125 moves a second",
+                  "label": "125 moves/s",
                   "stock": {
                     "value": 1087,
                     "src": [
@@ -11230,7 +11230,7 @@
               "rows": [
                 {
                   "id": "inj-box-only-slow-30",
-                  "label": "30 moves a second",
+                  "label": "30 moves/s",
                   "stock": {
                     "value": 11,
                     "src": [
@@ -11284,7 +11284,7 @@
                 },
                 {
                   "id": "inj-box-only-slow-10",
-                  "label": "10 moves a second",
+                  "label": "10 moves/s",
                   "stock": {
                     "value": 0,
                     "src": [
@@ -11341,7 +11341,7 @@
             {
               "kind": "measure",
               "label": "Empty reports in 2 s of one-count moves, mouse still",
-              "key": "Moves a second",
+              "key": "Moves/s",
               "unit": "reports",
               "better": "lower",
               "layer": "hidraw",
@@ -11499,7 +11499,7 @@
               "rows": [
                 {
                   "id": "inj-beside-1k-1000",
-                  "label": "1 kHz mouse, 1,000 moves a second",
+                  "label": "1 kHz mouse, 1,000 moves/s",
                   "stock": {
                     "value": 2500,
                     "src": [
@@ -11521,7 +11521,7 @@
                 },
                 {
                   "id": "inj-beside-1k-125",
-                  "label": "1 kHz mouse, 125 moves a second",
+                  "label": "1 kHz mouse, 125 moves/s",
                   "stock": {
                     "value": 2492,
                     "src": [
@@ -11543,7 +11543,7 @@
                 },
                 {
                   "id": "inj-beside-125-1000",
-                  "label": "125 Hz mouse, 1,000 moves a second",
+                  "label": "125 Hz mouse, 1,000 moves/s",
                   "stock": {
                     "value": 2073,
                     "src": [
@@ -11565,7 +11565,7 @@
                 },
                 {
                   "id": "inj-beside-125-125",
-                  "label": "125 Hz mouse, 125 moves a second",
+                  "label": "125 Hz mouse, 125 moves/s",
                   "stock": {
                     "value": 1316,
                     "src": [
@@ -11609,7 +11609,7 @@
               "rows": [
                 {
                   "id": "inj-total-rest-spaced",
-                  "label": "Still mouse, 400 moves 30 to 60 ms apart",
+                  "label": "Still mouse, 400 moves 30-60 ms apart",
                   "stock": {
                     "is": "Exact",
                     "src": [
@@ -11733,7 +11733,7 @@
                 },
                 {
                   "id": "inj-total-1k-spaced",
-                  "label": "Moving 1 kHz mouse, 400 moves 30 to 60 ms apart",
+                  "label": "Moving 1 kHz mouse, 400 moves 30-60 ms apart",
                   "stock": {
                     "is": "Exact",
                     "src": [
@@ -11857,7 +11857,7 @@
                 },
                 {
                   "id": "inj-total-125-spaced",
-                  "label": "Moving 125 Hz mouse, 400 moves 30 to 60 ms apart",
+                  "label": "Moving 125 Hz mouse, 400 moves 30-60 ms apart",
                   "stock": {
                     "is": "Exact",
                     "src": [
@@ -11981,7 +11981,7 @@
                 },
                 {
                   "id": "inj-total-var-spaced",
-                  "label": "Mouse moving at a varying speed, 400 moves 30 to 60 ms apart",
+                  "label": "Mouse moving at a varying speed, 400 moves 30-60 ms apart",
                   "stock": {
                     "is": "Exact",
                     "src": [
@@ -12057,7 +12057,7 @@
               "rows": [
                 {
                   "id": "inj-total-now-rest-spaced",
-                  "label": "Still mouse, 400 moves 30 to 60 ms apart",
+                  "label": "Still mouse, 400 moves 30-60 ms apart",
                   "stock": {
                     "is": "Exact",
                     "src": [
@@ -12181,7 +12181,7 @@
                 },
                 {
                   "id": "inj-total-now-1k-spaced",
-                  "label": "Moving 1 kHz mouse, 400 moves 30 to 60 ms apart",
+                  "label": "Moving 1 kHz mouse, 400 moves 30-60 ms apart",
                   "stock": {
                     "is": "Exact",
                     "src": [
@@ -12305,7 +12305,7 @@
                 },
                 {
                   "id": "inj-total-now-125-spaced",
-                  "label": "Moving 125 Hz mouse, 400 moves 30 to 60 ms apart",
+                  "label": "Moving 125 Hz mouse, 400 moves 30-60 ms apart",
                   "stock": {
                     "is": "Exact",
                     "src": [
@@ -12429,7 +12429,7 @@
                 },
                 {
                   "id": "inj-total-now-var-spaced",
-                  "label": "Mouse moving at a varying speed, 400 moves 30 to 60 ms apart",
+                  "label": "Mouse moving at a varying speed, 400 moves 30-60 ms apart",
                   "stock": {
                     "is": "Exact",
                     "src": [
@@ -12670,7 +12670,7 @@
               "rows": [
                 {
                   "id": "inj-total-counting-1000",
-                  "label": "Moving 1 kHz mouse, 1,000 moves a second",
+                  "label": "Moving 1 kHz mouse, 1,000 moves/s",
                   "stock": {
                     "value": 29977,
                     "of": 30000,
@@ -12717,7 +12717,7 @@
               "rows": [
                 {
                   "id": "inj-reversed-1k",
-                  "label": "Moving 1 kHz mouse, 400 moves 30 to 60 ms apart",
+                  "label": "Moving 1 kHz mouse, 400 moves 30-60 ms apart",
                   "stock": {
                     "is": "None",
                     "src": [
@@ -12755,7 +12755,7 @@
                 },
                 {
                   "id": "inj-reversed-125",
-                  "label": "Moving 125 Hz mouse, 400 moves 30 to 60 ms apart",
+                  "label": "Moving 125 Hz mouse, 400 moves 30-60 ms apart",
                   "stock": {
                     "is": "None",
                     "src": [
@@ -12793,7 +12793,7 @@
                 },
                 {
                   "id": "inj-reversed-var",
-                  "label": "Mouse moving at a varying speed, 400 moves 30 to 60 ms apart",
+                  "label": "Mouse moving at a varying speed, 400 moves 30-60 ms apart",
                   "stock": {
                     "is": "None",
                     "src": [
@@ -12830,7 +12830,7 @@
               "rows": [
                 {
                   "id": "inj-total-count-1000",
-                  "label": "Counting mouse, 1,000 moves a second",
+                  "label": "Counting mouse, 1,000 moves/s",
                   "stock": {
                     "value": 14988,
                     "src": [
@@ -12854,7 +12854,7 @@
                 },
                 {
                   "id": "inj-total-count-500",
-                  "label": "Counting mouse, 500 moves a second",
+                  "label": "Counting mouse, 500 moves/s",
                   "stock": {
                     "value": 7500,
                     "src": [
@@ -12878,7 +12878,7 @@
                 },
                 {
                   "id": "inj-total-count-125",
-                  "label": "Counting mouse, 125 moves a second",
+                  "label": "Counting mouse, 125 moves/s",
                   "stock": {
                     "value": 1870,
                     "src": [
@@ -12902,7 +12902,7 @@
                 },
                 {
                   "id": "inj-total-sine-1000",
-                  "label": "Mouse moving at a varying speed, 1,000 moves a second",
+                  "label": "Mouse moving at a varying speed, 1,000 moves/s",
                   "stock": {
                     "value": 14989,
                     "src": [
@@ -12926,7 +12926,7 @@
                 },
                 {
                   "id": "inj-total-sine-500",
-                  "label": "Mouse moving at a varying speed, 500 moves a second",
+                  "label": "Mouse moving at a varying speed, 500 moves/s",
                   "stock": {
                     "value": 7497,
                     "src": [
@@ -12950,7 +12950,7 @@
                 },
                 {
                   "id": "inj-total-sine-125",
-                  "label": "Mouse moving at a varying speed, 125 moves a second",
+                  "label": "Mouse moving at a varying speed, 125 moves/s",
                   "stock": {
                     "value": 1873,
                     "src": [
@@ -13257,7 +13257,7 @@
               "better": "lower",
               "stat": "p50",
               "layer": "wire",
-              "n": "20 to 40 commands per row",
+              "n": "20-40 commands per row",
               "commands": {
                 "stock": "km.wheel",
                 "medius": "MOVE"
@@ -13415,7 +13415,7 @@
         {
           "id": "inj-raw-move",
           "title": "Unsmoothed moves",
-          "about": "Stock's RAW_MOVE, documented as skipping its smoothing, against Medius's MOVE(NOW), one at a time and as a stream of 200 at 1,000 a second, timed on the PC's USB bus.",
+          "about": "Stock's RAW_MOVE (documented as skipping its smoothing) against Medius's MOVE(NOW), timed on the PC's USB bus: one at a time, and as a stream of 200 at 1,000/s.",
           "tables": [
             {
               "kind": "measure",
@@ -13487,7 +13487,7 @@
             },
             {
               "kind": "measure",
-              "label": "Counts arriving from 200 unsmoothed moves at 1,000 a second",
+              "label": "Counts arriving from 200 unsmoothed moves at 1,000/s",
               "key": "Mouse",
               "unit": "counts",
               "better": "higher",
@@ -13535,7 +13535,7 @@
         {
           "id": "link-queries",
           "title": "Query round trip",
-          "about": "A program sent each box 3,000 queries, one at a time, timed on the PC's USB bus, two runs on each box.",
+          "about": "A program sent each box 3,000 queries one at a time, in two runs, timed on the PC's USB bus.",
           "tables": [
             {
               "kind": "measure",
@@ -13698,12 +13698,12 @@
         {
           "id": "link-paced-rest",
           "title": "Paced moves, mouse still",
-          "about": "One-count moves sent at a steady rate into a still mouse: stock in its binary and text forms, Medius as MOVE frames, in 1 ms batches unless a row says otherwise. Each count adds one to the clone's X.",
+          "about": "One-count moves at a steady rate into a still mouse: stock's binary and text forms against Medius's MOVE frames, sent in 1 ms batches unless the table says otherwise. Each count adds 1 to the clone's X.",
           "tables": [
             {
               "kind": "measure",
               "label": "Counts arriving from 1 s of moves, binary",
-              "key": "Moves a second",
+              "key": "Moves/s",
               "unit": "counts",
               "better": "higher",
               "layer": "evdev",
@@ -13715,7 +13715,7 @@
               "rows": [
                 {
                   "id": "link-rest-bin-500",
-                  "label": "500 a second",
+                  "label": "500/s",
                   "stock": {
                     "value": 500,
                     "src": [
@@ -13739,7 +13739,7 @@
                 },
                 {
                   "id": "link-rest-bin-1000",
-                  "label": "1,000 a second",
+                  "label": "1,000/s",
                   "stock": {
                     "value": 1000,
                     "src": [
@@ -13763,7 +13763,7 @@
                 },
                 {
                   "id": "link-rest-bin-1500",
-                  "label": "1,500 a second",
+                  "label": "1,500/s",
                   "stock": {
                     "value": 1500,
                     "src": [
@@ -13787,7 +13787,7 @@
                 },
                 {
                   "id": "link-rest-bin-2000",
-                  "label": "2,000 a second",
+                  "label": "2,000/s",
                   "stock": {
                     "value": 2000,
                     "src": [
@@ -13811,7 +13811,7 @@
                 },
                 {
                   "id": "link-rest-bin-5000",
-                  "label": "5,000 a second",
+                  "label": "5,000/s",
                   "stock": {
                     "value": 5000,
                     "src": [
@@ -13838,7 +13838,7 @@
             {
               "kind": "measure",
               "label": "Counts arriving from 1 s of moves, text",
-              "key": "Moves a second",
+              "key": "Moves/s",
               "unit": "counts",
               "better": "higher",
               "layer": "evdev",
@@ -13850,7 +13850,7 @@
               "rows": [
                 {
                   "id": "link-rest-text-500",
-                  "label": "500 a second",
+                  "label": "500/s",
                   "stock": {
                     "value": 500,
                     "src": [
@@ -13874,7 +13874,7 @@
                 },
                 {
                   "id": "link-rest-text-1000",
-                  "label": "1,000 a second",
+                  "label": "1,000/s",
                   "stock": {
                     "value": 1000,
                     "src": [
@@ -13898,7 +13898,7 @@
                 },
                 {
                   "id": "link-rest-text-1500",
-                  "label": "1,500 a second",
+                  "label": "1,500/s",
                   "stock": {
                     "value": 1500,
                     "src": [
@@ -13922,7 +13922,7 @@
                 },
                 {
                   "id": "link-rest-text-2000",
-                  "label": "2,000 a second",
+                  "label": "2,000/s",
                   "stock": {
                     "value": 2000,
                     "src": [
@@ -13946,7 +13946,7 @@
                 },
                 {
                   "id": "link-rest-text-5000",
-                  "label": "5,000 a second",
+                  "label": "5,000/s",
                   "stock": {
                     "value": 5000,
                     "src": [
@@ -13972,8 +13972,8 @@
             },
             {
               "kind": "measure",
-              "label": "Counts arriving from 1 s of moves, one move a write",
-              "key": "Moves a second",
+              "label": "Counts arriving from 1 s of moves, one move per write",
+              "key": "Moves/s",
               "unit": "counts",
               "better": "higher",
               "layer": "evdev",
@@ -13985,7 +13985,7 @@
               "rows": [
                 {
                   "id": "link-rest-single-1000",
-                  "label": "1,000 a second",
+                  "label": "1,000/s",
                   "stock": {
                     "value": 1000,
                     "src": [
@@ -14009,7 +14009,7 @@
                 },
                 {
                   "id": "link-rest-single-2000",
-                  "label": "2,000 a second",
+                  "label": "2,000/s",
                   "stock": {
                     "value": 2000,
                     "src": [
@@ -14033,7 +14033,7 @@
                 },
                 {
                   "id": "link-rest-single-5000",
-                  "label": "5,000 a second",
+                  "label": "5,000/s",
                   "stock": {
                     "value": 5000,
                     "src": [
@@ -14060,7 +14060,7 @@
             {
               "kind": "measure",
               "label": "Counts arriving from 5 s of moves, binary",
-              "key": "Moves a second",
+              "key": "Moves/s",
               "unit": "counts",
               "better": "higher",
               "layer": "evdev",
@@ -14072,7 +14072,7 @@
               "rows": [
                 {
                   "id": "link-rest-5s-bin-250",
-                  "label": "250 a second",
+                  "label": "250/s",
                   "stock": {
                     "value": 1250,
                     "src": [
@@ -14096,7 +14096,7 @@
                 },
                 {
                   "id": "link-rest-5s-bin-500",
-                  "label": "500 a second",
+                  "label": "500/s",
                   "stock": {
                     "value": 5000,
                     "src": [
@@ -14128,7 +14128,7 @@
                 },
                 {
                   "id": "link-rest-5s-bin-1000",
-                  "label": "1,000 a second",
+                  "label": "1,000/s",
                   "stock": {
                     "value": 5000,
                     "src": [
@@ -14152,7 +14152,7 @@
                 },
                 {
                   "id": "link-rest-5s-bin-2000",
-                  "label": "2,000 a second",
+                  "label": "2,000/s",
                   "stock": {
                     "value": 10000,
                     "src": [
@@ -14179,7 +14179,7 @@
             {
               "kind": "measure",
               "label": "Counts arriving from 5 s of moves, text",
-              "key": "Moves a second",
+              "key": "Moves/s",
               "unit": "counts",
               "better": "higher",
               "layer": "evdev",
@@ -14191,7 +14191,7 @@
               "rows": [
                 {
                   "id": "link-rest-5s-text-250",
-                  "label": "250 a second",
+                  "label": "250/s",
                   "stock": {
                     "value": 1250,
                     "src": [
@@ -14215,7 +14215,7 @@
                 },
                 {
                   "id": "link-rest-5s-text-500",
-                  "label": "500 a second",
+                  "label": "500/s",
                   "stock": {
                     "value": 5000,
                     "src": [
@@ -14247,7 +14247,7 @@
                 },
                 {
                   "id": "link-rest-5s-text-1000",
-                  "label": "1,000 a second",
+                  "label": "1,000/s",
                   "stock": {
                     "value": 5000,
                     "src": [
@@ -14271,7 +14271,7 @@
                 },
                 {
                   "id": "link-rest-5s-text-2000",
-                  "label": "2,000 a second",
+                  "label": "2,000/s",
                   "stock": {
                     "value": 10000,
                     "src": [
@@ -14300,12 +14300,12 @@
         {
           "id": "link-paced-moving",
           "title": "Paced moves, mouse moving",
-          "about": "The same moves into a 1 kHz mouse whose Y moves 1 to 10 and back every 200 ms. Stock refuses part of what it is sent here, with DE AD 01 00 18 FF for a binary move and ERR for text.",
+          "about": "The same moves into a 1 kHz mouse whose Y moves 1-10 and back every 200 ms. Here stock refuses some moves, replying DE AD 01 00 18 FF to a binary move and ERR to a text one.",
           "tables": [
             {
               "kind": "measure",
               "label": "Counts arriving from 1 s of moves, binary",
-              "key": "Moves a second",
+              "key": "Moves/s",
               "unit": "counts",
               "better": "higher",
               "layer": "evdev",
@@ -14317,7 +14317,7 @@
               "rows": [
                 {
                   "id": "link-moving-bin-125",
-                  "label": "125 a second",
+                  "label": "125/s",
                   "stock": {
                     "value": 125,
                     "src": [
@@ -14341,7 +14341,7 @@
                 },
                 {
                   "id": "link-moving-bin-500",
-                  "label": "500 a second",
+                  "label": "500/s",
                   "stock": {
                     "value": 500,
                     "src": [
@@ -14365,7 +14365,7 @@
                 },
                 {
                   "id": "link-moving-bin-1000",
-                  "label": "1,000 a second",
+                  "label": "1,000/s",
                   "stock": {
                     "value": 999,
                     "src": [
@@ -14389,7 +14389,7 @@
                 },
                 {
                   "id": "link-moving-bin-1500",
-                  "label": "1,500 a second",
+                  "label": "1,500/s",
                   "stock": {
                     "value": 1498,
                     "src": [
@@ -14413,7 +14413,7 @@
                 },
                 {
                   "id": "link-moving-bin-2000",
-                  "label": "2,000 a second",
+                  "label": "2,000/s",
                   "stock": {
                     "value": 1966,
                     "src": [
@@ -14437,7 +14437,7 @@
                 },
                 {
                   "id": "link-moving-bin-3000",
-                  "label": "3,000 a second",
+                  "label": "3,000/s",
                   "stock": {
                     "value": 2093,
                     "src": [
@@ -14461,7 +14461,7 @@
                 },
                 {
                   "id": "link-moving-bin-5000",
-                  "label": "5,000 a second",
+                  "label": "5,000/s",
                   "stock": {
                     "value": 2095,
                     "src": [
@@ -14488,7 +14488,7 @@
             {
               "kind": "measure",
               "label": "Counts arriving from 1 s of moves, text",
-              "key": "Moves a second",
+              "key": "Moves/s",
               "unit": "counts",
               "better": "higher",
               "layer": "evdev",
@@ -14500,7 +14500,7 @@
               "rows": [
                 {
                   "id": "link-moving-text-125",
-                  "label": "125 a second",
+                  "label": "125/s",
                   "stock": {
                     "value": 124,
                     "src": [
@@ -14524,7 +14524,7 @@
                 },
                 {
                   "id": "link-moving-text-500",
-                  "label": "500 a second",
+                  "label": "500/s",
                   "stock": {
                     "value": 500,
                     "src": [
@@ -14548,7 +14548,7 @@
                 },
                 {
                   "id": "link-moving-text-1000",
-                  "label": "1,000 a second",
+                  "label": "1,000/s",
                   "stock": {
                     "value": 1000,
                     "src": [
@@ -14572,7 +14572,7 @@
                 },
                 {
                   "id": "link-moving-text-1500",
-                  "label": "1,500 a second",
+                  "label": "1,500/s",
                   "stock": {
                     "value": 1500,
                     "src": [
@@ -14596,7 +14596,7 @@
                 },
                 {
                   "id": "link-moving-text-2000",
-                  "label": "2,000 a second",
+                  "label": "2,000/s",
                   "stock": {
                     "value": 1999,
                     "src": [
@@ -14620,7 +14620,7 @@
                 },
                 {
                   "id": "link-moving-text-3000",
-                  "label": "3,000 a second",
+                  "label": "3,000/s",
                   "stock": {
                     "value": 1962,
                     "src": [
@@ -14644,7 +14644,7 @@
                 },
                 {
                   "id": "link-moving-text-5000",
-                  "label": "5,000 a second",
+                  "label": "5,000/s",
                   "stock": {
                     "value": 2089,
                     "src": [
@@ -14670,8 +14670,8 @@
             },
             {
               "kind": "measure",
-              "label": "Counts arriving from 1 s of moves, one move a write",
-              "key": "Moves a second",
+              "label": "Counts arriving from 1 s of moves, one move per write",
+              "key": "Moves/s",
               "unit": "counts",
               "better": "higher",
               "layer": "evdev",
@@ -14683,7 +14683,7 @@
               "rows": [
                 {
                   "id": "link-moving-single-1000",
-                  "label": "1,000 a second",
+                  "label": "1,000/s",
                   "stock": {
                     "value": 999,
                     "src": [
@@ -14707,7 +14707,7 @@
                 },
                 {
                   "id": "link-moving-single-2000",
-                  "label": "2,000 a second",
+                  "label": "2,000/s",
                   "stock": {
                     "value": 1963,
                     "src": [
@@ -14731,7 +14731,7 @@
                 },
                 {
                   "id": "link-moving-single-5000",
-                  "label": "5,000 a second",
+                  "label": "5,000/s",
                   "stock": {
                     "value": 2023,
                     "src": [
@@ -14758,7 +14758,7 @@
             {
               "kind": "measure",
               "label": "Counts arriving from 5 s of moves, binary",
-              "key": "Moves a second",
+              "key": "Moves/s",
               "unit": "counts",
               "better": "higher",
               "layer": "evdev",
@@ -14770,7 +14770,7 @@
               "rows": [
                 {
                   "id": "link-moving-5s-bin-125",
-                  "label": "125 a second",
+                  "label": "125/s",
                   "stock": {
                     "value": 625,
                     "src": [
@@ -14794,7 +14794,7 @@
                 },
                 {
                   "id": "link-moving-5s-bin-250",
-                  "label": "250 a second",
+                  "label": "250/s",
                   "stock": {
                     "value": 1249,
                     "src": [
@@ -14818,7 +14818,7 @@
                 },
                 {
                   "id": "link-moving-5s-bin-500",
-                  "label": "500 a second",
+                  "label": "500/s",
                   "stock": {
                     "value": 4998,
                     "src": [
@@ -14850,7 +14850,7 @@
                 },
                 {
                   "id": "link-moving-5s-bin-1000",
-                  "label": "1,000 a second",
+                  "label": "1,000/s",
                   "stock": {
                     "value": 4997,
                     "src": [
@@ -14877,7 +14877,7 @@
             {
               "kind": "measure",
               "label": "Counts arriving from 5 s of moves, text",
-              "key": "Moves a second",
+              "key": "Moves/s",
               "unit": "counts",
               "better": "higher",
               "layer": "evdev",
@@ -14889,7 +14889,7 @@
               "rows": [
                 {
                   "id": "link-moving-5s-text-125",
-                  "label": "125 a second",
+                  "label": "125/s",
                   "stock": {
                     "value": 625,
                     "src": [
@@ -14913,7 +14913,7 @@
                 },
                 {
                   "id": "link-moving-5s-text-250",
-                  "label": "250 a second",
+                  "label": "250/s",
                   "stock": {
                     "value": 1250,
                     "src": [
@@ -14937,7 +14937,7 @@
                 },
                 {
                   "id": "link-moving-5s-text-500",
-                  "label": "500 a second",
+                  "label": "500/s",
                   "stock": {
                     "value": 5000,
                     "src": [
@@ -14969,7 +14969,7 @@
                 },
                 {
                   "id": "link-moving-5s-text-1000",
-                  "label": "1,000 a second",
+                  "label": "1,000/s",
                   "stock": {
                     "value": 4997,
                     "src": [
@@ -15003,7 +15003,7 @@
             {
               "kind": "measure",
               "label": "Counts arriving from 1 s of 10-count moves, binary",
-              "key": "Moves a second",
+              "key": "Moves/s",
               "unit": "counts",
               "better": "higher",
               "layer": "evdev",
@@ -15015,7 +15015,7 @@
               "rows": [
                 {
                   "id": "link-size-bin-10-500",
-                  "label": "500 a second",
+                  "label": "500/s",
                   "stock": {
                     "value": 5000,
                     "src": [
@@ -15039,7 +15039,7 @@
                 },
                 {
                   "id": "link-size-bin-10-1000",
-                  "label": "1,000 a second",
+                  "label": "1,000/s",
                   "stock": {
                     "value": 10000,
                     "src": [
@@ -15063,7 +15063,7 @@
                 },
                 {
                   "id": "link-size-bin-10-1500",
-                  "label": "1,500 a second",
+                  "label": "1,500/s",
                   "stock": {
                     "value": 15000,
                     "src": [
@@ -15087,7 +15087,7 @@
                 },
                 {
                   "id": "link-size-bin-10-2000",
-                  "label": "2,000 a second",
+                  "label": "2,000/s",
                   "stock": {
                     "value": 20000,
                     "src": [
@@ -15111,7 +15111,7 @@
                 },
                 {
                   "id": "link-size-bin-10-5000",
-                  "label": "5,000 a second",
+                  "label": "5,000/s",
                   "stock": {
                     "value": 50000,
                     "src": [
@@ -15138,7 +15138,7 @@
             {
               "kind": "measure",
               "label": "Counts arriving from 1 s of 100-count moves, binary",
-              "key": "Moves a second",
+              "key": "Moves/s",
               "unit": "counts",
               "better": "higher",
               "layer": "evdev",
@@ -15150,7 +15150,7 @@
               "rows": [
                 {
                   "id": "link-size-bin-100-500",
-                  "label": "500 a second",
+                  "label": "500/s",
                   "stock": {
                     "value": 50000,
                     "src": [
@@ -15174,7 +15174,7 @@
                 },
                 {
                   "id": "link-size-bin-100-1000",
-                  "label": "1,000 a second",
+                  "label": "1,000/s",
                   "stock": {
                     "value": 100000,
                     "src": [
@@ -15198,7 +15198,7 @@
                 },
                 {
                   "id": "link-size-bin-100-1500",
-                  "label": "1,500 a second",
+                  "label": "1,500/s",
                   "stock": {
                     "value": 150000,
                     "src": [
@@ -15222,7 +15222,7 @@
                 },
                 {
                   "id": "link-size-bin-100-2000",
-                  "label": "2,000 a second",
+                  "label": "2,000/s",
                   "stock": {
                     "value": 200000,
                     "src": [
@@ -15246,7 +15246,7 @@
                 },
                 {
                   "id": "link-size-bin-100-5000",
-                  "label": "5,000 a second",
+                  "label": "5,000/s",
                   "stock": {
                     "value": 500000,
                     "src": [
@@ -15273,7 +15273,7 @@
             {
               "kind": "measure",
               "label": "Counts arriving from 1 s of 1,000-count moves, binary",
-              "key": "Moves a second",
+              "key": "Moves/s",
               "unit": "counts",
               "better": "higher",
               "layer": "evdev",
@@ -15285,7 +15285,7 @@
               "rows": [
                 {
                   "id": "link-size-bin-1000-500",
-                  "label": "500 a second",
+                  "label": "500/s",
                   "stock": {
                     "value": 500000,
                     "src": [
@@ -15309,7 +15309,7 @@
                 },
                 {
                   "id": "link-size-bin-1000-1000",
-                  "label": "1,000 a second",
+                  "label": "1,000/s",
                   "stock": {
                     "value": 1000000,
                     "src": [
@@ -15333,7 +15333,7 @@
                 },
                 {
                   "id": "link-size-bin-1000-1500",
-                  "label": "1,500 a second",
+                  "label": "1,500/s",
                   "stock": {
                     "value": 1500000,
                     "src": [
@@ -15357,7 +15357,7 @@
                 },
                 {
                   "id": "link-size-bin-1000-2000",
-                  "label": "2,000 a second",
+                  "label": "2,000/s",
                   "stock": {
                     "value": 2000000,
                     "src": [
@@ -15381,7 +15381,7 @@
                 },
                 {
                   "id": "link-size-bin-1000-5000",
-                  "label": "5,000 a second",
+                  "label": "5,000/s",
                   "stock": {
                     "value": 5000000,
                     "src": [
@@ -15408,7 +15408,7 @@
             {
               "kind": "measure",
               "label": "Counts arriving from 1 s of 10-count moves, text",
-              "key": "Moves a second",
+              "key": "Moves/s",
               "unit": "counts",
               "better": "higher",
               "layer": "evdev",
@@ -15420,7 +15420,7 @@
               "rows": [
                 {
                   "id": "link-size-text-10-500",
-                  "label": "500 a second",
+                  "label": "500/s",
                   "stock": {
                     "value": 5000,
                     "src": [
@@ -15444,7 +15444,7 @@
                 },
                 {
                   "id": "link-size-text-10-1000",
-                  "label": "1,000 a second",
+                  "label": "1,000/s",
                   "stock": {
                     "value": 10000,
                     "src": [
@@ -15468,7 +15468,7 @@
                 },
                 {
                   "id": "link-size-text-10-1500",
-                  "label": "1,500 a second",
+                  "label": "1,500/s",
                   "stock": {
                     "value": 15000,
                     "src": [
@@ -15492,7 +15492,7 @@
                 },
                 {
                   "id": "link-size-text-10-2000",
-                  "label": "2,000 a second",
+                  "label": "2,000/s",
                   "stock": {
                     "value": 20000,
                     "src": [
@@ -15516,7 +15516,7 @@
                 },
                 {
                   "id": "link-size-text-10-5000",
-                  "label": "5,000 a second",
+                  "label": "5,000/s",
                   "stock": {
                     "value": 50000,
                     "src": [
@@ -15543,7 +15543,7 @@
             {
               "kind": "measure",
               "label": "Counts arriving from 1 s of 100-count moves, text",
-              "key": "Moves a second",
+              "key": "Moves/s",
               "unit": "counts",
               "better": "higher",
               "layer": "evdev",
@@ -15555,7 +15555,7 @@
               "rows": [
                 {
                   "id": "link-size-text-100-500",
-                  "label": "500 a second",
+                  "label": "500/s",
                   "stock": {
                     "value": 50000,
                     "src": [
@@ -15579,7 +15579,7 @@
                 },
                 {
                   "id": "link-size-text-100-1000",
-                  "label": "1,000 a second",
+                  "label": "1,000/s",
                   "stock": {
                     "value": 100000,
                     "src": [
@@ -15603,7 +15603,7 @@
                 },
                 {
                   "id": "link-size-text-100-1500",
-                  "label": "1,500 a second",
+                  "label": "1,500/s",
                   "stock": {
                     "value": 150000,
                     "src": [
@@ -15627,7 +15627,7 @@
                 },
                 {
                   "id": "link-size-text-100-2000",
-                  "label": "2,000 a second",
+                  "label": "2,000/s",
                   "stock": {
                     "value": 200000,
                     "src": [
@@ -15651,7 +15651,7 @@
                 },
                 {
                   "id": "link-size-text-100-5000",
-                  "label": "5,000 a second",
+                  "label": "5,000/s",
                   "stock": {
                     "value": 500000,
                     "src": [
@@ -15678,7 +15678,7 @@
             {
               "kind": "measure",
               "label": "Counts arriving from 1 s of 1,000-count moves, text",
-              "key": "Moves a second",
+              "key": "Moves/s",
               "unit": "counts",
               "better": "higher",
               "layer": "evdev",
@@ -15690,7 +15690,7 @@
               "rows": [
                 {
                   "id": "link-size-text-1000-500",
-                  "label": "500 a second",
+                  "label": "500/s",
                   "stock": {
                     "value": 500000,
                     "src": [
@@ -15714,7 +15714,7 @@
                 },
                 {
                   "id": "link-size-text-1000-1000",
-                  "label": "1,000 a second",
+                  "label": "1,000/s",
                   "stock": {
                     "value": 1000000,
                     "src": [
@@ -15738,7 +15738,7 @@
                 },
                 {
                   "id": "link-size-text-1000-1500",
-                  "label": "1,500 a second",
+                  "label": "1,500/s",
                   "stock": {
                     "value": 1500000,
                     "src": [
@@ -15762,7 +15762,7 @@
                 },
                 {
                   "id": "link-size-text-1000-2000",
-                  "label": "2,000 a second",
+                  "label": "2,000/s",
                   "stock": {
                     "value": 2000000,
                     "src": [
@@ -15786,7 +15786,7 @@
                 },
                 {
                   "id": "link-size-text-1000-5000",
-                  "label": "5,000 a second",
+                  "label": "5,000/s",
                   "stock": {
                     "value": 5000000,
                     "src": [
@@ -15815,7 +15815,7 @@
         {
           "id": "link-one-write",
           "title": "Moves in one write",
-          "about": "A clump of one-count moves written to the box at once, then 100 more paced 1 ms apart: stock's binary moves are 9 bytes, its text moves 14, Medius's frames 12.",
+          "about": "One write holding a clump of one-count moves, then 100 more paced 1 ms apart. Stock's binary moves are 9 bytes, its text moves 14, Medius's frames 12.",
           "tables": [
             {
               "kind": "measure",
@@ -15824,7 +15824,7 @@
               "unit": "counts",
               "better": "higher",
               "layer": "evdev",
-              "n": "One write per row, 2 at 28 to 30",
+              "n": "One write per row, 2 at 28-30",
               "commands": {
                 "stock": "MOVE (0x18)",
                 "medius": "MOVE"
@@ -16137,16 +16137,16 @@
         {
           "id": "link-paced-fast",
           "title": "Fast paced moves",
-          "about": "One-count moves paced in 1 ms batches for 2 s into a still mouse, stock in its binary form, and stock's text form at 8,000 a second against Medius at the same rate. Stock was power-cycled after each run that left its parser behind.",
+          "about": "One-count moves paced in 1 ms batches for 2 s into a still mouse: stock's binary form at each rate and its text form at 8,000/s, against Medius at the same rates. Stock was power-cycled after each run that left its parser one command behind.",
           "tables": [
             {
               "kind": "measure",
               "label": "Counts arriving from 2 s of fast moves",
-              "key": "Moves a second",
+              "key": "Moves/s",
               "unit": "counts",
               "better": "higher",
               "layer": "wire",
-              "n": "2 runs per row up to 10,000 a second, 1 above",
+              "n": "2 runs per row up to 10,000/s, 1 above",
               "commands": {
                 "stock": "MOVE (0x18)",
                 "medius": "MOVE"
@@ -16300,7 +16300,7 @@
             },
             {
               "kind": "measure",
-              "label": "Counts arriving from 2 s of text moves at 8,000 a second",
+              "label": "Counts arriving from 2 s of text moves at 8,000/s",
               "key": "Runs",
               "unit": "counts",
               "better": "higher",
@@ -16313,7 +16313,7 @@
               "rows": [
                 {
                   "id": "link-fast-text-8000",
-                  "label": "8,000 a second",
+                  "label": "8,000/s",
                   "stock": {
                     "value": 96000,
                     "src": [
@@ -16382,12 +16382,12 @@
         {
           "id": "link-clumped",
           "title": "Clumped and back-to-back writes",
-          "about": "One-count binary moves written in clumps every 16 ms, as a sender whose timer wakes every 16 ms does, and 12,871 written back to back in 4,096-byte writes, into a still mouse. Stock was power-cycled after each run that left its parser behind.",
+          "about": "One-count binary moves into a still mouse, written in clumps every 16 ms (as a sender whose timer wakes every 16 ms writes them), or 12,871 back to back in 4,096-byte writes. Stock was power-cycled after each run that left its parser one command behind.",
           "tables": [
             {
               "kind": "measure",
               "label": "Counts arriving from moves written in clumps every 16 ms",
-              "key": "Moves a second",
+              "key": "Moves/s",
               "unit": "counts",
               "better": "higher",
               "layer": "evdev",
@@ -16399,7 +16399,7 @@
               "rows": [
                 {
                   "id": "link-clump-1000-16",
-                  "label": "1,000 a second, 16 a write",
+                  "label": "1,000/s, 16 per write",
                   "stock": {
                     "value": 1000,
                     "src": [
@@ -16423,7 +16423,7 @@
                 },
                 {
                   "id": "link-clump-2000-32",
-                  "label": "2,000 a second, 32 a write",
+                  "label": "2,000/s, 32 per write",
                   "stock": {
                     "value": 92,
                     "src": [
@@ -16501,7 +16501,7 @@
               "rows": [
                 {
                   "id": "link-clump-parser-2000",
-                  "label": "2,000 a second, 32 a write",
+                  "label": "2,000/s, 32 per write",
                   "stock": {
                     "is": "One command behind until a power cycle",
                     "src": [
@@ -16980,7 +16980,7 @@
         {
           "id": "input-latency",
           "title": "Button and key latency",
-          "about": "Injected left button and 'a' key, timed on the PC's USB bus from the command to the clone's report, with the mouse still, moving every millisecond, and moving while the box also injects a move every millisecond.",
+          "about": "Injected left button and 'a' key, timed on the PC's USB bus from the command to the clone's report. The mouse was still, moving every millisecond, or moving while the box also injected a move every millisecond.",
           "tables": [
             {
               "kind": "measure",
@@ -17331,7 +17331,7 @@
         {
           "id": "input-together",
           "title": "Native and injected presses",
-          "about": "A native key or button held while each box injected another key, or a release or click of the same button.",
+          "about": "A native key or button held while each box injected another key, or injected a release or click of that same button.",
           "tables": [
             {
               "kind": "outcome",
@@ -17455,7 +17455,7 @@
         {
           "id": "input-lock-leak",
           "title": "Locks",
-          "about": "Each box held a lock for 10 s against native motion and clicks, and locks were timed on the PC's USB bus from the command to the last native input through and the first back.",
+          "about": "Each box held a lock for 10 s against native motion and clicks. On the PC's USB bus, a lock is timed from the command to the last native input through, an unlock to the first one back.",
           "tables": [
             {
               "kind": "outcome",
@@ -17934,7 +17934,7 @@
                       }
                     ]
                   },
-                  "note": "Medius lets a press already under way finish before the lock blocks the button, so the PC never receives a release the real device didn't report"
+                  "note": "Medius lets a press already under way finish before the lock blocks the button. The PC never gets a release the real device didn't report"
                 },
                 {
                   "id": "input-lock2-key-on",
@@ -17987,7 +17987,7 @@
                       }
                     ]
                   },
-                  "note": "Medius lets a press already under way finish before the lock blocks the button, so the PC never receives a release the real device didn't report"
+                  "note": "Medius lets a press already under way finish before the lock blocks the button. The PC never gets a release the real device didn't report"
                 },
                 {
                   "id": "input-lock2-key-held-on",
@@ -18327,7 +18327,7 @@
         {
           "id": "input-box-timed",
           "title": "Clicks and typing timed by the box",
-          "about": "Ten 50 ms clicks and a 30-character string, timed by the box (stock km.click and km.string, a Medius clip) against the same clicks sent by the PC, read off the PC's USB bus. Five runs each.",
+          "about": "Ten 50 ms clicks and a 30-character string timed by the box (stock's km.click and km.string, a Medius clip), against the same clicks timed by the PC. Read off the PC's USB bus, five runs each.",
           "tables": [
             {
               "kind": "measure",
@@ -18999,7 +18999,7 @@
         {
           "id": "recovery-pc-restart",
           "title": "PC restart",
-          "about": "The PC turned the clone's port off for 3 s, as a restart does, or unconfigured it for 3 s, then sent a move once the clone was back.",
+          "about": "The PC turned the clone's port off for 3 s (as a restart does) or unconfigured the clone for 3 s, then sent a move once the clone was back.",
           "tables": [
             {
               "kind": "measure",
@@ -19211,7 +19211,7 @@
               "key": "PC action",
               "outcomes": [
                 "Arrives at once",
-                "Sometimes held for over 1 s"
+                "Sometimes held >1 s"
               ],
               "commands": {
                 "stock": "km.move_now",
@@ -19222,7 +19222,7 @@
                   "id": "recovery-restart-move-port-cycle",
                   "label": "Port off 3 s, then on",
                   "stock": {
-                    "is": "Sometimes held for over 1 s",
+                    "is": "Sometimes held >1 s",
                     "src": [
                       {
                         "file": "pc_restart_stock_samehub_r1.json",
@@ -19963,7 +19963,7 @@
                 },
                 {
                   "id": "feat-press-6-16",
-                  "label": "Buttons 6 to 16",
+                  "label": "Buttons 6-16",
                   "stock": null,
                   "medius": "INJECT"
                 }
@@ -20106,7 +20106,7 @@
                 },
                 {
                   "id": "feat-block-6-16",
-                  "label": "Buttons 6 to 16",
+                  "label": "Buttons 6-16",
                   "stock": null,
                   "medius": "LOCK"
                 }
@@ -20174,7 +20174,7 @@
               "rows": [
                 {
                   "id": "feat-scale-motion",
-                  "label": "Scale motion, 0 to 255%",
+                  "label": "Scale motion, 0-255%",
                   "stock": null,
                   "medius": "LOCK"
                 },
@@ -21056,7 +21056,7 @@
     {
       "id": "devices-stock-report-over-512",
       "box": "stock",
-      "text": "A report descriptor longer than 512 bytes isn't served, so the PC's HID driver doesn't load for that clone.",
+      "text": "Report descriptors >512 bytes aren't served, so the PC's HID driver doesn't load for that interface.",
       "rows": [
         "devices-report-768-2047"
       ]
@@ -21064,7 +21064,7 @@
     {
       "id": "devices-stock-hid-descriptor-stall",
       "box": "stock",
-      "text": "A request for the HID class descriptor gets a STALL instead of the native reply.",
+      "text": "The PC's request for the HID class descriptor gets a STALL instead of the native reply.",
       "rows": [
         "devices-ep0-hid-descriptor"
       ]
@@ -21072,7 +21072,7 @@
     {
       "id": "pass-inject-reads",
       "box": "stock",
-      "text": "While it injects, stock reads a 1 kHz mouse whose motion varies about 460 times a second instead of 1,000, at 10 to 1,000 moves a second.",
+      "text": "While injecting, even at 10 moves/s, stock reads a 1 kHz mouse moving at a varying speed only ~430-500 times/s.",
       "rows": [
         "pass-inject-varying"
       ]
@@ -21080,7 +21080,7 @@
     {
       "id": "inj-fresh-clone-no-injection",
       "box": "stock",
-      "text": "A move or click sent to a new clone before its first native report is lost: none of 3 tries arrived within 1 s.",
+      "text": "A move or click sent to a new clone is lost until the real device sends its first report (0/3 tries arrived within 1 s).",
       "rows": [
         "inj-fresh-never"
       ]
@@ -21088,7 +21088,7 @@
     {
       "id": "recovery-restart-move-held",
       "box": "stock",
-      "text": "After the PC turns the clone's port off and on, stock holds the first move for over 1 s in 6 of 10 tries.",
+      "text": "After the PC turns the clone's port off and on, the first injected move waits for the next native report: >1 s in 6/10 tries with a mouse reporting every 2 s.",
       "rows": [
         "recovery-restart-move-port-cycle"
       ]
@@ -21099,7 +21099,7 @@
       "rows": [
         "recovery-exit-left-button"
       ],
-      "text": "A button a program pressed stays held after the program closes the port, until another program releases it or the box restarts."
+      "text": "If a program closes the port while holding a button, the button stays held until another program releases it or the box restarts."
     },
     {
       "id": "inj-stock-lost-counts",
@@ -21107,7 +21107,7 @@
       "rows": [
         "inj-total-counting-1000"
       ],
-      "text": "Default moves at 1,000 a second into a moving 1 kHz mouse lose counts: 10 and 13 of 15,000 in two runs."
+      "text": "Default moves at 1,000/s into a moving 1 kHz mouse lose counts: 10/15,000 and 13/15,000 in two runs."
     },
     {
       "id": "pass-stock-config-reconnect",
@@ -21115,12 +21115,12 @@
       "rows": [
         "pass-pc-config"
       ],
-      "text": "When the PC switches the clone's configuration, stock reconnects the clone instead of relaying the switch to the real device: 3 of 3 tries."
+      "text": "When the PC switches the clone's configuration, stock reconnects the clone instead of relaying the switch to the real device (3/3 tries)."
     },
     {
       "id": "link-stock-parser-jam",
       "box": "stock",
-      "text": "One write of 30 binary moves, moves clumped 32 to a write, or moves written back to back lose commands and leave stock's parser one command behind until a power cycle.",
+      "text": "Moves written in a burst (30 binary moves in one write, 32 per write every 16 ms, or back to back) lose commands, and every later command then runs one command late until a power cycle.",
       "rows": [
         "link-write-parser-30"
       ]
@@ -21128,7 +21128,7 @@
     {
       "id": "recovery-stock-no-wake",
       "box": "stock",
-      "text": "While the PC sleeps, neither an injected move nor the real device's remote wakeup wakes it.",
+      "text": "Neither an injected move nor the real device's remote wakeup wakes a sleeping PC.",
       "rows": [
         "recovery-wake-device"
       ]
@@ -21136,7 +21136,7 @@
     {
       "id": "devices-stock-mouse-interval",
       "box": "stock",
-      "text": "A mouse's clone declares a 1 ms poll interval where the mouse declares 2 to 10 ms, so the PC polls it up to ten times as often as the native interval, which is where stock's lower latency below 1 kHz comes from.",
+      "text": "Mouse clones declare a 1 ms poll interval even when the mouse declares 2-10 ms (a 125 Hz mouse's clone is polled at 1 kHz). Stock's lower latency below 1 kHz comes from this.",
       "rows": [
         "devices-interval-mouse-8",
         "devices-interval-mouse-10",

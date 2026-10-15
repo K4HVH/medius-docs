@@ -14,31 +14,31 @@ import type { Fate } from '../../src/app/search/extract';
 // holds the link icon that copies its address.
 export type Rendered = Record<string, { id: string; fate: Fate; panel: boolean; link: boolean }[]>;
 
-// What a built search index is held to before it ships: every page, docs section, titled dashboard panel
-// and Help answer in it; each entry titled, at an address no other entry has; nothing a page shows only
-// while loading or failing, and no value of the dev build's fake box; every hand-kept address still on
-// the site; and the queries below answered as they must be.
+// What a built search index must pass before it ships: every page, docs section, titled dashboard panel and
+// Help answer in it; each entry titled, at an address no other entry has; no text a page shows only while
+// loading or failing, and no value of the dev build's fake box; every hand-kept address still on the site;
+// and the queries below answered as expected.
 
 export interface CheckContext {
   routes: string[];
-  // Ids of the docs sections, titled panels and hand-marked anchors in the page sources, less the panels
+  // Ids of the docs sections, titled panels and hand-marked anchors in the page sources, minus the panels
   // marked transient.
   sectionIds: string[];
   helpIds: string[];
-  // Today's first result for each query from the search this one replaced; a `why` says why another is
-  // better.
+  // The first result for each query in the search this one replaced; a `why` says why a different first
+  // result is better.
   golden: { q: string; first: string; why?: string }[];
   expect: { q: string; path: string; within: number }[];
   keywordPaths: string[];
   // The listed devices' addresses on Devices (/guide/compatibility/{slug}), which a section there must not
   // take.
   deviceSlugs?: string[];
-  // From the pass, when there was one: each page is held to what it rendered.
+  // From the pass, when one ran: each page is checked against what it rendered.
   rendered?: Rendered;
 }
 
 // Queries the search must answer from the built site. Releases and devices come from the server and are
-// held by its tests.
+// covered by its tests.
 export const EXPECT: CheckContext['expect'] = [
   { q: '"every-id sentinel"', path: '/library/types/errors', within: 1 },
   { q: 'query_patch_entry', path: '/library/advanced/patch#query-patch-entry', within: 1 },
@@ -87,8 +87,8 @@ export function checkIndex(index: SearchIndex, ctx: CheckContext): string[] {
   for (const r of ctx.routes) if (!paths.has(r)) out.push(`page ${r} has no entry`);
   if (ctx.rendered) {
     // Each element a page marked: an entry at its address on that page, the page's opening, or a panel
-    // that only holds others. A marked element with no title is a place a link can name and search
-    // cannot.
+    // that only holds others. A marked element with no title is a place a link can name but search
+    // can't.
     const seen = new Set(Object.values(ctx.rendered).flatMap((list) => list.map((t) => t.id)));
     for (const [path, list] of Object.entries(ctx.rendered))
       for (const t of list) {

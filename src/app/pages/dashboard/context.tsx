@@ -85,14 +85,15 @@ export const DashboardProvider: ParentComponent = (props) => {
     // The dev server's fake box (`?fakebox`), set by index.tsx; a production build never sets it.
     ...(import.meta.env.DEV ? (globalThis as { __mediusDevBox?: Partial<BoxesDeps> }).__mediusDevBox : undefined),
   };
-  // Built once the runtime is in: at once when a dashboard page brought it before the first render.
+  // Built once the runtime has loaded; at once if a dashboard page loaded it before the first render.
   const real = createMemo(() => {
     const m = runtime();
     return m ? untrack(() => m.createBoxes(deps)) : null;
   });
   const ready = (): Promise<Boxes> => loadRuntime().then(() => real()!);
-  // Until then, no boxes: the sidebar lists none, the first thing that needs one fetches the runtime, and
-  // only a page under BoxScope, which the dashboard's pages bring the runtime with, asks for a session.
+  // Until then there are no boxes: the sidebar lists none, and the first call that needs a box fetches the
+  // runtime. Only a page under BoxScope asks for a session, and the dashboard's pages bring the runtime
+  // with them.
   const boxes: Boxes = {
     supported: deps.supported,
     secure: deps.secure,
@@ -124,7 +125,8 @@ export const DashboardProvider: ParentComponent = (props) => {
 };
 
 // Keyed on the session, so a box switch remounts the pages and moves every poll. A box found as the page
-// opens (one picked on an earlier visit) redraws it mid-arrival, and the arrival carries on, never twice.
+// opens (one picked on an earlier visit) redraws the page mid-arrival; the arrival carries on and never
+// plays twice.
 export const BoxScope: ParentComponent = (props) => {
   const boxes = useBoxes();
   let drawn = false;

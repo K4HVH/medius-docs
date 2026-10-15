@@ -101,7 +101,7 @@ export interface Defect {
   id: string;
   box: Box;
   text: string;
-  // Every row it decides, the one that shows it first.
+  // Every row the defect decides, starting with the row that shows it first.
   rows: string[];
 }
 

@@ -57,7 +57,7 @@ const Device = () => {
   // A refusal belongs to the link it came over.
   createEffect(on(dash.link, () => blink.clear(), { defer: true }));
   const full = () => connected() && !dash.updateOnly();
-  // On older firmware the Options tab holds the options it has; a newer box stays update-only.
+  // On older firmware the Options tab holds the options that firmware has; a newer box stays update-only.
   const proto = () => dash.version()?.protoVer ?? 0;
   const older = () => connected() && dash.updateOnly() && proto() < PROTO_VER;
   const location = useLocation();
@@ -232,7 +232,7 @@ const Device = () => {
               <Show when={proto()} keyed>
                 {(p) => <DeviceOptions proto={p} />}
               </Show>
-              {/* Factory reset needs the current protocol: an older RESET has no flags byte, so erases nothing. */}
+              {/* Factory reset needs the current protocol: an older RESET has no flags byte, so it erases nothing. */}
               <Show when={full()}>
                 <DeviceFactoryReset />
               </Show>

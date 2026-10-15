@@ -59,7 +59,7 @@ except NotFoundError:
     raise SystemExit("no medius box found: check the control-port cable")`}</code></pre>
         <div class="callout callout--info">
           <p>
-            Injection reaches only the <em>game</em> PC, through the clone port, so the cursor and
+            Injection reaches only the <em>game</em> PC, through the clone port. The cursor and
             click don't show on the control PC running this script. Port map:{' '}
             <A href="/native/hardware">Hardware</A>.
           </p>
@@ -125,7 +125,7 @@ except NotFoundError:
         <p>
           The last line needs a move or click on the real mouse within 5 s.{' '}
           <code>CatchFilter.everything()</code> covers every class, so a real device with busy vendor
-          endpoints can print a <code>traffic</code> line first; narrow it with{' '}
+          endpoints can print a <code>traffic</code> line first. Narrow the subscription with{' '}
           <code>CatchFilter.watch_axes()</code>.
         </p>
       </DocSection>
@@ -160,7 +160,7 @@ except NotFoundError:
         </p>
         <p>
           <A href="/bindings/python/streams#input"><code>dev.input_events()</code></A> yields press
-          and release edges, with no snapshot diffing.
+          and release edges, already diffed from the snapshots.
         </p>
       </DocSection>
 
@@ -194,8 +194,8 @@ except NotFoundError:
 
       <DocSection id="cleanup" title="Closing" caption="With-block, close(), or garbage collection">
         <p>
-          A <code>Device</code> and each stream hold a live connection. Three ways close it, safe
-          to combine:
+          A <code>Device</code> and each stream hold a live connection. Any of these closes it, and
+          they are safe to combine:
         </p>
         <div class="table-scroll">
           <table class="api-params">

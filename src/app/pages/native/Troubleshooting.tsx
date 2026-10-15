@@ -10,7 +10,7 @@ const Troubleshooting: Component = () => {
         <p>
           Every message is a <A href="/native/frame"><code>frame</code></A> (one packet on the
           serial link). Most commands are{' '}
-          <A href="/native/injection#fire-and-forget">fire-and-forget</A>, with no reply;{' '}
+          <A href="/native/injection#fire-and-forget">fire-and-forget</A>, with no reply.{' '}
           <A href="/native/commands/requests#requests"><code>QUERY</code></A> asks for box state and
           gets one <A href="/native/commands/requests#resp"><code>RESP</code></A> frame.
         </p>
@@ -24,10 +24,10 @@ const Troubleshooting: Component = () => {
         </p>
         <ul>
           <li>
-            Port not opened at <code>6,000,000</code> baud;{' '}
-            <A href="/native/frame">framed binary</A> from the first byte, no slower startup speed.
+            Port not opened at <code>6,000,000</code> baud. The box speaks{' '}
+            <A href="/native/frame">framed binary</A> from the first byte, with no slower startup speed.
           </li>
-          <li>Another process holds the port; only one can open it.</li>
+          <li>Another process holds the port. Only one process can open it.</li>
           <li>Not a Medius box, or the wrong port.</li>
         </ul>
         <p>
@@ -59,7 +59,7 @@ const Troubleshooting: Component = () => {
               <tr><th>Event</th><th>Effect</th></tr>
             </thead>
             <tbody>
-              <tr><td><A href="/native/injection#safety">Silence timeout</A> (default <code>1000 ms</code> with no valid inbound frame)</td><td>Drops every held button and pending move, returns to passthrough.</td></tr>
+              <tr><td><A href="/native/injection#safety">Silence timeout</A> (default <code>1000 ms</code> with no valid inbound frame)</td><td>Drops every held button and pending move, and returns to passthrough.</td></tr>
               <tr><td>Any frame passing its <A href="/native/frame#crc">checksum</A> (including a <A href="/native/commands/requests#requests"><code>QUERY</code></A>)</td><td>Resets the timer.</td></tr>
             </tbody>
           </table>
@@ -75,7 +75,7 @@ const Troubleshooting: Component = () => {
         <p>
           <A href="/native/hardware"><code>USB1</code></A> and{' '}
           <A href="/native/hardware"><code>USB3</code></A> share one internal 5V rail that firmware
-          can't pull low, so wiring both to one machine back-feeds power into it. Keep them apart:
+          can't pull low. Wired to one machine, they back-feed power into it. Keep them apart:
         </p>
         <div class="table-scroll">
           <table class="api-params">
@@ -94,9 +94,9 @@ const Troubleshooting: Component = () => {
       <DocSection id="port-gone" title="No reply after REBOOT" caption="Chip in ROM download mode">
         <p>
           A download <A href="/native/commands/admin#reboot"><code>REBOOT</code></A> puts a chip in ROM
-          download mode and stops its firmware. With <code>target</code> <code>0</code> the CH343 port
-          stays, but the device chip's ROM is on it instead of Medius; with <code>1</code> the host chip
-          stops reading the real device.{' '}
+          download mode and stops its firmware. With <code>target</code> <code>0</code>, the CH343 port
+          stays, but the device chip's ROM loader replies on it instead of Medius. With <code>1</code>, the
+          host chip stops reading the real device.{' '}
           <A href="/native/flashing">Flash</A> the chip, or power-cycle the box to run the firmware again.
         </p>
       </DocSection>
@@ -107,8 +107,8 @@ const Troubleshooting: Component = () => {
           diagnostic frame (box to PC). If none arrive, check:
         </p>
         <ul>
-          <li>No control PC attached; <A href="/native/commands/admin#log"><code>LOG</code></A> is sent only while one is.</li>
-          <li>Logged before first contact; that output is dropped, not buffered.</li>
+          <li>No control PC attached. <A href="/native/commands/admin#log"><code>LOG</code></A> is sent only while one is.</li>
+          <li>Logged before first contact. That output is dropped, not buffered.</li>
           <li>Early ROM-bootloader output, plain ASCII the frame decoder ignores.</li>
         </ul>
       </DocSection>

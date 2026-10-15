@@ -8,10 +8,10 @@ const ROW_PX = 26;
 
 const hex3 = (n: number) => (n & 0x7ff).toString(16).toUpperCase().padStart(3, '0');
 
-// USB1's reports from a capture, one frame a row and slowed 250 times; bytes MOVE injected are blue. The
-// rows rise continuously while the feed is on screen and the pointer is off it, and stand still under
-// reduced motion. Frame numbers are the capture's, so its loop shows. The bytes' spacing is the
-// stylesheet's, from --bytes.
+// USB1's reports from a capture, one frame a row, slowed 250x. Bytes a MOVE injected are blue. The rows
+// rise continuously while the feed is on screen and the pointer is off it, and stand still under reduced
+// motion. Frame numbers are the capture's, so the point where it loops shows. The stylesheet spaces the
+// bytes from --bytes.
 export function ReportFeed(props: { frames: readonly FeedFrame[] }) {
   const [head, setHead] = createSignal(ROWS - 1);
   const n = () => props.frames.length;
@@ -22,9 +22,8 @@ export function ReportFeed(props: { frames: readonly FeedFrame[] }) {
   let tape: HTMLDivElement | undefined;
   let rows: HTMLDivElement | undefined;
 
-  // The stylesheet's spacing takes each character as wide as the font says. A browser that rounds
-  // characters up to whole pixels can still run the report past its column: there the type steps down
-  // until it fits.
+  // The stylesheet's spacing takes each character as wide as the font says. If a browser rounds characters
+  // up to whole pixels, the report can still run past its column. The type then steps down until it fits.
   const fit = () => {
     if (!rows) return;
     rows.style.removeProperty('font-size');

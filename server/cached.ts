@@ -1,6 +1,6 @@
-// A live source behind a cache, so a page never waits long on it. A fresh value answers at once; a stale one
-// answers at once while a refresh runs; with nothing kept, a caller waits at most its budget, then gets
-// null. One fetch is in flight at a time, and a failed one keeps the last value.
+// A live source behind a cache, so a page never waits long on it. A fresh value returns at once. A stale one
+// also returns at once, while a refresh runs. With no value kept, a caller waits at most its budget, then
+// gets null. One fetch is in flight at a time, and a failed fetch keeps the last value.
 export function cached<T>(
   source: () => Promise<T | null>,
   opts: { freshMs: number; budgetMs: number; now?: () => number },

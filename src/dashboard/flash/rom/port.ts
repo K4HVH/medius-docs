@@ -1,9 +1,9 @@
 /// <reference types="w3c-web-serial" />
 import { SlipDecoder, slipEncode } from './slip';
 
-// The baud means nothing on the chip's USB port; the ROM's UART default.
+// The baud rate means nothing on the chip's USB port; this is the ROM's UART default.
 const BAUD = 115200;
-// A frame the chip never takes: it NAKs its USB OUT while it is wedged.
+// The wait for a frame the chip never takes (a wedged chip NAKs its USB OUT).
 const SEND_MS = 3000;
 
 // No frame in time, or a frame the chip never took. Callers tell it apart from other failures by class.

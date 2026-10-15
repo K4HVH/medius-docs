@@ -8,15 +8,16 @@ const Patch: Component = () => {
     <>
       <PageHeader>
         <p>
-          A descriptor patch overwrites bytes in what the clone presents at enumeration, keyed by{' '}
-          <code>(section, cfg, index, offset)</code> and persisted per real device (VID:PID) in the box's NVS.
+          A descriptor patch overwrites bytes in what the clone presents at enumeration. Patches are
+          keyed by <code>(section, cfg, index, offset)</code> and stored per real device (VID:PID) in
+          the box's NVS.
         </p>
         <p>
-          A patch is configuration, not session state like a{' '}
-          <A href="/library/advanced/rewrite">rewrite rule</A>: it survives a reconnect and clears on{' '}
+          Unlike a <A href="/library/advanced/rewrite">rewrite rule</A>, a patch is configuration, not
+          session state. It survives a reconnect and clears on{' '}
           <A href="/library/advanced/patch#clear-patch"><code>clear_patch</code></A> or{' '}
           <A href="/library/admin#factory-reset"><code>factory_reset</code></A>. The box stores a
-          patch whatever the opt-in and applies the stored set only under it.
+          patch whatever the opt-in, but applies the stored set only with the opt-in on.
         </p>
         <pre class="diagram">{`  real device            the box  (host chip  |  device chip = the clone)         game PC
 
@@ -31,9 +32,9 @@ const Patch: Component = () => {
             A patch keeps a descriptor's length, except a STRING patch, which replaces the whole
             string. Patched descriptors that fail the box's clone or{' '}
             <A href="/native/commands/patch#ladder">consistency checks</A> are served unpatched, and
-            the box logs which check. Applying needs{' '}
-            <A href="/library/options#allow-imperfect-clones"><code>allow_imperfect_clones</code></A>;
-            with it off, <code>apply_patch</code> returns{' '}
+            the box logs which check failed. Applying needs{' '}
+            <A href="/library/options#allow-imperfect-clones"><code>allow_imperfect_clones</code></A>.
+            With it off, <code>apply_patch</code> returns{' '}
             <A href="/library/types/errors#errors"><code>Error::ImperfectRequired</code></A>.
           </p>
         </div>
@@ -42,18 +43,18 @@ const Patch: Component = () => {
             <thead><tr><th>Re-presented at</th><th>With</th></tr></thead>
             <tbody>
               <tr><td><A href="/library/advanced/patch#apply-patch"><code>apply_patch</code></A></td><td>The stored set, when it differs from the one the clone serves.</td></tr>
-              <tr><td><A href="/library/options#allow-imperfect-clones"><code>allow_imperfect_clones</code></A> changing the set the clone serves</td><td>Turned on: the stored set, unless the box refused it. Turned off: no patches, when the clone serves some.</td></tr>
+              <tr><td><A href="/library/options#allow-imperfect-clones"><code>allow_imperfect_clones</code></A> changing the set the clone serves</td><td>Turned on: the stored set, unless the box refused it. Turned off: no patches, if the clone serves some.</td></tr>
               <tr><td>The real device attaching</td><td>The stored set, under the opt-in.</td></tr>
-              <tr><td><A href="/library/advanced/patch#clear-patch"><code>clear_patch</code></A></td><td>No patches, when the clone serves some.</td></tr>
+              <tr><td><A href="/library/advanced/patch#clear-patch"><code>clear_patch</code></A></td><td>No patches, if the clone serves some.</td></tr>
             </tbody>
           </table>
         </div>
         <p>
-          Each presentation is a re-clone, which releases the session: the library re-sends what it
+          Each presentation is a re-clone, which releases the session. The library re-sends what it
           holds once the new clone is up (<A href="/library/lifecycle#restart">session recovery</A>).
         </p>
         <p>
-          The setters are <A href="/native/injection#fire-and-forget">fire-and-forget</A>;{' '}
+          The setters are <A href="/native/injection#fire-and-forget">fire-and-forget</A>.{' '}
           <A href="/library/advanced/patch#query-patches"><code>query_patches</code></A> reads back the
           stored set and its apply state.
         </p>
@@ -73,13 +74,13 @@ const Patch: Component = () => {
           </table>
         </div>
         <p>
-          Patches are keyed by <code>(section, cfg, index, offset)</code>: setting an existing key
-          overwrites the patch and moves it to the end of the set, unless it holds those bytes
-          already; empty <code>bytes</code> removes it. The set belongs to the attached real device, so a
+          Patches are keyed by <code>(section, cfg, index, offset)</code>. Setting an existing key
+          overwrites the patch and moves it to the end of the set, unless the patch already holds
+          those bytes. Empty <code>bytes</code> removes it. The set belongs to the attached real device, so a
           patch stored with none attached is dropped.
         </p>
         <p>
-          The clone serves the set it was presented with, STRING patches included, so a stored change
+          The clone serves the set it was presented with, STRING patches included. A stored change
           reaches the game PC at the next <A href="/library/advanced/patch">presentation</A>. The
           limits and wire layout are on the native{' '}
           <A href="/native/commands/patch#patch"><code>PATCH</code></A> command.
@@ -101,8 +102,8 @@ device.apply_patch()?;`}</code></pre>
         <p>
           Re-presents the clone with the stored patch set (native{' '}
           <A href="/native/commands/patch#apply">APPLY</A>): one unplug/replug to the game PC. Gated on{' '}
-          <A href="/library/options#allow-imperfect-clones"><code>allow_imperfect_clones</code></A>;
-          with the opt-in off it returns{' '}
+          <A href="/library/options#allow-imperfect-clones"><code>allow_imperfect_clones</code></A>.
+          With the opt-in off, it returns{' '}
           <A href="/library/types/errors#errors"><code>Error::ImperfectRequired</code></A>.
         </p>
         <div class="api-response-label">EFFECT</div>
@@ -112,7 +113,7 @@ device.apply_patch()?;`}</code></pre>
               <tr><th>Stored set</th><th>Box action</th></tr>
             </thead>
             <tbody>
-              <tr><td>Differs from the set the clone serves (<A href="/library/types/structs#patch-set"><code>pending</code></A>)</td><td>Re-presents the clone with it, a re-clone that releases the session. An emptied set re-presents the clone unpatched, and one that fails a check is served unpatched with <code>refused</code> set.</td></tr>
+              <tr><td>Differs from the set the clone serves (<A href="/library/types/structs#patch-set"><code>pending</code></A>)</td><td>Re-presents the clone with it: a re-clone that releases the session. An emptied set re-presents the clone unpatched. A set that fails a check is served unpatched, with <code>refused</code> set.</td></tr>
               <tr><td>The set the clone serves</td><td>Nothing.</td></tr>
               <tr><td>Refused, and unchanged since</td><td>Nothing, though it reads <code>pending</code>: change the set, or clear it.</td></tr>
               <tr><td>Any, with no real device attached</td><td>Nothing.</td></tr>
@@ -128,8 +129,9 @@ device.apply_patch()?; // the clone replugs and re-presents patched`}</code></pr
         <pre class="api-signature">fn clear_patch(&self) -&gt; Result&lt;()&gt;</pre>
         <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
         <p>
-          Erases every patch stored for this real device (VID:PID) or, with it unplugged, for the last
-          one attached since boot (native <A href="/native/commands/patch#clear">CLEAR</A>).
+          Erases every patch stored for this real device (VID:PID). With the real device unplugged,
+          it erases the set of the last one attached since boot (native{' '}
+          <A href="/native/commands/patch#clear">CLEAR</A>).
         </p>
         <div class="api-response-label">EFFECT</div>
         <div class="table-scroll">
@@ -190,10 +192,10 @@ for i in 0..set.entries.len() as u8 {
 
       <DocSection id="async" title="On AsyncDevice" caption="apply_patch and the queries await; set and clear fire">
         <p>
-          <A href="/library/features/async"><code>AsyncDevice</code></A> makes <code>apply_patch</code>{' '}
-          (which awaits the opt-in check), <code>query_patches</code> and{' '}
-          <code>query_patch_entry</code> futures; <code>set_patch</code> and <code>clear_patch</code>{' '}
-          stay synchronous.
+          <A href="/library/features/async"><code>AsyncDevice</code></A> makes <code>apply_patch</code>,{' '}
+          <code>query_patches</code> and <code>query_patch_entry</code> futures (<code>apply_patch</code>{' '}
+          awaits the opt-in check). <code>set_patch</code> and <code>clear_patch</code> stay
+          synchronous.
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`use futures::executor::block_on;

@@ -25,14 +25,14 @@ const Admin: Component = () => {
         <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
         <div class="api-response-label">PAYLOAD</div>
         <p>
-          A flags byte; <code>0x00</code> is the plain release below.
+          A flags byte. <code>0x00</code> is the plain release below.
         </p>
         <div class="api-response-label">FLAGS</div>
         <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Bit</th><th>Name</th><th>Effect</th></tr></thead>
             <tbody>
-              <tr><td><code>0x01</code></td><td><code>NVS</code></td><td>Also erases the persistent store and reboots, returning at defaults under the MAC-derived name.</td></tr>
+              <tr><td><code>0x01</code></td><td><code>NVS</code></td><td>Also erases the persistent store and reboots. The box comes back at defaults, under the MAC-derived name.</td></tr>
             </tbody>
           </table>
         </div>
@@ -54,15 +54,15 @@ const Admin: Component = () => {
           <A href="/native/commands/led"><code>LED</code></A> override.
         </p>
         <p>
-          The emitted report is then byte-identical to passthrough; a second <code>RESET</code> is a no-op.
+          The emitted report is then byte-identical to passthrough. A second <code>RESET</code> is a no-op.
           The <A href="/native/injection#safety">safety auto-clear</A> performs the same release.
           Library binding:{' '}
           <A href="/library/admin#reset"><code>reset</code></A>.
         </p>
         <div class="api-response-label">NVS FLAG</div>
         <p>
-          The release runs first, then the box erases the <code>nvs</code>{' '}
-          <A href="/native/commands/update">partition</A> and reboots, losing the box name, every{' '}
+          The release runs first. The box then erases the <code>nvs</code>{' '}
+          <A href="/native/commands/update">partition</A> and reboots. The erase loses the box name, every{' '}
           <A href="/library/options">option</A>, and everything learned about devices seen,
           including any <A href="/native/commands/patch">descriptor patch set</A>. Settings load
           into RAM at boot, so the reboot restores the defaults.
@@ -122,7 +122,7 @@ const Admin: Component = () => {
             </thead>
             <tbody>
               <tr><td>device download</td><td><code>0</code></td><td>Device chip enters ROM download, then flash over the <A href="/native/transport">CH343 link</A>.</td></tr>
-              <tr><td>host download</td><td><code>1</code></td><td>Device chip relays a download reboot to the host chip; the host flashes over USB3.</td></tr>
+              <tr><td>host download</td><td><code>1</code></td><td>Device chip relays a download reboot to the host chip. Flash the host chip over USB3.</td></tr>
               <tr><td>device run</td><td><code>2</code></td><td>Device chip reboots to run firmware.</td></tr>
               <tr><td>host run</td><td><code>3</code></td><td>Device chip relays a run reboot to the host chip.</td></tr>
             </tbody>
@@ -130,7 +130,7 @@ const Admin: Component = () => {
         </div>
         <div class="api-response-label">EFFECT</div>
         <p>
-          Reboot-to-run (<code>2</code> or <code>3</code>) is the board's only software cold-reboot;
+          Reboot-to-run (<code>2</code> or <code>3</code>) is the board's only software cold-reboot.
           DTR/RTS auto-reset isn't wired. No reply. Library binding:{' '}
           <A href="/library/admin#reboot"><code>reboot</code></A>.
         </p>
@@ -184,7 +184,7 @@ const Admin: Component = () => {
         </div>
         <div class="api-response-label">EFFECT</div>
         <p>
-          Sent only while a control PC is attached; logging before first contact is dropped. The
+          Sent only while a control PC is attached. Logging before first contact is dropped. The
           box's other outbound frames are{' '}
           <A href="/native/commands/requests#resp"><code>RESP</code></A>,{' '}
           <A href="/native/commands/transfer#transfer-resp"><code>TRANSFER_RESP</code></A>,{' '}

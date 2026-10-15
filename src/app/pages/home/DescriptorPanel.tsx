@@ -13,9 +13,9 @@ const TABS = [
 const CYCLE_MS = 6000;
 const bytesIn = (hex: string) => hex.split(' ').length;
 
-// A captured mouse's descriptors beside its clone's, field by field. The count and the rows check off
-// together once the panel is on screen, then the panel steps through the descriptors every six seconds
-// while it stays there, unless the pointer or keyboard focus is on it or a tab was picked.
+// A captured mouse's descriptors beside its clone's, field by field. Once the panel is on screen, the count
+// and the rows check off together. The panel then steps to the next descriptor every 6 s while it stays on
+// screen. It holds while the pointer or keyboard focus is on it, or once a tab is picked.
 export function DescriptorPanel(props: { sample: DescriptorSample }) {
   const reduce = prefersReducedMotion();
   const fields = (k: number) => props.sample.descriptors[TABS[k].key];

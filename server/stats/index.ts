@@ -11,8 +11,8 @@ const RATE_WINDOW_MS = 60_000;
 
 const SUMMARY_TTL_MS = 60_000;
 const RETRY_OPEN_MS = 60_000;
-// Per client address, for every address together, and how many addresses are remembered at once: an
-// address leaves the table when its window ends, and a new address waits while it is full.
+// Limits per client address, for all addresses together, and on how many addresses are remembered at once. An
+// address leaves the table when its window ends; a new address waits while the table is full.
 const LIMITS = { perAddress: 60, total: 1200, addresses: 10_000 };
 
 let path = process.env.STATS_DB || 'data/stats.db';
@@ -76,7 +76,7 @@ const allowed = (ip: string): boolean => {
   else {
     const entry = { start: t, n: 1 };
     seen.set(key, entry);
-    // Dropped when its window ends, asked again or not: the privacy page says a minute.
+    // Dropped when its window ends, whether the address posted again or not: the privacy page says a minute.
     setTimeout(() => seen.get(key) === entry && seen.delete(key), RATE_WINDOW_MS).unref();
   }
   return true;
@@ -91,8 +91,8 @@ const hostname = (h: string | null | undefined): string | undefined => {
   }
 };
 
-// A browser on another site may post too. A proxy in front may rewrite Host, so the forwarded one counts,
-// and so does Sec-Fetch-Site: same-origin.
+// A browser on another site could post here too. A proxy in front may rewrite Host, so the forwarded host
+// counts as well, and so does Sec-Fetch-Site: same-origin.
 const sameSite = (req: Request): boolean => {
   const origin = req.headers.get('origin');
   if (!origin) return true;

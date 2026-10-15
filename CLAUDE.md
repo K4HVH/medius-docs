@@ -34,7 +34,7 @@ bun run dev          # Dev server (http://localhost:3000)
 bun run build        # Production build (output: dist/)
 bun run serve        # Preview production build
 bun run build:full   # Build and prerender every page, as the Docker image does
-bun run crawlcheck   # After build:full: status, title, canonical and JSON-LD of every page
+bun run crawlcheck   # After build:full: checks every page's status, title, canonical and JSON-LD
 ```
 
 ## Project structure
@@ -49,19 +49,18 @@ src/
     routes.ts                         # Route registry: every page's title, description, sidebar entry
     site.ts                           # Site URL, outside links (Discord, GitHub, crates.io, PyPI)
     RouteMeta.tsx                     # Per-route <head> from the registry, with structuredData.ts
-    items.ts                          # Addresses for one Help answer, release or device (/guide/help/bsod)
+    items.ts                          # The address of a single Help answer, release or device (/guide/help/bsod)
     card/                             # Link cards: content.ts (what each says, its address), layout.ts (text
-                                      # fitted by the fonts' measures), svg.ts (the card as an SVG)
+                                      # fitted by the font metrics), svg.ts (the card as an SVG)
     AiActions.tsx                     # The "use this page with an AI" menu beside the crumbs
     shell/                            # The site shell: SiteNav, SiteFooter, DocsSidebar, PageHeader, DocSection,
-                                      # Anchor, CopyLink (the link icon beside each place a link names),
+                                      # Anchor, CopyLink (the link icon beside each linkable place),
                                       # OnThisPage, IndexRow, ByteStrip, Arrow, Filter (a live filter, Marked,
                                       # FixLink), motion.ts (scroll reveals), Count (a figure counting up), and the
                                       # dashboard's: PageTabs/Pane, Panels/Stack/Panel, panelMotion.ts, Segmented,
-                                      # Select, LogBox, Board (the box drawn from its board)
-    data/                             # Help answers, compatibility reports and their merge with the stats, the
-                                      # landing's figures, and the bench captures the landing draws (never edited
-                                      # by hand)
+                                      # Select, LogBox, Board (the box drawn from a photo of its board)
+    data/                             # Help answers, compatibility reports merged with the stats, the landing's
+                                      # figures, and the bench captures the landing draws (never edited by hand)
     prism.ts                          # Prism and its languages; highlight.ts fetches it, once
     search/                           # Ctrl+K search: extract.ts (a rendered page to entries), rank.ts and
                                       # text.ts (the ranker), load.ts (the index, fetched on use), extra.ts
@@ -183,23 +182,23 @@ src/
 
 ### Routing
 
-`App.tsx` routes every path to its page in `src/app/lazyPages.ts`; `src/app/routes.ts` holds each page's metadata, and tests keep the path lists equal. `DocsLayout` wraps each page with the nav, the sidebar, search, the on-this-page rail and the footer; the page renders the `PageHeader` (crumbs, h1, an optional `aside`, the intro body). A page that moved is in `MOVED` (`src/app/site.ts`): the server 301s it and `NotFound` forwards it, both keeping the anchor. The landing page (`Home.tsx`) sits outside it. The catch-all renders `NotFound.tsx` inside `DocsLayout`.
+`App.tsx` routes every path to its page in `src/app/lazyPages.ts`. `src/app/routes.ts` holds each page's metadata; tests keep the two path lists equal. `DocsLayout` wraps each page with the nav, the sidebar, search, the on-this-page rail and the footer. The page renders the `PageHeader` (crumbs, h1, an optional `aside`, the intro body). The landing page (`Home.tsx`) sits outside `DocsLayout`; the catch-all renders `NotFound.tsx` inside it. Moved pages are listed in `MOVED` (`src/app/site.ts`): the server 301s them and `NotFound` forwards them, both keeping the anchor.
 
-The prerender (`scripts/prerender.ts`, run by `build:full` and the Docker build) snapshots every registry page, the 404 page and Home, and writes `dist/routes.json`. `serve.ts` answers a registry path with its snapshot, 301s a trailing slash, a `.html` suffix or the wrong case to the registry path, and anything else with `dist/404.html` and status 404. The changelog and stats snapshots hold a `data-fill` block the server fills per request (`server/fill.ts`), so crawlers without JavaScript read the releases and totals. The landing's vitals and the compatibility table are filled the same way, but those pages (`SOFT_FILL_PATHS`) answer 200 as prerendered while a source is down, never 503.
+The prerender (`scripts/prerender.ts`, run by `build:full` and the Docker build) snapshots every registry page, the 404 page and Home, and writes `dist/routes.json`. `serve.ts` answers a registry path with its snapshot. A trailing slash, a `.html` suffix or the wrong case gets a 301 to the registry path; anything else gets `dist/404.html` with status 404. The changelog and stats snapshots hold a `data-fill` block that the server fills per request (`server/fill.ts`), so crawlers without JavaScript still read the releases and totals. The landing's vitals and the compatibility table are filled the same way. While a source is down, those two pages (`SOFT_FILL_PATHS`) answer 200 with the prerendered snapshot, never 503.
 
-A Help answer, release or device also has an address (`src/app/items.ts`: `/guide/help/{id}`, `/dashboard/changelog/{tag}`, `/guide/compatibility/{row id without device-}`), whose link card names it. `server/items.ts` answers it with the parent's snapshot, filled, under the item's head: title, description, card, `theme-color`, `noindex`, no canonical, and `medius-item` naming the address. An unknown item answers 404 with the 404 page (marked `data-not-found`, so the app keeps it), and an item whose source can't be read answers 503. The app routes the address to the parent page (`pagePath`), which lands on the item as on a `#hash`. Item addresses stay out of the sitemap and search.
+Each Help answer, release and device also has an address (`src/app/items.ts`: `/guide/help/{id}`, `/dashboard/changelog/{tag}`, `/guide/compatibility/{row id without device-}`) with a link card naming the item. `server/items.ts` answers an item address with the parent page's filled snapshot under a head for the item: title, description, card, `theme-color`, `noindex`, no canonical, and `medius-item` naming the address. An unknown item answers 404 with the 404 page (marked `data-not-found`, so the app keeps it). An item whose source can't be read answers 503. The app routes the address to the parent page (`pagePath`), which scrolls to the item as it would to a `#hash`. Item addresses stay out of the sitemap and search.
 
 ### Loading
 
-Every page is a separate chunk. A link, Back or Forward waits for the page's code before the page changes (`shell/leave.ts`), so a page never shows empty; the router fetches a page's code when a link to it is pointed at, focused or touched, and `DocsLayout` fetches the sidebar neighbours' at idle. A page whose code fails loads whole. In `lazyPages.ts`, a page that shows highlighted code is a `codePage` (it brings the highlighter, so its code never shows plain) and a dashboard page a `dashboard` (it brings the box runtime); a test fails when a page's source and its wrapper disagree. Docs pages never load the dashboard's box runtime.
+Every page is a separate chunk. A link, Back or Forward keeps the old page until the new page's code arrives (`shell/leave.ts`), so a page never shows empty. The router fetches a page's code when a link to it is hovered, focused or touched; `DocsLayout` fetches the sidebar neighbours' code at idle. If a page's code fails to load, the browser does a full page load instead. In `lazyPages.ts`, a page that shows highlighted code is a `codePage` (it brings the highlighter, so its code never shows plain). A dashboard page is a `dashboard` (it brings the box runtime). A test fails when a page's source and its wrapper disagree. Docs pages never load the dashboard's box runtime.
 
 ### Chrome and scrolling
 
-The top bar (`SiteNav`) and the grid are drawn once, in `App.tsx`'s root, never by a page or a layout, so a page change never redraws or fades them; the bar takes the look of the page a link is going to as the page fades out (`leavingFor` in `shell/leave.ts`). `shell/scrollPlace.ts` decides where each page opens before it draws: where Back, Forward or a reload left it, else its top or its hash. Pages scroll there with `behavior: 'instant'`; the router's scroll to the top would glide under `scroll-behavior: smooth`.
+The top bar (`SiteNav`) and the grid are drawn once, in `App.tsx`'s root, never by a page or a layout, so a page change never redraws or fades them. As the old page fades out, the bar takes the look of the page the link leads to (`leavingFor` in `shell/leave.ts`). `shell/scrollPlace.ts` picks each page's scroll position before it draws: where Back, Forward or a reload left it, else its top or its hash. Pages scroll there with `behavior: 'instant'`, because the router's scroll to the top would glide under `scroll-behavior: smooth`.
 
 ### Search
 
-Ctrl+K search reads an index the build makes from the rendered site (`scripts/searchindex.ts`), so a new page, section or panel is found with no list to keep. Mark a place with `data-search-target` (DocSection, Panel and PageHeader do it), keep live values out with `data-search-skip`, and give a panel shown in one box state the `transient` prop. `src/app/search/extra.ts` holds the few synonyms and keywords no page says. The build fails when a page marks a place search cannot reach or a known query stops finding its answer.
+Ctrl+K search reads an index the build makes from the rendered site (`scripts/searchindex.ts`), so a new page, section or panel is found without a list to keep. Mark a place with `data-search-target` (DocSection, Panel and PageHeader do it). Keep live values out with `data-search-skip`. Give a panel shown in only one box state the `transient` prop. `src/app/search/extra.ts` holds the few synonyms and keywords that no page uses. The build fails if a page marks a place search can't reach, or a known query stops finding its answer.
 
 ### Scroll targets
 
@@ -211,7 +210,7 @@ Every section is a `DocSection` with an id. It renders `section.doc-section` wit
 </DocSection>
 ```
 
-A marked block inside a section is an `Anchor` (`shell/Anchor.tsx`): its id, a label and what it holds.
+A marked block inside a section is an `Anchor` (`shell/Anchor.tsx`), given an id, a label and its content.
 
 ```tsx
 <Anchor id="scale" label="SCALE">
@@ -219,17 +218,17 @@ A marked block inside a section is an `Anchor` (`shell/Anchor.tsx`): its id, a l
 </Anchor>
 ```
 
-Every place a link can name carries a link icon (`shell/CopyLink.tsx`) that copies its full address:
+Every linkable place carries a link icon (`shell/CopyLink.tsx`) that copies its full address:
 - `DocSection`, `Panel` (titled, not transient) and `Anchor` place it themselves;
 - Help answers, device rows and releases copy their item address (`/guide/help/bsod`);
 - the tab strip's icon copies the open tab.
 
-Anything else marked `data-search-target` places one by hand. The build's search pass fails on a marked
-place with a search entry and no icon.
+Anything else marked `data-search-target` adds the icon by hand. The build's search pass fails on a
+marked place that has a search entry but no icon.
 
 ### Sidebar
 
-The sidebar is built from `src/app/routes.ts`: each entry's `section`, `group` (the group label) and `nav` (the label, at most 18 characters) place it, in registry order. `shell/DocsSidebar.tsx` renders the entries as router links, so crawlers can follow them, and builds the code-section switcher (Native, Rust, Bindings), the bindings language switcher and the search button. The AI & LLMs page sits at the foot of each code section. On a phone the sidebar opens full height from the bar under the nav.
+The sidebar is built from `src/app/routes.ts`, in registry order. Each entry is placed by its `section`, `group` (the group label) and `nav` (its label, ≤18 characters). `shell/DocsSidebar.tsx` renders the entries as router links (so crawlers can follow them), plus the code-section switcher (Native, Rust, Bindings), the bindings language switcher and the search button. The AI & LLMs page sits at the foot of each code section. On a phone the sidebar opens full height from the bar under the nav.
 
 ## Consistency rules (read before editing)
 
@@ -288,10 +287,10 @@ The signature, the table, and the example carry the content. Prose is near zero.
 ## Styling
 
 - Docs and Guide pages are built from the shell: `PageHeader` first, then a `DocSection` per section, `IndexRow` for a list of links, `ByteStrip` for a frame, `Filter` over a long table or list.
-- Dashboard pages are built from the shell too, never MidnightUI's `Card`: `PageHeader` (its `aside` holds the page's state or action), then `PageTabs` with a `Pane` per tab, each holding `Panels` of `Panel`s (a panel's heading is the docs h2 with its rule; `Stack` makes a column). A choice of up to four is `Segmented` (it stacks in one column where a row doesn't fit), five or more is `Select` (with `filter` when long), a slider is `Range`, a log is `LogBox`. MidnightUI's `Button`, `Chip`, `NumberInput`, `TextField` and `Checkbox` stay, restyled by the theme. Dashboard styles live in `src/styles/theme/dashboard.css`; no inline style objects. No subtitles under a page or panel title, no flavour text; a caps label is muted, never blue.
+- Dashboard pages are built from the shell too, never MidnightUI's `Card`: `PageHeader` (its `aside` holds the page's state or action), then `PageTabs` with a `Pane` per tab, each holding `Panels` of `Panel`s (a panel's heading is the docs h2 with its rule; `Stack` makes a column). A choice of ≤4 options is `Segmented` (it stacks in one column where a row doesn't fit), ≥5 is `Select` (with `filter` when long), a slider is `Range`, a log is `LogBox`. MidnightUI's `Button`, `Chip`, `NumberInput`, `TextField` and `Checkbox` stay, restyled by the theme. Dashboard styles live in `src/styles/theme/dashboard.css`; no inline style objects. No subtitles under a page or panel title, no flavour text; a caps label is muted, never blue.
 - A tab is the hash (`/dashboard#options`). An element id inside a tab opens it, even one that renders later (after Connect or a fetch).
 - `bun run dev`, then any dashboard page with `?fakebox`: Connect finds a fake box (`src/dev/fakeBox.ts`) that answers every query, for looking at the connected pages without hardware.
-- Site styles live in `src/styles/theme/`, imported after MidnightUI's `global.css` so its tokens win. Those files are editable; `global.css` and `src/components/` / `src/styles/components/` are not. Element styles take their scope through `:where()` so the spacing rules after a heading or a label win: 44px from the last ink to a section's rule, 44px from the rule to the heading's capitals, 24px from the heading's baseline to the content.
+- Site styles live in `src/styles/theme/`, imported after MidnightUI's `global.css` so the theme's tokens win. Those files are editable; `global.css` and `src/components/` / `src/styles/components/` are not. Element styles take their scope through `:where()` so the spacing rules after a heading or a label win: 44px from the last ink to a section's rule, 44px from the rule to the heading's capitals, 24px from the heading's baseline to the content.
 - No emojis except the ⚠️ on the USB3 hazard callout.
 - Terse, declarative wording. No filler, no marketing language. De-AI it: no "robust/seamless/leverage", no "**Bold**: explanation" bullets, and use contractions.
 - ASCII punctuation only. No em-dashes or en-dashes, ever (rewrite with commas, periods, parentheses, or "to" for ranges); no unicode minus (use "-"). Verify with a unicode-dash scan before committing.
@@ -308,7 +307,7 @@ The signature, the table, and the example carry the content. Prose is near zero.
 | `api-params` | `<table>` | Parameter and reference tables, inside `<div class="table-scroll">` |
 | `byte-table` | `<table>` | Wire and byte-layout tables (columns Offset / Field / Type / Notes), inside `<div class="table-scroll">` |
 | `callout` | `<div>` | Notes (`--info`, `--warning`, `--danger`), labelled Note, Warning, Danger by the theme |
-| `diagram` | `<pre>` | ASCII flow diagrams. A frame's bytes are a `ByteStrip`; an ASCII byte grid left elsewhere is fixed-width (each cell exactly 8 chars, `+--------+` borders), which conformance checks. |
+| `diagram` | `<pre>` | ASCII flow diagrams. A frame's bytes are a `ByteStrip`. Any other ASCII byte grid is fixed-width (each cell exactly 8 chars, `+--------+` borders); conformance checks this. |
 
 **Badges.** One `api-badge` span under each signature.
 
@@ -326,7 +325,7 @@ existing internal `<A>` alone; never wrap an external `<a>` around or inside it.
 
 ### Mobile
 
-- Every table sits in `.table-scroll`, so a wide one scrolls inside its box and never the page. Avoid 3+ column tables with long `code` content all the same.
+- Every table sits in `.table-scroll`, so a wide one scrolls inside its box and never the page. Even so, avoid tables of 3+ columns with long `code` content.
 - Inline `code` wraps; `pre` blocks scroll inside their box.
 
 ## Favicon and link previews
@@ -335,7 +334,7 @@ The favicon lives in `public/favicon.svg` (served at `/favicon.svg`), and two PN
 
 | File | Size | Use |
 |---|---|---|
-| `public/favicon.png` | 512 px, 256-colour palette | Tab icon where SVG isn't taken; every page view may fetch it, so it stays small |
+| `public/favicon.png` | 512 px, 256-colour palette | Tab icon where SVG isn't supported; every page view may fetch it, so keep it small |
 | `public/apple-touch-icon.png` | 180 px, opaque | iOS home screen and Safari |
 
 ```bash
@@ -353,18 +352,18 @@ PY
 
 `src/index.html` carries Home's head; `RouteMeta.tsx` rewrites title, description, canonical, Open Graph, Twitter, `theme-color` and JSON-LD per route from the registry.
 
-**Link cards.** Every page, Help answer, release and device has a 1200 x 630 card, the page header drawn as an image, made from the data the page renders:
+**Link cards.** Every page, Help answer, release and device has a 1200 x 630 card: the page header drawn as an image, from the data the page renders.
 
 | Unit | Job |
 |---|---|
-| `src/app/card/content.ts` | What a card says (crumb, title, description or list, address, fact, colour), and `cardUrl`, its address with a hash of that |
-| `src/app/card/layout.ts`, `svg.ts` | The title fitted from 140 px down to 56 px in two lines, the rest clamped with an ellipsis, by the fonts' measures; the SVG, its text as glyph outlines |
-| `server/og.ts` | `/og/{path}.png` (Home is `/og/index.png`), drawn by resvg (wasm) on first request and kept by hash; an address with the current `?v=` is cached for a year, any other for five minutes |
+| `src/app/card/content.ts` | What a card says (crumb, title, description or list, address, fact, colour), and `cardUrl`: the card's address, carrying a hash of what it says |
+| `src/app/card/layout.ts`, `svg.ts` | `layout.ts` fits the title from 140 px down to 56 px in two lines and clamps the rest with an ellipsis, using the font metrics. `svg.ts` draws the SVG, its text as glyph outlines |
+| `server/og.ts` | `/og/{path}.png` (Home is `/og/index.png`), drawn by resvg (wasm) on first request and kept by hash. An address with the current `?v=` is cached for a year, any other for 5 minutes |
 | `server/og/fonts/` | Inter 400 and 700 and IBM Plex Mono 500 as TrueType, made from `public/fonts` by `scripts/card-fonts.py` (fonttools and brotli); run it again when those fonts change |
 
-A change to how a card is drawn (`layout.ts`, `svg.ts`, the fonts) fails `tests/unit/card-render.test.ts` until `STYLE` in `content.ts` is raised and the new digest recorded there: without it the card's address stays the same, and caches keep the old image for a year. The same test fits every page's, Help answer's and listed device's card.
+A change to how a card is drawn (`layout.ts`, `svg.ts`, the fonts) fails `tests/unit/card-render.test.ts` until you raise `STYLE` in `content.ts` and record the new digest there. Without that, the card's address doesn't change and caches keep the old image for a year. The same test fits the card of every page, Help answer and listed device.
 
-**`theme-color`** is the stripe Discord draws down an embed's edge: blue, or a device's verdict colour. The served HTML carries it, and the script right after the tag sets it to black before the page paints, so a phone's address bar stays black. `RouteMeta` keeps the colour in `data-embed`, and the prerender copies it into `content` for the snapshot.
+**`theme-color`** is the stripe Discord draws down an embed's edge: blue, or a device's verdict colour. The served HTML carries it. The script right after the tag sets it to black before the page paints, so a phone's address bar stays black. `RouteMeta` keeps the colour in `data-embed`, and the prerender copies it into `content` for the snapshot.
 
 ## Content rules
 
@@ -375,52 +374,52 @@ A change to how a card is drawn (`layout.ts`, `svg.ts`, the fonts) fails `tests/
 
 ## Deployment
 
-CI (`.github/workflows/ci.yml`) builds the app and a multi-arch Docker image on every push to `main`, pushing it to `ghcr.io/<repo>` (lowercased, so `ghcr.io/k4hvh/medius-docs`) and tagging `latest` on `main`. `docker-compose.yml` runs that image. The Dockerfile builds with Bun and serves `dist/` via `serve.ts`. Before the image build, CI runs `scripts/lastmod.mjs` with the full git history, writing each page's last commit date to `src/generated/lastmod.json` for the sitemap and `dateModified`; a local build has no dates.
+CI (`.github/workflows/ci.yml`) builds the app and a multi-arch Docker image on every push to `main`, pushes it to `ghcr.io/<repo>` (lowercased: `ghcr.io/k4hvh/medius-docs`) and tags it `latest` on `main`. `docker-compose.yml` runs that image. The Dockerfile builds with Bun and serves `dist/` via `serve.ts`. Before the image build, CI runs `scripts/lastmod.mjs` over the full git history. It writes each page's last commit date to `src/generated/lastmod.json`, for the sitemap and `dateModified`. A local build has no dates.
 
 ## Usage stats
 
-The dashboard reports each box it connects, the box's cloned device, and every flash to `POST /api/stats/event`; `GET /api/stats` serves the totals the Stats page draws. Both live in `server/stats/` and run under `serve.ts` and the vite dev server alike.
+The dashboard reports each box it connects to, the device the box clones, and every flash to `POST /api/stats/event`. `GET /api/stats` serves the totals the Stats page draws. Both live in `server/stats/` and run under `serve.ts` and the vite dev server alike.
 
 | Piece | Where |
 |---|---|
 | Database | SQLite at `STATS_DB` (default `data/stats.db`, ignored by git). `bun:sqlite` in production, `node:sqlite` under vite and vitest |
 | Box identity | A keyed hash of the MAC; the key is made once and kept in the database. The raw MAC is never stored. Only a box event marks a box active |
 | Country | Cloudflare's `CF-IPCountry`; no IP address is stored |
-| Limits | 2 KB a body (read no further), 60 events a minute per client (an IPv6 /64 is one), 1200 a minute in all, foreign `Origin` refused; totals cached a minute |
-| Production | The compose file's `medius-stats` volume at `/app/data`. Redeploy the stack with it, or every restart starts the counts again |
+| Limits | 2 KB per body (nothing past it is read), 60 events/min per client (an IPv6 /64 counts as one client), 1200/min in all, foreign `Origin` refused; totals cached for 1 min |
+| Production | The compose file's `medius-stats` volume at `/app/data`. Redeploy the stack with it, or every restart resets the counts |
 
-Unit tests never count: the provider builds no sink under vitest. A dev server writes to `data/stats.db` in the checkout, so delete that file to start the counts at zero.
+Unit tests never count: under vitest the provider builds no sink. A dev server writes to `data/stats.db` in the checkout; delete that file to reset the counts to zero.
 
 ## Adding a page
 
 1. Create the component under `src/app/pages/`: a `PageHeader` (with the intro body), then a `DocSection id="..."` per section.
 2. Add it to `PAGES` in `src/app/lazyPages.ts` (`codePage` if it shows highlighted code) and a `<Route>` in `App.tsx`.
-3. Add its entry to `src/app/routes.ts` in sidebar order: section, group, nav label, icon, title, and a description of 50 to 155 characters that no other page uses.
+3. Add its entry to `src/app/routes.ts` in sidebar order: section, group, nav label, icon, title, and a description of 50-155 characters that no other page uses.
 4. Search finds it once built; add keywords to `src/app/search/extra.ts` only for names the page never uses.
 5. Follow the command/method template and the consistency rules above. Link to canonical tables; never duplicate them.
 
 ## Conformance gate
 
 `npm run conformance` (also run by `npm test` and CI) checks that every page is shaped like its
-siblings, the drift that prose and correctness checks cannot see.
+siblings: drift that prose and correctness checks can't see.
 
-Every rule is **derived, not asserted**. A structural rule fires only where the corpus already agrees at
-85% or better; a punctuation rule is measured against the page's **own** majority, so only stragglers on
-an otherwise consistent page fire. Each rule prints the rate it was derived from, so changing the corpus
-changes the rule.
+Every rule is **derived, not asserted**. A structural rule fires only where ≥85% of the corpus already
+agrees. A punctuation rule is measured against the majority **on that page**, so it fires only on
+stragglers in an otherwise consistent page. Each rule prints the rate it was derived from, so changing
+the corpus changes the rule.
 
 Written against CLAUDE.md alone, the checker produced 466 "findings": 183 were one page's internally
 consistent style and 116 were type cards measured as method sections. Measure first; a rule that fires
 on the majority is wrong.
 
-When it flags something you believe is correct, one of the two is wrong. If the page is right, teach
-the rule the distinction the page makes (a dispatch card whose variants carry the examples, a byte grid
+When it flags something you believe is correct, either the page or the rule is wrong. If the page is
+right, teach the rule the distinction the page makes (a dispatch card whose variants carry the examples, a byte grid
 against a topology diagram). Never widen a threshold to quiet the report.
 
 ## Landing captures
 
 `src/app/data/descriptorSample.json` and `feedSample.json` are bench captures from medius-fw's
-`tools/rig/descriptor_capture.py` (the mouse's descriptors read through the box beside the clone's, failing
-on one differing byte) and `feed_capture.py` (the reports the PC took while MOVE injected into real
-motion). Recapture them; never edit them by hand.
+`tools/rig/descriptor_capture.py` (the mouse's descriptors, read through the box, beside the clone's; the
+capture fails on any differing byte) and `feed_capture.py` (the reports the PC took while MOVE injected
+into native motion). Recapture them; never edit them by hand.
 

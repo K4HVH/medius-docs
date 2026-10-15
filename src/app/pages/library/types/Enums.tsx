@@ -8,7 +8,7 @@ const Enums: Component = () => {
     <>
       <PageHeader id="enums">
         <p>
-          Each is tied to a wire byte; conversion helpers are listed with the type.
+          Each is tied to a wire byte. Conversion helpers are listed with the type.
         </p>
       </PageHeader>
       <DocSection id="device-kind" title="DeviceKind" caption="Clone's primary kind">
@@ -16,9 +16,9 @@ const Enums: Component = () => {
         <p>
           The <code>kind</code> field of a{' '}
           <A href="/library/types/structs#device-info"><code>DeviceInfo</code></A>, read from the
-          native HID report descriptors and Boot declarations: one carrying both kinds reads keyboard
-          with a full key bitmap (unless it declares Boot for both) or a Boot keyboard alone, and mouse
-          otherwise. It also drives{' '}
+          native HID report descriptors and Boot declarations. A device with both kinds reads keyboard
+          if it has a full key bitmap (unless it declares Boot for both) or declares Boot for its
+          keyboard only. Otherwise it reads mouse. It also drives{' '}
           <A href="/library/discovery#find-mouse-box"><code>find_mouse_box</code></A> and{' '}
           <A href="/library/discovery#find-keyboard-box"><code>find_keyboard_box</code></A>.{' '}
           <code>Display</code> prints the lowercase name.
@@ -40,14 +40,14 @@ const Enums: Component = () => {
           The override action for an{' '}
           <A href="/library/inject#inject"><code>inject</code></A> call, on any{' '}
           <A href="/library/types/structs#usage"><code>Usage</code></A> class (button, key, or media). The
-          discriminant is the wire byte; convert with <code>as_u8()</code> and{' '}
+          discriminant is the wire byte. Convert with <code>as_u8()</code> and{' '}
           <code>from_u8(u8) -&gt; Option&lt;Action&gt;</code>.
         </p>
         <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>SoftRelease</code></td><td><code>0</code></td><td>Drop the box's override, press or force; a hold on the real device stays down.</td></tr>
+              <tr><td><code>SoftRelease</code></td><td><code>0</code></td><td>Drop the box's override, press or force. A hold on the real device stays down.</td></tr>
               <tr><td><code>Press</code></td><td><code>1</code></td><td>Force the input down.</td></tr>
               <tr><td><code>ForceRelease</code></td><td><code>2</code></td><td>Force the input up, masking a hold on the real device.</td></tr>
             </tbody>
@@ -92,12 +92,12 @@ const Enums: Component = () => {
           <A href="/library/types/structs#catch-filter"><code>CatchFilter</code></A> picks from, and
           the <code>class</code> of a{' '}
           <A href="/library/types/structs#traffic-event"><code>TrafficEvent</code></A>. Convert with{' '}
-          <code>as_u8()</code> and <code>from_u8(u8) -&gt; Option&lt;CatchClass&gt;</code>; split it
+          <code>as_u8()</code> and <code>from_u8(u8) -&gt; Option&lt;CatchClass&gt;</code>. Split it
           with <code>is_input()</code> and <code>is_traffic()</code>.
         </p>
         <p>
           The first four are <A href="/native/commands/lock"><code>LOCK</code></A>'s classes at the
-          same byte values. The other eight address USB traffic;{' '}
+          same byte values. The other eight address USB traffic.{' '}
           <A href="/library/types/enums#traffic-class"><code>TrafficClass</code></A> is that half
           alone.
         </p>
@@ -122,9 +122,9 @@ const Enums: Component = () => {
         </div>
         <p>
           A blanket is one table entry, not one per id. <code>CatchFilter::watch_class(c)</code> and{' '}
-          <code>traffic_class(c)</code> are the per-class blankets and{' '}
-          <code>CatchFilter::everything()</code> the wildcard over all twelve; the wire sentinels never
-          appear in Rust.
+          <code>traffic_class(c)</code> are the per-class blankets, and{' '}
+          <code>CatchFilter::everything()</code> is the wildcard over all twelve. The wire sentinels
+          never appear in Rust.
         </p>
         <p>
           The input classes are captured at the emission merge point, <em>before</em>{' '}
@@ -136,7 +136,7 @@ const Enums: Component = () => {
                        |                                           |
           Button / Key / Media / Axis                            Emit`}</pre>
         <p>
-          The traffic classes tap each pipe on the chip that owns it; each event's{' '}
+          The traffic classes tap each pipe on the chip that owns it. Each event's{' '}
           <A href="/library/types/enums#clock-domain"><code>ClockDomain</code></A> records which.
         </p>
         <div class="api-response-label">EXAMPLE</div>
@@ -160,9 +160,9 @@ let trace = device.catch_events([
         <pre class="api-signature">enum TrafficClass {'{'} HidIn, HidOut, VendorInterrupt, VendorBulk, Control, Emit, Bus, ClipTransfer {'}'}</pre>
         <p>
           The eight packet-carrying classes, at their{' '}
-          <A href="/library/types/enums#catch-class"><code>CatchClass</code></A> byte values. A separate
-          enum, so <code>CatchFilter::traffic</code> cannot take an input class.{' '}
-          <code>TrafficClass::ALL</code> lists them; <code>From</code> and <code>TryFrom</code>{' '}
+          <A href="/library/types/enums#catch-class"><code>CatchClass</code></A> byte values. It's a
+          separate enum, so <code>CatchFilter::traffic</code> can't take an input class.{' '}
+          <code>TrafficClass::ALL</code> lists them, and <code>From</code> and <code>TryFrom</code>{' '}
           convert both ways.
         </p>
       </DocSection>
@@ -173,10 +173,10 @@ let trace = device.catch_events([
           Traffic classes only: a capture on an input class, which carries no packet, is refused.
         </p>
         <p>
-          A ceiling: the box holds one entry per address and cuts once, so
-          another subscriber naming the same address more widely raises yours too.{' '}
-          <code>First(0)</code> is <code>Whole</code>; <code>bytes()</code> returns{' '}
-          <code>Option&lt;u8&gt;</code> and <code>widest()</code> resolves two.
+          It's a ceiling. The box holds one entry per address and cuts once, so another subscriber
+          naming the same address with a wider capture raises yours too. <code>First(0)</code> is{' '}
+          <code>Whole</code>. <code>bytes()</code> returns <code>Option&lt;u8&gt;</code>, and{' '}
+          <code>widest()</code> resolves two captures.
         </p>
       </DocSection>
 
@@ -219,7 +219,7 @@ let trace = device.catch_events([
           <table class="api-params">
             <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>Ride</code></td><td><code>0x00</code></td><td>Wait for a native cursor-motion report to carry this delta, when movement riding is on.</td></tr>
+              <tr><td><code>Ride</code></td><td><code>0x00</code></td><td>When movement riding is on, wait for a native cursor-motion report to carry this delta.</td></tr>
               <tr><td><code>Now</code></td><td><code>0x01</code></td><td>Emit on the next mouse report, native or not, whatever movement riding is set to.</td></tr>
             </tbody>
           </table>
@@ -295,7 +295,7 @@ let trace = device.catch_events([
             <tbody>
               <tr><td><code>Learned</code></td><td>Pace to the learnt native report rate (the default).</td></tr>
               <tr><td><code>Interval</code></td><td>Pace to the cloned mouse's declared poll rate (its <code>bInterval</code>).</td></tr>
-              <tr><td><code>Fixed(u16)</code></td><td>Pace to a fixed rate in Hz; snaps to <code>1000/n</code> and caps at 1 kHz.</td></tr>
+              <tr><td><code>Fixed(u16)</code></td><td>Pace to a fixed rate in Hz. Snaps to <code>1000/n</code> and caps at 1 kHz.</td></tr>
             </tbody>
           </table>
         </div>
@@ -316,7 +316,7 @@ let trace = device.catch_events([
               <tr><td><code>Off</code></td><td>Even fill at the paced rate, no model.</td></tr>
               <tr><td><code>Stock</code></td><td>Render with the bit-exact triangular smoother.</td></tr>
               <tr><td><code>Despiked</code></td><td>Render with the smoother's onset ramped rather than stepped (the default).</td></tr>
-              <tr><td><code>Unsmoothed</code></td><td>Render with no smoother; the model receives the raw injection.</td></tr>
+              <tr><td><code>Unsmoothed</code></td><td>Render with no smoother. The model receives the raw injection.</td></tr>
             </tbody>
           </table>
         </div>
@@ -342,7 +342,7 @@ let trace = device.catch_events([
       <DocSection id="led-mode" title="LedMode" caption="What to drive the LED to">
         <pre class="api-signature">enum LedMode {'{'} Auto, Off, Solid, Blink {'}'}</pre>
         <p>
-          What a <A href="/native/commands/led"><code>LED</code></A> command drives the LED to;{' '}
+          What a <A href="/native/commands/led"><code>LED</code></A> command drives the LED to.{' '}
           <code>Auto</code> restores the box's status display. The discriminant is the wire{' '}
           <code>mode</code> byte. Convert with <code>as_u8()</code> and{' '}
           <code>from_u8(u8) -&gt; Option&lt;LedMode&gt;</code>.
@@ -363,7 +363,7 @@ let trace = device.catch_events([
         <pre class="api-signature">enum LockTarget {'{'} Axis(Axis), Usage(Usage) {'}'}</pre>
         <p>
           What a <A href="/library/lock#lock"><code>lock</code></A> weighs and a{' '}
-          <A href="/library/types/structs#transform"><code>Transform</code></A> reads and writes; the
+          <A href="/library/types/structs#transform"><code>Transform</code></A> reads and writes. The
           box addresses a field the same way everywhere. An <code>Axis</code> and any{' '}
           <code>impl Into&lt;Usage&gt;</code> convert <code>Into&lt;LockTarget&gt;</code>, so either
           passes straight in. A button locks exactly like a key.
@@ -382,7 +382,7 @@ let trace = device.catch_events([
             <thead><tr><th>Method</th><th>Returns</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>.class_id()</code></td><td><code>(u8, u16)</code></td><td>The wire <code>(class, id)</code> this field encodes to.</td></tr>
-              <tr><td><code>LockTarget::from_class_id(class, id)</code></td><td><code>Option&lt;LockTarget&gt;</code></td><td>The inverse; <code>None</code> for a class no field names or an axis id past the declared axes.</td></tr>
+              <tr><td><code>LockTarget::from_class_id(class, id)</code></td><td><code>Option&lt;LockTarget&gt;</code></td><td>The inverse. <code>None</code> for a class no field names, or an axis id past the declared axes.</td></tr>
               <tr><td><code>.as_axis()</code></td><td><code>Option&lt;<A href="/library/types/enums#axis">Axis</A>&gt;</code></td><td>The axis this field names, or <code>None</code> for a momentary usage.</td></tr>
             </tbody>
           </table>
@@ -410,8 +410,8 @@ let trace = device.catch_events([
           The one byte <A href="/native/commands/lock"><code>LOCK</code></A>,{' '}
           <A href="/native/commands/clip"><code>CLIP</code></A> and{' '}
           <A href="/native/commands/catch"><code>CATCH</code></A> all carry. The variants are named
-          for the axis reading; the class selects which of the three applies, and no class carries
-          two. Convert with <code>as_u8()</code> and{' '}
+          for the axis reading. The class picks which of the three readings applies, and no class
+          carries two. Convert with <code>as_u8()</code> and{' '}
           <code>from_u8(u8) -&gt; Option&lt;Direction&gt;</code>.
         </p>
         <div class="table-scroll">
@@ -427,16 +427,16 @@ let trace = device.catch_events([
           </table>
         </div>
         <p>
-          A media usage has no edges: an edge on one is sent, and reads back in{' '}
-          <A href="/library/requests#query-locks"><code>query_locks</code></A>, as <code>Both</code>.
+          A media usage has no edges. An edge on one is sent as <code>Both</code>, and reads back as{' '}
+          <code>Both</code> in <A href="/library/requests#query-locks"><code>query_locks</code></A>.
         </p>
         <p>
           <code>With</code> and <code>Against</code> are measured against the{' '}
           <A href="/library/options#set-bearing">bearing</A>, not a fixed
           sign, so the sign they cover follows the injection. <code>is_relative()</code> tells them
-          apart. A lock or <A href="/library/catch#catch-events">catch</A> call on any class but an
-          axis refuses one
-          with <A href="/library/types/errors#errors"><code>Error::RelativeDirection</code></A>.
+          apart. On any class but an axis, a lock or{' '}
+          <A href="/library/catch#catch-events">catch</A> call refuses them with{' '}
+          <A href="/library/types/errors#errors"><code>Error::RelativeDirection</code></A>.
         </p>
         <p>
           The other two readings have separate names:{' '}
@@ -449,7 +449,7 @@ let trace = device.catch_events([
       <DocSection id="bearing-mode" title="BearingMode" caption="How the box reads the injected direction">
         <pre class="api-signature">enum BearingMode {'{'} PerAxis, Vector {'}'}</pre>
         <p>
-          Set by <A href="/library/options#set-bearing"><code>set_bearing</code></A>; resolves{' '}
+          Set by <A href="/library/options#set-bearing"><code>set_bearing</code></A>. It resolves{' '}
           <code>Direction::With</code> and <code>Against</code>. Convert with{' '}
           <code>as_u8()</code> and <code>from_u8(u8) -&gt; Option&lt;BearingMode&gt;</code>.
         </p>
@@ -463,8 +463,8 @@ let trace = device.catch_events([
           </table>
         </div>
         <p>
-          In <code>Vector</code> the relative pair addresses X and Y as one vector: the box takes the
-          lower of X's and Y's scale and applies it to both axes, so address them together with{' '}
+          In <code>Vector</code>, the relative pair addresses X and Y as one vector. The box applies
+          the lower of X's and Y's scale to both axes, so address them together with{' '}
           <A href="/library/lock#lock-all"><code>scale_all</code></A>.{' '}
           <A href="/library/types/structs#locks"><code>Locks</code></A> documents the readback.
         </p>
@@ -477,9 +477,10 @@ let trace = device.catch_events([
       <DocSection id="blanket" title="Blanket" caption="Whole-group lock selector">
         <pre class="api-signature">enum Blanket {'{'} Aim, Wheel, Buttons, Keys, Media {'}'}</pre>
         <p>
-          A whole input group: which one <A href="/library/lock#lock-all"><code>scale_all</code></A> /{' '}
-          <A href="/library/lock#lock-all"><code>lock_all</code></A> weigh in one call, and the members of a
-          clip's <A href="/library/types/structs#clip-settings"><code>ClipSettings</code></A> auto-lock.
+          A whole input group. <A href="/library/lock#lock-all"><code>scale_all</code></A> /{' '}
+          <A href="/library/lock#lock-all"><code>lock_all</code></A> weigh one in a single call, and a
+          clip's <A href="/library/types/structs#clip-settings"><code>ClipSettings</code></A> auto-lock
+          is a list of them.
         </p>
         <div class="table-scroll">
           <table class="api-params">
@@ -531,14 +532,14 @@ let trace = device.catch_events([
         </div>
         <p>
           All three carry <code>ts_us</code> and a{' '}
-          <A href="/library/types/enums#clock-domain"><code>ClockDomain</code></A>: a stamp compares
-          only to another from the same domain until the{' '}
-          <A href="/library/types/structs#clock-estimate"><code>ClockEstimate</code></A> is applied.
+          <A href="/library/types/enums#clock-domain"><code>ClockDomain</code></A>. Until the{' '}
+          <A href="/library/types/structs#clock-estimate"><code>ClockEstimate</code></A> is applied, a
+          stamp compares only with another from the same domain.
         </p>
         <p>
-          One rolling <code>seq</code> counter covers all three frame types and counts what the box{' '}
-          <em>sent</em>, not what it captured; loss shows in{' '}
-          <A href="/library/types/structs#catch-state"><code>CatchState</code></A>, not a{' '}
+          One rolling <code>seq</code> counter covers all three frame types. It counts what the box{' '}
+          <em>sent</em>, not what it captured, so loss shows in{' '}
+          <A href="/library/types/structs#catch-state"><code>CatchState</code></A>, not as a{' '}
           <code>seq</code> gap.
         </p>
         <div class="api-response-label">EXAMPLE</div>
@@ -556,7 +557,7 @@ match stream.recv()? {
         <pre class="api-signature">enum ClockDomain {'{'} HostChip, DeviceChip {'}'}</pre>
         <p>
           The <code>clock</code> field beside every event's <code>ts_us</code>. The box runs two
-          unsynchronised microsecond timers; the chip that captured the event stamps it. Convert
+          unsynchronised microsecond timers. The chip that captured the event stamps it. Convert
           with{' '}
           <code>as_u8()</code> and <code>from_u8(u8) -&gt; Option&lt;ClockDomain&gt;</code>.
         </p>
@@ -583,8 +584,8 @@ match stream.recv()? {
           minutes (a <code>u32</code> of microseconds) and restart at zero when their chip reboots.
         </p>
         <p>
-          A stamp below the one before it is a wrap, a reboot, or a domain change, and only the
-          third shows in the value itself. To put both domains on one timeline, apply the{' '}
+          A stamp lower than the one before it means a wrap, a reboot, or a domain change. Only the
+          domain change shows in the value itself. To put both domains on one timeline, apply the{' '}
           <A href="/library/types/structs#clock-estimate"><code>ClockEstimate</code></A> from{' '}
           <A href="/library/requests#query-catch"><code>query_catch</code></A>.
         </p>
@@ -596,7 +597,7 @@ match stream.recv()? {
           Read it with <code>TrafficEvent::control_status()</code>, which returns{' '}
           <code>None</code> for any class other than{' '}
           <A href="/library/types/enums#catch-class"><code>Control</code></A>. It is{' '}
-          <code>flags</code> bits 0-1; bit 7 is{' '}
+          <code>flags</code> bits 0-1. Bit 7 is{' '}
           <A href="/library/types/structs#traffic-event"><code>rule_acted()</code></A>.
         </p>
         <div class="table-scroll">
@@ -627,9 +628,9 @@ match stream.recv()? {
             <thead><tr><th>Variant</th><th>Byte</th><th>Operands</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>Reset</code></td><td><code>0</code></td><td>-</td><td>The game PC reset the clone's bus.</td></tr>
-              <tr><td><code>Suspend</code></td><td><code>1</code></td><td>-</td><td>The bus went idle and the PC suspended the clone; the box suspends the real device with it.</td></tr>
+              <tr><td><code>Suspend</code></td><td><code>1</code></td><td>-</td><td>The bus went idle and the PC suspended the clone. The box suspends the real device with it.</td></tr>
               <tr><td><code>Resume</code></td><td><code>2</code></td><td>-</td><td>The bus came back, and the box resumes the real device with it.</td></tr>
-              <tr><td><code>Configured</code></td><td><code>3</code></td><td><code>a</code> = configuration index</td><td>The PC selected a configuration; the clone is live.</td></tr>
+              <tr><td><code>Configured</code></td><td><code>3</code></td><td><code>a</code> = configuration index</td><td>The PC selected a configuration. The clone is live.</td></tr>
               <tr><td><code>Deconfigured</code></td><td><code>4</code></td><td>-</td><td>The PC dropped the clone back to configuration 0.</td></tr>
               <tr><td><code>SetInterface</code></td><td><code>5</code></td><td><code>a</code> = interface, <code>b</code> = alternate setting</td><td>The PC switched an interface's alternate setting.</td></tr>
               <tr><td><code>DeviceAttached</code></td><td><code>6</code></td><td>-</td><td>The real device appeared on the host chip.</td></tr>
@@ -640,8 +641,8 @@ match stream.recv()? {
           </table>
         </div>
         <p>
-          <code>DeviceAttached</code> and <code>DeviceDetached</code> are the real device on USB3;
-          the other eight are the clone's USB1 bus, which the control PC is not on.
+          <code>DeviceAttached</code> and <code>DeviceDetached</code> are the real device on USB3.
+          The other eight are on the clone's USB1 bus, which the control PC isn't on.
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`use medius::{BusEvent, CatchEvent, CatchFilter, TrafficClass};
@@ -661,7 +662,7 @@ if let CatchEvent::Traffic(t) = stream.recv()? {
         <pre class="api-signature">enum TransformOp {'{'} Remap, Swap {'}'}</pre>
         <p>
           How a <A href="/library/types/structs#transform"><code>Transform</code></A>'s source and
-          destination relate. <code>as_u8()</code> and <code>from_u8()</code> convert the wire byte;{' '}
+          destination relate. <code>as_u8()</code> and <code>from_u8()</code> convert the wire byte.{' '}
           <code>admits(source, dest)</code> checks a pair, as the crate does before sending.
         </p>
         <div class="table-scroll">
@@ -691,8 +692,8 @@ if let CatchEvent::Traffic(t) = stream.recv()? {
             <tbody>
               <tr><td><code>Idle</code></td><td><code>0</code></td><td>No clip playing (empty, or a loaded clip parked at its start).</td></tr>
               <tr><td><code>Playing</code></td><td><code>1</code></td><td>Draining the ring, one entry per native frame.</td></tr>
-              <tr><td><code>Paused</code></td><td><code>2</code></td><td>Held mid-clip, keeping the cursor and any held input; resumes from the same spot.</td></tr>
-              <tr><td><code>Faulted</code></td><td><code>3</code></td><td>An append was dropped or the ring overflowed; recover with <code>clear</code>.</td></tr>
+              <tr><td><code>Paused</code></td><td><code>2</code></td><td>Held mid-clip, keeping the cursor and any held input. Resumes from the same spot.</td></tr>
+              <tr><td><code>Faulted</code></td><td><code>3</code></td><td>An append was dropped or the ring overflowed. Recover with <code>clear</code>.</td></tr>
             </tbody>
           </table>
         </div>
@@ -701,7 +702,7 @@ if let CatchEvent::Traffic(t) = stream.recv()? {
         <pre class="api-signature">enum Edge {'{'} Both, Press, Release {'}'}</pre>
         <p>
           Which edge of a bound usage fires a{' '}
-          <A href="/library/types/structs#clip-trigger"><code>ClipTrigger</code></A>; shares wire
+          <A href="/library/types/structs#clip-trigger"><code>ClipTrigger</code></A>. Shares wire
           values with{' '}
           <A href="/library/types/enums#direction"><code>Direction</code></A>.
         </p>
@@ -756,7 +757,7 @@ if let CatchEvent::Traffic(t) = stream.recv()? {
       <DocSection id="image-state" title="ImageState" caption="Where a booted image is in its probation">
         <pre class="api-signature">enum ImageState {'{'} New, PendingVerify, Valid, Invalid, Aborted, Unknown {'}'}</pre>
         <p>
-          The bootloader's record for a slot; see{' '}
+          The bootloader's record for a slot. See{' '}
           <A href="/native/commands/update#rollback">rollback</A>.
         </p>
         <div class="table-scroll">
@@ -764,7 +765,7 @@ if let CatchEvent::Traffic(t) = stream.recv()? {
             <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>New</code></td><td><code>0</code></td><td>Selected but not yet booted.</td></tr>
-              <tr><td><code>PendingVerify</code></td><td><code>1</code></td><td>Booted and on probation; rollback is still possible.</td></tr>
+              <tr><td><code>PendingVerify</code></td><td><code>1</code></td><td>Booted and on probation. Rollback is still possible.</td></tr>
               <tr><td><code>Valid</code></td><td><code>2</code></td><td>Confirmed by the image itself.</td></tr>
               <tr><td><code>Invalid</code></td><td><code>3</code></td><td>The image asked to be rolled back.</td></tr>
               <tr><td><code>Aborted</code></td><td><code>4</code></td><td>Booted once and never confirmed.</td></tr>
@@ -780,7 +781,7 @@ if let CatchEvent::Traffic(t) = stream.recv()? {
           The status byte of a{' '}
           <A href="/library/types/structs#transfer-outcome"><code>TransferOutcome</code></A>, and of a{' '}
           <code>ClipTransfer</code> event through <code>TrafficEvent::transfer_status()</code>. The
-          codes sit at the top of the byte range so they never collide with a length; an unknown byte
+          codes sit at the top of the byte range so they never collide with a length. An unknown byte
           is carried through as <code>Other</code>.
         </p>
         <div class="table-scroll">
@@ -788,9 +789,9 @@ if let CatchEvent::Traffic(t) = stream.recv()? {
             <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>Ok</code></td><td><code>0x00</code></td><td>The transfer completed; any IN data is in <code>data</code>.</td></tr>
-              <tr><td><code>Refused</code></td><td><code>0xFC</code></td><td>The box refused before reaching the real device: the opt-in is off, the request was malformed, <code>wLength</code> was above 504 or the OUT data shorter than it, or the host chip's control queue was full.</td></tr>
+              <tr><td><code>Refused</code></td><td><code>0xFC</code></td><td>The box refused before reaching the real device: the opt-in is off, the request was malformed, <code>wLength</code> was &gt;504 or the OUT data shorter than it, or the host chip's control queue was full.</td></tr>
               <tr><td><code>Stall</code></td><td><code>0xFD</code></td><td>The real device STALLed the request.</td></tr>
-              <tr><td><code>Nak</code></td><td><code>0xFE</code></td><td>The real device did not finish within 500 ms or the transfer failed on the bus, the endpoint is undeclared, no reply crossed the link within 800 ms, or the game PC has the clone suspended, and the real device with it.</td></tr>
+              <tr><td><code>Nak</code></td><td><code>0xFE</code></td><td>The real device didn't finish within 500 ms, the transfer failed on the bus, the endpoint is undeclared, no reply crossed the link within 800 ms, or the game PC has the clone (and so the real device) suspended.</td></tr>
               <tr><td><code>NoDevice</code></td><td><code>0xFF</code></td><td>No real device is attached on the host chip.</td></tr>
               <tr><td><code>Other(u8)</code></td><td>any other</td><td>A status byte this build does not name.</td></tr>
             </tbody>
@@ -798,7 +799,7 @@ if let CatchEvent::Traffic(t) = stream.recv()? {
         </div>
         <div class="callout callout--info">
           <p>
-            <code>Refused</code> comes from the box, before the real device; <code>Stall</code> comes
+            <code>Refused</code> comes from the box, before the real device. <code>Stall</code> comes
             from the real device. <code>Nak</code> can be either: a real device that did not finish, or
             a request with no reply (native{' '}
             <A href="/native/commands/transfer#transfer-resp"><code>TRANSFER_RESP</code></A>).
@@ -819,8 +820,8 @@ match reply.status {
         <pre class="api-signature">enum RewriteClass {'{'} HidIn, HidOut, VendorInterrupt, VendorBulk, Control, Emit, Any {'}'}</pre>
         <p>
           The class picks the traffic a{' '}
-          <A href="/library/types/structs#rewrite-rule"><code>RewriteRule</code></A> addresses and the
-          id picks the address within it, the writable half of{' '}
+          <A href="/library/types/structs#rewrite-rule"><code>RewriteRule</code></A> addresses, and the
+          id picks the address within it. Together they are the writable half of{' '}
           <A href="/library/catch">catch</A>'s address space.
         </p>
         <div class="table-scroll">
@@ -833,7 +834,7 @@ match reply.status {
               <tr><td><code>HidOut</code></td><td><code>5</code></td><td>A report the PC writes to the real device.</td><td>the endpoint number</td></tr>
               <tr><td><code>VendorInterrupt</code></td><td><code>6</code></td><td>Interrupt traffic on a vendor interface.</td><td>the endpoint number</td></tr>
               <tr><td><code>VendorBulk</code></td><td><code>7</code></td><td>Bulk traffic on a vendor interface.</td><td>the endpoint number</td></tr>
-              <tr><td><code>Control</code></td><td><code>8</code></td><td>A proxied control transfer, the only class that may answer or rewrite the native reply. On EP0, the requests the clone relays to the real device (class and vendor ones, and a few standard ones); a control endpoint above 0 carries every request.</td><td>the endpoint number (<code>0</code> = EP0)</td></tr>
+              <tr><td><code>Control</code></td><td><code>8</code></td><td>A proxied control transfer, and the only class that may answer or rewrite the native reply. On EP0, it covers the requests the clone relays to the real device (class and vendor ones, and a few standard ones). A control endpoint above 0 carries every request.</td><td>the endpoint number (<code>0</code> = EP0)</td></tr>
               <tr><td><code>Emit</code></td><td><code>9</code></td><td>What the clone emits, after the renderer: injected and rendered frames as well as relayed ones.</td><td>the endpoint number</td></tr>
               <tr><td><code>Any</code></td><td><code>0xFF</code></td><td>Every surface a packet crosses, so a report meets the rule at <code>HidIn</code> and again at <code>Emit</code>. <code>Pass</code>, <code>Patch</code> and <code>Replace</code> only, ranked below every other class.</td><td>ignored</td></tr>
             </tbody>
@@ -847,10 +848,9 @@ match reply.status {
       <DocSection id="rewrite-action" title="RewriteAction" caption="What the top-ranked rewrite rule does">
         <pre class="api-signature">enum RewriteAction {'{'} Pass, Drop, Patch, Replace, Answer, Stall, Nak, ReplyPatch, ReplyReplace {'}'}</pre>
         <p>
-          The top-ranked rule's action sets what happens to a matched packet. The class column is
-          which{' '}
-          <A href="/library/types/enums#rewrite-class"><code>RewriteClass</code></A> accepts it: a
-          report-only action on a control class, or the reverse, is{' '}
+          The top-ranked rule's action sets what happens to a matched packet. The class column says
+          which <A href="/library/types/enums#rewrite-class"><code>RewriteClass</code></A> accepts the
+          action. A report-only action on a control class, or the reverse, returns{' '}
           <A href="/library/types/errors#errors"><code>Error::RewriteActionClass</code></A>.
         </p>
         <div class="table-scroll">
@@ -865,7 +865,7 @@ match reply.status {
               <tr><td><code>Replace</code></td><td><code>3</code></td><td>any</td><td>yes</td><td>The packet becomes the payload. On <code>Control</code>, the payload overwrites the start of an OUT request's data stage and <code>wLength</code> is kept.</td></tr>
               <tr><td><code>Answer</code></td><td><code>4</code></td><td>control</td><td>yes</td><td>Answer from the payload without forwarding the request to the real device.</td></tr>
               <tr><td><code>Stall</code></td><td><code>5</code></td><td>control</td><td>no</td><td>Protocol STALL.</td></tr>
-              <tr><td><code>Nak</code></td><td><code>6</code></td><td>control</td><td>no</td><td>EP0 NAKs to a timeout; a control endpoint above 0 STALLs.</td></tr>
+              <tr><td><code>Nak</code></td><td><code>6</code></td><td>control</td><td>no</td><td>EP0 NAKs until the host times out. A control endpoint above 0 STALLs.</td></tr>
               <tr><td><code>ReplyPatch</code></td><td><code>7</code></td><td>control</td><td>yes</td><td>Overwrite the native reply at <code>offset</code>.</td></tr>
               <tr><td><code>ReplyReplace</code></td><td><code>8</code></td><td>control</td><td>yes</td><td>Replace the native reply with the payload.</td></tr>
             </tbody>
@@ -886,7 +886,7 @@ match reply.status {
               <tr><td><code>Device</code></td><td><code>0</code></td><td>The 18-byte device descriptor.</td><td>ignored</td></tr>
               <tr><td><code>Config</code></td><td><code>1</code></td><td>A configuration descriptor.</td><td><code>cfg</code> is the configuration index, counting from 0</td></tr>
               <tr><td><code>Report</code></td><td><code>2</code></td><td>An interface's report descriptor.</td><td><code>cfg</code> is that index, <code>index</code> the interface number</td></tr>
-              <tr><td><code>String</code></td><td><code>3</code></td><td>A string descriptor, replaced whole: up to 126 bytes, one UTF-16 code unit per byte. Index <code>0</code>, the language list, is not patched.</td><td><code>index</code> is the string index; <code>offset</code> ignored</td></tr>
+              <tr><td><code>String</code></td><td><code>3</code></td><td>A string descriptor, replaced whole: ≤126 bytes, one UTF-16 code unit per byte. Index <code>0</code>, the language list, is not patched.</td><td><code>index</code> is the string index; <code>offset</code> ignored</td></tr>
               <tr><td><code>Bos</code></td><td><code>4</code></td><td>The BOS descriptor.</td><td>ignored</td></tr>
             </tbody>
           </table>

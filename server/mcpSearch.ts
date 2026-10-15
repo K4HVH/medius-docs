@@ -34,9 +34,9 @@ export function getPage(pages: IndexPage[], path: string): IndexPage | null {
   return pages.find((p) => p.path === norm) ?? null;
 }
 
-// Hits of the site search, each with the sentence the words matched in; a release leads with its date and
-// a device report with its verdict. An agent gets every match, up to its limit, from this site alone, and
-// its query is finished: a space after it keeps the last word from reading as one still being typed.
+// Site search hits, each with the sentence the words matched in; a release leads with its date and a device
+// report with its verdict. An agent gets every match up to its limit, from this site only. Its query is
+// treated as finished: a trailing space stops the last word reading as one still being typed.
 export function searchHits(searcher: Searcher, query: string, limit = 10): SearchHit[] {
   const most = Math.max(0, Math.floor(limit));
   const hits = searcher.search(`${query} `, most + 10, { spread: false }).filter((h) => h.entry.kind !== 'external');

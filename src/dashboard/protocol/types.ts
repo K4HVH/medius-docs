@@ -79,8 +79,8 @@ export interface Health {
   transformOn: boolean;
 }
 
-// A u16 from proto 7. A proto-6 box sends one byte, so the high three flags read 0, true for a box
-// without the layer.
+// A u16 from proto 7. A proto-6 box sends one byte, so the high three flags read 0, which is true for
+// a box without the layer.
 export function healthFromFlags(flags: number): Health {
   return {
     linkUp: (flags & H_LINK_UP) !== 0,
@@ -669,8 +669,8 @@ const PACKET_CLASSES: ReadonlySet<number> = new Set([
   CatchClass.Emit,
 ]);
 
-// A zero-length packet, or on a HID endpoint a HID_IN or EMIT report one ended after its bytes. Bit 1 of a
-// control event is its handshake, and of a ClipTransfer event part of its status.
+// A zero-length packet; on a HID endpoint, also a HID_IN or EMIT report that one ended after its bytes.
+// Bit 1 of a control event is part of its handshake, and of a ClipTransfer event part of its status.
 export function trafficZlp(ev: TrafficEvent): boolean {
   return PACKET_CLASSES.has(ev.cls) && (ev.flags & TRAFFIC_F_ZLP) !== 0;
 }
@@ -700,8 +700,8 @@ export type CatchEvent =
 export interface ClockEstimate {
   // The host chip's clock minus the device chip's, in microseconds.
   offsetUs: number;
-  // Crystal drift in parts per billion; extrapolate with it, since the offset goes stale at up to
-  // 20 us per second.
+  // Crystal drift in parts per billion; extrapolate with it, since the offset goes stale by up to
+  // 20 us/s.
   ratePpb: number;
   // Best measured round trip of the window. The offset is good to about half of this.
   delayUs: number;

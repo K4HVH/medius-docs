@@ -11,7 +11,7 @@ import { inlineRuns, parseBlocks, releaseDay, splitRelease } from '../../dashboa
 export interface CardContent {
   crumb: string;
   title: string;
-  // Lines kept as written, where the title has them.
+  // The title's line breaks as written, where it has them.
   titleLines?: readonly string[];
   description?: string;
   list?: readonly string[];
@@ -24,8 +24,8 @@ export interface CardContent {
 export const BLUE = '#0080ff';
 const TONE: Record<string, string> = { ok: '#10b981', warn: '#f59e0b', bad: '#dc2626' };
 
-// Raised whenever the card is drawn differently: its address changes with it, and unfurlers that keep an
-// image by its address fetch the new one.
+// Raise this whenever the card is drawn differently. Every card's address changes with it, so unfurlers that
+// cache an image by its address fetch the new one.
 export const STYLE = 2;
 
 const HOST = SITE.replace(/^https?:\/\//, '');
@@ -57,9 +57,9 @@ export function pageCard(r: RouteInfo): CardContent {
   };
 }
 
-// What a place says first: its caption, else its first sentence of prose, to 200 characters on a word.
-// Prose is a line of three words or more ending a sentence: a table's rows and a button's label are not.
-// Null for a place with neither, such as a tab.
+// What a place says first: its caption, else its first sentence of prose, cut at a word to <=200 characters.
+// Prose is a line of >=3 words that ends a sentence; a table row or a button label isn't. Null for a place
+// with neither, such as a tab.
 export function placeLine(place: { caption?: string; text: string }): string | null {
   if (place.caption) return stop(place.caption);
   const prose = place.text
@@ -79,8 +79,8 @@ const listed = (names: readonly string[]) =>
 // The card fonts draw no arrow; a caption's `box → PC` reads as `box to PC`.
 const spelled = (s: string) => s.replace(/\s*→\s*/g, ' to ');
 
-// A place's card. A tab with no prose is described by the panels it holds; any other place with
-// none, by its page.
+// A place's card. A tab with no prose is described by the panels it holds; any other place without prose,
+// by its page's description.
 export function placeCard(
   r: RouteInfo,
   id: string,
@@ -122,7 +122,7 @@ export function releaseCard(r: FirmwareRelease): CardContent {
   };
 }
 
-// A device that is neither mouse nor keyboard is named by no kind: "Other." says nothing.
+// A device that is neither a mouse nor a keyboard gets no kind label: "Other." says nothing.
 function deviceLine(row: CompatRow): string {
   const kind = row.kind === 'other' ? '' : KIND_LABEL[row.kind];
   const lead = kind ? `${kind}. ` : '';
@@ -139,7 +139,7 @@ function deviceLine(row: CompatRow): string {
 export function deviceCard(row: CompatRow & { id: string }): CardContent {
   return {
     crumb: parentCrumb('/guide/compatibility'),
-    // The card's fonts carry Latin letters alone.
+    // The card's fonts carry only Latin letters.
     title: /[a-z0-9\u00c0-\u024f]/i.test(row.name) ? row.name : (row.vidpid ?? row.name),
     description: deviceLine(row),
     address: HOST + itemPath('device', row.id.replace(/^device-/, '')),
@@ -153,8 +153,8 @@ export function cardKey(c: CardContent): string {
   return JSON.stringify([STYLE, c.crumb, c.title, c.titleLines ?? null, c.description ?? null, c.list ?? null, c.address, c.fact, c.colour]);
 }
 
-// FNV-1a over cardKey. 32 bits tell one card's versions apart in its address; they can be made to collide,
-// so nothing keeps a drawing by the hash alone.
+// FNV-1a over cardKey. 32 bits tell one card's versions apart in its address. They can be made to collide,
+// so nothing caches a drawing by the hash alone.
 export function cardHash(c: CardContent): string {
   const text = cardKey(c);
   let h = 0x811c9dc5;

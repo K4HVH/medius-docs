@@ -77,36 +77,36 @@ const Options: Component = () => (
       <p>Lets the box clone a device it can't clone faithfully (byte for byte).</p>
       <Values
         rows={[
-          [<Default>Faithful only</Default>, 'A device the box can\'t clone faithfully is refused: no clone appears, and the device does nothing through the box. Control\'s Advanced rewrites are cleared.'],
+          [<Default>Faithful only</Default>, 'The box refuses a device it can\'t clone faithfully: no clone appears, and the device does nothing through the box. Control\'s Advanced rewrites are cleared.'],
           ['Allow imperfect', 'The box clones such a device anyway, as close as it can, relaying every IN endpoint (a channel the device sends reports on).'],
         ]}
       />
       <Details
         rows={[
-          ['Limits', 'More than 4 IN endpoints in use at once, more than 6 HID interfaces (input functions such as a mouse or a keyboard), a vendor bulk or isochronous endpoint, or high speed (480 Mbit/s).'],
-          ['Never cloned', 'A device with an endpoint numbered 7 or higher.'],
+          ['Limits', 'A device with >4 IN endpoints in use at once, >6 HID interfaces (input functions such as a mouse or a keyboard), a vendor bulk or isochronous endpoint, or high speed (480 Mbit/s).'],
+          ['Never cloned', 'A device with an endpoint numbered ≥7.'],
           ['Use', <>A device that doesn't work through the box, or one the dashboard or <Fixes /> names. A forced Wire rate and Control's Advanced tab need it too.</>],
-          ['Cost', 'The clone no longer matches the real device byte for byte. With more than 4 IN endpoints, reports on the extra ones can be relayed a poll or more late. The mouse, keyboard and media endpoints are never delayed.'],
+          ['Cost', 'The clone no longer matches the real device byte for byte. With >4 IN endpoints, reports on the extra ones can be relayed ≥1 poll late. The mouse, keyboard and media endpoints are never delayed.'],
           ['Restart', 'On a change, while a device the box can\'t clone faithfully is plugged in or a Wire rate is forced.'],
-          ['Firmware', 'v3.4.4 or later for a device with more than 4 IN endpoints. On older firmware, Windows keeps resetting the clone.'],
+          ['Firmware', 'v3.4.4 or later for a device with >4 IN endpoints. On older firmware, Windows keeps resetting the clone.'],
         ]}
       />
     </DocSection>
 
     <DocSection id="movement-riding" title="Movement riding" aside={<Dashboard id="movement-riding" />}>
-      <p>Injected motion rides native reports: it waits for the next one and is emitted in it.</p>
+      <p>Injected motion rides native reports: it waits for the next native report and is emitted in it.</p>
       <Values
         delay
         rows={[
           [<Default>Off</Default>, 'Injected motion is emitted at once: in native reports while the mouse moves, in the box\'s reports while it\'s still.', '0 ms'],
-          ['On, with a window', 'Injected motion waits up to the window (1 to 65535 ms) for the next native report and rides it. Motion still waiting when the window ends is dropped. The box emits no extra report for injected motion.', 'Up to 1 native report: 1 ms at 1000 Hz'],
+          ['On, with a window', 'Injected motion waits up to the window (1-65535 ms) for the next native report and rides it. Motion still waiting when the window ends is dropped. The box emits no extra report for injected motion.', '≤1 native report: 1 ms at 1000 Hz'],
         ]}
       />
       <Details
         rows={[
           ['Cost', 'Injected motion does nothing while the mouse is still.'],
           ['Unaffected', 'Injected buttons, keys and media.'],
-          ['Override', 'Rendered motion set to Injected and native ignores riding.'],
+          ['Override', 'With Rendered motion at Injected and native, riding doesn\'t apply.'],
         ]}
       />
     </DocSection>
@@ -119,36 +119,36 @@ const Options: Component = () => (
       <Values
         head="Setting"
         rows={[
-          [<>Window <em>(default 20 ms)</em></>, 'How long the last injected direction counts, 1 to 65535 ms. Off: no bearing, so With and Against scales do nothing.'],
+          [<>Window <em>(default 20 ms)</em></>, 'How long the last injected direction counts (1-65535 ms). Off: no bearing, so With and Against scales do nothing.'],
           [<Default>Per axis</Default>, 'X and Y compared separately: native X with injected X, native Y with injected Y.'],
-          ['Vector', 'Native motion along the injected direction is scaled, by the lower of the X and Y scales. The rest is unscaled.'],
+          ['Vector', 'Native motion along the injected direction is scaled by the lower of the X and Y scales. The rest is unscaled.'],
         ]}
       />
       <Details
         rows={[
           ['Use', 'Only with Lock\'s With injection or Against injection scales.'],
-          ['Change', 'Drops the current bearing: one step in the scaled motion.'],
+          ['Change', 'Drops the current bearing: With and Against scales do nothing until the next injected motion.'],
         ]}
       />
     </DocSection>
 
     <DocSection id="render" title="Render" aside={<Dashboard id="render" />}>
       <p>
-        Emits injected motion with the native report texture (the timing and size of each report your mouse sends),
-        learned by a model, instead of an even stream.
+        A model learns the native report texture (the timing and size of each report your mouse sends). Render
+        emits injected motion with that texture instead of as an even stream.
       </p>
       <Values
         delay
         rows={[
           ['Off', 'An even stream, paced at the Emit rate.', '0 ms'],
-          ['Stock', 'The model with its original smoother. The first report of each injection carries twice the steady amount.', '4 ms'],
-          [<Default>De-spiked</Default>, 'The same smoother, ramping up to the steady amount over 8 ms from the first report.', '2.7 ms'],
+          ['Stock', 'The model with its original smoother. The first report of each injection carries 2× the steady amount.', '4 ms'],
+          [<Default>De-spiked</Default>, 'The same smoother, ramping up to the steady amount over the first 8 ms.', '2.7 ms'],
           ['Unsmoothed', 'No smoother: the model renders injected motion as it arrives.', '0 ms'],
         ]}
       />
       <Details
         rows={[
-          ['Warm-up', 'After every restart the model learns from native motion first. Until then, injected motion is emitted as with Off.'],
+          ['Warm-up', 'After every restart, injected motion is emitted as with Off until the model has learned from native motion.'],
           ['Firmware', 'v3.3.1 or later.'],
         ]}
       />
@@ -166,7 +166,7 @@ const Options: Component = () => (
     </DocSection>
 
     <DocSection id="spread" title="Spread" aside={<Dashboard id="spread" />}>
-      <p>Spreads each command's delta (the movement it carries) across the command interval (the time until the next command), so no single report carries all of it.</p>
+      <p>Spreads each command's delta (the movement it carries) across the command interval (the time until the next command). No single report carries the whole delta.</p>
       <Values
         delay
         rows={[
@@ -181,19 +181,19 @@ const Options: Component = () => (
           ['Delay', 'Average at an 8 ms command interval. It scales with the interval: interval ÷ 4 at Half, ÷ 2 at Full.'],
           ['Interval', 'Learned from how often commands arrive.'],
           ['Total', 'Never changed.'],
-          ['Not spread', 'Wheel motion, and commands more than about 32 ms apart.'],
+          ['Not spread', 'Wheel motion, and commands more than ~32 ms apart.'],
           ['Firmware', 'v3.3.1 or later.'],
         ]}
       />
     </DocSection>
 
     <DocSection id="emit-rate" title="Emit rate" aside={<Dashboard id="emit-rate" />}>
-      <p>The highest rate at which the box emits injected motion. Nothing is emitted while no motion is waiting.</p>
+      <p>The highest rate at which the box emits injected motion. The box emits only while motion is waiting.</p>
       <Values
         rows={[
           [<Default>Learned</Default>, 'The native report rate, measured as the mouse moves.'],
           ['Interval', 'The poll rate the clone declares to the PC: native, or a forced Wire rate.'],
-          ['Fixed', 'A rate you pick, up to 1000 Hz, rounded to 1000 divided by a whole number: 1000, 500, 333, 250 and so on.'],
+          ['Fixed', 'A rate you pick (≤1000 Hz), rounded to 1000 ÷ a whole number: 1000, 500, 333, 250 and so on.'],
           ['Rendered', 'v3.3.0 only: paced by the renderer. Removed after that release.'],
         ]}
       />
@@ -210,13 +210,13 @@ const Options: Component = () => (
       <Values
         rows={[
           [<Default>Native</Default>, 'The poll rate the real device declares.'],
-          ['Forced', 'A rate you pick, rounded to one the PC polls at exactly: 1000, 500, 250, 125, 62, 31, 15 or 7 Hz (600 becomes 500). A low-speed device can\'t go above 62 Hz.'],
+          ['Forced', 'A rate you pick, rounded to one the PC polls at exactly: 1000, 500, 250, 125, 62, 31, 15 or 7 Hz (600 becomes 500). A low-speed device is capped at 62 Hz.'],
         ]}
       />
       <Details
         rows={[
-          ['Use', <>A mouse that declares 125 Hz but reports faster, like Logitech's receivers. The dashboard offers a forced rate for such a mouse, and <Fixes /> lists them.</>],
-          ['Needs', 'Imperfect clone on, since the clone\'s descriptor (what it tells the PC it is) no longer matches the native one.'],
+          ['Use', <>A mouse that declares 125 Hz but reports faster, like Logitech's receivers. The dashboard offers a forced rate for such a mouse. <Fixes /> lists them.</>],
+          ['Needs', 'Imperfect clone on. The clone\'s descriptor (what it tells the PC it is) no longer matches the native one.'],
           ['Restart', 'On every change. The box clones the device again.'],
         ]}
       />

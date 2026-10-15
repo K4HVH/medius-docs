@@ -298,7 +298,7 @@ describe('The Advanced tab of Control', () => {
     const card = patchCard(container);
     expect(cardButton(card, 'Clear all').disabled).toBe(false);
     expect(cardButton(card, 'Apply').disabled).toBe(false);
-    expect(getByText('The clone still carries the removed patches. Apply or Clear all takes them off.')).toBeTruthy();
+    expect(getByText('The clone still carries the removed patches. Apply or Clear all removes them.')).toBeTruthy();
     expect(getByText('Nothing stored.')).toBeTruthy();
   });
 
@@ -551,7 +551,7 @@ describe('DeviceRewrite actions and payloads', () => {
     fireEvent.input(field(card, 'Match (hex)')!, { target: { value: 'aa'.repeat(17) } });
     fireEvent.input(field(card, 'Mask (hex)')!, { target: { value: 'ff'.repeat(17) } });
     fireEvent.click(getByText('Add'));
-    await findByText('Match and mask must be at most 16 bytes.');
+    await findByText('Match and mask must be ≤16 bytes.');
     expect(mock.rewrites).toEqual([]);
     fireEvent.input(field(card, 'Match (hex)')!, { target: { value: 'aa'.repeat(16) } });
     fireEvent.input(field(card, 'Mask (hex)')!, { target: { value: 'ff'.repeat(16) } });

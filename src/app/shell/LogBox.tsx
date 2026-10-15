@@ -1,12 +1,11 @@
 import { createEffect, onCleanup, onMount } from 'solid-js';
 
-// A log read from the top, the newest line last and lit as the landing feed lights its newest row;
-// each new line lands with a short rise. While the log is scrolled to its end it follows new lines;
-// scrolled back, it holds still, old lines leaving the top included. `added` counts every line ever
-// added, so a log at its cap still knows which lines are new; it must change in the same update as
-// `rows` (one signal holding both), or the log would draw a half-made change. A change to `version`
-// redraws every line in place, the reader's place kept, for lines whose text changed without a line
-// being added.
+// A log read from the top. The newest line is last, lit the way the landing feed lights its newest row, and
+// each new line lands with a short rise. Scrolled to its end, the log follows new lines. Scrolled back, it
+// holds still, even as old lines leave the top. `added` counts every line ever added, so a log at its cap
+// still knows which lines are new. `added` must change in the same update as `rows` (one signal holding
+// both), or the log would draw a half-made change. A change to `version` redraws every line in place,
+// keeping the reader's place, for lines whose text changed with no line added.
 export function LogBox(props: {
   rows: () => string[][];
   added: () => number;
@@ -76,7 +75,7 @@ export function LogBox(props: {
     seen = total;
     const have = box.children.length;
     if (redraw || have + fresh < rows.length) {
-      // Lines already there when the log opened, or more changed than was added: drawn, not landing.
+      // Lines already there when the log opened, or more changed than was added: drawn without the rise.
       const at = box.scrollTop;
       box.replaceChildren(...rows.map(row));
       box.lastElementChild?.classList.add('now');
@@ -112,5 +111,5 @@ export function LogBox(props: {
   );
 }
 
-// What a log holds, one line a row, for Copy and Save.
+// The log's text, one row per line, for Copy and Save.
 export const logText = (rows: string[][]): string => rows.map((r) => r.join('  ')).join('\n');

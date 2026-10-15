@@ -30,8 +30,8 @@ const Home: Component = () => {
   let root: HTMLDivElement | undefined;
 
   onMount(() => {
-    // At its top for a link (the router's scroll would glide there from the old place), where it was
-    // left for Back or Forward.
+    // A link opens the page at its top (the router's scroll would glide there from the old place). Back
+    // or Forward opens it where it was left.
     const at = openingAt();
     if (at !== null) settleAt(at);
     let dispose = () => {};

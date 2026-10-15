@@ -8,9 +8,9 @@ const Transform: Component = () => {
     <>
       <PageHeader>
         <p>
-          A transform moves a field the clone's descriptor declares into another. It needs no{' '}
-          <A href="/library/options#allow-imperfect-clones">imperfect-clone opt-in</A>, unlike the{' '}
-          <A href="/library/advanced/raw">advanced control layer</A>.
+          A transform moves one field the clone's descriptor declares into another. Unlike the{' '}
+          <A href="/library/advanced/raw">advanced control layer</A>, it needs no{' '}
+          <A href="/library/options#allow-imperfect-clones">imperfect-clone opt-in</A>.
         </p>
         <p>
           Transforms run before rendering, so <A href="/library/inject">injection</A>, riding and
@@ -37,7 +37,7 @@ const Transform: Component = () => {
         <p>
           All are <A href="/native/injection#fire-and-forget">fire-and-forget</A>: one frame, no reply.{' '}
           <A href="/library/transform#transform"><code>transform</code></A> takes any{' '}
-          <A href="/library/types/structs#transform"><code>Transform</code></A> built from parts;{' '}
+          <A href="/library/types/structs#transform"><code>Transform</code></A> built from parts.{' '}
           <A href="/library/transform#query-transforms"><code>query_transforms</code></A> reads the
           active table.
         </p>
@@ -52,15 +52,15 @@ const Transform: Component = () => {
               <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>t</code></td><td><A href="/library/types/structs#transform"><code>Transform</code></A></td><td>The <A href="/library/types/enums#transform-op">operation</A>, source and destination <A href="/library/types/enums#lock-target">fields</A>. A pair the op cannot address, or one field named as both ends, is <A href="/library/types/errors#errors"><code>Error::TransformOpFields</code></A>. Installing one past <code>Transforms::CAPACITY</code> is <code>Error::TransformTableFull</code>. One the box refuses is absent from <A href="/library/transform#query-transforms"><code>query_transforms</code></A>.</td></tr>
+              <tr><td><code>t</code></td><td><A href="/library/types/structs#transform"><code>Transform</code></A></td><td>The <A href="/library/types/enums#transform-op">operation</A>, source and destination <A href="/library/types/enums#lock-target">fields</A>. If the op can't address the pair, or one field is both ends, the call returns <A href="/library/types/errors#errors"><code>Error::TransformOpFields</code></A>. Installing one past <code>Transforms::CAPACITY</code> returns <code>Error::TransformTableFull</code>. A transform the box refuses is absent from <A href="/library/transform#query-transforms"><code>query_transforms</code></A>.</td></tr>
             </tbody>
           </table>
         </div>
         <p>
           Entries are keyed by{' '}
-          <A href="/library/types/structs#transform-key"><code>(source, dest)</code></A>; setting an
-          existing key overwrites it in place, keeping its position. Entries apply in installation
-          order, so two that write the same field do not commute.
+          <A href="/library/types/structs#transform-key"><code>(source, dest)</code></A>. Setting an
+          existing key overwrites that entry in place, keeping its position. Entries apply in
+          installation order, so the order of two entries writing the same field matters.
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`use medius::{Device, Axis, Transform};
@@ -76,7 +76,7 @@ device.transform(&Transform::remap(Axis::Wheel, Axis::Y))?; // the wheel drives 
         <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
         <p>
           Each installs the <A href="/library/types/structs#transform"><code>Transform</code></A> its
-          matching constructor builds, and refuses on the same terms as{' '}
+          matching constructor builds. Both refuse on the same terms as{' '}
           <A href="/library/transform#transform"><code>transform</code></A>.
         </p>
         <div class="api-response-label">EXAMPLE</div>
@@ -94,9 +94,9 @@ device.scale(Axis::Y, Direction::Both, -100)?;   // Y inverted`}</code></pre>
         <pre class="api-signature">fn clear_transforms(&self) -&gt; Result&lt;()&gt;</pre>
         <p><span class="api-badge api-badge--executed">Fire-and-forget</span></p>
         <p>
-          <code>untransform</code> drops the entry keyed by this transform's{' '}
-          <A href="/library/types/structs#transform-key"><code>(source, dest)</code></A>; its op is
-          ignored. <code>clear_transforms</code> drops the whole table.
+          <code>untransform</code> drops the entry with this transform's{' '}
+          <A href="/library/types/structs#transform-key"><code>(source, dest)</code></A> key and
+          ignores its op. <code>clear_transforms</code> drops the whole table.
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`let swap = Transform::swap(Axis::X, Axis::Y);
@@ -126,7 +126,7 @@ for t in &table.entries {
       <DocSection id="async" title="On AsyncDevice" caption="Transforms fire; query_transforms awaits">
         <p>
           Transforms carry no opt-in check, so <A href="/library/features/async"><code>AsyncDevice</code></A>{' '}
-          keeps every setter synchronous; only <code>query_transforms</code> is a future.
+          keeps every setter synchronous. Only <code>query_transforms</code> is a future.
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`use futures::executor::block_on;

@@ -3,8 +3,8 @@ import { A } from '@solidjs/router';
 import { Arrow, ArrowOut } from './Arrow';
 import { marks } from '../search/text';
 
-// A live filter over a table or a list, with the count of what it leaves. The page's Markdown twin
-// carries the list, not the filter.
+// A live filter over a table or a list, with a count of the matches left. The page's Markdown twin carries
+// the list, not the filter.
 export function Filter(props: {
   value: string;
   onInput: (v: string) => void;
@@ -40,8 +40,8 @@ export function Marked(props: { text: string; query: string }) {
   return <For each={marks(props.text, props.query)}>{(p) => (p.hit ? <mark>{p.text}</mark> : p.text)}</For>;
 }
 
-// A small link to the setting or page a row or an answer points at. `label` names it where several links share
-// its text.
+// A small link to the setting or page a row or an answer points at. `label` names the link where several
+// links share its text.
 export function FixLink(props: { href: string; children: string; label?: string }) {
   return (
     <Show

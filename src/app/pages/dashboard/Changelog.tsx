@@ -80,7 +80,7 @@ const Release = (props: { release: FirmwareRelease; open: boolean }) => {
   const notes = createMemo(() => props.release.notes);
   const parts = createMemo(() => splitRelease(notes()));
   const grouped = () => groupCommits(parts().commits);
-  // A release from before written notes is its commit list alone, shown as one.
+  // A release from before written notes has only a commit list, so its notes are shown as one.
   const old = () => (parts().commits ? null : groupCommits(parts().notes));
   const [open, setOpen] = createSignal(props.open);
   const body = `commits-${props.release.tag}`;
@@ -134,8 +134,8 @@ const Release = (props: { release: FirmwareRelease; open: boolean }) => {
   );
 };
 
-// The releases server/fill.ts embedded in the page, so the first render already has them; by a link, the
-// ones fetched beside the page's code.
+// The releases server/fill.ts embedded in the page, so the first render already has them. Reached by a
+// link, the page uses the ones fetched beside its code.
 const embedded = (): FirmwareRelease[] | undefined => {
   try {
     const el = document.getElementById('releases-data');
@@ -167,8 +167,8 @@ const Changelog = () => {
   let armed = false;
   let dispose = () => {};
   onCleanup(() => dispose());
-  // Releases the fetch brought after the page arrived arrive themselves. The sections below the screen
-  // rise as they come into view, armed after any jump to a release so the one landed on is never held back.
+  // Releases fetched after the page arrived play their own arrival. Sections below the screen rise as
+  // they come into view; that is armed after any jump to a release, so the one landed on is never held back.
   createEffect(() => {
     if (armed || !list()?.length) return;
     armed = true;

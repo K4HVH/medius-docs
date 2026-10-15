@@ -1,9 +1,9 @@
 import { LINKS } from '../site';
 import type { IndexEntry } from './types';
 
-// The hand-kept part of the search, kept small: words readers use for one thing the site calls by
-// another, words for a place the page never uses itself, and other sites. Everything else comes from
-// the pages. The build fails when an address here is no longer on the site.
+// The hand-kept part of search, kept small: readers' words for things the site names differently, words for
+// a place that its page never uses, and other sites. Everything else comes from the pages. The build fails
+// when an address here is no longer on the site.
 
 // Each group's members stand for one another; a match through one scores half of a direct match.
 export const SYNONYMS: string[][] = [

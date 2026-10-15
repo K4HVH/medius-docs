@@ -47,7 +47,7 @@ cc app.c -DMEDIUS_FEATURE_MOCK \\
    -I medius-capi/include -L target/release -lmedius_capi -lpthread -o app`}</code></pre>
         <div class="callout callout--warning">
           <p>
-            The prebuilt tarball is built <strong>without</strong> it. The macro without the
+            The prebuilt tarball is built <strong>without</strong> mock. The macro without the
             feature is a link error; the feature without the macro leaves the declarations hidden.
           </p>
         </div>
@@ -106,8 +106,9 @@ LD_LIBRARY_PATH=target/release ./hello
         <div class="callout callout--info">
           <p>
             <code>-L</code> is link-time only. At <em>run</em> time the loader finds the shared
-            library via Linux <code>LD_LIBRARY_PATH</code> or an rpath, macOS <code>DYLD_LIBRARY_PATH</code> /{' '}
-            <code>@rpath</code>, Windows the <code>.dll</code> next to the exe or on <code>PATH</code>.
+            library through <code>LD_LIBRARY_PATH</code> or an rpath on Linux,{' '}
+            <code>DYLD_LIBRARY_PATH</code> or <code>@rpath</code> on macOS, and the <code>.dll</code>{' '}
+            next to the exe or on <code>PATH</code> on Windows.
           </p>
           <p>
             Or link the static library (<code>.a</code> / <code>.lib</code>) into the binary.

@@ -16,7 +16,7 @@ const Transport: Component = () => {
 
       <DocSection id="serial" title="Serial link" caption="Baud and framing">
         <p>
-          Fixed <code>6,000,000</code> baud (6 Mbaud), no negotiation; any other baud fails.
+          Fixed <code>6,000,000</code> baud (6 Mbaud), no negotiation. Any other baud fails.
         </p>
         <p>
           The box speaks <A href="/native/frame">framed binary</A> from the first byte.

@@ -11,10 +11,9 @@ const Transform: Component = () => {
       <PageHeader>
         <p>
           <A href="/native/commands/transform#transform"><code>TRANSFORM</code></A> moves one
-          declared field into another, clamped to the destination's declared range, so the clone
-          emits only values the real device could. It needs no{' '}
-          <A href="/native/commands/option#imperfect">imperfect-clone opt-in</A>, unlike the
-          rewrite/raw/patch layer.
+          declared field into another. The value is clamped to the destination's declared range, so
+          the clone emits only values the real device could. Unlike the rewrite/raw/patch layer, it
+          needs no <A href="/native/commands/option#imperfect">imperfect-clone opt-in</A>.
         </p>
         <pre class="diagram">{`  parsed report --> LOCK --> [ TRANSFORM ] --> render --> inject --> emit
                                    |
@@ -53,7 +52,7 @@ const Transform: Component = () => {
 
       <DocSection id="transform" title="TRANSFORM" caption="Install, overwrite, or remove one entry">
         <p>
-          An entry is keyed by its <code>(source, dest)</code>; setting one whose key exists
+          An entry is keyed by its <code>(source, dest)</code>. Setting an entry whose key exists
           overwrites its op. <A href="/native/frame#opcodes">Opcode</A> <code>0x1E</code>.
         </p>
         <pre class="api-signature">TRANSFORM  0x1E  ·  payload 8 bytes</pre>
@@ -77,8 +76,8 @@ const Transform: Component = () => {
 
         <Anchor id="weighing" label="SCALED">
           <p>
-            The <A href="/native/commands/lock#scale">weigh</A> runs first and the transform moves
-            what it kept. The rounding remainder is banked once, per axis and sign, by the lock.
+            The <A href="/native/commands/lock#scale">weigh</A> runs first, and the transform moves
+            what the weigh kept. The lock banks the rounding remainder once, per axis and sign.
           </p>
           <pre class="diagram">{`  LOCK(X, both, -50)      keep half of X, reversed
   TRANSFORM(swap, X, Y)   and put what is left on Y
@@ -107,7 +106,7 @@ const Transform: Component = () => {
           so a swap installed after a remap exchanges what the remap wrote.
         </p>
         <p>
-          No reply: a refused entry is absent from{' '}
+          No reply. A refused entry is absent from{' '}
           <A href="/native/commands/requests#transforms"><code>RESP(TRANSFORMS)</code></A>, which
           also carries the full flag. The <code>TRANSFORM_ON</code>{' '}
           <A href="/native/commands/requests#health">health</A> bit follows the table.
@@ -160,7 +159,7 @@ const Transform: Component = () => {
       </DocSection>
 
       <DocSection id="pairs" title="Field pairs" caption="Source and destination per op">
-        <p>Each op admits a fixed set of shapes; anything else is refused.</p>
+        <p>Each op admits a fixed set of shapes. Anything else is refused.</p>
         <pre class="diagram">{`  swap    axis a    <--------->  axis b      two axes
   remap   axis a    ---------->  axis b      one report, source zeroed
           button i  ---------->  button j    one report, source bit cleared
@@ -174,8 +173,8 @@ const Transform: Component = () => {
               <tr><th>Name</th><th>Behaviour</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>swap</code></td><td>Reads both axes, then writes both; two remaps would leave the pair equal.</td></tr>
-              <tr><td><code>remap</code></td><td>Adds the source to the destination's value, then zeroes the source. A button destination is OR'd the press instead, and the source bit cleared.</td></tr>
+              <tr><td><code>swap</code></td><td>Reads both axes, then writes both. Two remaps would leave the pair equal.</td></tr>
+              <tr><td><code>remap</code></td><td>Adds the source to the destination's value, then zeroes the source. For a button destination, the press is OR'd in instead, and the source bit cleared.</td></tr>
             </tbody>
           </table>
         </div>
@@ -183,9 +182,8 @@ const Transform: Component = () => {
 
       <DocSection id="cross" title="Button to key or media" caption="Remap across collections">
         <p>
-          A button source can drive a keyboard or Consumer destination, emitted through that
-          collection's interface as <A href="/native/commands/inject#key"><code>INJECT</code></A>{' '}
-          emits one.
+          A button source can drive a keyboard or Consumer destination. The box emits it through that
+          collection's interface, as for <A href="/native/commands/inject#key"><code>INJECT</code></A>.
         </p>
         <div class="api-response-label">HELD, NOT LATCHED</div>
         <pre class="diagram">{`  native button      ____----------________-----____
@@ -194,18 +192,18 @@ const Transform: Component = () => {
   driven from the button mask the real device just reported,
   re-read every report, with no edge latch to strand`}</pre>
         <p>
-          Following the level, a configuration switch, missed release, or briefly unbound
-          destination resolves on the next report, never leaving a key held with nothing pressed.
+          Because the key follows the level, a configuration switch, missed release or briefly unbound
+          destination resolves on the next report. No key is left held with nothing pressed.
         </p>
         <div class="api-response-label">EVERY MOUSE COLLECTION</div>
         <p>
           Buttons may span two mouse collections. The destination is held while any collection the
-          box reports on has that button down; a collection not declaring the id holds nothing.
+          box reports on has that button down. A collection not declaring the id holds nothing.
         </p>
         <div class="api-response-label">INERT WHEN UNBOUND</div>
         <p>
-          An entry naming an unbound destination collection is refused. One whose collection goes
-          away with a configuration switch turns inert and leaves its source uncleared, so the
+          An entry naming an unbound destination collection is refused. If an entry's collection goes
+          away with a configuration switch, the entry turns inert and leaves its source uncleared. The
           button keeps reaching the game PC until that collection binds again.
         </p>
         <div class="api-response-label">EXAMPLE</div>
@@ -229,7 +227,7 @@ const Transform: Component = () => {
           ]}
         />
         <p>
-          The keycode is a <A href="/native/commands/usage#keycodes">HID keyboard usage</A>; a
+          The keycode is a <A href="/native/commands/usage#keycodes">HID keyboard usage</A>. A
           media destination takes a 16-bit{' '}
           <A href="/native/commands/usage#consumer">Consumer usage</A>.
         </p>
@@ -237,8 +235,8 @@ const Transform: Component = () => {
 
       <DocSection id="order" title="Pipeline order" caption="Locks, rendering, injection">
         <p>
-          The weigh runs first and the field pass moves what it left; everything downstream reads
-          the field where the table put it.
+          The weigh runs first, and the field pass moves what the weigh left. Everything downstream
+          reads the field where the table put it.
         </p>
         <pre class="diagram">{`  native report
        |
@@ -267,7 +265,7 @@ const Transform: Component = () => {
         <div class="api-response-label">CATCH</div>
         <p>
           <A href="/native/commands/catch#catch"><code>CATCH</code></A> input classes tap the
-          native report before either pass, so they report the native value;{' '}
+          native report before either pass, so they report the native value.{' '}
           <code>EMIT</code> carries what the clone emitted.
         </p>
       </DocSection>
@@ -286,7 +284,7 @@ re-clone    the box binds a device again`}</pre>
           re-asserts the whole table after the box clears it and across a control-link reconnect,
           as for <A href="/native/commands/lock"><code>LOCK</code></A>.
         </p>
-        <p>Every clear here but remove and clear moves the <A href="/native/commands/requests#stats"><code>session</code></A> count.</p>
+        <p>Every clear here except remove and clear moves the <A href="/native/commands/requests#stats"><code>session</code></A> count.</p>
         <div class="api-response-label">RELEASE</div>
         <p>
           <A href="/native/commands/transform#cross">Cross-class holds</A> release before their

@@ -21,8 +21,8 @@ const RETRY_MS = 5 * 60 * 1000;
 const DISCORD_TIMEOUT_MS = 10_000;
 const INVITE = LINKS.discord.slice(LINKS.discord.lastIndexOf('/') + 1);
 
-// The invite's public count: no token, cached an hour, the last good count kept while Discord is down and
-// asked again five minutes after a failure.
+// The invite's public member count: no token, cached for an hour. While Discord is down the last good count
+// is kept, and Discord is asked again 5 min after a failure.
 export function createDiscordMembers(fetchImpl: typeof fetch = fetch, now: () => number = Date.now) {
   let last: number | null = null;
   let nextAt = -Infinity;

@@ -19,9 +19,10 @@ export function loadFace(bytes: ArrayBuffer | Uint8Array): Face {
   return parse(bytes instanceof Uint8Array ? bytes.slice().buffer : bytes);
 }
 
-// What the face can draw of the text: a letter whose accent it lacks keeps the letter, and anything else it
-// lacks goes, so a card never shows a missing-glyph box (nor an accent set apart from its letter, since
-// marks are not positioned). Control characters go too, though the fonts map some.
+// The part of the text the face can draw. A letter whose accented form the face lacks keeps the base letter;
+// any other character it lacks is dropped, so a card never shows a missing-glyph box (nor an accent set apart
+// from its letter, since marks aren't positioned). Control characters are dropped too, though the fonts map
+// some.
 export function drawable(face: Face, text: string): string {
   const kept = [...collapse(text).normalize('NFC')].map((ch) =>
     /\p{Cc}/u.test(ch) ? '' : face.hasChar(ch) ? ch : [...ch.normalize('NFD')].filter((c) => !/\p{M}/u.test(c) && face.hasChar(c)).join(''),
@@ -47,7 +48,7 @@ function ruler(face: Face, tracking: number) {
 
 type Ruler = ReturnType<typeof ruler>;
 
-// Greedy on spaces. A word wider than the width keeps a line to itself, and is left wide.
+// Greedy wrap on spaces. A word wider than the width gets a line to itself and is left too wide.
 function wrap(width: Ruler, words: string[], size: number, max: number): string[] {
   const lines: string[] = [];
   let line = '';
@@ -93,14 +94,14 @@ function clampWith(width: Ruler, text: string, size: number, max: number, lines:
   return [...set.slice(0, lines - 1), ellipsize(width, set[lines - 1], size, max)];
 }
 
-// At most `lines` lines inside the width; text past them ends in an ellipsis on a word.
+// At most `lines` lines inside the width; text past them is cut at a word and ends in an ellipsis.
 export function clampLines(face: Face, text: string, size: number, width: number, lines: number, tracking = 0): string[] {
   return clampWith(ruler(face, tracking), text, size, width, lines);
 }
 
 // The largest size from max down to min at which the title fits its lines and the width, and leaves the
-// room the rest of the card asks for. Lines given as an array are kept as they are. Below min, the title
-// is set at min and clamped.
+// room the rest of the card needs. Lines given as an array are kept as given. If nothing fits, the title is
+// set at min and clamped.
 export function fitTitle(face: Face, text: string | readonly string[], opts: FitOptions = {}): { size: number; lines: string[] } {
   const { max = 140, min = 56, width = 1056, lines = 2, tracking = 0, room = () => true } = opts;
   const w = ruler(face, tracking);

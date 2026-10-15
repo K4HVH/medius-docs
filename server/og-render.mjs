@@ -1,5 +1,5 @@
-// The link cards' renderer, on a worker thread: a drawing takes about 0.1 s, which would hold every other
-// request on the server's. Plain JavaScript, so Node (dev server, tests) and Bun run it as it is.
+// The link cards' renderer, on a worker thread: a drawing takes ~0.1 s, which on the server's thread would
+// hold up every other request. Plain JavaScript, so Node (dev server, tests) and Bun run it as is.
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { parentPort } from 'node:worker_threads';

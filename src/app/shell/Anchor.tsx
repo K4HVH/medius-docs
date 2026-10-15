@@ -1,8 +1,8 @@
 import type { JSX } from 'solid-js';
 import { CopyLink } from './CopyLink';
 
-// A marked block inside a docs section: a label, its link icon and what it holds, which search and links
-// can name by its id.
+// A marked block inside a docs section: a label, its link icon and its content. Search and links name it by
+// its id.
 export function Anchor(props: { id: string; label: string; children?: JSX.Element }) {
   return (
     <div id={props.id} data-search-target>

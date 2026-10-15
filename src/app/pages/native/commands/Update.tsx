@@ -19,7 +19,7 @@ const Update: Component = () => {
                                      |
                                      +--UART1, 20 Mbaud-> HOST chip --> its spare slot`}</pre>
         <p>
-          The host chip has no serial port; only GPIO1 and GPIO2 connect the two chips. Its image is
+          The host chip has no serial port. Only GPIO1 and GPIO2 connect the two chips. Its image is
           relayed chunk for chunk, never buffered.
         </p>
         <div class="api-response-label">SLOTS</div>
@@ -39,7 +39,7 @@ const Update: Component = () => {
           </table>
         </div>
         <p>
-          <code>otadata</code> sits above the slots so <code>nvs</code> keeps its offset, and the box
+          <code>otadata</code> sits above the slots, so <code>nvs</code> keeps its offset. The box
           name, options and learned baselines survive the one{' '}
           <A href="/native/flashing">flash</A> that installs this layout. A box without the layout
           replies <code>NOSLOT</code>.
@@ -48,7 +48,7 @@ const Update: Component = () => {
 
       <DocSection id="update" title="UPDATE" caption="One firmware session on one chip">
         <p>
-          <code>UPDATE</code> carries five ops against one target chip; every frame leads with the
+          <code>UPDATE</code> carries five ops against one target chip. Every frame leads with the
           op and the chip.{' '}
           <A href="/native/frame#opcodes">Opcode</A> <code>0x17</code>.
         </p>
@@ -73,7 +73,7 @@ const Update: Component = () => {
     +-- ABORT ---------------------------------+--> ACTIVATE --> reboot`}</pre>
         <div class="api-response-label">EFFECT</div>
         <p>
-          A target can be staged and activated later; both chips may be staged before one{' '}
+          A target can be staged and activated later. Both chips may be staged before one{' '}
           <A href="/native/commands/update#activate"><code>ACTIVATE</code></A> commits them
           together. <A href="/native/commands/requests#firmware"><code>QUERY(FIRMWARE)</code></A>{' '}
           reads what each chip runs. Library binding:{' '}
@@ -90,7 +90,7 @@ const Update: Component = () => {
               <tr><th>Offset</th><th>Field</th><th>Type</th><th>Notes</th></tr>
             </thead>
             <tbody>
-              <tr><td>2</td><td><code>size</code></td><td><code>u32</code></td><td>total image bytes, little-endian; over <code>983040</code> is refused with <code>TOOBIG</code></td></tr>
+              <tr><td>2</td><td><code>size</code></td><td><code>u32</code></td><td>total image bytes, little-endian; &gt;<code>983040</code> is refused with <code>TOOBIG</code></td></tr>
               <tr><td>6</td><td><code>sha256</code></td><td><code>u8[32]</code></td><td>digest of the whole image, checked at <code>END</code></td></tr>
             </tbody>
           </table>
@@ -102,13 +102,13 @@ const Update: Component = () => {
           real device, and the clone disconnects from the game PC.
         </p>
         <p>
-          Then it erases the whole target slot and replies <code>READY</code> with the credit in{' '}
+          Then the box erases the whole target slot and replies <code>READY</code> with the credit in{' '}
           <code>arg</code>. Library binding:{' '}
           <A href="/library/update#stage-firmware"><code>stage_firmware</code></A>.
         </p>
         <p>
-          The erase runs up front: a 64 KB block erase disables the cache for 50 to 100 ms, more
-          than any receive buffer on either link can absorb mid-stream.
+          The erase runs up front. A 64 KB block erase disables the cache for 50-100 ms, longer than
+          any receive buffer on either link can absorb mid-stream.
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <p>Open a 364784-byte device-chip image (<code>size</code> is <code>0x000590F0</code>):</p>
@@ -137,7 +137,7 @@ const Update: Component = () => {
             </thead>
             <tbody>
               <tr><td>2</td><td><code>seq</code></td><td><code>u16</code></td><td>chunk index, little-endian; the byte offset is <code>seq * 504</code></td></tr>
-              <tr><td>4..</td><td><code>bytes</code></td><td><code>u8[]</code></td><td>1 to 504 image bytes</td></tr>
+              <tr><td>4..</td><td><code>bytes</code></td><td><code>u8[]</code></td><td>1-504 image bytes</td></tr>
             </tbody>
           </table>
         </div>
@@ -151,8 +151,9 @@ const Update: Component = () => {
           acknowledges.
         </p>
         <p>
-          Read it: the device chip asks for 16, the host chip for 6, since a relayed chunk waits in
-          the inter-chip link's receive ring while the host chip writes the previous one to flash.
+          Read it. The device chip asks for 16 and the host chip for 6, because a relayed chunk waits
+          in the inter-chip link's receive ring while the host chip writes the previous chunk to
+          flash.
         </p>
         <p>
           The window is a correctness requirement.
@@ -167,17 +168,17 @@ const Update: Component = () => {
               <tr><th>Quantity</th><th>Value</th></tr>
             </thead>
             <tbody>
-              <tr><td>Flash page write</td><td>0.3 to 0.7 ms, both cores stalled.</td></tr>
+              <tr><td>Flash page write</td><td>0.3-0.7 ms, both cores stalled.</td></tr>
               <tr><td>UART0 RX FIFO</td><td>128 bytes, 213 µs at 6 Mbaud.</td></tr>
               <tr><td>Credit window</td><td>16 chunks to the device chip (8064 bytes), 6 to the host chip.</td></tr>
-              <tr><td>Inter-chip link ring</td><td>8192 bytes; caps the relayed window.</td></tr>
+              <tr><td>Inter-chip link ring</td><td>8192 bytes. Caps the relayed window.</td></tr>
             </tbody>
           </table>
         </div>
         <p>
-          A sender ignoring its credit overruns the smaller hop, and the lost chunk leaves the
-          window one short: nothing acknowledges it, and the session ends on
-          the idle timer with the sender still waiting. Library binding:{' '}
+          A sender ignoring its credit overruns the smaller hop. The lost chunk leaves the window one
+          short, so nothing acknowledges the window. The session ends on the idle timer with the
+          sender still waiting. Library binding:{' '}
           <A href="/library/update#stage-firmware"><code>stage_firmware</code></A>.
         </p>
         <div class="api-response-label">RESENDS</div>
@@ -214,15 +215,15 @@ const Update: Component = () => {
         </p>
         <div class="callout callout--info">
           <p>
-            A staged image isn't bootable. <code>END</code> doesn't set the boot partition, which
-            would take effect on any next boot, a power cut included;{' '}
+            A staged image isn't bootable. <code>END</code> doesn't set the boot partition, since that
+            would take effect on any next boot, a power cut included.{' '}
             <A href="/native/commands/update#activate"><code>ACTIVATE</code></A> commits.
           </p>
         </div>
         <div class="api-response-label">TIMEOUT</div>
         <p>
           Ten seconds with no traffic ends update mode, so a vanished client can't leave the clone
-          down. A staged image survives it: it is inert, and its transfer already completed.
+          down. A staged image survives the timeout: it is inert, and its transfer already completed.
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <p>Close the device-chip session:</p>
@@ -250,13 +251,13 @@ const Update: Component = () => {
         </p>
         <div class="api-response-label">DURING ACTIVATE</div>
         <p>
-          Once <A href="/native/commands/update#activate"><code>ACTIVATE</code></A> is accepted the
-          box replies <code>BUSY</code> to new commands, with this one exception: while waiting on
-          the host chip, it abandons the wait and replies <code>TIMEOUT</code> to the{' '}
-          <code>ACTIVATE</code>.
+          Once <A href="/native/commands/update#activate"><code>ACTIVATE</code></A> is accepted, the
+          box replies <code>BUSY</code> to new commands. The one exception is <code>ABORT</code>{' '}
+          while the box waits on the host chip: the box abandons the wait and replies{' '}
+          <code>TIMEOUT</code> to the <code>ACTIVATE</code>.
         </p>
         <p>
-          Past that point the boot partition is written, so nothing is left to abort; cancelling the
+          Past that wait, the boot partition is written, so nothing is left to abort. Cancelling the
           reboot would leave the box running one image with the loader pointed at the other.
         </p>
         <div class="callout callout--warning">
@@ -265,7 +266,7 @@ const Update: Component = () => {
           </p>
           <p>
             One <code>ACTIVATE</code> commits everything staged, so abandoning it abandons
-            everything staged; a leftover would let a later <code>ACTIVATE</code> commit it alone
+            everything staged. A leftover image would let a later <code>ACTIVATE</code> commit it alone
             and put the chips on different versions. Outside an activate, <code>ABORT</code> is
             per-target.
           </p>
@@ -289,7 +290,7 @@ const Update: Component = () => {
         <pre class="api-signature">UPDATE  op 4  ·  [target u8] (ignored)</pre>
         <div class="api-response-label">EFFECT</div>
         <p>
-          Points each staged chip at its new slot and reboots into it, host chip first; the device
+          Points each staged chip at its new slot and reboots into it, host chip first. The device
           chip is the only transport, so it goes last. Library binding:{' '}
           <A href="/library/update#activate-firmware"><code>activate_firmware</code></A>.
         </p>
@@ -307,7 +308,7 @@ const Update: Component = () => {
         <p>
           The reply is <code>OK</code> once both chips are committed, <code>NOSTAGE</code> if
           nothing was staged, or <code>TIMEOUT</code> if the host chip never came back on the new
-          slot; it always names target <code>0</code>, so match it on the op alone.
+          slot. The reply always names target <code>0</code>, so match it on the op alone.
         </p>
         <div class="callout callout--warning">
           <p>
@@ -320,9 +321,9 @@ const Update: Component = () => {
             different versions.
           </p>
           <p>
-            After a failed <code>ACTIVATE</code>, retry the whole update or first send{' '}
-            <A href="/native/commands/update#abort"><code>ABORT</code></A> for each staged target;
-            the dashboard and both reference clients do the latter.
+            After a failed <code>ACTIVATE</code>, either retry the whole update, or first send{' '}
+            <A href="/native/commands/update#abort"><code>ABORT</code></A> for each staged target (as
+            the dashboard and both reference clients do).
           </p>
         </div>
         <div class="api-response-label">EXAMPLE</div>
@@ -378,13 +379,13 @@ const Update: Component = () => {
             </thead>
             <tbody>
               <tr><td><code>OK</code></td><td><code>0x00</code></td><td><code>0</code></td><td>Accepted.</td></tr>
-              <tr><td><code>READY</code></td><td><code>0x01</code></td><td>credit</td><td>Slot erased; this many chunks before an acknowledgement.</td></tr>
-              <tr><td><code>ACK</code></td><td><code>0x02</code></td><td>next <code>seq</code></td><td>The window landed; send from this index.</td></tr>
+              <tr><td><code>READY</code></td><td><code>0x01</code></td><td>credit</td><td>Slot erased. This many chunks before an acknowledgement.</td></tr>
+              <tr><td><code>ACK</code></td><td><code>0x02</code></td><td>next <code>seq</code></td><td>The window landed. Send from this index.</td></tr>
               <tr><td><code>STAGED</code></td><td><code>0x03</code></td><td>bytes written</td><td>Verified and inert until <code>ACTIVATE</code>.</td></tr>
               <tr><td><code>BUSY</code></td><td><code>0x10</code></td><td><code>0</code></td><td>A session is already open on this target.</td></tr>
               <tr><td><code>NOSLOT</code></td><td><code>0x11</code></td><td><code>0</code></td><td>No second app slot (single-app layout).</td></tr>
               <tr><td><code>TOOBIG</code></td><td><code>0x12</code></td><td>slot size</td><td>The declared size does not fit, or a chunk overran it.</td></tr>
-              <tr><td><code>SEQGAP</code></td><td><code>0x13</code></td><td>expected <code>seq</code></td><td>A chunk out of order; the session is dropped.</td></tr>
+              <tr><td><code>SEQGAP</code></td><td><code>0x13</code></td><td>expected <code>seq</code></td><td>A chunk out of order. The session is dropped.</td></tr>
               <tr><td><code>WRITEFAIL</code></td><td><code>0x14</code></td><td>error code</td><td>The flash write failed.</td></tr>
               <tr><td><code>BADSHA</code></td><td><code>0x15</code></td><td><code>0</code></td><td>The image does not match the digest.</td></tr>
               <tr><td><code>BADIMAGE</code></td><td><code>0x16</code></td><td>error code</td><td>The bytes are not a bootable image.</td></tr>
@@ -392,7 +393,7 @@ const Update: Component = () => {
               <tr><td><code>TIMEOUT</code></td><td><code>0x18</code></td><td><code>0</code></td><td>The host chip did not come back on the new image.</td></tr>
               <tr><td><code>NOSTAGE</code></td><td><code>0x19</code></td><td><code>0</code></td><td><code>ACTIVATE</code> with nothing staged.</td></tr>
               <tr><td><code>BADSTATE</code></td><td><code>0x1A</code></td><td>expected op</td><td>An op out of order, or a malformed body.</td></tr>
-              <tr><td><code>PROBATION</code></td><td><code>0x1B</code></td><td><code>0</code></td><td>The running image has not confirmed itself yet; wait and retry.</td></tr>
+              <tr><td><code>PROBATION</code></td><td><code>0x1B</code></td><td><code>0</code></td><td>The running image has not confirmed itself yet. Wait and retry.</td></tr>
               <tr><td><code>UNTOUCHED</code></td><td><code>0x1C</code></td><td><code>0</code></td><td>Refused before the slot was touched, so anything staged stays staged and bootable.</td></tr>
             </tbody>
           </table>
@@ -420,8 +421,8 @@ const Update: Component = () => {
 
       <DocSection id="rollback" title="Rollback" caption="Reverts an image that won't run">
         <p>
-          A freshly booted image is on probation until it confirms itself; the bootloader reverts
-          one that never does.{' '}
+          A freshly booted image is on probation until it confirms itself. The bootloader reverts an
+          image that never does.{' '}
           <A href="/native/commands/requests#firmware"><code>QUERY(FIRMWARE)</code></A> reports each
           chip's booted slot and image state.
         </p>
@@ -434,18 +435,18 @@ const Update: Component = () => {
               <tr><th>Chip</th><th>Confirmed by</th><th>Grace</th></tr>
             </thead>
             <tbody>
-              <tr><td>Device</td><td>Ten seconds of a running main loop.</td><td>30 s</td></tr>
+              <tr><td>Device</td><td>10 s of a running main loop.</td><td>30 s</td></tr>
               <tr><td>Host</td><td>A completed clock exchange over the link, only.</td><td>40 s</td></tr>
             </tbody>
           </table>
         </div>
         <p>
-          The host chip's image arrives over the link, its only way back, so one that runs but can't
-          use the link must revert by itself.
+          The host chip's image arrives over the link, its only way back. A host image that runs but
+          can't use the link must therefore revert by itself.
         </p>
         <p>
           Measured on hardware: an image that panics in its entry point is back on the old slot in
-          0.8 s, and one built to ignore the link reverted and restored the link unaided.
+          0.8 s. An image built to ignore the link reverted and restored the link unaided.
         </p>
         <div class="callout callout--warning">
           <p>
@@ -475,7 +476,7 @@ const Update: Component = () => {
           </table>
         </div>
         <p>
-          A status may be added; a client reads an unknown one as a refusal. The dashboard connects to any
+          A status may be added. A client reads an unknown status as a refusal. The dashboard connects to any
           box on protocol 5 or later, and can update but not control a box on another protocol.
         </p>
       </DocSection>

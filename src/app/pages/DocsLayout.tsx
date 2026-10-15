@@ -37,13 +37,13 @@ const DocsLayout = (props: RouteSectionProps) => {
   let main: HTMLElement | undefined;
   let footer: HTMLElement | undefined;
 
-  // 'auto' glides by the page's CSS, which reduced motion turns off; a new page lands with 'instant'.
-  // The ring marks a search result, a deep link or a link in the page, not a section the reader picked from
-  // the rail.
+  // 'auto' glides via the page's CSS (reduced motion turns the glide off); a new page lands with 'instant'.
+  // The highlight ring marks a search result, a deep link or an in-page link, never a section picked from the
+  // rail.
   let highlightNext: string | null = null;
-  // A target that comes with fetched content (a device the stats add, a release), or is drawn anew when
-  // more arrives, is landed on again, for up to 10 s and until the reader scrolls, types or presses
-  // anywhere (the scrollbar too).
+  // A target may come with fetched content (a device the stats add, a release), or be redrawn when more
+  // arrives. Each time it appears anew the page lands on it again, until 10 s pass or the reader scrolls,
+  // types or presses anywhere (the scrollbar too).
   let awaited = () => {};
   onCleanup(() => awaited());
   const scrollToTarget = (id: string, behavior: ScrollBehavior, highlight: boolean, until = Date.now() + 10000) => {
@@ -68,8 +68,8 @@ const DocsLayout = (props: RouteSectionProps) => {
     }
     if (!el) return;
     showAddress(id, el);
-    // The place shows at once, settled: an arrival still under way around it (a table rising with its rows)
-    // would have it set short of the bar once the block came to rest.
+    // Show the place at once, settled. If its block were still arriving (a table rising with its rows), the
+    // scroll would stop short of the bar once the block came to rest.
     for (let p: HTMLElement | null = el; p && p !== main; p = p.parentElement) p.classList.remove('moving');
     el.scrollIntoView({ behavior, block: 'start' });
     if (!highlight) return;
@@ -77,12 +77,12 @@ const DocsLayout = (props: RouteSectionProps) => {
     setTimeout(() => el.classList.remove('search-highlight'), 3000);
   };
   const has = (id: string) => !!document.getElementById(id);
-  // A hash that lands on a place or an item: the address bar shows its address instead (shell/share.ts), in
-  // the same history entry, so the address the reader copies from it has a card naming it. A section that
-  // opens the page keeps the hash, which is where it already is.
-  // It is written once the router has finished the navigation under way: inside it, the router merges the two
-  // and keeps the first one's options, so a link's scroll to its hash became a scroll to the top of an address
-  // with no hash.
+  // When a hash lands on a place or an item, the address bar shows that place's address instead
+  // (shell/share.ts), in the same history entry, so the address the reader copies has a card naming the place.
+  // A section that opens the page (its share address is the page) keeps the hash.
+  // The address is written once the router finishes the navigation under way. A navigate() inside it is merged
+  // with it and takes its options, which turned a link's scroll to its hash into a scroll to the top of an
+  // address with no hash.
   const showAddress = (id: string, el: HTMLElement) => {
     if (landingId('', location.hash) !== id) return;
     const to = shareAddress(el, id, location.pathname);
@@ -105,9 +105,9 @@ const DocsLayout = (props: RouteSectionProps) => {
     else navigate(fullPath, { scroll: !same });
   };
 
-  // A link to a place on the page shown goes there without the router, which scrolls to the top after any
-  // address with no hash, after the page has moved to the place, and ignores the address already shown. A
-  // hash link is the router's to follow; the place it goes to is ringed, as one a path names.
+  // A link to a place on the current page goes there without the router. The router scrolls to the top after
+  // any address with no hash (after the page has already moved to the place), and ignores the address already
+  // shown. The router follows a hash link; its place is ringed, like one a path names.
   onMount(() => {
     const toPlace = (e: MouseEvent) => {
       if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
@@ -140,9 +140,9 @@ const DocsLayout = (props: RouteSectionProps) => {
     onCleanup(() => main?.removeEventListener('click', toPlace));
   });
 
-  // Ctrl or Cmd with K opens and closes the search; / opens it from anywhere but a field.
+  // Ctrl+K or Cmd+K opens and closes search; / opens it from anywhere except a field.
   onMount(() => {
-    // During a flash the keys open nothing, and the browser's Ctrl K stays blocked as ever.
+    // During a flash the keys open nothing, and the browser's Ctrl+K stays blocked as usual.
     const onKey = (e: KeyboardEvent) => {
       const typing = e.target instanceof Element && !!e.target.closest('input, textarea, select, [contenteditable="true"]');
       if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key.toLowerCase() === 'k') {
@@ -167,11 +167,11 @@ const DocsLayout = (props: RouteSectionProps) => {
     return box ? `${label} - ${box}` : label;
   });
 
-  // A new page arrives block by block, and starts at the top, or at its place (routes.ts landingId) once the
-  // fonts have set the layout; the reveals are armed after that jump, so the section it lands on is never
-  // held back. A change of place on the same page scrolls there; a change of the address's spelling alone
-  // (#id written as /page/id) leaves the page where it is. The arrival is stamped at once, so a prerendered
-  // snapshot's arrival carries on into the app's (takeover.ts).
+  // A new page arrives block by block. It starts at the top, or at its place (routes.ts landingId) once the
+  // fonts have set the layout. The reveals are armed after that jump, so the section it lands on is never held
+  // back. A change of place on the same page scrolls there. A change of spelling alone (#id written as
+  // /page/id) leaves the page where it is. The arrival is stamped at once, so a prerendered snapshot's arrival
+  // carries on into the app's (takeover.ts).
   let shownPage = '';
   let shownTarget = '';
   let settled = 0;
@@ -192,8 +192,8 @@ const DocsLayout = (props: RouteSectionProps) => {
             return;
           }
           awaited();
-          // Back across places returns to where the reader was; a link on the page glides, to its place or
-          // its top.
+          // Back or Forward between places returns to where the reader was; a link on the page glides to its
+          // place or the top.
           if (at !== null && openedByHistory()) settleAt(at);
           else if (at !== null) window.scrollTo({ top: at, left: 0, behavior: 'auto' });
           else if (target && moved) scrollToTarget(target, 'auto', target === highlightNext);
@@ -206,7 +206,7 @@ const DocsLayout = (props: RouteSectionProps) => {
         const run = ++settled;
         disposeReveals();
         disposeReveals = () => {};
-        // The page goes where it opens before it arrives, so its arrival starts at what is in view.
+        // Scroll to where the page opens before it arrives, so the arrival plays on what is in view.
         if (at !== null) settleAt(at);
         if (main) {
           arrive(main, pageArrival(main));
@@ -240,9 +240,9 @@ const DocsLayout = (props: RouteSectionProps) => {
     if (main) onCleanup(watchChanges(main));
   });
 
-  // `data-highlighted` names the page whose code is highlighted, which the prerender and the search pass
-  // wait for. Every navigation brings the page's code before the page shows (shell/leave.ts), and a page
-  // that shows code brings the highlighter (lazyPages.ts), so its code is highlighted as it first shows.
+  // `data-highlighted` names the page whose code is highlighted; the prerender and the search pass wait for
+  // it. Every navigation fetches the page's code before the page shows (shell/leave.ts), and a page that shows
+  // code brings the highlighter (lazyPages.ts), so its code is highlighted from the first paint.
   const highlight = (el: HTMLElement, path: string, run: number) => {
     const done = (Prism?: ReturnType<typeof highlighter>) => {
       Prism?.highlightAllUnder(el);
@@ -257,10 +257,10 @@ const DocsLayout = (props: RouteSectionProps) => {
     );
   };
 
-  // Once the page is in and the browser idle, the code of the pages before and after it in its section of
-  // the sidebar, where a reader most often goes next (a browser without idle callbacks waits a second);
-  // never when the browser asks to save data, and none for a page the sidebar does not list. Any other
-  // link's page comes when the link is pointed at, focused or touched.
+  // Once the page is in and the browser is idle, fetch the code of the pages before and after it in its
+  // sidebar section, where a reader most often goes next (a browser without idle callbacks waits 1 s). Skip
+  // this when the browser asks to save data, or when the sidebar doesn't list the page. Any other link's page
+  // is fetched when the link is hovered, focused or touched.
   const preloadRoute = usePreloadRoute();
   let stopIdle = () => {};
   const whenIdle = (f: () => void) => {
@@ -291,9 +291,10 @@ const DocsLayout = (props: RouteSectionProps) => {
     if (!BOX_ROUTES.has(p) && p !== SETUP && p !== FLASH && !flashing()) navigate('/dashboard');
   };
 
-  // The selection decides the dashboard's pages: a Medius box takes Device, Control and Update, anything else Set
-  // up; Flash stays for both. A page the selection doesn't take leaves the list, and its address goes to the one
-  // that does, but never mid-flash. While the selection isn't told (a port still being checked), every page stays.
+  // The selected box decides the dashboard's pages: a Medius box gets Device, Control and Update, anything else
+  // gets Set up; Flash stays for both. A page the selection doesn't get leaves the list, and its address
+  // redirects to one it does get (never mid-flash). While the selection's kind is unknown (a port still being
+  // checked), every page stays.
   const hidden = (path: string) => {
     // The search pass (dev) reads every page, with a box connected.
     if (import.meta.env.DEV && (globalThis as { __mediusSearchPass?: boolean }).__mediusSearchPass) return false;

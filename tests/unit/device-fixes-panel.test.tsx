@@ -267,6 +267,6 @@ describe('DeviceFixes', () => {
     setup({ device: mouse(0x1532, 0x00c1), imperfect: { allowed: false, overCapacity: false, cloneImperfect: false } });
     box.state!.setDevice(mouse(0x1532, 0x00c1));
     const { container } = render(() => <DeviceFixes />);
-    expect(container.textContent ?? '').toContain('Set its highest polling rate in Razer Synapse');
+    expect(container.textContent ?? '').toContain('set its highest polling rate in Razer Synapse');
   });
 });

@@ -34,8 +34,8 @@ const Usage: Component = () => {
         </div>
         <div class="callout callout--info">
           <p>
-            A <span class="api-badge api-badge--executed">Fire-and-forget</span> call returning
-            without raising means the frame was <em>queued</em>, not that the box acted on it.
+            When a <span class="api-badge api-badge--executed">Fire-and-forget</span> call returns
+            without raising, the frame was <em>queued</em>. That does not mean the box acted on it.
             Confirm with a <span class="api-badge api-badge--responded">Blocks</span> query such as{' '}
             <A href="/bindings/python/api#queries"><code>dev.query_health()</code></A>. Default reply wait:{' '}
             <A href="/bindings/python/api#module"><code>medius.default_query_timeout_ms()</code></A> (1000 ms).

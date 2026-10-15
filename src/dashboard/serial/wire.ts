@@ -1,4 +1,4 @@
-// Which wire a box speaks, apart from the link, so a page can tell without loading it.
+// Which wire a box speaks, kept apart from the link so a page can tell without loading the link.
 import { MIN_PROTO_VER, PROTO_VER } from '../protocol/opcode';
 import type { Version } from '../protocol';
 

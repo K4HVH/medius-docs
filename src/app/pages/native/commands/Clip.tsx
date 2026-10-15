@@ -18,15 +18,16 @@ const Clip: Component = () => {
           Playback is box-clocked, independent of host send timing.
         </p>
         <p>
-          Like <A href="/native/commands/inject"><code>INJECT</code></A> a clip is field-generic and{' '}
-          <A href="/native/injection#state">additive</A>: one clip mixes mouse motion, buttons,
-          keyboard, and media, each routed to the matching interface, at{' '}
+          Like <A href="/native/commands/inject"><code>INJECT</code></A>, a clip is field-generic and{' '}
+          <A href="/native/injection#state">additive</A>. One clip mixes mouse motion, buttons,
+          keyboard and media, each routed to the matching interface, at{' '}
           <A href="/native/commands/option#emit">the emit rate</A>.
         </p>
         <p>
-          A clip plays on any clone. One tick is the cloned mouse's native frame; with no mouse, the
-          rate <A href="/native/commands/option#emit"><code>OPTION(EMIT)</code></A> fixes, else
-          1&nbsp;ms. A field for a class the clone has no interface for is discarded.
+          A clip plays on any clone. One tick is the cloned mouse's native frame. With no mouse, a
+          tick is the rate <A href="/native/commands/option#emit"><code>OPTION(EMIT)</code></A>{' '}
+          fixes, or 1&nbsp;ms if it fixes none. A field for a class with no interface on the clone is
+          discarded.
         </p>
         <p>
           <A href="/native/commands/requests#clip"><code>QUERY(CLIP)</code></A> reads back ring depth,
@@ -46,7 +47,7 @@ const Clip: Component = () => {
               <tr>
                 <td>streaming <em>(default)</em></td>
                 <td>Each entry is freed as it plays, so the host appends to the tail while the head drains.</td>
-                <td>None; an emptied ring underruns.</td>
+                <td>None. An emptied ring underruns.</td>
                 <td>Open-ended or generated input.</td>
               </tr>
               <tr>
@@ -105,7 +106,7 @@ const Clip: Component = () => {
         </div>
         <div class="api-response-label">CONTENT TICK</div>
         <p>
-          Motion, edges, raw reports and control transfers applied on one frame; <code>flags</code>{' '}
+          Motion, edges, raw reports and control transfers applied on one frame. <code>flags</code>{' '}
           selects which fields follow.
         </p>
         <div class="table-scroll">
@@ -118,21 +119,21 @@ const Clip: Component = () => {
               <tr><td>+</td><td><code>dx</code>, <code>dy</code></td><td><code>i16 x 2</code></td><td><code>flags &amp; XY (0x01)</code>, per-frame cursor delta</td></tr>
               <tr><td>+</td><td><code>wheel</code></td><td><code>i16</code></td><td><code>flags &amp; WHEEL (0x02)</code>, per-frame delta</td></tr>
               <tr><td>+</td><td><code>pan</code></td><td><code>i16</code></td><td><code>flags &amp; PAN (0x08)</code>, per-frame delta</td></tr>
-              <tr><td>+</td><td><code>n</code></td><td><code>u8</code></td><td><code>flags &amp; EDGES (0x04)</code>, edge count (1 to 8)</td></tr>
+              <tr><td>+</td><td><code>n</code></td><td><code>u8</code></td><td><code>flags &amp; EDGES (0x04)</code>, edge count (1-8)</td></tr>
               <tr><td>+</td><td><code>edges</code></td><td><code>n x 4 bytes</code></td><td>each edge is <code>[class u8][id u16][action u8]</code></td></tr>
-              <tr><td>+</td><td><code>n</code></td><td><code>u8</code></td><td><code>flags &amp; RAW (0x10)</code>, raw item count (1 to 8)</td></tr>
+              <tr><td>+</td><td><code>n</code></td><td><code>u8</code></td><td><code>flags &amp; RAW (0x10)</code>, raw item count (1-8)</td></tr>
               <tr><td>+</td><td><code>raw</code></td><td><code>n items</code></td><td>each a <A href="/native/commands/clip#items">raw item</A></td></tr>
-              <tr><td>+</td><td><code>n</code></td><td><code>u8</code></td><td><code>flags &amp; XFER (0x20)</code>, transfer item count (1 or more)</td></tr>
+              <tr><td>+</td><td><code>n</code></td><td><code>u8</code></td><td><code>flags &amp; XFER (0x20)</code>, transfer item count (≥1)</td></tr>
               <tr><td>+</td><td><code>xfer</code></td><td><code>n items</code></td><td>each a <A href="/native/commands/clip#items">transfer item</A></td></tr>
             </tbody>
           </table>
         </div>
         <p>
-          The fields follow in the table's order, and an entry is at most 512 bytes, one{' '}
+          The fields follow in the table's order. An entry is ≤512 bytes, one{' '}
           <A href="/native/commands/clip#append"><code>CLIP_APPEND</code></A> payload.
         </p>
         <p>
-          An invalid entry (a reserved bit, a count out of range, a length past 512 bytes) faults
+          An invalid entry (a reserved bit, a count out of range, a length &gt;512 bytes) faults
           the clip when playback reaches it.
         </p>
         <div class="api-response-label">EDGES</div>
@@ -159,15 +160,15 @@ const Clip: Component = () => {
               <tr><th>Action</th><th>Value</th><th>Effect</th></tr>
             </thead>
             <tbody>
-              <tr><td>soft-release</td><td><code>0</code></td><td>Drop the override; a hold on the real device stays active.</td></tr>
+              <tr><td>soft-release</td><td><code>0</code></td><td>Drop the override. A hold on the real device stays active.</td></tr>
               <tr><td>press</td><td><code>1</code></td><td>Force the usage active.</td></tr>
               <tr><td>force-release</td><td><code>2</code></td><td>Force the usage inactive, masking a hold on the real device too.</td></tr>
             </tbody>
           </table>
         </div>
         <p>
-          An edge is a level: it holds until a later tick changes it, and the box NAKs while it is
-          unchanged.
+          An edge is a level: it holds until a later tick changes it, and the box NAKs while the
+          level is unchanged.
         </p>
         <div class="api-response-label">COMBINED TICK</div>
         <p>
@@ -204,8 +205,8 @@ const Clip: Component = () => {
           A raw item is <A href="/native/commands/raw#raw"><code>RAW</code></A>'s payload with its length,
           and a transfer item is{' '}
           <A href="/native/commands/transfer#transfer"><code>TRANSFER</code></A>'s payload. Both need{' '}
-          <A href="/native/commands/option#imperfect"><code>OPTION(IMPERFECT)</code></A>, read as the
-          tick plays: with it off the item is discarded and counted in{' '}
+          <A href="/native/commands/option#imperfect"><code>OPTION(IMPERFECT)</code></A>, checked as
+          the tick plays. With the opt-in off, the item is discarded and counted in{' '}
           <A href="/native/commands/requests#clip"><code>gated</code></A>.
         </p>
         <div class="api-response-label">RAW ITEM</div>
@@ -249,7 +250,7 @@ const Clip: Component = () => {
             <tbody>
               <tr><td><code>PAUSE</code>, the natural end</td><td>still run</td></tr>
               <tr><td><code>STOP</code>, <code>RESTART</code>, <code>CLEAR</code>, a fault, a <A href="/native/commands/clip#ctrl">hard stop</A></td><td>dropped</td></tr>
-              <tr><td>a <code>0xFE</code> (no answer) status that took 250&nbsp;ms or longer</td><td>those behind it dropped into <code>xfer_errs</code></td></tr>
+              <tr><td>a <code>0xFE</code> (no answer) status that took ≥250&nbsp;ms</td><td>those behind it dropped into <code>xfer_errs</code></td></tr>
               <tr><td><code>OPTION(IMPERFECT)</code> turned off</td><td>dropped, each counted in <code>gated</code></td></tr>
             </tbody>
           </table>
@@ -308,12 +309,12 @@ const Clip: Component = () => {
         </p>
         <p>
           The link is <A href="/native/injection#fire-and-forget">fire-and-forget</A>, so a lost frame
-          shows as a <code>SEQ</code> gap and the box marks the clip <code>faulted</code> in{' '}
+          shows as a <code>SEQ</code> gap. The box then marks the clip <code>faulted</code> in{' '}
           <A href="/native/commands/requests#clip"><code>QUERY(CLIP)</code></A>. Recover with{' '}
           <code>CLEAR</code>, then rebuild.
         </p>
         <p>
-          Pack whole entries per frame; never split one entry across two appends.
+          Pack whole entries per frame. Never split one entry across two appends.
         </p>
         <div class="api-response-label">FLOW CONTROL</div>
         <p>
@@ -324,8 +325,8 @@ const Clip: Component = () => {
           Keep an append under{' '}
           <A href="/native/commands/requests#clip"><code>QUERY(CLIP)</code></A>'s <code>free</code> bytes.
           In streaming mode the head drains while the host appends to the tail, so{' '}
-          <code>free</code> recovers as it plays. The ring is 64 KB with PSRAM and 16 KB without;
-          never assume a size.
+          <code>free</code> recovers as it plays. The ring is 64 KB with PSRAM and 16 KB without.
+          Never assume a size.
         </p>
         <pre class="diagram">{`  the ring, read by QUERY(CLIP):
 
@@ -363,7 +364,7 @@ const Clip: Component = () => {
 
       <DocSection id="ctrl" title="CLIP_CTRL" caption="Drive the playback engine">
         <p>
-          One byte of <code>op</code> selects an engine verb; settings live on{' '}
+          One byte of <code>op</code> selects an engine verb. Settings live on{' '}
           <A href="/native/commands/clip#set"><code>CLIP_SET</code></A>.{' '}
           <A href="/native/frame#opcodes">Opcode</A> <code>0x13</code>.
         </p>
@@ -390,7 +391,7 @@ const Clip: Component = () => {
         <p>
           Ops <code>0</code>-<code>5</code> (<code>START</code> through <code>TOGGLE</code>) double as the{' '}
           <code>action</code> byte a <A href="/native/commands/clip#trigger"><code>CLIP_TRIGGER</code></A> fires
-          on a native edge or a <A href="/native/commands/clip#packet-triggers">matched packet</A>;{' '}
+          on a native edge or a <A href="/native/commands/clip#packet-triggers">matched packet</A>.{' '}
           <code>CLEAR</code> and <code>FINALIZE</code> are host-only.
         </p>
         <div class="api-response-label">STATE</div>
@@ -411,7 +412,7 @@ const Clip: Component = () => {
         <div class="api-response-label">UNDERRUN</div>
         <p>
           In streaming mode, if the ring drains with no <code>FINALIZE</code>, the box idles (NAKs, holding
-          its levels) and stays <code>playing</code> until refilled; a topping-up host or any keepalive
+          its levels) and stays <code>playing</code> until refilled. A topping-up host or any keepalive
           resets the 1 s silence timer.
         </p>
         <p>
@@ -426,7 +427,7 @@ detach      the real device unplugs
 link loss   the inter-chip link drops
 re-clone    the box clones a device again`}</pre>
         <p>
-          Each halts playback and releases the clip's lock; a hard stop (<code>silence</code>,{' '}
+          Each halts playback and releases the clip's lock. A hard stop (<code>silence</code>,{' '}
           <A href="/native/commands/admin#reset"><code>RESET</code></A>, detach, link loss,{' '}
           <A href="/native/commands/patch#presentation">re-clone</A>) also clears the ring, settings
           and trigger set, which a host reloads.
@@ -450,7 +451,7 @@ re-clone    the box clones a device again`}</pre>
       <DocSection id="set" title="CLIP_SET" caption="Set a clip setting">
         <p>
           Sets one clip setting, <A href="/native/commands/option">OPTION</A>-shaped. A setting holds
-          until changed or cleared by a <A href="/native/commands/clip#ctrl">hard stop</A>;{' '}
+          until changed or cleared by a <A href="/native/commands/clip#ctrl">hard stop</A>.{' '}
           <A href="/native/commands/requests#clip"><code>QUERY(CLIP)</code></A> reads them all back.{' '}
           <A href="/native/frame#opcodes">Opcode</A> <code>0x14</code>.
         </p>
@@ -484,7 +485,7 @@ re-clone    the box clones a device again`}</pre>
         </div>
         <div class="api-response-label">AUTO-LOCK</div>
         <p>
-          <code>autolock</code> locks are clip-owned and released on <code>STOP</code>; a host{' '}
+          <code>autolock</code> locks are clip-owned and released on <code>STOP</code>. A host{' '}
           <A href="/native/commands/lock"><code>LOCK</code></A> is untouched. <code>0</code> = no
           auto-lock; <code>0x1F</code> = every class.
         </p>
@@ -503,13 +504,13 @@ re-clone    the box clones a device again`}</pre>
         <div class="api-response-label">RIDE</div>
         <p>
           A clip's motion bypasses <A href="/native/commands/option#move-ride">movement riding</A> by
-          default, so it plays on the box's clock; <code>ride</code> puts it back on the ride,
-          additive to native motion and dropped while the mouse is still.
+          default, so it plays on the box's clock. <code>ride</code> puts it back on the ride:
+          additive to native motion, and dropped while the mouse is still.
         </p>
         <p>
           While <A href="/native/commands/option#render">rendering</A> is on with a profile armed, a
           clip's cursor motion is rendered like a <A href="/native/commands/move"><code>MOVE</code></A>{' '}
-          with no flag and rides the same way; <code>ride</code> then applies to the wheel and pan
+          with no flag and rides the same way. <code>ride</code> then applies to the wheel and pan
           alone. Edges stay on the clip tick, ahead of the rendered motion.
         </p>
         <p>
@@ -542,8 +543,8 @@ re-clone    the box clones a device again`}</pre>
         <p>
           Triggers are a{' '}
           <A href="/native/commands/lock"><code>LOCK</code></A>-shaped managed set. The{' '}
-          <code>class</code> byte picks the kind: an input class makes one of up to eight bindings,
-          keyed by <code>(class, id, edge)</code>, and a traffic class makes one of up to eight{' '}
+          <code>class</code> byte picks the kind. An input class makes one of up to 8 bindings, keyed
+          by <code>(class, id, edge)</code>. A traffic class makes one of up to 8{' '}
           <A href="/native/commands/clip#packet-triggers">packet triggers</A>.{' '}
           <A href="/native/frame#opcodes">Opcode</A> <code>0x15</code>.
         </p>
@@ -592,7 +593,7 @@ re-clone    the box clones a device again`}</pre>
             <thead><tr><th>Bit</th><th>Mask</th><th>Effect</th></tr></thead>
             <tbody>
               <tr><td><code>b0</code></td><td><code>0x01</code></td><td>present: set to add or replace the binding, clear to remove it</td></tr>
-              <tr><td><code>b1</code></td><td><code>0x02</code></td><td>consume: lock the trigger usage while it stays active. Press edge only; a release-edge binding stores the flag and never acts on it</td></tr>
+              <tr><td><code>b1</code></td><td><code>0x02</code></td><td>consume: lock the trigger usage while it stays active. Press edge only: a release-edge binding stores the flag and never acts on it</td></tr>
             </tbody>
           </table>
         </div>
@@ -609,7 +610,7 @@ re-clone    the box clones a device again`}</pre>
           +------------> one CLIP_CTRL op <---------+
                          0 START .. 5 TOGGLE, run on the box`}</pre>
         <p>
-          Re-sending the same <code>(class, id, edge)</code> key replaces that binding; clearing{' '}
+          Re-sending the same <code>(class, id, edge)</code> key replaces that binding. Clearing{' '}
           <code>present</code> removes it.
         </p>
         <p>
@@ -651,7 +652,7 @@ re-clone    the box clones a device again`}</pre>
 
       <DocSection id="packet-triggers" title="Packet triggers" caption="CLIP_TRIGGER with a traffic class">
         <p>
-          A traffic class in the <code>class</code> byte makes a packet trigger: a packet on that
+          A traffic class in the <code>class</code> byte makes a packet trigger. A packet on that
           surface whose head matches runs the verb, as an input edge does. The match follows the six
           bytes every binding has.{' '}
           <A href="/native/frame#opcodes">Opcode</A> <code>0x15</code>.
@@ -698,13 +699,13 @@ re-clone    the box clones a device again`}</pre>
             <tbody>
               <tr><td><code>b0</code></td><td><code>0x01</code></td><td>present: set to add or replace the trigger, clear to remove it</td></tr>
               <tr><td><code>b1</code></td><td><code>0x02</code></td><td>consume: drop every packet the trigger is the most specific match for, as a <code>DROP</code> <A href="/native/commands/rewrite">rewrite rule</A> would, before a rule sees it</td></tr>
-              <tr><td><code>b2</code></td><td><code>0x04</code></td><td><code>RUN</code>: run the verb on the first of a run of matching packets, where a trigger without it runs the verb on every packet it is the most specific match for</td></tr>
+              <tr><td><code>b2</code></td><td><code>0x04</code></td><td><code>RUN</code>: run the verb on the first of a run of matching packets. Without <code>RUN</code>, a trigger runs the verb on every packet it is the most specific match for</td></tr>
             </tbody>
           </table>
         </div>
         <p>
-          The key is <code>(class, id, dir, mlen, match, mask)</code>: the same key overwrites, and{' '}
-          <code>present</code> clear with the same key removes. The box holds 8 packet triggers
+          The key is <code>(class, id, dir, mlen, match, mask)</code>. The same key overwrites, and
+          the same key with <code>present</code> clear removes. The box holds 8 packet triggers
           beside the 8 bindings, with 112 match bytes between them.
         </p>
         <div class="api-response-label">PACKET PATH</div>
@@ -729,11 +730,11 @@ re-clone    the box clones a device again`}</pre>
             <tbody>
               <tr><td>surfaces</td><td>A trigger sees a packet at every surface a <A href="/native/commands/rewrite">rewrite rule</A> does, ahead of it. The two are independent: one packet can run a verb and then match a rule.</td></tr>
               <tr><td>rank</td><td>Only the most specific trigger a packet matches acts on it, ranked in the rewrite table's order: an exact <code>id</code> over <code>0xFFFF</code>, more masked bits over fewer, a named <code>dir</code> over both, then the earlier one. One verb runs per packet.</td></tr>
-              <tr><td>tick</td><td>The verb runs on the frame clock's next tick, within one frame of the matching packet (1&nbsp;ms at the default pace), and one that starts the clip plays its first entry on that tick.</td></tr>
-              <tr><td>consume</td><td>A consumed <code>HID_IN</code> report is the whole report, so a release edge in it is emitted with the next report. Consuming needs <A href="/native/commands/option#imperfect"><code>OPTION(IMPERFECT)</code></A>: turning it off removes the consuming triggers. A trigger that only watches works with it off.</td></tr>
+              <tr><td>tick</td><td>The verb runs on the frame clock's next tick, within one frame of the matching packet (1&nbsp;ms at the default pace). A verb that starts the clip plays its first entry on that tick.</td></tr>
+              <tr><td>consume</td><td>A consumed <code>HID_IN</code> report is the whole report, so a release edge in it is emitted with the next report. Consuming needs <A href="/native/commands/option#imperfect"><code>OPTION(IMPERFECT)</code></A>. Turning the opt-in off removes the consuming triggers. A trigger that only watches works with the opt-in off.</td></tr>
               <tr><td>catch</td><td><A href="/native/commands/catch#traffic-event"><code>CATCH</code></A> reports a consumed <code>HID_IN</code> or OUT packet, whose taps sit ahead of the triggers. A consumed vendor IN packet or emitted report goes unreported.</td></tr>
-              <tr><td>run</td><td>With <code>RUN</code>, a device that repeats a held state every poll fires once per hold; the release is a second trigger matching the released bytes. The first <code>slen</code> match bytes select the stream within the address (a report ID) and the rest are the condition. A packet that fails the selector leaves the run as it was.</td></tr>
-              <tr><td>first packet</td><td>A run starts on the first matching packet the trigger sees. A trigger whose condition already holds when it is set fires on the next packet, so one matching the at-rest bytes of a device that reports every poll fires once when it is set.</td></tr>
+              <tr><td>run</td><td>With <code>RUN</code>, a device that repeats a held state every poll fires once per hold. The release is a second trigger matching the released bytes. The first <code>slen</code> match bytes select the stream within the address (a report ID) and the rest are the condition. A packet that fails the selector leaves the run as it was.</td></tr>
+              <tr><td>first packet</td><td>A run starts on the first matching packet the trigger sees. A trigger whose condition already holds when it is set fires on the next packet. A trigger matching the at-rest bytes of a device that reports every poll therefore fires once, when it is set.</td></tr>
               <tr><td>shadowed</td><td>A trigger a more specific one outranks still tracks its run, so removing that trigger mid-hold fires nothing.</td></tr>
               <tr><td>re-send</td><td>An identical re-send keeps the run and the count. An overwrite starts both again, and a bus reset or a configuration change starts every run again.</td></tr>
               <tr><td>hits</td><td>Each trigger counts the packets it matched as the top-ranked trigger, saturating at 65535, read back in <A href="/native/commands/requests#clip"><code>QUERY(CLIP)</code></A>. An outranked trigger's count stays still while it tracks its run.</td></tr>
@@ -753,7 +754,7 @@ re-clone    the box clones a device again`}</pre>
               <tr><th>Frame</th><th>Why</th></tr>
             </thead>
             <tbody>
-              <tr><td>shorter than <code>8 + 2 x mlen</code>, <code>mlen</code> above 16, <code>dir</code> above 2, <code>action</code> above 5, a reserved flag bit</td><td>Malformed.</td></tr>
+              <tr><td>shorter than <code>8 + 2 x mlen</code>, <code>mlen</code> &gt;16, <code>dir</code> &gt;2, <code>action</code> &gt;5, a reserved flag bit</td><td>Malformed.</td></tr>
               <tr><td>a ninth trigger, or match bytes past the pool of 112</td><td>The set is full.</td></tr>
               <tr><td>consume with <code>OPTION(IMPERFECT)</code> off</td><td>Consuming is dropping traffic.</td></tr>
               <tr><td>consume on <code>CONTROL</code></td><td>A control transfer always runs to completion.</td></tr>
@@ -797,7 +798,7 @@ re-clone    the box clones a device again`}</pre>
             { value: 'lo hi', name: 'CRC16' },
           ]}
         />
-        <p>The same trigger removed: the key stays, <code>action</code>, <code>flags</code> and <code>slen</code> are zero.</p>
+        <p>To remove the same trigger, keep the key and zero <code>action</code>, <code>flags</code> and <code>slen</code>.</p>
         <pre class="diagram">{`04 02 00 01 00 00 00 02 07 20 FF 20
    class=4 HID_IN   id=2   dir=1 IN   action=0   flags=0   slen=0   mlen=2   match=07 20   mask=FF 20`}</pre>
       </DocSection>

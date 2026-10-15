@@ -83,27 +83,26 @@ const Frame: Component = () => {
               <tr><td><code>0x12</code></td><td><A href="/native/commands/clip#append"><code>CLIP_APPEND</code></A></td><td>PC→box</td><td>varies</td><td>none</td></tr>
               <tr><td><code>0x13</code></td><td><A href="/native/commands/clip#ctrl"><code>CLIP_CTRL</code></A></td><td>PC→box</td><td>1 byte</td><td>none</td></tr>
               <tr><td><code>0x14</code></td><td><A href="/native/commands/clip#set"><code>CLIP_SET</code></A></td><td>PC→box</td><td>2 bytes</td><td>none</td></tr>
-              <tr><td><code>0x15</code></td><td><A href="/native/commands/clip#trigger"><code>CLIP_TRIGGER</code></A></td><td>PC→box</td><td>6 to 40 bytes</td><td>none</td></tr>
+              <tr><td><code>0x15</code></td><td><A href="/native/commands/clip#trigger"><code>CLIP_TRIGGER</code></A></td><td>PC→box</td><td>6-40 bytes</td><td>none</td></tr>
               <tr><td><code>0x16</code></td><td><A href="/native/commands/catch#traffic-event"><code>TRAFFIC_EVENT</code></A></td><td>box→PC</td><td>varies</td><td>none</td></tr>
-              <tr><td><code>0x17</code></td><td><A href="/native/commands/update#update"><code>UPDATE</code></A></td><td>PC→box</td><td>2 to 508 bytes</td><td><A href="/native/commands/update#resp"><code>UPDATE_RESP</code></A></td></tr>
+              <tr><td><code>0x17</code></td><td><A href="/native/commands/update#update"><code>UPDATE</code></A></td><td>PC→box</td><td>2-508 bytes</td><td><A href="/native/commands/update#resp"><code>UPDATE_RESP</code></A></td></tr>
               <tr><td><code>0x18</code></td><td><A href="/native/commands/update#resp"><code>UPDATE_RESP</code></A></td><td>box→PC</td><td>7 bytes</td><td>none</td></tr>
-              <tr><td><code>0x19</code></td><td><A href="/native/commands/raw#raw"><code>RAW</code></A></td><td>PC→box</td><td>2 to 512 bytes</td><td>none</td></tr>
-              <tr><td><code>0x1A</code></td><td><A href="/native/commands/transfer#transfer"><code>TRANSFER</code></A></td><td>PC→box</td><td>9 to 512 bytes</td><td><A href="/native/commands/transfer#transfer-resp"><code>TRANSFER_RESP</code></A></td></tr>
-              <tr><td><code>0x1B</code></td><td><A href="/native/commands/transfer#transfer-resp"><code>TRANSFER_RESP</code></A></td><td>box→PC</td><td>2 to 506 bytes</td><td>none</td></tr>
-              <tr><td><code>0x1C</code></td><td><A href="/native/commands/rewrite#rewrite"><code>REWRITE</code></A></td><td>PC→box</td><td>9 to 510 bytes</td><td>none</td></tr>
-              <tr><td><code>0x1D</code></td><td><A href="/native/commands/patch#patch"><code>PATCH</code></A></td><td>PC→box</td><td>1 to 510 bytes</td><td>none</td></tr>
+              <tr><td><code>0x19</code></td><td><A href="/native/commands/raw#raw"><code>RAW</code></A></td><td>PC→box</td><td>2-512 bytes</td><td>none</td></tr>
+              <tr><td><code>0x1A</code></td><td><A href="/native/commands/transfer#transfer"><code>TRANSFER</code></A></td><td>PC→box</td><td>9-512 bytes</td><td><A href="/native/commands/transfer#transfer-resp"><code>TRANSFER_RESP</code></A></td></tr>
+              <tr><td><code>0x1B</code></td><td><A href="/native/commands/transfer#transfer-resp"><code>TRANSFER_RESP</code></A></td><td>box→PC</td><td>2-506 bytes</td><td>none</td></tr>
+              <tr><td><code>0x1C</code></td><td><A href="/native/commands/rewrite#rewrite"><code>REWRITE</code></A></td><td>PC→box</td><td>9-510 bytes</td><td>none</td></tr>
+              <tr><td><code>0x1D</code></td><td><A href="/native/commands/patch#patch"><code>PATCH</code></A></td><td>PC→box</td><td>1-510 bytes</td><td>none</td></tr>
               <tr><td><code>0x1E</code></td><td><A href="/native/commands/transform#transform"><code>TRANSFORM</code></A></td><td>PC→box</td><td>8 bytes</td><td>none</td></tr>
             </tbody>
           </table>
         </div>
         <p>
-          <code>0x02</code>, <code>0x0D</code>, and <code>0x0E</code> were <code>WHEEL</code>,{' '}
-          <code>KEY</code>, and <code>CONSUMER</code>, now{' '}
-          <A href="/native/commands/move#move"><code>MOVE</code></A> (motion-tagged) and{' '}
-          <A href="/native/commands/inject#inject"><code>INJECT</code></A> (class-tagged);{' '}
+          Retired numbers are never reused. <code>0x02</code> was <code>WHEEL</code>, now{' '}
+          <A href="/native/commands/move#move"><code>MOVE</code></A> (motion-tagged).{' '}
+          <code>0x0D</code> and <code>0x0E</code> were <code>KEY</code> and <code>CONSUMER</code>, now{' '}
+          <A href="/native/commands/inject#inject"><code>INJECT</code></A> (class-tagged).{' '}
           <code>0x10</code> was <code>CONS_EVENT</code>, now the class-tagged{' '}
-          <A href="/native/commands/catch#usage-event"><code>USAGE_EVENT</code></A>. Retired numbers
-          are never reused.
+          <A href="/native/commands/catch#usage-event"><code>USAGE_EVENT</code></A>.
         </p>
       </DocSection>
 
@@ -165,7 +164,7 @@ def encode_frame(type, seq, payload):
         />
         <p>
           The CRC is the little-endian <code>crc16_ccitt</code> of{' '}
-          <code>01 00 06 00 00 64 00 00 00 00</code>; compute it, don't copy a literal.
+          <code>01 00 06 00 00 64 00 00 00 00</code>. Compute it; don't copy a literal.
         </p>
       </DocSection>
     </>

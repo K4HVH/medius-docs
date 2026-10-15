@@ -41,8 +41,8 @@ const Down = arrow(180);
 const DeviceInject = () => {
   const dash = useDashboard();
   const health = () => dash.health();
-  // Both flags: a configured clone can carry no mouse collection, and the box then drops motion and
-  // button commands with no reply.
+  // Both flags, because a configured clone may have no mouse collection; the box then drops
+  // motion and button commands with no error.
   const mouseReady = () => health()?.cloneConfigured === true && health()?.mouseAttached === true;
   const kbdReady = () => health()?.kbdAttached === true;
 
@@ -192,7 +192,7 @@ const DeviceInject = () => {
   // Every other send clears a refusal when it lands, and shows one when refused.
   const settle = (p: Promise<unknown> | undefined) => p?.then(clear, report);
 
-  // Everything the pad and the arrows have sent, read in the middle of the arrows.
+  // The total the pad and the arrows have sent, shown between the arrows.
   const [sent, setSent] = createSignal({ x: 0, y: 0 });
   const moveCursor = (dx: number, dy: number) =>
     settle(
@@ -337,8 +337,8 @@ const DeviceInject = () => {
             >
               <Show when={dropped()}>
                 <div class="callout callout--warning">
-                  The box cleared every injected hold: this page sent nothing for 1 s, which a background tab
-                  can cause.
+                  The box cleared every injected hold because this page sent nothing for 1 s (a background tab
+                  can cause this).
                 </div>
               </Show>
               <Show
