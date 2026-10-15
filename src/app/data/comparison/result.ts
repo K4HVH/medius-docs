@@ -4,7 +4,7 @@ import type { Box, FeatureRow, MeasureRow, OutcomeRow, PairRow, Table, Value } f
 
 export type Result = Box | 'equal' | 'differs' | null;
 
-// The lowest and highest a value covers; a count of a total as its fraction.
+// The lowest and highest a value covers; a count out of a total becomes its fraction.
 export function span(v: Value): [number, number] {
   if ('lo' in v) return [v.lo, v.hi];
   const x = v.of ? v.value / v.of : v.value;
@@ -28,7 +28,7 @@ export function resultOf(table: Table, row: PairRow): Result {
   }
   if (table.kind === 'feature') {
     const { stock, medius } = row as FeatureRow;
-    // Unranked, the cells say what each box has, so two different things differ.
+    // In an unranked table the cells say what each box has, so two different cells differ.
     if (table.ranked === false) return stock === medius ? 'equal' : 'differs';
     if (stock && medius) return 'equal';
     return stock ? 'stock' : 'medius';
@@ -47,7 +47,7 @@ const places = (n: number) => {
   return Math.max(0, decimals - Number(exponent ?? 0));
 };
 
-// Thousands with commas, to the decimals given: a range's ends share them, as 8.60-8.66.
+// Thousands with commas, to the given decimals; a range's ends share them (8.60-8.66).
 const number = (n: number, decimals = places(n)) => {
   const [whole, frac] = n.toFixed(decimals).split('.');
   return Number(whole).toLocaleString('en-US') + (frac ? `.${frac}` : '');
@@ -62,7 +62,7 @@ export function showValue(v: Value, unit: string): string {
     const join = v.lo < 0 || v.hi < 0 ? ' to ' : '-';
     return withUnit(v.lo === v.hi ? number(v.lo) : `${number(v.lo, d)}${join}${number(v.hi, d)}`, unit);
   }
-  if (v.of !== undefined) return `${number(v.value)} of ${number(v.of)}`;
+  if (v.of !== undefined) return `${number(v.value)}/${number(v.of)}`;
   return withUnit(number(v.value), unit);
 }
 
