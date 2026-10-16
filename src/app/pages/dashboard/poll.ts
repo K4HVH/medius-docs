@@ -1,7 +1,7 @@
 // One poller for the dashboard: shared timers, deduplicated subscribers, and a query stops once
 // nothing watches it.
 
-import { type Accessor, createMemo, createRenderEffect, createSignal, onCleanup, untrack } from 'solid-js';
+import { type Accessor, createMemo, createRenderEffect, createSignal, on, onCleanup, untrack } from 'solid-js';
 import type {
   Bearing,
   Caps,
@@ -111,6 +111,8 @@ interface Slot {
   timer: ReturnType<typeof setTimeout> | null;
   // Bumped to abandon an in-flight tick, whose link may have changed.
   gen: number;
+  // Stopped for want of a link; a link's arrival starts it again.
+  parked: boolean;
 }
 
 export interface Poller {
@@ -138,7 +140,7 @@ export function createPoller(
     if (!s) {
       const [read, write] = createSignal<unknown>(null);
       const [unreadable, setUnreadable] = createSignal(false);
-      s = { read, write: (v) => write(() => v), unreadable, setUnreadable, subs: new Map(), timer: null, gen: 0 };
+      s = { read, write: (v) => write(() => v), unreadable, setUnreadable, subs: new Map(), timer: null, gen: 0, parked: false };
       slots.set(key, s);
     }
     return s;
@@ -154,21 +156,26 @@ export function createPoller(
     const s = slots.get(key);
     if (!s || s.gen !== gen) return;
     const l = link();
-    // Skipped with no link only to save a thrown call per tick.
-    if (l) {
-      try {
-        const v = await RUN[key](l);
-        // A reset or link change during the round trip makes this value stale.
-        if (s.gen !== gen || link() !== l) return;
-        s.write(v);
-        s.setUnreadable(false);
-        if (key === keepalive()) opts.onKeepalive?.(true);
-      } catch (e) {
-        // A transient miss is fine; the next tick tries again. A real drop closes the link.
-        if (s.gen === gen && link() === l) {
-          if (e instanceof UnreadableReplyError) s.setUnreadable(true);
-          if (key === keepalive()) opts.onKeepalive?.(e instanceof UnreadableReplyError);
-        }
+    if (!l) {
+      s.parked = true;
+      return;
+    }
+    try {
+      const v = await RUN[key](l);
+      // A reset or link change during the round trip makes this value stale. With no link now, the slot
+      // waits for one, as a tick that found none does.
+      if (s.gen !== gen || link() !== l) {
+        if (s.gen === gen && !link()) s.parked = true;
+        return;
+      }
+      s.write(v);
+      s.setUnreadable(false);
+      if (key === keepalive()) opts.onKeepalive?.(true);
+    } catch (e) {
+      // A transient miss is fine; the next tick tries again. A real drop closes the link.
+      if (s.gen === gen && link() === l) {
+        if (e instanceof UnreadableReplyError) s.setUnreadable(true);
+        if (key === keepalive()) opts.onKeepalive?.(e instanceof UnreadableReplyError);
       }
     }
     // Only avoids arming a timer the top check would reject.
@@ -184,6 +191,7 @@ export function createPoller(
       s.timer = null;
     }
     s.gen++;
+    s.parked = false;
     if (s.subs.size > 0) void tick(key, s.gen);
   };
 
@@ -225,6 +233,20 @@ export function createPoller(
     const key = keepalive();
     untrack(() => subscribe(key, KEEPALIVE_MS));
   });
+
+  // A microtask later, so a reset made with the new link restarts each slot once, not twice.
+  createRenderEffect(
+    on(
+      link,
+      (l) => {
+        if (l)
+          queueMicrotask(() => {
+            for (const [key, s] of slots) if (s.parked && link() === l) restart(key);
+          });
+      },
+      { defer: true },
+    ),
+  );
 
   if (typeof document !== 'undefined') {
     // On tab return, re-read everything rather than wait out a clamped interval.

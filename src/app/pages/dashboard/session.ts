@@ -34,10 +34,11 @@ import {
 import { type FlashProgress, imageVersion } from '../../../dashboard/flash';
 import type { FlashSource, StatsReport, StatsSink } from '../../../dashboard/stats';
 import { type Poller, createPoller } from './poll';
+import { flashErrorText } from './flashText';
 
 export type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'lost' | 'flashing' | 'error';
 
-// A CATCH event and its box sequence, shared across all three frame types, so any gap is a drop.
+// A CATCH event and its box sequence number. All three frame types share the sequence, so any gap is a drop.
 export interface InputEventEntry {
   seq: number;
   ev: CatchEvent;
@@ -49,8 +50,8 @@ export interface UpdateRun {
   // The page that started the run, and the only one that shows its result.
   page: 'update' | 'advanced';
   outcome: 'running' | 'verified' | 'sent' | 'failed';
-  // Per chip sent, once verified: whether it decided on the other slot. A revert lands back on the slot
-  // it ran, whatever the versions say.
+  // For each chip sent, once verified: whether it decided on the other slot. A revert lands back on the
+  // slot it was running, whatever the versions say.
   landed?: { device?: boolean; host?: boolean };
 }
 
@@ -68,7 +69,7 @@ export interface BoxSession {
   link: Accessor<SerialLink | null>;
   name: Accessor<string | null>;
   present: Accessor<boolean>;
-  // Connected and not disconnected since: it reconnects whenever it is found.
+  // Connected and not disconnected since; a held box reconnects whenever it is found.
   held: Accessor<boolean>;
   probe: Accessor<Probe | null>;
   connect: () => Promise<void>;
@@ -96,8 +97,11 @@ export interface BoxSession {
     source?: FlashSource,
   ) => Promise<'verified' | 'sent' | 'failed'>;
   deviceLog: Accessor<string[]>;
+  // Every line ever added, so a view of a log at its cap still knows which lines are new.
+  deviceLogAdded: Accessor<number>;
   clearDeviceLog: () => void;
   inputEvents: Accessor<InputEventEntry[]>;
+  inputEventsAdded: Accessor<number>;
   clearInputEvents: () => void;
   // A raw catch-stream tap for a consumer that buffers events itself; returns an unsubscribe.
   subscribeEvents: (fn: (ev: CatchEvent, seq: number) => void) => () => void;
@@ -140,24 +144,7 @@ function formatLogLine(line: LogLine): string {
   return `[${LogLevel[line.level]}] ${line.text}`;
 }
 
-// Flash and update failures only: a failed CONNECT is a verdict, not a string.
-export function flashErrorText(e: unknown): string {
-  // A DOMException isn't an Error everywhere, so Web Serial's wording is matched on the message.
-  const message = typeof e === 'object' && e !== null && 'message' in e ? String((e as { message: unknown }).message) : '';
-  if (/device has been lost/i.test(message)) return 'The box went away partway through.';
-  // Web Serial's wording says nothing about what to do. Matched exactly: the box's BUSY says "already
-  // open" too, about an update session.
-  if (/port is already open/i.test(message)) {
-    return 'That port is still held by an earlier session. Reload the page, or replug the control cable.';
-  }
-  if (e instanceof Error) {
-    if (/[Ff]ailed to open|Access denied|NetworkError/.test(e.message)) {
-      return 'Could not open that port. Close anything else using it, then replug the control cable.';
-    }
-    return e.message;
-  }
-  return String(e);
-}
+export { flashErrorText };
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -204,8 +191,15 @@ export function createBoxSession(
     const [updateProgress, setUpdateProgress] = createSignal<FlashProgress | null>(null);
     const [update, setUpdate] = createSignal<UpdateRun | null>(null);
     const [firmwareInfo, setFirmwareInfo] = createSignal<FirmwareInfo | null>(null);
-    const [deviceLog, setDeviceLog] = createSignal<string[]>([]);
-    const [inputEvents, setInputEvents] = createSignal<InputEventEntry[]>([]);
+    // A list and its count of everything added change together, in one signal.
+    const [log, setLog] = createSignal<{ lines: string[]; added: number }>({ lines: [], added: 0 });
+    const deviceLog = () => log().lines;
+    const deviceLogAdded = () => log().added;
+    const setDeviceLog = (lines: string[]) => setLog((l) => ({ lines, added: l.added }));
+    const [events, setEvents] = createSignal<{ list: InputEventEntry[]; added: number }>({ list: [], added: 0 });
+    const inputEvents = () => events().list;
+    const inputEventsAdded = () => events().added;
+    const setInputEvents = (list: InputEventEntry[]) => setEvents((e) => ({ list, added: e.added }));
     const [seenName, setSeenName] = createSignal<string | null>(versionOf(init.probe ?? null)?.name ?? null);
     const eventTaps = new Set<(ev: CatchEvent, seq: number) => void>();
 
@@ -295,9 +289,9 @@ export function createBoxSession(
 
     const makeLink = (p: SerialPort): SerialLink => {
       const nl: SerialLink = build(p, {
-        onLog: (ln) => setDeviceLog((prev) => [...prev, formatLogLine(ln)].slice(-500)),
+        onLog: (ln) => setLog((l) => ({ lines: [...l.lines, formatLogLine(ln)].slice(-500), added: l.added + 1 })),
         onEvent: (ev, seq) => {
-          setInputEvents((prev) => [...prev, { seq, ev }].slice(-200));
+          setEvents((e) => ({ list: [...e.list, { seq, ev }].slice(-200), added: e.added + 1 }));
           eventTaps.forEach((fn) => fn(ev, seq));
         },
         onClose: () => {
@@ -344,13 +338,29 @@ export function createBoxSession(
       void reattach(++lostGen);
     };
 
+    // A reattach with no port to try waits for one, rather than waking every second.
+    let portBack: (() => void) | null = null;
+    createEffect(() => {
+      if (port() && portBack) {
+        portBack();
+        portBack = null;
+      }
+    });
+
     const reattach = async (gen: number) => {
+      let pause = true;
       for (;;) {
-        await sleep(REATTACH_MS);
+        if (pause) await sleep(REATTACH_MS);
+        pause = true;
         if (disposed || gen !== lostGen || status() !== 'lost') return;
         const p = port();
+        if (!p) {
+          await new Promise<void>((r) => (portBack = r));
+          pause = false;
+          continue;
+        }
         // Nothing writes to a box whose chip may be in ROM download.
-        if (!p || hooks.nativeFlashing()) continue;
+        if (hooks.nativeFlashing()) continue;
         try {
           const found = await exclusive(p, async () => {
             const { link: nl, version: v, baud } = await attachLink(p, makeLink, bauds(lastBaud));
@@ -508,12 +518,12 @@ export function createBoxSession(
       const l = link();
       if (identifyRun || !l || status() !== 'connected') return identifyRun ?? Promise.resolve();
       setIdentifying(true);
+      // A refused blink rejects for the caller to show; the restore can fail on a box already gone.
       const run = (async () => {
         await l.led(LedTarget.Both, LedMode.Blink, 255);
         await sleep(IDENTIFY_MS);
-        if (link() === l) await l.led(LedTarget.Both, LedMode.Auto, 0);
+        if (link() === l) await l.led(LedTarget.Both, LedMode.Auto, 0).catch(() => undefined);
       })()
-        .catch(() => undefined)
         .finally(() => {
           identifyRun = null;
           setIdentifying(false);
@@ -561,7 +571,7 @@ export function createBoxSession(
     };
 
     // Reattaches whenever the box stops answering: a revert reboots the main chip, maybe onto the other
-    // control rate. No verdict by the deadline is no verification.
+    // control rate. No verdict by the deadline means the update is not verified.
     const awaitVerdict = async (p: SerialPort, hostExpected: boolean): Promise<Verdict> => {
       const deadline = Date.now() + CONFIRM_TIMEOUT_MS;
       const drop = async () => {
@@ -616,7 +626,7 @@ export function createBoxSession(
       if (!images.device && !images.host) return 'failed';
       const run = { device: images.device !== undefined, host: images.host !== undefined, page };
       const started = performance.now();
-      // Where each chip runs now: one that lands decides on the other slot.
+      // Where each chip runs now: a chip whose update lands decides on the other slot.
       let before: FirmwareInfo | null = null;
       const finish = <O extends 'verified' | 'sent' | 'failed'>(outcome: O, landed?: UpdateRun['landed']): O => {
         setUpdate({ ...run, outcome, ...(landed ? { landed } : {}) });
@@ -649,27 +659,29 @@ export function createBoxSession(
       try {
         // Host first: the device chip's running firmware relays its image.
         if (images.host) {
-          setUpdateProgress({ phase: 'writing', written: 0, total: images.host.length });
+          setUpdateProgress({ phase: 'writing', chip: 'host', written: 0, total: images.host.length });
           await l.stageFirmware(OTA_TGT_HOST, images.host, (written, total) =>
-            setUpdateProgress({ phase: 'writing', written, total }),
+            setUpdateProgress({ phase: 'writing', chip: 'host', written, total }),
           );
         }
         if (images.device) {
-          setUpdateProgress({ phase: 'writing', written: 0, total: images.device.length });
+          setUpdateProgress({ phase: 'writing', chip: 'device', written: 0, total: images.device.length });
           await l.stageFirmware(OTA_TGT_DEVICE, images.device, (written, total) =>
-            setUpdateProgress({ phase: 'writing', written, total }),
+            setUpdateProgress({ phase: 'writing', chip: 'device', written, total }),
           );
         }
         // A mouse-side chip that answered before the activate has to answer after it, whatever was sent.
         const hostBefore = ((await read()) ?? (await read()))?.host != null;
-        setUpdateProgress({ phase: 'connecting' });
+        setUpdateProgress({ phase: 'restarting' });
         updating = true;
         await l.activateFirmware();
         // The link is reopened either way; the main chip reboots unless only the mouse-side chip was sent.
         resetView();
         await l.close().catch(() => undefined);
         const hostExpected = images.host !== undefined || hostBefore;
-        const result = (await tryReconnect(ctrlPort)) ? await awaitVerdict(ctrlPort, hostExpected) : 'gone';
+        const back = await tryReconnect(ctrlPort);
+        if (back) setUpdateProgress({ phase: 'verifying' });
+        const result = back ? await awaitVerdict(ctrlPort, hostExpected) : 'gone';
         setUpdateProgress({ phase: 'done' });
         if (result !== 'ok') {
           // Shared, not page-local, so it survives a tab change; Device, Control and Update show it.
@@ -775,8 +787,10 @@ export function createBoxSession(
       readFirmwareInfo,
       updateOverControl,
       deviceLog,
+      deviceLogAdded,
       clearDeviceLog,
       inputEvents,
+      inputEventsAdded,
       clearInputEvents,
       subscribeEvents,
     };

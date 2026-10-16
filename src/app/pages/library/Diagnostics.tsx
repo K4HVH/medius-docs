@@ -1,55 +1,48 @@
 import type { Component } from 'solid-js';
 import { A } from '@solidjs/router';
-import { Card, CardHeader } from '../../../components/surfaces/Card';
-import '../../../styles/docs.css';
+import { PageHeader } from '../../shell/PageHeader';
+import { DocSection } from '../../shell/DocSection';
 
 const Diagnostics: Component = () => {
   return (
     <>
-      <div id="diagnostics-overview" data-search-target>
-        <Card>
-          <CardHeader title="Diagnostics" subtitle="Read-only views of the link" />
-          <p>
-            <code>logs</code> and <code>counters</code> are lock-free, on both{' '}
-            <A href="/library/connection"><code>Device</code></A> and{' '}
-            <A href="/library/features/async"><code>AsyncDevice</code></A>.
-          </p>
-          <p>See also: <A href="/library/guides/testing#testing">testing with MockBox</A>.</p>
-        </Card>
-      </div>
+      <PageHeader id="diagnostics-overview">
+        <p>
+          <code>logs</code> and <code>counters</code> are lock-free, on both{' '}
+          <A href="/library/connection"><code>Device</code></A> and{' '}
+          <A href="/library/features/async"><code>AsyncDevice</code></A>.
+        </p>
+        <p>See also: <A href="/library/guides/testing#testing">testing with MockBox</A>.</p>
+      </PageHeader>
 
-      <div id="logs" data-search-target>
-        <Card>
-          <CardHeader title="logs" subtitle="Stream of box messages" />
-          <pre class="api-signature">fn logs(&self) -&gt; LogStream</pre>
-          <p>
-            <span class="api-badge api-badge--executed">No round-trip</span>
-          </p>
+      <DocSection id="logs" title="logs" caption="Stream of box messages">
+        <pre class="api-signature">fn logs(&self) -&gt; LogStream</pre>
+        <p>
+          <span class="api-badge api-badge--executed">No round-trip</span>
+        </p>
 
-          <p>
-            Yields each box <A href="/native/commands/admin#log"><code>LOG</code></A> frame as a{' '}
-            <A href="/library/types/structs#log-line"><code>LogLine</code></A>.
-          </p>
+        <p>
+          Yields each box <A href="/native/commands/admin#log"><code>LOG</code></A> frame as a{' '}
+          <A href="/library/types/structs#log-line"><code>LogLine</code></A>.
+        </p>
 
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`for line in device.logs() {
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`for line in device.logs() {
     println!("[{:?}] {}", line.level, line.text);
 }
-// ends when the link drops`}</code></pre>
+// ends when the link drops or the stream closes`}</code></pre>
 
-          <div class="callout callout--info">
-            <p>
-              The box emits <A href="/native/commands/admin#log"><code>LOG</code></A> frames only
-              while the control link is up; with no control PC they are dropped, not buffered.
-            </p>
-          </div>
-        </Card>
-      </div>
+        <div class="callout callout--info">
+          <p>
+            The box sends <A href="/native/commands/admin#log"><code>LOG</code></A> frames only
+            while the control link is up. With no control PC, they are dropped, not buffered.
+          </p>
+        </div>
+      </DocSection>
 
-      <div id="reading-logs" data-search-target>
-        <Card>
-          <CardHeader title="Reading the stream" subtitle="Blocking, polling, and draining" />
-          <div class="api-response-label">METHODS</div>
+      <DocSection id="reading-logs" title="Reading the stream" caption="Blocking, polling, and draining">
+        <div class="api-response-label">METHODS</div>
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr>
@@ -67,7 +60,7 @@ const Diagnostics: Component = () => {
                 <td>
                   Waits for the next line. <code>Err</code> is{' '}
                   <A href="/library/types/errors"><code>Error::Disconnected</code></A> once the link
-                  is gone.
+                  is gone or the stream is closed.
                 </td>
               </tr>
               <tr>
@@ -98,18 +91,37 @@ const Diagnostics: Component = () => {
                 <td><code>for line in stream</code></td>
                 <td><code>LogLine</code></td>
                 <td>Yes</td>
-                <td>Blocking <code>IntoIterator</code>; yields each line until the link closes.</td>
+                <td>Blocking <code>IntoIterator</code>; yields each line until the link or the stream closes.</td>
+              </tr>
+              <tr>
+                <td><code>is_connected()</code></td>
+                <td><code>bool</code></td>
+                <td>No</td>
+                <td>Whether the box still delivers to this stream. A <code>None</code> from <code>try_recv</code> or <code>recv_timeout</code> can't tell you this.</td>
+              </tr>
+              <tr>
+                <td><code>close()</code></td>
+                <td><code>()</code></td>
+                <td>No</td>
+                <td>Ends this stream and its clones. A blocked receive returns at once, and so does every later one. Other <code>LogStream</code>s keep reading.</td>
+              </tr>
+              <tr>
+                <td><code>closer()</code></td>
+                <td><A href="/library/catch#stream-closer"><code>StreamCloser</code></A></td>
+                <td>No</td>
+                <td>A handle that closes the stream from another thread.</td>
               </tr>
             </tbody>
           </table>
+        </div>
 
-          <p>
-            <code>try_iter()</code> or <code>try_recv()</code> for a per-frame loop;{' '}
-            <code>recv()</code> or the blocking iterator for a dedicated log thread.
-          </p>
+        <p>
+          Use <code>try_iter()</code> or <code>try_recv()</code> in a per-frame loop, and{' '}
+          <code>recv()</code> or the blocking iterator on a dedicated log thread.
+        </p>
 
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`let stream = device.logs();
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`let stream = device.logs();
 
 // once per frame: drain the queue, never blocking
 for line in stream.try_iter() {
@@ -123,35 +135,31 @@ if let Some(line) = stream.recv_timeout(Duration::from_millis(50)) {
     // none this window
 }`}</code></pre>
 
-          <div class="callout callout--warning">
-            <p>
-              The channel buffers 1024 lines and evicts the oldest, uncounted, when full.
-            </p>
-          </div>
-        </Card>
-      </div>
-
-      <div id="counters" data-search-target>
-        <Card>
-          <CardHeader title="counters" subtitle="Link statistics" />
-          <pre class="api-signature">fn counters(&self) -&gt; CountersSnapshot</pre>
+        <div class="callout callout--warning">
           <p>
-            <span class="api-badge api-badge--executed">No round-trip</span>
+            The channel buffers 1024 lines. When full, it evicts the oldest line, uncounted.
           </p>
+        </div>
+      </DocSection>
 
-          <p>
-            A <code>Copy</code> snapshot of five totals that only climb, zeroed at process start:
-            rising <code>crc_drops</code> means a flaky cable, <code>reconnects</code> counts port
-            reopens after a dropped link, and <code>restarts</code> counts device-chip restarts the
-            library <A href="/library/lifecycle#restart">recovered</A> from. Fields on{' '}
-            <A href="/library/types/structs#counters-snapshot"><code>CountersSnapshot</code></A>.
-          </p>
+      <DocSection id="counters" title="counters" caption="Link statistics">
+        <pre class="api-signature">fn counters(&self) -&gt; CountersSnapshot</pre>
+        <p>
+          <span class="api-badge api-badge--executed">No round-trip</span>
+        </p>
 
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`let c = device.counters();
+        <p>
+          A <code>Copy</code> snapshot of five totals that only climb, zeroed at process start.
+          Rising <code>crc_drops</code> means a flaky cable. <code>reconnects</code> counts port
+          reopens after a dropped link. <code>restarts</code> counts device-chip restarts the
+          library <A href="/library/lifecycle#restart">recovered</A> from. Fields are on{' '}
+          <A href="/library/types/structs#counters-snapshot"><code>CountersSnapshot</code></A>.
+        </p>
+
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`let c = device.counters();
 println!("{} reconnects, {} restarts, {} CRC drops", c.reconnects, c.restarts, c.crc_drops);`}</code></pre>
-        </Card>
-      </div>
+      </DocSection>
 
     </>
   );

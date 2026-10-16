@@ -223,7 +223,7 @@ describe('box registry', () => {
     serial.unplug(ports[0]);
     release();
     expect(await run).toBe('failed');
-    expect(s.error()).toBe('The box went away partway through.');
+    expect(s.error()).toBe('The box disconnected partway through.');
     serial.plug(new FakePort(b));
     await ready();
     await vi.advanceTimersByTimeAsync(REATTACH_MS);
@@ -398,6 +398,104 @@ describe('box registry', () => {
     expect(second.isOpen).toBe(false);
   });
 
+  it("is not told before the startup scan has listed this browser's ports", async () => {
+    const boxes = mount(new FakeSerial([]), createBoxStore(null), { start: false });
+    await ready();
+    expect(boxes.selectedKind()).toBeNull();
+    boxes.start();
+    await ready();
+    expect(boxes.selectedKind()).toBe('other');
+  });
+
+  it('is never told in a browser without Web Serial, where every page keeps its content', async () => {
+    const boxes = createRoot((dispose) => {
+      roots.push(dispose);
+      const b = createBoxes({ serial: null, store: createBoxStore(null), supported: false, secure: true, nativeFlashing: flashing, probe: fakeProbe, makeLink: makeFakeLink, choose: () => Promise.reject(new DOMException('none', 'NotFoundError')) });
+      b.start();
+      return b;
+    });
+    await ready();
+    expect(boxes.selectedKind()).toBeNull();
+  });
+
+  it('checks a port plugged in during a ROM flash once the flash ends', async () => {
+    const serial = new FakeSerial([]);
+    const boxes = mount(serial);
+    await ready();
+    setFlashing(true);
+    const a = box(1);
+    serial.plug(new FakePort(a));
+    await ready();
+    expect(boxes.selected()?.session.probe() ?? null).toBeNull();
+    setFlashing(false);
+    await ready();
+    expect(boxes.selectedKind()).toBe('medius');
+  });
+
+  it('with nothing plugged in or remembered, the selection is for setting a box up', async () => {
+    const boxes = mount(new FakeSerial([]));
+    await ready();
+    expect(boxes.selectedKind()).toBe('other');
+  });
+
+  it('a box stays a Medius box once unplugged, where its page says to plug it back in', async () => {
+    const a = box(1);
+    const ports = portsOf(a);
+    const serial = new FakeSerial(ports);
+    const boxes = mount(serial);
+    await ready();
+    await pick(boxes, a.mac);
+    expect(boxes.selectedKind()).toBe('medius');
+    serial.unplug(ports[0]);
+    await ready();
+    expect(boxes.selectedKind()).toBe('medius');
+  });
+
+  it('a port this browser knows is not told until its check ends', async () => {
+    const a = box(1);
+    const release = a.hold();
+    const boxes = mount(new FakeSerial(portsOf(a)));
+    await ready();
+    expect(boxes.selectedKind()).toBeNull();
+    release();
+    await ready();
+    expect(boxes.selectedKind()).toBe('medius');
+  });
+
+  it('Add box picked is for setting a box up, even while a port is checked', async () => {
+    const a = box(1);
+    const release = a.hold();
+    const boxes = mount(new FakeSerial(portsOf(a)));
+    await ready();
+    boxes.select(NEW_BOX);
+    expect(boxes.selectedKind()).toBe('other');
+    release();
+    await ready();
+  });
+
+  it('a box too old for this page is set up', async () => {
+    const old = box(2);
+    old.version = { ...old.version, protoVer: 3 };
+    const later = mount(new FakeSerial(portsOf(old)));
+    await ready();
+    expect(later.selected()?.session.probe()?.kind).toBe('old-firmware');
+    expect(later.selectedKind()).toBe('other');
+  });
+
+  it('adding a port that answers nothing checks it once, so its verdict comes without a second wait', async () => {
+    const quiet = box(1);
+    quiet.alive = false;
+    const serial = new FakeSerial([]);
+    const boxes = mount(serial);
+    await ready();
+    serial.chosen = new FakePort(quiet);
+    probes.length = 0;
+    const added = await boxes.add();
+    await ready();
+    expect(probes).toHaveLength(1);
+    expect(added.ok && added.entry.session.verdict()).toMatchObject({ kind: 'silent' });
+  });
+
   it('a getPorts that rejects leaves an empty list, and Add a box still works', async () => {
     const serial = new FakeSerial([]);
     serial.getPortsFails = true;
@@ -477,7 +575,7 @@ describe('box registry', () => {
     expect(boxes.entries()[0].session.verdict()).toBeNull();
   });
 
-  it('Try again on a silent box retries that box, and connects once it answers', async () => {
+  it('Retry on a silent box retries that box, and connects once it answers', async () => {
     const a = box(1);
     a.alive = false;
     const ports = portsOf(a);

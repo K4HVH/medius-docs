@@ -1,31 +1,31 @@
 import type { Component } from 'solid-js';
 import { A } from '@solidjs/router';
-import { Card, CardHeader } from '../../../../components/surfaces/Card';
-import '../../../../styles/docs.css';
+import { PageHeader } from '../../../shell/PageHeader';
+import { DocSection } from '../../../shell/DocSection';
 
 const Errors: Component = () => {
   return (
     <>
-      <div id="errors" data-search-target>
-        <Card>
-          <CardHeader title="Errors" subtitle="The Error enum and the Result alias" />
-          <p>
-            Every fallible call returns <code>Result&lt;T&gt;</code>, the crate's alias for{' '}
-            <code>core::result::Result&lt;T, Error&gt;</code>.
-          </p>
+      <PageHeader id="errors">
+        <p>
+          Every fallible call returns <code>Result&lt;T&gt;</code>, the crate's alias for{' '}
+          <code>core::result::Result&lt;T, Error&gt;</code>.
+        </p>
+      </PageHeader>
+      <DocSection id="error" title="Error" caption="What a call returns on failure">
+        <p>
+          <code>Error</code> is{' '}
+          <a
+            href="https://doc.rust-lang.org/reference/attributes/type_system.html"
+            target="_blank"
+            rel="noreferrer"
+          >
+            <code>#[non_exhaustive]</code>
+          </a>
+          , so any <code>match</code> needs a wildcard arm.
+        </p>
 
-          <p>
-            <code>Error</code> is{' '}
-            <a
-              href="https://doc.rust-lang.org/reference/attributes/type_system.html"
-              target="_blank"
-              rel="noreferrer"
-            >
-              <code>#[non_exhaustive]</code>
-            </a>
-            , so any <code>match</code> needs a wildcard arm.
-          </p>
-
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr>
@@ -56,10 +56,10 @@ const Errors: Component = () => {
               <tr>
                 <td><code>BadProtoVer {'{'} got {'}'}</code></td>
                 <td>
-                  The box replied with a <code>proto_ver</code> other than <code>9</code>, carried in{' '}
-                  <code>got</code>. The{' '}
+                  The box replied to the <A href="/library/connection">handshake</A> with a{' '}
+                  <code>proto_ver</code> other than <code>9</code>, carried in <code>got</code>. The{' '}
                   <A href="/library/discovery">discovery</A> openers return it for a matched box on
-                  another protocol. See the <A href="/library/connection">handshake</A>.
+                  another protocol.
                 </td>
               </tr>
               <tr>
@@ -71,7 +71,7 @@ const Errors: Component = () => {
               </tr>
               <tr>
                 <td><code>Disconnected</code></td>
-                <td>The device disconnected.</td>
+                <td>The box disconnected.</td>
               </tr>
               <tr>
                 <td><code>FrameTooLong</code></td>
@@ -116,16 +116,16 @@ const Errors: Component = () => {
                 <td><code>RelativeDirection {'{'} direction, what {'}'}</code></td>
                 <td>
                   A call addressed <code>Direction::With</code> or <code>Against</code> where only a
-                  fixed sign or edge fits; <code>what</code> names it. Those resolve against the{' '}
-                  <A href="/native/commands/lock#bearing">bearing</A> at emit time; use{' '}
-                  <code>Both</code>, <code>Positive</code>, or <code>Negative</code>.
+                  fixed sign or edge fits (<code>what</code> names the thing addressed). Those two
+                  resolve against the <A href="/native/commands/lock#bearing">bearing</A> at emit
+                  time. Use <code>Both</code>, <code>Positive</code>, or <code>Negative</code>.
                 </td>
               </tr>
               <tr>
                 <td><code>LockScaleRange {'{'} scale, min, max {'}'}</code></td>
                 <td>
                   A <A href="/library/lock#scale">lock scale</A> outside <code>min</code> to{' '}
-                  <code>max</code>. The percent is signed: full reversal to full amplification.
+                  <code>max</code>. The percent is signed, from full reversal to full amplification.
                 </td>
               </tr>
               <tr>
@@ -163,8 +163,8 @@ const Errors: Component = () => {
               <tr>
                 <td><code>ClipFrameTooLong {'{'} len {'}'}</code></td>
                 <td>
-                  A <code>ClipFrame</code> encodes to <code>len</code> bytes and one append carries at
-                  most 512 (<code>CLIP_ENTRY_MAX</code>). Split it across frames.
+                  A <code>ClipFrame</code> encodes to <code>len</code> bytes, and one append carries
+                  ≤512 (<code>CLIP_ENTRY_MAX</code>). Split it across frames.
                 </td>
               </tr>
               <tr>
@@ -177,7 +177,7 @@ const Errors: Component = () => {
               <tr>
                 <td><code>ClipPacketTrigger {'{'} reason {'}'}</code></td>
                 <td>
-                  A clip packet trigger in a shape the box refuses, caught before anything is sent;{' '}
+                  A clip packet trigger in a shape the box refuses, caught before anything is sent.{' '}
                   <code>reason</code> names which of the{' '}
                   <A href="/library/clip#packet-triggers">refusals</A> it is.
                 </td>
@@ -214,17 +214,17 @@ const Errors: Component = () => {
               <tr>
                 <td><code>RewriteTableFull {'{'} limit {'}'}</code></td>
                 <td>
-                  A further <A href="/library/advanced/rewrite">rewrite rule</A> with all{' '}
-                  <code>limit</code> already in use. Remove one first.
+                  A new <A href="/library/advanced/rewrite">rewrite rule</A> while all{' '}
+                  <code>limit</code> slots are in use. Remove one first.
                 </td>
               </tr>
               <tr>
                 <td><code>RewritePoolFull {'{'} len, free, limit {'}'}</code></td>
                 <td>
-                  A rewrite rule's <code>len</code>-byte payload with <code>free</code> bytes left of
-                  the box's <code>limit</code>-byte payload pool (<code>REWRITE_PAYLOAD_POOL</code>,
-                  2048) after the other held rules; an overwrite gives back the bytes it replaces.
-                  Remove a rule or shorten a payload first.
+                  A rewrite rule's <code>len</code>-byte payload, when only <code>free</code> bytes
+                  are left in the box's <code>limit</code>-byte payload pool
+                  (<code>REWRITE_PAYLOAD_POOL</code>, 2048) after the other held rules. An overwrite
+                  frees the bytes of the rule it replaces. Remove a rule or shorten a payload first.
                 </td>
               </tr>
               <tr>
@@ -239,22 +239,22 @@ const Errors: Component = () => {
               <tr>
                 <td><code>TransformTableFull {'{'} limit {'}'}</code></td>
                 <td>
-                  A further <A href="/library/transform">transform</A> with all <code>limit</code>{' '}
-                  already in use. Remove one first.
+                  A new <A href="/library/transform">transform</A> while all <code>limit</code>{' '}
+                  slots are in use. Remove one first.
                 </td>
               </tr>
               <tr>
                 <td><code>HalfEdgeInputFilter</code></td>
                 <td>
-                  An input subscription narrowed to one edge: without the release, a fresh press
-                  cannot be told from a chord. Match on <code>Input::Press</code> instead.
+                  An input subscription narrowed to one edge. Without the release, a fresh press
+                  can't be told from a chord. Match on <code>Input::Press</code> instead.
                 </td>
               </tr>
               <tr>
                 <td><code>ReservedId {'{'} class, id {'}'}</code></td>
                 <td>
-                  An exact id of <code>0xFFFF</code>, the wire's every-id sentinel, which would address
-                  the whole class. Only a media usage is wide enough to reach it.
+                  An exact id of <code>0xFFFF</code>. That is the wire's every-id sentinel, so it would
+                  address the whole class. Only a media usage is wide enough to reach it.
                 </td>
               </tr>
               <tr>
@@ -267,8 +267,8 @@ const Errors: Component = () => {
               </tr>
             </tbody>
           </table>
-        </Card>
-      </div>
+        </div>
+      </DocSection>
     </>
   );
 };

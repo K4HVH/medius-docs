@@ -7,6 +7,7 @@ const settle = () => new Promise((r) => setTimeout(r, 20));
 const mock = vi.hoisted(() => ({
   setHealth: (_v: unknown) => {},
   sent: [] as { kind: string; args: number[] }[],
+  refuse: false,
 }));
 
 vi.mock('../../src/app/pages/dashboard/context', async () => {
@@ -20,9 +21,11 @@ vi.mock('../../src/app/pages/dashboard/context', async () => {
       mock.sent.push({ kind: 'inject', args: [cls, id, action] });
     },
     moveRel: async (dx: number, dy: number) => {
+      if (mock.refuse) throw new Error('The box refused that.');
       mock.sent.push({ kind: 'move', args: [dx, dy] });
     },
     wheel: async (dz: number) => {
+      if (mock.refuse) throw new Error('The box refused that.');
       mock.sent.push({ kind: 'wheel', args: [dz] });
     },
     moveRelNow: async (dx: number, dy: number) => {
@@ -56,6 +59,7 @@ vi.mock('../../src/app/pages/dashboard/context', async () => {
 });
 
 import DeviceInject from '../../src/app/pages/dashboard/DeviceInject';
+import { INJ_KEY } from '../../src/dashboard/protocol';
 
 const health = (over: Partial<Record<string, boolean>> = {}) => ({
   linkUp: true,
@@ -133,7 +137,7 @@ describe('DeviceInject', () => {
     mock.setHealth(health());
     const { findByText, queryByText, container } = render(() => <DeviceInject />);
     expect(queryByText('Nothing held.')).not.toBeNull();
-    // Held once, the button's own label is joined by a chip carrying the same text, so hold the
+    // Held once, the button's label is joined by a chip carrying the same text, so hold the
     // element rather than looking it up again.
     const left = await findByText('Left');
     fireEvent.pointerDown(left);
@@ -162,15 +166,90 @@ describe('DeviceInject', () => {
     expect(mock.sent.some((s) => s.kind === 'reset')).toBe(false);
   });
 
-  it('steps the cursor by the step size', async () => {
+  it('keeps Release all in place, hidden while nothing is held', async () => {
+    // Removing it would move the panels under Held each time a hold starts or ends.
     mock.setHealth(health());
     const { findByText } = render(() => <DeviceInject />);
-    fireEvent.click(await findByText('Move right'));
-    fireEvent.click(await findByText('Move up'));
+    const all = await findByText('Release all');
+    expect(all.style.visibility).toBe('hidden');
+    const left = await findByText('Left');
+    fireEvent.pointerDown(left);
+    expect(all.style.visibility).toBe('visible');
+    fireEvent.pointerUp(left);
+    expect(all.style.visibility).toBe('hidden');
+  });
+
+  it('steps the cursor by the step size', async () => {
+    mock.setHealth(health());
+    const { findByLabelText } = render(() => <DeviceInject />);
+    fireEvent.click(await findByLabelText('Move right'));
+    fireEvent.click(await findByLabelText('Move up'));
     expect(mock.sent.filter((s) => s.kind === 'move').map((s) => s.args)).toEqual([
       [20, 0],
       [0, -20],
     ]);
+  });
+
+  it('reads the running total of the cursor in the middle of the arrows', async () => {
+    mock.setHealth(health());
+    const { container, findByLabelText } = render(() => <DeviceInject />);
+    const total = () => container.querySelector('.dpad .dpad-c')!.textContent;
+    expect(total()).toBe('0, 0');
+    fireEvent.click(await findByLabelText('Move right'));
+    fireEvent.click(await findByLabelText('Move up'));
+    fireEvent.click(await findByLabelText('Move up'));
+    await new Promise((r) => setTimeout(r, 20));
+    expect(total()).toBe('20, -40');
+  });
+
+  it('counts only the moves the box took in the running total', async () => {
+    mock.setHealth(health());
+    const { container, findByLabelText } = render(() => <DeviceInject />);
+    const total = () => container.querySelector('.dpad .dpad-c')!.textContent;
+    mock.refuse = true;
+    fireEvent.click(await findByLabelText('Move right'));
+    await new Promise((r) => setTimeout(r, 20));
+    mock.refuse = false;
+    expect(total()).toBe('0, 0');
+    fireEvent.click(await findByLabelText('Move down'));
+    await new Promise((r) => setTimeout(r, 20));
+    expect(total()).toBe('0, 20');
+  });
+
+  it('shows a refused command in the panel it came from', async () => {
+    mock.setHealth(health());
+    mock.refuse = true;
+    const { container, findByText } = render(() => <DeviceInject />);
+    const up = await findByText('Scroll up');
+    fireEvent.pointerDown(up);
+    fireEvent.click(up);
+    await new Promise((r) => setTimeout(r, 20));
+    mock.refuse = false;
+    const alerts = [...container.querySelectorAll('[role="alert"]')];
+    expect(alerts.map((a) => a.textContent?.trim())).toEqual(['The box refused that.']);
+    expect(alerts[0].closest('.pn')!.id).toBe('inject-wheel');
+  });
+
+  it('keeps a refusal where it showed through later clicks, and clears it when a send lands', async () => {
+    mock.setHealth(health());
+    mock.refuse = true;
+    const { container, findByText } = render(() => <DeviceInject />);
+    const up = await findByText('Scroll up');
+    fireEvent.pointerDown(up);
+    fireEvent.click(up);
+    await new Promise((r) => setTimeout(r, 20));
+    mock.refuse = false;
+    const pad = container.querySelector('#cursor .pb')!;
+    fireEvent.pointerDown(pad);
+    fireEvent.click(pad);
+    await new Promise((r) => setTimeout(r, 20));
+    const alerts = [...container.querySelectorAll('[role="alert"]')];
+    expect(alerts.map((a) => a.closest('.pn')!.id)).toEqual(['inject-wheel']);
+    const down = await findByText('Scroll down');
+    fireEvent.pointerDown(down);
+    fireEvent.click(down);
+    await new Promise((r) => setTimeout(r, 20));
+    expect(container.querySelector('[role="alert"]')).toBeNull();
   });
 
   it('hides the cursor and button controls when no mouse is cloned', async () => {
@@ -214,10 +293,10 @@ describe('DeviceInject', () => {
     // silently ignores every later choice.
     mock.setHealth(health());
     const { findByText, container } = render(() => <DeviceInject />);
-    const combos = container.querySelectorAll('[role="combobox"], select, .combobox__control');
-    expect(combos.length).toBeGreaterThan(0);
+    await findByText(/^Hold /);
+    expect(container.querySelector('.dd-b')).not.toBeNull();
     // Switch the picker's class to Key, which changes both the class byte and the id.
-    fireEvent.click(await findByText('Key'));
+    fireEvent.click(container.querySelector(`[role="radio"][data-v="${INJ_KEY}"]`)!);
     const holdBtn = await findByText(/^Hold /);
     mock.sent = [];
     fireEvent.pointerDown(holdBtn);
@@ -225,6 +304,18 @@ describe('DeviceInject', () => {
     // Class 1 is key; the default key is 'A' (0x04), not button 0.
     expect(injects()[0][0]).toBe(1);
     expect(injects()[0][1]).toBe(0x04);
+    fireEvent.pointerUp(holdBtn);
+
+    // Then a usage picked from the list: the filter sits inside the opened list.
+    fireEvent.click(container.querySelector('.dd-b')!);
+    await settle();
+    fireEvent.input(container.querySelector('.dd-f')!, { target: { value: '0x1d' } });
+    const option = [...container.querySelectorAll('[role="option"]')].find((o) => o.textContent?.includes('(0x1d)'));
+    expect(option).toBeDefined();
+    fireEvent.click(option!);
+    mock.sent = [];
+    fireEvent.pointerDown(await findByText(/^Hold /));
+    expect(injects()).toEqual([[1, 0x1d, 1]]);
   });
 
   it('says so when a keyboard is missing, without hiding the picker', async () => {
@@ -240,17 +331,17 @@ describe('DeviceInject', () => {
     // "this move lands now", so a control that ignored it would look identical until riding is on.
     mock.setHealth(health());
     const { findByText, findByLabelText } = render(() => <DeviceInject />);
-    fireEvent.click(await findByText('Move right'));
+    fireEvent.click(await findByLabelText('Move right'));
     fireEvent.click(await findByText('Scroll up'));
 
     fireEvent.click(await findByLabelText('Bypass movement riding'));
-    fireEvent.click(await findByText('Move right'));
+    fireEvent.click(await findByLabelText('Move right'));
     fireEvent.click(await findByText('Scroll up'));
 
     expect(mock.sent.map((s) => s.kind)).toEqual(['move', 'wheel', 'moveNow', 'wheelNow']);
   });
 
-  it('sends and drops held motion from their own buttons', async () => {
+  it('sends and drops held motion from separate buttons', async () => {
     mock.setHealth(health());
     const { findByText } = render(() => <DeviceInject />);
     fireEvent.click(await findByText('Send held motion'));
@@ -258,7 +349,7 @@ describe('DeviceInject', () => {
     expect(mock.sent.map((s) => s.kind)).toEqual(['flush', 'discard']);
   });
 
-  it('drives AC Pan left and right as its own axis', async () => {
+  it('drives AC Pan left and right as a separate axis', async () => {
     mock.setHealth(health());
     const { findByText } = render(() => <DeviceInject />);
     fireEvent.click(await findByText('Pan right'));
@@ -284,12 +375,12 @@ const typeFraction = async (el: HTMLInputElement) => {
 describe('DeviceInject whole-number fields', () => {
   it('keeps the cursor step to a whole number, and moves by what the field shows', async () => {
     mock.setHealth(health());
-    const { container, findByText } = render(() => <DeviceInject />);
-    await findByText('Move right');
+    const { container, findByLabelText } = render(() => <DeviceInject />);
+    await findByLabelText('Move right');
     const el = numberField(container, 'Step');
     await typeFraction(el);
     expect(el.value).toBe('3');
-    fireEvent.click(await findByText('Move right'));
+    fireEvent.click(await findByLabelText('Move right'));
     expect(mock.sent.filter((s) => s.kind === 'move').map((s) => s.args)).toEqual([[3, 0]]);
   });
 

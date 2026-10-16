@@ -19,11 +19,14 @@ const mock = vi.hoisted(() => ({
   supported: true,
   secure: true,
   connect: vi.fn(async () => {}),
+  select: vi.fn(),
   disconnects: 0,
   forgets: 0,
 }));
 
 vi.mock('../../src/app/pages/dashboard/context', () => ({
+  NEW_BOX: 'new',
+  useBoxes: () => ({ select: mock.select }),
   useDashboard: () => ({
     supported: mock.supported,
     secure: mock.secure,
@@ -62,6 +65,7 @@ afterEach(() => {
   mock.supported = true;
   mock.secure = true;
   mock.connect.mockClear();
+  mock.select.mockClear();
   navigate.mockClear();
 });
 
@@ -73,6 +77,14 @@ describe('ConnectPanel', () => {
     const { getByRole, getAllByRole } = render(() => <ConnectPanel />);
     expect(getByRole('button', { name: /connect/i })).toBeTruthy();
     expect(getAllByRole('button')).toHaveLength(1);
+  });
+
+  it('Add box picks Add box first, so Set up is open to it', () => {
+    mock.s!.setVerdict({ kind: 'silent' });
+    const { getByRole } = render(() => <ConnectPanel />);
+    getByRole('button', { name: 'Add box' }).click();
+    expect(mock.select).toHaveBeenCalledWith('new');
+    expect(navigate).toHaveBeenCalledWith('/dashboard/setup');
   });
 
   it('an older box is named and sent to the install', () => {
@@ -87,7 +99,7 @@ describe('ConnectPanel', () => {
     mock.s!.setVerdict({ kind: 'unreadable' });
     const { container, getByRole } = render(() => <ConnectPanel />);
     expect(container.textContent).toContain("This computer can't read from the box. Unplug USB2 and plug it back in.");
-    expect(getByRole('button', { name: /try again/i })).toBeTruthy();
+    expect(getByRole('button', { name: 'Retry' })).toBeTruthy();
   });
 
   it('no port names the cable and the computer', () => {
@@ -96,7 +108,7 @@ describe('ConnectPanel', () => {
     const alert = getByRole('alert');
     expect(alert.textContent).toContain('USB2');
     expect(alert.textContent).toMatch(/this computer/i);
-    getByRole('button', { name: /try again/i }).click();
+    getByRole('button', { name: 'Retry' }).click();
     expect(mock.connect).toHaveBeenCalled();
   });
 
@@ -106,7 +118,7 @@ describe('ConnectPanel', () => {
     const alert = getByRole('alert');
     expect(alert.textContent).toContain('USB1');
     expect(alert.textContent).not.toContain('USB3');
-    expect(getByRole('button', { name: /try again/i })).toBeTruthy();
+    expect(getByRole('button', { name: 'Retry' })).toBeTruthy();
   });
 
   it('a held port says to close what is holding it', () => {
@@ -121,6 +133,8 @@ describe('ConnectPanel', () => {
     const { queryByRole, container } = render(() => <ConnectPanel />);
     expect(container.textContent).toMatch(/Chrome/);
     expect(queryByRole('button')).toBeNull();
+    // The wiring a supported browser shows stays, so the page still says how the box is cabled.
+    expect(container.textContent).toMatch(/USB1/);
   });
 
   it('an insecure page says what to open instead, with nothing to press', () => {
@@ -128,13 +142,14 @@ describe('ConnectPanel', () => {
     const { queryByRole, container } = render(() => <ConnectPanel />);
     expect(container.textContent).toMatch(/isn't secure/i);
     expect(queryByRole('button')).toBeNull();
+    expect(container.textContent).toMatch(/USB1/);
   });
 
-  it('an unrecognised failure still shows its own message and a retry', () => {
+  it('an unrecognised failure still shows its message and a retry', () => {
     mock.s!.setVerdict({ kind: 'other', message: 'the port fell over' });
     const { container, getByRole } = render(() => <ConnectPanel />);
     expect(container.textContent).toContain('the port fell over');
-    expect(getByRole('button', { name: /try again/i })).toBeTruthy();
+    expect(getByRole('button', { name: 'Retry' })).toBeTruthy();
   });
 
   it('only one button carries weight on a recoverable failure', () => {
@@ -169,7 +184,7 @@ describe('ConnectPanel', () => {
     const { container, getByRole } = render(() => <ConnectPanel />);
     expect(container.textContent).toMatch(/one more click/i);
     expect(container.textContent).not.toMatch(/unplug everything/i);
-    expect(getByRole('button', { name: /try again/i })).toBeTruthy();
+    expect(getByRole('button', { name: 'Retry' })).toBeTruthy();
   });
 
   it('a setup handler given by the page wins over the route', () => {
@@ -187,7 +202,8 @@ describe('ConnectPanel', () => {
     const { getByRole, queryByRole } = render(() => <ConnectPanel />);
     expect(getByRole('alert').textContent?.trim()).toBe("The box isn't answering. Check USB1 is plugged in too.");
     expect(queryByRole('button', { name: /^connect$/i })).toBeNull();
-    expect((getByRole('button', { name: /reconnecting/i }) as HTMLButtonElement).disabled).toBe(true);
+    expect(queryByRole('button', { name: /reconnecting/i })).toBeNull();
+    expect(getByRole('status').textContent?.trim()).toBe('Reconnecting...');
     getByRole('button', { name: /disconnect/i }).click();
     await waitFor(() => expect(getByRole('button', { name: /^connect$/i })).toBeTruthy());
     expect(mock.disconnects).toBe(1);
@@ -217,10 +233,10 @@ describe('ConnectPanel', () => {
     expect(alerts.some((t) => t?.includes('the image is too big for this box'))).toBe(true);
   });
 
-  it('Try again on a box that is not answering retries that box, without the chooser', () => {
+  it('Retry on a box that is not answering retries that box, without the chooser', () => {
     mock.s!.setVerdict({ kind: 'silent' });
     const { getByRole } = render(() => <ConnectPanel />);
-    getByRole('button', { name: /try again/i }).click();
+    getByRole('button', { name: 'Retry' }).click();
     expect(mock.connect).toHaveBeenCalledTimes(1);
     expect(mock.connect.mock.calls[0]).toEqual([]);
   });

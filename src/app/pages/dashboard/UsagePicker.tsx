@@ -1,13 +1,11 @@
-// A class, then a usage in it. The filter matches the hex id too, which is how an unnamed Consumer
-// usage gets picked.
+// A class, then a usage in it. The filter also matches the hex id, so an unnamed Consumer usage can be
+// picked.
 
-import { For, Show, createMemo, createSignal } from 'solid-js';
+import { Index, Show, createMemo, createSignal } from 'solid-js';
 import { Chip } from '../../../components/display/Chip';
-import { Combobox } from '../../../components/inputs/Combobox';
-import { RadioGroup } from '../../../components/inputs/RadioGroup';
-import { TextField } from '../../../components/inputs/TextField';
 import type { NamedUsage } from '../../../dashboard/protocol';
-import { chips, label, muted, section } from './ui';
+import { Segmented } from '../../shell/Segmented';
+import { Select } from '../../shell/Select';
 
 export interface PickerClass {
   value: number;
@@ -44,9 +42,9 @@ export const UsagePicker = (props: {
     const c = current();
     const q = filter().trim().toLowerCase();
     const out: { value: string; label: string }[] = [];
-    if (c.blanket !== undefined) {
-      out.push({ value: String(c.blanket), label: c.blanketLabel ?? `Every ${c.label.toLowerCase()}` });
-    }
+    // The wildcard leads the list unless the filter excludes it.
+    const blanket = c.blanketLabel ?? `Every ${c.label.toLowerCase()}`;
+    if (c.blanket !== undefined && (!q || blanket.toLowerCase().includes(q))) out.push({ value: String(c.blanket), label: blanket });
     for (const u of c.table) {
       const hex = `0x${u.id.toString(16)}`;
       if (q && !u.name.toLowerCase().includes(q) && !hex.includes(q) && String(u.id) !== q) continue;
@@ -55,19 +53,20 @@ export const UsagePicker = (props: {
     return out;
   });
 
-  // The cut is counted, or a truncated list reads as unaddressable. The selection is always kept, or
-  // filtering past it blanks the control.
+  // The footer counts what the cut hides, or the hidden usages would look unpickable. A selected option
+  // past the cut stays as the last entry, so Enter still takes the first match.
   const shown = createMemo(() => {
     const all = options();
     const head = all.slice(0, MAX_OPTIONS);
     const selected = String(props.value.id);
     if (head.some((o) => o.value === selected)) return head;
     const keep = all.find((o) => o.value === selected);
-    return keep ? [keep, ...head.slice(0, MAX_OPTIONS - 1)] : head;
+    return keep ? [...head.slice(0, MAX_OPTIONS - 1), keep] : head;
   });
   const cut = createMemo(() => Math.max(0, options().length - shown().length));
 
-  // First usage, never the wildcard: the box drops a blanket it doesn't implement with no reply.
+  // A new class starts on its first usage, never the wildcard: the box drops, with no error, a blanket it
+  // doesn't implement.
   const pickClass = (v: string) => {
     const c = props.classes.find((x) => String(x.value) === v);
     if (!c) return;
@@ -78,40 +77,29 @@ export const UsagePicker = (props: {
   return (
     <>
       <Show when={props.classes.length > 1}>
-        <div style={label}>{props.classLabel ?? 'Class'}</div>
-        <RadioGroup
-          name={props.name}
-          value={String(props.value.cls)}
-          onChange={pickClass}
-          options={props.classes.map((c) => ({ value: String(c.value), label: c.label }))}
-        />
-      </Show>
-      <div style={section}>
-        <div style={label}>{props.usageLabel ?? 'Input'}</div>
-        <div style={{ 'max-width': '20rem', 'margin-bottom': 'var(--g-spacing-sm)' }}>
-          <TextField
-            value={filter()}
-            placeholder="Filter by name or id"
-            onChange={setFilter}
-            clearable
-            size="compact"
+        <div class="labelled">
+          <span class="field-l">{props.classLabel ?? 'Class'}</span>
+          <Segmented
+            name={props.name}
+            label={props.classLabel ?? 'Class'}
+            value={String(props.value.cls)}
+            onChange={pickClass}
+            options={props.classes.map((c) => ({ value: String(c.value), label: c.label }))}
           />
         </div>
-        <Show
-          when={shown().length > 0}
-          fallback={<p style={muted}>No matches.</p>}
-        >
-          <Combobox
-            value={String(props.value.id)}
-            onChange={(v) => props.onChange({ cls: props.value.cls, id: Number(Array.isArray(v) ? v[0] : v) })}
-            options={shown()}
-          />
-        </Show>
-        <Show when={cut() > 0}>
-          <p style={{ ...muted, 'margin-top': '4px' }}>
-            {cut()} more {cut() === 1 ? 'match' : 'matches'}. Narrow the filter.
-          </p>
-        </Show>
+      </Show>
+      <div class="labelled">
+        <span class="field-l">{props.usageLabel ?? 'Input'}</span>
+        <Select
+          value={String(props.value.id)}
+          options={shown()}
+          onChange={(v) => props.onChange({ cls: props.value.cls, id: Number(v) })}
+          filter="Filter by name or id"
+          query={filter()}
+          onQuery={setFilter}
+          footer={cut() > 0 ? `${cut()} more ${cut() === 1 ? 'match' : 'matches'}. Narrow the filter.` : undefined}
+          label={props.usageLabel ?? 'Input'}
+        />
       </div>
     </>
   );
@@ -123,16 +111,16 @@ export const UsageChips = (props: {
   onRemove?: (key: string) => void;
   variant?: 'primary' | 'success' | 'warning' | 'error' | 'info' | 'neutral';
 }) => (
-  <div style={chips}>
-    <For each={props.items}>
+  <div class="chips">
+    <Index each={props.items}>
       {(it) => (
         <Chip
           variant={props.variant ?? 'neutral'}
-          onRemove={props.onRemove ? () => props.onRemove?.(it.key) : undefined}
+          onRemove={props.onRemove ? () => props.onRemove?.(it().key) : undefined}
         >
-          {it.text}
+          {it().text}
         </Chip>
       )}
-    </For>
+    </Index>
   </div>
 );

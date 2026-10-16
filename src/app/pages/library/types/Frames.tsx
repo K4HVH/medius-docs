@@ -1,20 +1,20 @@
 import type { Component } from 'solid-js';
 import { A } from '@solidjs/router';
-import { Card, CardHeader } from '../../../../components/surfaces/Card';
-import '../../../../styles/docs.css';
+import { PageHeader } from '../../../shell/PageHeader';
+import { DocSection } from '../../../shell/DocSection';
 
 const Frames: Component = () => {
   return (
     <>
-      <div id="frames" data-search-target>
-        <Card>
-          <CardHeader title="Frame types" subtitle="FrameType, DecodedFrame" />
-          <p>
-            Low-level types for inspecting raw <A href="/native/frame">frame</A> traffic:{' '}
-            <code>FrameType</code> is the <code>TYPE</code> byte and <code>DecodedFrame</code> is one
-            parsed frame.
-          </p>
-
+      <PageHeader id="frames">
+        <p>
+          Low-level types for inspecting raw <A href="/native/frame">frame</A> traffic:{' '}
+          <code>FrameType</code> is the <code>TYPE</code> byte and <code>DecodedFrame</code> is one
+          parsed frame.
+        </p>
+      </PageHeader>
+      <DocSection id="frame-type" title="FrameType" caption="A frame's TYPE byte">
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr>
@@ -27,7 +27,7 @@ const Frames: Component = () => {
               <tr>
                 <td><code>Move</code></td>
                 <td><code>0x01</code></td>
-                <td>Motion-tagged cursor or wheel movement (PC to box).</td>
+                <td>Cursor, wheel or pan motion, tagged by axis (PC to box).</td>
               </tr>
               <tr>
                 <td><code>Inject</code></td>
@@ -57,7 +57,7 @@ const Frames: Component = () => {
               <tr>
                 <td><code>Log</code></td>
                 <td><code>0x08</code></td>
-                <td>Unsolicited device diagnostics (box to PC).</td>
+                <td>Unsolicited box diagnostics (box to PC).</td>
               </tr>
               <tr>
                 <td><code>Led</code></td>
@@ -67,7 +67,7 @@ const Frames: Component = () => {
               <tr>
                 <td><code>Lock</code></td>
                 <td><code>0x0A</code></td>
-                <td>Weigh a physical input: block, pass, or amplify (PC to box).</td>
+                <td>Weigh a native input: block, pass, or amplify (PC to box).</td>
               </tr>
               <tr>
                 <td><code>Catch</code></td>
@@ -77,7 +77,7 @@ const Frames: Component = () => {
               <tr>
                 <td><code>MotionEvent</code></td>
                 <td><code>0x0C</code></td>
-                <td>An unsolicited relative-axis catch event, dx/dy/dz (box to PC).</td>
+                <td>An unsolicited relative-axis catch event, dx/dy/dz/pan (box to PC).</td>
               </tr>
               <tr>
                 <td><code>UsageEvent</code></td>
@@ -92,7 +92,7 @@ const Frames: Component = () => {
               <tr>
                 <td><code>ClipAppend</code></td>
                 <td><code>0x12</code></td>
-                <td>Append buffered-clip entries to the device ring; seq = append seq (PC to box).</td>
+                <td>Append buffered-clip entries to the box's clip ring; seq = append seq (PC to box).</td>
               </tr>
               <tr>
                 <td><code>ClipCtrl</code></td>
@@ -107,7 +107,7 @@ const Frames: Component = () => {
               <tr>
                 <td><code>ClipTrigger</code></td>
                 <td><code>0x15</code></td>
-                <td>Bind a physical edge or a matched packet to a clip engine verb (PC to box).</td>
+                <td>Bind a native edge or a matched packet to a clip engine verb (PC to box).</td>
               </tr>
               <tr>
                 <td><code>TrafficEvent</code></td>
@@ -124,9 +124,43 @@ const Frames: Component = () => {
                 <td><code>0x18</code></td>
                 <td>The reply to one update op (box to PC).</td>
               </tr>
+              <tr>
+                <td><code>Raw</code></td>
+                <td><code>0x19</code></td>
+                <td>Raw bytes on a cloned endpoint (PC to box).</td>
+              </tr>
+              <tr>
+                <td><code>Transfer</code></td>
+                <td><code>0x1A</code></td>
+                <td>One control transfer against the real device (PC to box).</td>
+              </tr>
+              <tr>
+                <td><code>TransferResp</code></td>
+                <td><code>0x1B</code></td>
+                <td>The native reply to a <code>Transfer</code> (box to PC).</td>
+              </tr>
+              <tr>
+                <td><code>Rewrite</code></td>
+                <td><code>0x1C</code></td>
+                <td>Add, overwrite or remove one rewrite rule (PC to box).</td>
+              </tr>
+              <tr>
+                <td><code>Patch</code></td>
+                <td><code>0x1D</code></td>
+                <td>Store, apply or clear a descriptor patch (PC to box).</td>
+              </tr>
+              <tr>
+                <td><code>Transform</code></td>
+                <td><code>0x1E</code></td>
+                <td>Add, overwrite or remove one field transform (PC to box).</td>
+              </tr>
             </tbody>
           </table>
+        </div>
 
+      </DocSection>
+      <DocSection id="decoded-frame" title="DecodedFrame" caption="One parsed frame">
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr>
@@ -153,9 +187,10 @@ const Frames: Component = () => {
               </tr>
             </tbody>
           </table>
+        </div>
 
-          <div class="api-response-label">EXAMPLE</div>
-          <pre><code class="language-rust">{`use medius::{FrameType, DecodedFrame};
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`use medius::{FrameType, DecodedFrame};
 
 // Byte -> variant is fallible; an unknown opcode is an Err.
 assert_eq!(FrameType::try_from(0x06), Ok(FrameType::Resp));
@@ -164,19 +199,18 @@ assert!(FrameType::try_from(0xFF).is_err());
 // Variant -> byte always works.
 assert_eq!(u8::from(FrameType::Log), 0x08);
 
-// Read a decoded frame by field: a MOTION_EVENT at ts_us=1000 carrying dx=5, dy=-5, dz=1.
-let frame = DecodedFrame { ty: FrameType::MotionEvent, seq: 7, payload: vec![0xE8, 3, 0, 0, 5, 0, 0xFB, 0xFF, 1, 0] };
+// Read a decoded frame by field: a MOTION_EVENT at ts_us=1000, host chip clock, carrying dx=5, dy=-5, dz=1, pan=0.
+let frame = DecodedFrame { ty: FrameType::MotionEvent, seq: 7, payload: vec![0xE8, 3, 0, 0, 0, 5, 0, 0xFB, 0xFF, 1, 0, 0, 0] };
 println!("{:?} seq={} {} bytes", frame.ty, frame.seq, frame.payload.len());`}</code></pre>
 
-          <div class="callout callout--info">
-            <p>
-              The wire layout is on the <A href="/native/frame">frame</A> page;{' '}
-              <A href="/library/requests">Requests</A> and{' '}
-              <A href="/library/diagnostics">Diagnostics</A> cover everyday work.
-            </p>
-          </div>
-        </Card>
-      </div>
+        <div class="callout callout--info">
+          <p>
+            The wire layout is on the <A href="/native/frame">frame</A> page.{' '}
+            <A href="/library/requests">Requests</A> and{' '}
+            <A href="/library/diagnostics">Diagnostics</A> cover everyday work.
+          </p>
+        </div>
+      </DocSection>
     </>
   );
 };

@@ -6,6 +6,7 @@ import {
   buildRobotsTxt,
   buildAgentIndex,
   buildServerCard,
+  LIVE_PATHS,
   type PageRecord,
 } from '../../scripts/lib/artifacts';
 
@@ -31,6 +32,21 @@ const PAGES: PageRecord[] = [
     title: 'Clip',
     description: 'Preload input',
     markdown: '<!-- Source: https://s/library/clip -->\n# Clip\n\nlib clip body',
+    lastmod: '2026-10-01',
+  },
+  {
+    path: '/dashboard/setup',
+    section: 'Dashboard',
+    title: 'Set up',
+    description: 'Install Medius',
+    markdown: '<!-- Source: https://s/dashboard/setup -->\n# Install Medius\n\nsetup body',
+  },
+  {
+    path: '/dashboard/changelog',
+    section: 'Dashboard',
+    title: 'Changelog',
+    description: 'Firmware releases',
+    markdown: '<!-- Source: https://s/dashboard/changelog -->\n# Changelog\n\nCould not load the changelog.',
   },
 ];
 
@@ -49,6 +65,11 @@ describe('buildLlmsTxt', () => {
   it('links each page to its .md twin with the description', () => {
     expect(out).toContain('- [Clip](https://s/native/commands/clip.md): CLIP commands');
     expect(out).toContain('- [Introduction](https://s/native.md): Native API overview');
+  });
+  it('lists the dashboard under a Dashboard heading after the code sections', () => {
+    expect(out.indexOf('## Dashboard')).toBeGreaterThan(out.indexOf('## Rust Library'));
+    expect(out).toContain('- [Set up](https://s/dashboard/setup.md): Install Medius');
+    expect(out).toContain('- [Changelog](https://s/dashboard/changelog.md)');
   });
   it('points at the full corpus file', () => {
     expect(out).toContain('https://s/llms-full.txt');
@@ -76,6 +97,12 @@ describe('buildLlmsFullTxt', () => {
     expect(out).toContain('lib clip body');
     expect(out.indexOf('intro body')).toBeLessThan(out.indexOf('lib clip body'));
   });
+  it('leaves out pages filled in per request, whose snapshot has no content', () => {
+    expect(LIVE_PATHS.has('/dashboard/changelog')).toBe(true);
+    expect(LIVE_PATHS.has('/dashboard/stats')).toBe(true);
+    expect(out).toContain('setup body');
+    expect(out).not.toContain('Could not load the changelog');
+  });
   it('separates pages with a horizontal rule', () => {
     expect(out).toContain('\n---\n');
   });
@@ -89,6 +116,20 @@ describe('buildSitemap', () => {
     expect(out).toContain('<loc>https://s/</loc>');
     expect(out).toContain('<loc>https://s/library/clip</loc>');
     expect(out).not.toContain('.md</loc>');
+  });
+  it('leaves out a page marked noindex', () => {
+    const quiet = buildSitemap(SITE, [...PAGES, { ...PAGES[0], path: '/dashboard/control', index: false }]);
+    expect(quiet).not.toContain('/dashboard/control');
+  });
+  it('lists the dashboard pages', () => {
+    expect(out).toContain('<loc>https://s/dashboard/setup</loc>');
+  });
+  it('dates a page only when its date is known', () => {
+    expect(out).toContain('<url><loc>https://s/library/clip</loc><lastmod>2026-10-01</lastmod></url>');
+    expect(out).toContain('<url><loc>https://s/native</loc></url>');
+  });
+  it('dates the homepage when given a date', () => {
+    expect(buildSitemap(SITE, PAGES, '2026-09-30')).toContain('<url><loc>https://s/</loc><lastmod>2026-09-30</lastmod></url>');
   });
 });
 
@@ -110,7 +151,10 @@ describe('buildAgentIndex', () => {
   it('carries one searchable record per page with the source comment stripped from text', () => {
     expect(out.site).toBe(SITE);
     expect(out.mcp).toBe('https://s/mcp');
-    expect(out.pages).toHaveLength(3);
+    expect(out.pages).toHaveLength(5);
+    const live = out.pages.find((p) => p.path === '/dashboard/changelog')!;
+    expect(live.text).toBe('Firmware releases');
+    expect(live.text).not.toContain('Could not load');
     const clip = out.pages.find((p) => p.path === '/library/clip')!;
     expect(clip.title).toBe('Clip');
     expect(clip.section).toBe('Rust Library');

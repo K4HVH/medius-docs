@@ -17,7 +17,7 @@ import {
 import type { IconTypes } from 'solid-icons';
 import { Menu, MenuItem } from '../../../components/navigation/Menu';
 import { Tabs, type TabOption } from '../../../components/navigation/Tabs';
-import { speaksCurrentWire } from '../../../dashboard/serial';
+import { speaksCurrentWire } from '../../../dashboard/serial/wire';
 import { type BoxEntry, type BoxSession, NEW_BOX, useBoxes } from './context';
 import { BOX_ICONS, type BoxIcon } from './store';
 
@@ -47,7 +47,7 @@ const listed = (e: BoxEntry) => !e.key.startsWith('port:');
 export const BoxList = (props: { onPick?: () => void; disabled?: boolean }) => {
   const boxes = useBoxes();
   const options = new WeakMap<BoxEntry, TabOption>();
-  // Each row's tab to its icon menu, for a right-click or the menu key anywhere on the row.
+  // Maps each row's tab to its icon menu, so a right-click or the menu key anywhere on the row opens the menu.
   const menus = new Map<Element, () => void>();
 
   const iconMenu =
@@ -63,7 +63,7 @@ export const BoxList = (props: { onPick?: () => void; disabled?: boolean }) => {
         setOpen(true);
         button(boxes.icon(e.key))?.focus({ preventScroll: true });
       };
-      // Back to the selected box, which the tab keys move from.
+      // Focus goes back to the selected box, where the tab keys move from.
       const hide = () => {
         setOpen(false);
         tab()

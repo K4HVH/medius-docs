@@ -116,7 +116,7 @@ export function catchPayload(
   return new Uint8Array([cls, id & 0xff, (id >> 8) & 0xff, dir, state & 0xff, capture & 0xff]);
 }
 
-// OPTION(IMPERFECT) (§3.10): [id=0][allow u8]. 1 clones a device the box can't copy exactly and admits
+// OPTION(IMPERFECT) (§3.10): [id=0][allow u8]. 1 clones a device the box can't copy faithfully and admits
 // the advanced control layer, 0 is faithful-only (default). Persisted in NVS.
 export function imperfectPayload(allow: boolean): Uint8Array {
   return new Uint8Array([OPT_IMPERFECT, allow ? 1 : 0]);
@@ -156,8 +156,8 @@ export function renderPayload(mode: RenderMode, full: boolean): Uint8Array {
   return new Uint8Array([OPT_RENDER, mode & 0xff, full ? 1 : 0]);
 }
 
-// OPTION(SPREAD) (§3.10): [id=6][percent u16 LE]. The share of the interval between commands an
-// injected delta is released across; 0 puts the whole delta on the next report the box emits.
+// OPTION(SPREAD) (§3.10): [id=6][percent u16 LE]. The share of the command interval an injected delta
+// is released across; 0 puts the whole delta on the next report the box emits.
 export function spreadPayload(percent: number): Uint8Array {
   const p = percent & 0xffff;
   return new Uint8Array([OPT_SPREAD, p & 0xff, p >> 8]);

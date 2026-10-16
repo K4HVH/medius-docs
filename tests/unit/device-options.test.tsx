@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { render, cleanup, fireEvent } from '@solidjs/testing-library';
+import { render as rtlRender, cleanup, fireEvent } from '@solidjs/testing-library';
+import { MemoryRouter, Route, createMemoryHistory } from '@solidjs/router';
+import type { JSX } from 'solid-js';
 import { BearingMode, EmitMode, RenderMode } from '../../src/dashboard/protocol';
 
 const settle = () => new Promise((r) => setTimeout(r, 20));
@@ -11,6 +13,8 @@ const mock = vi.hoisted(() => ({
   spread: { percent: 100, spanUs: 8000 } as { percent: number; spanUs: number },
   // Every option write the card made, as [call, args].
   sent: [] as [string, unknown[]][],
+  // Every value the card asked the box for.
+  asked: new Set<string>(),
 }));
 
 vi.mock('../../src/app/pages/dashboard/context', () => {
@@ -35,19 +39,34 @@ vi.mock('../../src/app/pages/dashboard/context', () => {
         },
         setRender: async () => {},
         setSpread: async () => {},
+        setName: async () => {
+          throw new Error('The box refused that.');
+        },
       }),
-      poll: (key: string) => () =>
+      poll: (key: string) => (mock.asked.add(key), () =>
         key === 'bearing' ? mock.bearing
           : key === 'emit' ? mock.emit
           : key === 'render' ? mock.render
           : key === 'spread' ? mock.spread
-          : (values[key] ?? null),
+          : (values[key] ?? null)),
       refreshPoll: () => {},
     }),
   };
 });
 
 import DeviceOptions from '../../src/app/pages/dashboard/DeviceOptions';
+
+// The options link to the Guide through the router.
+const render = (view: () => JSX.Element) => {
+  const history = createMemoryHistory();
+  history.set({ value: '/dashboard#options' });
+  return rtlRender(() => (
+    <MemoryRouter history={history}>
+      <Route path="*" component={view} />
+    </MemoryRouter>
+  ));
+};
+import { OPTION_PLACES } from '../../src/app/pages/dashboard/optionPlaces';
 
 const button = (root: HTMLElement, text: string) =>
   [...root.querySelectorAll('button')].find((b) => b.textContent?.trim() === text);
@@ -62,25 +81,98 @@ afterEach(() => {
 });
 
 describe('DeviceOptions', () => {
+  it('shows a box on older firmware the options it has, and never asks it for the rest', async () => {
+    const panels = (c: HTMLElement) => [...c.querySelectorAll('.pn[id]')].map((p) => p.id);
+    mock.asked.clear();
+    const five = render(() => <DeviceOptions proto={5} />);
+    await settle();
+    expect(panels(five.container)).toEqual(['box-name', 'imperfect-clone', 'movement-riding', 'bearing', 'emit-rate']);
+    expect([...mock.asked]).not.toContain('render');
+    expect([...mock.asked]).not.toContain('spread');
+    expect(five.container.querySelector('#imperfect-clone')!.textContent).not.toContain('Advanced tab');
+    cleanup();
+    for (const proto of [6, 7, 8]) {
+      const r = render(() => <DeviceOptions proto={proto} />);
+      await settle();
+      expect(panels(r.container), String(proto)).toEqual(['box-name', 'imperfect-clone', 'movement-riding', 'bearing', 'render', 'spread', 'emit-rate']);
+      expect(r.container.querySelector('#imperfect-clone')!.textContent, String(proto)).not.toContain('Advanced tab');
+      cleanup();
+    }
+    const now = render(() => <DeviceOptions proto={9} />);
+    await settle();
+    expect(now.container.querySelector('#imperfect-clone')!.textContent).toContain('Advanced tab');
+  });
+
+  it("keeps v3.3.0's rendered emit mode unless another is picked", async () => {
+    mock.emit = { mode: 3, fixedHz: 0, resolvedHz: 1000 };
+    const r = render(() => <DeviceOptions proto={5} />);
+    await settle();
+    const picked = r.container.querySelector('#emit-rate [role="radio"][aria-checked="true"]');
+    expect(picked?.textContent).toBe('Rendered');
+    const fixed = [...r.container.querySelectorAll<HTMLElement>('#emit-rate [role="radio"]')].find((b) => b.textContent === 'Fixed')!;
+    fireEvent.click(fixed);
+    fireEvent.click([...r.container.querySelectorAll<HTMLElement>('#emit-rate [role="radio"]')].find((b) => b.textContent === 'Rendered')!);
+    await settle();
+    expect(r.container.querySelector('#emit-rate')!.textContent).not.toContain('Unknown');
+  });
+
+  it('links each option to its section of the Guide', async () => {
+    const { container, findByText } = render(() => <DeviceOptions />);
+    await findByText('X and Y are compared with the injected direction separately.');
+    for (const id of ['box-name', 'imperfect-clone', 'movement-riding', 'bearing', 'render', 'spread', 'emit-rate']) {
+      const link = container.querySelector(`[id="${id}"] > .ph a.fix`);
+      expect(link?.getAttribute('href'), id).toBe(`/guide/options#${id}`);
+      expect(link?.textContent, id).toBe('Guide');
+    }
+    for (const id of ['render-full', 'wire-rate']) {
+      expect(container.querySelector(`[id="${id}"] a.fix`)?.getAttribute('href'), id).toBe(`/guide/options#${id}`);
+    }
+  });
+
+  it('has every place a link names, under the title the link names it by', async () => {
+    const { container, findByText } = render(() => <DeviceOptions />);
+    await findByText('X and Y are compared with the injected direction separately.');
+    for (const [id, title] of Object.entries(OPTION_PLACES)) {
+      if (id === 'options') continue;
+      const el = container.querySelector(`[id="${id}"]`);
+      expect(el, id).not.toBeNull();
+      const named = el!.querySelector('h2')?.getAttribute('aria-label') ?? el!.querySelector('.field-l')?.textContent?.trim();
+      expect(named, id).toBe(title);
+    }
+  });
+
   // Each multi-option control used to describe every option at once. Only the selected one is a
   // statement about the box you are looking at.
   it('describes only the selected bearing geometry', async () => {
     const { container, queryByText, findByText } = render(() => <DeviceOptions />);
-    await findByText('Each axis is weighed against its own bearing.');
+    await findByText('X and Y are compared with the injected direction separately.');
     expect(queryByText(/along the injected vector is weighed/)).toBeNull();
 
-    fireEvent.click(container.querySelector('input[value="1"]')!);
+    fireEvent.click(container.querySelector('[role="radio"][data-v="1"]')!);
     await settle();
-    await findByText(/along the injected vector is weighed/);
-    expect(queryByText('Each axis is weighed against its own bearing.')).toBeNull();
+    await findByText('Only native motion along the injected direction is scaled.');
+    expect(queryByText('X and Y are compared with the injected direction separately.')).toBeNull();
+  });
+
+  it('sets the rate fields side by side beside Apply, and no empty group when neither is on screen', async () => {
+    const learned = render(() => <DeviceOptions />);
+    await learned.findByText('The native report rate, measured as the mouse moves.');
+    expect(learned.container.querySelector('#emit-rate .fields')).toBeNull();
+    cleanup();
+    mock.emit = { mode: EmitMode.Fixed, fixedHz: 500, resolvedHz: 500, forceHz: 1000 } as typeof mock.emit;
+    const forced = render(() => <DeviceOptions />);
+    await forced.findByText('The rate you pick.');
+    const group = forced.container.querySelector('#emit-rate .acts > .fields')!;
+    expect(group.querySelectorAll('.number-input')).toHaveLength(2);
+    expect(group.nextElementSibling?.textContent?.trim()).toBe('Apply');
   });
 
   it('describes only the selected emit mode', async () => {
     mock.emit = { mode: EmitMode.Fixed, fixedHz: 500, resolvedHz: 500 };
     const { queryByText, findByText } = render(() => <DeviceOptions />);
-    await findByText('Pins the rate to the number you pick.');
-    expect(queryByText("Matches native report rate.")).toBeNull();
-    expect(queryByText('Follows the declared poll rate.')).toBeNull();
+    await findByText('The rate you pick.');
+    expect(queryByText('The native report rate, measured as the mouse moves.')).toBeNull();
+    expect(queryByText('The rate the clone declares.')).toBeNull();
   });
 
   // Emit rate was the only control that offered Revert, so a pending bearing or riding edit looked
@@ -89,7 +181,7 @@ describe('DeviceOptions', () => {
     const { container, findAllByText } = render(() => <DeviceOptions />);
     expect(button(container, 'Revert')).toBeUndefined();
 
-    fireEvent.click(container.querySelector('input[value="1"]')!);   // bearing geometry
+    fireEvent.click(container.querySelector('[role="radio"][data-v="1"]')!);   // bearing geometry
     await settle();
     expect(button(container, 'Revert')).toBeTruthy();
     expect((await findAllByText('Not applied')).length).toBe(1);
@@ -102,9 +194,9 @@ describe('DeviceOptions', () => {
   it('describes only the selected texture, and only the setting in force', async () => {
     mock.render = { mode: RenderMode.Despiked, full: true, ready: true };
     const { queryByText, findByText } = render(() => <DeviceOptions />);
-    await findByText('Native texture, ramped onset.');
-    expect(queryByText('Even fill at the paced rate.')).toBeNull();
-    await findByText('Both go through the model as one stream.');
+    await findByText('The original smoother, ramped up over 8 ms.');
+    expect(queryByText('An even stream at the Emit rate.')).toBeNull();
+    await findByText('Native and injected motion are rendered as one stream.');
     expect(queryByText("Native motion is relayed untouched.")).toBeNull();
   });
 
@@ -113,7 +205,7 @@ describe('DeviceOptions', () => {
   it('does not claim the mouse own motion is rendered while the mode is off', async () => {
     mock.render = { mode: RenderMode.Off, full: true, ready: true };
     const { queryByText, findByText } = render(() => <DeviceOptions />);
-    await findByText('Renders nothing while the mode is off.');
+    await findByText('Nothing is rendered while Render is off.');
     await findByText('Native motion relayed');
     expect(queryByText('Native motion rendered')).toBeNull();
   });
@@ -131,8 +223,8 @@ describe('DeviceOptions', () => {
   it('describes only the selected spread, and shows the interval in force', async () => {
     mock.spread = { percent: 50, spanUs: 4000 };
     const { queryByText, findByText } = render(() => <DeviceOptions />);
-    await findByText('Injected motion over half the command interval.');
-    expect(queryByText('Injected motion on one report.')).toBeNull();
+    await findByText('Over half the command interval.');
+    expect(queryByText('The whole delta, emitted on the next report.')).toBeNull();
     await findByText('Half · 4.0 ms');
   });
 
@@ -157,7 +249,7 @@ describe('DeviceOptions', () => {
   it('shows no interval chip at all with spreading off', async () => {
     mock.spread = { percent: 0, spanUs: 0 };
     const { container, queryByText, findByText } = render(() => <DeviceOptions />);
-    await findByText('Injected motion on one report.');
+    await findByText('The whole delta, emitted on the next report.');
     expect(queryByText('Waiting for injection')).toBeNull();
     // Scoped to this section: the riding and bearing chips carry the same "Name . N ms" shape.
     expect(container.querySelector('#spread')!.textContent).not.toMatch(/ ms/);
@@ -175,7 +267,7 @@ describe('DeviceOptions', () => {
 
     mock.render = { mode: RenderMode.Despiked, full: false, ready: true };
     const armed = render(() => <DeviceOptions />);
-    await armed.findByText('Native texture, ramped onset.');
+    await armed.findByText('The original smoother, ramped up over 8 ms.');
     expect(armed.queryByText('Move the mouse to start')).toBeNull();
   });
 
@@ -183,7 +275,7 @@ describe('DeviceOptions', () => {
   it('does not ask for a profile while the renderer is off', async () => {
     mock.render = { mode: RenderMode.Off, full: false, ready: false };
     const { queryByText, findByText } = render(() => <DeviceOptions />);
-    await findByText('Even fill at the paced rate.');
+    await findByText('An even stream at the Emit rate.');
     expect(queryByText('Move the mouse to start')).toBeNull();
   });
 
@@ -212,16 +304,16 @@ describe('DeviceOptions whole-number fields', () => {
   };
   // The button beside a field, in the same row of controls.
   const beside = (el: HTMLElement, name: string) =>
-    [...(el.closest('[style*="flex"]')?.parentElement?.querySelectorAll('button') ?? [])].find(
+    [...(el.closest('.acts')?.querySelectorAll('button') ?? [])].find(
       (b) => b.textContent?.trim() === name,
     ) as HTMLElement;
 
   it.each([
-    ['movement riding window', 0, 'Turn on', 'riding', 0],
+    ['movement riding window', 0, 'Apply', 'riding', 0],
     ['bearing window', 1, 'Apply', 'bearing', 0],
   ] as const)('keeps the %s to a whole number, and sends what it shows', async (_what, nth, press, call, arg) => {
     const { container } = render(() => <DeviceOptions />);
-    const el = numberField(container, 'Window (ms)', nth);
+    const el = numberField(container, 'Window', nth);
     await typeFraction(el);
     expect(el.value).toBe('3');
     fireEvent.click(beside(el, press));
@@ -230,8 +322,8 @@ describe('DeviceOptions whole-number fields', () => {
   });
 
   it.each([
-    ['Emit rate (Hz)', 1, 3],
-    ['Wire rate (Hz)', 2, 4],
+    ['Emit rate', 1, 3],
+    ['Wire rate', 2, 4],
   ] as const)('keeps the %s to a whole number, and sends what it shows', async (field, arg, want) => {
     forced();
     const { container } = render(() => <DeviceOptions />);
@@ -244,5 +336,20 @@ describe('DeviceOptions whole-number fields', () => {
     fireEvent.click(beside(el, 'Apply'));
     await settle();
     expect(mock.sent.filter(([c]) => c === 'emit').map(([, a]) => a[arg])).toEqual([want]);
+  });
+});
+
+describe('DeviceOptions errors', () => {
+  it('shows a refused write in the panel whose button sent it, and nowhere else', async () => {
+    const { container } = render(() => <DeviceOptions />);
+    fireEvent.click(button(container.querySelector('#box-name') as HTMLElement, 'Set')!);
+    await settle();
+    const alerts = [...container.querySelectorAll('[role="alert"]')];
+    expect(alerts.map((a) => a.textContent)).toEqual(['The box refused that.']);
+    expect(alerts[0].closest('.pn')!.id).toBe('box-name');
+    // The next write elsewhere clears it.
+    fireEvent.click(button(container.querySelector('#bearing') as HTMLElement, 'Apply')!);
+    await settle();
+    expect(container.querySelectorAll('[role="alert"]')).toHaveLength(0);
   });
 });

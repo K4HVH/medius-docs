@@ -1,5 +1,5 @@
 /// <reference types="w3c-web-serial" />
-import { type Accessor, createEffect, createMemo, createSignal, onCleanup, untrack } from 'solid-js';
+import { type Accessor, createEffect, createMemo, createSignal, on, onCleanup, untrack } from 'solid-js';
 import type { Version } from '../../../dashboard/protocol';
 import {
   CH343_PID,
@@ -15,10 +15,9 @@ import {
 } from '../../../dashboard/serial';
 import type { StatsSink } from '../../../dashboard/stats';
 import { type BoxSession, type SessionControl, boxId, createBoxSession } from './session';
-import { type BoxIcon, type BoxStore, STORE_KEY } from './store';
+import { type BoxIcon, type BoxStore, NEW_BOX, STORE_KEY } from './store';
 
-// The selection for a box not listed yet: its card connects one through the chooser.
-export const NEW_BOX = 'new';
+export { NEW_BOX } from './store';
 
 export interface BoxEntry {
   readonly key: string;
@@ -43,6 +42,9 @@ export interface Boxes {
   start: () => void;
   entries: Accessor<BoxEntry[]>;
   selected: Accessor<BoxEntry | null>;
+  // Which dashboard pages the selection gets: 'medius' for a Medius box's (Device, Control, Update), 'other' for
+  // Set up; null while a port this browser knows is still being checked and may be the box.
+  selectedKind: Accessor<'medius' | 'other' | null>;
   // The selected session, else a blank one whose Connect opens the chooser.
   scope: Accessor<BoxSession>;
   select: (key: string) => void;
@@ -176,7 +178,7 @@ export function createBoxes(deps: BoxesDeps): Boxes {
     if (wasSelected) choosing(into.key);
   };
 
-  // False hands the port to whichever entry owns the box that answered on it.
+  // False when the port belongs to another entry: the one owning the box that answered on it.
   const seen = (s: BoxSession, port: SerialPort, pr: Probe): boolean => {
     const self = bySession(s);
     const mac = boxId(versionOf(pr));
@@ -348,7 +350,8 @@ export function createBoxes(deps: BoxesDeps): Boxes {
     const e = byPort(port);
     if (!e) return { ok: false, verdict: { kind: 'other', message: 'The port went away' } };
     choosing(e.key);
-    await open(e.session);
+    // The probe just ran, so a port with no box keeps that verdict instead of waiting through a second check.
+    if (e.session.probe()?.kind === 'box') await open(e.session);
     return { ok: true, entry: e };
   };
 
@@ -399,6 +402,20 @@ export function createBoxes(deps: BoxesDeps): Boxes {
     );
   });
 
+  // Set once the ports this browser may use are listed at start; until then the kind is unknown (null).
+  const [scanned, setScanned] = createSignal(false);
+  const selectedKind = createMemo((): 'medius' | 'other' | null => {
+    if (!scanned()) return null;
+    const e = selected();
+    const checking = (x: BoxEntry) => x.session.present() && !x.session.probe();
+    if (!e) return selKey() !== NEW_BOX && entries().some((x) => isPortKey(x.key) && checking(x)) ? null : 'other';
+    const p = e.session.probe();
+    if (p?.kind === 'old-firmware') return 'other';
+    if (!isPortKey(e.key)) return 'medius';
+    if (checking(e)) return null;
+    return p?.kind === 'box' ? 'medius' : 'other';
+  });
+
   const blank = createBoxSession(
     { port: null },
     {
@@ -422,6 +439,9 @@ export function createBoxes(deps: BoxesDeps): Boxes {
       : null;
     untrack(() => blank.ctl.setProbe(stuck));
   });
+
+  // A port that came during a ROM flash was left unchecked.
+  createEffect(on(deps.nativeFlashing, (now, was) => void (was && !now && rescan()), { defer: true }));
 
   const onConnect = (ev: Event) => {
     const p = ev.target as SerialPort;
@@ -463,6 +483,8 @@ export function createBoxes(deps: BoxesDeps): Boxes {
     window.addEventListener('focus', onFocus);
     window.addEventListener('storage', onStorage);
     document.addEventListener('visibilitychange', onVisible);
+    // Without Web Serial nothing is found or ruled out: the selection's kind stays unknown, and every page stays.
+    if (!deps.serial) return;
     void (async () => {
       let ports: SerialPort[] = [];
       try {
@@ -476,6 +498,7 @@ export function createBoxes(deps: BoxesDeps): Boxes {
         present.add(p);
         listPort(p);
       }
+      setScanned(true);
       await Promise.all(ports.map((p) => probe(p)));
     })();
   };
@@ -500,6 +523,7 @@ export function createBoxes(deps: BoxesDeps): Boxes {
     start,
     entries,
     selected,
+    selectedKind,
     scope: () => selected()?.session ?? blank.api,
     select,
     add,

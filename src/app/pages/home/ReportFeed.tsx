@@ -1,0 +1,132 @@
+import { createSignal, For, onCleanup, onMount, Show } from 'solid-js';
+import type { FeedFrame } from '../../data/sampleTypes';
+import { prefersReducedMotion } from '../../shell/motion';
+
+const ROWS = 44;
+const STEP_MS = 250;
+const ROW_PX = 26;
+
+const hex3 = (n: number) => (n & 0x7ff).toString(16).toUpperCase().padStart(3, '0');
+
+// USB1's reports from a capture, one frame a row, slowed 250x. Bytes a MOVE injected are blue. The rows
+// rise continuously while the feed is on screen and the pointer is off it, and stand still under reduced
+// motion. Frame numbers are the capture's, so the point where it loops shows. The stylesheet spaces the
+// bytes from --bytes.
+export function ReportFeed(props: { frames: readonly FeedFrame[] }) {
+  const [head, setHead] = createSignal(ROWS - 1);
+  const n = () => props.frames.length;
+  const at = (i: number) => props.frames[((i % n()) + n()) % n()];
+  const shown = () => Array.from({ length: ROWS }, (_, j) => head() - ROWS + 1 + j);
+  const now = () => (n() ? at(head()) : undefined);
+  const bytes = () => (props.frames.find((f) => f.report)?.report?.length ?? 0) / 2;
+  let tape: HTMLDivElement | undefined;
+  let rows: HTMLDivElement | undefined;
+
+  // The stylesheet's spacing takes each character as wide as the font says. If a browser rounds characters
+  // up to whole pixels, the report can still run past its column. The type then steps down until it fits.
+  const fit = () => {
+    if (!rows) return;
+    rows.style.removeProperty('font-size');
+    const report = rows.querySelector('.b')?.parentElement;
+    if (!report?.lastElementChild) return;
+    // At least a quarter pixel a step: rounding moves in whole pixels, so a smaller step can change nothing.
+    for (let i = 0; i < 12; i++) {
+      const column = report.getBoundingClientRect();
+      const over = report.lastElementChild.getBoundingClientRect().right - column.right;
+      if (over <= 0.5 || column.width <= 0) return;
+      const size = parseFloat(getComputedStyle(rows).fontSize);
+      rows.style.fontSize = `${Math.floor(Math.min(size - 0.25, size * (column.width / (column.width + over))) * 100) / 100}px`;
+    }
+  };
+
+  onMount(() => {
+    fit();
+    void document.fonts?.ready.then(fit);
+    if (typeof ResizeObserver === 'undefined' || !tape) return;
+    const ro = new ResizeObserver(fit);
+    ro.observe(tape);
+    onCleanup(() => ro.disconnect());
+  });
+
+  onMount(() => {
+    if (!n() || prefersReducedMotion() || !tape) return;
+    let last = performance.now();
+    let acc = 0;
+    let inView = true;
+    let hover = false;
+    let raf = 0;
+    const io = typeof IntersectionObserver === 'undefined' ? null : new IntersectionObserver((es) => (inView = es[0].isIntersecting));
+    io?.observe(tape);
+    const el = tape;
+    const onEnter = () => (hover = true);
+    const onLeave = () => (hover = false);
+    el.addEventListener('pointerenter', onEnter);
+    el.addEventListener('pointerleave', onLeave);
+    const loop = (t: number) => {
+      const dt = Math.min(t - last, 50);
+      last = t;
+      if (inView && !hover && !document.hidden) {
+        acc = Math.min(acc + dt, 1000);
+        while (acc >= STEP_MS) {
+          acc -= STEP_MS;
+          setHead((h) => h + 1);
+        }
+        rows?.style.setProperty('transform', `translateY(${(ROW_PX * (1 - acc / STEP_MS)).toFixed(2)}px)`);
+      }
+      raf = requestAnimationFrame(loop);
+    };
+    raf = requestAnimationFrame(loop);
+    onCleanup(() => {
+      cancelAnimationFrame(raf);
+      io?.disconnect();
+      el.removeEventListener('pointerenter', onEnter);
+      el.removeEventListener('pointerleave', onLeave);
+    });
+  });
+
+  return (
+    <div class="tape" ref={tape} aria-hidden="true" style={{ '--bytes': bytes() }}>
+      <div class="tape-head caps">
+        <span>Frame</span>
+        <span>Report</span>
+        <span class="lamps">
+          <span class="lamp" classList={{ lit: !!now()?.mouse }}>Mouse</span>
+          <span class="lamp api" classList={{ lit: !!now()?.api.some(Boolean) }}>API</span>
+        </span>
+      </div>
+      <div class="tape-body">
+        <div class="rows" ref={rows}>
+          <Show when={n()}>
+            <For each={shown()}>
+              {(i) => {
+                const f = at(i);
+                return (
+                  <div class="row" classList={{ now: i === head() }}>
+                    <span>{hex3(f.frame)}</span>
+                    <Show when={f.report} fallback={<span>NAK</span>}>
+                      {(r) => (
+                        <span>
+                          <For each={r().match(/../g) ?? []}>
+                            {(b, k) => (
+                              <span class="b" classList={{ api: f.api[k()] }}>
+                                {b}
+                              </span>
+                            )}
+                          </For>
+                        </span>
+                      )}
+                    </Show>
+                    <span class="tag">{f.api.some(Boolean) ? '+API' : ''}</span>
+                  </div>
+                );
+              }}
+            </For>
+          </Show>
+        </div>
+      </div>
+      <div class="tape-foot caps">
+        USB1 · <span class="nc">1 kHz</span> · slowed 250×
+      </div>
+    </div>
+  );
+}
