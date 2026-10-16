@@ -43,7 +43,7 @@ export function parseVersion(s: string | null | undefined): Semver | null {
 
 export const mediusChip = (h: AppHeader | null): FlashChip | null => (h?.project && PROJECTS[h.project]) || null;
 
-// A medius image's version as major.minor.patch; null for any other image.
+// A Medius image's version as major.minor.patch; null for any other image.
 export function imageVersion(image: Uint8Array | null | undefined, kind: FlashKind): string | null {
   const h = image ? readAppHeader(image, kind) : null;
   const v = mediusChip(h) ? parseVersion(h?.version) : null;
@@ -64,7 +64,7 @@ export function usb2Refusal(image: Uint8Array, chip: FlashChip): string | null {
   const h = readAppHeader(image, 'app');
   if (!h || h.chipId !== S3_CHIP_ID) return 'Not an ESP32-S3 image.';
   const mine = mediusChip(h);
-  if (!mine) return `This isn't medius firmware. Flash it over ${socket(chip)}.`;
+  if (!mine) return `This isn't Medius firmware. Flash it over ${socket(chip)}.`;
   if (mine !== chip) return otherChip(chip);
   const v = parseVersion(h.version);
   if (v && (v.major < 3 || (v.major === 3 && v.minor < 2))) {
@@ -73,7 +73,7 @@ export function usb2Refusal(image: Uint8Array, chip: FlashChip): string | null {
   return null;
 }
 
-// ROM download takes any firmware but medius built for the other chip. The app is read where the file's
+// ROM download takes any firmware but Medius built for the other chip. The app is read where the file's
 // layout puts it, not where the Image choice says it should be.
 export function romRefusal(image: Uint8Array, chip: FlashChip): string | null {
   const mine = mediusChip(readAppHeader(image, hasPartitionTable(image) ? 'factory' : 'app'));

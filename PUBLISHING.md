@@ -53,6 +53,7 @@ curl "https://registry.modelcontextprotocol.io/v0.1/servers?search=net.k4tech/do
 Bump `version` in `server.json` (published versions are immutable), then re-run
 `mcp-publisher publish`. To remove: `mcp-publisher status --status deleted --message "..." net.k4tech/docs <version>`.
 
-Notes: the registry is in preview (no pre-publish review; the entry is queryable
-immediately, downstream catalogs ingest on their own schedule). The `type` must
-be exactly `streamable-http`, and the name namespace must match the proven domain.
+Notes: the registry is in preview. Nothing is reviewed before publishing: the entry
+is queryable at once, and downstream catalogs pick it up on their own schedule. The
+`type` must be exactly `streamable-http`, and the name namespace must match the
+proven domain.

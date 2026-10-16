@@ -234,6 +234,24 @@ describe('box session', () => {
     expect((api.link() as unknown as { port: FakePort }).port).toBe(moved);
   });
 
+  it('a lost box with no port runs no timer, and reattaches as soon as its port returns', async () => {
+    const box = new FakeBox();
+    const { api, ctl } = open(box);
+    await api.connect();
+    ctl.setPort(null);
+    box.drop();
+    await settle();
+    expect(api.status()).toBe('lost');
+    await vi.advanceTimersByTimeAsync(REATTACH_MS * 2);
+    expect(vi.getTimerCount()).toBe(0);
+    await vi.advanceTimersByTimeAsync(REATTACH_MS * 10);
+    expect(vi.getTimerCount()).toBe(0);
+    ctl.setPort(asPort(new FakePort(box)));
+    await settle();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(api.status()).toBe('connected');
+  });
+
   it('a box the user disconnected stays disconnected when its port returns', async () => {
     const box = new FakeBox();
     const { api, ctl } = open(box);
@@ -259,6 +277,15 @@ describe('box session', () => {
     await vi.advanceTimersByTimeAsync(IDENTIFY_MS);
     await run;
     expect(box.leds.at(-1)).toEqual([LedTarget.Both, LedMode.Auto, 0]);
+    expect(api.identifying()).toBe(false);
+  });
+
+  it('identify on a box that refuses the light says why, and stops identifying', async () => {
+    const box = new FakeBox();
+    const { api } = open(box);
+    await api.connect();
+    box.ledRefused = true;
+    await expect(api.identify()).rejects.toThrow('The box refused that.');
     expect(api.identifying()).toBe(false);
   });
 

@@ -1,10 +1,9 @@
-// Moves a native field's value into another before the clone emits it. Weighing is the lock card's.
+// Moves a native field's value into another field before the clone emits the report. Weighing belongs to
+// the lock card.
 
-import { For, Show, createMemo, createSignal } from 'solid-js';
-import { Card, CardHeader } from '../../../components/surfaces/Card';
+import { Index, Show, createMemo, createSignal } from 'solid-js';
 import { Button } from '../../../components/inputs/Button';
 import { Chip } from '../../../components/display/Chip';
-import { RadioGroup } from '../../../components/inputs/RadioGroup';
 import {
   type NamedUsage,
   type Transform,
@@ -20,7 +19,8 @@ import {
 import { useDashboard } from './context';
 import { createCommand } from './action';
 import { UsagePicker, type PickerClass, type UsageValue } from './UsagePicker';
-import { chips, label, row, section } from './ui';
+import { Panel, Panels } from '../../shell/Panel';
+import { Segmented } from '../../shell/Segmented';
 
 const AXES: NamedUsage[] = [
   { id: LockAxis.X, name: 'X (left/right)', group: 'Axes' },
@@ -37,7 +37,7 @@ const OP_LABELS = [
 const fieldName = (cls: number, id: number): string =>
   cls === LockClass.Axis ? (AXES.find((a) => a.id === id)?.name ?? `axis ${id}`) : usageName(cls, id);
 
-// A chip ellipsises past 250px, so each reads as the plain move.
+// A chip wider than its panel wraps, so each chip names only the move.
 const describe = (t: Transform): string => {
   const src = fieldName(t.sclass, t.sid);
   const dst = fieldName(t.dclass, t.did);
@@ -91,8 +91,8 @@ const DeviceTransform = () => {
   const srcLabel = () => (remapping() ? 'Source' : 'Axis');
   const dstLabel = () => (remapping() ? 'Target' : 'With axis');
 
-  // Leaving Remap strands a button source, and an unmatched radio keeps sending the old field, so fall
-  // back to X and Y.
+  // Swap takes no button, and a radio with no matching option keeps sending the old field. So leaving
+  // Remap with a button source falls back to X and Y.
   const chooseOp = (v: string) => {
     setOp(v);
     if (Number(v) !== TransformOp.Remap && buttonSource()) {
@@ -120,7 +120,7 @@ const DeviceTransform = () => {
   };
 
   const apply = () => {
-    // The box drops a field named as both ends with no reply, so refuse it here.
+    // The box drops a transform whose two ends are one field with no error, so it is refused here.
     const s = source();
     const d = dest();
     if (s.cls === d.cls && s.id === d.id) {
@@ -145,75 +145,75 @@ const DeviceTransform = () => {
 
   return (
     <Show when={dash.status() === 'connected'}>
-      <div id="transforms" data-search-target>
-        <Card>
-          <CardHeader title="Transforms" subtitle="Move native inputs between fields" />
-
-          <div style={section}>
-            <div style={label}>Operation</div>
-            <RadioGroup name="transform-op" value={op()} onChange={chooseOp} options={OP_LABELS} />
+      <Panels>
+        <Panel id="transform" title="Transform">
+          <div class="labelled">
+            <span class="field-l">Operation</span>
+            <Segmented name="transform-op" label="Operation" value={op()} onChange={chooseOp} options={OP_LABELS} />
           </div>
 
-          <div style={section}>
-            <UsagePicker
-              classes={sourceClasses()}
-              name="transform-source"
-              value={source()}
-              onChange={chooseSource}
-              classLabel="From"
-              usageLabel={srcLabel()}
-            />
-          </div>
+          <UsagePicker
+            classes={sourceClasses()}
+            name="transform-source"
+            value={source()}
+            onChange={chooseSource}
+            classLabel="From"
+            usageLabel={srcLabel()}
+          />
+          <UsagePicker
+            classes={destClasses()}
+            name="transform-dest"
+            value={dest()}
+            onChange={(v) => setDest(v)}
+            classLabel="To"
+            usageLabel={dstLabel()}
+          />
 
-          <div style={section}>
-            <UsagePicker
-              classes={destClasses()}
-              name="transform-dest"
-              value={dest()}
-              onChange={(v) => setDest(v)}
-              classLabel="To"
-              usageLabel={dstLabel()}
-            />
-          </div>
-
-          <div style={{ ...section, ...row }}>
+          <div class="acts">
             <Button variant="primary" disabled={cmd.busy()} onClick={apply}>
               Apply
-            </Button>
-            <Button variant="secondary" disabled={cmd.busy() || active().length === 0} onClick={clearAll}>
-              Clear all
             </Button>
           </div>
 
           <Show when={full()}>
-            <div class="callout callout--warning" style={section}>
+            <div class="callout callout--warning">
               The {TRANSFORM_MAX_ENTRIES}-entry table is full. Remove an entry first.
             </div>
           </Show>
           <Show when={cmd.error()}>
-            <div class="callout callout--danger" role="alert" style={section}>
+            <div class="callout callout--danger" role="alert">
               {cmd.error()}
             </div>
           </Show>
+        </Panel>
 
-          <div style={section}>
-            <div style={label}>
-              Active ({active().length} of {TRANSFORM_MAX_ENTRIES})
+        <Panel
+          id="active-transforms"
+          title="Active"
+          aside={
+            <div class="pr">
+              <span class="caps">
+                {active().length}/{TRANSFORM_MAX_ENTRIES}
+              </span>
+              <Button variant="subtle" disabled={cmd.busy() || active().length === 0} onClick={clearAll}>
+                Clear all
+              </Button>
             </div>
-            <Show when={active().length > 0} fallback={<p>None.</p>}>
-              <div style={chips}>
-                <For each={active()}>
-                  {(t) => (
-                    <Chip variant="info" onRemove={() => remove(t)}>
-                      {describe(t)}
-                    </Chip>
-                  )}
-                </For>
-              </div>
-            </Show>
-          </div>
-        </Card>
-      </div>
+          }
+        >
+          <Show when={active().length > 0} fallback={<p class="mut" data-search-skip>None.</p>}>
+            <div class="chips">
+              <Index each={active()}>
+                {(t) => (
+                  <Chip variant="info" onRemove={() => remove(t())}>
+                    {describe(t())}
+                  </Chip>
+                )}
+              </Index>
+            </div>
+          </Show>
+        </Panel>
+      </Panels>
     </Show>
   );
 };

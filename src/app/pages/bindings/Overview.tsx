@@ -1,23 +1,22 @@
 import type { Component } from 'solid-js';
 import { A } from '@solidjs/router';
-import { Card, CardHeader } from '../../../components/surfaces/Card';
-import '../../../styles/docs.css';
+import { PageHeader } from '../../shell/PageHeader';
+import { DocSection } from '../../shell/DocSection';
 
 const Overview: Component = () => {
   return (
     <>
-      <Card>
-        <CardHeader title="Bindings" subtitle="C, C++ and Python clients" />
+      <PageHeader>
         <p>
-          A <A href="/native/hardware">medius box</A> sits between a mouse and a PC: the mouse passes
-          through untouched, and your program <A href="/native/injection">injects input</A> over a{' '}
+          A <A href="/native/hardware">Medius box</A> sits between a mouse and a PC: it relays native
+          reports untouched, and your program <A href="/native/injection">injects input</A> over a{' '}
           <A href="/native/transport">USB-serial link</A>.
         </p>
         <p>
-          The bindings write that program in <A href="/bindings/c">C / C++</A> or{' '}
+          With the bindings, that program is <A href="/bindings/c">C / C++</A> or{' '}
           <A href="/bindings/python">Python</A> instead of{' '}
-          <a href="https://crates.io/crates/medius" target="_blank" rel="noreferrer">Rust</a>, with
-          the same bytes on the wire.
+          <a href="https://crates.io/crates/medius" target="_blank" rel="noreferrer">Rust</a> and
+          sends the same frames.
         </p>
         <pre class="diagram">{`        your program   ( C / C++ / Python )
                        │
@@ -30,7 +29,7 @@ const Overview: Component = () => {
         └──────────────┬──────────────┘
                        │   6 Mbaud USB-serial frames
         ┌──────────────▼──────────────┐
-        │       the medius box        │   ▶ mouse + game PC
+        │       the Medius box        │   ▶ mouse + game PC
         └─────────────────────────────┘`}</pre>
         <div class="callout callout--info">
           <p>
@@ -41,11 +40,10 @@ const Overview: Component = () => {
             command.
           </p>
         </div>
-      </Card>
+      </PageHeader>
 
-      <div id="pick" data-search-target>
-        <Card>
-          <CardHeader title="Languages" subtitle="Same capabilities, different ergonomics" />
+      <DocSection id="pick" title="Languages" caption="Install, errors and cleanup per language">
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Language</th><th>Install</th><th>Errors</th><th>Cleanup</th><th>Use for</th></tr>
@@ -67,12 +65,11 @@ const Overview: Component = () => {
               </tr>
             </tbody>
           </table>
-        </Card>
-      </div>
+        </div>
+      </DocSection>
 
-      <div id="coverage" data-search-target>
-        <Card>
-          <CardHeader title="Coverage" subtitle="Every feature in every language" />
+      <DocSection id="coverage" title="Coverage" caption="Capability per language">
+        <div class="table-scroll">
           <table class="api-params">
             <thead>
               <tr><th>Capability</th><th>C / C++</th><th>Python</th></tr>
@@ -81,22 +78,22 @@ const Overview: Component = () => {
               <tr><td><A href="/library/connection">Connect, find, clone the link</A></td><td>yes</td><td>yes</td></tr>
               <tr><td><A href="/library/move">Move &amp; wheel</A></td><td>yes</td><td>yes</td></tr>
               <tr><td><A href="/library/inject">Inject buttons, keys, media</A></td><td>yes</td><td>yes</td></tr>
-              <tr><td><A href="/library/lock">Lock physical input</A></td><td>yes</td><td>yes</td></tr>
+              <tr><td><A href="/library/lock">Lock native input</A></td><td>yes</td><td>yes</td></tr>
               <tr><td><A href="/library/catch">Catch live input (streams)</A></td><td>yes</td><td>yes</td></tr>
               <tr><td><A href="/library/clip">Buffered clip playback</A></td><td>yes</td><td>yes</td></tr>
               <tr><td><A href="/library/options">Options &amp; LED</A></td><td>yes</td><td>yes</td></tr>
               <tr><td><A href="/library/requests">Queries (version, health, caps)</A></td><td>yes</td><td>yes</td></tr>
               <tr><td><A href="/library/features/mock">Mock box (testing)</A></td><td>build flag</td><td>build flag</td></tr>
               <tr><td><A href="/library/update">Update firmware</A></td><td>yes</td><td>yes</td></tr>
-              <tr><td><A href="/library/features/async">Async</A></td><td colspan="2">sync only; build it on the stream timeouts (see each Streams page)</td></tr>
+              <tr><td><A href="/library/features/async">Async</A></td><td colspan="2">sync only; build async on the stream timeouts (see each Streams page)</td></tr>
             </tbody>
           </table>
-          <p>
-            Mock is off by default; each binding's <strong>Build &amp; features</strong>{' '}
-            page shows how to turn it on.
-          </p>
-        </Card>
-      </div>
+        </div>
+        <p>
+          Mock is off by default; each binding's <strong>Build &amp; features</strong>{' '}
+          page shows how to turn it on.
+        </p>
+      </DocSection>
     </>
   );
 };

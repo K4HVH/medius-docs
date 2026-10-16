@@ -3,12 +3,14 @@ import {
   normalizePagePath,
   listPages,
   getPage,
-  searchDocs,
+  searchHits,
   isOriginAllowed,
   toSearchResults,
   toFetchDoc,
   type IndexPage,
 } from '../../server/mcpSearch';
+import { createSearcher } from '../../src/app/search/rank';
+import type { IndexEntry } from '../../src/app/search/types';
 
 const PAGES: IndexPage[] = [
   {
@@ -41,6 +43,7 @@ describe('normalizePagePath', () => {
     expect(normalizePagePath('/library/clip.md')).toBe('/library/clip');
     expect(normalizePagePath('/library/clip/')).toBe('/library/clip');
     expect(normalizePagePath('  /library/clip  ')).toBe('/library/clip');
+    expect(normalizePagePath('/library/clip#builder')).toBe('/library/clip');
   });
 });
 
@@ -63,44 +66,67 @@ describe('getPage', () => {
   });
 });
 
-describe('searchDocs', () => {
-  it('ranks the page whose content best matches the query first', () => {
-    const hits = searchDocs(PAGES, 'ClipBuilder');
-    expect(hits[0].path).toBe('/library/clip');
-    expect(hits[0].snippet.toLowerCase()).toContain('clipbuilder');
+const ENTRIES: IndexEntry[] = [
+  { path: '/library/clip', title: 'Clip', kind: 'page', section: 'Rust Library', crumb: 'API', text: 'Build a sequence of per-frame input with a ClipBuilder. Playback is box-clocked.' },
+  { path: '/library/clip#builder', title: 'ClipBuilder', kind: 'section', section: 'Rust Library', crumb: 'API / Clip', text: 'Adds one entry per frame.' },
+  { path: '/library/move', title: 'Move', kind: 'page', section: 'Rust Library', crumb: 'API', text: 'move_axis and move_rel drive cursor motion and the wheel.' },
+  { path: '/native/commands/clip', title: 'Clip', kind: 'page', section: 'Native API', crumb: 'Commands', text: 'The CLIP opcodes preload input for box-clocked playback.' },
+];
+const searcher = createSearcher(ENTRIES);
+
+describe('searchHits', () => {
+  it('ranks the part of a page whose words match best first, with the sentence they matched in', () => {
+    const hits = searchHits(searcher, 'entry per frame');
+    expect(hits[0].path).toBe('/library/clip#builder');
+    expect(hits[0]).toMatchObject({ title: 'ClipBuilder', section: 'Rust Library', snippet: 'Adds one entry per frame.' });
   });
-  it('matches on description/title words too', () => {
-    const hits = searchDocs(PAGES, 'cursor motion');
-    expect(hits[0].path).toBe('/library/move');
+  it('returns nothing for a query that matches nothing, and respects the limit', () => {
+    expect(searchHits(searcher, 'zzzznomatch')).toEqual([]);
+    expect(searchHits(searcher, 'clip', 1)).toHaveLength(1);
   });
-  it('returns nothing for a query that matches no page', () => {
-    expect(searchDocs(PAGES, 'zzzznomatch')).toEqual([]);
-  });
-  it('respects the limit', () => {
-    expect(searchDocs(PAGES, 'clip', 1)).toHaveLength(1);
-  });
-  it('stays bounded and correct on a huge query (term cap)', () => {
-    const huge = Array(5000).fill('clip').join(' ');
-    const hits = searchDocs(PAGES, huge);
-    expect(hits.length).toBeGreaterThan(0);
+  it('stays quick and correct on a huge query', () => {
+    const started = performance.now();
+    const hits = searchHits(searcher, Array(5000).fill('clip').join(' '));
+    expect(performance.now() - started).toBeLessThan(200);
     expect(hits.map((h) => h.path)).toContain('/library/clip');
   });
-  it('is deterministic for equal scores (path tiebreak)', () => {
-    const a = searchDocs(PAGES, 'clip').map((h) => h.path);
-    const b = searchDocs(PAGES, 'clip').map((h) => h.path);
-    expect(a).toEqual(b);
+
+  it('lists every release and device that matches, leaves other sites out, and takes a whole number as the limit', () => {
+    const many = createSearcher([
+      ...Array.from({ length: 6 }, (_, i): IndexEntry => ({ path: `/dashboard/changelog#v1.${i}`, title: `v1.${i}`, kind: 'release', section: 'Dashboard', crumb: 'Changelog', text: 'Fixed a thing.' })),
+      { path: 'https://pypi.org/project/medius/', title: 'PyPI', kind: 'external', section: 'Elsewhere', crumb: 'pypi.org', text: 'Fixed nothing.' },
+    ]);
+    const hits = searchHits(many, 'fixed', 50);
+    expect(hits).toHaveLength(6);
+    expect(hits.every((h) => h.path.startsWith('/'))).toBe(true);
+    expect(searchHits(many, 'fixed', 2.7)).toHaveLength(2);
+  });
+
+  it('reads an agent query as finished, never as a word still being typed', () => {
+    expect(searcher.search('playbac').length).toBeGreaterThan(0);
+    expect(searchHits(searcher, 'playbac')).toEqual([]);
+  });
+
+  it('gives a release its date and a device its verdict ahead of the sentence', () => {
+    const s2 = createSearcher([
+      { path: '/dashboard/changelog#v3.4.4', title: 'v3.4.4', kind: 'release', section: 'Dashboard', crumb: 'Changelog', caption: '2 October 2026', text: 'Fixed the delay.' },
+    ]);
+    expect(searchHits(s2, 'v3.4.4')[0].snippet).toBe('2 October 2026 · Fixed the delay.');
   });
 });
 
 describe('toSearchResults (OpenAI search shape)', () => {
-  it('returns {id,title,url,text} with id=path and absolute url', () => {
-    const r = toSearchResults(PAGES, 'ClipBuilder', 'https://s');
-    expect(r[0]).toMatchObject({ id: '/library/clip', title: 'Clip', url: 'https://s/library/clip' });
+  it('returns {id,title,url,text} with id=address and absolute url', () => {
+    const r = toSearchResults(searchHits(searcher, 'ClipBuilder'), 'https://s');
+    expect(r[0]).toMatchObject({ id: '/library/clip#builder', title: 'ClipBuilder', url: 'https://s/library/clip#builder' });
     expect(typeof r[0].text).toBe('string');
   });
 });
 
 describe('toFetchDoc (OpenAI fetch shape)', () => {
+  it('returns the page a section id is on', () => {
+    expect(toFetchDoc(PAGES, '/library/clip#builder', 'https://s')!.id).toBe('/library/clip');
+  });
   it('returns the full document by id, tolerating .md and missing slash', () => {
     const d = toFetchDoc(PAGES, 'library/clip.md', 'https://s')!;
     expect(d.id).toBe('/library/clip');

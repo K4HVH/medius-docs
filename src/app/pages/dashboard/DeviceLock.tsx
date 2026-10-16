@@ -1,13 +1,11 @@
-// Lock and Unlock are the ends of one signed scale; the sign inverts an axis. With, against and
-// reversal are offered on axes only: one bit has no bearing and nothing to reverse.
+// Lock and Unlock are 0% and 100% on one signed scale; a negative scale inverts an axis. With, against
+// and reversal are offered on axes only: a one-bit input has no bearing and nothing to reverse.
 
-import { For, Show, createMemo, createSignal } from 'solid-js';
+import { Index, Show, createMemo, createSignal } from 'solid-js';
 import { A } from '@solidjs/router';
-import { Card, CardHeader } from '../../../components/surfaces/Card';
 import { Button } from '../../../components/inputs/Button';
 import { Chip } from '../../../components/display/Chip';
-import { RadioGroup } from '../../../components/inputs/RadioGroup';
-import { Slider } from '../../../components/inputs/Slider';
+import { Range } from '../../shell/Range';
 import {
   type LockEntry,
   type NamedUsage,
@@ -29,7 +27,8 @@ import { useDashboard } from './context';
 import { createCommand } from './action';
 import { displayName } from './hex';
 import { UsagePicker, type PickerClass, type UsageValue } from './UsagePicker';
-import { chips, label, row, section } from './ui';
+import { Panel, Panels } from '../../shell/Panel';
+import { Select } from '../../shell/Select';
 
 const AXES: NamedUsage[] = [
   { id: LockAxis.X, name: 'X (left/right)', group: 'Axes' },
@@ -45,13 +44,12 @@ const BLANKET_NAMES: Record<number, string> = {
   [LockClass.Axis]: 'axes',
 };
 
-// An axis locks by sign, a button or key by edge. Media has no edges: the box suppresses it whole
-// and reports Both, so it gets no direction word.
+// An axis locks by sign, a button or key by edge. Both gets no direction word, and neither does media
+// (the box suppresses media whole and reports it at Both).
 const dirName = (cls: number, d: Direction): string => {
-  if (cls === LockClass.Media) return '';
+  if (cls === LockClass.Media || d === Direction.Both) return '';
   if (d === Direction.With) return 'with injection';
   if (d === Direction.Against) return 'against injection';
-  if (d === Direction.Both) return 'both';
   if (cls === LockClass.Axis) return d === Direction.Positive ? 'positive' : 'negative';
   return d === Direction.Positive ? 'press' : 'release';
 };
@@ -99,7 +97,7 @@ const DeviceLock = () => {
       }
     });
 
-  // One chip per weighed (target, direction) the box reports, whoever set it; a blanket key lock
+  // One chip per weighed (target, direction) the box reports, whoever set it. A blanket key lock
   // arrives as one entry per blocked edge.
   const active = createMemo(() =>
     (locks()?.entries ?? ([] as LockEntry[])).map((e) => {
@@ -109,9 +107,9 @@ const DeviceLock = () => {
         key: `${e.cls}:${e.id}:${e.direction}`,
         text:
           e.scale === LOCK_SCALE_BLOCK
-            ? head
+            ? `${head} blocked`
             : e.scale < 0
-              ? `${head} reversed at ${e.scale}%`
+              ? `${head} reversed at ${-e.scale}%`
               : `${head} at ${e.scale}%`,
         blocked: e.scale === LOCK_SCALE_BLOCK,
       };
@@ -121,8 +119,8 @@ const DeviceLock = () => {
   const isAxis = () => target().cls === LockClass.Axis;
   const isMedia = () => target().cls === LockClass.Media;
 
-  // A new class can lack the selected direction, and an unmatched radio keeps sending the old byte,
-  // so fall back to Both.
+  // A new class may lack the selected direction, and a radio with no matching option keeps sending the
+  // old byte. So fall back to Both.
   const chooseTarget = (v: UsageValue) => {
     setTarget(v);
     if (v.cls === LockClass.Media || (v.cls !== LockClass.Axis && isRelativeDirection(dir()))) {
@@ -140,7 +138,7 @@ const DeviceLock = () => {
           { value: String(Direction.Against), label: 'Against injection' },
         ]
       : isMedia()
-        ? [{ value: String(Direction.Both), label: 'The whole usage' }]
+        ? [{ value: String(Direction.Both), label: 'Both' }]
         : [
             { value: String(Direction.Both), label: 'Both' },
             { value: String(Direction.Positive), label: 'Press' },
@@ -149,10 +147,8 @@ const DeviceLock = () => {
 
   return (
     <Show when={dash.status() === 'connected'}>
-      <div id="input-locks" data-search-target>
-        <Card>
-          <CardHeader title="Input locks" subtitle="Weigh native input" />
-
+      <Panels>
+        <Panel id="input-locks" title="Lock">
           <UsagePicker
             classes={classes()}
             name="lock-target"
@@ -161,45 +157,41 @@ const DeviceLock = () => {
             usageLabel="Input"
           />
 
-          <div style={section}>
-            <div style={label}>Direction</div>
-            <RadioGroup
-              name="lock-direction"
-              value={direction()}
-              onChange={setDirection}
-              options={dirLabel()}
-            />
+          <div class="labelled">
+            <span class="field-l">Direction</span>
+            <Select label="Direction" value={direction()} onChange={setDirection} options={dirLabel()} />
           </div>
 
           <Show when={isAxis()}>
-            <div style={section}>
-              <div style={label}>
-                {scale() < 0
-                  ? `Reverse physical motion, keeping ${Math.abs(scale())}%`
-                  : `Keep ${scale()}% of physical motion`}
-              </div>
-              <Slider
+            <div class="labelled">
+              <span class="field-l">Keep</span>
+              <Range
+                label="Keep"
                 value={scale()}
                 min={LOCK_SCALE_MIN}
                 max={LOCK_SCALE_MAX}
                 step={5}
-                onChange={(v) => setScale(Array.isArray(v) ? v[0] : v)}
+                zero={0}
+                format={(v) => `${v}%`}
+                onChange={setScale}
               />
             </div>
+            <p class="mut">
+              {scale() < 0 ? `Reverse native motion, keeping ${Math.abs(scale())}%` : `Keep ${scale()}% of native motion`}
+            </p>
           </Show>
-
 
           <Show when={isAxis() && isRelativeDirection(dir())}>
-            <div class="callout callout--info" style={section}>
-              With and against follow the injected direction on that axis. See{' '}
-              <A href="/native/commands/lock#bearing">the bearing</A>.
-            </div>
+            <p class="mut">
+              With and against follow the <A href="/native/commands/lock#bearing">bearing</A>: the injected
+              direction on that axis.
+            </p>
           </Show>
 
-          <div style={{ ...section, ...row }}>
+          <div class="acts">
             <Show when={isAxis()}>
               <Button variant="primary" disabled={cmd.busy()} onClick={() => applyScale(scale())}>
-                Apply {scale()}%
+                Apply <span data-search-skip>{scale()}%</span>
               </Button>
             </Show>
             <Button
@@ -214,23 +206,22 @@ const DeviceLock = () => {
             </Button>
           </div>
           <Show when={cmd.error()}>
-            <div class="callout callout--danger" role="alert" style={section}>
+            <div class="callout callout--danger" role="alert">
               {cmd.error()}
             </div>
           </Show>
+        </Panel>
 
-          <div style={section}>
-            <div style={label}>Active</div>
-            <Show when={active().length > 0} fallback={<p>None.</p>}>
-              <div style={chips}>
-                <For each={active()}>
-                  {(item) => <Chip variant={item.blocked ? 'warning' : 'info'}>{item.text}</Chip>}
-                </For>
-              </div>
-            </Show>
-          </div>
-        </Card>
-      </div>
+        <Panel id="active-locks" title="Active">
+          <Show when={active().length > 0} fallback={<p class="mut" data-search-skip>None.</p>}>
+            <div class="chips">
+              <Index each={active()}>
+                {(item) => <Chip variant={item().blocked ? 'warning' : 'info'}>{item().text}</Chip>}
+              </Index>
+            </div>
+          </Show>
+        </Panel>
+      </Panels>
     </Show>
   );
 };

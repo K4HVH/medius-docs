@@ -64,4 +64,9 @@ describe('looksLikeWrongKind', () => {
   it('accepts an app-shaped image chosen as an app update', () => {
     expect(looksLikeWrongKind(appImage(), 'app')).toBe(false);
   });
+
+  it('says nothing of a file that is no image at all, which validation already refuses', () => {
+    expect(looksLikeWrongKind(new Uint8Array(3000).fill(0x5a), 'factory')).toBe(false);
+    expect(looksLikeWrongKind(new Uint8Array(16).fill(0xe9), 'factory')).toBe(false);
+  });
 });

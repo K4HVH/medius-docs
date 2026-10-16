@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { render, cleanup, waitFor } from '@solidjs/testing-library';
+import { render, cleanup, fireEvent, waitFor } from '@solidjs/testing-library';
 import { createSignal } from 'solid-js';
 import type { ConnectVerdict } from '../../src/dashboard/serial';
 
@@ -10,17 +10,20 @@ const st = vi.hoisted(() => ({
     const [running, setRunning] = createSignal(false);
     const [error, setError] = createSignal<string | null>(null);
     const [found, setFound] = createSignal<string>('disconnected');
-    return { running, setRunning, error, setError, found, setFound };
+    const [progress, setProgress] = createSignal<{ phase: string; written?: number; total?: number } | null>(null);
+    return { running, setRunning, error, setError, found, setFound, progress, setProgress };
   },
 }));
 
 const mock = vi.hoisted(() => ({
   s: null as ReturnType<(typeof st)['make']> | null,
   supported: true,
+  secure: true,
   flashOk: true,
   flashError: 'That port is still held by an earlier session.',
   chooserEmpty: false,
   releasesThrow: false,
+  releasesNone: false,
   flashed: [] as string[],
   metas: [] as unknown[],
   romCalls: 0,
@@ -28,6 +31,10 @@ const mock = vi.hoisted(() => ({
   befores: [] as string[][],
   disconnects: 0,
   findVerdict: null as ConnectVerdict | null,
+  // What Connect's pick in the chooser finds; held while `holdAdd` is set.
+  added: { ok: false, verdict: { kind: 'no-port' } } as unknown,
+  holdAdd: null as Promise<void> | null,
+  adds: 0,
   assets: [
     { name: 'medius_device-factory.bin', size: 1, url: 'd' },
     { name: 'medius_host-factory.bin', size: 1, url: 'h' },
@@ -37,7 +44,7 @@ const mock = vi.hoisted(() => ({
 vi.mock('../../src/app/pages/dashboard/context', () => ({
   useBoxes: () => ({
     supported: mock.supported,
-    secure: true,
+    secure: mock.secure,
     snapshot: () => ({ answering: new Set(mock.answering), all: new Set(mock.answering) }),
     connectNew: async (before: { answering: ReadonlySet<string> }) => {
       mock.befores.push([...before.answering]);
@@ -45,7 +52,11 @@ vi.mock('../../src/app/pages/dashboard/context', () => ({
       mock.s!.setFound('connected');
       return null;
     },
-    add: async () => ({ ok: false, verdict: { kind: 'no-port' } }),
+    add: async () => {
+      mock.adds += 1;
+      if (mock.holdAdd) await mock.holdAdd;
+      return mock.added;
+    },
     selected: () => ({
       key: 'bbbbbbbbbbbb',
       session: {
@@ -57,8 +68,7 @@ vi.mock('../../src/app/pages/dashboard/context', () => ({
     }),
   }),
   useNativeFlash: () => ({
-    progress: () => null,
-    log: () => [],
+    progress: () => mock.s!.progress(),
     error: () => mock.s!.error(),
     running: () => mock.s!.running(),
     clear: () => {},
@@ -75,9 +85,10 @@ vi.mock('../../src/app/pages/dashboard/context', () => ({
 vi.mock('../../src/dashboard/firmware', () => ({
   fetchReleases: async () => {
     if (mock.releasesThrow) throw new Error('firmware fetch is not set up on this server');
+    if (mock.releasesNone) return [];
     return [{ tag: 'v3.2.0', assets: mock.assets }];
   },
-  // The stand-in returns the asset's own name, so the image identifies where it came from.
+  // The stand-in returns the asset's name, so the image identifies where it came from.
   downloadAsset: async (a: { name: string }) => new TextEncoder().encode(a.name),
 }));
 
@@ -90,7 +101,11 @@ vi.mock('../../src/dashboard/serial', () => ({
 }));
 
 const navigate = vi.hoisted(() => vi.fn());
-vi.mock('@solidjs/router', () => ({ useNavigate: () => navigate }));
+vi.mock('@solidjs/router', () => ({
+  useNavigate: () => navigate,
+  useLocation: () => ({ pathname: '/dashboard/setup', hash: '' }),
+  A: (p: { children: unknown }) => p.children,
+}));
 
 import Setup from '../../src/app/pages/dashboard/Setup';
 
@@ -103,13 +118,18 @@ const mount = () => {
 afterEach(() => {
   cleanup();
   mock.supported = true;
+  mock.secure = true;
   mock.flashOk = true;
   mock.chooserEmpty = false;
   mock.releasesThrow = false;
+  mock.releasesNone = false;
   mock.answering = ['aaaaaaaaaaaa'];
   mock.befores = [];
   mock.disconnects = 0;
   mock.findVerdict = null;
+  mock.added = { ok: false, verdict: { kind: 'no-port' } };
+  mock.holdAdd = null;
+  mock.adds = 0;
   mock.flashed = [];
   mock.metas = [];
   mock.romCalls = 0;
@@ -138,9 +158,79 @@ const walk = async () => {
 };
 
 describe('Setup', () => {
+  // A port the chooser hands back, as the registry finds it.
+  const found = (status: string, verdict: ConnectVerdict | null) => ({
+    ok: true,
+    entry: { key: 'port:1', session: { status: () => status, verdict: () => verdict } },
+  });
+
+  it('Connect beside Install picks a box that runs Medius, and says nothing more when it connects', async () => {
+    mock.added = found('connected', null);
+    const r = mount();
+    fireEvent.click(r.getByRole('button', { name: 'Connect' }));
+    await waitFor(() => expect(mock.adds).toBe(1));
+    await new Promise((res) => setTimeout(res, 0));
+    expect(r.queryByRole('alert')).toBeNull();
+    expect(mock.flashed).toEqual([]);
+  });
+
+  it("a port that isn't a Medius box says so where Connect was, which then reads Retry", async () => {
+    mock.added = found('disconnected', { kind: 'silent' });
+    const r = mount();
+    fireEvent.click(r.getByRole('button', { name: 'Connect' }));
+    await waitFor(() => expect(r.getByRole('alert').textContent).toBe("That port isn't a Medius box. Pick another, or install Medius."));
+    expect(r.getByRole('button', { name: 'Retry' })).toBeTruthy();
+  });
+
+  it('a port another program holds, or no port, says why', async () => {
+    mock.added = { ok: false, verdict: { kind: 'busy' } };
+    const r = mount();
+    fireEvent.click(r.getByRole('button', { name: 'Connect' }));
+    await waitFor(() => expect(r.getByRole('alert').textContent).toBe('Another tab or program has this box open. Close it.'));
+    mock.added = { ok: false, verdict: { kind: 'no-port' } };
+    fireEvent.click(r.getByRole('button', { name: 'Retry' }));
+    await waitFor(() => expect(r.getByRole('alert').textContent).toBe("This computer can't see your box. Plug USB2 into it."));
+  });
+
+  it('reads Connecting... from the click until the port is checked, with Install locked', async () => {
+    let release = () => {};
+    mock.holdAdd = new Promise<void>((res) => (release = res));
+    mock.added = found('disconnected', { kind: 'silent' });
+    const r = mount();
+    fireEvent.click(r.getByRole('button', { name: 'Connect' }));
+    await waitFor(() => expect(r.getByRole('button', { name: 'Connecting...' })).toBeTruthy());
+    expect((r.getByRole('button', { name: 'Install' }) as HTMLButtonElement).disabled).toBe(true);
+    release();
+    await waitFor(() => expect(r.getByRole('button', { name: 'Retry' })).toBeTruthy());
+    expect((r.getByRole('button', { name: 'Install' }) as HTMLButtonElement).disabled).toBe(false);
+  });
+
+
+  it('names a phase with no count over a running track while installing, never a 0% figure', async () => {
+    const r = mount();
+    mock.s!.setRunning(true);
+    mock.s!.setProgress({ phase: 'connecting' });
+    await waitFor(() => expect(r.container.querySelector('#installing .pct')?.textContent).toBe('Connecting'));
+    expect(r.container.querySelector('#installing .track.wait')).not.toBeNull();
+    mock.s!.setProgress({ phase: 'writing', written: 40, total: 100 });
+    await waitFor(() => expect(r.container.querySelector('#installing .pct')?.textContent).toBe('40%'));
+    expect(r.container.querySelector('#installing .track.wait')).toBeNull();
+  });
+
+  it('says Installing over the one count, never a word for each phase', async () => {
+    const r = mount();
+    mock.s!.setRunning(true);
+    mock.s!.setProgress({ phase: 'writing', written: 1, total: 4 });
+    await waitFor(() => expect(r.container.querySelector('#installing .pct')?.textContent).toBe('25%'));
+    expect(r.container.querySelector('#installing .cue')?.textContent).toBe('Installing');
+    mock.s!.setProgress({ phase: 'erasing' });
+    await waitFor(() => expect(r.container.querySelector('#installing .pct')?.textContent).toBe('Erasing'));
+    expect(r.container.querySelector('#installing .cue')?.textContent).toBe('Installing');
+  });
+
   it('starts on the first install, with no questions to answer first', async () => {
     const r = mount();
-    await waitFor(() => expect(r.container.textContent).toMatch(/step 1 of 5/i));
+    await waitFor(() => expect(r.container.querySelector('.stages .now')?.textContent).toMatch(/main chip/i));
     expect(r.getByRole('button', { name: /^install$/i })).toBeTruthy();
   });
 
@@ -153,7 +243,9 @@ describe('Setup', () => {
     r.getByRole('button', { name: /^done$/i }).click();
     await waitFor(() => expect(r.container.textContent).toMatch(/button next to USB3/i));
     expect(r.container.textContent).not.toMatch(/button next to USB1/i);
-    expect(r.container.textContent).not.toMatch(/left button|right button|main chip|mouse-side chip/i);
+    // The instruction names the socket; the drawing beside it labels the chips.
+    const cues = [...r.container.querySelectorAll('.cue')].map((c) => c.textContent).join(' ');
+    expect(cues).not.toMatch(/left button|right button|main chip|mouse-side chip/i);
   });
 
   it('an empty chooser lands on a retry that says what to fix, not on nothing', async () => {
@@ -197,13 +289,23 @@ describe('Setup', () => {
     expect(mock.romCalls).toBe(0);
   });
 
-  it('a release fetch that failed leaves a message, not a button that does nothing', async () => {
+  it('a release fetch that failed says so where Install was, and Retry fetches again', async () => {
     mock.releasesThrow = true;
     const r = mount();
+    await waitFor(() => expect(r.container.textContent).toMatch(/release list didn't load/i));
+    expect(r.queryByRole('button', { name: /^install$/i })).toBeNull();
+    mock.releasesThrow = false;
+    fireEvent.click(r.getByRole('button', { name: /^retry$/i }));
     await waitFor(() => r.getByRole('button', { name: /^install$/i }));
-    install(r);
-    await waitFor(() => expect(r.container.textContent).toMatch(/isn't ready/i));
-    expect(mock.romCalls).toBe(0);
+    expect(r.container.textContent).not.toMatch(/didn't load/i);
+  });
+
+  it('an empty release list says none is published, not that the list failed', async () => {
+    mock.releasesNone = true;
+    const r = mount();
+    await waitFor(() => expect(r.container.textContent).toMatch(/no release is published yet/i));
+    expect(r.container.textContent).not.toMatch(/didn't load/i);
+    expect(r.queryByRole('button', { name: /^install$/i })).toBeNull();
   });
 
   it('writes the main chip image first and the mouse-side image second, never the other way', async () => {
@@ -221,12 +323,13 @@ describe('Setup', () => {
     const r = mount();
     await waitFor(() => r.getByRole('button', { name: /^install$/i }));
     install(r);
-    await waitFor(() => expect(r.container.textContent).toMatch(/can kill it/i));
+    const now = () => r.container.querySelector('.stages .now')?.textContent ?? '';
+    await waitFor(() => expect(now()).toMatch(/unplug usb1/i));
     expect(r.queryByRole('button', { name: /^install$/i })).toBeNull();
     r.getByRole('button', { name: /^done$/i }).click();
     await waitFor(() => r.getByRole('button', { name: /^install$/i }));
     install(r);
-    await waitFor(() => expect(r.container.textContent).toMatch(/step 4 of 5/i));
+    await waitFor(() => expect(now()).toMatch(/unplug usb3/i));
     expect(r.queryByRole('button', { name: /^connect$/i })).toBeNull();
   });
 
@@ -261,7 +364,7 @@ describe('Setup', () => {
     const alert = await r.findByRole('alert');
     expect(alert.textContent).toMatch(/isn't answering/i);
     expect(r.container.textContent).not.toMatch(/installed\./i);
-    expect(r.getByRole('button', { name: /try again/i })).toBeTruthy();
+    expect(r.getByRole('button', { name: 'Retry' })).toBeTruthy();
   });
 
   it('ends on connect, and says so once the box answers', async () => {
@@ -273,21 +376,32 @@ describe('Setup', () => {
     expect(navigate).toHaveBeenCalledWith('/dashboard');
   });
 
-  it('an unsupported browser gets the reason and no wizard at all', async () => {
+  it('an unsupported browser sees the first step, with the reason where Install was', async () => {
     mock.supported = false;
     const r = mount();
-    expect(r.container.textContent).toMatch(/Chrome/);
+    expect(r.container.querySelector('.stages .now')?.textContent).toMatch(/main chip/i);
+    expect(r.container.textContent).toMatch(/Hold the button next to USB1/);
+    expect(r.container.textContent).toMatch(/Open this page in Chrome/);
+    expect(r.container.textContent).not.toMatch(/Browser not supported/);
     expect(r.queryByRole('button')).toBeNull();
   });
 
-  it('Try again after a box that is not answering looks again, without the chooser', async () => {
+  it('an insecure origin sees the first step, with the reason where Install was', async () => {
+    mock.secure = false;
+    const r = mount();
+    expect(r.container.querySelector('.stages .now')?.textContent).toMatch(/main chip/i);
+    expect(r.container.textContent).toMatch(/isn't secure/);
+    expect(r.queryByRole('button')).toBeNull();
+  });
+
+  it('Retry after a box that is not answering looks again, without the chooser', async () => {
     mock.findVerdict = { kind: 'silent' };
     const r = await walk();
     await waitFor(() => r.getByRole('button', { name: /^connect$/i }));
     r.getByRole('button', { name: /^connect$/i }).click();
     await r.findByRole('alert');
     mock.findVerdict = null;
-    r.getByRole('button', { name: /try again/i }).click();
+    r.getByRole('button', { name: 'Retry' }).click();
     await waitFor(() => expect(r.container.textContent).toMatch(/installed\./i));
     expect(mock.befores).toHaveLength(2);
   });

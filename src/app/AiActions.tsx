@@ -3,6 +3,7 @@ import { Portal } from 'solid-js/web';
 import { useLocation, useNavigate } from '@solidjs/router';
 import { BsStars } from 'solid-icons/bs';
 import { Button } from '../components/inputs/Button';
+import { pagePath } from './routes';
 
 const SITE = 'https://medius.k4tech.net';
 
@@ -12,7 +13,8 @@ export default function AiActions() {
   const location = useLocation();
   const navigate = useNavigate();
   const isDoc = () => /^\/(native|library|bindings|ai)(\/|$)/.test(location.pathname);
-  const mdPath = () => location.pathname.replace(/\/+$/, '') + '.md';
+  // The page's Markdown twin (a place on a page has none, so it takes the page's).
+  const mdPath = () => pagePath(location.pathname.replace(/\/+$/, '') || '/') + '.md';
   const mdUrl = () => SITE + mdPath();
 
   const [open, setOpen] = createSignal(false);
@@ -42,11 +44,15 @@ export default function AiActions() {
   const onKey = (e: KeyboardEvent) => {
     if (e.key === 'Escape') close();
   };
+  // The menu is fixed where it opened. Once the page scrolls, the menu no longer sits under its button.
+  const onScroll = () => open() && close();
   document.addEventListener('pointerdown', onDocPointer);
   document.addEventListener('keydown', onKey);
+  window.addEventListener('scroll', onScroll, { passive: true });
   onCleanup(() => {
     document.removeEventListener('pointerdown', onDocPointer);
     document.removeEventListener('keydown', onKey);
+    window.removeEventListener('scroll', onScroll);
     clearTimeout(copyTimer);
   });
 

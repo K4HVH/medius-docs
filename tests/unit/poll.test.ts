@@ -139,8 +139,8 @@ describe('dashboard poller', () => {
     });
   });
 
-  it('polls health on its own, faster than the box clears its state', async () => {
-    // The keepalive is the poller's own job, not a card's.
+  it('polls health without a card asking, faster than the box clears its state', async () => {
+    // The keepalive is the poller's job, not a card's.
     const { calls, link } = makeLink();
     await createRoot(async (dispose) => {
       createPoller(() => link);
@@ -500,6 +500,49 @@ describe('dashboard poller', () => {
       stale(new QueryTimeoutError());
       await settle();
       expect(seen).toEqual([]);
+      dispose();
+    });
+  });
+
+  it('runs no timer without a link, and reads as soon as one comes', async () => {
+    const { calls, link } = makeLink();
+    await createRoot(async (dispose) => {
+      const [current, setCurrent] = createSignal<SerialLink | null>(null);
+      const poller = createPoller(current);
+      poller.subscribe('locks', 500);
+      await settle();
+      expect(vi.getTimerCount()).toBe(0);
+      await vi.advanceTimersByTimeAsync(10_000);
+      expect(vi.getTimerCount()).toBe(0);
+      setCurrent(link);
+      await settle();
+      expect(calls.health).toBe(1);
+      expect(calls.locks).toBe(1);
+      dispose();
+    });
+  });
+
+  it('keeps reading after a reply lands once the link has gone, when the link comes back', async () => {
+    let release = () => {};
+    let reads = 0;
+    const link = {
+      queryHealth: () => {
+        reads++;
+        return new Promise((r) => (release = () => r({ linkUp: true })));
+      },
+    } as unknown as SerialLink;
+    await createRoot(async (dispose) => {
+      const [current, setCurrent] = createSignal<SerialLink | null>(link);
+      createPoller(current);
+      await settle();
+      expect(reads).toBe(1);
+      setCurrent(null);
+      release();
+      await settle();
+      setCurrent(link);
+      await settle();
+      await vi.advanceTimersByTimeAsync(KEEPALIVE_MS * 2);
+      expect(reads).toBeGreaterThan(1);
       dispose();
     });
   });

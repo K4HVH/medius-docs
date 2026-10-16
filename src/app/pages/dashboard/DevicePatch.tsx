@@ -1,17 +1,17 @@
-// A patch is stored with imperfect clones off too; only Apply waits for the opt-in. The clone serves
-// the set it last enumerated with, which the applied and pending flags compare against the store.
+// A patch is stored even with imperfect clones off; only Apply waits for the opt-in. The clone serves
+// the set it last enumerated with; the applied and pending flags compare that set with the store.
 
-import { For, Show, createSignal } from 'solid-js';
-import { Card, CardHeader } from '../../../components/surfaces/Card';
+import { A } from '@solidjs/router';
+import { Index, Show, createSignal } from 'solid-js';
 import { Button } from '../../../components/inputs/Button';
 import { Chip } from '../../../components/display/Chip';
 import { NumberInput } from '../../../components/inputs/NumberInput';
-import { RadioGroup } from '../../../components/inputs/RadioGroup';
 import { TextField } from '../../../components/inputs/TextField';
 import { type PatchInfo, PATCH_POOL, PATCHES_MAX, PatchSection, patchSectionName } from '../../../dashboard/protocol';
 import { useDashboard } from './context';
 import { createCommand } from './action';
-import { chips, label, muted, row, section } from './ui';
+import { Panel } from '../../shell/Panel';
+import { Select } from '../../shell/Select';
 import { displayName, parseHex } from './hex';
 
 const SECTIONS = [
@@ -31,7 +31,7 @@ const SECTION_BLURB: Record<number, string> = {
   [PatchSection.Device]: 'Offset into the 18-byte device descriptor.',
   [PatchSection.Config]: 'Offset into the whole configuration, interfaces and endpoints included.',
   [PatchSection.Report]: "Offset into that interface's report descriptor.",
-  [PatchSection.String]: 'The bytes replace the whole string, one character each, up to 127. A 00 byte ends it early.',
+  [PatchSection.String]: 'The bytes (≤126, one per character) replace the whole string. A 00 byte ends the string early.',
   [PatchSection.Bos]: 'Offset into the BOS descriptor.',
 };
 
@@ -39,7 +39,7 @@ const usesCfg = (s: PatchSection | null) => s === PatchSection.Config || s === P
 const usesIndex = (s: PatchSection | null) => s === PatchSection.Report || s === PatchSection.String;
 const usesOffset = (s: PatchSection | null) => s !== PatchSection.String;
 
-// A chip ellipsises past 250px, so a patch names only what addresses it.
+// A chip wider than its panel wraps, so a patch's chip names only what addresses the patch.
 const describe = (e: PatchInfo): string => {
   const narrow: string[] = [];
   if (e.section === PatchSection.Report) narrow.push(`cfg ${e.cfg}`, `interface ${e.index}`);
@@ -81,24 +81,24 @@ const DevicePatch = () => {
   const pending = () => patches()?.pending === true;
   const refused = () => patches()?.refused === true;
 
-  // The box ignores an Apply of the set already served or of an unchanged refused set, so the button
-  // says why.
+  // The box ignores Apply when the clone already serves the set, or the set was refused and is unchanged,
+  // so the button says why.
   const applyWhy = (): string | null => {
-    if (!allowed()) return 'Applying needs imperfect clones, on the Device tab.';
+    if (!allowed()) return "Applying needs imperfect clones, on Device's Options tab.";
     if (refused()) return 'This set failed a check. Change it, then apply.';
     if (entries().length === 0 && !applied()) return 'Nothing stored to apply.';
     if (!pending()) return 'The clone already carries this set.';
     return null;
   };
 
-  // Clear all stays live while anything is on the clone, stored or not.
+  // Clear all stays enabled while anything is stored, applied or refused.
   const clearable = () => entries().length > 0 || applied() || refused();
 
-  // Refused sets and sets waiting on the opt-in have their own callouts.
+  // Refused sets and sets waiting on the opt-in get a callout instead.
   const stateLine = (): string | null => {
     if (refused() || !allowed()) return null;
     if (applied() && !pending()) return 'The clone carries this set.';
-    if (applied() && entries().length === 0) return 'The clone still carries the removed patches. Apply or Clear all takes them off.';
+    if (applied() && entries().length === 0) return 'The clone still carries the removed patches. Apply or Clear all removes them.';
     if (applied()) return 'The clone carries an earlier version of this set. Apply to update it.';
     if (pending()) return 'Not on the clone yet. Apply to put it on.';
     return null;
@@ -109,124 +109,112 @@ const DevicePatch = () => {
 
   return (
     <Show when={dash.status() === 'connected'}>
-      <div id="descriptor-patches" data-search-target>
-        <Card>
-          <CardHeader title="Descriptor patches" subtitle="Change the clone's descriptors" />
+      <Panel id="descriptor-patches" title="Descriptor patches">
+        <div class="labelled">
+          <span class="field-l">Descriptor</span>
+          <Select label="Descriptor" value={pSection()} onChange={setPSection} options={SECTION_OPTIONS} />
+        </div>
+        <p class="mut">{SECTION_BLURB[psection()]}</p>
 
-          <div style={label}>Descriptor</div>
-          <RadioGroup
-            name="patch-section"
-            value={pSection()}
-            onChange={setPSection}
-            options={SECTION_OPTIONS}
-          />
-          <p style={{ ...muted, 'margin-top': '4px' }}>{SECTION_BLURB[psection()]}</p>
-
-          <div style={{ ...section, ...row, 'align-items': 'flex-end' }}>
-            <Show when={usesCfg(psection())}>
-              <div style={{ 'max-width': '9rem' }}>
-                <NumberInput label="Configuration index" value={pCfg()} min={0} max={255} precision={0} onChange={(v) => setPCfg(v ?? 0)} />
-              </div>
-            </Show>
-            <Show when={usesIndex(psection())}>
-              <div style={{ 'max-width': '9rem' }}>
-                <NumberInput
-                  label={psection() === PatchSection.String ? 'String index' : 'Interface'}
-                  value={pIndex()}
-                  min={0}
-                  max={255}
-                  precision={0}
-                  onChange={(v) => setPIndex(v ?? 0)}
-                />
-              </div>
-            </Show>
-            <Show when={usesOffset(psection())}>
-              <div style={{ 'max-width': '9rem' }}>
-                <NumberInput label="Offset" value={pOff()} min={0} max={65534} precision={0} onChange={(v) => setPOff(v ?? 0)} />
-              </div>
-            </Show>
-          </div>
-
-          <div style={section}>
+        <div class="fields">
+          <Show when={usesCfg(psection())}>
+            <div class="fw-s">
+              <NumberInput label="Configuration index" value={pCfg()} min={0} max={255} precision={0} onChange={(v) => setPCfg(v ?? 0)} />
+            </div>
+          </Show>
+          <Show when={usesIndex(psection())}>
+            <div class="fw-s">
+              <NumberInput
+                label={psection() === PatchSection.String ? 'String index' : 'Interface'}
+                value={pIndex()}
+                min={0}
+                max={255}
+                precision={0}
+                onChange={(v) => setPIndex(v ?? 0)}
+              />
+            </div>
+          </Show>
+          <Show when={usesOffset(psection())}>
+            <div class="fw-s">
+              <NumberInput label="Offset" value={pOff()} min={0} max={65534} precision={0} onChange={(v) => setPOff(v ?? 0)} />
+            </div>
+          </Show>
+          <div class="grow">
             <TextField label="Bytes (hex)" value={pBytes()} onInput={setPBytes} placeholder="e.g. 00 03" />
           </div>
+        </div>
 
-          <div style={{ ...section, ...row }}>
-            <Button variant="primary" disabled={cmd.busy()} onClick={setPatch}>
-              Set patch
-            </Button>
-            <Button
-              variant="secondary"
-              disabled={cmd.busy() || applyWhy() !== null}
-              title={applyWhy() ?? 'Re-clone with the stored set'}
-              onClick={applyPatches}
-            >
-              Apply
-            </Button>
-            <Button variant="secondary" disabled={cmd.busy() || !clearable()} onClick={clearAll}>
-              Clear all
-            </Button>
+        <div class="acts">
+          <Button variant="primary" disabled={cmd.busy()} onClick={setPatch}>
+            Set patch
+          </Button>
+          <Button
+            variant="secondary"
+            disabled={cmd.busy() || applyWhy() !== null}
+            title={applyWhy() ?? 'Re-clone with the stored set'}
+            onClick={applyPatches}
+          >
+            Apply
+          </Button>
+          <Button variant="secondary" disabled={cmd.busy() || !clearable()} onClick={clearAll}>
+            Clear all
+          </Button>
+        </div>
+        <Show when={!allowed()}>
+          <div class="callout callout--info">
+            A patch is stored now and applied once you allow <A href="/dashboard#imperfect-clone">imperfect clones</A> on Device's Options tab.
           </div>
-          <Show when={!allowed()}>
-            <div class="callout callout--info" style={section}>
-              A patch is stored now and applied once imperfect clones are on, on the Device tab.
-            </div>
-          </Show>
-          <Show when={patches()?.tableFull}>
-            <div class="callout callout--warning" style={section}>
-              The box refused the last patch: it holds {PATCHES_MAX} patches and {PATCH_POOL} bytes of patch
-              data per device. Remove or shorten one, then set it again.
-            </div>
-          </Show>
-          <Show when={cmd.error()}>
-            <div class="callout callout--danger" role="alert" style={section}>
-              {cmd.error()}
-            </div>
-          </Show>
+        </Show>
+        <Show when={patches()?.tableFull}>
+          <div class="callout callout--warning">
+            The box refused the last patch: it holds {PATCHES_MAX} patches and {PATCH_POOL} bytes of patch
+            data per device. Remove or shorten one, then set it again.
+          </div>
+        </Show>
+        <Show when={cmd.error()}>
+          <div class="callout callout--danger" role="alert">
+            {cmd.error()}
+          </div>
+        </Show>
 
-          <div style={section}>
-            <div style={label}>State</div>
-            <div style={chips}>
-              <Chip variant={applied() ? 'success' : 'neutral'}>{applied() ? 'Applied' : 'Not applied'}</Chip>
-              <Show when={pending() && !refused()}>
-                <Chip variant="info">Changes not on the clone</Chip>
-              </Show>
-              <Show when={refused()}>
-                <Chip variant="warning">Refused</Chip>
-              </Show>
-            </div>
-            <Show when={stateLine()}>
-              <p style={{ ...muted, 'margin-top': '4px' }}>{stateLine()}</p>
-            </Show>
-            <Show when={refused()}>
-              <div class="callout callout--warning" style={section}>
-                This set failed a check, so the clone runs without it and the device log names the check.
-                Change the set and apply, or clear it.
-              </div>
-            </Show>
+        <p class="sublabel">State</p>
+        <div class="chips">
+          <Chip variant={applied() ? 'success' : 'neutral'}>{applied() ? 'Applied' : 'Not applied'}</Chip>
+          <Show when={pending() && !refused()}>
+            <Chip variant="info">Pending</Chip>
+          </Show>
+          <Show when={refused()}>
+            <Chip variant="warning">Refused</Chip>
+          </Show>
+        </div>
+        <Show when={stateLine()}>
+          <p class="mut">{stateLine()}</p>
+        </Show>
+        <Show when={refused()}>
+          <div class="callout callout--warning">
+            This set failed a check, so the clone runs without it. The device log names the check.
+            Change the set and apply, or clear it.
           </div>
+        </Show>
 
-          <div style={section}>
-            <div style={label}>
-              Stored ({entries().length} of {PATCHES_MAX})
-            </div>
-            <Show
-              when={entries().length > 0}
-              fallback={<p>{applied() ? 'Nothing stored.' : 'Nothing patched.'}</p>}
-            >
-              <div style={chips}>
-                <For each={entries()}>
-                  {(e) => (
-                    <Chip variant="info" onRemove={() => removeOne(e)}>
-                      {describe(e)}
-                    </Chip>
-                  )}
-                </For>
-              </div>
-            </Show>
+        <p class="sublabel">
+          Stored <span data-search-skip>({entries().length}/{PATCHES_MAX})</span>
+        </p>
+        <Show
+          when={entries().length > 0}
+          fallback={<p class="mut">{applied() ? 'Nothing stored.' : 'Nothing patched.'}</p>}
+        >
+          <div class="chips">
+            <Index each={entries()}>
+              {(e) => (
+                <Chip variant="info" onRemove={() => removeOne(e())}>
+                  {describe(e())}
+                </Chip>
+              )}
+            </Index>
           </div>
-        </Card>
-      </div>
+        </Show>
+      </Panel>
     </Show>
   );
 };

@@ -147,7 +147,7 @@ export interface Render {
   ready: boolean;
 }
 
-// `spanUs` is the interval the box releases across; 0 until it learns the host's command period.
+// `spanUs` is the interval the box releases across; 0 until it learns the command interval.
 export interface Spread {
   percent: number;
   spanUs: number;
@@ -289,7 +289,7 @@ export function parseResp(payload: Uint8Array): Resp | null {
       };
     }
     case Q_LOCKS: {
-      // [what][n u8] then n × [class u8][id u16 LE][dir u8][scale i16 LE], one entry per direction not
+      // [what][n u8] then n x [class u8][id u16 LE][dir u8][scale i16 LE], one entry per direction not
       // passing untouched. A target absent from the list is passing on every direction.
       if (payload.length < 2) return null;
       const n = payload[1];
@@ -298,7 +298,7 @@ export function parseResp(payload: Uint8Array): Resp | null {
       const entries: LockEntry[] = [];
       for (let i = 0; i < n; i++) {
         const off = 2 + LOCK_ENTRY_LEN * i;
-        // Dropped like the crate does: kept, scaleOf would report a pass over a lock the box holds.
+        // Dropped, as the crate does: if kept, scaleOf would report a pass over a lock the box holds.
         const cls = lockClassFromU8(payload[off]);
         const direction = directionFromU8(payload[off + 3]);
         if (cls === null || direction === null) continue;
@@ -313,7 +313,7 @@ export function parseResp(payload: Uint8Array): Resp | null {
     }
     case Q_CATCH: {
       // [what][flags][dropped u32][clk_off_us i32][clk_rate_ppb i32][clk_delay_us u16]
-      // [clk_age_ms u16][n u8] then n × [class][id u16 LE][dir][capture][dropped u16].
+      // [clk_age_ms u16][n u8] then n x [class][id u16 LE][dir][capture][dropped u16].
       if (payload.length < CATCH_HDR_LEN) return null;
       const n = payload[18];
       // The payload fits 70 entries but the table holds 32, so a larger count is malformed.
@@ -515,7 +515,7 @@ export function parseResp(payload: Uint8Array): Resp | null {
       }
     }
     case Q_TRANSFORMS: {
-      // [what][flags][n] then n × [op][sclass][sid u16 LE][dclass][did u16 LE]; every read-back entry
+      // [what][flags][n] then n x [op][sclass][sid u16 LE][dclass][did u16 LE]; every read-back entry
       // is live.
       if (payload.length < RESP_TRANSFORMS_HDR) return null;
       const n = payload[2];
@@ -537,7 +537,7 @@ export function parseResp(payload: Uint8Array): Resp | null {
       return { kind: 'transforms', transforms: { tableFull: (payload[1] & TF_F_FULL) !== 0, entries } };
     }
     case Q_REWRITE: {
-      // [what][flags][gen][n] then n × [cls][id u16 LE][dir][action][mlen][off u16 LE][plen u16
+      // [what][flags][gen][n] then n x [cls][id u16 LE][dir][action][mlen][off u16 LE][plen u16
       // LE][hits u16 LE].
       if (payload.length < RESP_REWRITE_HDR) return null;
       const n = payload[3];
@@ -587,7 +587,7 @@ export function parseResp(payload: Uint8Array): Resp | null {
       };
     }
     case Q_PATCHES: {
-      // [what][flags][n] then n × [section][cfg][index][offset u16 LE][len u16 LE]. len is a u16: a
+      // [what][flags][n] then n x [section][cfg][index][offset u16 LE][len u16 LE]. len is a u16: a
       // report or configuration descriptor patch routinely exceeds 255 bytes.
       if (payload.length < RESP_PATCHES_HDR) return null;
       const n = payload[2];
@@ -617,7 +617,7 @@ export function parseResp(payload: Uint8Array): Resp | null {
       };
     }
     case Q_PATCH_ENTRY: {
-      // [what][list_index][section][cfg][index][offset u16 LE][bytes..], the PATCH command's own shape.
+      // [what][list_index][section][cfg][index][offset u16 LE][bytes..], the PATCH command's shape.
       if (payload.length < 7) return null;
       return {
         kind: 'patchEntry',
@@ -636,7 +636,7 @@ export function parseResp(payload: Uint8Array): Resp | null {
   }
 }
 
-// Parse a TRANSFER_RESP payload (§3.14): [ep u8][status u8][IN data..]. Its own opcode, not a RESP
+// Parse a TRANSFER_RESP payload (§3.14): [ep u8][status u8][IN data..]. A separate opcode, not a RESP
 // frame, correlated by the SEQ that echoes the TRANSFER.
 export function parseTransferResp(payload: Uint8Array): TransferResult {
   if (payload.length < 2) {
@@ -664,7 +664,7 @@ export function parseMotionEvent(payload: Uint8Array): MotionEvent | null {
 }
 
 // Parse a USAGE_EVENT payload (§4.10): [ts_us u32][clk u8][cls u8][dir u8][n u8] then
-// n × [class u8][id u16 LE]. Unsolicited. Class and edge come from the HEADER: the empty snapshot
+// n x [class u8][id u16 LE]. Unsolicited. Class and edge come from the HEADER: the empty snapshot
 // (release of the last held usage) lists nothing to read them from.
 export function parseUsageEvent(payload: Uint8Array): UsageSnapshot | null {
   if (payload.length < EVENT_HDR + 3) return null;

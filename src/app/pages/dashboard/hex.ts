@@ -17,8 +17,8 @@ export const parseHex = (s: string): Uint8Array | null => {
   return out;
 };
 
-// The box compares a packet's head byte for byte under the mask, so both are one length, at most
-// `max` bytes.
+// The box compares the start of a packet byte for byte under the mask, so match and mask share one
+// length of <= `max` bytes.
 export const parseMatchMask = (
   match: string,
   mask: string,
@@ -28,7 +28,7 @@ export const parseMatchMask = (
   const k = parseHex(mask);
   if (m === null || k === null) return 'Match and mask must be hex.';
   if (m.length !== k.length) return 'Match and mask must be the same length.';
-  if (m.length > max) return `Match and mask must be at most ${max} bytes.`;
+  if (m.length > max) return `Match and mask must be ≤${max} bytes.`;
   return { match: m, mask: k };
 };
 
@@ -40,8 +40,8 @@ export const parseNum = (s: string): number | null => {
   return Number.isFinite(v) && v >= 0 ? Math.floor(v) : null;
 };
 
-// Spec names, as text fields: USB documents bmRequestType and wValue in hex, and a spinner would
-// show 256 for 0x0100.
+// Text fields under the spec's names: USB documents bmRequestType and wValue in hex, and a spinner
+// would show 256 for 0x0100.
 export const SETUP_FIELDS = [
   { key: 'type', label: 'bmRequestType', placeholder: '0x80' },
   { key: 'req', label: 'bRequest', placeholder: '6' },
@@ -118,7 +118,7 @@ export const TRAFFIC_CLASS_BLURB: Record<number, string> = {
   [CatchClass.VendorInterrupt]: 'Interrupt traffic on a vendor interface.',
   [CatchClass.VendorBulk]: 'Bulk traffic on a vendor interface.',
   [CatchClass.Control]: 'Class and vendor requests on EP0, and every request on higher control endpoints.',
-  [CatchClass.Emit]: 'What the clone sends the game PC, injection included.',
+  [CatchClass.Emit]: 'What the clone emits to the game PC, injection included.',
 };
 
 // HID_IN keys on the interface; every other class, HID_OUT included, on the endpoint number.

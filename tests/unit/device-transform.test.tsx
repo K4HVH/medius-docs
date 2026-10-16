@@ -40,12 +40,10 @@ afterEach(() => {
   mock.entries = [];
 });
 
-// The usage list renders through a portal, so it is read off the document rather than the
-// container, and it only exists once the combobox is open. `which` picks source or destination.
+// The usage list is read off the document, and it only exists once the dropdown is open. `which`
+// picks source or destination.
 const openOptions = async (container: HTMLElement, which: number): Promise<string[]> => {
-  const trigger = [...container.querySelectorAll('[role="combobox"]')][which] as HTMLElement;
-  fireEvent.click(trigger);
-  fireEvent.keyDown(trigger, { key: 'Enter' });
+  fireEvent.click([...container.querySelectorAll('.dd-b')][which] as HTMLElement);
   await settle();
   return [...document.querySelectorAll('[role="option"]')].map((o) => o.textContent ?? '');
 };

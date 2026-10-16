@@ -12,12 +12,15 @@ export interface BoxStore {
   held(): HeldBox[];
   hold(mac: string, name: string): void;
   release(mac: string): void;
-  // By MAC; a box with none shows the default box.
+  // By MAC. A box with no entry shows the default `box` icon.
   icons(): Record<string, BoxIcon>;
   setIcon(mac: string, icon: BoxIcon): void;
 }
 
 export const STORE_KEY = 'medius.dashboard.boxes';
+
+// The selection key for a box not listed yet; its card connects a box through the chooser.
+export const NEW_BOX = 'new';
 
 interface Saved {
   selected: string | null;

@@ -8,6 +8,10 @@ import { PROTO_VER } from '../../src/dashboard/protocol';
 const mock = vi.hoisted(() => ({
   identifies: 0,
   identifying: false,
+  identifyRefused: false,
+  setLink: (_l: object | null) => {},
+  // Tells the page the box changed (an update finished), so what it reads is read again.
+  changed: () => {},
   supported: true,
   secure: true,
   status: 'disconnected' as string,
@@ -18,22 +22,33 @@ const mock = vi.hoisted(() => ({
   // The page that started the update in flight.
   runPage: 'update',
   error: null as string | null,
+  hash: '',
 }));
 
-vi.mock('../../src/app/pages/dashboard/context', () => ({
+vi.mock('../../src/app/pages/dashboard/context', async () => {
+  const { createSignal } = await import('solid-js');
+  const [link, setLink] = createSignal<object | null>({});
+  mock.setLink = setLink;
+  const [tick, setTick] = createSignal(0);
+  mock.changed = () => setTick((n) => n + 1);
+  return {
+  // The card's Add box picks Add box through the registry.
+  NEW_BOX: 'new',
+  useBoxes: () => ({ select: () => {} }),
   useDashboard: () => ({
+    link,
     supported: mock.supported,
     secure: mock.secure,
-    status: () => mock.status,
+    status: () => (tick(), mock.status),
     held: () => mock.status === 'lost',
     present: () => true,
-    updateOnly: () => mock.updateOnly,
+    updateOnly: () => (tick(), mock.updateOnly),
     verdict: () => mock.verdict,
     error: () => mock.error,
     // Update-only is a 3.2.0 box on protocol 5 unless a test says otherwise; the full page is a 3.4.2
     // box on the current wire.
     version: () =>
-      mock.updateOnly
+      (tick(), mock.updateOnly)
         ? { protoVer: mock.protoVer, fwMajor: 3, fwMinor: 2, fwPatch: 0, mac: [], name: '' }
         : { protoVer: PROTO_VER, fwMajor: 3, fwMinor: 4, fwPatch: 2, mac: [], name: '' },
     health: () => null,
@@ -41,20 +56,24 @@ vi.mock('../../src/app/pages/dashboard/context', () => ({
     disconnect: async () => {},
     identify: async () => {
       mock.identifies += 1;
+      if (mock.identifyRefused) throw new Error('The box refused that.');
     },
     identifying: () => mock.identifying,
     update: () => ({ device: true, host: true, page: mock.runPage, outcome: 'running' }),
     deviceLog: () => [],
+    deviceLogAdded: () => 0,
     clearDeviceLog: () => {},
     poll: () => () => null,
     refreshPoll: () => {},
   }),
-}));
+  };
+});
 
 const navigate = vi.hoisted(() => vi.fn());
 vi.mock('@solidjs/router', () => ({
   useNavigate: () => navigate,
   A: (p: { children: unknown }) => p.children,
+  useLocation: () => ({ pathname: '/dashboard', hash: mock.hash }),
 }));
 
 import Device from '../../src/app/pages/dashboard/Device';
@@ -69,10 +88,45 @@ afterEach(() => {
   mock.runPage = 'update';
   mock.verdict = null;
   mock.error = null;
+  mock.hash = '';
 });
 
 describe('Device', () => {
-  it('uses the same browser wording as every other page, not its own', async () => {
+  it('names the option a link asked for while no box is connected', () => {
+    mock.hash = '#imperfect-clone';
+    const { container } = render(() => <Device />);
+    expect(container.querySelector('#your-box')!.textContent).toContain('Connect your box to reach Imperfect clone.');
+    cleanup();
+    mock.hash = '#options';
+    expect(render(() => <Device />).container.textContent).toContain('Connect your box to reach Options.');
+    cleanup();
+    mock.hash = '#log';
+    expect(render(() => <Device />).container.textContent).not.toContain('Connect your box to reach');
+    for (const hash of ['#valueOf', '#toString', '#constructor', '#__proto__', '#hasOwnProperty']) {
+      cleanup();
+      mock.hash = hash;
+      expect(render(() => <Device />).container.textContent, hash).not.toContain('Connect your box to reach');
+    }
+  });
+
+  it('keeps the page in a browser without Web Serial, with the reason where Connect was', async () => {
+    mock.supported = false;
+    const { container, queryByRole } = render(() => <Device />);
+    await waitFor(() => expect(container.textContent).toContain('Your box'));
+    expect(container.textContent).toMatch(/can't talk to your box/i);
+    expect(container.textContent).not.toMatch(/Browser not supported/);
+    expect(queryByRole('button', { name: /^connect$/i })).toBeNull();
+  });
+
+  it('keeps the page on an insecure origin, with the reason where Connect was', async () => {
+    mock.secure = false;
+    const { container } = render(() => <Device />);
+    await waitFor(() => expect(container.textContent).toContain('Your box'));
+    expect(container.textContent).toMatch(/isn't secure/i);
+    expect(container.textContent).not.toMatch(/Page not secure/);
+  });
+
+  it('uses the same browser wording as every other page', async () => {
     mock.supported = false;
     const { container } = render(() => <Device />);
     await waitFor(() => expect(container.textContent).toMatch(/can't talk to your box/i));
@@ -105,11 +159,48 @@ describe('Device', () => {
       expect(text).toMatch(/Update needed/i);
       expect(text).toMatch(/use the rest of the dashboard/i);
       // the live-health panel belongs to the current wire and must not be offered
-      expect(text).not.toMatch(/Live device health/i);
+      expect(container.querySelector('#status')).toBeNull();
     });
   });
 
-  it('a box newer than the page is called newer and pointed at Reload and Advanced, never told to update', async () => {
+  it("gives a box on older firmware the Options it has, names what an update adds, and keeps factory reset away", async () => {
+    mock.status = 'connected';
+    mock.updateOnly = true;
+    mock.hash = '#options';
+    for (const [proto, missing] of [[5, 'Render, Spread, factory reset and the Control page'], [6, 'factory reset and the Control page'], [8, 'factory reset and the Control page']] as const) {
+      mock.protoVer = proto;
+      const { container } = render(() => <Device />);
+      const tab = container.querySelector<HTMLButtonElement>('[data-tab="options"]')!;
+      expect(tab.disabled, String(proto)).toBe(false);
+      await waitFor(() => expect(container.querySelector('#older-firmware'), String(proto)).not.toBeNull());
+      expect(container.querySelector('#older-firmware')!.textContent).toContain(`Update it for ${missing}.`);
+      expect(container.querySelector('#imperfect-clone'), String(proto)).not.toBeNull();
+      expect(!!container.querySelector('#render'), String(proto)).toBe(proto >= 6);
+      expect(container.querySelector('#factory-reset'), String(proto)).toBeNull();
+      cleanup();
+    }
+    mock.protoVer = PROTO_VER + 1;
+    const newer = render(() => <Device />);
+    expect(newer.container.querySelector<HTMLButtonElement>('[data-tab="options"]')!.disabled).toBe(true);
+  });
+
+  it('swaps the older layout for the whole page when the box is updated while its Options are open', async () => {
+    mock.status = 'connected';
+    mock.updateOnly = true;
+    mock.protoVer = 5;
+    mock.hash = '#options';
+    const { container } = render(() => <Device />);
+    await waitFor(() => expect(container.querySelector('#older-firmware')).not.toBeNull());
+    expect(container.querySelector('#render')).toBeNull();
+    mock.updateOnly = false;
+    mock.changed();
+    await waitFor(() => expect(container.querySelector('#older-firmware')).toBeNull());
+    expect(container.querySelector('#render')).not.toBeNull();
+    expect(container.querySelector('#factory-reset')).not.toBeNull();
+    expect(container.querySelector('#imperfect-clone')!.textContent).toContain('Advanced tab');
+  });
+
+  it('a box newer than the page is called newer and pointed at Reload and the Flash page, never told to update', async () => {
     mock.status = 'connected';
     mock.updateOnly = true;
     mock.protoVer = PROTO_VER + 1;
@@ -120,12 +211,12 @@ describe('Device', () => {
       const { container, getByRole } = render(() => <Device />);
       await waitFor(() => expect(container.textContent).toMatch(/Newer firmware/));
       const text = container.textContent ?? '';
-      expect(text).toContain(`This box speaks protocol ${PROTO_VER + 1} and this page protocol ${PROTO_VER}.`);
-      expect(text).toContain('It can still be flashed from Advanced.');
+      expect(text).toContain("This box speaks a newer protocol than this page.");
+      expect(text).toContain('It can still be flashed by hand, on the Flash page.');
       expect(text).not.toMatch(/Update needed/i);
-      expect(text).not.toMatch(/Live device health/i);
-      getByRole('button', { name: 'Advanced' }).click();
-      expect(navigate).toHaveBeenCalledWith('/dashboard/advanced');
+      expect(container.querySelector('#status')).toBeNull();
+      getByRole('button', { name: 'Flash' }).click();
+      expect(navigate).toHaveBeenCalledWith('/dashboard/flash');
       getByRole('button', { name: /reload/i }).click();
       expect(reload).toHaveBeenCalled();
     } finally {
@@ -140,7 +231,7 @@ describe('Device', () => {
     await waitFor(() => {
       const text = container.textContent ?? '';
       expect(text).not.toMatch(/Update needed/i);
-      expect(text).toMatch(/Live device health/i);
+      expect(container.querySelector('#status')).not.toBeNull();
     });
   });
 
@@ -153,7 +244,6 @@ describe('Device', () => {
     await waitFor(() => {
       const text = container.textContent ?? '';
       expect(text).toMatch(/Factory reset/i);
-      expect(text).toMatch(/Erase everything saved/i);
       expect(text).toMatch(/box name/i);
       expect(text).toMatch(/learned/i);
       expect(text).toMatch(/then restarts/i);
@@ -172,10 +262,12 @@ describe('Device', () => {
     // silently do a plain reset instead of what it says.
     mock.status = 'connected';
     mock.updateOnly = true;
+    mock.hash = '#options';
     const { container } = render(() => <Device />);
-    await waitFor(() => {
-      expect(container.textContent ?? '').not.toMatch(/Factory reset/i);
-    });
+    await waitFor(() => expect(container.querySelector('#imperfect-clone')).not.toBeNull());
+    expect(container.querySelector('#factory-reset')).toBeNull();
+    expect(container.querySelector('button')?.textContent ?? '').not.toMatch(/factory reset/i);
+    expect([...container.querySelectorAll('button')].some((b) => /reset/i.test(b.textContent ?? ''))).toBe(false);
   });
 
   it('a box that stopped answering keeps its card, with the reason and Disconnect', async () => {
@@ -195,12 +287,22 @@ describe('Device', () => {
     expect(navigate).toHaveBeenCalledWith('/dashboard/update');
   });
 
-  it('while Advanced flashes this box, the card takes you to Advanced', async () => {
+  it('names the box as updating in the header, not as disconnected, while it updates', async () => {
+    mock.status = 'flashing';
+    const { container } = render(() => <Device />);
+    expect(container.querySelector('.conn')!.textContent).toMatch(/^Updating/);
+    mock.status = 'lost';
+    cleanup();
+    const lost = render(() => <Device />);
+    expect(lost.container.querySelector('.conn')!.textContent).toMatch(/^Not answering/);
+  });
+
+  it('while the Flash page flashes this box, the card takes you to it', async () => {
     mock.status = 'flashing';
     mock.runPage = 'advanced';
     const { getByRole } = render(() => <Device />);
-    getByRole('button', { name: /go to advanced/i }).click();
-    expect(navigate).toHaveBeenCalledWith('/dashboard/advanced');
+    getByRole('button', { name: /go to flash/i }).click();
+    expect(navigate).toHaveBeenCalledWith('/dashboard/flash');
   });
 
   it('offers no Identify for a box newer than the page: the light command may have changed', () => {
@@ -227,6 +329,26 @@ describe('Device', () => {
     expect(names.indexOf('Identify')).toBe(names.indexOf('Disconnect') - 1);
     getByRole('button', { name: 'Identify' }).click();
     expect(mock.identifies).toBe(1);
+  });
+
+  it('a refused identify says so under the buttons that sent it', async () => {
+    mock.status = 'connected';
+    mock.identifyRefused = true;
+    const { getByRole, findByRole } = render(() => <Device />);
+    getByRole('button', { name: 'Identify' }).click();
+    expect((await findByRole('alert')).textContent).toBe('The box refused that.');
+    mock.identifyRefused = false;
+  });
+
+  it('drops a refused identify once the box is reached over a new link', async () => {
+    mock.status = 'connected';
+    mock.identifyRefused = true;
+    const { getByRole, findByRole, queryByRole } = render(() => <Device />);
+    getByRole('button', { name: 'Identify' }).click();
+    await findByRole('alert');
+    mock.identifyRefused = false;
+    mock.setLink({});
+    await waitFor(() => expect(queryByRole('alert')).toBeNull());
   });
 
   it('says it is identifying while the light blinks', () => {

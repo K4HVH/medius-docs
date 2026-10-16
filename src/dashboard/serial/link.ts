@@ -139,6 +139,7 @@ import {
   UPD_BUSY,
 } from '../protocol';
 import { isWebSerialSupported } from './support';
+import { canUpdate } from './wire';
 
 export const CTRL_BAUD = 6_000_000;
 // Firmware before 3.4.0 runs the control link at 4 Mbaud, and has to stay reachable to be updated.
@@ -209,7 +210,7 @@ function updateReason(op: number, status: number, arg: number): string {
     // Usually the op the box expected; a short END carries the bytes missing, a bad chunk its limit.
     case 0x1a:
       if (op === 0x02 && arg > 0) return `the image ended ${arg} bytes short.`;
-      if (op === 0x01 && arg === OTA_CHUNK) return `a chunk was not 1 to ${arg} bytes.`;
+      if (op === 0x01 && arg === OTA_CHUNK) return `a chunk was outside 1-${arg} bytes.`;
       return `out of order. The box wanted op ${arg}.`;
     case 0x1b: return 'a chip is still verifying its new firmware. Try again in a few seconds.';
     case 0x1c: return 'refused before writing, so anything staged is untouched.';
@@ -253,15 +254,7 @@ export class BadProtoVerError extends Error {
   }
 }
 
-/** Whether this page can reach a box at all: from MIN_PROTO_VER on, the update path is fixed (§2.3). */
-export function canUpdate(version: Version): boolean {
-  return version.protoVer >= MIN_PROTO_VER;
-}
-
-/** Whether a box speaks the current wire, or only enough of it to be updated. */
-export function speaksCurrentWire(version: Version): boolean {
-  return version.protoVer === PROTO_VER;
-}
+export { canUpdate, speaksCurrentWire } from './wire';
 
 export interface SerialLinkEvents {
   onLog?: (line: LogLine) => void;
@@ -298,7 +291,7 @@ export async function requestMediusPort(): Promise<SerialPort> {
   });
 }
 
-// Open a chooser filtered to an ESP32-S3 in ROM download mode (native USB).
+// Open a chooser filtered to an ESP32-S3 in ROM download mode, over the chip's USB port.
 export async function requestRomPort(): Promise<SerialPort> {
   if (!isWebSerialSupported()) {
     throw new Error('Web Serial is not supported in this browser');
@@ -315,12 +308,12 @@ export class SerialLink {
   // TRANSFER_RESP waiters, keyed by the SEQ the reply echoes (§3.14).
   private transferWaiters = new Map<number, TransferWaiter>();
   // UPDATE_RESP waiters, keyed by op: one acknowledgement answers a window of DATA frames and carries
-  // its own rolling SEQ.
+  // a separate rolling SEQ.
   private updateWaiters = new Map<number, (r: UpdateResp | null, cause?: Error) => void>();
   // Replies that beat their waiter; dropping them loses refusals raised inside a credit window.
   private updateBacklog: UpdateResp[] = [];
   private seq = 1;
-  // CLIP_APPEND's own sequence; see `clipAppend`.
+  // CLIP_APPEND's separate SEQ; see `clipAppend`.
   private clipSeq = 0;
   private opened = false;
   private closing = false;
@@ -334,7 +327,7 @@ export class SerialLink {
     private readonly events: SerialLinkEvents = {},
   ) {}
 
-  // The underlying Web Serial port, handed to esptool-js for the flash handoff.
+  // The underlying Web Serial port, kept to reconnect once an update restarts the box.
   get serialPort(): SerialPort {
     return this.port;
   }
@@ -360,8 +353,8 @@ export class SerialLink {
     for (let i = 0; i < HANDSHAKE_ATTEMPTS; i++) {
       try {
         const version = await this.queryVersion(HANDSHAKE_TIMEOUT_MS);
-        // Below MIN_PROTO_VER there is no UPDATE to reach. From it on a box connects, for updating
-        // unless it speaks this page's wire.
+        // Below MIN_PROTO_VER there is no UPDATE to reach. From MIN_PROTO_VER on a box connects, and is
+        // update-only unless it speaks this page's wire.
         if (!canUpdate(version)) throw new BadProtoVerError(version);
         return version;
       } catch (e) {
@@ -369,7 +362,7 @@ export class SerialLink {
         // No later attempt reads anything either.
         if (this.readFailed) throw new UnreadablePortError();
         // A timeout often means a prior client left the box's decoder wedged mid-frame; flush it and
-        // retry. Firmware drops a stale partial frame by itself after 50 ms, except 3.4.0 to 3.4.3, where only
+        // retry. Firmware drops a stale partial frame by itself after 50 ms, except 3.4.0-3.4.3, where only
         // this flush clears it.
         await this.flushPeerDecoder();
       }
@@ -471,7 +464,7 @@ export class SerialLink {
     return this.send(encode(FrameType.Led, this.nextSeq(), ledPayload(target, mode, level)));
   }
 
-  // Weigh physical input on a target and direction (§3.8).
+  // Weigh native input on a target and direction (§3.8).
   scale(target: LockTarget, direction: Direction, scale: number): Promise<void> {
     // Only an axis has a bearing; the box treats a relative direction differently per class elsewhere.
     if (target.cls !== LockClass.Axis && (direction === Direction.With || direction === Direction.Against)) {
@@ -507,7 +500,7 @@ export class SerialLink {
     return this.send(encode(FrameType.Move, this.nextSeq(), movePanPayload(dpan, flags)));
   }
 
-  // Movement riding bypassed (§3.1, MV_F_NOW): the delta leaves on the next report.
+  // Movement riding bypassed (§3.1, MV_F_NOW): the delta is emitted on the next report.
   moveRelNow(dx: number, dy: number): Promise<void> {
     return this.moveRel(dx, dy, MV_F_NOW);
   }
@@ -623,8 +616,8 @@ export class SerialLink {
     return resp.render;
   }
 
-  // Share of the command interval an injected delta is released across (§3.13). 0 = next report;
-  // above 100 overlaps. Persisted.
+  // Share of the command interval an injected delta is released across (§3.10). 0 = next report;
+  // >100 overlaps. Persisted.
   setSpread(percent: number): Promise<void> {
     return this.send(encode(FrameType.Option, this.nextSeq(), spreadPayload(percent)));
   }
@@ -643,7 +636,7 @@ export class SerialLink {
     return resp.clip;
   }
 
-  // CLIP_APPEND has its own SEQ: the box faults on any gap, and every query advances the shared one.
+  // CLIP_APPEND has a separate SEQ: the box faults on any gap, and every query advances the shared one.
   // No backpressure: an overflowing append faults, so check `freeBytes`. Dropped with no reply while
   // no clone is up, and after FINALIZE on a retained clip (§3.11).
   async clipAppend(entries: ClipEntry[]): Promise<void> {
@@ -1023,7 +1016,7 @@ export class SerialLink {
       return;
     }
     if (f.ty === FrameType.TransferResp) {
-      // Its own opcode, correlated by the SEQ that echoes the TRANSFER.
+      // A separate opcode, correlated by the SEQ that echoes the TRANSFER.
       const w = this.transferWaiters.get(f.seq);
       if (w) {
         clearTimeout(w.timer);
@@ -1084,8 +1077,8 @@ export class SerialLink {
     new DataView(begin.buffer).setUint32(0, image.length, true);
     begin.set(digest, 4);
     let ready = await this.updateOp(OTA_OP_BEGIN, target, begin, UPDATE_OP_TIMEOUT_MS);
-    // Only one client holds the port, so a session already open on this target was left by one that went
-    // away mid-transfer (a pulled cable), and the box would hold it for its 10 s idle timer. Drop it.
+    // Only one client holds the port, so a session already open on this target was left by a client that
+    // went away mid-transfer (a pulled cable). The box would hold it for its 10 s idle timer, so drop it.
     if (ready.status === UPD_BUSY) {
       await this.abortUpdate(target).catch(() => undefined);
       ready = await this.updateOp(OTA_OP_BEGIN, target, begin, UPDATE_OP_TIMEOUT_MS);
@@ -1148,7 +1141,7 @@ export class SerialLink {
     body: Uint8Array,
     timeoutMs: number,
   ): Promise<UpdateResp> {
-    // Anything queued for THIS op answers an earlier command and would read as a fresh success.
+    // Anything already queued for this op answers an earlier command and would read as a fresh success.
     this.updateBacklog = this.updateBacklog.filter((r) => r.op !== op);
     const frame = new Uint8Array(2 + body.length);
     frame[0] = op;
@@ -1158,7 +1151,7 @@ export class SerialLink {
     try {
       await this.send(encode(FrameType.Update, this.nextSeq(), frame));
     } catch (e) {
-      // Nothing will answer a frame that never went out: end the wait now, or it times out unheard.
+      // Nothing will answer a frame that was never sent: end the wait now, or it times out unheard.
       wait.catch(() => undefined);
       this.updateWaiters.get(op)?.(null, e as Error);
       throw e;
@@ -1198,7 +1191,7 @@ export class SerialLink {
       w.reject(err);
     }
     this.transferWaiters.clear();
-    // Or an in-flight op sits out its 20 to 60 s timeout after the port is gone.
+    // Fail every update waiter now, or an in-flight op sits out its 20-60 s timeout after the port is gone.
     for (const w of this.updateWaiters.values()) w(null, err);   // the real cause, not a supersession
     this.updateWaiters.clear();
     this.updateBacklog.length = 0;

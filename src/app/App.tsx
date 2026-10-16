@@ -1,191 +1,141 @@
 import type { Component, JSX } from 'solid-js';
-import { Router, Route, Navigate } from '@solidjs/router';
+import { Dynamic } from 'solid-js/web';
+import { Router, Route, type RouteSectionProps } from '@solidjs/router';
 import { NotificationProvider } from '../components/feedback/Notification';
 import RouteMeta from './RouteMeta';
-import Home from './pages/Home';
+import { useLeaveFade } from './shell/leave';
+import { SiteNav } from './shell/SiteNav';
+import { GridBackground } from '../components/surfaces/GridBackground';
+import { useScrollPlace } from './shell/scrollPlace';
+import { useNativeFlash } from './pages/dashboard/context';
 import DocsLayout from './pages/DocsLayout';
-import NativeIntroduction from './pages/native/Introduction';
-import NativeQuickstart from './pages/native/Quickstart';
-import NativeArchitecture from './pages/native/Architecture';
-import NativeHardware from './pages/native/Hardware';
-import NativeTransport from './pages/native/Transport';
-import NativeConnection from './pages/native/Connection';
-import NativeFrame from './pages/native/Frame';
-import NativeInjection from './pages/native/Injection';
-import CmdInject from './pages/native/commands/Inject';
-import CmdMove from './pages/native/commands/Move';
-import CmdUsage from './pages/native/commands/Usage';
-import CmdRequests from './pages/native/commands/Requests';
-import CmdAdmin from './pages/native/commands/Admin';
-import CmdLed from './pages/native/commands/Led';
-import CmdLock from './pages/native/commands/Lock';
-import CmdCatch from './pages/native/commands/Catch';
-import CmdTransform from './pages/native/commands/Transform';
-import CmdOption from './pages/native/commands/Option';
-import CmdClip from './pages/native/commands/Clip';
-import CmdUpdate from './pages/native/commands/Update';
-import CmdRaw from './pages/native/commands/Raw';
-import CmdTransfer from './pages/native/commands/Transfer';
-import CmdRewrite from './pages/native/commands/Rewrite';
-import CmdPatch from './pages/native/commands/Patch';
-import NativeFlashing from './pages/native/Flashing';
-import NativeTroubleshooting from './pages/native/Troubleshooting';
-import AiAccess from './pages/AiAccess';
-import LibIntroduction from './pages/library/Introduction';
-import LibConnection from './pages/library/Connection';
-import LibDiscovery from './pages/library/Discovery';
-import LibInject from './pages/library/Inject';
-import LibMove from './pages/library/Move';
-import LibRequests from './pages/library/Requests';
-import LibAdmin from './pages/library/Admin';
-import LibUpdate from './pages/library/Update';
-import LibLed from './pages/library/Led';
-import LibLock from './pages/library/Lock';
-import LibCatch from './pages/library/Catch';
-import LibTransform from './pages/library/Transform';
-import LibOptions from './pages/library/Options';
-import LibClip from './pages/library/Clip';
-import LibLifecycle from './pages/library/Lifecycle';
-import LibDiagnostics from './pages/library/Diagnostics';
-import FeatAsync from './pages/library/features/Async';
-import FeatMock from './pages/library/features/Mock';
-import FeatTracing from './pages/library/features/Tracing';
-import DevRaw from './pages/library/advanced/Raw';
-import DevTransfer from './pages/library/advanced/Transfer';
-import DevRewrite from './pages/library/advanced/Rewrite';
-import DevPatch from './pages/library/advanced/Patch';
-import GuideCalls from './pages/library/GuideCalls';
-import GuideConnection from './pages/library/GuideConnection';
-import GuideTesting from './pages/library/GuideTesting';
-import LibTypes from './pages/library/TypesAndErrors';
-import LibTypesEnums from './pages/library/types/Enums';
-import LibTypesStructs from './pages/library/types/Structs';
-import LibTypesFrames from './pages/library/types/Frames';
-import LibTypesErrors from './pages/library/types/Errors';
-import BindingsOverview from './pages/bindings/Overview';
-import CInstall from './pages/bindings/c/Install';
-import CQuickstart from './pages/bindings/c/Quickstart';
-import CUsage from './pages/bindings/c/Usage';
-import CStreams from './pages/bindings/c/Streams';
-import CApi from './pages/bindings/c/Api';
-import CTypes from './pages/bindings/c/Types';
-import CBuild from './pages/bindings/c/Build';
-import PyInstall from './pages/bindings/python/Install';
-import PyQuickstart from './pages/bindings/python/Quickstart';
-import PyUsage from './pages/bindings/python/Usage';
-import PyStreams from './pages/bindings/python/Streams';
-import PyApi from './pages/bindings/python/Api';
-import PyTypes from './pages/bindings/python/Types';
-import PyBuild from './pages/bindings/python/Build';
-import DashboardDevice from './pages/dashboard/Device';
-import DashboardSetup from './pages/dashboard/Setup';
-import DashboardControl from './pages/dashboard/Control';
-import DashboardDeveloper from './pages/dashboard/DeviceDeveloper';
-import DashboardUpdate from './pages/dashboard/Update';
-import DashboardAdvanced from './pages/dashboard/Advanced';
-import DashboardChangelog from './pages/dashboard/Changelog';
-import DashboardStats from './pages/dashboard/Stats';
+import { NotFoundPage, PAGES, pageAt, pageLoaded, preloadPage } from './lazyPages';
 import { BoxScope, DashboardProvider } from './pages/dashboard/context';
 
-const RootLayout: Component<{ children?: JSX.Element }> = (props) => (
-  <>
-    <RouteMeta />
-    {props.children}
-  </>
-);
+const RootLayout: Component<{ children?: JSX.Element }> = (props) => {
+  const native = useNativeFlash();
+  useScrollPlace();
+  useLeaveFade(native.running, { loaded: pageLoaded, load: preloadPage, whole: (href) => window.location.assign(href) });
+  return (
+    <>
+      <RouteMeta />
+      <GridBackground gridSize={10} />
+      <SiteNav disabled={native.running()} />
+      {props.children}
+    </>
+  );
+};
+
+// A page and the places on it (`/page/id`, routes.ts addressFor) share one route, so moving between them keeps
+// the page mounted. An address the server answered with its 404 page shows the 404 page.
+const AtPage: Component<RouteSectionProps> = (props) => <Dynamic component={pageAt(props.location.pathname)} {...props} />;
 
 const App: Component = () => {
   return (
       <NotificationProvider>
       <DashboardProvider>
         <Router root={RootLayout}>
-        <Route path="/" component={Home} />
+        <Route path="/" component={PAGES['/']} />
         <Route path="/" component={DocsLayout}>
-          <Route path="/native" component={NativeIntroduction} />
-          <Route path="/native/quickstart" component={NativeQuickstart} />
-          <Route path="/native/architecture" component={NativeArchitecture} />
-          <Route path="/native/hardware" component={NativeHardware} />
-          <Route path="/native/transport" component={NativeTransport} />
-          <Route path="/native/connection" component={NativeConnection} />
-          <Route path="/native/frame" component={NativeFrame} />
-          <Route path="/native/injection" component={NativeInjection} />
-          <Route path="/native/commands/inject" component={CmdInject} />
-          <Route path="/native/commands/move" component={CmdMove} />
-          <Route path="/native/commands/requests" component={CmdRequests} />
-          <Route path="/native/commands/admin" component={CmdAdmin} />
-          <Route path="/native/commands/update" component={CmdUpdate} />
-          <Route path="/native/commands/led" component={CmdLed} />
-          <Route path="/native/commands/lock" component={CmdLock} />
-          <Route path="/native/commands/catch" component={CmdCatch} />
-          <Route path="/native/commands/transform" component={CmdTransform} />
-          <Route path="/native/commands/option" component={CmdOption} />
-          <Route path="/native/commands/clip" component={CmdClip} />
-          <Route path="/native/commands/raw" component={CmdRaw} />
-          <Route path="/native/commands/transfer" component={CmdTransfer} />
-          <Route path="/native/commands/rewrite" component={CmdRewrite} />
-          <Route path="/native/commands/patch" component={CmdPatch} />
-          <Route path="/native/commands/usage" component={CmdUsage} />
-          <Route path="/native/flashing" component={NativeFlashing} />
-          <Route path="/native/troubleshooting" component={NativeTroubleshooting} />
-          <Route path="/ai" component={AiAccess} />
-          <Route path="/library" component={LibIntroduction} />
-          <Route path="/library/connection" component={LibConnection} />
-          <Route path="/library/discovery" component={LibDiscovery} />
-          <Route path="/library/inject" component={LibInject} />
-          <Route path="/library/move" component={LibMove} />
-          <Route path="/library/requests" component={LibRequests} />
-          <Route path="/library/admin" component={LibAdmin} />
-          <Route path="/library/update" component={LibUpdate} />
-          <Route path="/library/led" component={LibLed} />
-          <Route path="/library/lock" component={LibLock} />
-          <Route path="/library/catch" component={LibCatch} />
-          <Route path="/library/transform" component={LibTransform} />
-          <Route path="/library/options" component={LibOptions} />
-          <Route path="/library/clip" component={LibClip} />
-          <Route path="/library/lifecycle" component={LibLifecycle} />
-          <Route path="/library/diagnostics" component={LibDiagnostics} />
-          <Route path="/library/features/async" component={FeatAsync} />
-          <Route path="/library/features/mock" component={FeatMock} />
-          <Route path="/library/features/tracing" component={FeatTracing} />
-          <Route path="/library/advanced/raw" component={DevRaw} />
-          <Route path="/library/advanced/transfer" component={DevTransfer} />
-          <Route path="/library/advanced/rewrite" component={DevRewrite} />
-          <Route path="/library/advanced/patch" component={DevPatch} />
-          <Route path="/library/guides/calls" component={GuideCalls} />
-          <Route path="/library/guides/connection" component={GuideConnection} />
-          <Route path="/library/guides/testing" component={GuideTesting} />
-          <Route path="/library/types" component={LibTypes} />
-          <Route path="/library/types/enums" component={LibTypesEnums} />
-          <Route path="/library/types/structs" component={LibTypesStructs} />
-          <Route path="/library/types/frames" component={LibTypesFrames} />
-          <Route path="/library/types/errors" component={LibTypesErrors} />
-          <Route path="/bindings" component={BindingsOverview} />
-          <Route path="/bindings/c" component={CInstall} />
-          <Route path="/bindings/c/quickstart" component={CQuickstart} />
-          <Route path="/bindings/c/usage" component={CUsage} />
-          <Route path="/bindings/c/streams" component={CStreams} />
-          <Route path="/bindings/c/api" component={CApi} />
-          <Route path="/bindings/c/types" component={CTypes} />
-          <Route path="/bindings/c/build" component={CBuild} />
-          <Route path="/bindings/python" component={PyInstall} />
-          <Route path="/bindings/python/quickstart" component={PyQuickstart} />
-          <Route path="/bindings/python/usage" component={PyUsage} />
-          <Route path="/bindings/python/streams" component={PyStreams} />
-          <Route path="/bindings/python/api" component={PyApi} />
-          <Route path="/bindings/python/types" component={PyTypes} />
-          <Route path="/bindings/python/build" component={PyBuild} />
+          <Route path="/guide/:place?" component={AtPage} />
+          <Route path="/guide/compatibility/:place?" component={AtPage} />
+          <Route path="/guide/options/:place?" component={AtPage} />
+          <Route path="/guide/privacy/:place?" component={AtPage} />
+          <Route path="/guide/help/:place?" component={AtPage} />
+          <Route path="/comparison/:place?" component={AtPage} />
+          <Route path="/comparison/devices/:place?" component={AtPage} />
+          <Route path="/comparison/passthrough/:place?" component={AtPage} />
+          <Route path="/comparison/injection/:place?" component={AtPage} />
+          <Route path="/comparison/control-link/:place?" component={AtPage} />
+          <Route path="/comparison/input/:place?" component={AtPage} />
+          <Route path="/comparison/recovery/:place?" component={AtPage} />
+          <Route path="/comparison/features/:place?" component={AtPage} />
+          <Route path="/comparison/software/:place?" component={AtPage} />
+          <Route path="/comparison/method/:place?" component={AtPage} />
+          <Route path="/native/:place?" component={AtPage} />
+          <Route path="/native/quickstart/:place?" component={AtPage} />
+          <Route path="/native/architecture/:place?" component={AtPage} />
+          <Route path="/native/hardware/:place?" component={AtPage} />
+          <Route path="/native/transport/:place?" component={AtPage} />
+          <Route path="/native/connection/:place?" component={AtPage} />
+          <Route path="/native/frame/:place?" component={AtPage} />
+          <Route path="/native/injection/:place?" component={AtPage} />
+          <Route path="/native/commands/inject/:place?" component={AtPage} />
+          <Route path="/native/commands/move/:place?" component={AtPage} />
+          <Route path="/native/commands/requests/:place?" component={AtPage} />
+          <Route path="/native/commands/admin/:place?" component={AtPage} />
+          <Route path="/native/commands/update/:place?" component={AtPage} />
+          <Route path="/native/commands/led/:place?" component={AtPage} />
+          <Route path="/native/commands/lock/:place?" component={AtPage} />
+          <Route path="/native/commands/catch/:place?" component={AtPage} />
+          <Route path="/native/commands/transform/:place?" component={AtPage} />
+          <Route path="/native/commands/option/:place?" component={AtPage} />
+          <Route path="/native/commands/clip/:place?" component={AtPage} />
+          <Route path="/native/commands/raw/:place?" component={AtPage} />
+          <Route path="/native/commands/transfer/:place?" component={AtPage} />
+          <Route path="/native/commands/rewrite/:place?" component={AtPage} />
+          <Route path="/native/commands/patch/:place?" component={AtPage} />
+          <Route path="/native/commands/usage/:place?" component={AtPage} />
+          <Route path="/native/flashing/:place?" component={AtPage} />
+          <Route path="/native/troubleshooting/:place?" component={AtPage} />
+          <Route path="/ai/:place?" component={AtPage} />
+          <Route path="/library/:place?" component={AtPage} />
+          <Route path="/library/connection/:place?" component={AtPage} />
+          <Route path="/library/discovery/:place?" component={AtPage} />
+          <Route path="/library/inject/:place?" component={AtPage} />
+          <Route path="/library/move/:place?" component={AtPage} />
+          <Route path="/library/requests/:place?" component={AtPage} />
+          <Route path="/library/admin/:place?" component={AtPage} />
+          <Route path="/library/update/:place?" component={AtPage} />
+          <Route path="/library/led/:place?" component={AtPage} />
+          <Route path="/library/lock/:place?" component={AtPage} />
+          <Route path="/library/catch/:place?" component={AtPage} />
+          <Route path="/library/transform/:place?" component={AtPage} />
+          <Route path="/library/options/:place?" component={AtPage} />
+          <Route path="/library/clip/:place?" component={AtPage} />
+          <Route path="/library/lifecycle/:place?" component={AtPage} />
+          <Route path="/library/diagnostics/:place?" component={AtPage} />
+          <Route path="/library/features/async/:place?" component={AtPage} />
+          <Route path="/library/features/mock/:place?" component={AtPage} />
+          <Route path="/library/features/tracing/:place?" component={AtPage} />
+          <Route path="/library/advanced/raw/:place?" component={AtPage} />
+          <Route path="/library/advanced/transfer/:place?" component={AtPage} />
+          <Route path="/library/advanced/rewrite/:place?" component={AtPage} />
+          <Route path="/library/advanced/patch/:place?" component={AtPage} />
+          <Route path="/library/guides/calls/:place?" component={AtPage} />
+          <Route path="/library/guides/connection/:place?" component={AtPage} />
+          <Route path="/library/guides/testing/:place?" component={AtPage} />
+          <Route path="/library/types/:place?" component={AtPage} />
+          <Route path="/library/types/enums/:place?" component={AtPage} />
+          <Route path="/library/types/structs/:place?" component={AtPage} />
+          <Route path="/library/types/frames/:place?" component={AtPage} />
+          <Route path="/library/types/errors/:place?" component={AtPage} />
+          <Route path="/bindings/:place?" component={AtPage} />
+          <Route path="/bindings/c/:place?" component={AtPage} />
+          <Route path="/bindings/c/quickstart/:place?" component={AtPage} />
+          <Route path="/bindings/c/usage/:place?" component={AtPage} />
+          <Route path="/bindings/c/streams/:place?" component={AtPage} />
+          <Route path="/bindings/c/api/:place?" component={AtPage} />
+          <Route path="/bindings/c/types/:place?" component={AtPage} />
+          <Route path="/bindings/c/build/:place?" component={AtPage} />
+          <Route path="/bindings/python/:place?" component={AtPage} />
+          <Route path="/bindings/python/quickstart/:place?" component={AtPage} />
+          <Route path="/bindings/python/usage/:place?" component={AtPage} />
+          <Route path="/bindings/python/streams/:place?" component={AtPage} />
+          <Route path="/bindings/python/api/:place?" component={AtPage} />
+          <Route path="/bindings/python/types/:place?" component={AtPage} />
+          <Route path="/bindings/python/build/:place?" component={AtPage} />
           <Route path="/" component={BoxScope}>
-            <Route path="/dashboard" component={DashboardDevice} />
-            <Route path="/dashboard/control" component={DashboardControl} />
-            <Route path="/dashboard/advanced-control" component={DashboardDeveloper} />
-            <Route path="/dashboard/update" component={DashboardUpdate} />
+            <Route path="/dashboard/:place?" component={AtPage} />
+            <Route path="/dashboard/control/:place?" component={AtPage} />
           </Route>
-          <Route path="/dashboard/setup" component={DashboardSetup} />
-          <Route path="/dashboard/advanced" component={DashboardAdvanced} />
-          <Route path="/dashboard/changelog" component={DashboardChangelog} />
-          <Route path="/dashboard/stats" component={DashboardStats} />
+          <Route path="/dashboard/setup/:place?" component={AtPage} />
+          <Route path="/dashboard/update/:place?" component={AtPage} />
+          <Route path="/dashboard/flash/:place?" component={AtPage} />
+          <Route path="/dashboard/changelog/:place?" component={AtPage} />
+          <Route path="/dashboard/stats/:place?" component={AtPage} />
+          <Route path="*" component={NotFoundPage} />
         </Route>
-        <Route path="*" component={() => <Navigate href="/" />} />
         </Router>
       </DashboardProvider>
       </NotificationProvider>

@@ -1,38 +1,49 @@
 /// <reference types="w3c-web-serial" />
-import { Match, Show, Switch, createResource, createSignal } from 'solid-js';
+import { For, Match, Show, Switch, createResource, createSignal, type JSX } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
-import { Card, CardHeader } from '../../../components/surfaces/Card';
 import { Button } from '../../../components/inputs/Button';
-import { Chip } from '../../../components/display/Chip';
-import { Progress } from '../../../components/feedback/Progress';
 import { type FirmwareAsset, downloadAsset, fetchReleases } from '../../../dashboard/firmware';
 import type { FlashChip } from '../../../dashboard/flash';
 import { type ConnectVerdict, requestRomPort } from '../../../dashboard/serial';
 import { type BoxEntry, type Snapshot, useBoxes, useNativeFlash } from './context';
-import { BAD_BROWSER, BAD_CONTEXT, ConnectView } from './ConnectPanel';
+import { BAD_BROWSER, BAD_CONTEXT, ConnectView, notConnected } from './ConnectPanel';
 import { ClearPort, InstallPorts, type PortId } from './PortDiagram';
-import '../../../styles/docs.css';
+import { flashPercent, flashWait } from './flashText';
+import { PageHeader } from '../../shell/PageHeader';
 
 type Step = 'main' | 'unplug' | 'mouse' | 'unplug3' | 'cables';
 
 const STEPS: Step[] = ['main', 'unplug', 'mouse', 'unplug3', 'cables'];
 
 const isUserCancel = (e: unknown) => e instanceof DOMException && e.name === 'NotFoundError';
-const HAZARD = 'USB1 and USB3 in one computer can kill it.';
-const row = { display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' } as const;
 
 const Setup = () => {
   const native = useNativeFlash();
   const boxes = useBoxes();
   const navigate = useNavigate();
-  const [releases] = createResource(fetchReleases);
+  const [releases, { refetch }] = createResource(fetchReleases);
   const [step, setStep] = createSignal<Step>('main');
   const [busy, setBusy] = createSignal(false);
   const [err, setErr] = createSignal<string | null>(null);
   const [installed, setInstalled] = createSignal<BoxEntry | null>(null);
   const [finding, setFinding] = createSignal(false);
   const [found, setFound] = createSignal<ConnectVerdict | null>(null);
-  // Taken at the first install: the box installed is one that answers after it.
+  // A box already running Medius, picked in the chooser (a browser sees a port only after one pick). A Medius
+  // box connects and takes its pages (DocsLayout); any other result is shown here.
+  const [linking, setLinking] = createSignal(false);
+  const [linked, setLinked] = createSignal<ConnectVerdict | null>(null);
+  const link = async () => {
+    setLinked(null);
+    setLinking(true);
+    try {
+      const r = await boxes.add();
+      if (!r.ok) setLinked(r.verdict);
+      else if (r.entry.session.status() !== 'connected') setLinked(r.entry.session.verdict() ?? { kind: 'silent' });
+    } finally {
+      setLinking(false);
+    }
+  };
+  // Taken at the first install, so the installed box is one that starts answering after it.
   let before: Snapshot | null = null;
 
   // A rejected resource re-throws on every read, render included, and there is no ErrorBoundary:
@@ -44,13 +55,8 @@ const Setup = () => {
       return null;
     }
   };
-  const counter = () => `Step ${STEPS.indexOf(step()) + 1} of ${STEPS.length}`;
-  const pct = () => {
-    const p = native.progress();
-    return p?.phase === 'writing' && p.total
-      ? Math.round(((p.written ?? 0) / p.total) * 100)
-      : undefined;
-  };
+  const pct = () => flashPercent(native.progress());
+  const wait = () => flashWait(native.progress());
 
   // Only one chip's USB is plugged in with its button held, so only that chip answers.
   const install = async (chip: FlashChip, next: Step) => {
@@ -96,65 +102,131 @@ const Setup = () => {
     setStep(to);
   };
 
+  // The first step shows in any browser; Install needs Web Serial on a secure page.
+  const blocked = () => (!boxes.supported ? BAD_BROWSER : !boxes.secure ? BAD_CONTEXT : null);
+  const unlisted = () => !latest() && !releases.loading;
+
+  // Install, or why there is nothing to install yet.
+  const installOr = (chip: FlashChip, next: Step, back?: JSX.Element) => (
+    <Show
+      when={!unlisted()}
+      fallback={
+        <>
+          <div class="callout callout--warning" role="alert">
+            {releases.error ? "The release list didn't load. Try again in a few minutes." : 'No release is published yet.'}
+          </div>
+          <Show when={releases.error || back}>
+            <div class="acts">
+              <Show when={releases.error}>
+                <Button variant="secondary" onClick={() => void refetch()}>
+                  Retry
+                </Button>
+              </Show>
+              {back}
+            </div>
+          </Show>
+        </>
+      }
+    >
+      <div class="acts">
+        <Button variant="primary" disabled={busy() || linking() || releases.loading} onClick={() => void install(chip, next)}>
+          {busy() ? 'Installing...' : 'Install'}
+        </Button>
+        {back}
+      </div>
+    </Show>
+  );
+
+  const LABELS: Record<Step, string> = {
+    main: 'Main chip',
+    unplug: 'Unplug USB1',
+    mouse: 'Mouse-side chip',
+    unplug3: 'Unplug USB3',
+    cables: 'Wire the box',
+  };
+  const at = () => STEPS.indexOf(step());
+  const finished = () => installed()?.session.status() === 'connected';
+
   return (
     <>
-      <Show when={!boxes.supported}>
-        <div id="unsupported" data-search-target>
-          <Card>
-            <CardHeader title="Browser not supported" subtitle="No box access from this browser" />
-            <p>{BAD_BROWSER}</p>
-          </Card>
+      <PageHeader />
+      <div class="flow" id="install">
+        <div class="stages">
+          <For each={STEPS}>
+            {(s, i) => (
+              <span classList={{ now: !finished() && i() === at(), done: i() < at() || finished() }}>
+                <em>{i() + 1}</em>
+                <i>{LABELS[s]}</i>
+              </span>
+            )}
+          </For>
         </div>
-      </Show>
-      <Show when={boxes.supported && !boxes.secure}>
-        <div id="insecure" data-search-target>
-          <Card>
-            <CardHeader title="Page not secure" subtitle="No box access from this page" />
-            <p>{BAD_CONTEXT}</p>
-          </Card>
-        </div>
-      </Show>
 
-      <Show when={native.running()}>
-        <div id="installing" data-search-target>
-          <Card>
-            <CardHeader title="Installing" subtitle="Don't unplug or leave this page" />
-            <Progress type="linear" value={pct()} showLabel={pct() !== undefined} />
-          </Card>
-        </div>
-      </Show>
-
-      <Show when={boxes.supported && boxes.secure && !native.running()}>
-        <div id="install" data-search-target>
-          <Card>
-            <CardHeader title="Install Medius" subtitle="Ports are numbered on the box" />
-            <div style={{ 'margin-bottom': 'var(--g-spacing-sm)' }}>
-              <Chip variant="neutral">{counter()}</Chip>
+        <Show when={err()}>
+          {(msg) => (
+            <div class="callout callout--danger" role="alert">
+              {msg()}
             </div>
-            <Show when={err()}>
-              {(msg) => (
-                <div class="callout callout--danger" role="alert">
-                  {msg()}
+          )}
+        </Show>
+
+        <Show
+          when={!native.running()}
+          fallback={
+            <div class="step" id="installing">
+              <p class="cue">Installing</p>
+              <p class="sub2">Don't unplug or close this tab</p>
+              <div class="prog">
+                <div class="pct">
+                  <Show when={wait()} fallback={<>{pct()}<small>%</small></>}>
+                    {wait()}
+                  </Show>
                 </div>
-              )}
-            </Show>
-
-            <Switch>
-              <Match when={step() === 'main'}>
+                <div class="track" classList={{ wait: !!wait() }}>
+                  <i style={{ '--p': (pct() ?? 0) / 100 }} />
+                </div>
+              </div>
+            </div>
+          }
+        >
+          <Switch>
+            <Match when={step() === 'main'}>
+              <div class="step">
                 <InstallPorts socket="usb1" />
-                <Button
-                  variant="primary"
-                  disabled={busy() || releases.loading}
-                  onClick={() => void install('device', 'unplug')}
+                <Show
+                  when={blocked()}
+                  fallback={
+                    <>
+                      {installOr(
+                        'device',
+                        'unplug',
+                        <Button variant="secondary" disabled={busy() || linking()} loading={linking()} onClick={() => void link()}>
+                          {linking() ? 'Connecting...' : linked() ? 'Retry' : 'Connect'}
+                        </Button>,
+                      )}
+                      <Show when={linked()}>
+                        {(v) => (
+                          <div class="callout callout--danger" role="alert">
+                            {notConnected(v())}
+                          </div>
+                        )}
+                      </Show>
+                    </>
+                  }
                 >
-                  {busy() ? 'Installing...' : 'Install'}
-                </Button>
-              </Match>
+                  {(reason) => (
+                    <div class="callout callout--warning" role="alert">
+                      {reason()}
+                    </div>
+                  )}
+                </Show>
+              </div>
+            </Match>
 
-              <Match when={step() === 'unplug'}>
+            <Match when={step() === 'unplug'}>
+              <div class="step">
                 <ClearPort socket="usb1" />
-                <div class="callout callout--danger">{HAZARD}</div>
-                <div style={row}>
+                <div class="acts">
                   <Button variant="primary" onClick={go('mouse')}>
                     Done
                   </Button>
@@ -162,36 +234,37 @@ const Setup = () => {
                     Back
                   </Button>
                 </div>
-              </Match>
+              </div>
+            </Match>
 
-              <Match when={step() === 'mouse'}>
+            <Match when={step() === 'mouse'}>
+              <div class="step">
                 <InstallPorts socket="usb3" />
-                <div class="callout callout--danger">{HAZARD}</div>
-                <div style={row}>
-                  <Button
-                    variant="primary"
-                    disabled={busy() || releases.loading}
-                    onClick={() => void install('host', 'unplug3')}
-                  >
-                    {busy() ? 'Installing...' : 'Install'}
-                  </Button>
+                {installOr(
+                  'host',
+                  'unplug3',
                   <Button variant="secondary" disabled={busy()} onClick={go('unplug')}>
                     Back
+                  </Button>,
+                )}
+              </div>
+            </Match>
+
+            <Match when={step() === 'unplug3'}>
+              <div class="step">
+                <ClearPort socket="usb3" />
+                <div class="acts">
+                  <Button variant="primary" onClick={go('cables')}>
+                    Done
                   </Button>
                 </div>
-              </Match>
+              </div>
+            </Match>
 
-              <Match when={step() === 'unplug3'}>
-                <ClearPort socket="usb3" />
-                <div class="callout callout--danger">{HAZARD}</div>
-                <Button variant="primary" onClick={go('cables')}>
-                  Done
-                </Button>
-              </Match>
-
-              <Match when={step() === 'cables'}>
+            <Match when={step() === 'cables'}>
+              <div class="step">
                 <Show
-                  when={installed()?.session.status() === 'connected'}
+                  when={finished()}
                   fallback={
                     <ConnectView
                       supported={boxes.supported}
@@ -204,16 +277,21 @@ const Setup = () => {
                     />
                   }
                 >
-                  <div class="callout callout--info">Installed.</div>
-                  <Button variant="primary" onClick={() => navigate('/dashboard')}>
-                    Finish
-                  </Button>
+                  <p class="state">
+                    <span class="dot ok" />
+                    Installed.
+                  </p>
+                  <div class="acts">
+                    <Button variant="primary" onClick={() => navigate('/dashboard')}>
+                      Finish
+                    </Button>
+                  </div>
                 </Show>
-              </Match>
-            </Switch>
-          </Card>
-        </div>
-      </Show>
+              </div>
+            </Match>
+          </Switch>
+        </Show>
+      </div>
     </>
   );
 };

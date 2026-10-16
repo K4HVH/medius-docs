@@ -122,6 +122,34 @@ export function createTurndown(): TurndownService {
     },
   });
 
+  // h2.doc-h2 -> h2 title + italic caption line.
+  td.addRule('sectionHeading', {
+    filter: (node: any) => node.nodeName === 'H2' && hasClass(node, 'doc-h2'),
+    replacement: (_content, node: any) => {
+      const caption = node.querySelector('.doc-caption');
+      const title = Array.from(node.childNodes as any[])
+        .filter((c) => c !== caption)
+        .map((c) => c.textContent || '')
+        .join('')
+        .trim();
+      const sub = (caption?.textContent || '').trim();
+      return '\n\n## ' + title + (sub ? '\n\n_' + sub + '_' : '') + '\n\n';
+    },
+  });
+
+  // div.bytes (a frame's byte strip) -> a two-row table: the values, then the field names.
+  td.addRule('byteStrip', {
+    filter: (node: any) => node.nodeName === 'DIV' && hasClass(node, 'bytes'),
+    replacement: (_content, node: any) => {
+      const cells = (Array.from(node.children) as any[]).map((c) => ({
+        value: (c.querySelector('b')?.textContent || '').trim().replace(/\|/g, '\\|'),
+        name: (c.querySelector('span')?.textContent || '').trim().replace(/\|/g, '\\|'),
+      }));
+      const line = (xs: string[]) => '| ' + xs.join(' | ') + ' |';
+      return '\n\n' + [line(cells.map((c) => c.value)), line(cells.map(() => '---')), line(cells.map((c) => c.name))].join('\n') + '\n\n';
+    },
+  });
+
   // pre.api-signature -> fenced text block, verbatim.
   td.addRule('apiSignature', {
     filter: (node: any) => node.nodeName === 'PRE' && hasClass(node, 'api-signature'),
@@ -202,6 +230,22 @@ export function createTurndown(): TurndownService {
         items.push(`- [${title}](${target})${subtitle ? ': ' + subtitle : ''}`);
       }
       return '\n\n' + items.join('\n') + '\n\n';
+    },
+  });
+
+  // a.go index rows -> one bullet list of links, the row's tag after a colon. Added after internalLink,
+  // since a later rule wins.
+  td.addRule('indexRow', {
+    filter: (node: any) => node.nodeName === 'A' && hasClass(node, 'go'),
+    replacement: (_content, node: any) => {
+      const href = node.getAttribute('href') || '';
+      const title = (node.querySelector('h3')?.textContent || '').trim();
+      const tag = (node.querySelector('.go-r span')?.textContent || '').trim();
+      const target = href.startsWith('/') ? rewriteInternalHref(href) : href;
+      const row = (n: any) => n && n.nodeName === 'A' && hasClass(n, 'go');
+      const before = row(node.previousElementSibling) ? '' : '\n\n';
+      const after = row(node.nextElementSibling) ? '\n' : '\n\n';
+      return `${before}- [${title}](${target})${tag ? ': ' + tag : ''}${after}`;
     },
   });
 

@@ -1,8 +1,8 @@
 import { Show, createSignal } from 'solid-js';
-import { Card, CardHeader } from '../../../components/surfaces/Card';
 import { Button } from '../../../components/inputs/Button';
 import { useDashboard } from './context';
 import { createCommand } from './action';
+import { Panel } from '../../shell/Panel';
 
 const DeviceFactoryReset = () => {
   const dash = useDashboard();
@@ -20,28 +20,22 @@ const DeviceFactoryReset = () => {
 
   return (
     <Show when={dash.status() === 'connected'}>
-      <div id="factory-reset" data-search-target>
-        <Card>
-          <CardHeader title="Factory reset" subtitle="Erase everything saved" />
-          <p>
-            Clears the box name, every option above and everything learned about devices, then
-            restarts.
-          </p>
-          <div style={{ display: 'flex', gap: 'var(--g-spacing-sm)', 'flex-wrap': 'wrap' }}>
-            <Button variant="danger" disabled={cmd.busy()} onClick={factoryReset}>
-              Erase and restart
-            </Button>
-          </div>
-          <div aria-live="polite">
-            <Show when={done()}>
-              <p>Sent.</p>
-            </Show>
-            <Show when={cmd.error()}>
-              <div class="callout callout--danger" role="alert">{cmd.error()}</div>
-            </Show>
-          </div>
-        </Card>
-      </div>
+      <Panel id="factory-reset" title="Factory reset">
+        <p>Clears the box name, every option on this tab, stored descriptor patches and everything learned about devices, then restarts.</p>
+        <div class="acts">
+          <Button variant="danger" disabled={cmd.busy()} onClick={factoryReset}>
+            Erase and restart
+          </Button>
+        </div>
+        <div aria-live="polite" class="step">
+          <Show when={done()}>
+            <p class="mut">Sent.</p>
+          </Show>
+          <Show when={cmd.error()}>
+            <div class="callout callout--danger" role="alert">{cmd.error()}</div>
+          </Show>
+        </div>
+      </Panel>
     </Show>
   );
 };
