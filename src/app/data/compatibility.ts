@@ -33,7 +33,6 @@ export const COMPAT: readonly CompatEntry[] = [
   { name: 'AULA SC580', kind: 'mouse', verdict: 'works', reported: 'v3.3.4' },
   { name: 'AULA SC800', kind: 'mouse', verdict: 'works', reported: 'v3.3.4' },
   { name: 'AULA SC900 Pro', kind: 'mouse', verdict: 'works', reported: 'v3.3.4' },
-  { name: 'CHERRY XTRFY M68 PRO Wireless', kind: 'mouse', verdict: 'partial', note: "Doesn't work properly; what fails wasn't reported", reported: 'v3.4.5' },
   { name: 'Corsair SABRE PRO Champion Series', kind: 'mouse', verdict: 'works', reported: 'v3.0.1' },
   { name: 'Endgame Gear OP1 8k', kind: 'mouse', verdict: 'works', reported: 'v3.1.0' },
   { name: 'Endgame Gear OP1 8k v2', kind: 'mouse', verdict: 'works', reported: 'v3.4.5' },
