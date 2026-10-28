@@ -1328,7 +1328,7 @@ let setup = Setup::new(0x80, 0x06, 0x0100, 0x0000, 18);
 assert!(setup.is_in());
 assert_eq!(setup.to_bytes(), [0x80, 0x06, 0x00, 0x01, 0x00, 0x00, 0x12, 0x00]);`}</code></pre>
       </DocSection>
-      <DocSection id="transfer-outcome" title="TransferOutcome" caption="Native reply: status and any IN data">
+      <DocSection id="transfer-outcome" title="TransferOutcome" caption="Native reply: status and the real device's reply">
         <pre class="api-signature">struct TransferOutcome {'{'} status: TransferStatus, data: Vec&lt;u8&gt; {'}'}</pre>
         <p>
           What <A href="/library/advanced/transfer#transfer"><code>transfer</code></A> returns. A
@@ -1340,7 +1340,7 @@ assert_eq!(setup.to_bytes(), [0x80, 0x06, 0x00, 0x01, 0x00, 0x00, 0x12, 0x00]);`
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>status</code></td><td><A href="/library/types/enums#transfer-status"><code>TransferStatus</code></A></td><td>How the transfer ended.</td></tr>
-              <tr><td><code>data</code></td><td><code>Vec&lt;u8&gt;</code></td><td>The IN data the real device returned. Empty for an OUT transfer, a STALL, or no data.</td></tr>
+              <tr><td><code>data</code></td><td><code>Vec&lt;u8&gt;</code></td><td>An IN transfer's data stage, whole even where the real device sent more than <code>wLength</code> asked for. For an OUT transfer or one with <code>wLength</code> 0, what it sent where the status stage was due (at most 64 bytes, usually none). Empty for any status but <code>Ok</code>.</td></tr>
             </tbody>
           </table>
         </div>
