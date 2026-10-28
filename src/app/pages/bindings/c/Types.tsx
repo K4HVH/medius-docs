@@ -1735,7 +1735,7 @@ medius_clip_unbind_packet(clip, &held);   /* by key */`}</code></pre>
             <tbody>
               <tr><td><code>status</code></td><td><code>uint8_t</code></td><td>A <code>MEDIUS_TRANSFER_STATUS_*</code> value (see below).</td></tr>
               <tr><td><code>len</code></td><td><code>uint16_t</code></td><td>Valid bytes in <code>data</code>.</td></tr>
-              <tr><td><code>data</code></td><td><code>uint8_t[MEDIUS_MAX_DEV_PAYLOAD]</code></td><td>The IN data the real device returned.</td></tr>
+              <tr><td><code>data</code></td><td><code>uint8_t[MEDIUS_MAX_DEV_PAYLOAD]</code></td><td>An IN transfer's data stage, whole even where the real device sent more than <code>wLength</code> asked for. For an OUT transfer or one with <code>wLength</code> 0, what it sent where the status stage was due (at most 64 bytes, usually none).</td></tr>
             </tbody>
           </table>
         </div>

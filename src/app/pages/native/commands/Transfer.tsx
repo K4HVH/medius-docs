@@ -69,7 +69,7 @@ const Transfer: Component = () => {
           <table class="api-params">
             <thead><tr><th>Value</th><th>Effect</th></tr></thead>
             <tbody>
-              <tr><td>bit 7 = 1, IN</td><td>bytes after offset 8 ignored; the reply carries what the real device sent, up to <code>wLength</code></td></tr>
+              <tr><td>bit 7 = 1, IN</td><td>bytes after offset 8 ignored; the reply carries the whole data stage the real device sent, longer than <code>wLength</code> where it sent more</td></tr>
               <tr><td>bit 7 = 0, OUT</td><td>the first <code>wLength</code> bytes sent, the rest ignored; fewer is refused</td></tr>
             </tbody>
           </table>
@@ -166,7 +166,7 @@ const Transfer: Component = () => {
             <tbody>
               <tr><td>0</td><td><code>ep</code></td><td><code>u8</code></td><td>echoes the command's <code>ep</code> byte</td></tr>
               <tr><td>1</td><td><code>status</code></td><td><code>u8</code></td><td>how the transfer ended, as below</td></tr>
-              <tr><td>2..</td><td><code>data</code></td><td><code>u8[]</code></td><td>IN data stage, only on an IN request with <code>status = 0</code>; length from the frame <A href="/native/frame#layout"><code>LEN</code></A></td></tr>
+              <tr><td>2..</td><td><code>data</code></td><td><code>u8[]</code></td><td>only with <code>status = 0</code>: an IN request's data stage, whole; on an OUT request or one with <code>wLength</code> 0, what the real device sent where the status stage was due (≤64 bytes, usually none). Length from the frame <A href="/native/frame#layout"><code>LEN</code></A></td></tr>
             </tbody>
           </table>
         </div>
@@ -177,7 +177,7 @@ const Transfer: Component = () => {
               <tr><th>Value</th><th>State</th><th>Means</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>0x00</code></td><td>completed</td><td>the real device finished the status stage; an IN request's data follows</td></tr>
+              <tr><td><code>0x00</code></td><td>completed</td><td>the real device answered; its reply follows. A PC sees a reply past <code>wLength</code>, or data in the status stage, as the transfer failing</td></tr>
               <tr><td><code>0xFC</code></td><td>refused</td><td>stopped before the real device, per the <A href="/native/commands/transfer#transfer">refusals</A></td></tr>
               <tr><td><code>0xFD</code></td><td>STALL</td><td>the real device STALLed the request</td></tr>
               <tr><td><code>0xFE</code></td><td>no answer</td><td>the real device didn't finish within 500 ms, the transfer failed on the bus, the endpoint is undeclared, no reply crossed the link within 800 ms, or the game PC has the clone suspended, and the device with it</td></tr>

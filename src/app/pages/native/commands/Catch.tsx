@@ -524,13 +524,24 @@ const Catch: Component = () => {
               <tr><th>Transaction</th><th>Why</th></tr>
             </thead>
             <tbody>
-              <tr><td>a standard request on endpoint 0, such as <code>GET_DESCRIPTOR</code> or <code>SET_CONFIGURATION</code></td><td>the clone serves it itself, and a configuration or interface change still raises a <code>BUS</code> event. Some standard requests are relayed to the real device and raise a <code>CONTROL</code> event: an interface's <code>GET_DESCRIPTOR</code> for a class descriptor other than the HID and report descriptors, and a string the box did not keep. While the clone is configured, so does a device qualifier or other-speed configuration the box did not keep (one too long for it, or at an index past 0). On a device that answers them, so do a read at recipients 3-31, a class descriptor asked at the device recipient, and a descriptor asked at an endpoint</td></tr>
+              <tr><td>a standard request on endpoint 0, such as <code>GET_DESCRIPTOR</code> or <code>SET_CONFIGURATION</code></td><td>the clone serves it itself, and a configuration or interface change still raises a <code>BUS</code> event. The standard requests the box relays to the real device raise a <code>CONTROL</code> event, listed below the table</td></tr>
               <tr><td>one a bus reset cut short</td><td>it never completed</td></tr>
               <tr><td>on endpoint 0, a request with an OUT data stage &gt;2048 bytes; above endpoint 0, any data stage &gt;2048 bytes</td><td>the box STALLs it before proxying it</td></tr>
               <tr><td>a request a new SETUP on its endpoint replaced, or, above endpoint 0, one the box had no room to queue</td><td>the box abandons it</td></tr>
             </tbody>
           </table>
         </div>
+        <div class="api-response-label">RELAYED STANDARD REQUESTS</div>
+        <p>These standard requests on endpoint 0 go to the real device, and each raises a <code>CONTROL</code> event:</p>
+        <ul>
+          <li>an interface's <code>GET_DESCRIPTOR</code> for a class descriptor other than the HID and report descriptors</li>
+          <li>a string the box did not keep</li>
+          <li>while the clone is configured, a device qualifier or other-speed configuration the box did not keep (one too long for it, or at an index past 0)</li>
+          <li>on a device that answers them, a read at recipients 3-31, a class descriptor asked at the device recipient, a descriptor asked at an endpoint, and <code>SYNCH_FRAME</code></li>
+          <li>a read (<code>GET_STATUS</code>, <code>GET_DESCRIPTOR</code>, <code>GET_CONFIGURATION</code>, <code>GET_INTERFACE</code>) sent with the host-to-device bit and a data stage, on a device that doesn't refuse the bit</li>
+          <li>a configuration index past the last, on a device that answers one with bytes other than its first configuration</li>
+          <li>on a device that answers a descriptor type it lacks, any other descriptor the box did not keep: another type, or a HID or report descriptor at an interface without one</li>
+        </ul>
         <div class="api-response-label">CLIP_XFER EVENTS</div>
         <p>
           <code>CLIP_XFER</code> carries one event per control transfer a{' '}

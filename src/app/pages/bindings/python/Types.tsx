@@ -1534,7 +1534,7 @@ for b in medius.list_boxes():
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
                 <tr><td><code>status</code></td><td><code>TransferStatus | int</code></td><td><code>OK</code> (0x00), <code>REFUSED</code> (0xFC), <code>STALL</code> (0xFD), <code>NAK</code> (0xFE), <code>NO_DEVICE</code> (0xFF), or a byte no constant names.</td></tr>
-                <tr><td><code>data</code></td><td><code>bytes</code></td><td>The IN data the real device returned.</td></tr>
+                <tr><td><code>data</code></td><td><code>bytes</code></td><td>An IN transfer's data stage, whole even where the real device sent more than <code>wLength</code> asked for. For an OUT transfer or one with <code>wLength</code> 0, what it sent where the status stage was due (at most 64 bytes, usually none).</td></tr>
                 <tr><td><code>is_ok()</code></td><td><code>bool</code></td><td>Whether the transfer completed.</td></tr>
               </tbody>
             </table>
