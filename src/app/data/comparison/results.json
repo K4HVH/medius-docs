@@ -1708,7 +1708,7 @@
               "rows": [
                 {
                   "id": "devices-clone-time-all",
-                  "label": "The 44 devices both boxes clone",
+                  "label": "The 46 devices both boxes clone",
                   "stock": {
                     "lo": 0.67,
                     "hi": 1.49,
@@ -1888,6 +1888,14 @@
                       {
                         "file": "device_matrix_stock_v4122.json",
                         "ptr": "/results/58/boxes/stock/enum_s"
+                      },
+                      {
+                        "file": "device_matrix_stock_v4122.json",
+                        "ptr": "/results/55/boxes/stock/enum_s"
+                      },
+                      {
+                        "file": "device_matrix_stock_v4122.json",
+                        "ptr": "/results/56/boxes/stock/enum_s"
                       }
                     ]
                   },
@@ -2070,6 +2078,14 @@
                       {
                         "file": "device_matrix_medius_v347.json",
                         "ptr": "/results/58/boxes/medius/enum_s"
+                      },
+                      {
+                        "file": "device_matrix_medius_v347.json",
+                        "ptr": "/results/55/boxes/medius/enum_s"
+                      },
+                      {
+                        "file": "device_matrix_medius_v347.json",
+                        "ptr": "/results/56/boxes/medius/enum_s"
                       }
                     ]
                   }
@@ -25205,7 +25221,7 @@
     {
       "id": "pass-inject-reads",
       "box": "stock",
-      "text": "While injecting, even at 10 moves/s, stock reads a 1 kHz mouse whose speed varies only ~300-530 times/s.",
+      "text": "While injecting, even at 10 moves/s, stock reads a 1 kHz mouse whose speed varies only ~290-490 times/s.",
       "rows": [
         "pass-inject-varying",
         "pass-inject-slow-10",
@@ -25240,7 +25256,7 @@
     {
       "id": "link-stock-parser-jam",
       "box": "stock",
-      "text": "Moves arriving faster than stock takes them (29 or 30 binary moves in one write, ≥10,000 binary moves/s, 8,000 text moves/s in 5/6 runs, 32 per write every 16 ms, or back to back) lose commands, and every later command then runs one command late until a power cycle. 30 characters sent as key presses back to back lose characters.",
+      "text": "Moves arriving faster than stock takes them (29 or 30 binary moves in one write, ≥10,000 binary moves/s, 8,000 text moves/s, 32 per write every 16 ms, or back to back) are lost, most with no refusal. Every later command then runs one command late until a power cycle (after 29 moves in one write in 1/2 runs, after 8,000 text moves/s in 5/6). 30 characters sent as key presses back to back lose characters.",
       "rows": [
         "link-write-parser-29",
         "link-write-parser-30",
@@ -25296,10 +25312,9 @@
     {
       "id": "pass-stock-class-requests-unanswered",
       "box": "stock",
-      "text": "Class requests to the clone sometimes go unanswered: SET_IDLE, SET_PROTOCOL or GET_PROTOCOL in 7/20 tries. In 1/10 port cycles of a PC restart, the PC's HID driver waited 5 s for such a request, and the clone took 6.1 s to come back.",
+      "text": "Class requests to the clone sometimes go unanswered: SET_IDLE, SET_PROTOCOL or GET_PROTOCOL in 7/20 tries. In 1/10 port cycles of a PC restart, the clone took 6.1 s to come back: the kernel log shows the PC's HID driver waiting 5 s for such a request.",
       "rows": [
-        "pass-boot-unanswered",
-        "recovery-restart-back-port-cycle"
+        "pass-boot-unanswered"
       ]
     },
     {
