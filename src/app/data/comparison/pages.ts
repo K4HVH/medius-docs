@@ -24,7 +24,7 @@ export const KEY_ROWS: Record<string, string[]> = {
   '/comparison/injection': ['inj-lat-rest-1', 'inj-lat-now-125-1', 'inj-delivered-125-1', 'inj-emitted-counting-1000', 'inj-stream-empty-30'],
   '/comparison/control-link': ['link-rtt-version-p50', 'link-rtt-status-p50', 'link-bad-cut', 'link-bad-moved-corrupt'],
   '/comparison/input': ['input-held-left-release', 'input-leak-x-inject-y-1khz'],
-  '/comparison/recovery': ['recovery-exit-left-button', 'recovery-replug-gone', 'recovery-replug-move-idle-p50', 'recovery-restart-back-port-cycle', 'recovery-sleep-device'],
+  '/comparison/recovery': ['recovery-exit-left-button', 'recovery-replug-gone', 'recovery-replug-move-idle-p50', 'recovery-exit-key-silent', 'recovery-sleep-device'],
   '/comparison/features': ['feat-move-absolute', 'feat-pad-drive', 'feat-scale-motion', 'feat-dev-transfer'],
   '/comparison/software': ['software-programs-kmbox-net', 'software-pypi-every', 'software-discord-members', 'software-update-fallback'],
 };
