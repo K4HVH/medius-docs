@@ -222,6 +222,7 @@ const Rewrite: Component = () => {
             <li>while the clone is configured, a device qualifier or other-speed configuration the box did not keep</li>
             <li>on a device that answers them, a read at recipients 3-31, a class descriptor asked at the device recipient, a descriptor asked at an endpoint, and <code>SYNCH_FRAME</code></li>
             <li>a configuration index past the last, on a device that answers one with bytes other than its first configuration</li>
+            <li>a <code>GET_STATUS</code>, <code>GET_CONFIGURATION</code> or <code>GET_INTERFACE</code> longer than its reply, on a device that answers one past its reply (at the device recipient, with anything but zeros)</li>
             <li>on a device that answers a descriptor type it lacks, any other descriptor the box did not keep: another type, or a HID or report descriptor at an interface without one</li>
             <li>a read (<code>GET_STATUS</code>, <code>GET_DESCRIPTOR</code>, <code>GET_CONFIGURATION</code>, <code>GET_INTERFACE</code>) sent with the host-to-device bit and a data stage, on a device that doesn't refuse the bit</li>
           </ul>
