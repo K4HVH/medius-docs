@@ -19,12 +19,12 @@ export const COMPARISON_PAGES: ComparisonPage[] = [
 // The rows Overview leads each area with, by page. They're picked so an area's lead results show where
 // stock is ahead as well as where Medius is.
 export const KEY_ROWS: Record<string, string[]> = {
-  '/comparison/devices': ['devices-data-wooting', 'devices-interval-mouse-10', 'devices-report-768-2047', 'devices-ep0-hid-descriptor'],
-  '/comparison/passthrough': ['pass-seq-1000', 'pass-latency-p50-1000', 'pass-latency-p50-125', 'pass-inject-varying', 'pass-pc-config', 'pass-dev-stall'],
-  '/comparison/injection': ['inj-lat-rest-1', 'inj-lat-now-125-1', 'inj-delivered-125-1', 'inj-emitted-counting-1000', 'inj-fresh-never'],
+  '/comparison/devices': ['devices-data-wooting', 'devices-interval-mouse-10', 'devices-report-768-2047', 'devices-ep0-stack-stm32'],
+  '/comparison/passthrough': ['pass-seq-1000', 'pass-latency-p50-1000', 'pass-latency-p50-125', 'pass-inject-varying', 'pass-pc-config', 'pass-pause-skip-hid', 'pass-boot-unanswered'],
+  '/comparison/injection': ['inj-lat-rest-1', 'inj-lat-now-125-1', 'inj-delivered-125-1', 'inj-emitted-counting-1000', 'inj-stream-empty-30'],
   '/comparison/control-link': ['link-rtt-version-p50', 'link-rtt-status-p50', 'link-bad-cut', 'link-bad-moved-corrupt'],
   '/comparison/input': ['input-held-left-release', 'input-leak-x-inject-y-1khz'],
-  '/comparison/recovery': ['recovery-exit-left-button', 'recovery-replug-gone', 'recovery-restart-move-port-cycle', 'recovery-sleep-device'],
+  '/comparison/recovery': ['recovery-exit-left-button', 'recovery-replug-gone', 'recovery-replug-move-idle-p50', 'recovery-restart-back-port-cycle', 'recovery-sleep-device'],
   '/comparison/features': ['feat-move-absolute', 'feat-pad-drive', 'feat-scale-motion', 'feat-dev-transfer'],
   '/comparison/software': ['software-programs-kmbox-net', 'software-pypi-every', 'software-discord-members', 'software-update-fallback'],
 };
