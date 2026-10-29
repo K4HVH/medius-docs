@@ -5095,7 +5095,7 @@
         {
           "id": "devices-ep0-stacks",
           "title": "Standard requests across device stacks",
-          "about": "A mouse with a vendor-page HID interface and a vendor interface, answering standard requests as 21 device stacks do. Each box's clone gets the 292 reads that change nothing, and each reply's outcome and bytes are compared with the native reply, read through Medius's TRANSFER. A timeout counts only where the native request times out too.",
+          "about": "A mouse with a vendor-page HID interface and a vendor interface, answering standard requests as 22 device stacks do. Each box's clone gets the 316 reads that change nothing, and each reply's outcome and bytes are compared with the native reply, read through Medius's TRANSFER. A timeout counts only where the native request times out too.",
           "tables": [
             {
               "kind": "measure",
@@ -5103,510 +5103,534 @@
               "key": "Device stack",
               "unit": "requests",
               "better": "higher",
-              "n": "292 requests per stack, 1 run",
+              "n": "316 requests per stack, 1 run",
               "rows": [
                 {
                   "id": "devices-ep0-stack-permissive",
                   "label": "Stack acting on every request as written",
                   "stock": {
-                    "value": 292,
+                    "value": 314,
                     "src": [
                       {
                         "file": "ep0_stacks_stock_v4122.json",
                         "ptr": "/results/permissive/stock/match"
                       }
                     ],
-                    "of": 292
+                    "of": 316
                   },
                   "medius": {
-                    "value": 292,
+                    "value": 316,
                     "src": [
                       {
                         "file": "ep0_stacks_medius_v347.json",
                         "ptr": "/results/permissive/medius/match"
                       }
                     ],
-                    "of": 292
+                    "of": 316
                   }
                 },
                 {
                   "id": "devices-ep0-stack-strict",
                   "label": "Stack refusing a request with the wrong direction bit",
                   "stock": {
-                    "value": 292,
+                    "value": 316,
                     "src": [
                       {
                         "file": "ep0_stacks_stock_v4122.json",
                         "ptr": "/results/strict/stock/match"
                       }
                     ],
-                    "of": 292
+                    "of": 316
                   },
                   "medius": {
-                    "value": 292,
+                    "value": 316,
                     "src": [
                       {
                         "file": "ep0_stacks_medius_v347.json",
                         "ptr": "/results/strict/medius/match"
                       }
                     ],
-                    "of": 292
+                    "of": 316
                   }
                 },
                 {
                   "id": "devices-ep0-stack-twobit",
                   "label": "Stack reading two recipient bits",
                   "stock": {
-                    "value": 290,
+                    "value": 315,
                     "src": [
                       {
                         "file": "ep0_stacks_stock_v4122.json",
                         "ptr": "/results/twobit/stock/match"
                       }
                     ],
-                    "of": 292
+                    "of": 316
                   },
                   "medius": {
-                    "value": 292,
+                    "value": 316,
                     "src": [
                       {
                         "file": "ep0_stacks_medius_v347.json",
                         "ptr": "/results/twobit/medius/match"
                       }
                     ],
-                    "of": 292
+                    "of": 316
                   }
                 },
                 {
                   "id": "devices-ep0-stack-lax",
                   "label": "Stack ignoring the recipient and refusing the HID descriptor",
                   "stock": {
-                    "value": 292,
+                    "value": 316,
                     "src": [
                       {
                         "file": "ep0_stacks_stock_v4122.json",
                         "ptr": "/results/lax/stock/match"
                       }
                     ],
-                    "of": 292
+                    "of": 316
                   },
                   "medius": {
-                    "value": 292,
+                    "value": 316,
                     "src": [
                       {
                         "file": "ep0_stacks_medius_v347.json",
                         "ptr": "/results/lax/medius/match"
                       }
                     ],
-                    "of": 292
+                    "of": 316
                   }
                 },
                 {
                   "id": "devices-ep0-stack-hidown",
                   "label": "Stack serving the HID descriptor from a separate copy",
                   "stock": {
-                    "value": 292,
+                    "value": 316,
                     "src": [
                       {
                         "file": "ep0_stacks_stock_v4122.json",
                         "ptr": "/results/hidown/stock/match"
                       }
                     ],
-                    "of": 292
+                    "of": 316
                   },
                   "medius": {
-                    "value": 292,
+                    "value": 316,
                     "src": [
                       {
                         "file": "ep0_stacks_medius_v347.json",
                         "ptr": "/results/hidown/medius/match"
                       }
                     ],
-                    "of": 292
+                    "of": 316
                   }
                 },
                 {
                   "id": "devices-ep0-stack-laxstrict",
                   "label": "Stack ignoring the recipient and refusing the wrong direction",
                   "stock": {
-                    "value": 292,
+                    "value": 316,
                     "src": [
                       {
                         "file": "ep0_stacks_stock_v4122.json",
                         "ptr": "/results/laxstrict/stock/match"
                       }
                     ],
-                    "of": 292
+                    "of": 316
                   },
                   "medius": {
-                    "value": 292,
+                    "value": 316,
                     "src": [
                       {
                         "file": "ep0_stacks_medius_v347.json",
                         "ptr": "/results/laxstrict/medius/match"
                       }
                     ],
-                    "of": 292
+                    "of": 316
                   }
                 },
                 {
                   "id": "devices-ep0-stack-wlenstatus",
                   "label": "Stack refusing GET_STATUS at another length",
                   "stock": {
-                    "value": 292,
+                    "value": 316,
                     "src": [
                       {
                         "file": "ep0_stacks_stock_v4122.json",
                         "ptr": "/results/wlenstatus/stock/match"
                       }
                     ],
-                    "of": 292
+                    "of": 316
                   },
                   "medius": {
-                    "value": 292,
+                    "value": 316,
                     "src": [
                       {
                         "file": "ep0_stacks_medius_v347.json",
                         "ptr": "/results/wlenstatus/medius/match"
                       }
                     ],
-                    "of": 292
+                    "of": 316
                   }
                 },
                 {
                   "id": "devices-ep0-stack-wlenconfig",
                   "label": "Stack refusing GET_CONFIGURATION at another length",
                   "stock": {
-                    "value": 292,
+                    "value": 315,
                     "src": [
                       {
                         "file": "ep0_stacks_stock_v4122.json",
                         "ptr": "/results/wlenconfig/stock/match"
                       }
                     ],
-                    "of": 292
+                    "of": 316
                   },
                   "medius": {
-                    "value": 292,
+                    "value": 316,
                     "src": [
                       {
                         "file": "ep0_stacks_medius_v347.json",
                         "ptr": "/results/wlenconfig/medius/match"
                       }
                     ],
-                    "of": 292
+                    "of": 316
                   }
                 },
                 {
                   "id": "devices-ep0-stack-wlenshort",
                   "label": "Stack refusing GET_STATUS and GET_CONFIGURATION at a shorter length",
                   "stock": {
-                    "value": 291,
+                    "value": 316,
                     "src": [
                       {
                         "file": "ep0_stacks_stock_v4122.json",
                         "ptr": "/results/wlenshort/stock/match"
                       }
                     ],
-                    "of": 292
+                    "of": 316
                   },
                   "medius": {
-                    "value": 292,
+                    "value": 316,
                     "src": [
                       {
                         "file": "ep0_stacks_medius_v347.json",
                         "ptr": "/results/wlenshort/medius/match"
                       }
                     ],
-                    "of": 292
+                    "of": 316
                   }
                 },
                 {
                   "id": "devices-ep0-stack-epdesc",
                   "label": "Stack answering GET_DESCRIPTOR addressed to an endpoint",
                   "stock": {
-                    "value": 292,
+                    "value": 316,
                     "src": [
                       {
                         "file": "ep0_stacks_stock_v4122.json",
                         "ptr": "/results/epdesc/stock/match"
                       }
                     ],
-                    "of": 292
+                    "of": 316
                   },
                   "medius": {
-                    "value": 292,
+                    "value": 316,
                     "src": [
                       {
                         "file": "ep0_stacks_medius_v347.json",
                         "ptr": "/results/epdesc/medius/match"
                       }
                     ],
-                    "of": 292
+                    "of": 316
                   }
                 },
                 {
                   "id": "devices-ep0-stack-rwtaken",
                   "label": "Stack taking remote wakeup at any wIndex",
                   "stock": {
-                    "value": 292,
+                    "value": 316,
                     "src": [
                       {
                         "file": "ep0_stacks_stock_v4122.json",
                         "ptr": "/results/rwtaken/stock/match"
                       }
                     ],
-                    "of": 292
+                    "of": 316
                   },
                   "medius": {
-                    "value": 292,
+                    "value": 316,
                     "src": [
                       {
                         "file": "ep0_stacks_medius_v347.json",
                         "ptr": "/results/rwtaken/medius/match"
                       }
                     ],
-                    "of": 292
+                    "of": 316
                   }
                 },
                 {
                   "id": "devices-ep0-stack-rwrefused",
                   "label": "Stack refusing remote wakeup",
                   "stock": {
-                    "value": 290,
+                    "value": 315,
                     "src": [
                       {
                         "file": "ep0_stacks_stock_v4122.json",
                         "ptr": "/results/rwrefused/stock/match"
                       }
                     ],
-                    "of": 292
+                    "of": 316
                   },
                   "medius": {
-                    "value": 292,
+                    "value": 316,
                     "src": [
                       {
                         "file": "ep0_stacks_medius_v347.json",
                         "ptr": "/results/rwrefused/medius/match"
                       }
                     ],
-                    "of": 292
+                    "of": 316
                   }
                 },
                 {
                   "id": "devices-ep0-stack-in0nak",
                   "label": "Stack leaving device-to-host requests with no data stage unanswered",
                   "stock": {
-                    "value": 292,
+                    "value": 316,
                     "src": [
                       {
                         "file": "ep0_stacks_stock_v4122.json",
                         "ptr": "/results/in0nak/stock/match"
                       }
                     ],
-                    "of": 292
+                    "of": 316
                   },
                   "medius": {
-                    "value": 292,
+                    "value": 316,
                     "src": [
                       {
                         "file": "ep0_stacks_medius_v347.json",
                         "ptr": "/results/in0nak/medius/match"
                       }
                     ],
-                    "of": 292
+                    "of": 316
                   }
                 },
                 {
                   "id": "devices-ep0-stack-in0strict",
                   "label": "Stack refusing the wrong direction, leaving device-to-host requests with no data stage unanswered",
                   "stock": {
-                    "value": 292,
+                    "value": 316,
                     "src": [
                       {
                         "file": "ep0_stacks_stock_v4122.json",
                         "ptr": "/results/in0strict/stock/match"
                       }
                     ],
-                    "of": 292
+                    "of": 316
                   },
                   "medius": {
-                    "value": 292,
+                    "value": 316,
                     "src": [
                       {
                         "file": "ep0_stacks_medius_v347.json",
                         "ptr": "/results/in0strict/medius/match"
                       }
                     ],
-                    "of": 292
+                    "of": 316
                   }
                 },
                 {
                   "id": "devices-ep0-stack-ifstrict",
                   "label": "Stack refusing GET_STATUS and GET_INTERFACE at an interface",
                   "stock": {
-                    "value": 292,
+                    "value": 316,
                     "src": [
                       {
                         "file": "ep0_stacks_stock_v4122.json",
                         "ptr": "/results/ifstrict/stock/match"
                       }
                     ],
-                    "of": 292
+                    "of": 316
                   },
                   "medius": {
-                    "value": 292,
+                    "value": 316,
                     "src": [
                       {
                         "file": "ep0_stacks_medius_v347.json",
                         "ptr": "/results/ifstrict/medius/match"
                       }
                     ],
-                    "of": 292
+                    "of": 316
                   }
                 },
                 {
                   "id": "devices-ep0-stack-lufa",
                   "label": "LUFA",
                   "stock": {
-                    "value": 285,
+                    "value": 309,
                     "src": [
                       {
                         "file": "ep0_stacks_stock_v4122.json",
                         "ptr": "/results/lufa/stock/match"
                       }
                     ],
-                    "of": 292
+                    "of": 316
                   },
                   "medius": {
-                    "value": 292,
+                    "value": 316,
                     "src": [
                       {
                         "file": "ep0_stacks_medius_v347.json",
                         "ptr": "/results/lufa/medius/match"
                       }
                     ],
-                    "of": 292
+                    "of": 316
                   }
                 },
                 {
                   "id": "devices-ep0-stack-stm32",
                   "label": "STM32's USB library",
                   "stock": {
-                    "value": 283,
+                    "value": 308,
                     "src": [
                       {
                         "file": "ep0_stacks_stock_v4122.json",
                         "ptr": "/results/stm32/stock/match"
                       }
                     ],
-                    "of": 292
+                    "of": 316
                   },
                   "medius": {
-                    "value": 292,
+                    "value": 316,
                     "src": [
                       {
                         "file": "ep0_stacks_medius_v347.json",
                         "ptr": "/results/stm32/medius/match"
                       }
                     ],
-                    "of": 292
+                    "of": 316
                   }
                 },
                 {
                   "id": "devices-ep0-stack-vusb",
                   "label": "V-USB",
                   "stock": {
-                    "value": 287,
+                    "value": 310,
                     "src": [
                       {
                         "file": "ep0_stacks_stock_v4122.json",
                         "ptr": "/results/vusb/stock/match"
                       }
                     ],
-                    "of": 292
+                    "of": 316
                   },
                   "medius": {
-                    "value": 292,
+                    "value": 316,
                     "src": [
                       {
                         "file": "ep0_stacks_medius_v347.json",
                         "ptr": "/results/vusb/medius/match"
                       }
                     ],
-                    "of": 292
+                    "of": 316
                   }
                 },
                 {
                   "id": "devices-ep0-stack-cherry",
                   "label": "CherryUSB",
                   "stock": {
-                    "value": 292,
+                    "value": 314,
                     "src": [
                       {
                         "file": "ep0_stacks_stock_v4122.json",
                         "ptr": "/results/cherry/stock/match"
                       }
                     ],
-                    "of": 292
+                    "of": 316
                   },
                   "medius": {
-                    "value": 292,
+                    "value": 316,
                     "src": [
                       {
                         "file": "ep0_stacks_medius_v347.json",
                         "ptr": "/results/cherry/medius/match"
                       }
                     ],
-                    "of": 292
+                    "of": 316
                   }
                 },
                 {
                   "id": "devices-ep0-stack-twolimit",
                   "label": "Stack reading two recipient bits and checking interface and endpoint numbers",
                   "stock": {
-                    "value": 291,
+                    "value": 315,
                     "src": [
                       {
                         "file": "ep0_stacks_stock_v4122.json",
                         "ptr": "/results/twolimit/stock/match"
                       }
                     ],
-                    "of": 292
+                    "of": 316
                   },
                   "medius": {
-                    "value": 292,
+                    "value": 316,
                     "src": [
                       {
                         "file": "ep0_stacks_medius_v347.json",
                         "ptr": "/results/twolimit/medius/match"
                       }
                     ],
-                    "of": 292
+                    "of": 316
                   }
                 },
                 {
                   "id": "devices-ep0-stack-padded",
                   "label": "Stack padding replies out to wLength",
                   "stock": {
-                    "value": 292,
+                    "value": 315,
                     "src": [
                       {
                         "file": "ep0_stacks_stock_v4122.json",
                         "ptr": "/results/padded/stock/match"
                       }
                     ],
-                    "of": 292
+                    "of": 316
                   },
                   "medius": {
-                    "value": 292,
+                    "value": 316,
                     "src": [
                       {
                         "file": "ep0_stacks_medius_v347.json",
                         "ptr": "/results/padded/medius/match"
                       }
                     ],
-                    "of": 292
+                    "of": 316
+                  }
+                },
+                {
+                  "id": "devices-ep0-stack-razer",
+                  "label": "Razer Mamba Elite",
+                  "stock": {
+                    "value": 315,
+                    "src": [
+                      {
+                        "file": "ep0_stacks_stock_v4122.json",
+                        "ptr": "/results/razer/stock/match"
+                      }
+                    ],
+                    "of": 316
+                  },
+                  "medius": {
+                    "value": 316,
+                    "src": [
+                      {
+                        "file": "ep0_stacks_medius_v347.json",
+                        "ptr": "/results/razer/medius/match"
+                      }
+                    ],
+                    "of": 316
                   }
                 }
               ]
@@ -25346,15 +25370,19 @@
     {
       "id": "devices-stock-ep0-overrun",
       "box": "stock",
-      "text": "Where the real device replies past wLength (LUFA, STM32's library, V-USB), stock STALLs the request. Standard requests the real device answers sometimes time out on stock (8 over 6 device stacks).",
+      "text": "Where the real device replies past wLength (LUFA, STM32's library, V-USB), stock STALLs the request. Standard requests the real device answers sometimes time out on stock (12 over 9 device stacks).",
       "rows": [
         "devices-ep0-stack-stm32",
         "devices-ep0-stack-lufa",
         "devices-ep0-stack-vusb",
+        "devices-ep0-stack-permissive",
         "devices-ep0-stack-twobit",
+        "devices-ep0-stack-wlenconfig",
         "devices-ep0-stack-rwrefused",
-        "devices-ep0-stack-wlenshort",
-        "devices-ep0-stack-twolimit"
+        "devices-ep0-stack-cherry",
+        "devices-ep0-stack-twolimit",
+        "devices-ep0-stack-padded",
+        "devices-ep0-stack-razer"
       ]
     }
   ],
