@@ -5610,14 +5610,14 @@
                   }
                 },
                 {
-                  "id": "devices-ep0-stack-razer",
-                  "label": "Razer Mamba Elite",
+                  "id": "devices-ep0-stack-longbuf",
+                  "label": "Stack answering long reads from its buffer and SET_DESCRIPTOR only after a read",
                   "stock": {
                     "value": 315,
                     "src": [
                       {
                         "file": "ep0_stacks_stock_v4122.json",
-                        "ptr": "/results/razer/stock/match"
+                        "ptr": "/results/longbuf/stock/match"
                       }
                     ],
                     "of": 316
@@ -5627,7 +5627,7 @@
                     "src": [
                       {
                         "file": "ep0_stacks_medius_v347.json",
-                        "ptr": "/results/razer/medius/match"
+                        "ptr": "/results/longbuf/medius/match"
                       }
                     ],
                     "of": 316
@@ -25382,7 +25382,7 @@
         "devices-ep0-stack-cherry",
         "devices-ep0-stack-twolimit",
         "devices-ep0-stack-padded",
-        "devices-ep0-stack-razer"
+        "devices-ep0-stack-longbuf"
       ]
     }
   ],
