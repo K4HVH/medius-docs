@@ -46,7 +46,7 @@ it('gives each benchmark both values as the site writes them, and which box is a
       expect(highlights[i]![box].text).toBe(shown);
     }
   }
-  expect(highlights[0]).toMatchObject({ medius: { text: '1.02-1.04 ms' }, result: 'medius' });
+  expect(highlights[0]).toMatchObject({ medius: { text: '1.05-1.06 ms' }, result: 'medius' });
 });
 
 it('shows a benchmark where stock is ahead beside those where Medius is', async () => {

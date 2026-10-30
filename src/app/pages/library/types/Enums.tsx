@@ -788,7 +788,7 @@ if let CatchEvent::Traffic(t) = stream.recv()? {
           <table class="api-params">
             <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>Ok</code></td><td><code>0x00</code></td><td>The transfer completed; any IN data is in <code>data</code>.</td></tr>
+              <tr><td><code>Ok</code></td><td><code>0x00</code></td><td>The real device answered; its reply is in <code>data</code>.</td></tr>
               <tr><td><code>Refused</code></td><td><code>0xFC</code></td><td>The box refused before reaching the real device: the opt-in is off, the request was malformed, <code>wLength</code> was &gt;504 or the OUT data shorter than it, or the host chip's control queue was full.</td></tr>
               <tr><td><code>Stall</code></td><td><code>0xFD</code></td><td>The real device STALLed the request.</td></tr>
               <tr><td><code>Nak</code></td><td><code>0xFE</code></td><td>The real device didn't finish within 500 ms, the transfer failed on the bus, the endpoint is undeclared, no reply crossed the link within 800 ms, or the game PC has the clone (and so the real device) suspended.</td></tr>
