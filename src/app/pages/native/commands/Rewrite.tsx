@@ -215,12 +215,20 @@ const Rewrite: Component = () => {
         <div class="callout callout--info">
           <p>
             On EP0, the table matches class and vendor requests, plus the standard requests the clone
-            relays to the real device. Those are an interface's <code>GET_DESCRIPTOR</code> for a class
-            descriptor other than the HID and report descriptors, and (while the clone is configured) a
-            device qualifier or other-speed configuration the box did not keep.
+            relays to the real device through its proxy:
           </p>
+          <ul>
+            <li>an interface's <code>GET_DESCRIPTOR</code> for a class descriptor other than the HID and report descriptors</li>
+            <li>while the clone is configured, a device qualifier or other-speed configuration the box did not keep</li>
+            <li>on a device that answers them, a read at recipients 3-31, a class descriptor asked at the device recipient, a descriptor asked at an endpoint, and <code>SYNCH_FRAME</code></li>
+            <li>a configuration index past the last, on a device that answers one with bytes other than its first configuration</li>
+            <li>a <code>GET_STATUS</code>, <code>GET_CONFIGURATION</code> or <code>GET_INTERFACE</code> longer than its reply, on a device that answers one past its reply (at the device recipient, with anything but zeros)</li>
+            <li>on a device that answers a descriptor type it lacks, any other descriptor the box did not keep: another type, or a HID or report descriptor at an interface without one</li>
+            <li>a read (<code>GET_STATUS</code>, <code>GET_DESCRIPTOR</code>, <code>GET_CONFIGURATION</code>, <code>GET_INTERFACE</code>) sent with the host-to-device bit and a data stage, on a device that doesn't refuse the bit</li>
+          </ul>
           <p>
-            The clone serves every other standard request itself. To change a descriptor, use{' '}
+            A string the box did not keep is asked of the real device directly, outside the table. The
+            clone serves every other standard request itself. To change a descriptor, use{' '}
             <A href="/native/commands/patch"><code>PATCH</code></A>. A control endpoint above 0
             passes every request to the table.
           </p>

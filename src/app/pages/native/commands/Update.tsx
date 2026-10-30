@@ -30,7 +30,7 @@ const Update: Component = () => {
               <tr><th>Partition</th><th>Offset</th><th>Size</th><th>Holds</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>nvs</code></td><td><code>0x9000</code></td><td><code>0x6000</code></td><td>Box name, options, and learned baselines.</td></tr>
+              <tr><td><code>nvs</code></td><td><code>0x9000</code></td><td><code>0x6000</code></td><td>Box name, options, and learned baselines (~90 devices, least recently cloned dropped first).</td></tr>
               <tr><td><code>phy_init</code></td><td><code>0xF000</code></td><td><code>0x1000</code></td><td>PHY calibration.</td></tr>
               <tr><td><code>ota_0</code></td><td><code>0x10000</code></td><td><code>0xF0000</code></td><td>One app slot.</td></tr>
               <tr><td><code>ota_1</code></td><td><code>0x100000</code></td><td><code>0xF0000</code></td><td>The other app slot.</td></tr>
