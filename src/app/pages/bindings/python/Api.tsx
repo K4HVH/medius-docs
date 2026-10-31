@@ -245,7 +245,7 @@ const Api: Component = () => {
               <tr><td><code>.press(usage) / .release(usage) / .force_release(usage)</code></td><td>A one-edge press / soft-release / force-release frame; <code>usage</code> is a <A href="/bindings/python/types#input"><code>Usage</code></A> (button, key, or media).</td></tr>
               <tr><td><code>.edge(usage, action)</code></td><td>A one-edge frame for any <A href="/bindings/python/types#input"><code>Usage</code></A> with an explicit <A href="/bindings/python/types#action"><code>Action</code></A> (default press).</td></tr>
               <tr><td><code>.raw(ep, direction, data)</code></td><td>A frame carrying one raw report, as <A href="/bindings/python/api#advanced"><code>dev.raw</code></A> sends one; played only with the imperfect-clone opt-in on.</td></tr>
-              <tr><td><code>.transfer(ep, setup, out=b"")</code></td><td>A frame carrying one control transfer, as <code>dev.transfer</code> runs one: <code>out</code> is <code>setup.length</code> bytes for an OUT request, empty for an IN one. The reply arrives as a <A href="/bindings/python/types#trafficclass"><code>TrafficClass.CLIP_TRANSFER</code></A> event. The box runs it only while the opt-in is on.</td></tr>
+              <tr><td><code>.transfer(ep, setup, out=b"")</code></td><td>A frame carrying one control transfer, as <code>dev.transfer</code> runs one, with 4 s for the real device to answer: <code>out</code> is <code>setup.length</code> bytes for an OUT request, empty for an IN one. The reply arrives as a <A href="/bindings/python/types#trafficclass"><code>TrafficClass.CLIP_TRANSFER</code></A> event. The box runs it only while the opt-in is on.</td></tr>
               <tr><td><code>.frame(dx=0, dy=0, wheel=0, pan=0, edges=(), raw=(), transfers=())</code></td><td>One frame carrying the motion deltas plus <code>(usage, action)</code> edges, <code>(ep, direction, data)</code> raw reports, and <code>(ep, setup, out)</code> transfers, within the <A href="/bindings/python/types#clip-constants">clip constants</A>.</td></tr>
             </tbody>
           </table>
@@ -266,7 +266,7 @@ b.transfer(0, Setup(0x21, 0x09, 0x0300, 0, 2), bytes([0x04, 0x01]))`}</code></pr
             <thead><tr><th>Call</th><th>Effect</th></tr></thead>
             <tbody>
               <tr><td><code>dev.clip()</code></td><td>A <code>ClipHandle</code> (owns the append-seq counter).</td></tr>
-              <tr><td><code>clip.append(builder)</code></td><td>Append the builder's entries to the ring. Every entry is checked first, so a refusal sends nothing: <A href="/bindings/python/types#subclasses"><code>ClipFrameCountError</code></A>, <code>ClipFrameTooLongError</code>, <code>ClipTransferDataError</code>, <code>RawDirectionError</code>, or <code>RelativeDirectionError</code>.</td></tr>
+              <tr><td><code>clip.append(builder)</code></td><td>Append the builder's entries to the ring. Every entry is checked first, so a refusal sends nothing: <A href="/bindings/python/types#subclasses"><code>ClipFrameCountError</code></A>, <code>ClipFrameTooLongError</code>, <code>TransferDataError</code>, <code>RawDirectionError</code>, or <code>RelativeDirectionError</code>.</td></tr>
               <tr><td><code>clip.set_autolock(blankets)</code></td><td>Set the auto-lock scope: a list of <A href="/bindings/python/types#blanket"><code>Blanket</code></A> classes locked while the clip plays.</td></tr>
               <tr><td><code>clip.set_loop(on) / clip.set_retain(on)</code></td><td>Loop the ring on completion; retain entries after playback instead of flushing.</td></tr>
               <tr><td><code>clip.set_ride(on)</code></td><td>Run the clip's motion under <A href="/library/options#set-movement-riding">movement riding</A> (off = the box's clock, the default). While rendering is on with a profile armed, only the clip's wheel and pan ride.</td></tr>
@@ -299,7 +299,7 @@ b.transfer(0, Setup(0x21, 0x09, 0x0300, 0, 2), bytes([0x04, 0x01]))`}</code></pr
             <thead><tr><th>Call</th><th>Does</th></tr></thead>
             <tbody>
               <tr><td><code>dev.raw(ep, direction, data)</code></td><td>Write <code>data</code> verbatim on cloned endpoint number <code>ep</code>. <code>direction</code> is <code>Direction.IN</code> (toward the game PC) or <code>OUT</code> (to the real device).</td></tr>
-              <tr><td><code>dev.transfer(ep, setup, out=b"", timeout_ms=None)</code></td><td>Run one control transfer; returns a <A href="/bindings/python/types#transfer-outcome"><code>TransferOutcome</code></A>. <code>timeout_ms</code> replaces the default reply wait.</td></tr>
+              <tr><td><code>dev.transfer(ep, setup, out=b"", timeout_ms=None)</code></td><td>Run one control transfer; returns a <A href="/bindings/python/types#transfer-outcome"><code>TransferOutcome</code></A> with the whole reply. <code>out</code> is <code>setup.length</code> bytes for an OUT request, none for an IN one (<code>TransferDataError</code>), ≤<code>TRANSFER_OUT_MAX</code> (<code>FrameTooLongError</code>). <code>timeout_ms</code> (1-65535, else <code>TransferTimeoutRangeError</code>) is how long the box waits on the real device, the time the game PC holds the pipe included; <code>None</code> takes <code>default_transfer_timeout_ms()</code>. The call waits <code>timeout_ms</code> + 2 s for the reply (<code>QueryTimeoutError</code> past that). A reply that lost a chunk between the box's chips or on the control link raises <code>TransferReplyIncompleteError</code>.</td></tr>
               <tr><td><code>dev.set_rewrite(rule)</code></td><td>Install or overwrite one <A href="/bindings/python/types#rewrite-rule"><code>RewriteRule</code></A>. A payload larger than the room the held rules leave in the 2048-byte pool raises <A href="/bindings/python/types#subclasses"><code>RewritePoolFullError</code></A>. A new rule past 32 raises <code>RewriteTableFullError</code>.</td></tr>
               <tr><td><code>dev.remove_rewrite(rule)</code></td><td>Drop the rule with this rule's key.</td></tr>
               <tr><td><code>dev.clear_rewrite()</code></td><td>Drop the whole rewrite table.</td></tr>
@@ -313,6 +313,20 @@ b.transfer(0, Setup(0x21, 0x09, 0x0300, 0, 2), bytes([0x04, 0x01]))`}</code></pr
             </tbody>
           </table>
         </div>
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-python">{`from medius import Setup, TransferStage, TransferStatus
+
+dev.allow_imperfect_clones(True)
+
+# GET_DESCRIPTOR(Configuration) with wLength 0xFFFF: the whole descriptor, however long
+reply = dev.transfer(0, Setup(0x80, 0x06, 0x0200, 0, 0xFFFF))
+if reply.is_ok:
+    print(len(reply.data), "bytes")
+elif reply.status == TransferStatus.STALL and reply.stage == TransferStage.DATA:
+    print("STALL after", len(reply.data), "bytes")    # the bytes before it are kept
+
+# a slow real device: the box waits up to 10 s
+reply = dev.transfer(0, Setup(0x80, 0x06, 0x0100, 0, 18), timeout_ms=10_000)`}</code></pre>
       </DocSection>
 
       <DocSection id="transforms" title="Transforms" caption="Swap or remap a field on the wire">
@@ -359,7 +373,7 @@ b.transfer(0, Setup(0x21, 0x09, 0x0300, 0, 2), bytes([0x04, 0x01]))`}</code></pr
             <tbody>
               <tr><td><code>mock.set_version</code>, <code>set_health</code>, <code>set_device_info</code>, <code>set_caps</code>, <code>set_mouse_caps</code>, <code>set_kbd_caps</code>, <code>set_rate</code>, <code>set_stats</code>, <code>set_locks</code>, <code>set_catch_state</code></td><td>Set each query's reply.</td></tr>
               <tr><td><code>mock.set_imperfect_status(status)</code></td><td>Set the <A href="/bindings/python/types#imperfectstatus"><code>ImperfectStatus</code></A> <code>dev.query_imperfect()</code> returns. With <code>allowed</code> false the mock drops its consuming packet triggers, as the box does.</td></tr>
-              <tr><td><code>mock.set_transfer_reply(status, data=b"")</code></td><td>Set a transfer's reply status and IN data while the opt-in is on. With it off, the mock replies <code>REFUSED</code>.</td></tr>
+              <tr><td><code>mock.set_transfer_reply(reply)</code></td><td>Set the <A href="/bindings/python/types#transfer-outcome"><code>TransferOutcome</code></A> a transfer brings back, sent a chunk a frame as the box sends it. With the opt-in off, the mock replies <code>REFUSED</code>, as the box does.</td></tr>
               <tr><td><code>mock.set_movement_riding</code>, <code>set_bearing</code>, <code>set_emit_pace</code>, <code>set_spread_learned</code>, <code>set_render</code>, <code>set_advertised_hz</code></td><td>Set the option queries' replies.</td></tr>
               <tr><td><code>mock.set_clip_status(status)</code></td><td>Set the <A href="/bindings/python/types#clipstatus"><code>ClipStatus</code></A> <code>clip.query_status()</code> returns.</td></tr>
               <tr><td><code>mock.set_clip_settings(settings)</code></td><td>Set the <A href="/bindings/python/types#clipsettings"><code>ClipSettings</code></A> <code>clip.query_config()</code> returns. Its packet triggers bind in order, as <code>clip.bind_packet()</code> binds them, under the opt-in state that <code>set_imperfect_status</code> scripted. For a consuming trigger, script that first. The reply is these settings plus the triggers bound on the mock. <code>set_retain</code>, <code>finalize</code>, input binds and playback are recorded as frames and leave the reply as scripted.</td></tr>
@@ -422,7 +436,7 @@ with MockBox() as mock:
               <tr><td><code>medius.find_ports(cap=16)</code></td><td>List present medius ports as <A href="/bindings/python/types#portinfo"><code>PortInfo</code></A>, including the CH343 serial.</td></tr>
               <tr><td><code>medius.list_boxes(cap=16)</code></td><td>Enumerate every connected box as a <A href="/bindings/python/types#boxinfo"><code>BoxInfo</code></A>. See <A href="/bindings/python/api#discovery">Discovery</A>.</td></tr>
               <tr><td><code>medius.default_query_timeout_ms()</code></td><td>The default query reply wait (1000 ms).</td></tr>
-              <tr><td><code>medius.default_transfer_timeout_ms()</code></td><td>The default control-transfer reply wait (1500 ms).</td></tr>
+              <tr><td><code>medius.default_transfer_timeout_ms()</code></td><td>How long the box waits on the real device for <code>dev.transfer</code> by default (1000 ms).</td></tr>
               <tr><td><code>medius.default_keepalive_cadence_ms()</code></td><td>The default keepalive interval (500 ms).</td></tr>
               <tr><td><code>medius.abi_version()</code></td><td>The <A href="/bindings/c">C ABI</A> version the library exposes. <code>import medius</code> raises <code>ImportError</code> when it isn't the ABI the package was built for.</td></tr>
               <tr><td><code>medius.version_string()</code></td><td>The library version string.</td></tr>

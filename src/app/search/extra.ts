@@ -22,6 +22,7 @@ export const KEYWORDS: Record<string, string[]> = {
   '/guide': ['getting started', 'first time', 'new box'],
   '/guide/compatibility': ['compatible', 'compatibility', 'supported devices'],
   '/guide/compatibility#reporting': ['broken', 'not working'],
+  '/guide/compatibility#limits': ['1000hz'],
   '/guide/help': ['faq', 'questions', 'troubleshooting'],
   '/dashboard/setup': ['install', 'installer', 'first install'],
   '/dashboard/update': ['update firmware', 'firmware update', 'outdated', 'out of date'],

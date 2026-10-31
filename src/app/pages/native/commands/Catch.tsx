@@ -3,6 +3,7 @@ import { A } from '@solidjs/router';
 import { PageHeader } from '../../../shell/PageHeader';
 import { DocSection } from '../../../shell/DocSection';
 import { ByteStrip } from '../../../shell/ByteStrip';
+import { Anchor } from '../../../shell/Anchor';
 
 const Catch: Component = () => {
   return (
@@ -89,7 +90,7 @@ const Catch: Component = () => {
               <tr><td><code>HID_OUT</code></td><td><code>5</code></td><td>endpoint number</td><td>every interrupt-OUT endpoint</td></tr>
               <tr><td><code>VEND_INTR</code></td><td><code>6</code></td><td>endpoint number</td><td>every vendor interrupt endpoint</td></tr>
               <tr><td><code>VEND_BULK</code></td><td><code>7</code></td><td>endpoint number</td><td>every vendor bulk endpoint</td></tr>
-              <tr><td><code>CONTROL</code></td><td><code>8</code></td><td>endpoint number (<code>0</code> = EP0; on EP0, the requests the clone relays to the real device)</td><td>every control endpoint</td></tr>
+              <tr><td><code>CONTROL</code></td><td><code>8</code></td><td>endpoint number (<code>0</code> = EP0; on EP0, every class and vendor request and each standard request the clone relays)</td><td>every control endpoint</td></tr>
               <tr><td><code>EMIT</code></td><td><code>9</code></td><td>endpoint number</td><td>every emitting endpoint</td></tr>
               <tr><td><code>BUS</code></td><td><code>10</code></td><td>unused</td><td>-</td></tr>
               <tr><td><code>CLIP_XFER</code></td><td><code>11</code></td><td>endpoint number (<code>0</code> = EP0)</td><td>every control endpoint</td></tr>
@@ -437,7 +438,7 @@ const Catch: Component = () => {
               <tr><td>6</td><td><code>id</code></td><td><code>u16</code></td><td>endpoint number or interface number, little-endian</td></tr>
               <tr><td>8</td><td><code>dir</code></td><td><code>u8</code></td><td><code>1</code> = IN (device to PC), <code>2</code> = OUT (PC to device), <code>0</code> for <code>BUS</code>, which is not a transfer</td></tr>
               <tr><td>9</td><td><code>flags</code></td><td><code>u8</code></td><td>class-specific (table below)</td></tr>
-              <tr><td>10</td><td><code>true_len</code></td><td><code>u16</code></td><td>packet length <em>before</em> truncation (by <code>snaplen</code> or the 172-byte control data-stage cap), little-endian</td></tr>
+              <tr><td>10</td><td><code>true_len</code></td><td><code>u16</code></td><td>packet length <em>before</em> truncation (by <code>snaplen</code> or the 172-byte control data-stage cap), little-endian; <code>65535</code> for a control transfer of 65535 bytes or more</td></tr>
               <tr><td>12</td><td><code>bytes</code></td><td><code>u8[]</code></td><td>up to <code>snaplen</code> bytes; the frame <A href="/native/frame#layout"><code>LEN</code></A> gives how many arrived</td></tr>
             </tbody>
           </table>
@@ -460,8 +461,8 @@ const Catch: Component = () => {
               <tr><td><code>HID_IN</code>, <code>EMIT</code></td><td>b1 zero-length packet (on a HID endpoint, also one that ended the report after the event's bytes); b7 <A href="/native/commands/catch#rules"><code>RULE</code></A></td></tr>
               <tr><td><code>HID_OUT</code>, <code>VEND_INTR</code></td><td>b1 zero-length packet, b7 <code>RULE</code></td></tr>
               <tr><td><code>VEND_BULK</code></td><td>b0 end-of-transfer, b1 zero-length packet, b7 <code>RULE</code></td></tr>
-              <tr><td><code>CONTROL</code></td><td>b0-b1 the handshake the game PC received: <code>0</code> OK, <code>1</code> STALL, <code>2</code> NAK until the host gave up (endpoint 0 only); b7 <code>RULE</code></td></tr>
-              <tr><td><code>CLIP_XFER</code></td><td>how the transfer ended, as <A href="/native/commands/transfer#transfer-resp"><code>TRANSFER_RESP</code></A>'s status: <code>0</code> OK, <code>0xFD</code> STALL, <code>0xFE</code> no answer (NAKed past the host chip's timeout, failed on the bus, an undeclared endpoint, no reply within 4&nbsp;s, or the clone suspended by the game PC), <code>0xFF</code> no device, <code>0xFC</code> refused</td></tr>
+              <tr><td><code>CONTROL</code></td><td>b0-b1 the <A href="/native/commands/catch#handshake">handshake</A> the game PC received: <code>0</code> OK, <code>1</code> STALL, <code>2</code> NAK; b7 <code>RULE</code></td></tr>
+              <tr><td><code>CLIP_XFER</code></td><td>how the transfer ended: <A href="/native/commands/transfer#transfer-resp"><code>TRANSFER_RESP</code></A>'s <A href="/native/commands/transfer#status">status</A>, <code>0xFE</code> NO_ANSWER when no answer came in 4&nbsp;s</td></tr>
               <tr><td><code>BUS</code></td><td>the event kind (table below)</td></tr>
             </tbody>
           </table>
@@ -493,13 +494,16 @@ const Catch: Component = () => {
   vendor endpoint: one event a packet, so [ 64 ] [ ZLP ] is 64 bytes, then 0 bytes with b1`}</pre>
         <div class="api-response-label">CONTROL EVENTS</div>
         <p>
-          <code>CONTROL</code> carries one event per <em>completed transaction</em>:{' '}
+          <code>CONTROL</code> carries one event per transaction, not per stage, raised when it ends:{' '}
           <code>bytes</code> is <code>[setup 8][data ...]</code> and <code>dir</code> is the data
           stage's direction.
         </p>
         <p>
-          The event is the transaction as the game PC received it, the same on every control endpoint. A
-          request served from the box's value cache still produces an event.
+          The event is the transaction as the game PC received it, the same on every control endpoint.
+          Every request that reaches the{' '}
+          <A href="/native/commands/rewrite#endpoint-0">rewrite table</A> raises one: on endpoint 0, the
+          class and vendor requests and the standard requests the clone relays. A request served from
+          the box's value cache still produces an event.
         </p>
         <pre class="diagram">{`  bytes = A1 01 00 01 00 00 08 00   01 00 00 00 00 00 00 00
           '------ setup (8) ------'   '---- data stage -------'
@@ -513,7 +517,35 @@ const Catch: Component = () => {
               <tr><td>setup</td><td>The 8 setup bytes, from byte 0 of <code>bytes</code>.</td></tr>
               <tr><td>IN data</td><td>The reply the PC received: after a <code>REPLY_PATCH</code> or <code>REPLY_REPLACE</code> <A href="/native/commands/rewrite#actions">rule</A>, or an <code>ANSWER</code>'s payload.</td></tr>
               <tr><td>OUT data</td><td>The data stage the PC sent, before a <code>PATCH</code> or <code>REPLACE</code> rule rewrote it for the real device.</td></tr>
-              <tr><td>b0-b1</td><td>The handshake the PC got. A request a rule refused reads STALL (NAK for a <code>NAK</code> rule on endpoint 0). A failed request above endpoint 0 reads STALL, since the clone STALLs it there.</td></tr>
+              <tr><td>b0-b1</td><td>The handshake the PC got, below.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <Anchor id="handshake" label="HANDSHAKE">
+          <div class="table-scroll">
+            <table class="api-params">
+              <thead>
+                <tr><th>Value</th><th>Handshake</th><th>When</th></tr>
+              </thead>
+              <tbody>
+                <tr><td><code>0</code></td><td>OK</td><td>the transaction completed</td></tr>
+                <tr><td><code>1</code></td><td>STALL</td><td>the real device STALLed it, or a <code>STALL</code> rule refused it</td></tr>
+                <tr><td><code>2</code></td><td>NAK</td><td>the real device left it unanswered, it failed on the real device's bus, a <code>NAK</code> rule refused it, or the PC gave up on it before the real device finished</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </Anchor>
+        <p>The handshakes are the same on every control endpoint.</p>
+        <div class="api-response-label">EVENT TIMING</div>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Transaction</th><th>Event</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>one the PC gave up on</td><td>with NAK when the PC's next SETUP on that endpoint replaces it, or 250-300 ms after the PC stopped polling it, whichever comes first</td></tr>
+              <tr><td>one a SET_INTERFACE on its interface, a configuration change or a suspend ended</td><td>at once, with NAK</td></tr>
+              <tr><td>one with a step the box had no room to pass on</td><td>at once, with NAK</td></tr>
             </tbody>
           </table>
         </div>
@@ -524,31 +556,30 @@ const Catch: Component = () => {
               <tr><th>Transaction</th><th>Why</th></tr>
             </thead>
             <tbody>
-              <tr><td>a standard request on endpoint 0, such as <code>GET_DESCRIPTOR</code> or <code>SET_CONFIGURATION</code></td><td>the clone serves it itself, and a configuration or interface change still raises a <code>BUS</code> event. The standard requests the box relays to the real device raise a <code>CONTROL</code> event, listed below the table</td></tr>
+              <tr><td>a standard request the clone serves itself on endpoint 0: <code>GET_DESCRIPTOR</code> for what the box kept, <code>SET_ADDRESS</code>, <code>SET_CONFIGURATION</code> and the rest</td><td>it never reaches the rewrite table; a configuration or interface change still raises a <code>BUS</code> event</td></tr>
               <tr><td>one a bus reset cut short</td><td>it never completed</td></tr>
-              <tr><td>on endpoint 0, a request with an OUT data stage &gt;2048 bytes; above endpoint 0, any data stage &gt;2048 bytes</td><td>the box STALLs it before proxying it</td></tr>
-              <tr><td>a request a new SETUP on its endpoint replaced, or, above endpoint 0, one the box had no room to queue</td><td>the box abandons it</td></tr>
+              <tr><td>one whose SETUP the box had no room to take</td><td>it never reached the relay: the game PC sees NAKs until it gives up</td></tr>
             </tbody>
           </table>
         </div>
-        <div class="api-response-label">RELAYED STANDARD REQUESTS</div>
-        <p>These standard requests on endpoint 0 go to the real device, and each raises a <code>CONTROL</code> event:</p>
-        <ul>
-          <li>an interface's <code>GET_DESCRIPTOR</code> for a class descriptor other than the HID and report descriptors</li>
-          <li>a string the box did not keep</li>
-          <li>while the clone is configured, a device qualifier or other-speed configuration the box did not keep (one too long for it, or at an index past 0)</li>
-          <li>on a device that answers them, a read at recipients 3-31, a class descriptor asked at the device recipient, a descriptor asked at an endpoint, and <code>SYNCH_FRAME</code></li>
-          <li>a read (<code>GET_STATUS</code>, <code>GET_DESCRIPTOR</code>, <code>GET_CONFIGURATION</code>, <code>GET_INTERFACE</code>) sent with the host-to-device bit and a data stage, on a device that doesn't refuse the bit</li>
-          <li>a configuration index past the last, on a device that answers one with bytes other than its first configuration</li>
-          <li>a <code>GET_STATUS</code>, <code>GET_CONFIGURATION</code> or <code>GET_INTERFACE</code> longer than its reply, on a device that answers one past its reply (at the device recipient, with anything but zeros)</li>
-          <li>on a device that answers a descriptor type it lacks, any other descriptor the box did not keep: another type, or a HID or report descriptor at an interface without one</li>
-        </ul>
         <div class="api-response-label">CLIP_XFER EVENTS</div>
         <p>
           <code>CLIP_XFER</code> carries one event per control transfer a{' '}
           <A href="/native/commands/clip#items">clip</A> sent to the real device, in{' '}
-          <code>CONTROL</code>'s shape: <code>bytes</code> is <code>[setup 8][IN data]</code>.
+          <code>CONTROL</code>'s shape: <code>bytes</code> is <code>[setup 8][data]</code>.
         </p>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>Part</th><th>Carries</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>setup</td><td>The 8 setup bytes, from byte 0 of <code>bytes</code>.</td></tr>
+              <tr><td>data</td><td>The reply as <A href="/native/commands/transfer#transfer-resp"><code>TRANSFER_RESP</code></A> carries it: the IN data stage, or what the real device sent where the status stage was due. Empty on a host-to-device request with a data stage.</td></tr>
+              <tr><td><code>flags</code></td><td>The <A href="/native/commands/transfer#status">status</A>, <code>0xFE</code> NO_ANSWER when no answer came in 4&nbsp;s.</td></tr>
+            </tbody>
+          </table>
+        </div>
         <p>
           Only a transfer the box sent raises an event. The rest are counted in{' '}
           <A href="/native/commands/requests#clip"><code>RESP(CLIP)</code></A>.

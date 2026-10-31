@@ -491,7 +491,7 @@ clip.clear_triggers()             # both kinds`}</code></pre>
                 <tr><td><code>HID_OUT</code></td><td><code>5</code></td><td>an endpoint number</td><td>every interrupt-OUT endpoint</td></tr>
                 <tr><td><code>VENDOR_INTERRUPT</code></td><td><code>6</code></td><td>an endpoint number</td><td>every vendor interrupt endpoint</td></tr>
                 <tr><td><code>VENDOR_BULK</code></td><td><code>7</code></td><td>an endpoint number</td><td>every vendor bulk endpoint</td></tr>
-                <tr><td><code>CONTROL</code></td><td><code>8</code></td><td>an endpoint number (<code>0</code> = EP0; on EP0, the requests the clone relays to the real device)</td><td>every control endpoint</td></tr>
+                <tr><td><code>CONTROL</code></td><td><code>8</code></td><td>an endpoint number (<code>0</code> = EP0; on EP0, every class and vendor request and each standard request the clone relays)</td><td>every control endpoint</td></tr>
                 <tr><td><code>EMIT</code></td><td><code>9</code></td><td>an endpoint number</td><td>every emitting endpoint</td></tr>
                 <tr><td><code>BUS</code></td><td><code>10</code></td><td>unused</td><td>the bus lifecycle</td></tr>
                 <tr><td><code>CLIP_TRANSFER</code></td><td><code>11</code></td><td>the endpoint number (<code>0</code> = EP0) a <A href="/bindings/python/api#clip">clip</A>'s transfer ran on</td><td>every control endpoint</td></tr>
@@ -1027,7 +1027,7 @@ LockTarget.media(media)   -> LockTarget`}</pre>
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
                 <tr><td><code>inject_emits</code></td><td><code>int</code></td><td>injected reports emitted</td></tr>
-                <tr><td><code>tx_drops</code></td><td><code>int</code></td><td>reports the clone's IN queue could not hold</td></tr>
+                <tr><td><code>tx_drops</code></td><td><code>int</code></td><td>reports the clone's IN queue, or the host chip's forwarder or link, could not take, and reports a stop of their stream (a setting switch, a halt, a suspend) cut short</td></tr>
                 <tr><td><code>tx_merges</code></td><td><code>int</code></td><td>coalesced TX frames</td></tr>
                 <tr><td><code>tx_maxdepth</code></td><td><code>int</code></td><td>peak TX queue depth</td></tr>
                 <tr><td><code>tx_wedges</code></td><td><code>int</code></td><td>wedged-endpoint recoveries</td></tr>
@@ -1036,7 +1036,7 @@ LockTarget.media(media)   -> LockTarget`}</pre>
                 <tr><td><code>config_count</code></td><td><code>int</code></td><td>clone configures</td></tr>
                 <tr><td><code>link_rx_drops</code></td><td><code>int</code></td><td>input frames the device chip could not take off the link from the host chip</td></tr>
                 <tr><td><code>host_rx_drops</code></td><td><code>int</code></td><td>the same count on the host chip, relayed over the link</td></tr>
-                <tr><td><code>relay_drops</code></td><td><code>int</code></td><td>relayed traffic and commands that went no further, never native input. One count each for: a vendor IN packet whose endpoint queue was full of the control PC's <code>RAW</code> packets; a native zero-length packet answering a poll the PC never made (the box runs one poll ahead of a suspended PC); an OUT packet with no room in the queue, that failed three times on the real device's bus, or that a bus reset or <code>SET_INTERFACE</code> overtook; a <code>RAW</code> OUT packet with no room to wait; a relayed request the box could not queue; a flagged <code>MOVE</code> the motion batch could not take; a frame other than native input that either chip's link receive ring dropped; a control-PC frame its receive ring had no room for. A control-port UART overrun counts once, however many frames it cost</td></tr>
+                <tr><td><code>relay_drops</code></td><td><code>int</code></td><td>relayed traffic and commands that went no further, never native input. One count each for: a vendor IN packet the host chip's link would not carry, or whose endpoint queue was full of the control PC's <code>RAW</code> packets; a native zero-length packet answering a poll the PC never made (the box runs one poll ahead of a suspended PC); an OUT packet with no room in the queue, that failed three times on the real device's bus, or that a bus reset or <code>SET_INTERFACE</code> overtook; a <code>RAW</code> OUT packet with no room to wait; a relayed request, or a packet or step of one, the box could not queue (the request then ends, NAKed until the game PC gives up); a flagged <code>MOVE</code> the motion batch could not take; a frame other than native input that either chip's link receive ring dropped; a control-PC frame its receive ring had no room for. A control-port UART overrun counts once, however many frames it cost</td></tr>
                 <tr><td><code>session</code></td><td><code>int</code></td><td>times the box released some or all of the session state a host set. 0 at boot; it wraps, so compare for inequality. The library watches it for <A href="/library/lifecycle#restart">session recovery</A></td></tr>
               </tbody>
             </table>
@@ -1370,10 +1370,10 @@ for b in medius.list_boxes():
                 <tr><td><code>bytes</code></td><td><code>bytes</code></td><td>the captured bytes, at most 180 of them</td></tr>
                 <tr><td><code>truncated()</code></td><td><code>bool</code></td><td><code>len(bytes) &lt; true_len</code>: bytes were cut</td></tr>
                 <tr><td><code>setup()</code></td><td><code>Optional[bytes]</code></td><td>the 8-byte setup packet of a <code>CONTROL</code> or <code>CLIP_TRANSFER</code> event; <code>None</code> for another class or a shorter capture</td></tr>
-                <tr><td><code>data()</code></td><td><code>bytes</code></td><td>the data stage of a <code>CONTROL</code> or <code>CLIP_TRANSFER</code> event, the whole packet for any other class</td></tr>
+                <tr><td><code>data()</code></td><td><code>bytes</code></td><td>the data stage of a <code>CONTROL</code> event, the reply of a <code>CLIP_TRANSFER</code> one (empty on an OUT request with a data stage), the whole packet for any other class</td></tr>
                 <tr><td><code>control_status()</code></td><td><code>Optional[<A href="/bindings/python/types#controlstatus">ControlStatus</A>]</code></td><td>the handshake the game PC received, <code>flags</code> bits 0-1; <code>None</code> for any class but <code>CONTROL</code></td></tr>
                 <tr><td><code>rule_acted()</code></td><td><code>bool</code></td><td>whether a rewrite rule changed, dropped, answered or refused the packet: <code>flags</code> bit 7 on <code>HID_IN</code>, <code>HID_OUT</code>, the vendor classes, <code>CONTROL</code> and <code>EMIT</code></td></tr>
-                <tr><td><code>transfer_status()</code></td><td><code>Optional[TransferStatus | int]</code></td><td>how the transfer ended, as a <A href="/bindings/python/types#transfer-outcome"><code>TransferStatus</code></A> (<code>NAK</code> when no reply came) or the raw byte for a status no member names; <code>None</code> for any class but <code>CLIP_TRANSFER</code></td></tr>
+                <tr><td><code>transfer_status()</code></td><td><code>Optional[TransferStatus | int]</code></td><td>how the transfer ended, as a <A href="/bindings/python/types#transfer-outcome"><code>TransferStatus</code></A> (<code>NO_ANSWER</code> when no answer came in 4 s) or the raw byte for a status no member names; <code>None</code> for any class but <code>CLIP_TRANSFER</code></td></tr>
                 <tr><td><code>bus_event()</code></td><td><code>Optional[<A href="/bindings/python/types#busevent">BusEvent</A>]</code></td><td>the decoded lifecycle event; <code>None</code> for a class other than <code>BUS</code>, or an unknown kind</td></tr>
                 <tr><td><code>zlp()</code></td><td><code>bool</code></td><td>whether the event is a zero-length packet (<code>flags</code> bit 1 on the packet classes). On a HID endpoint, a <code>HID_IN</code> or <code>EMIT</code> event also returns true when a ZLP ended the report after its bytes</td></tr>
                 <tr><td><code>bulk_end_of_transfer()</code></td><td><code>bool</code></td><td>whether a <code>VENDOR_BULK</code> event is the last of its transfer, <code>flags</code> bit 0</td></tr>
@@ -1389,17 +1389,17 @@ for b in medius.list_boxes():
                 <tr><td><code>HID_OUT</code>, <code>VENDOR_INTERRUPT</code></td><td>b1 a zero-length packet, b7 a rule acted</td><td><code>zlp()</code>, <code>rule_acted()</code></td></tr>
                 <tr><td><code>VENDOR_BULK</code></td><td>b0 end-of-transfer, b1 zero-length packet, b7 a rule acted</td><td><code>bulk_end_of_transfer()</code>, <code>zlp()</code>, <code>rule_acted()</code></td></tr>
                 <tr><td><code>CONTROL</code></td><td>b0-b1 the handshake the game PC received, a <A href="/bindings/python/types#controlstatus"><code>ControlStatus</code></A>; b7 a rule acted</td><td><code>control_status()</code>, <code>rule_acted()</code></td></tr>
-                <tr><td><code>CLIP_TRANSFER</code></td><td>how the transfer ended, a <A href="/bindings/python/types#transfer-outcome"><code>TransferStatus</code></A> byte; <code>0xFE</code> when no reply came</td><td><code>transfer_status()</code></td></tr>
+                <tr><td><code>CLIP_TRANSFER</code></td><td>how the transfer ended, a <A href="/bindings/python/types#transfer-outcome"><code>TransferStatus</code></A> byte; <code>NO_ANSWER</code> (<code>0xFE</code>) when no answer came in 4 s</td><td><code>transfer_status()</code></td></tr>
                 <tr><td><code>BUS</code></td><td>the <A href="/bindings/python/types#busevent"><code>BusEventKind</code></A>; the bytes hold its arguments</td><td><code>bus_event()</code></td></tr>
                 <tr><td>everything else</td><td><code>0</code></td><td>-</td></tr>
               </tbody>
             </table>
           </div>
           <p>
-            A <code>CONTROL</code> or <code>CLIP_TRANSFER</code> event is one{' '}
-            <em>completed transaction</em>. <code>bytes</code> is <code>[setup 8][data...]</code>{' '}
-            (IN data only on <code>CLIP_TRANSFER</code>); <code>direction</code> says which way
-            the data stage went.
+            A <code>CONTROL</code> event is one transaction, not one stage, raised when it ends; a{' '}
+            <code>CLIP_TRANSFER</code> event is one transfer a clip ran. <code>bytes</code> is{' '}
+            <code>[setup 8][data...]</code> (on <code>CLIP_TRANSFER</code>, the reply, empty on an OUT
+            request with a data stage); <code>direction</code> says which way the data stage went.
           </p>
           <div class="table-scroll">
             <table class="api-params">
@@ -1422,8 +1422,8 @@ for b in medius.list_boxes():
               <thead><tr><th>Member</th><th>Value</th><th>Meaning</th></tr></thead>
               <tbody>
                 <tr><td><code>OK</code></td><td><code>0</code></td><td>the transaction completed</td></tr>
-                <tr><td><code>STALLED</code></td><td><code>1</code></td><td>the game PC got a STALL from the real device, from a rule that refused the request, or (above endpoint 0) for a failed request</td></tr>
-                <tr><td><code>NAKED</code></td><td><code>2</code></td><td>NAKed until the host gave up, on endpoint 0 only</td></tr>
+                <tr><td><code>STALLED</code></td><td><code>1</code></td><td>the game PC got a STALL: the real device STALLed the request, or a <code>STALL</code> rule refused it</td></tr>
+                <tr><td><code>NAKED</code></td><td><code>2</code></td><td>NAKed until the PC gave up: the real device left the request unanswered or it failed on the real device's bus, a <code>NAK</code> rule matched it, the PC gave up before the real device finished, a SET_INTERFACE on its interface, a configuration change or a suspend ended it, or the box had no room to pass a step of it on (for a request the PC gave up on, the event comes when the PC's next SETUP on that endpoint replaces it, or 250-300 ms after the PC stopped polling it, whichever is first)</td></tr>
                 <tr><td><code>OTHER</code></td><td><code>3</code></td><td>a handshake value this build does not know; read it off <code>TrafficEvent.flags</code> bits 0-1</td></tr>
               </tbody>
             </table>
@@ -1533,12 +1533,39 @@ for b in medius.list_boxes():
             <table class="api-params">
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
-                <tr><td><code>status</code></td><td><code>TransferStatus | int</code></td><td><code>OK</code> (0x00), <code>REFUSED</code> (0xFC), <code>STALL</code> (0xFD), <code>NAK</code> (0xFE), <code>NO_DEVICE</code> (0xFF), or a byte no constant names.</td></tr>
-                <tr><td><code>data</code></td><td><code>bytes</code></td><td>An IN transfer's data stage, whole even where the real device sent more than <code>wLength</code> asked for. For an OUT transfer or one with <code>wLength</code> 0, what it sent where the status stage was due (at most 64 bytes, usually none).</td></tr>
-                <tr><td><code>is_ok()</code></td><td><code>bool</code></td><td>Whether the transfer completed.</td></tr>
+                <tr><td><code>status</code></td><td><code>TransferStatus | int</code></td><td>How the transfer ended: a member below, or the raw byte for a status no member names. A status other than <code>OK</code> is returned, not raised.</td></tr>
+                <tr><td><code>stage</code></td><td><code>TransferStage | int</code></td><td>Where it ended: a member below, or the raw byte for a stage no member names.</td></tr>
+                <tr><td><code>data</code></td><td><code>bytes</code></td><td>The IN data stage as the box received it, whole at any length: the bytes before a STALL included, and bytes past <code>wLength</code> where the real device sent more in the packets a host asks for. For an OUT transfer or one with <code>wLength</code> 0, what the real device sent where the status stage was due (≤1 packet, usually none). Meaningful on any status.</td></tr>
+                <tr><td><code>is_ok</code></td><td><code>bool</code></td><td>A property: whether the transfer completed.</td></tr>
               </tbody>
             </table>
           </div>
+          <div class="table-scroll">
+            <table class="api-params">
+              <thead><tr><th><code>TransferStatus</code></th><th>Value</th><th>Meaning</th></tr></thead>
+              <tbody>
+                <tr><td><code>OK</code></td><td><code>0x00</code></td><td>Completed.</td></tr>
+                <tr><td><code>BUSY</code></td><td><code>0xF9</code></td><td>The game PC had the pipe: its transfer held it until the timeout and nothing was sent (stage <code>SETUP</code>), or its next request on that endpoint, or a bus event it caused, took the pipe in the stage named.</td></tr>
+                <tr><td><code>SUSPENDED</code></td><td><code>0xFA</code></td><td>The game PC has suspended the clone, and the real device with it. Nothing was sent.</td></tr>
+                <tr><td><code>ERROR</code></td><td><code>0xFB</code></td><td>The real device's packets were corrupt past three tries or ran past the buffer the host asked for, or the host chip had no channel free to send the transfer on.</td></tr>
+                <tr><td><code>REFUSED</code></td><td><code>0xFC</code></td><td>Never sent: the opt-in is off, <code>ep</code> names no control endpoint the real device declares, another transfer is outstanding, or the box had no room for it then (the link between its chips was full, or an earlier transfer's reply still held its place, for up to 1 s).</td></tr>
+                <tr><td><code>STALL</code></td><td><code>0xFD</code></td><td>The real device STALLed, in the stage named.</td></tr>
+                <tr><td><code>NO_ANSWER</code></td><td><code>0xFE</code></td><td>The real device NAKed until the timeout, in the stage named; or the host chip's reply was lost between the chips; or the reply's next chunk waited 1 s to be passed on to the control port, in the data stage.</td></tr>
+                <tr><td><code>NO_DEVICE</code></td><td><code>0xFF</code></td><td>No real device attached.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="table-scroll">
+            <table class="api-params">
+              <thead><tr><th><code>TransferStage</code></th><th>Value</th><th>Meaning</th></tr></thead>
+              <tbody>
+                <tr><td><code>SETUP</code></td><td><code>0</code></td><td>The setup packet.</td></tr>
+                <tr><td><code>DATA</code></td><td><code>1</code></td><td>The data stage.</td></tr>
+                <tr><td><code>STATUS</code></td><td><code>2</code></td><td>The status stage, where a completed transfer ends.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p><code>TRANSFER_OUT_MAX</code> (501) is the most OUT data one <code>dev.transfer</code> carries: one frame less its header.</p>
         </div>
 
         <div id="rewrite-rule">
@@ -1660,15 +1687,17 @@ except MediusError as e:     # any other failure
                 <tr><td><code>RawDirectionError</code></td><td><code>ERR_RAW_DIRECTION</code></td></tr>
                 <tr><td><code>ClipFrameCountError</code></td><td><code>ERR_CLIP_FRAME_COUNT</code></td></tr>
                 <tr><td><code>ClipFrameTooLongError</code></td><td><code>ERR_CLIP_FRAME_TOO_LONG</code></td></tr>
-                <tr><td><code>ClipTransferDataError</code></td><td><code>ERR_CLIP_TRANSFER_DATA</code></td></tr>
+                <tr><td><code>TransferDataError</code></td><td><code>ERR_TRANSFER_DATA</code></td></tr>
                 <tr><td><code>ClipPacketTriggerError</code></td><td><code>ERR_CLIP_PACKET_TRIGGER</code></td></tr>
                 <tr><td><code>RewriteMatchTooLongError</code></td><td><code>ERR_REWRITE_MATCH_TOO_LONG</code></td></tr>
                 <tr><td><code>RewritePoolFullError</code></td><td><code>ERR_REWRITE_POOL_FULL</code></td></tr>
+                <tr><td><code>TransferTimeoutRangeError</code></td><td><code>ERR_TRANSFER_TIMEOUT_RANGE</code></td></tr>
+                <tr><td><code>TransferReplyIncompleteError</code></td><td><code>ERR_TRANSFER_REPLY_INCOMPLETE</code></td></tr>
               </tbody>
             </table>
           </div>
           <p>
-            The last 24 are argument refusals, raised before a frame reaches the box.
+            The ones below are argument refusals, raised before a frame reaches the box.
           </p>
           <div class="table-scroll">
             <table class="api-params">
@@ -1694,10 +1723,11 @@ except MediusError as e:     # any other failure
                 <tr><td><code>RawDirectionError</code></td><td>a raw injection direction other than <code>Direction.IN</code> or <code>Direction.OUT</code></td></tr>
                 <tr><td><code>ClipFrameCountError</code></td><td>a clip frame with more than <A href="/bindings/python/types#clip-constants"><code>CLIP_EDGES_MAX</code></A> edges or <code>CLIP_RAW_MAX</code> raw reports</td></tr>
                 <tr><td><code>ClipFrameTooLongError</code></td><td>a clip frame that encodes to more than <code>CLIP_ENTRY_MAX</code> bytes</td></tr>
-                <tr><td><code>ClipTransferDataError</code></td><td>a clip transfer whose data is not what its setup packet announces: <code>length</code> bytes for an OUT request, none for an IN one</td></tr>
+                <tr><td><code>TransferDataError</code></td><td>a control transfer, or a clip's, whose data is not what its setup packet announces: <code>length</code> bytes for an OUT request, none for an IN one</td></tr>
                 <tr><td><code>ClipPacketTriggerError</code></td><td>a <A href="/bindings/python/types#clippackettrigger"><code>ClipPacketTrigger</code></A> the box would refuse; the message says why</td></tr>
                 <tr><td><code>RewriteMatchTooLongError</code></td><td>a rewrite rule with more than 16 match bytes</td></tr>
                 <tr><td><code>RewritePoolFullError</code></td><td>a rewrite payload larger than the room the held rules leave in the box's 2048-byte payload pool; an overwrite counts the bytes it replaces as free</td></tr>
+                <tr><td><code>TransferTimeoutRangeError</code></td><td>a <code>timeout_ms</code> outside 1 to 65535, passed to <code>dev.transfer</code> (a negative one, or one past 32 bits, raises <code>ValueError</code> first)</td></tr>
               </tbody>
             </table>
           </div>
@@ -1745,9 +1775,10 @@ except MediusError as e:     # any other failure
                 <tr><td><code>ERR_IMPERFECT_REQUIRED</code></td><td><code>22</code></td><td><code>ERR_RAW_DIRECTION</code></td><td><code>29</code></td></tr>
                 <tr><td><code>ERR_REWRITE_MASK_LENGTH</code></td><td><code>23</code></td><td><code>ERR_CLIP_FRAME_COUNT</code></td><td><code>30</code></td></tr>
                 <tr><td><code>ERR_REWRITE_ACTION_CLASS</code></td><td><code>24</code></td><td><code>ERR_CLIP_FRAME_TOO_LONG</code></td><td><code>31</code></td></tr>
-                <tr><td><code>ERR_REWRITE_PAYLOAD_TOO_LARGE</code></td><td><code>25</code></td><td><code>ERR_CLIP_TRANSFER_DATA</code></td><td><code>32</code></td></tr>
+                <tr><td><code>ERR_REWRITE_PAYLOAD_TOO_LARGE</code></td><td><code>25</code></td><td><code>ERR_TRANSFER_DATA</code></td><td><code>32</code></td></tr>
                 <tr><td><code>ERR_REWRITE_TABLE_FULL</code></td><td><code>26</code></td><td><code>ERR_CLIP_PACKET_TRIGGER</code></td><td><code>33</code></td></tr>
                 <tr><td><code>ERR_REWRITE_MATCH_TOO_LONG</code></td><td><code>34</code></td><td><code>ERR_REWRITE_POOL_FULL</code></td><td><code>35</code></td></tr>
+                <tr><td><code>ERR_TRANSFER_TIMEOUT_RANGE</code></td><td><code>36</code></td><td><code>ERR_TRANSFER_REPLY_INCOMPLETE</code></td><td><code>37</code></td></tr>
               </tbody>
             </table>
           </div>

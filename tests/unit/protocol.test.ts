@@ -4,6 +4,7 @@ import {
   anyPending,
   UPD_NAMES,
   OTA_CHUNK,
+  MAX_PAYLOAD,
   MIN_PROTO_VER,
   PROTO_VER,
   BearingMode,
@@ -107,7 +108,16 @@ import {
   patchApplyPayload,
   patchClearPayload,
   queryEntryPayload,
-  parseTransferResp,
+  parseTransferChunk,
+  assembleTransfer,
+  transferStatusName,
+  TransferStage,
+  TRANSFER_OUT_MAX,
+  TRANSFER_TIMEOUT_MAX_MS,
+  XFER_CHUNK_MAX,
+  XFER_LAST,
+  XFER_REQ_HDR,
+  XFER_RESP_HDR,
   RewriteAction,
   RW_ACTION_COUNT,
   rewriteActionName,
@@ -590,10 +600,10 @@ describe('LOCK command (§3.8)', () => {
     expect(MIN_PROTO_VER).toBeLessThanOrEqual(PROTO_VER);
   });
 
-  it('PROTO_VER matches the firmware that speaks this RESP(STATS)', () => {
-    // v9 (firmware 3.4.2) grows RESP(STATS) from 17 bytes to 31: the two inter-chip link drop
-    // counts, relay_drops, then session.
-    expect(PROTO_VER).toBe(9);
+  it('PROTO_VER matches the firmware that speaks this TRANSFER', () => {
+    // v10 (firmware 3.5.0) puts the box's wait in TRANSFER and sends TRANSFER_RESP in chunks that name the
+    // stage. RESP(STATS) keeps the 31 bytes v9 (firmware 3.4.2) gave it.
+    expect(PROTO_VER).toBe(10);
   });
 
   it('parses the readback shapes a blanket and a media lock produce', () => {
@@ -1194,11 +1204,16 @@ describe('TRAFFIC_EVENT (§4.10)', () => {
     const withStatus = (status: string) =>
       parseTrafficEvent(fromHex(`00 00 00 00 01 0b 00 00 02 ${status} 08 00 21 09 00 03 00 00 02 00`))!;
     expect(trafficTransferStatus(withStatus('00'))).toBe(TransferStatus.Ok);
-    expect(trafficTransferStatus(withStatus('fd'))).toBe(TransferStatus.Stall);
-    expect(trafficTransferStatus(withStatus('fe'))).toBe(TransferStatus.Nak);
-    expect(trafficTransferStatus(withStatus('ff'))).toBe(TransferStatus.NoDevice);
+    expect(trafficTransferStatus(withStatus('f9'))).toBe(TransferStatus.Busy);
+    expect(trafficTransferStatus(withStatus('fa'))).toBe(TransferStatus.Suspended);
+    expect(trafficTransferStatus(withStatus('fb'))).toBe(TransferStatus.Error);
     expect(trafficTransferStatus(withStatus('fc'))).toBe(TransferStatus.Refused);
-    // An OUT transfer's event is the setup packet alone: the data stage went to the device.
+    expect(trafficTransferStatus(withStatus('fd'))).toBe(TransferStatus.Stall);
+    expect(trafficTransferStatus(withStatus('fe'))).toBe(TransferStatus.NoAnswer);
+    expect(trafficTransferStatus(withStatus('ff'))).toBe(TransferStatus.NoDevice);
+    // A byte no status names stays as it came: it never reads as a status it isn't.
+    expect(trafficTransferStatus(withStatus('42'))).toBe(0x42);
+    // A host-to-device transfer's event is the setup packet alone: its data stage went to the real device.
     expect(trafficData(withStatus('00'))).toHaveLength(0);
   });
 
@@ -1809,13 +1824,19 @@ describe('advanced control layer (§3.14 / §4.17)', () => {
     expect(toHex(rawPayload(1, Direction.Positive, fromHex('01 00 05 00')))).toBe('01 01 01 00 05 00');
   });
 
-  it('TRANSFER is [ep][setup 8][out..], setup little-endian', () => {
-    // GET_DESCRIPTOR(device, 18): bmRequestType 0x80, bRequest 6, wValue 0x0100, wIndex 0, wLength 18.
-    expect(toHex(transferPayload(0, 0x80, 6, 0x0100, 0, 18))).toBe('00 80 06 00 01 00 00 12 00');
-    // A host-to-device request carries its OUT stage after the setup packet.
-    expect(toHex(transferPayload(0, 0x00, 9, 1, 0, 0, fromHex('aa bb')))).toBe(
-      '00 00 09 01 00 00 00 00 00 aa bb',
+  it('TRANSFER is [ep][timeout_ms u16][setup 8][out..], little-endian', () => {
+    // GET_DESCRIPTOR(device, 18), waiting 1000 ms: bmRequestType 0x80, bRequest 6, wValue 0x0100, wIndex 0,
+    // wLength 18.
+    expect(toHex(transferPayload(0, 1000, 0x80, 6, 0x0100, 0, 18))).toBe('00 e8 03 80 06 00 01 00 00 12 00');
+    // SET_REPORT(Output) on interface 1 carries its two-byte OUT stage after the setup packet.
+    expect(toHex(transferPayload(0, 500, 0x21, 9, 0x0200, 1, 2, fromHex('aa bb')))).toBe(
+      '00 f4 01 21 09 00 02 01 00 02 00 aa bb',
     );
+    // The header is 11 bytes, so a frame carries 501 bytes of OUT data; the timeout spans 1-65535 ms.
+    expect(XFER_REQ_HDR).toBe(11);
+    expect(TRANSFER_OUT_MAX).toBe(501);
+    expect(toHex(transferPayload(2, TRANSFER_TIMEOUT_MAX_MS, 0xc0, 1, 0, 0, 0))).toBe('02 ff ff c0 01 00 00 00 00 00 00');
+    expect(transferPayload(0, 1, 0x00, 9, 0, 0, TRANSFER_OUT_MAX, new Uint8Array(TRANSFER_OUT_MAX))).toHaveLength(MAX_PAYLOAD);
   });
 
   it('REWRITE is [cls][id u16][dir][state][action][off u16][mlen][match][mask][payload]', () => {
@@ -1928,22 +1949,105 @@ describe('advanced control layer (§3.14 / §4.17)', () => {
     );
   });
 
-  it('parses TRANSFER_RESP into ep, status, and IN data', () => {
-    const r = parseTransferResp(fromHex('00 00 12 01 10 01'));
+  it('parses a TRANSFER_RESP chunk: ep, status, stage, LAST, offset and data', () => {
+    const c = parseTransferChunk(fromHex('02 fd 01 01 c0 01 aa bb'))!;
+    expect(c.ep).toBe(2);
+    expect(c.status).toBe(TransferStatus.Stall);
+    expect(c.stage).toBe(TransferStage.Data);
+    expect(c.last).toBe(true);
+    expect(c.offset).toBe(0x01c0);
+    expect(toHex(c.data)).toBe('aa bb');
+    // Only bit 0 of flags is LAST.
+    expect(parseTransferChunk(fromHex('00 00 01 00 00 00'))!.last).toBe(false);
+    // A frame shorter than the 6-byte header is no chunk.
+    expect(XFER_RESP_HDR).toBe(6);
+    expect(parseTransferChunk(fromHex('00 00 01 01 00'))).toBeNull();
+  });
+
+  it('puts a one-chunk reply together, with the outcome from that chunk', () => {
+    // The device descriptor's first 4 bytes, completed in the status stage.
+    const r = assembleTransfer([parseTransferChunk(fromHex('00 00 02 01 00 00 12 01 10 01'))!])!;
     expect(r.ep).toBe(0);
     expect(r.status).toBe(TransferStatus.Ok);
+    expect(r.stage).toBe(TransferStage.Status);
     expect(toHex(r.data)).toBe('12 01 10 01');
-    // A short frame is a refusal with no data, not a throw.
-    expect(parseTransferResp(fromHex('00')).status).toBe(TransferStatus.Refused);
   });
 
-  it('parses the advanced control layer status bytes', () => {
-    expect(parseTransferResp(fromHex('83 fd')).status).toBe(TransferStatus.Stall);
-    expect(parseTransferResp(fromHex('83 fe')).status).toBe(TransferStatus.Nak);
-    expect(parseTransferResp(fromHex('83 ff')).status).toBe(TransferStatus.NoDevice);
-    expect(parseTransferResp(fromHex('83 fc')).status).toBe(TransferStatus.Refused);
+  it('puts a long reply together by offset, and takes status and stage from the LAST chunk alone', () => {
+    // 1000 bytes: two full chunks of 448, then the LAST one with 104. The others carry no outcome.
+    const body = Uint8Array.from({ length: 1000 }, (_, i) => i & 0xff);
+    const chunk = (off: number, n: number, last: boolean, status: number, stage: number) => {
+      const p = new Uint8Array(XFER_RESP_HDR + n);
+      p.set([3, status, stage, last ? XFER_LAST : 0, off & 0xff, off >> 8]);
+      p.set(body.subarray(off, off + n), XFER_RESP_HDR);
+      return parseTransferChunk(p)!;
+    };
+    const chunks = [
+      chunk(0, XFER_CHUNK_MAX, false, 0, 1),
+      chunk(448, XFER_CHUNK_MAX, false, 0, 1),
+      chunk(896, 104, true, TransferStatus.Ok, TransferStage.Status),
+    ];
+    const r = assembleTransfer(chunks)!;
+    expect(r.ep).toBe(3);
+    expect(r.status).toBe(TransferStatus.Ok);
+    expect(r.stage).toBe(TransferStage.Status);
+    expect(r.data).toEqual(body);
+    // Placed by offset, so arrival order doesn't matter.
+    expect(assembleTransfer([chunks[2], chunks[0], chunks[1]])!.data).toEqual(body);
+    // Without its LAST chunk the reply isn't done.
+    expect(assembleTransfer(chunks.slice(0, 2))).toBeNull();
   });
 
+  it('refuses a reply with a gap a lost chunk left, even when the LAST chunk is empty', () => {
+    const first = parseTransferChunk(new Uint8Array([0, 0, 1, 0, 0, 0, ...new Uint8Array(448)]))!;
+    // The LAST chunk sits at 896: the bytes from 448 went missing.
+    const last = parseTransferChunk(fromHex('00 fe 01 01 80 03'))!;
+    expect(assembleTransfer([first, last])).toBeNull();
+    // At 448 it closes the reply with nothing missing.
+    const closing = parseTransferChunk(fromHex('00 fe 01 01 c0 01'))!;
+    const r = assembleTransfer([first, closing])!;
+    expect(r.status).toBe(TransferStatus.NoAnswer);
+    expect(r.data).toHaveLength(448);
+  });
+
+  it('keeps the data on every status: before a STALL, and where the status stage was due', () => {
+    // 64 bytes of the IN data stage, then a STALL in the data stage.
+    const stalled = assembleTransfer([
+      parseTransferChunk(new Uint8Array([0, TransferStatus.Stall, TransferStage.Data, XFER_LAST, 0, 0, ...new Uint8Array(64).fill(0x5a)]))!,
+    ])!;
+    expect(stalled.status).toBe(TransferStatus.Stall);
+    expect(stalled.stage).toBe(TransferStage.Data);
+    expect(stalled.data).toHaveLength(64);
+    // A host-to-device request: one byte the real device sent where the status stage was due.
+    const status = assembleTransfer([parseTransferChunk(fromHex('00 00 02 01 00 00 01'))!])!;
+    expect(toHex(status.data)).toBe('01');
+    // A refusal: never sent, in the SETUP stage, no data.
+    const refused = assembleTransfer([parseTransferChunk(fromHex('05 fc 00 01 00 00'))!])!;
+    expect(refused.status).toBe(TransferStatus.Refused);
+    expect(refused.stage).toBe(TransferStage.Setup);
+    expect(refused.data).toHaveLength(0);
+  });
+
+  it('names every TRANSFER_RESP status, and no byte it does not know', () => {
+    const names: [TransferStatus, string][] = [
+      [TransferStatus.Ok, 'ok'],
+      [TransferStatus.Busy, 'busy'],
+      [TransferStatus.Suspended, 'suspended'],
+      [TransferStatus.Error, 'error'],
+      [TransferStatus.Refused, 'refused'],
+      [TransferStatus.Stall, 'stall'],
+      [TransferStatus.NoAnswer, 'no answer'],
+      [TransferStatus.NoDevice, 'no device'],
+    ];
+    expect(names.map(([v]) => v)).toEqual([0x00, 0xf9, 0xfa, 0xfb, 0xfc, 0xfd, 0xfe, 0xff]);
+    for (const [v, name] of names) expect(transferStatusName(v)).toBe(name);
+    // An unknown status keeps its byte and has no name, so it never reads as no device.
+    const r = assembleTransfer([parseTransferChunk(fromHex('00 42 07 01 00 00'))!])!;
+    expect(r.status).toBe(0x42);
+    expect(r.stage).toBe(7);
+    expect(transferStatusName(r.status)).toBeNull();
+    expect([TransferStage.Setup, TransferStage.Data, TransferStage.Status]).toEqual([0, 1, 2]);
+  });
   it('reads the advanced control layer health bits through a u16 RESP(HEALTH)', () => {
     // [what=1][flags 0x0300 LE] = rewrite + patch on, nothing in the low byte.
     const r = parseResp(fromHex('01 00 03'));
