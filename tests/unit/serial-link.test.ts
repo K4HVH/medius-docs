@@ -1,9 +1,10 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import {
   BadProtoVerError,
   NoReplyError,
   QueryTimeoutError,
   SerialLink,
+  TransferReplyLostError,
   UnreadablePortError,
   attachLink,
   bauds,
@@ -20,7 +21,9 @@ import {
   RewriteAction,
   PatchSection,
   PROTO_VER,
+  TransferStage,
   TransferStatus,
+  XFER_LAST,
   encode,
 } from '../../src/dashboard/protocol';
 
@@ -586,28 +589,105 @@ describe('SerialLink', () => {
     await link.close();
   });
 
-  it('transfer() correlates TRANSFER_RESP by SEQ on a separate opcode', async () => {
+  // One TRANSFER_RESP chunk: [ep][status][stage][flags][offset u16][data..].
+  const xferChunk = (ep: number, status: number, stage: number, last: boolean, offset: number, data: Uint8Array) =>
+    new Uint8Array([ep, status, stage, last ? XFER_LAST : 0, offset & 0xff, offset >> 8, ...data]);
+
+  it('transfer() sends the timeout, and puts a chunked TRANSFER_RESP together by SEQ', async () => {
     const mock = new MockSerialPort();
+    const body = Uint8Array.from({ length: 1024 }, (_, i) => (i * 7) & 0xff);
     mock.responder = (f) => {
-      if (f.ty === FrameType.Transfer) {
-        // The request is [ep][setup 8][out..]; echo the SEQ back on TRANSFER_RESP with [ep][status][IN..].
-        expect(Array.from(f.payload.slice(0, 9))).toEqual([0, 0x80, 6, 0, 1, 0, 0, 18, 0]);
-        mock.push(encode(FrameType.TransferResp, f.seq, new Uint8Array([0, 0x00, 0x12, 0x01, 0x10, 0x01])));
-      }
+      if (f.ty !== FrameType.Transfer) return;
+      // [ep][timeout_ms u16][setup 8]: a 1024-byte read of the configuration descriptor, waiting 1000 ms.
+      expect(Array.from(f.payload)).toEqual([0, 0xe8, 0x03, 0x80, 6, 0, 2, 0, 0, 0x00, 0x04]);
+      // The chunks before the last carry no outcome; the last says how and where it ended.
+      mock.push(encode(FrameType.TransferResp, f.seq, xferChunk(0, 0, 1, false, 0, body.subarray(0, 448))));
+      mock.push(encode(FrameType.TransferResp, f.seq, xferChunk(0, 0, 1, false, 448, body.subarray(448, 896))));
+      mock.push(encode(FrameType.TransferResp, f.seq, xferChunk(0, 0, 2, true, 896, body.subarray(896))));
     };
     const link = new SerialLink(asPort(mock));
     await link.open();
-    const r = await link.transfer(0, 0x80, 6, 0x0100, 0, 18);
+    const r = await link.transfer(0, 0x80, 6, 0x0200, 0, 1024);
     expect(r.status).toBe(TransferStatus.Ok);
-    expect(Array.from(r.data)).toEqual([0x12, 0x01, 0x10, 0x01]);
+    expect(r.stage).toBe(TransferStage.Status);
+    expect(r.data).toEqual(body);
     await link.close();
   });
 
-  it('transfer() rejects when the device never answers', async () => {
+  it('transfer() takes no chunk that names another endpoint, a reply left on a reused SEQ', async () => {
+    const mock = new MockSerialPort();
+    mock.responder = (f) => {
+      if (f.ty !== FrameType.Transfer) return;
+      mock.push(encode(FrameType.TransferResp, f.seq, xferChunk(5, 0xfd, 1, true, 0, new Uint8Array([0xee]))));
+      mock.push(encode(FrameType.TransferResp, f.seq, xferChunk(2, 0, 2, true, 0, new Uint8Array([0x01, 0x02]))));
+    };
+    const link = new SerialLink(asPort(mock));
+    await link.open();
+    const r = await link.transfer(2, 0xc0, 1, 0, 0, 2);
+    expect(r.ep).toBe(2);
+    expect(r.status).toBe(TransferStatus.Ok);
+    expect(Array.from(r.data)).toEqual([0x01, 0x02]);
+    await link.close();
+  });
+
+  it('transfer() resolves a STALL with the data that came before it', async () => {
+    const mock = new MockSerialPort();
+    mock.responder = (f) => {
+      if (f.ty !== FrameType.Transfer) return;
+      mock.push(encode(FrameType.TransferResp, f.seq, xferChunk(0, 0xfd, 1, true, 0, new Uint8Array(64).fill(0x5a))));
+    };
+    const link = new SerialLink(asPort(mock));
+    await link.open();
+    const r = await link.transfer(0, 0xc0, 0x89, 1, 0xa500, 192);
+    expect(r.status).toBe(TransferStatus.Stall);
+    expect(r.stage).toBe(TransferStage.Data);
+    expect(r.data).toHaveLength(64);
+    await link.close();
+  });
+
+  it('transfer() rejects a reply that a lost chunk left a gap in', async () => {
+    const mock = new MockSerialPort();
+    mock.responder = (f) => {
+      if (f.ty !== FrameType.Transfer) return;
+      // The chunk at 448 never arrives.
+      mock.push(encode(FrameType.TransferResp, f.seq, xferChunk(0, 0, 1, false, 0, new Uint8Array(448))));
+      mock.push(encode(FrameType.TransferResp, f.seq, xferChunk(0, 0, 2, true, 896, new Uint8Array(10))));
+    };
+    const link = new SerialLink(asPort(mock));
+    await link.open();
+    await expect(link.transfer(0, 0x80, 6, 0x0200, 0, 906)).rejects.toThrow(TransferReplyLostError);
+    await link.close();
+  });
+
+  it('transfer() waits the timeout it sent plus 2 s for the last chunk, then gives up', async () => {
     const mock = new MockSerialPort();
     const link = new SerialLink(asPort(mock));
     await link.open();
-    await expect(link.transfer(0, 0x80, 6, 0x0100, 0, 18, new Uint8Array(0), 20)).rejects.toThrow();
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    try {
+      let outcome: unknown = 'pending';
+      link.transfer(0, 0x80, 6, 0x0100, 0, 18, new Uint8Array(0), 300).then(
+        () => (outcome = 'resolved'),
+        (e: unknown) => (outcome = e),
+      );
+      await vi.advanceTimersByTimeAsync(2299);
+      expect(outcome).toBe('pending');
+      await vi.advanceTimersByTimeAsync(1);
+      expect(outcome).toBeInstanceOf(QueryTimeoutError);
+    } finally {
+      vi.useRealTimers();
+    }
+    await link.close();
+  });
+
+  it('transfer() refuses a timeout outside 1-65535 ms and OUT data past one frame, sending nothing', async () => {
+    const mock = new MockSerialPort();
+    const link = new SerialLink(asPort(mock));
+    await link.open();
+    await expect(link.transfer(0, 0x80, 6, 0x0100, 0, 18, new Uint8Array(0), 0)).rejects.toThrow(RangeError);
+    await expect(link.transfer(0, 0x80, 6, 0x0100, 0, 18, new Uint8Array(0), 65536)).rejects.toThrow(RangeError);
+    await expect(link.transfer(0, 0x00, 9, 0, 0, 502, new Uint8Array(502))).rejects.toThrow(RangeError);
+    expect(mock.written).toHaveLength(0);
     await link.close();
   });
 

@@ -88,7 +88,7 @@ let dev = Device::open("/dev/ttyACM0")?;`}</code></pre>
               </tr>
               <tr>
                 <td><code>PROTO_VER</code></td>
-                <td><code>9</code></td>
+                <td><code>10</code></td>
               </tr>
             </tbody>
           </table>
@@ -104,7 +104,7 @@ let dev = Device::open("/dev/ttyACM0")?;`}</code></pre>
 
 println!("query timeout:     {:?}", DEFAULT_QUERY_TIMEOUT);   // 1s
 println!("keepalive cadence: {:?}", DEFAULT_KEEPALIVE_CADENCE); // 500ms
-println!("speaks protocol:   {}", PROTO_VER);                   // 9`}</code></pre>
+println!("speaks protocol:   {}", PROTO_VER);                   // 10`}</code></pre>
       </DocSection>
 
       <DocSection id="async" title="Async device" caption="Same link, awaitable queries">

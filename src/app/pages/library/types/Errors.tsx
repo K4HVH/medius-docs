@@ -57,7 +57,7 @@ const Errors: Component = () => {
                 <td><code>BadProtoVer {'{'} got {'}'}</code></td>
                 <td>
                   The box replied to the <A href="/library/connection">handshake</A> with a{' '}
-                  <code>proto_ver</code> other than <code>9</code>, carried in <code>got</code>. The{' '}
+                  <code>proto_ver</code> other than <code>10</code>, carried in <code>got</code>. The{' '}
                   <A href="/library/discovery">discovery</A> openers return it for a matched box on
                   another protocol.
                 </td>
@@ -66,7 +66,9 @@ const Errors: Component = () => {
                 <td><code>QueryTimeout</code></td>
                 <td>
                   A <A href="/library/requests"><code>query</code></A> hit its deadline with no{' '}
-                  <A href="/native/commands/requests#resp"><code>RESP</code></A> back.
+                  <A href="/native/commands/requests#resp"><code>RESP</code></A> back, or a{' '}
+                  <A href="/library/advanced/transfer#reply"><code>transfer</code></A> had no last
+                  chunk within its timeout + 2 s.
                 </td>
               </tr>
               <tr>
@@ -154,6 +156,31 @@ const Errors: Component = () => {
                 </td>
               </tr>
               <tr>
+                <td><code>TransferData {'{'} want, got {'}'}</code></td>
+                <td>
+                  A <A href="/library/advanced/transfer#transfer"><code>transfer</code></A>, or a{' '}
+                  <A href="/library/clip#frame"><code>ClipFrame</code></A> transfer, has{' '}
+                  <code>got</code> data bytes where its setup packet announces <code>want</code>:{' '}
+                  <code>wLength</code> for an OUT request, none for an IN one. Nothing is sent.
+                </td>
+              </tr>
+              <tr>
+                <td><code>TransferTimeoutRange {'{'} timeout {'}'}</code></td>
+                <td>
+                  A <A href="/library/advanced/transfer#transfer"><code>transfer_timeout</code></A>{' '}
+                  call's <code>timeout</code> is outside the box's 1 ms to 65535 ms, in whole
+                  milliseconds. Nothing is sent.
+                </td>
+              </tr>
+              <tr>
+                <td><code>TransferReplyIncomplete {'{'} got, len {'}'}</code></td>
+                <td>
+                  A <A href="/library/advanced/transfer#reply">transfer reply</A> arrived with{' '}
+                  <code>got</code> of its <code>len</code> bytes: a chunk was lost between the box's chips (STATS{' '}
+                  <code>relay_drops</code> counts it) or on the control link.
+                </td>
+              </tr>
+              <tr>
                 <td><code>ClipFrameCount {'{'} what, count, limit {'}'}</code></td>
                 <td>
                   A <A href="/library/clip#frame"><code>ClipFrame</code></A> has <code>count</code> of{' '}
@@ -165,13 +192,6 @@ const Errors: Component = () => {
                 <td>
                   A <code>ClipFrame</code> encodes to <code>len</code> bytes, and one append carries
                   ≤512 (<code>CLIP_ENTRY_MAX</code>). Split it across frames.
-                </td>
-              </tr>
-              <tr>
-                <td><code>ClipTransferData {'{'} want, got {'}'}</code></td>
-                <td>
-                  A clip transfer has <code>got</code> data bytes where its setup packet announces{' '}
-                  <code>want</code>: <code>wLength</code> for an OUT request, none for an IN one.
                 </td>
               </tr>
               <tr>

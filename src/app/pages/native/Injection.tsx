@@ -54,9 +54,9 @@ const Injection: Component = () => {
       <DocSection id="fire-and-forget" title="Fire-and-forget" caption="No per-command acknowledgement">
         <p>
           Command frames get no echo or acknowledgement, so input streams at up to ~1
-          command/ms. <A href="/native/commands/requests#requests"><code>QUERY</code></A> and{' '}
-          <A href="/native/commands/transfer#transfer"><code>TRANSFER</code></A> each return a reply
-          frame. <A href="/native/commands/update#update"><code>UPDATE</code></A> replies to every op
+          command/ms. <A href="/native/commands/requests#requests"><code>QUERY</code></A> returns a reply
+          frame, and <A href="/native/commands/transfer#transfer"><code>TRANSFER</code></A> a reply in
+          one or more. <A href="/native/commands/update#update"><code>UPDATE</code></A> replies to every op
           except <code>DATA</code>. <code>DATA</code> chunks get one acknowledgement per window, plus
           one reply per refused chunk.
         </p>

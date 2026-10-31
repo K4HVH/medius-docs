@@ -113,7 +113,7 @@ const Enums: Component = () => {
               <tr><td><code>HidOut</code></td><td><code>5</code></td><td>an endpoint number.</td><td>every interrupt-OUT endpoint.</td></tr>
               <tr><td><code>VendorInterrupt</code></td><td><code>6</code></td><td>an endpoint number.</td><td>every vendor interrupt endpoint.</td></tr>
               <tr><td><code>VendorBulk</code></td><td><code>7</code></td><td>an endpoint number.</td><td>every vendor bulk endpoint.</td></tr>
-              <tr><td><code>Control</code></td><td><code>8</code></td><td>an endpoint number (<code>0</code> = EP0; on EP0, the requests the clone relays to the real device).</td><td>every control endpoint.</td></tr>
+              <tr><td><code>Control</code></td><td><code>8</code></td><td>an endpoint number (<code>0</code> = EP0; on EP0, every class and vendor request and each standard request the clone relays).</td><td>every control endpoint.</td></tr>
               <tr><td><code>Emit</code></td><td><code>9</code></td><td>an endpoint number on the clone.</td><td>every emitting endpoint.</td></tr>
               <tr><td><code>Bus</code></td><td><code>10</code></td><td>unused; a bus event has no id.</td><td>every bus event.</td></tr>
               <tr><td><code>ClipTransfer</code></td><td><code>11</code></td><td>the endpoint number (<code>0</code> = EP0) a <A href="/library/clip#frame">clip</A>'s transfer ran on.</td><td>every control endpoint.</td></tr>
@@ -605,8 +605,8 @@ match stream.recv()? {
             <thead><tr><th>Variant</th><th>flags b0-b1</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>Ok</code></td><td><code>0</code></td><td>The transaction completed.</td></tr>
-              <tr><td><code>Stalled</code></td><td><code>1</code></td><td>The PC got a STALL: from the real device, from a rule that refused the request, or, above endpoint 0, for a request that failed.</td></tr>
-              <tr><td><code>Naked</code></td><td><code>2</code></td><td>NAKed until the host gave up, on endpoint 0 only: the real device never replied, or a <code>Nak</code> rule.</td></tr>
+              <tr><td><code>Stalled</code></td><td><code>1</code></td><td>The PC got a STALL: the real device STALLed the request, or a <code>Stall</code> rule refused it.</td></tr>
+              <tr><td><code>Naked</code></td><td><code>2</code></td><td>NAKed until the PC gave up: the real device left the request unanswered or it failed on the real device's bus, a <code>Nak</code> rule matched it, the PC gave up before the real device finished, a SET_INTERFACE on its interface, a configuration change or a suspend ended it, or the box had no room to pass a step of it on. For a request the PC gave up on, the event comes when the PC's next SETUP on that endpoint replaces it, or 250-300 ms after the PC stopped polling it, whichever is first.</td></tr>
               <tr><td><code>Other(u8)</code></td><td><code>3</code></td><td>A handshake value with no variant in this build, carried verbatim.</td></tr>
             </tbody>
           </table>
@@ -776,45 +776,64 @@ if let CatchEvent::Traffic(t) = stream.recv()? {
       </DocSection>
 
       <DocSection id="transfer-status" title="TransferStatus" caption="How a control transfer ended">
-        <pre class="api-signature">enum TransferStatus {'{'} Ok, Refused, Stall, Nak, NoDevice, Other(u8) {'}'}</pre>
+        <pre class="api-signature">enum TransferStatus {'{'} Ok, Busy, Suspended, Error, Refused, Stall, NoAnswer, NoDevice, Other(u8) {'}'}</pre>
         <p>
-          The status byte of a{' '}
-          <A href="/library/types/structs#transfer-outcome"><code>TransferOutcome</code></A>, and of a{' '}
-          <code>ClipTransfer</code> event through <code>TrafficEvent::transfer_status()</code>. The
-          codes sit at the top of the byte range so they never collide with a length. An unknown byte
-          is carried through as <code>Other</code>.
+          The <code>status</code> of a{' '}
+          <A href="/library/types/structs#transfer-outcome"><code>TransferOutcome</code></A> that{' '}
+          <A href="/library/advanced/transfer#transfer"><code>transfer</code></A> returns, and of a{' '}
+          <code>ClipTransfer</code> event through <code>TrafficEvent::transfer_status()</code>.{' '}
+          <code>as_u8()</code> and <code>from_u8(u8)</code> convert the wire byte (native{' '}
+          <A href="/native/commands/transfer#status"><code>TRANSFER_RESP</code></A>'s{' '}
+          <code>status</code>), and an unknown byte is carried through as <code>Other</code>.
         </p>
         <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>Ok</code></td><td><code>0x00</code></td><td>The real device answered; its reply is in <code>data</code>.</td></tr>
-              <tr><td><code>Refused</code></td><td><code>0xFC</code></td><td>The box refused before reaching the real device: the opt-in is off, the request was malformed, <code>wLength</code> was &gt;504 or the OUT data shorter than it, or the host chip's control queue was full.</td></tr>
-              <tr><td><code>Stall</code></td><td><code>0xFD</code></td><td>The real device STALLed the request.</td></tr>
-              <tr><td><code>Nak</code></td><td><code>0xFE</code></td><td>The real device didn't finish within 500 ms, the transfer failed on the bus, the endpoint is undeclared, no reply crossed the link within 800 ms, or the game PC has the clone (and so the real device) suspended.</td></tr>
-              <tr><td><code>NoDevice</code></td><td><code>0xFF</code></td><td>No real device is attached on the host chip.</td></tr>
-              <tr><td><code>Other(u8)</code></td><td>any other</td><td>A status byte this build does not name.</td></tr>
+              <tr><td><code>Ok</code></td><td><code>0x00</code></td><td>The transfer completed.</td></tr>
+              <tr><td><code>Busy</code></td><td><code>0xF9</code></td><td>The game PC had the pipe: its transfer held it until the timeout and nothing was sent (stage <code>Setup</code>), or its next request on that endpoint, or a bus event it caused, took the pipe in the stage named.</td></tr>
+              <tr><td><code>Suspended</code></td><td><code>0xFA</code></td><td>The game PC has suspended the clone, and the real device with it. Nothing was sent.</td></tr>
+              <tr><td><code>Error</code></td><td><code>0xFB</code></td><td>The real device's packets were corrupt past three tries or ran past the buffer the host asked for, or the host chip had no channel free to send the transfer on.</td></tr>
+              <tr><td><code>Refused</code></td><td><code>0xFC</code></td><td>Never sent: the opt-in is off, <code>ep</code> names no control endpoint the real device declares, another transfer is outstanding, or the box had no room for it then (the link between its chips was full, or an earlier transfer's reply still held its place, for up to 1 s).</td></tr>
+              <tr><td><code>Stall</code></td><td><code>0xFD</code></td><td>The real device STALLed, in the stage named.</td></tr>
+              <tr><td><code>NoAnswer</code></td><td><code>0xFE</code></td><td>The real device NAKed until the timeout, in the stage named; or the host chip's reply was lost between the chips; or the reply's next chunk waited 1 s to be passed on to the control port, in the data stage. A <code>ClipTransfer</code> event also reads it when no answer came in 4 s.</td></tr>
+              <tr><td><code>NoDevice</code></td><td><code>0xFF</code></td><td>No real device is attached.</td></tr>
+              <tr><td><code>Other(u8)</code></td><td>any other</td><td>A status byte this build doesn't name.</td></tr>
             </tbody>
           </table>
-        </div>
-        <div class="callout callout--info">
-          <p>
-            <code>Refused</code> comes from the box, before the real device. <code>Stall</code> comes
-            from the real device. <code>Nak</code> can be either: a real device that did not finish, or
-            a request with no reply (native{' '}
-            <A href="/native/commands/transfer#transfer-resp"><code>TRANSFER_RESP</code></A>).
-          </p>
         </div>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`use medius::TransferStatus;
 
 match reply.status {
     TransferStatus::Ok => println!("{} bytes", reply.data().len()),
-    TransferStatus::Stall => println!("device rejected the request"),
-    TransferStatus::NoDevice => println!("nothing attached on the host chip"),
-    TransferStatus::Refused => println!("box refused it: opt-in off, malformed, too large, or queue full"),
-    other => println!("other status: {other:?}"),
+    TransferStatus::Stall => println!("STALL in {:?}, {} bytes before it", reply.stage, reply.data().len()),
+    TransferStatus::NoAnswer => println!("no answer in {:?}", reply.stage),
+    TransferStatus::Busy | TransferStatus::Suspended => println!("the game PC had the real device"),
+    TransferStatus::Refused => println!("refused: opt-in off, undeclared endpoint, or a transfer outstanding"),
+    other => println!("{other:?}"),
 }`}</code></pre>
+      </DocSection>
+      <DocSection id="transfer-stage" title="TransferStage" caption="Where a control transfer ended">
+        <pre class="api-signature">enum TransferStage {'{'} Setup, Data, Status, Other(u8) {'}'}</pre>
+        <p>
+          The <code>stage</code> of a{' '}
+          <A href="/library/types/structs#transfer-outcome"><code>TransferOutcome</code></A> that{' '}
+          <A href="/library/advanced/transfer#transfer"><code>transfer</code></A> returns.{' '}
+          <code>as_u8()</code> and <code>from_u8(u8)</code> convert the wire byte, and an unknown byte
+          is carried through as <code>Other</code>.
+        </p>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Variant</th><th>Byte</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>Setup</code></td><td><code>0</code></td><td>The setup packet.</td></tr>
+              <tr><td><code>Data</code></td><td><code>1</code></td><td>The data stage.</td></tr>
+              <tr><td><code>Status</code></td><td><code>2</code></td><td>The status stage, where a completed transfer ends.</td></tr>
+              <tr><td><code>Other(u8)</code></td><td>any other</td><td>A stage byte this build doesn't name.</td></tr>
+            </tbody>
+          </table>
+        </div>
       </DocSection>
       <DocSection id="rewrite-class" title="RewriteClass" caption="Which traffic a rewrite rule addresses">
         <pre class="api-signature">enum RewriteClass {'{'} HidIn, HidOut, VendorInterrupt, VendorBulk, Control, Emit, Any {'}'}</pre>
@@ -834,7 +853,7 @@ match reply.status {
               <tr><td><code>HidOut</code></td><td><code>5</code></td><td>A report the PC writes to the real device.</td><td>the endpoint number</td></tr>
               <tr><td><code>VendorInterrupt</code></td><td><code>6</code></td><td>Interrupt traffic on a vendor interface.</td><td>the endpoint number</td></tr>
               <tr><td><code>VendorBulk</code></td><td><code>7</code></td><td>Bulk traffic on a vendor interface.</td><td>the endpoint number</td></tr>
-              <tr><td><code>Control</code></td><td><code>8</code></td><td>A proxied control transfer, and the only class that may answer or rewrite the native reply. On EP0, it covers the requests the clone relays to the real device (class and vendor ones, and a few standard ones). A control endpoint above 0 carries every request.</td><td>the endpoint number (<code>0</code> = EP0)</td></tr>
+              <tr><td><code>Control</code></td><td><code>8</code></td><td>A proxied control transfer, and the only class that may answer or rewrite the native reply. On EP0, it covers the requests the clone relays to the real device: class and vendor ones, and the standard ones the clone holds no answer for. A control endpoint above 0 carries every request.</td><td>the endpoint number (<code>0</code> = EP0)</td></tr>
               <tr><td><code>Emit</code></td><td><code>9</code></td><td>What the clone emits, after the renderer: injected and rendered frames as well as relayed ones.</td><td>the endpoint number</td></tr>
               <tr><td><code>Any</code></td><td><code>0xFF</code></td><td>Every surface a packet crosses, so a report meets the rule at <code>HidIn</code> and again at <code>Emit</code>. <code>Pass</code>, <code>Patch</code> and <code>Replace</code> only, ranked below every other class.</td><td>ignored</td></tr>
             </tbody>
@@ -865,7 +884,7 @@ match reply.status {
               <tr><td><code>Replace</code></td><td><code>3</code></td><td>any</td><td>yes</td><td>The packet becomes the payload. On <code>Control</code>, the payload overwrites the start of an OUT request's data stage and <code>wLength</code> is kept.</td></tr>
               <tr><td><code>Answer</code></td><td><code>4</code></td><td>control</td><td>yes</td><td>Answer from the payload without forwarding the request to the real device.</td></tr>
               <tr><td><code>Stall</code></td><td><code>5</code></td><td>control</td><td>no</td><td>Protocol STALL.</td></tr>
-              <tr><td><code>Nak</code></td><td><code>6</code></td><td>control</td><td>no</td><td>EP0 NAKs until the host times out. A control endpoint above 0 STALLs.</td></tr>
+              <tr><td><code>Nak</code></td><td><code>6</code></td><td>control</td><td>no</td><td>NAK until the PC gives up.</td></tr>
               <tr><td><code>ReplyPatch</code></td><td><code>7</code></td><td>control</td><td>yes</td><td>Overwrite the native reply at <code>offset</code>.</td></tr>
               <tr><td><code>ReplyReplace</code></td><td><code>8</code></td><td>control</td><td>yes</td><td>Replace the native reply with the payload.</td></tr>
             </tbody>

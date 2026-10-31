@@ -169,18 +169,35 @@ describe('DeviceEventCatch clip transfers', () => {
     const { bodies } = await watching();
     const out = { dir: Direction.Negative, bytes: new Uint8Array([0x21, 0x09, 0x00, 0x03, 0x00, 0x00, 0x02, 0x00]) };
     await show(
+      traffic({ ...out, flags: 0xf9 }),
+      traffic({ ...out, flags: 0xfa }),
+      traffic({ ...out, flags: 0xfb }),
+      traffic({ ...out, flags: 0xfc }),
       traffic({ ...out, flags: 0xfd }),
       traffic({ ...out, flags: 0xfe }),
       traffic({ ...out, flags: 0xff }),
-      traffic({ ...out, flags: 0xfc }),
+      traffic({ ...out, flags: 0x42 }),
     );
-    // Oldest first. An OUT transfer's event carries the setup packet alone, so one group of bytes.
+    // Oldest first. A host-to-device transfer's event carries the setup packet alone, so one group of bytes. A
+    // status no name covers shows its byte, never a name it doesn't have.
     expect(bodies()).toEqual([
-      'clip-transfer out 0x0 STALL [21 09 00 03 00 00 02 00]',
-      'clip-transfer out 0x0 NAK [21 09 00 03 00 00 02 00]',
-      'clip-transfer out 0x0 NO DEVICE [21 09 00 03 00 00 02 00]',
+      'clip-transfer out 0x0 BUSY [21 09 00 03 00 00 02 00]',
+      'clip-transfer out 0x0 SUSPENDED [21 09 00 03 00 00 02 00]',
+      'clip-transfer out 0x0 ERROR [21 09 00 03 00 00 02 00]',
       'clip-transfer out 0x0 REFUSED [21 09 00 03 00 00 02 00]',
+      'clip-transfer out 0x0 STALL [21 09 00 03 00 00 02 00]',
+      'clip-transfer out 0x0 NO ANSWER [21 09 00 03 00 00 02 00]',
+      'clip-transfer out 0x0 NO DEVICE [21 09 00 03 00 00 02 00]',
+      'clip-transfer out 0x0 status 0x42 [21 09 00 03 00 00 02 00]',
     ]);
+  });
+
+  // A control endpoint above EP0 reports the NAK handshake as EP0 does.
+  it('names the NAK a control endpoint above EP0 gave the game PC', async () => {
+    const { bodies } = await watching();
+    const setup = [0xc0, 0x01, 0x00, 0x00, 0x00, 0x00, 0x40, 0x00];
+    await show(traffic({ cls: CatchClass.Control, id: 2, flags: 0x02, bytes: new Uint8Array(setup) }));
+    expect(bodies()).toEqual(['control in 0x2 NAK [c0 01 00 00 00 00 40 00]']);
   });
 
   it('splits a control transaction the same way, and names the handshake the game PC got', async () => {

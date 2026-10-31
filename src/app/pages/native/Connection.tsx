@@ -32,7 +32,7 @@ const Connection: Component = () => {
             <A href="/native/commands/requests#version"><code>RESP(VERSION)</code></A> frame.
           </li>
           <li>
-            Check that reply's <code>proto_ver</code> is <code>9</code>.
+            Check that reply's <code>proto_ver</code> is <code>10</code>.
           </li>
         </ol>
         <div class="table-scroll">
@@ -41,8 +41,8 @@ const Connection: Component = () => {
               <tr><th>Reply</th><th>Meaning</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>proto_ver == 9</code></td><td>Speaks the protocol these pages describe.</td></tr>
-              <tr><td><code>proto_ver != 9</code></td><td>Speaks a protocol these pages don't cover; commands may behave otherwise.</td></tr>
+              <tr><td><code>proto_ver == 10</code></td><td>Speaks the protocol these pages describe.</td></tr>
+              <tr><td><code>proto_ver != 10</code></td><td>Speaks a protocol these pages don't cover; commands may behave otherwise.</td></tr>
               <tr><td>No reply</td><td>Not a Medius box, or wrong port or baud.</td></tr>
             </tbody>
           </table>
@@ -54,7 +54,7 @@ const Connection: Component = () => {
             (<code>1</code> = lock, <code>0</code> = unlock), not a{' '}
             <A href="/native/commands/lock#scale">scale</A>.
           </p>
-          <pre class="diagram">{`a proto-9 host talking to a proto-4 box
+          <pre class="diagram">{`a proto-10 host talking to a proto-4 box
 
   scale = 100  (unlock)  ->  state = 100, non-zero  ->  LOCKS it
   scale =   0  (block)   ->  state = 0              ->  UNLOCKS it`}</pre>
@@ -67,7 +67,7 @@ const Connection: Component = () => {
             </thead>
             <tbody>
               <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>selector, echoed; <code>0x00</code> = <code>VERSION</code></td></tr>
-              <tr><td>1</td><td><code>proto_ver</code></td><td><code>u8</code></td><td>protocol version, expected <code>9</code></td></tr>
+              <tr><td>1</td><td><code>proto_ver</code></td><td><code>u8</code></td><td>protocol version, expected <code>10</code></td></tr>
               <tr><td>2</td><td><code>fw_major</code></td><td><code>u8</code></td><td>firmware major</td></tr>
               <tr><td>3</td><td><code>fw_minor</code></td><td><code>u8</code></td><td>firmware minor</td></tr>
               <tr><td>4</td><td><code>fw_patch</code></td><td><code>u8</code></td><td>firmware patch</td></tr>
@@ -110,7 +110,7 @@ const Connection: Component = () => {
             <A href="/library/connection#open"><code>open</code></A> and{' '}
             <A href="/library/connection#open"><code>find</code></A> do all of this: send{' '}
             <A href="/native/commands/requests#version"><code>QUERY(VERSION)</code></A> up to 5 times,
-            waiting 250 ms for each reply, and check <code>proto_ver == 9</code> before returning a connection.
+            waiting 250 ms for each reply, and check <code>proto_ver == 10</code> before returning a connection.
           </p>
         </div>
       </DocSection>

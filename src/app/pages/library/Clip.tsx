@@ -150,7 +150,7 @@ clip.release(Button::LEFT);`}</code></pre>
               <tr><td><code>press / release / force_release(usage)</code></td><td>Add a press, soft-release, or force-release edge of any <A href="/library/types/structs#usage"><code>Usage</code></A>.</td></tr>
               <tr><td><code>edge(usage, action)</code></td><td>Add an edge with an explicit <A href="/library/types/enums#action"><code>Action</code></A>. A frame holds ≤8 (<code>CLIP_EDGES_MAX</code>).</td></tr>
               <tr><td><code>raw(ep, direction, bytes)</code></td><td>Add a raw report, as <A href="/library/advanced/raw#raw"><code>Device::raw</code></A> sends one. A frame holds ≤8 (<code>CLIP_RAW_MAX</code>), sent in order ahead of the frame's report.</td></tr>
-              <tr><td><code>transfer(ep, setup, out)</code></td><td>Add a control transfer, as <A href="/library/advanced/transfer#transfer"><code>Device::transfer</code></A> runs one: <code>out</code> is <code>setup.length</code> bytes for an OUT request, empty for an IN one. Each reply is a <A href="/library/types/enums#traffic-class"><code>TrafficClass::ClipTransfer</code></A> catch event.</td></tr>
+              <tr><td><code>transfer(ep, setup, out)</code></td><td>Add a control transfer, as <A href="/library/advanced/transfer#transfer"><code>Device::transfer</code></A> runs one, with 4 s for the real device to answer: <code>out</code> is <code>setup.length</code> bytes for an OUT request, empty for an IN one. Each reply is a <A href="/library/types/enums#traffic-class"><code>TrafficClass::ClipTransfer</code></A> catch event.</td></tr>
               <tr><td><code>byte_len()</code></td><td>The ring bytes the frame takes: ≤512 for a frame <code>append</code> accepts.</td></tr>
             </tbody>
           </table>

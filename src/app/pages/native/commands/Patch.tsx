@@ -369,6 +369,7 @@ const Patch: Component = () => {
             </thead>
             <tbody>
               <tr><td>a clone check fails, such as an endpoint <code>wMaxPacketSize</code> &gt;64</td><td>the patched descriptors face the checks every device does</td></tr>
+              <tr><td>a patch changes the device descriptor's <code>bMaxPacketSize0</code></td><td>endpoint 0's packets cross to the real device one to one, at the real device's packet size</td></tr>
               <tr><td>a patch changes the device descriptor's <code>bLength</code> or <code>bDescriptorType</code>, or a configuration's or the BOS's <code>bLength</code>, <code>bDescriptorType</code> or <code>wTotalLength</code></td><td>the box serves these as written: a larger length reads the host past the descriptor, a smaller one hides its tail</td></tr>
               <tr><td><code>bcdUSB</code> ≥<code>0x0201</code> with no BOS</td><td>a host requests the BOS of any 2.01 device</td></tr>
               <tr><td>a HID descriptor's <code>wDescriptorLength</code> differs from its served report descriptor, in any configuration</td><td>the game PC would ask for one length and get another</td></tr>

@@ -185,14 +185,15 @@ const Raw: Component = () => {
             <tbody>
               <tr><td>HID IN, 8 reports</td><td>when full, drops the oldest native zero-length packet, counted in <code>relay_drops</code>. Failing that, the oldest native report, then the oldest <code>RAW</code> one, counted in <A href="/native/commands/requests#stats"><code>tx_drops</code></A></td></tr>
               <tr><td>vendor interrupt IN, 8 packets</td><td>drops the oldest packet when full, counted in <A href="/native/commands/requests#stats"><code>relay_drops</code></A></td></tr>
-              <tr><td>vendor bulk IN, 8 packets</td><td>drops the new packet when full, counted in <code>relay_drops</code>. The box polls the real device's bulk IN only while &lt;8 packets are queued or armed (<code>RAW</code> ones included), so only a <code>RAW</code> packet finds the queue full</td></tr>
+              <tr><td>vendor bulk IN, 8 packets</td><td>drops the new packet when full, counted in <code>relay_drops</code>. The box polls the real device's bulk IN only while the PC reads the clone's and &lt;8 packets are queued or armed (<code>RAW</code> ones included), so only a <code>RAW</code> packet finds the queue full</td></tr>
               <tr><td>OUT relay, 16 packets across all endpoints</td><td>each waits its turn behind the real device's two-packet hold, as the PC's writes do. The PC's writes to that endpoint wait behind it, except one the clone had already taken a read for, which goes first. A packet past 16 is dropped, counted in <code>relay_drops</code></td></tr>
             </tbody>
           </table>
         </div>
         <p>
-          Native reports take ≤1 place in an interrupt IN queue. The box polls the real device only
-          as the PC takes what the last poll brought, so the rest of the queue is room for{' '}
+          Native reports take ≤1 place in an interrupt IN queue. The box polls the real device's endpoint only
+          while the PC polls the clone's, and only as the PC takes what the last poll brought, so the rest of
+          the queue is room for{' '}
           <code>RAW</code> reports. A native bulk stream takes as many places as the PC leaves unread,
           up to all 8.
         </p>

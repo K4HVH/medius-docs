@@ -24,7 +24,7 @@ const Introduction: Component = () => {
             <tbody>
               <tr>
                 <td>Crate version</td>
-                <td><code>3.4.6</code></td>
+                <td><code>3.5.0</code></td>
               </tr>
               <tr>
                 <td><a href="https://doc.rust-lang.org/edition-guide/rust-2024/index.html" target="_blank" rel="noreferrer">Edition</a></td>

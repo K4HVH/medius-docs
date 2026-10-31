@@ -36,6 +36,7 @@ import {
   RewriteAction,
   PatchSection,
   TransformOp,
+  TransferStage,
   TransferStatus,
   TRAFFIC_CONTROL_MASK,
   TRAFFIC_CONTROL_NAK,
@@ -43,7 +44,6 @@ import {
   TRAFFIC_CONTROL_STALL,
   TRAFFIC_F_RULE,
   TRAFFIC_F_ZLP,
-  transferStatusFromU8,
 } from './opcode';
 
 export interface Version {
@@ -632,10 +632,9 @@ export function trafficData(ev: TrafficEvent): Uint8Array {
 // The handshake the game PC received for a control transaction (§4.10), on any control endpoint.
 export enum ControlStatus {
   Ok = TRAFFIC_CONTROL_OK,
-  // A STALL: from the device, from a rule that refused the request, or, above endpoint 0, for a
-  // request that failed.
+  // From the real device, or from a rule that refused the request.
   Stall = TRAFFIC_CONTROL_STALL,
-  // NAKed until the host gave up, on endpoint 0 only: the device never answered, or a Nak rule.
+  // Unanswered or failed on the real device's bus, a Nak rule, or a request the PC gave up on first.
   Nak = TRAFFIC_CONTROL_NAK,
   // Sent by no firmware; kept apart so it never reads as a device fault.
   Other = TRAFFIC_CONTROL_MASK,
@@ -675,9 +674,9 @@ export function trafficZlp(ev: TrafficEvent): boolean {
   return PACKET_CLASSES.has(ev.cls) && (ev.flags & TRAFFIC_F_ZLP) !== 0;
 }
 
-// A ClipTransfer event's TRANSFER status; Nak when no answer came.
+// A ClipTransfer event's TRANSFER_RESP status byte; null for any other class.
 export function trafficTransferStatus(ev: TrafficEvent): TransferStatus | null {
-  return ev.cls === CatchClass.ClipTransfer ? transferStatusFromU8(ev.flags) : null;
+  return ev.cls === CatchClass.ClipTransfer ? (ev.flags as TransferStatus) : null;
 }
 
 // True when the given usage is held in this snapshot.
@@ -752,8 +751,8 @@ export interface SetupPacket {
   wLength: number;
 }
 
-// TRANSFER's payload (§3.14). `out` is wLength bytes when bmRequestType bit 7 is clear, else empty.
-// The answer comes back as a ClipTransfer event.
+// TRANSFER's payload without the timeout (§3.11). `out` is wLength bytes when bmRequestType bit 7 is clear,
+// else empty. The answer comes back as a ClipTransfer event.
 export interface ClipTransferItem {
   ep: number;
   setup: SetupPacket;
@@ -1257,10 +1256,22 @@ export interface TransformTable {
   entries: Transform[];
 }
 
-// TRANSFER_RESP (§3.14).
+// One TRANSFER_RESP frame (§3.14); only the last chunk's status and stage are the outcome.
+export interface TransferChunk {
+  ep: number;
+  status: TransferStatus;
+  stage: TransferStage;
+  last: boolean;
+  offset: number;
+  data: Uint8Array;
+}
+
+// A TRANSFER's reply (§3.14). Status and stage keep the last chunk's bytes, so an unnamed byte never reads
+// as a named one.
 export interface TransferResult {
   ep: number;
   status: TransferStatus;
+  stage: TransferStage;
   data: Uint8Array;
 }
 
@@ -1306,18 +1317,27 @@ export function patchSectionName(section: PatchSection | null): string {
   }
 }
 
-export function transferStatusName(status: TransferStatus): string {
+// Null for a byte TransferStatus doesn't name, so it never reads as one it does.
+export function transferStatusName(status: number): string | null {
   switch (status) {
     case TransferStatus.Ok:
       return 'ok';
+    case TransferStatus.Busy:
+      return 'busy';
+    case TransferStatus.Suspended:
+      return 'suspended';
+    case TransferStatus.Error:
+      return 'error';
     case TransferStatus.Refused:
       return 'refused';
     case TransferStatus.Stall:
       return 'stall';
-    case TransferStatus.Nak:
-      return 'nak';
-    default:
+    case TransferStatus.NoAnswer:
+      return 'no answer';
+    case TransferStatus.NoDevice:
       return 'no device';
+    default:
+      return null;
   }
 }
 

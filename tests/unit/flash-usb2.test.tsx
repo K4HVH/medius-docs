@@ -30,7 +30,7 @@ const st = vi.hoisted(() => ({
   make: () => {
     const [status, setStatus] = createSignal('connected');
     const [error, setError] = createSignal<string | null>(null);
-    const [version, setVersion] = createSignal({ protoVer: 9, fwMajor: 3, fwMinor: 4, fwPatch: 2, mac: [], name: 'Desk' });
+    const [version, setVersion] = createSignal({ protoVer: 10, fwMajor: 3, fwMinor: 5, fwPatch: 0, mac: [], name: 'Desk' });
     const [firmwareInfo, setFirmwareInfo] = createSignal<unknown>(null);
     const [update, setUpdate] = createSignal<unknown>(null);
     return { status, setStatus, error, setError, version, setVersion, firmwareInfo, setFirmwareInfo, update, setUpdate };
