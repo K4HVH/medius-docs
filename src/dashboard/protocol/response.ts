@@ -79,7 +79,8 @@ import {
   rewriteActionFromU8,
   patchSectionFromU8,
   transformOpFromU8,
-  transferStatusFromU8,
+  XFER_LAST,
+  XFER_RESP_HDR,
 } from './opcode';
 import {
   type Caps,
@@ -109,6 +110,7 @@ import {
   type Transform,
   type TransformTable,
   type PatchEntry,
+  type TransferChunk,
   type TransferResult,
   type Stats,
   type TrafficEvent,
@@ -636,17 +638,33 @@ export function parseResp(payload: Uint8Array): Resp | null {
   }
 }
 
-// Parse a TRANSFER_RESP payload (§3.14): [ep u8][status u8][IN data..]. A separate opcode, not a RESP
-// frame, correlated by the SEQ that echoes the TRANSFER.
-export function parseTransferResp(payload: Uint8Array): TransferResult {
-  if (payload.length < 2) {
-    return { ep: payload[0] ?? 0, status: transferStatusFromU8(0xfc), data: new Uint8Array(0) };
-  }
+// Parse one TRANSFER_RESP chunk (§3.14): [ep u8][status u8][stage u8][flags u8][offset u16 LE][data..]. A
+// separate opcode, not a RESP frame: every chunk echoes the TRANSFER's SEQ. Null when shorter than its header.
+export function parseTransferChunk(payload: Uint8Array): TransferChunk | null {
+  if (payload.length < XFER_RESP_HDR) return null;
   return {
     ep: payload[0],
-    status: transferStatusFromU8(payload[1]),
-    data: payload.slice(2),
+    status: payload[1],
+    stage: payload[2],
+    last: (payload[3] & XFER_LAST) !== 0,
+    offset: u16le(payload, 4),
+    data: payload.slice(XFER_RESP_HDR),
   };
+}
+
+// The reply a TRANSFER's chunks make: data placed by offset, status and stage from the last chunk. Null
+// without a last chunk, or with a gap a lost chunk left.
+export function assembleTransfer(chunks: TransferChunk[]): TransferResult | null {
+  const last = chunks.find((c) => c.last);
+  if (!last) return null;
+  let end = 0;
+  for (const c of [...chunks].sort((a, b) => a.offset - b.offset)) {
+    if (c.offset > end) return null;
+    end = Math.max(end, c.offset + c.data.length);
+  }
+  const data = new Uint8Array(end);
+  for (const c of chunks) data.set(c.data, c.offset);
+  return { ep: last.ep, status: last.status, stage: last.stage, data };
 }
 
 // Parse a MOTION_EVENT payload (§4.10): [ts_us u32][clk u8][dx i16][dy i16][dz i16][dpan i16].

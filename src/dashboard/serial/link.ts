@@ -4,6 +4,7 @@
 
 import {
   anyPending,
+  assembleTransfer,
   BearingMode,
   bearingPayload,
   catchPayload,
@@ -65,7 +66,7 @@ import {
   parseMotionEvent,
   parseResp,
   parseTrafficEvent,
-  parseTransferResp,
+  parseTransferChunk,
   parseUsageEvent,
   patchApplyPayload,
   patchClearPayload,
@@ -98,6 +99,10 @@ import {
   rewritePayload,
   RST_F_NVS,
   spreadPayload,
+  TRANSFER_OUT_MAX,
+  TRANSFER_TIMEOUT_DEFAULT_MS,
+  TRANSFER_TIMEOUT_MAX_MS,
+  TRANSFER_TIMEOUT_MIN_MS,
   transferPayload,
   transformPayload,
   type Bearing,
@@ -126,6 +131,7 @@ import {
   type RewriteTable,
   type Spread,
   type Stats,
+  type TransferChunk,
   type TransferResult,
   type Transform,
   type TransformTable,
@@ -180,6 +186,14 @@ export class NoReplyError extends Error {
   constructor(what = 'the version handshake') {
     super(`no reply to ${what}`);
     this.name = 'NoReplyError';
+  }
+}
+
+// A TRANSFER_RESP chunk went missing, so the reply has a gap where its bytes belong.
+export class TransferReplyLostError extends Error {
+  constructor() {
+    super('part of the transfer reply was lost on the way from the box');
+    this.name = 'TransferReplyLostError';
   }
 }
 
@@ -271,15 +285,17 @@ interface Pending {
   timer: ReturnType<typeof setTimeout>;
 }
 
-// A TRANSFER_RESP waiter, keyed by the SEQ the reply echoes.
+// A TRANSFER_RESP waiter, keyed by the SEQ every chunk of the reply echoes.
 interface TransferWaiter {
+  ep: number;
+  chunks: TransferChunk[];
   resolve: (result: TransferResult) => void;
   reject: (err: Error) => void;
   timer: ReturnType<typeof setTimeout>;
 }
 
-/** How long a TRANSFER waits for the device to answer before it gives up. */
-const DEFAULT_TRANSFER_TIMEOUT_MS = 1500;
+/** Added to the box's wait on the real device: the last chunk still crosses the inter-chip link and the control port. */
+const TRANSFER_REPLY_MARGIN_MS = 2000;
 
 // Open a Web Serial port chooser filtered to the CH343 control link.
 export async function requestMediusPort(): Promise<SerialPort> {
@@ -726,7 +742,7 @@ export class SerialLink {
     return this.send(encode(FrameType.Raw, this.nextSeq(), rawPayload(epNum, dir, bytes)));
   }
 
-  // One control request on the device; `out` is the OUT-stage data for a host-to-device request.
+  // One control transfer on the real device, which the box waits `timeoutMs` on; `out` is an OUT data stage.
   transfer(
     ep: number,
     bmRequestType: number,
@@ -735,20 +751,28 @@ export class SerialLink {
     wIndex: number,
     wLength: number,
     out: Uint8Array = new Uint8Array(0),
-    timeoutMs = DEFAULT_TRANSFER_TIMEOUT_MS,
+    timeoutMs = TRANSFER_TIMEOUT_DEFAULT_MS,
   ): Promise<TransferResult> {
+    if (!Number.isInteger(timeoutMs) || timeoutMs < TRANSFER_TIMEOUT_MIN_MS || timeoutMs > TRANSFER_TIMEOUT_MAX_MS) {
+      return Promise.reject(
+        new RangeError(`a transfer waits ${TRANSFER_TIMEOUT_MIN_MS}-${TRANSFER_TIMEOUT_MAX_MS} ms, not ${timeoutMs}`),
+      );
+    }
+    if (out.length > TRANSFER_OUT_MAX) {
+      return Promise.reject(new RangeError(`an OUT data stage is at most ${TRANSFER_OUT_MAX} bytes, not ${out.length}`));
+    }
     const seq = this.nextSeq();
     const frame = encode(
       FrameType.Transfer,
       seq,
-      transferPayload(ep, bmRequestType, bRequest, wValue, wIndex, wLength, out),
+      transferPayload(ep, timeoutMs, bmRequestType, bRequest, wValue, wIndex, wLength, out),
     );
     return new Promise<TransferResult>((resolve, reject) => {
       const timer = setTimeout(() => {
         this.transferWaiters.delete(seq);
         reject(new QueryTimeoutError());
-      }, timeoutMs);
-      this.transferWaiters.set(seq, { resolve, reject, timer });
+      }, timeoutMs + TRANSFER_REPLY_MARGIN_MS);
+      this.transferWaiters.set(seq, { ep: ep & 0xff, chunks: [], resolve, reject, timer });
       this.send(frame).catch((err) => {
         clearTimeout(timer);
         this.transferWaiters.delete(seq);
@@ -1016,13 +1040,17 @@ export class SerialLink {
       return;
     }
     if (f.ty === FrameType.TransferResp) {
-      // A separate opcode, correlated by the SEQ that echoes the TRANSFER.
+      // A chunk naming another endpoint is a stale reply on a reused SEQ.
       const w = this.transferWaiters.get(f.seq);
-      if (w) {
-        clearTimeout(w.timer);
-        this.transferWaiters.delete(f.seq);
-        w.resolve(parseTransferResp(f.payload));
-      }
+      const chunk = parseTransferChunk(f.payload);
+      if (!w || !chunk || chunk.ep !== w.ep) return;
+      w.chunks.push(chunk);
+      if (!chunk.last) return;
+      clearTimeout(w.timer);
+      this.transferWaiters.delete(f.seq);
+      const result = assembleTransfer(w.chunks);
+      if (result) w.resolve(result);
+      else w.reject(new TransferReplyLostError());
       return;
     }
     if (f.ty === FrameType.Log) {

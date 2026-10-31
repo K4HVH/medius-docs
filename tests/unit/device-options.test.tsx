@@ -91,14 +91,14 @@ describe('DeviceOptions', () => {
     expect([...mock.asked]).not.toContain('spread');
     expect(five.container.querySelector('#imperfect-clone')!.textContent).not.toContain('Advanced tab');
     cleanup();
-    for (const proto of [6, 7, 8]) {
+    for (const proto of [6, 7, 8, 9]) {
       const r = render(() => <DeviceOptions proto={proto} />);
       await settle();
       expect(panels(r.container), String(proto)).toEqual(['box-name', 'imperfect-clone', 'movement-riding', 'bearing', 'render', 'spread', 'emit-rate']);
       expect(r.container.querySelector('#imperfect-clone')!.textContent, String(proto)).not.toContain('Advanced tab');
       cleanup();
     }
-    const now = render(() => <DeviceOptions proto={9} />);
+    const now = render(() => <DeviceOptions proto={10} />);
     await settle();
     expect(now.container.querySelector('#imperfect-clone')!.textContent).toContain('Advanced tab');
   });

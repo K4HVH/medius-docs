@@ -204,7 +204,8 @@ const Clip: Component = () => {
         <p>
           A raw item is <A href="/native/commands/raw#raw"><code>RAW</code></A>'s payload with its length,
           and a transfer item is{' '}
-          <A href="/native/commands/transfer#transfer"><code>TRANSFER</code></A>'s payload. Both need{' '}
+          <A href="/native/commands/transfer#transfer"><code>TRANSFER</code></A>'s payload without{' '}
+          <code>timeout_ms</code>. Both need{' '}
           <A href="/native/commands/option#imperfect"><code>OPTION(IMPERFECT)</code></A>, checked as
           the tick plays. With the opt-in off, the item is discarded and counted in{' '}
           <A href="/native/commands/requests#clip"><code>gated</code></A>.
@@ -237,7 +238,8 @@ const Clip: Component = () => {
           </table>
         </div>
         <p>
-          The box queues transfers (1&nbsp;KiB) and runs them one at a time. Each result arrives as a{' '}
+          The box queues transfers (1&nbsp;KiB) and runs them one at a time, giving the real device 4&nbsp;s
+          to answer each. Each result arrives as a{' '}
           <A href="/native/commands/catch#traffic-event"><code>CLIP_XFER</code></A> event, in drain
           order.
         </p>
@@ -250,7 +252,7 @@ const Clip: Component = () => {
             <tbody>
               <tr><td><code>PAUSE</code>, the natural end</td><td>still run</td></tr>
               <tr><td><code>STOP</code>, <code>RESTART</code>, <code>CLEAR</code>, a fault, a <A href="/native/commands/clip#ctrl">hard stop</A></td><td>dropped</td></tr>
-              <tr><td>a <code>0xFE</code> (no answer) status that took ≥250&nbsp;ms</td><td>those behind it dropped into <code>xfer_errs</code></td></tr>
+              <tr><td>a <code>0xFE</code> NO_ANSWER status that took ≥250&nbsp;ms</td><td>those behind it dropped into <code>xfer_errs</code></td></tr>
               <tr><td><code>OPTION(IMPERFECT)</code> turned off</td><td>dropped, each counted in <code>gated</code></td></tr>
             </tbody>
           </table>

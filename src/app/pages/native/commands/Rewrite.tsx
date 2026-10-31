@@ -3,6 +3,7 @@ import { A } from '@solidjs/router';
 import { PageHeader } from '../../../shell/PageHeader';
 import { DocSection } from '../../../shell/DocSection';
 import { ByteStrip } from '../../../shell/ByteStrip';
+import { Anchor } from '../../../shell/Anchor';
 
 const Rewrite: Component = () => {
   return (
@@ -186,7 +187,7 @@ const Rewrite: Component = () => {
               <tr><td><code>REPLACE</code></td><td><code>3</code></td><td>Any class. A report becomes the payload, length included.</td></tr>
               <tr><td><code>ANSWER</code></td><td><code>4</code></td><td><code>CONTROL</code>. The box completes the request itself.</td></tr>
               <tr><td><code>STALL</code></td><td><code>5</code></td><td><code>CONTROL</code>. The request ends in a STALL handshake.</td></tr>
-              <tr><td><code>NAK</code></td><td><code>6</code></td><td><code>CONTROL</code>. EP0 NAKs until the PC times out. A control endpoint above 0 STALLs.</td></tr>
+              <tr><td><code>NAK</code></td><td><code>6</code></td><td><code>CONTROL</code>. The request is NAKed until the PC gives up.</td></tr>
               <tr><td><code>REPLY_PATCH</code></td><td><code>7</code></td><td><code>CONTROL</code>. Writes the payload into the native IN reply at <code>off</code>, unapplied past the reply's end.</td></tr>
               <tr><td><code>REPLY_REPLACE</code></td><td><code>8</code></td><td><code>CONTROL</code>. The IN reply becomes the payload, cut to <code>wLength</code>.</td></tr>
             </tbody>
@@ -212,27 +213,26 @@ const Rewrite: Component = () => {
             </tbody>
           </table>
         </div>
-        <div class="callout callout--info">
+        <Anchor id="endpoint-0" label="ENDPOINT 0">
           <p>
-            On EP0, the table matches class and vendor requests, plus the standard requests the clone
-            relays to the real device through its proxy:
+            A control endpoint above 0 passes every request to the table. On EP0, every request the
+            clone relays to the real device reaches it: class and vendor requests, and these standard
+            requests, which the clone holds no answer for.
           </p>
           <ul>
-            <li>an interface's <code>GET_DESCRIPTOR</code> for a class descriptor other than the HID and report descriptors</li>
-            <li>while the clone is configured, a device qualifier or other-speed configuration the box did not keep</li>
-            <li>on a device that answers them, a read at recipients 3-31, a class descriptor asked at the device recipient, a descriptor asked at an endpoint, and <code>SYNCH_FRAME</code></li>
-            <li>a configuration index past the last, on a device that answers one with bytes other than its first configuration</li>
-            <li>a <code>GET_STATUS</code>, <code>GET_CONFIGURATION</code> or <code>GET_INTERFACE</code> longer than its reply, on a device that answers one past its reply (at the device recipient, with anything but zeros)</li>
-            <li>on a device that answers a descriptor type it lacks, any other descriptor the box did not keep: another type, or a HID or report descriptor at an interface without one</li>
-            <li>a read (<code>GET_STATUS</code>, <code>GET_DESCRIPTOR</code>, <code>GET_CONFIGURATION</code>, <code>GET_INTERFACE</code>) sent with the host-to-device bit and a data stage, on a device that doesn't refuse the bit</li>
+            <li>while the clone is configured, an interface's <code>GET_DESCRIPTOR</code> for anything but the HID and report descriptors the clone holds there</li>
+            <li>a string the box did not keep, unless a patch answers it</li>
+            <li>a device qualifier or other-speed configuration the box did not keep: while the clone is configured, one asked longer than the copy the box kept, or at an index past 0; and one the box never asked for when it cloned the real device, where the real device answered an undefined descriptor type</li>
+            <li>a read (<code>GET_STATUS</code>, <code>GET_DESCRIPTOR</code>, <code>GET_CONFIGURATION</code>, <code>GET_INTERFACE</code> or <code>SYNCH_FRAME</code>) sent with the host-to-device bit and a data stage, unless the real device refused that direction when the box cloned it</li>
+            <li>on a real device that answered them when the box cloned it: a read at recipients 3-31; a device-recipient <code>GET_DESCRIPTOR</code> for a class descriptor, a type the clone holds none of, or a configuration past the last (unless the real device answered that with its first); an endpoint-recipient <code>GET_DESCRIPTOR</code>; <code>SYNCH_FRAME</code>; and a <code>GET_STATUS</code>, <code>GET_CONFIGURATION</code> or <code>GET_INTERFACE</code> asked past its length (at the device recipient, only where the real device answered past it with more than zeros)</li>
           </ul>
           <p>
-            A string the box did not keep is asked of the real device directly, outside the table. The
-            clone serves every other standard request itself. To change a descriptor, use{' '}
-            <A href="/native/commands/patch"><code>PATCH</code></A>. A control endpoint above 0
-            passes every request to the table.
+            The clone serves every other standard request itself, so no rule matches or answers it. To
+            change a descriptor, use <A href="/native/commands/patch"><code>PATCH</code></A>. Every
+            request that reaches the table raises a{' '}
+            <A href="/native/commands/catch#traffic-event"><code>CONTROL</code> event</A>.
           </p>
-        </div>
+        </Anchor>
       </DocSection>
 
       <DocSection id="matching" title="Matching" caption="Which rule a packet reaches">

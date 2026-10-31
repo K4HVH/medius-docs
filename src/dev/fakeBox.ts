@@ -16,6 +16,8 @@
 //   nomouse, keyboard              nothing cloned, or a keyboard
 //   imperfect                      imperfect clones allowed (the Advanced tab's controls)
 //   fail                           every command the box is sent is refused
+//   transfers                      each TRANSFER ends the next way in turn: every status, then one this build
+//                                  doesn't know
 //   lost                           the box stops answering 4 s after it connects
 //   logs                           a long device log with warnings, errors and a very long line
 //   events                         the box streams catch events once subscribed
@@ -40,6 +42,8 @@ import {
   PROTO_VER,
   RenderMode,
   RewriteAction,
+  TransferStage,
+  TransferStatus,
   TransformOp,
   type DeviceInfo,
   type Version,
@@ -68,6 +72,29 @@ const DEVICE: DeviceInfo = on.has('refused')
   : on.has('keyboard')
   ? { vid: 0x31e3, pid: 0x1322, bcdDevice: 0x0100, bcdUsb: 0x0200, hasSerial: true, hasBos: false, kind: DeviceKind.Keyboard, product: 'Wooting 60HE+' }
   : { vid: 0x046d, pid: 0xc098, bcdDevice: 0x0100, bcdUsb: 0x0200, hasSerial: true, hasBos: false, kind: DeviceKind.Mouse, product: 'G502 X LIGHTSPEED' };
+
+// The device descriptor TRANSFER reads, made from what DEVICE_INFO reports.
+const DEVICE_DESCRIPTOR = new Uint8Array([
+  0x12, 0x01, DEVICE.bcdUsb & 0xff, DEVICE.bcdUsb >> 8, 0x00, 0x00, 0x00, 0x40,
+  DEVICE.vid & 0xff, DEVICE.vid >> 8, DEVICE.pid & 0xff, DEVICE.pid >> 8,
+  DEVICE.bcdDevice & 0xff, DEVICE.bcdDevice >> 8, 0x01, 0x02, DEVICE.hasSerial ? 0x03 : 0x00, 0x01,
+]);
+
+// `transfers`: how each TRANSFER ends, in turn. 0x42 is no status this build knows.
+const TRANSFER_TURNS: [number, TransferStage, number][] = [
+  [TransferStatus.Ok, TransferStage.Status, 18],
+  [TransferStatus.Busy, TransferStage.Setup, 0],
+  [TransferStatus.Busy, TransferStage.Data, 8],
+  [TransferStatus.Suspended, TransferStage.Setup, 0],
+  [TransferStatus.Error, TransferStage.Data, 8],
+  [TransferStatus.Refused, TransferStage.Setup, 0],
+  [TransferStatus.Stall, TransferStage.Data, 8],
+  [TransferStatus.NoAnswer, TransferStage.Data, 8],
+  [TransferStatus.NoAnswer, TransferStage.Status, 18],
+  [TransferStatus.NoDevice, TransferStage.Setup, 0],
+  [0x42, TransferStage.Status, 0],
+];
+let transferTurn = 0;
 
 const chip = { major: 3, minor: 4, patch: 5, slot: 0, state: ImageState.Valid };
 const old = { ...chip, patch: 4 };
@@ -226,6 +253,24 @@ function devLink(port: SerialPort, events: SerialLinkEvents): SerialLink {
       if (!updated) return structuredClone(ANSWERS.queryFirmware);
       const moved = { ...chip, slot: 1 };
       return { ...(ANSWERS.queryFirmware as object), device: moved, host: on.has('reverted') ? old : moved };
+    },
+    // The real device answers GET_DESCRIPTOR(device), and STALLs anything else where its answer was due.
+    transfer: async (ep: number, type: number, req: number, value: number, _index: number, length: number) => {
+      if (silent()) throw new Error('No reply');
+      const reply = (status: TransferStatus, stage: TransferStage, data = new Uint8Array(0)) => ({ ep, status, stage, data });
+      if (on.has('fail') || !(ANSWERS.queryImperfect as { allowed: boolean }).allowed) {
+        return reply(TransferStatus.Refused, TransferStage.Setup);
+      }
+      if (on.has('nomouse')) return reply(TransferStatus.NoDevice, TransferStage.Setup);
+      await sleep(40);
+      if (on.has('transfers')) {
+        const [status, stage, n] = TRANSFER_TURNS[transferTurn++ % TRANSFER_TURNS.length];
+        return reply(status, stage, DEVICE_DESCRIPTOR.slice(0, Math.min(n, length)));
+      }
+      if (type === 0x80 && req === 6 && value === 0x0100) {
+        return reply(TransferStatus.Ok, TransferStage.Status, DEVICE_DESCRIPTOR.slice(0, length));
+      }
+      return reply(TransferStatus.Stall, type & 0x80 && length ? TransferStage.Data : TransferStage.Status);
     },
     // The table holds what was subscribed, so the page reads every entry as taken.
     uncatch: async () => {

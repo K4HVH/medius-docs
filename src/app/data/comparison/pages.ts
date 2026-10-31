@@ -13,7 +13,7 @@ const AREAS = ['devices', 'passthrough', 'injection', 'control-link', 'input', '
 export const COMPARISON_PAGES: ComparisonPage[] = [
   { path: '/comparison', categories: [], own: [...AREAS.map((a) => `${a}-results`), 'defects'] },
   ...AREAS.map((a) => ({ path: `/comparison/${a}`, categories: [a], own: [] })),
-  { path: '/comparison/method', categories: [], own: ['rig', 'rules', 'layers', 'data'] },
+  { path: '/comparison/method', categories: [], own: ['rig', 'rules', 'layers', 'data', 'tool', 'tool-run', 'tool-tests'] },
 ];
 
 // The rows Overview leads each area with, by page. They're picked so an area's lead results show where

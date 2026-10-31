@@ -78,8 +78,8 @@ int main(void) {
     return 0;
 }`}</code></pre>
         <div class="api-response-label">EXAMPLE OUTPUT</div>
-        <pre><code class="language-c">{`medius-capi 3.4.6 (abi 10)
-firmware 3.4.7 (proto 9)
+        <pre><code class="language-c">{`medius-capi 3.5.0 (abi 11)
+firmware 3.5.0 (proto 10)
 motion: dx=12 dy=-4 dz=0`}</code></pre>
         <p>
           The subscription is an array of{' '}
