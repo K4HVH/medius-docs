@@ -22,7 +22,7 @@ const Structs: Component = () => {
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>proto_ver</code></td><td><code>u8</code></td><td>Wire-protocol version the firmware speaks (<code>9</code> here).</td></tr>
+              <tr><td><code>proto_ver</code></td><td><code>u8</code></td><td>Wire-protocol version the firmware speaks (<code>10</code> here).</td></tr>
               <tr><td><code>fw_major</code></td><td><code>u8</code></td><td>Firmware major version.</td></tr>
               <tr><td><code>fw_minor</code></td><td><code>u8</code></td><td>Firmware minor version.</td></tr>
               <tr><td><code>fw_patch</code></td><td><code>u8</code></td><td>Firmware patch version.</td></tr>
@@ -42,8 +42,8 @@ const Structs: Component = () => {
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`use medius::Version;
 
-let v = Version { proto_ver: 9, fw_major: 3, fw_minor: 4, fw_patch: 7, mac: [0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc], name: "Loki".into() };
-assert_eq!(v.to_string(), "fw 3.4.7"); // Display omits proto_ver
+let v = Version { proto_ver: 10, fw_major: 3, fw_minor: 5, fw_patch: 0, mac: [0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc], name: "Loki".into() };
+assert_eq!(v.to_string(), "fw 3.5.0"); // Display omits proto_ver
 assert_eq!(v.mac_hex(), "123456789abc");
 println!("{v} (protocol {}, box {}, name {})", v.proto_ver, v.mac_hex(), v.name);`}</code></pre>
       </DocSection>
@@ -207,7 +207,7 @@ assert_eq!(r.native_hz(), Some(1000.0));`}</code></pre>
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>inject_emits</code></td><td><code>u32</code></td><td>Pure-injection reports emitted.</td></tr>
-              <tr><td><code>tx_drops</code></td><td><code>u16</code></td><td>Reports the clone's IN queue could not hold, so the game PC never received them (should stay 0).</td></tr>
+              <tr><td><code>tx_drops</code></td><td><code>u16</code></td><td>Reports the game PC never received: one the clone's IN queue could not hold, one the host chip's forwarder or link could not take, or one a stop of its stream (a setting switch, a halt, a suspend) cut short (should stay 0).</td></tr>
               <tr><td><code>tx_merges</code></td><td><code>u16</code></td><td>Backed-up reports merged instead of queued.</td></tr>
               <tr><td><code>tx_maxdepth</code></td><td><code>u8</code></td><td>Deepest the TX queue has reached.</td></tr>
               <tr><td><code>tx_wedges</code></td><td><code>u8</code></td><td>Wedged-endpoint recoveries.</td></tr>
@@ -216,7 +216,7 @@ assert_eq!(r.native_hz(), Some(1000.0));`}</code></pre>
               <tr><td><code>config_count</code></td><td><code>u16</code></td><td>SET_CONFIGURATION events (re-enumerations).</td></tr>
               <tr><td><code>link_rx_drops</code></td><td><code>u32</code></td><td>Input frames the device chip could not take off the link from the host chip (should stay 0).</td></tr>
               <tr><td><code>host_rx_drops</code></td><td><code>u32</code></td><td>The same count on the host chip, relayed over the link (should stay 0).</td></tr>
-              <tr><td><code>relay_drops</code></td><td><code>u32</code></td><td>Relayed traffic and commands that went no further (none of it native input). Each of these counts: a vendor IN packet that found its endpoint's queue full of the control PC's <code>RAW</code> packets; a native zero-length packet answering a poll the PC didn't make (the one poll the box runs ahead of a suspended PC); an OUT packet the box had no room to queue, that failed three times on the real device's bus, or that a bus reset or <code>SET_INTERFACE</code> overtook; a <code>RAW</code> OUT packet with no room to wait; a relayed request the box couldn't queue; a flagged <code>MOVE</code> the motion batch couldn't take; any frame other than native input that either chip's link receive ring dropped; a frame from the control PC that its receive ring had no room for (one per frame); an overrun of the control port's UART (one per overrun, however many frames it cost).</td></tr>
+              <tr><td><code>relay_drops</code></td><td><code>u32</code></td><td>Relayed traffic and commands that went no further (none of it native input). Each of these counts: a vendor IN packet the host chip's link wouldn't carry, or that found its endpoint's queue full of the control PC's <code>RAW</code> packets; a native zero-length packet answering a poll the PC didn't make (the one poll the box runs ahead of a suspended PC); an OUT packet the box had no room to queue, that failed three times on the real device's bus, or that a bus reset or <code>SET_INTERFACE</code> overtook; a <code>RAW</code> OUT packet with no room to wait; a relayed request, or a packet or step of one, the box couldn't queue (the request then ends, NAKed until the game PC gives up); a flagged <code>MOVE</code> the motion batch couldn't take; any frame other than native input that either chip's link receive ring dropped; a frame from the control PC that its receive ring had no room for (one per frame); an overrun of the control port's UART (one per overrun, however many frames it cost).</td></tr>
               <tr><td><code>session</code></td><td><code>u16</code></td><td>Releases of some or all of the session state a host set: held input, locks, subscriptions, rules, transforms, the clip, and an LED override. The library re-sends all but the LED override. 0 at boot. It wraps, so compare for inequality. The library watches it for <A href="/library/lifecycle#restart">session recovery</A>. The native <A href="/native/commands/requests#stats"><code>RESP(STATS)</code></A> lists what counts.</td></tr>
             </tbody>
           </table>
@@ -473,13 +473,13 @@ for ev in device.input_events(CatchFilter::all_input())? {
         <p>
           The payload of a{' '}
           <A href="/library/types/enums#catch-event"><code>CatchEvent::Traffic</code></A>: one packet,
-          one completed control transaction, or one bus event.
+          one control transaction, or one bus event.
         </p>
         <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>ts_us</code></td><td><code>u32</code></td><td>When the transfer completed, in the microseconds of the chip named by <code>clock</code>.</td></tr>
+              <tr><td><code>ts_us</code></td><td><code>u32</code></td><td>When the tap fired, in the microseconds of the chip named by <code>clock</code>.</td></tr>
               <tr><td><code>clock</code></td><td><A href="/library/types/enums#clock-domain"><code>ClockDomain</code></A></td><td>Which chip stamped it. Varies by class and direction here, unlike the two input events.</td></tr>
               <tr><td><code>class</code></td><td><A href="/library/types/enums#catch-class"><code>CatchClass</code></A></td><td>Which address space the event came from.</td></tr>
               <tr><td><code>id</code></td><td><code>u16</code></td><td>The endpoint or interface number within that class.</td></tr>
@@ -496,7 +496,10 @@ for ev in device.input_events(CatchFilter::all_input())? {
             <tbody>
               <tr><td><code>truncated()</code></td><td><code>bool</code></td><td>Whether the capture or the frame ceiling cut this packet: <code>bytes.len() &lt; true_len</code>.</td></tr>
               <tr><td><code>rule_acted()</code></td><td><code>bool</code></td><td>Whether a <A href="/library/advanced/rewrite">rewrite rule</A> at this event's class changed, dropped, answered or refused the packet. A <code>Pass</code> rule, or a <code>Patch</code> that changed nothing, leaves it false.</td></tr>
+              <tr><td><code>setup()</code></td><td><code>Option&lt;&amp;[u8]&gt;</code></td><td>The 8-byte setup packet of a <code>Control</code> or <code>ClipTransfer</code> event. <code>None</code> for another class, or a capture cut shorter than the setup packet.</td></tr>
+              <tr><td><code>data()</code></td><td><code>&amp;[u8]</code></td><td>The data stage of a <code>Control</code> event, the reply of a <code>ClipTransfer</code> one (empty on an OUT request with a data stage), the whole packet for any other class. Empty when the capture cut the setup packet short.</td></tr>
               <tr><td><code>control_status()</code></td><td><code>Option&lt;<A href="/library/types/enums#control-status">ControlStatus</A>&gt;</code></td><td>The handshake the game PC received, for a <code>Control</code> event.</td></tr>
+              <tr><td><code>transfer_status()</code></td><td><code>Option&lt;<A href="/library/types/enums#transfer-status">TransferStatus</A>&gt;</code></td><td>How a <code>ClipTransfer</code> event's transfer ended: the status <A href="/library/advanced/transfer#transfer"><code>transfer</code></A> returns, or <code>NoAnswer</code> when no answer came in 4 s.</td></tr>
               <tr><td><code>zlp()</code></td><td><code>bool</code></td><td>Whether the event is a zero-length packet. An event is one packet, except a <code>HidIn</code> or <code>Emit</code> event on a HID endpoint, which carries a whole report of ≤64 bytes. On such an event with bytes, it means a zero-length packet ended the report after them.</td></tr>
               <tr><td><code>bulk_end_of_transfer()</code></td><td><code>bool</code></td><td>Whether a <code>VendorBulk</code> event is the last of its transfer.</td></tr>
             </tbody>
@@ -521,11 +524,11 @@ for ev in device.input_events(CatchFilter::all_input())? {
           </table>
         </div>
         <p>
-          A <code>Control</code> or <code>ClipTransfer</code> event is one completed transaction:{' '}
-          <code>bytes</code> is the 8-byte SETUP packet then the data stage, and{' '}
-          <code>direction</code> says which way that data went. A <code>Control</code> event is the
-          transaction the game PC received, on every control endpoint. A request served from the
-          box's value cache still raises one.
+          A <code>Control</code> event is one transaction the game PC received on any control
+          endpoint, raised when it ends; one the PC gave up on reads <code>Naked</code>, and one served
+          from the box's value cache counts too. A <code>ClipTransfer</code> event is one transfer a
+          clip ran. In both, <code>bytes</code> is the 8-byte SETUP packet then the data,
+          and <code>direction</code> is the data stage's.
         </p>
         <div class="table-scroll">
           <table class="api-params">
@@ -1305,7 +1308,7 @@ handle.bind_packet(&held)?;`}</code></pre>
               <tr><td><code>request</code></td><td><code>u8</code></td><td><code>bRequest</code>: the request code.</td></tr>
               <tr><td><code>value</code></td><td><code>u16</code></td><td><code>wValue</code>: request-specific.</td></tr>
               <tr><td><code>index</code></td><td><code>u16</code></td><td><code>wIndex</code>: request-specific, often an interface or endpoint.</td></tr>
-              <tr><td><code>length</code></td><td><code>u16</code></td><td><code>wLength</code>: the data-stage length. For an IN request, how many bytes to read back (the real device may return fewer). For an OUT request, the length of the data passed.</td></tr>
+              <tr><td><code>length</code></td><td><code>u16</code></td><td><code>wLength</code>: the data-stage length. For an IN request, how many bytes to read back (the real device may send fewer, or more). For an OUT request, the length of the data passed.</td></tr>
             </tbody>
           </table>
         </div>
@@ -1328,19 +1331,20 @@ let setup = Setup::new(0x80, 0x06, 0x0100, 0x0000, 18);
 assert!(setup.is_in());
 assert_eq!(setup.to_bytes(), [0x80, 0x06, 0x00, 0x01, 0x00, 0x00, 0x12, 0x00]);`}</code></pre>
       </DocSection>
-      <DocSection id="transfer-outcome" title="TransferOutcome" caption="Native reply: status and the real device's reply">
-        <pre class="api-signature">struct TransferOutcome {'{'} status: TransferStatus, data: Vec&lt;u8&gt; {'}'}</pre>
+      <DocSection id="transfer-outcome" title="TransferOutcome" caption="Status, stage, and the native reply">
+        <pre class="api-signature">struct TransferOutcome {'{'} status: TransferStatus, stage: TransferStage, data: Vec&lt;u8&gt; {'}'}</pre>
         <p>
           What <A href="/library/advanced/transfer#transfer"><code>transfer</code></A> returns. A
           non-<code>Ok</code> <A href="/library/types/enums#transfer-status"><code>status</code></A>{' '}
-          carries no data.
+          is a result, not an error, and <code>data</code> is meaningful on any status.
         </p>
         <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>status</code></td><td><A href="/library/types/enums#transfer-status"><code>TransferStatus</code></A></td><td>How the transfer ended.</td></tr>
-              <tr><td><code>data</code></td><td><code>Vec&lt;u8&gt;</code></td><td>An IN transfer's data stage, whole even where the real device sent more than <code>wLength</code> asked for. For an OUT transfer or one with <code>wLength</code> 0, what it sent where the status stage was due (at most 64 bytes, usually none). Empty for any status but <code>Ok</code>.</td></tr>
+              <tr><td><code>stage</code></td><td><A href="/library/types/enums#transfer-stage"><code>TransferStage</code></A></td><td>Where it ended: <code>Status</code> for a completed transfer.</td></tr>
+              <tr><td><code>data</code></td><td><code>Vec&lt;u8&gt;</code></td><td>The IN data stage as the box received it, whole at any length: the bytes before a STALL included, and bytes past <code>wLength</code> where the real device sent more in the packets a host asks for. For an OUT transfer or one with <code>wLength</code> 0, what the real device sent where the status stage was due (≤1 packet, usually none). A PC sees data past <code>wLength</code>, or in a status stage, as the transfer failing.</td></tr>
             </tbody>
           </table>
         </div>

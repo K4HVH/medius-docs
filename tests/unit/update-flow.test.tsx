@@ -260,9 +260,9 @@ const img = (tag: number) => new Uint8Array([0xe9, tag, 2, 3]);
 // Each is the firmware named and the protocol it reports.
 const V3_3_4 = { protoVer: 6, fwMajor: 3, fwMinor: 3, fwPatch: 4, mac: [], name: '' };
 const V3_4_0 = { protoVer: 7, fwMajor: 3, fwMinor: 4, fwPatch: 0, mac: [], name: '' };
-const V3_4_2 = { protoVer: 9, fwMajor: 3, fwMinor: 4, fwPatch: 2, mac: [], name: '' };
+const V3_5_0 = { protoVer: 10, fwMajor: 3, fwMinor: 5, fwPatch: 0, mac: [], name: '' };
 // A test build on the protocol after this page's.
-const V_NEWER = { protoVer: PROTO_VER + 1, fwMajor: 3, fwMinor: 5, fwPatch: 0, mac: [], name: '' };
+const V_NEWER = { protoVer: PROTO_VER + 1, fwMajor: 3, fwMinor: 6, fwPatch: 0, mac: [], name: '' };
 
 const connected = async () => {
   mountProvider();
@@ -527,7 +527,7 @@ describe('updateOverControl', () => {
   it('reports what the main chip runs after it reverts on the same rate, not what the handshake said', async () => {
     mock.version = V3_4_0;
     await connected();
-    mock.after = { baud: 6_000_000, version: V3_4_2 };
+    mock.after = { baud: 6_000_000, version: V3_5_0 };
     mock.devicePendingFor = 5;
     mock.revert = { at: 4, baud: 6_000_000, version: V3_4_0 };
     const outcome = await api.updateOverControl({ device: img(DEVICE_TAG) }, 'update');
@@ -536,21 +536,21 @@ describe('updateOverControl', () => {
     expect(api.updateOnly()).toBe(true);
   }, 20000);
 
-  it('a 3.4.0 box on protocol 7 connects for updating, and the 3.4.2 it updates to opens the rest', async () => {
+  it('a 3.4.0 box on protocol 7 connects for updating, and the 3.5.0 it updates to opens the rest', async () => {
     mock.version = V3_4_0;
     await connected();
     expect(api.updateOnly()).toBe(true);
-    mock.after = { baud: 6_000_000, version: V3_4_2 };
+    mock.after = { baud: 6_000_000, version: V3_5_0 };
     mock.opens = [];
     const outcome = await api.updateOverControl({ device: img(DEVICE_TAG), host: img(HOST_TAG) }, 'update');
     expect(outcome).toBe('verified');
     expect(mock.opens).toEqual([6_000_000]);
-    expect(api.version()).toEqual(V3_4_2);
+    expect(api.version()).toEqual(V3_5_0);
     expect(api.updateOnly()).toBe(false);
   }, 20000);
 
   it('an image on a newer protocol than the page is verified, and the box stays connected for updating', async () => {
-    mock.version = V3_4_2;
+    mock.version = V3_5_0;
     await connected();
     mock.after = { baud: 6_000_000, version: V_NEWER };
     const outcome = await api.updateOverControl({ device: img(DEVICE_TAG) }, 'update');
@@ -563,7 +563,7 @@ describe('updateOverControl', () => {
   it('still reports what runs after a same-rate revert when the version replies are lost', async () => {
     mock.version = V3_4_0;
     await connected();
-    mock.after = { baud: 6_000_000, version: V3_4_2 };
+    mock.after = { baud: 6_000_000, version: V3_5_0 };
     mock.devicePendingFor = 5;
     mock.revert = { at: 4, baud: 6_000_000, version: V3_4_0 };
     mock.versionLostFor = 10;
@@ -575,7 +575,7 @@ describe('updateOverControl', () => {
   it('reattaches across the silence a same-rate revert leaves', async () => {
     mock.version = V3_4_0;
     await connected();
-    mock.after = { baud: 6_000_000, version: V3_4_2 };
+    mock.after = { baud: 6_000_000, version: V3_5_0 };
     mock.devicePendingFor = 5;
     mock.revert = { at: 4, baud: 6_000_000, version: V3_4_0, silent: 2 };
     mock.opens = [];
@@ -625,12 +625,12 @@ describe('control link rate', () => {
     mock.baud = 4_000_000;
     mock.version = V3_3_4;
     await connected();
-    mock.after = { baud: 6_000_000, version: V3_4_2 };
+    mock.after = { baud: 6_000_000, version: V3_5_0 };
     mock.opens = [];
     const outcome = await api.updateOverControl({ device: img(DEVICE_TAG), host: img(HOST_TAG) }, 'update');
     expect(outcome).toBe('verified');
     expect(mock.opens).toEqual([6_000_000]);
-    expect(api.version()).toEqual(V3_4_2);
+    expect(api.version()).toEqual(V3_5_0);
     expect(api.updateOnly()).toBe(false);
   }, 20000);
 

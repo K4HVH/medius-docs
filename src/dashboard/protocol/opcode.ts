@@ -2,10 +2,9 @@
 
 export const SOF = 0xa5;
 export const MAX_PAYLOAD = 512;
-// Protocol 9 is firmware 3.4.2: a 31-byte RESP(STATS) adding link_rx_drops and host_rx_drops (one per
-// link direction), relay_drops and session. Protocol 8 was 3.4.1: a 31-byte RESP(CLIP) prefix ending in
-// the packet trigger list, packet triggers on CLIP_TRIGGER, and vendor interrupt OUT matched as VEND_INTR.
-export const PROTO_VER = 9;
+// Protocol 10 is firmware 3.5.0: TRANSFER carries the box's wait, and TRANSFER_RESP comes in chunks naming
+// the stage. Protocol 9 was 3.4.2: a 31-byte RESP(STATS).
+export const PROTO_VER = 10;
 
 // The oldest wire this page will still open.
 export const MIN_PROTO_VER = 5;
@@ -110,7 +109,7 @@ export const CLIP_F_WHEEL = 0x02;
 export const CLIP_F_EDGES = 0x04;
 export const CLIP_F_PAN = 0x08;
 export const CLIP_F_RAW = 0x10; // [n] then n x [ep_num][dir][len u16][bytes]: RAW's payload, length explicit
-export const CLIP_F_XFER = 0x20; // [n] then n x [ep][setup 8][OUT data]: TRANSFER's payload
+export const CLIP_F_XFER = 0x20; // [n] then n x [ep][setup 8][OUT data]: TRANSFER's payload without the timeout
 export const CLIP_EDGES_MAX = 8;
 export const CLIP_RAW_MAX = 8;
 // An entry fits in one CLIP_APPEND payload.
@@ -249,7 +248,7 @@ export enum RewriteAction {
   Replace = 3, // the packet becomes the payload (control: overwrites the start of an OUT data stage, wLength kept)
   Answer = 4, // control: answer from the payload without asking the device
   Stall = 5, // control: protocol STALL
-  Nak = 6, // control: NAK to a timeout on EP0, STALL on a control endpoint above it
+  Nak = 6, // control: NAK until the PC gives up
   ReplyPatch = 7, // control IN: overwrite the real device's reply at the offset
   ReplyReplace = 8, // control IN: replace the real device's reply with the payload
 }
@@ -292,29 +291,37 @@ export function patchSectionFromU8(v: number): PatchSection | null {
   return v >= 0 && v < PATCH_SEC_COUNT ? (v as PatchSection) : null;
 }
 
-// TRANSFER_RESP status (§3.14): what the real device answered a proxied control request with.
+// TRANSFER_RESP status (§3.14), also a CLIP_XFER event's flags byte: how a control transfer ended.
 export enum TransferStatus {
   Ok = 0x00,
-  Refused = 0xfc, // not sent: opt-in off, malformed, wLength > 504, short OUT data, or the control queue full
-  Stall = 0xfd, // the device protocol-STALLed the request
-  Nak = 0xfe, // no answer: device timeout or bus failure, an undeclared control endpoint, the host chip silent, or the clone suspended
-  NoDevice = 0xff, // no device is attached
+  Busy = 0xf9, // the game PC's transfer held the pipe until the timeout (stage Setup), or took it in the stage named
+  Suspended = 0xfa, // the game PC has the clone suspended, and the real device with it: nothing was sent
+  Error = 0xfb, // the real device's packets were corrupt past three tries, or ran past the buffer asked for
+  Refused = 0xfc, // never sent: opt-in off, timeout 0, short OUT data, an undeclared endpoint, or one already outstanding
+  Stall = 0xfd, // the real device STALLed, in the stage named
+  NoAnswer = 0xfe, // the real device NAKed until the timeout, in the stage named; or the host chip's reply was lost
+  NoDevice = 0xff,
 }
 
-export function transferStatusFromU8(v: number): TransferStatus {
-  switch (v) {
-    case 0x00:
-      return TransferStatus.Ok;
-    case 0xfc:
-      return TransferStatus.Refused;
-    case 0xfd:
-      return TransferStatus.Stall;
-    case 0xfe:
-      return TransferStatus.Nak;
-    default:
-      return TransferStatus.NoDevice;
-  }
+// TRANSFER_RESP stage (§3.14): where the transfer ended.
+export enum TransferStage {
+  Setup = 0,
+  Data = 1,
+  Status = 2,
 }
+
+// TRANSFER (§3.14): [ep][timeout_ms u16 LE][setup 8][OUT data]. TRANSFER_RESP: [ep][status][stage][flags]
+// [offset u16 LE][data], up to 448 bytes of data.
+export const XFER_REQ_HDR = 11;
+export const XFER_RESP_HDR = 6;
+export const XFER_CHUNK_MAX = 448;
+export const TRANSFER_OUT_MAX = MAX_PAYLOAD - XFER_REQ_HDR;
+// TRANSFER_RESP flags bit 0: the reply's last chunk, the one whose status and stage are the outcome.
+export const XFER_LAST = 0x01;
+// How long the box waits on the real device; 0 is refused. The default is the medius crate's.
+export const TRANSFER_TIMEOUT_MIN_MS = 1;
+export const TRANSFER_TIMEOUT_MAX_MS = 0xffff;
+export const TRANSFER_TIMEOUT_DEFAULT_MS = 1000;
 
 // RESP(REWRITE) (§4.17): a 4-byte scalar header (what + flags + gen + n), then 12 bytes per rule.
 export const REWRITE_TAB_MAX = 32; // agrees with the box's REWRITE_TAB_MAX
@@ -363,8 +370,8 @@ export enum FrameType {
   UpdateResp = 0x18,
   // v3.4.0 advanced control layer (§3.14), gated on OPTION(IMPERFECT).
   Raw = 0x19, // [ep_num u8][dir u8][bytes...] put a raw report on a cloned endpoint
-  Transfer = 0x1a, // [ep u8][setup 8][OUT data..] run a control request on the device
-  TransferResp = 0x1b, // [ep u8][status u8][IN data..] the real device's reply (a separate opcode, SEQ-correlated)
+  Transfer = 0x1a, // [ep u8][timeout_ms u16 LE][setup 8][OUT data..] run a control request on the real device
+  TransferResp = 0x1b, // [ep u8][status u8][stage u8][flags u8][offset u16 LE][data..] one chunk of the reply, SEQ-correlated
   Rewrite = 0x1c, // [cls][id u16][dir][state][action][off u16][mlen][match][mask][payload] a rewrite rule
   Patch = 0x1d, // [section][cfg][index][offset u16][bytes..] a descriptor patch
   Transform = 0x1e, // [op][sclass][sid u16][dclass][did u16][state] a field transform
@@ -444,7 +451,7 @@ export const UPD_NAMES: Record<number, string> = {
 // TRAFFIC_F_RULE. A CLIP_XFER event's whole flags byte is a TransferStatus.
 export const TRAFFIC_CONTROL_OK = 0x00;
 export const TRAFFIC_CONTROL_STALL = 0x01;
-export const TRAFFIC_CONTROL_NAK = 0x02; // NAKed until the host gave up, endpoint 0 only
+export const TRAFFIC_CONTROL_NAK = 0x02; // NAKed until the PC gave up
 export const TRAFFIC_CONTROL_MASK = 0x03;
 
 export function frameTypeFromU8(value: number): FrameType | null {

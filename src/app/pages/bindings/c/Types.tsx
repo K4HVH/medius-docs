@@ -36,7 +36,7 @@ const Types: Component = () => {
           </p>
           <p>
             Variable-length wire data is an inline fixed-size array with a count, never a pointer
-            you own. These layouts are ABI version <code>10</code> (<code>MEDIUS_ABI_VERSION</code> in
+            you own. These layouts are ABI version <code>11</code> (<code>MEDIUS_ABI_VERSION</code> in
             the header). Compare it with{' '}
             <A href="/bindings/c/api#module"><code>medius_abi_version()</code></A> once at{' '}
             <A href="/bindings/c#verify">start-up</A>.
@@ -70,6 +70,8 @@ const Types: Component = () => {
               <tr><td><code>MEDIUS_CLIP_ENTRY_MAX</code></td><td><code>512</code></td><td>Encoded bytes of one <A href="/bindings/c/api#clip"><code>MediusClipFrame</code></A>: one <code>CLIP_APPEND</code> payload</td></tr>
               <tr><td><code>MEDIUS_MAX_CATCH_ENTRIES</code></td><td><code>32</code></td><td><A href="/bindings/c/types#catch-state"><code>MediusCatchState.entries</code></A></td></tr>
               <tr><td><code>MEDIUS_MAX_TRAFFIC_BYTES</code></td><td><code>180</code></td><td><A href="/bindings/c/types#traffic-event"><code>MediusTrafficEvent.bytes</code></A></td></tr>
+              <tr><td><code>MEDIUS_MAX_TRANSFER_OUT</code></td><td><code>501</code></td><td>The OUT data stage of one <A href="/bindings/c/api#advanced"><code>medius_device_transfer</code></A>: one frame less its header</td></tr>
+              <tr><td><code>MEDIUS_MAX_TRANSFER_REPLY</code></td><td><code>65536</code></td><td>The longest reply a transfer brings back (<code>wLength</code> 65535 rounded up to whole 64-byte packets), so a <code>reply</code> buffer this size holds any</td></tr>
             </tbody>
           </table>
         </div>
@@ -537,7 +539,7 @@ const Types: Component = () => {
               <tr><td><code>MEDIUS_CATCH_CLASS_HID_OUT</code></td><td><code>5</code></td><td>An interrupt-OUT endpoint number.</td><td>Every interrupt-OUT endpoint.</td></tr>
               <tr><td><code>MEDIUS_CATCH_CLASS_VENDOR_INTERRUPT</code></td><td><code>6</code></td><td>A vendor interrupt endpoint number.</td><td>Every vendor interrupt endpoint.</td></tr>
               <tr><td><code>MEDIUS_CATCH_CLASS_VENDOR_BULK</code></td><td><code>7</code></td><td>A vendor bulk endpoint number.</td><td>Every vendor bulk endpoint.</td></tr>
-              <tr><td><code>MEDIUS_CATCH_CLASS_CONTROL</code></td><td><code>8</code></td><td>A control endpoint number (<code>0</code> is EP0; on EP0, the requests the clone relays to the real device).</td><td>Every control endpoint.</td></tr>
+              <tr><td><code>MEDIUS_CATCH_CLASS_CONTROL</code></td><td><code>8</code></td><td>A control endpoint number (<code>0</code> is EP0; on EP0, every class and vendor request and each standard request the clone relays).</td><td>Every control endpoint.</td></tr>
               <tr><td><code>MEDIUS_CATCH_CLASS_EMIT</code></td><td><code>9</code></td><td>An emitting endpoint number.</td><td>Every emitting endpoint.</td></tr>
               <tr><td><code>MEDIUS_CATCH_CLASS_BUS</code></td><td><code>10</code></td><td>Nothing; pass <code>MEDIUS_CATCH_ID_ANY</code>.</td><td>Every bus event.</td></tr>
               <tr><td><code>MEDIUS_CATCH_CLASS_CLIP_TRANSFER</code></td><td><code>11</code></td><td>The control endpoint number (<code>0</code> is EP0) a <A href="/bindings/c/api#clip">clip</A>'s transfer ran on.</td><td>Every control endpoint.</td></tr>
@@ -1003,7 +1005,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>inject_emits</code></td><td><code>uint32_t</code></td><td>Pure-injection reports emitted.</td></tr>
-              <tr><td><code>tx_drops</code></td><td><code>uint16_t</code></td><td>Reports the clone's IN queue could not hold, so they were never emitted to the game PC (should stay 0).</td></tr>
+              <tr><td><code>tx_drops</code></td><td><code>uint16_t</code></td><td>Reports never emitted to the game PC: one the clone's IN queue could not hold, one the host chip's forwarder or link could not take, or one a stop of its stream (a setting switch, a halt, a suspend) cut short (should stay 0).</td></tr>
               <tr><td><code>tx_merges</code></td><td><code>uint16_t</code></td><td>Backed-up reports merged instead of queued.</td></tr>
               <tr><td><code>tx_maxdepth</code></td><td><code>uint8_t</code></td><td>Deepest the TX queue has reached.</td></tr>
               <tr><td><code>tx_wedges</code></td><td><code>uint8_t</code></td><td>Wedged-endpoint recoveries.</td></tr>
@@ -1012,7 +1014,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
               <tr><td><code>config_count</code></td><td><code>uint16_t</code></td><td>SET_CONFIGURATION events (re-enumerations).</td></tr>
               <tr><td><code>link_rx_drops</code></td><td><code>uint32_t</code></td><td>Input frames the device chip could not take off the link from the host chip (should stay 0).</td></tr>
               <tr><td><code>host_rx_drops</code></td><td><code>uint32_t</code></td><td>The same count on the host chip, relayed over the link (should stay 0).</td></tr>
-              <tr><td><code>relay_drops</code></td><td><code>uint32_t</code></td><td>Relayed traffic and commands that went no further, never native input. One count each for: a vendor IN packet whose endpoint queue was full of the control PC's <code>RAW</code> packets; a native zero-length packet answering a poll the PC never made (the box runs one poll ahead of a suspended PC); an OUT packet with no room in the queue, that failed three times on the real device's bus, or that a bus reset or <code>SET_INTERFACE</code> overtook; a <code>RAW</code> OUT packet with no room to wait; a relayed request the box could not queue; a flagged <code>MOVE</code> the motion batch could not take; a frame other than native input that either chip's link receive ring dropped; a control-PC frame its receive ring had no room for. A control-port UART overrun counts once, however many frames it cost.</td></tr>
+              <tr><td><code>relay_drops</code></td><td><code>uint32_t</code></td><td>Relayed traffic and commands that went no further, never native input. One count each for: a vendor IN packet the host chip's link would not carry, or whose endpoint queue was full of the control PC's <code>RAW</code> packets; a native zero-length packet answering a poll the PC never made (the box runs one poll ahead of a suspended PC); an OUT packet with no room in the queue, that failed three times on the real device's bus, or that a bus reset or <code>SET_INTERFACE</code> overtook; a <code>RAW</code> OUT packet with no room to wait; a relayed request, or a packet or step of one, the box could not queue (the request then ends, NAKed until the game PC gives up); a flagged <code>MOVE</code> the motion batch could not take; a frame other than native input that either chip's link receive ring dropped; a control-PC frame its receive ring had no room for. A control-port UART overrun counts once, however many frames it cost.</td></tr>
               <tr><td><code>session</code></td><td><code>uint16_t</code></td><td>Times the box released some or all of the session state a host set. 0 at boot; it wraps, so compare for inequality. The library watches it for <A href="/library/lifecycle#restart">session recovery</A>.</td></tr>
             </tbody>
           </table>
@@ -1413,7 +1415,7 @@ for (uintptr_t i = 0; i < n; i++) {
               <tr><td><code>MEDIUS_CATCH_CLASS_HID_OUT</code>, <code>_VENDOR_INTERRUPT</code></td><td>Bit 1: a zero-length packet. Bit 7: a rule acted.</td><td><code>medius_traffic_event_zlp</code>, <code>medius_traffic_event_rule_acted</code></td></tr>
               <tr><td><code>MEDIUS_CATCH_CLASS_VENDOR_BULK</code></td><td>Bit 0: end of transfer. Bit 1: a zero-length packet. Bit 7: a rule acted.</td><td><code>medius_traffic_event_bulk_end_of_transfer</code>, <code>medius_traffic_event_zlp</code>, <code>medius_traffic_event_rule_acted</code></td></tr>
               <tr><td><code>MEDIUS_CATCH_CLASS_CONTROL</code></td><td>Bits 0-1: the handshake the game PC received, below. Bit 7: a rule acted.</td><td><code>medius_traffic_event_control_status</code>, into a <code>MediusControlStatus</code>; <code>medius_traffic_event_rule_acted</code></td></tr>
-              <tr><td><code>MEDIUS_CATCH_CLASS_CLIP_TRANSFER</code></td><td>How the transfer ended, a <A href="/bindings/c/types#transfer-outcome"><code>MEDIUS_TRANSFER_STATUS_*</code></A> byte; <code>0xFE</code> when no reply came.</td><td><code>medius_traffic_event_transfer_status</code></td></tr>
+              <tr><td><code>MEDIUS_CATCH_CLASS_CLIP_TRANSFER</code></td><td>How the transfer ended, a <A href="/bindings/c/types#transfer-outcome"><code>MEDIUS_TRANSFER_STATUS_*</code></A> byte; <code>_NO_ANSWER</code> (<code>0xFE</code>) when no answer came in 4 s.</td><td><code>medius_traffic_event_transfer_status</code></td></tr>
               <tr><td><code>MEDIUS_CATCH_CLASS_BUS</code></td><td>The bus event kind (table below).</td><td><code>medius_traffic_event_bus_event</code>, into a <code>MediusBusEvent</code></td></tr>
               <tr><td>every other class</td><td><code>0</code>.</td><td>-</td></tr>
             </tbody>
@@ -1421,10 +1423,10 @@ for (uintptr_t i = 0; i < n; i++) {
         </div>
         <div class="api-response-label">CONTROL EVENTS</div>
         <p>
-          A <code>CONTROL</code> or <code>CLIP_TRANSFER</code> event is one completed
-          transaction. <code>bytes</code> holds the 8-byte SETUP packet, then the data stage (IN
-          data only on <code>CLIP_TRANSFER</code>); <code>direction</code> says which way the data
-          went. Split them with{' '}
+          A <code>CONTROL</code> event is one transaction, not one stage, raised when it ends; a{' '}
+          <code>CLIP_TRANSFER</code> event is one transfer a clip ran. <code>bytes</code> holds the
+          8-byte SETUP packet, then the data (on <code>CLIP_TRANSFER</code>, the reply, empty on an OUT
+          request with a data stage); <code>direction</code> is the data stage's. Split them with{' '}
           <A href="/bindings/c/api#inspectors"><code>medius_traffic_event_setup</code></A> and{' '}
           <code>medius_traffic_event_data</code>.
         </p>
@@ -1438,9 +1440,9 @@ for (uintptr_t i = 0; i < n; i++) {
           <table class="api-params">
             <thead><tr><th><code>MediusControlStatus</code></th><th>Bits 0-1</th><th>PC received</th></tr></thead>
             <tbody>
-              <tr><td><code>MEDIUS_CONTROL_STATUS_OK</code></td><td><code>0</code></td><td>A completed transaction.</td></tr>
-              <tr><td><code>MEDIUS_CONTROL_STATUS_STALLED</code></td><td><code>1</code></td><td>A STALL from the real device, from a rule that refused the request, or (above endpoint 0) for a failed request.</td></tr>
-              <tr><td><code>MEDIUS_CONTROL_STATUS_NAKED</code></td><td><code>2</code></td><td>NAKs until the PC gave up, on endpoint 0 only.</td></tr>
+              <tr><td><code>MEDIUS_CONTROL_STATUS_OK</code></td><td><code>0</code></td><td>The transaction completed.</td></tr>
+              <tr><td><code>MEDIUS_CONTROL_STATUS_STALLED</code></td><td><code>1</code></td><td>A STALL: the real device STALLed the request, or a <code>STALL</code> rule refused it.</td></tr>
+              <tr><td><code>MEDIUS_CONTROL_STATUS_NAKED</code></td><td><code>2</code></td><td>NAKs until the PC gave up: the real device left the request unanswered or it failed on the real device's bus, a <code>NAK</code> rule matched it, the PC gave up before the real device finished, a SET_INTERFACE on its interface, a configuration change or a suspend ended it, or the box had no room to pass a step of it on. For a request the PC gave up on, the event comes when the PC's next SETUP on that endpoint replaces it, or 250-300 ms after the PC stopped polling it, whichever is first.</td></tr>
               <tr><td><code>MEDIUS_CONTROL_STATUS_OTHER</code></td><td><code>3</code></td><td>A value this build does not know; read <code>flags</code> for it.</td></tr>
             </tbody>
           </table>
@@ -1727,27 +1729,53 @@ medius_clip_unbind_packet(clip, &held);   /* by key */`}</code></pre>
         </div>
       </DocSection>
 
-      <DocSection id="transfer-outcome" title="MediusTransferOutcome" caption="Real device's reply to a control transfer">
-        <p>Filled by <A href="/bindings/c/api#advanced"><code>medius_device_transfer</code></A>. <code>MEDIUS_STATUS_OK</code> means only that the box replied; <code>status</code> is the transfer's result.</p>
+      <DocSection id="transfer-outcome" title="MediusTransferOutcome" caption="How a control transfer ended, and the native reply's length">
+        <pre class="api-signature">{`struct MediusTransferOutcome {
+    uint8_t   status;   /* MEDIUS_TRANSFER_STATUS_*, or a byte no constant names */
+    uint8_t   stage;    /* MEDIUS_TRANSFER_STAGE_*, likewise                     */
+    uintptr_t len;      /* the reply's whole length                              */
+};`}</pre>
+        <p>Filled by <A href="/bindings/c/api#advanced"><code>medius_device_transfer</code></A>, which writes the reply's first <code>reply_cap</code> bytes to the caller's <code>reply</code> buffer. <code>MEDIUS_STATUS_OK</code> means only that the box replied; <code>status</code> is the transfer's result.</p>
         <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>status</code></td><td><code>uint8_t</code></td><td>A <code>MEDIUS_TRANSFER_STATUS_*</code> value (see below).</td></tr>
-              <tr><td><code>len</code></td><td><code>uint16_t</code></td><td>Valid bytes in <code>data</code>.</td></tr>
-              <tr><td><code>data</code></td><td><code>uint8_t[MEDIUS_MAX_DEV_PAYLOAD]</code></td><td>An IN transfer's data stage, whole even where the real device sent more than <code>wLength</code> asked for. For an OUT transfer or one with <code>wLength</code> 0, what it sent where the status stage was due (at most 64 bytes, usually none).</td></tr>
+              <tr><td><code>status</code></td><td><code>uint8_t</code></td><td>How the transfer ended, a <code>MEDIUS_TRANSFER_STATUS_*</code> value (below). A byte, so it carries a status no constant names; C++ compares it to one with a cast.</td></tr>
+              <tr><td><code>stage</code></td><td><code>uint8_t</code></td><td>Where it ended, a <code>MEDIUS_TRANSFER_STAGE_*</code> value (below).</td></tr>
+              <tr><td><code>len</code></td><td><code>uintptr_t</code></td><td>The reply's whole length. If it's over <code>reply_cap</code>, the buffer holds the first <code>reply_cap</code> bytes only.</td></tr>
             </tbody>
           </table>
         </div>
+        <p>
+          The reply is the IN data stage as the box received it, whole at any length: the bytes before a
+          STALL included, and bytes past <code>wLength</code> where the real device sent more in the
+          packets a host asks for. For an OUT transfer or one with <code>wLength</code> 0, it is what
+          the real device sent where the status stage was due (≤1 packet, usually none).
+        </p>
+        <div class="api-response-label">MEDIUSTRANSFERSTATUS</div>
         <div class="table-scroll">
           <table class="api-params">
             <thead><tr><th>Enumerator</th><th>Value</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>MEDIUS_TRANSFER_STATUS_OK</code></td><td><code>0x00</code></td><td>Completed; data is in <code>data</code>.</td></tr>
-              <tr><td><code>MEDIUS_TRANSFER_STATUS_REFUSED</code></td><td><code>0xFC</code></td><td>The box refused it before it reached the real device: opt-in off, malformed, <code>wLength</code> &gt;504 or OUT data shorter than <code>wLength</code>, or the host chip's control queue full.</td></tr>
-              <tr><td><code>MEDIUS_TRANSFER_STATUS_STALL</code></td><td><code>0xFD</code></td><td>The real device STALLed.</td></tr>
-              <tr><td><code>MEDIUS_TRANSFER_STATUS_NAK</code></td><td><code>0xFE</code></td><td>One of: the real device did not finish within 500 ms, the transfer failed on the bus, the endpoint is undeclared, no reply crossed the link within 800 ms, or the game PC has suspended the clone (and with it the real device).</td></tr>
-              <tr><td><code>MEDIUS_TRANSFER_STATUS_NO_DEVICE</code></td><td><code>0xFF</code></td><td>No real device attached to the host chip.</td></tr>
+              <tr><td><code>MEDIUS_TRANSFER_STATUS_OK</code></td><td><code>0x00</code></td><td>Completed.</td></tr>
+              <tr><td><code>MEDIUS_TRANSFER_STATUS_BUSY</code></td><td><code>0xF9</code></td><td>The game PC had the pipe: its transfer held it until the timeout and nothing was sent (stage <code>SETUP</code>), or its next request on that endpoint, or a bus event it caused, took the pipe in the stage named.</td></tr>
+              <tr><td><code>MEDIUS_TRANSFER_STATUS_SUSPENDED</code></td><td><code>0xFA</code></td><td>The game PC has suspended the clone, and the real device with it. Nothing was sent.</td></tr>
+              <tr><td><code>MEDIUS_TRANSFER_STATUS_ERROR</code></td><td><code>0xFB</code></td><td>The real device's packets were corrupt past three tries or ran past the buffer the host asked for, or the host chip had no channel free to send the transfer on.</td></tr>
+              <tr><td><code>MEDIUS_TRANSFER_STATUS_REFUSED</code></td><td><code>0xFC</code></td><td>Never sent: the opt-in is off, <code>ep</code> names no control endpoint the real device declares, another transfer is outstanding, or the box had no room for it then (the link between its chips was full, or an earlier transfer's reply still held its place, for up to 1 s).</td></tr>
+              <tr><td><code>MEDIUS_TRANSFER_STATUS_STALL</code></td><td><code>0xFD</code></td><td>The real device STALLed, in the stage named.</td></tr>
+              <tr><td><code>MEDIUS_TRANSFER_STATUS_NO_ANSWER</code></td><td><code>0xFE</code></td><td>The real device NAKed until the timeout, in the stage named; or the host chip's reply was lost between the chips; or the reply's next chunk waited 1 s to be passed on to the control port, in the data stage.</td></tr>
+              <tr><td><code>MEDIUS_TRANSFER_STATUS_NO_DEVICE</code></td><td><code>0xFF</code></td><td>No real device attached.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="api-response-label">MEDIUSTRANSFERSTAGE</div>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Enumerator</th><th>Value</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>MEDIUS_TRANSFER_STAGE_SETUP</code></td><td><code>0</code></td><td>The setup packet.</td></tr>
+              <tr><td><code>MEDIUS_TRANSFER_STAGE_DATA</code></td><td><code>1</code></td><td>The data stage.</td></tr>
+              <tr><td><code>MEDIUS_TRANSFER_STAGE_STATUS</code></td><td><code>2</code></td><td>The status stage, where a completed transfer ends.</td></tr>
             </tbody>
           </table>
         </div>
@@ -1905,10 +1933,12 @@ medius_clip_unbind_packet(clip, &held);   /* by key */`}</code></pre>
               <tr><td><code>MEDIUS_STATUS_ERR_RAW_DIRECTION</code></td><td><code>29</code></td><td>A raw injection direction other than <code>MEDIUS_DIRECTION_POSITIVE</code> (IN) or <code>MEDIUS_DIRECTION_NEGATIVE</code> (OUT).</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_CLIP_FRAME_COUNT</code></td><td><code>30</code></td><td>A clip frame with more than <code>MEDIUS_CLIP_EDGES_MAX</code> edges or <code>MEDIUS_CLIP_RAW_MAX</code> raw reports.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_CLIP_FRAME_TOO_LONG</code></td><td><code>31</code></td><td>A clip frame that encodes to more than <code>MEDIUS_CLIP_ENTRY_MAX</code> bytes.</td></tr>
-              <tr><td><code>MEDIUS_STATUS_ERR_CLIP_TRANSFER_DATA</code></td><td><code>32</code></td><td>A clip transfer whose data is not what its setup packet announces: <code>length</code> bytes for an OUT request, none for an IN one.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_TRANSFER_DATA</code></td><td><code>32</code></td><td>A control transfer, or a clip's, whose data is not what its setup packet announces: <code>length</code> bytes for an OUT request, none for an IN one.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_CLIP_PACKET_TRIGGER</code></td><td><code>33</code></td><td>A <A href="/bindings/c/types#clip-packet-trigger"><code>MediusClipPacketTrigger</code></A> the box would refuse; <code>medius_last_error_message</code> says why.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_REWRITE_MATCH_TOO_LONG</code></td><td><code>34</code></td><td>A rewrite rule with more than <code>MEDIUS_MAX_REWRITE_MATCH</code> (16) match bytes.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_REWRITE_POOL_FULL</code></td><td><code>35</code></td><td>A rewrite payload larger than the room the held rules leave in <code>MEDIUS_REWRITE_PAYLOAD_POOL</code> (2048). An overwrite counts the bytes it replaces as free.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_TRANSFER_TIMEOUT_RANGE</code></td><td><code>36</code></td><td>A transfer timeout outside 1 to 65535 ms.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_TRANSFER_REPLY_INCOMPLETE</code></td><td><code>37</code></td><td>A transfer reply that lost a chunk between the box's chips or on the control link.</td></tr>
             </tbody>
           </table>
         </div>

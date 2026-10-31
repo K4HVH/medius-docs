@@ -44,3 +44,6 @@ key.pem
 
 # Build-time data written by scripts/lastmod.mjs
 src/generated/
+
+# Python bytecode beside the public comparison tool
+__pycache__/

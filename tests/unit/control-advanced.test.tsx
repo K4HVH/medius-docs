@@ -8,6 +8,7 @@ import {
   Direction,
   PatchSection,
   RewriteAction,
+  TransferStage,
   TransferStatus,
 } from '../../src/dashboard/protocol';
 
@@ -21,13 +22,18 @@ const mock = vi.hoisted(() => ({
   entryReads: [] as number[],
   patches: [] as { section: number; cfg: number; index: number; offset: number; len: number }[],
   transfers: [] as number[][],
+  // The OUT data and the box's wait each transfer was sent with.
+  transferOut: [] as number[][],
+  transferTimeouts: [] as number[],
+  // Holds a transfer open until the test lets it go.
+  transferHold: null as Promise<void> | null,
   raws: [] as unknown[][],
   applied: 0,
   cleared: 0,
-  transferReply: { ep: 0, status: 0, data: new Uint8Array() },
+  transferReply: { ep: 0, status: 0, stage: 2, data: new Uint8Array() },
   status: 'connected',
   updateOnly: false,
-  protoVer: 9,
+  protoVer: 10,
   poll: {} as Record<string, unknown>,
   // Tells the card the polled values moved, as a fresh poll reply would.
   polled: () => {},
@@ -71,8 +77,13 @@ vi.mock('../../src/app/pages/dashboard/context', async () => {
       wValue: number,
       wIndex: number,
       wLength: number,
+      out: Uint8Array,
+      timeoutMs: number,
     ) => {
       mock.transfers.push([ep, bmRequestType, bRequest, wValue, wIndex, wLength]);
+      mock.transferOut.push([...out]);
+      mock.transferTimeouts.push(timeoutMs);
+      if (mock.transferHold) await mock.transferHold;
       return mock.transferReply;
     },
     queryRewriteEntry: async (index: number) => {
@@ -147,10 +158,13 @@ afterEach(() => {
   mock.entryReads = [];
   mock.patches = [];
   mock.transfers = [];
+  mock.transferOut = [];
+  mock.transferTimeouts = [];
+  mock.transferHold = null;
   mock.raws = [];
   mock.applied = 0;
   mock.cleared = 0;
-  mock.transferReply = { ep: 0, status: 0, data: new Uint8Array() };
+  mock.transferReply = { ep: 0, status: 0, stage: 2, data: new Uint8Array() };
   mock.status = 'connected';
   mock.poll = {};
 });
@@ -470,28 +484,169 @@ describe('The Advanced tab of Control', () => {
     expect(queryByText('Device to host, standard, to the device: GET_DESCRIPTOR.')).toBeNull();
   });
 
-  it('runs a control transfer and shows the device answer', async () => {
+  it('runs a control transfer and shows the real device answer', async () => {
     on();
-    mock.transferReply = { ep: 0, status: TransferStatus.Ok, data: new Uint8Array([0x12, 0x01]) };
+    mock.transferReply = {
+      ep: 0,
+      status: TransferStatus.Ok,
+      stage: TransferStage.Status,
+      data: new Uint8Array([0x12, 0x01]),
+    };
     const { getByText } = render(() => <Cards />);
     fireEvent.click(getByText('Run'));
     await settle();
-    // The default setup is GET_DESCRIPTOR for the 18-byte device descriptor.
+    // The default setup is GET_DESCRIPTOR for the 18-byte device descriptor, waiting the default 1 s.
     expect(mock.transfers[0]).toEqual([0, 0x80, 6, 0x0100, 0, 18]);
+    expect(mock.transferTimeouts).toEqual([1000]);
     expect(getByText('OK')).toBeTruthy();
+    expect(getByText('Status stage')).toBeTruthy();
     expect(getByText('2 B in')).toBeTruthy();
+    expect(getByText('The real device completed the transfer.')).toBeTruthy();
+    expect(getByText('12 01')).toBeTruthy();
   });
 
-  // No answer covers more than a silent device, and the card says which cases.
+  // No answer is the real device's silence or a reply the box's chips lost, never a refusal.
   it('says what a transfer with no answer can mean', async () => {
     on();
-    mock.transferReply = { ep: 0, status: TransferStatus.Nak, data: new Uint8Array() };
+    mock.transferReply = { ep: 0, status: TransferStatus.NoAnswer, stage: TransferStage.Data, data: new Uint8Array() };
     const { getByText, findByText, queryByText } = render(() => <Cards />);
     fireEvent.click(getByText('Run'));
     await findByText('No answer');
-    expect(getByText(/no control endpoint with that number/)).toBeTruthy();
-    expect(getByText(/mouse-side chip did not answer within 0\.8 s/)).toBeTruthy();
+    expect(getByText(/didn't answer within the timeout/)).toBeTruthy();
+    expect(getByText(/lost between the box's chips/)).toBeTruthy();
+    expect(queryByText(/no control endpoint with that number/)).toBeNull();
     expect(queryByText('NAK')).toBeNull();
+  });
+});
+
+describe('The control transfer card', () => {
+  const root = () => {
+    on();
+    const view = render(() => <Cards />);
+    return { ...view, card: view.container.querySelector('#control-transfer') as HTMLElement };
+  };
+  const text = (card: ParentNode, label: string, value: string) => {
+    const l = [...card.querySelectorAll('label')].find((e) => e.textContent?.trim() === label);
+    fireEvent.input(l?.parentElement?.querySelector('input') as HTMLInputElement, { target: { value } });
+  };
+  const run = async (card: ParentNode) => {
+    fireEvent.click([...card.querySelectorAll('button')].find((b) => b.textContent?.trim() === 'Run')!);
+    await settle();
+  };
+
+  it('shows the data that came before a stall, and the stage the transfer ended in', async () => {
+    mock.transferReply = {
+      ep: 0,
+      status: TransferStatus.Stall,
+      stage: TransferStage.Data,
+      data: new Uint8Array([0x01, 0x02, 0x03]),
+    };
+    const { card, getByText } = root();
+    await run(card);
+    expect(getByText('Stalled')).toBeTruthy();
+    expect(getByText('Data stage')).toBeTruthy();
+    expect(getByText('3 B in')).toBeTruthy();
+    expect(card.querySelector('pre.reply')?.textContent).toBe('01 02 03');
+  });
+
+  it.each([
+    ['Busy', TransferStatus.Busy, /requests on this endpoint go first/],
+    ['Suspended', TransferStatus.Suspended, /put the clone to sleep/],
+    ['Error', TransferStatus.Error, /corrupt packets three times over/],
+    ['Refused', TransferStatus.Refused, /no control endpoint with that number/],
+    ['No device', TransferStatus.NoDevice, /No device plugged into the box/],
+  ])('names %s and says what it means', async (label, status, blurb) => {
+    mock.transferReply = { ep: 0, status, stage: TransferStage.Setup, data: new Uint8Array() };
+    const { card, getByText } = root();
+    await run(card);
+    expect(getByText(label)).toBeTruthy();
+    expect(getByText('Setup stage')).toBeTruthy();
+    expect(getByText(blurb)).toBeTruthy();
+    expect(card.querySelector('pre.reply')).toBeNull();
+  });
+
+  it('shows a status it does not know as its byte, never as one it knows', async () => {
+    mock.transferReply = { ep: 0, status: 0x42, stage: 9, data: new Uint8Array() };
+    const { card, getByText, queryByText } = root();
+    await run(card);
+    expect(getByText('Status 0x42')).toBeTruthy();
+    expect(getByText('Stage 9')).toBeTruthy();
+    expect(queryByText('No device')).toBeNull();
+    expect(queryByText(/No device plugged into the box/)).toBeNull();
+  });
+
+  it('sends the timeout the field holds, kept to 1-65535 ms', async () => {
+    const { card } = root();
+    const field = numberField(card, 'Timeout');
+    expect(field.value).toBe('1000');
+    fireEvent.input(field, { target: { value: '0' } });
+    fireEvent.blur(field);
+    await settle();
+    expect(field.value).toBe('1');
+    fireEvent.input(field, { target: { value: '70000' } });
+    fireEvent.blur(field);
+    await settle();
+    expect(field.value).toBe('65535');
+    await run(card);
+    expect(mock.transferTimeouts).toEqual([65535]);
+  });
+
+  it('sends no Out data on a request that reads, whatever the field holds', async () => {
+    const { card } = root();
+    text(card, 'Out data (hex)', 'aa bb');
+    await run(card);
+    expect(mock.transferOut).toEqual([[]]);
+  });
+
+  it('sends a request that writes only with wLength bytes of Out data', async () => {
+    const { card, findByText } = root();
+    text(card, 'bmRequestType', '0x21');
+    text(card, 'bRequest', '9');
+    text(card, 'wLength', '2');
+    text(card, 'Out data (hex)', 'aa');
+    await run(card);
+    await findByText('Out data must be wLength bytes.');
+    expect(mock.transfers).toEqual([]);
+    text(card, 'Out data (hex)', 'aa bb');
+    await run(card);
+    expect(mock.transfers).toEqual([[0, 0x21, 9, 0x0100, 0, 2]]);
+    expect(mock.transferOut).toEqual([[0xaa, 0xbb]]);
+  });
+
+  it('takes the last result away when the next run is refused', async () => {
+    mock.transferReply = { ep: 0, status: TransferStatus.Ok, stage: TransferStage.Status, data: new Uint8Array([0x12]) };
+    const { card, findByText, queryByText } = root();
+    await run(card);
+    await findByText('OK');
+    text(card, 'bmRequestType', '0x21');
+    text(card, 'Out data (hex)', 'aa');
+    await run(card);
+    await findByText('Out data must be wLength bytes.');
+    expect(queryByText('OK')).toBeNull();
+    expect(card.querySelector('pre.reply')).toBeNull();
+  });
+
+  it('refuses a request that writes more than one frame carries', async () => {
+    const { card, findByText } = root();
+    text(card, 'bmRequestType', '0x21');
+    text(card, 'wLength', '502');
+    text(card, 'Out data (hex)', 'aa '.repeat(502));
+    await run(card);
+    await findByText('A request that writes carries ≤501 bytes.');
+    expect(mock.transfers).toEqual([]);
+  });
+
+  it('says it is running while the box waits on the real device', async () => {
+    let release = () => {};
+    mock.transferHold = new Promise<void>((r) => (release = r));
+    const { card } = root();
+    await run(card);
+    const button = () => [...card.querySelectorAll('button')].find((b) => /^Run/.test(b.textContent?.trim() ?? ''))!;
+    expect(button().textContent?.trim()).toBe('Running...');
+    expect((button() as HTMLButtonElement).disabled).toBe(true);
+    release();
+    await settle();
+    expect(button().textContent?.trim()).toBe('Run');
   });
 });
 
