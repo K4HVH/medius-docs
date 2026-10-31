@@ -154,7 +154,8 @@ const Method: Component = () => (
       <p>
         <a href="/comparison/medius-compare.py" download="">medius-compare.py</a> runs the tests that need no USB
         device emulator, on any MAKCU box and USB mouse. Run it on stock firmware and on Medius, then compare the two
-        runs. The figures depend on your mouse and PC, so they won't match the ones here exactly.
+        runs. A run takes 1-2 minutes, plus the time you take to move the mouse for the last test. The figures depend on
+        your mouse and PC, so they won't match the ones here exactly.
       </p>
       <div class="table-scroll">
         <table class="api-params names">

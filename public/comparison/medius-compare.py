@@ -42,6 +42,7 @@ import fcntl
 import json
 import os
 import random
+import re
 import select
 import signal
 import struct
@@ -662,8 +663,10 @@ class StockBox:
                     break
         except Exception:
             pass
-        name = (text.replace("km.", "") or "MAKCU").strip()
-        return f"{name} ({num})" if num else (name or "MAKCU")
+        # The name alone: binary frames the box sends unasked can land among the reply's bytes.
+        m = re.search(r"MAKCU[!-~]*", text)
+        name = m.group(0) if m else "MAKCU"
+        return f"{name} ({num})" if num else name
 
     def move(self, dx, dy, now=False):
         self.send(f"km.{'move_now' if now else 'move'}({dx},{dy})")
@@ -698,7 +701,7 @@ class StockBox:
 
     def rtt_queries(self):
         return [("version", lambda: self.query("km.version()")),
-                ("moving", lambda: self.query("km.moving()"))]
+                ("status", lambda: self.query("km.moving()"))]
 
 
 KEY_A_HID = 4  # HID usage for 'a' on stock's keyboard commands
@@ -807,7 +810,7 @@ class MediusBox:
 
     def rtt_queries(self):
         return [("version", lambda: self.dev.query_version()),
-                ("health", lambda: self.dev.query_health())]
+                ("status", lambda: self.dev.query_health())]
 
 
 class _MediusRaw:
