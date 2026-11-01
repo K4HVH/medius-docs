@@ -18,7 +18,7 @@ const Catch: Component = () => {
         <p>
           A subscription is a table of{' '}
           <A href="/library/types/structs#catch-filter"><code>CatchFilter</code></A> entries, each addressed
-          like a <A href="/library/lock"><code>lock</code></A>. Vendor bulk alone measures ~250&nbsp;KiB/s
+          like a <A href="/library/lock"><code>lock</code></A>. Vendor bulk alone measures ~630&nbsp;KiB/s
           on a 6&nbsp;Mbaud control link, so a filter can narrow to one endpoint.
         </p>
       </PageHeader>

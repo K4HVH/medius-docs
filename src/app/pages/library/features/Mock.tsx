@@ -440,7 +440,7 @@ assert!(matches!(err, Error::BadProtoVer { got: 11 }));`}</code></pre>
         <p><span class="api-badge api-badge--executed">No round-trip</span></p>
         <pre class="api-signature">fn link_lost(&self)</pre>
         <p><span class="api-badge api-badge--executed">No round-trip</span></p>
-        <pre class="api-signature">fn detach(&self, back_within_grace: bool)</pre>
+        <pre class="api-signature">fn detach(&self)</pre>
         <p><span class="api-badge api-badge--executed">No round-trip</span></p>
         <pre class="api-signature">fn attach(&self)</pre>
         <p><span class="api-badge api-badge--executed">No round-trip</span></p>
@@ -470,12 +470,12 @@ assert!(matches!(err, Error::BadProtoVer { got: 11 }));`}</code></pre>
               </tr>
               <tr>
                 <td><code>detach</code></td>
-                <td>The real device detaching. With <code>back_within_grace</code>, it re-attaches inside the 250 ms grace and the clone stays up. Without it, the clone is down until <code>attach</code>.</td>
+                <td>The real device detaching. The clone is down until <code>attach</code>.</td>
                 <td><code>session</code> moving. The recovery waits for a clone.</td>
               </tr>
               <tr>
                 <td><code>attach</code></td>
-                <td>A real device attaching. If the clone was up, it is cloned again, which releases the session. If it was down, it comes up with nothing to release.</td>
+                <td>The real device attaching again. The clone comes up with nothing to release.</td>
                 <td>A clone for the recovery to re-send to.</td>
               </tr>
             </tbody>
@@ -495,7 +495,7 @@ let device = Device::open_mock(mock.clone())?;
 device.scale(Axis::X, Direction::Both, 40)?;
 let scale_x = || device.query_locks().map(|l| l.scale_of(Axis::X, Direction::Positive));
 
-mock.detach(false);                 // the clone goes down, and the scale with it
+mock.detach();                      // the clone goes down, and the scale with it
 assert_eq!(scale_x()?, 100);
 mock.attach();                      // a new clone: the library re-sends the scale
 while scale_x()? != 40 {
