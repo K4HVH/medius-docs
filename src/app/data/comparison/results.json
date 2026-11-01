@@ -10734,7 +10734,7 @@
         {
           "id": "inj-latency",
           "title": "Move latency",
-          "about": "One move at a time, timed on the PC's USB bus from the command to the report carrying it. A default move goes through each box's default smoothing, and an immediate move skips it.",
+          "about": "One move at a time, timed on the PC's USB bus from the command to the report carrying it. A default move goes through each box's default smoothing, and an immediate move skips it. Medius smooths only once it has seen the mouse move since it was cloned. The still mouse here never has, so its default moves go out unsmoothed.",
           "tables": [
             {
               "kind": "measure",
