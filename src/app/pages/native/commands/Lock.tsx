@@ -133,6 +133,11 @@ const Lock: Component = () => {
             </table>
           </div>
           <p>
+            A lock that blocks the press releases a button or key already held when it is set. It reads
+            released until the unlock, and pressed again then if it is still held. A lock on the release
+            alone keeps a held one down. The box emits the change at once.
+          </p>
+          <p>
             Media has no sign and no edge, so{' '}
             <A href="/native/commands/requests#locks"><code>RESP(LOCKS)</code></A> always reports
             its direction as <code>0</code>. Every shipped client refuses <code>3</code> and{' '}

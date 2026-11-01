@@ -552,7 +552,7 @@ const Requests: Component = () => {
             <tbody>
               <tr><td><A href="/native/commands/admin#reset"><code>RESET</code></A></td><td>once</td></tr>
               <tr><td>the inter-chip link drops</td><td>once per outage</td></tr>
-              <tr><td>the real device detaches</td><td>once. The clone's teardown after the detach grace counts again only if a command arrived during the grace</td></tr>
+              <tr><td>the real device detaches</td><td>once, the clone's teardown included</td></tr>
               <tr><td>another device attaches</td><td>once</td></tr>
               <tr><td>a <code>PATCH</code> <code>APPLY</code> or <code>CLEAR</code>, or an <A href="/native/commands/option#imperfect"><code>OPTION(IMPERFECT)</code></A> toggle, that <A href="/native/commands/patch#presentation">presents</A> the clone again</td><td>once</td></tr>
               <tr><td>an <A href="/native/commands/update">update</A> takes the clone down</td><td>once</td></tr>
