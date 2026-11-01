@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""medius-compare: the Medius comparison's tests that need no USB device emulator, for any MAKCU box and USB mouse.
+"""medius-compare: the Medius comparison's tests that need only a USB mouse, on any MAKCU box.
 
 Run it once on stock firmware and once on Medius, then compare the two runs:
 
@@ -9,31 +9,35 @@ Run it once on stock firmware and once on Medius, then compare the two runs:
         --port /dev/serial/by-id/usb-1a86_USB_Single_Serial_<serial>-if00
     python3 medius-compare.py report stock.json medius.json
 
-The figures depend on your mouse and PC, so they won't match the published ones exactly.
+The published results come from a USB device emulator that isn't public. Most tests need it. It plays scripted native
+reports, presents device shapes no product has, and records what the box relays to it. This tool runs the tests that
+need only a USB mouse. The figures depend on your mouse and PC, so they won't match the published ones exactly.
 
 Requirements:
   PC           Linux, run as root
-  Python       3.10 or newer, with pyserial
-  Medius       the medius package release for the box's firmware (pip install medius)
-  Wire timing  USB1 and USB2 on one of the PC's USB buses (lsusb -t). On two, the tool uses host timing
+  Python       3.10 or newer, with pyserial installed for root
+  Medius run   the medius package release made for the box's firmware, installed for root
+  Wire timing  USB1 and USB2 on one USB bus (lsusb -t). On two buses, query falls back to host timing and
+               move-latency to evdev
 
 Wiring: USB1 (clone) and USB2 (control) to this PC, USB3 to your mouse. Leave the mouse still while the tool runs.
 
 The tool grabs the clone while it runs, so nothing it injects reaches your desktop. It sends the mouse only the reads
-a PC makes at enumeration, never writes the box's flash, and releases every button, key and lock it set, on Ctrl-C
+a PC makes at enumeration. It never writes the box's flash. It releases every button, key and lock it set, on Ctrl-C
 too. Stock is driven over its serial API (km. commands), Medius over the medius package. The malformed test writes its
 bytes to the control port directly, since no API sends a broken frame.
 
 On stock, move-accept and malformed can leave the parser one command behind until the box is unplugged. The tool runs
 them after every other test that sends the box commands, and skips a test that sends commands while the box is behind.
-The ep0 test runs last: it reads the mouse plugged into the PC.
+The ep0 test runs last, with the mouse plugged into the PC. It times the device descriptor, configuration descriptor,
+product string and GET_STATUS on the bus, on the clone and on the mouse.
 
 Timing layers, as the report names them:
-  wire     USB packets on the PC's bus, timed by usbmon: the command to the control port and the clone's report on
-           one clock
+  wire     USB packets on the PC's bus, timed by usbmon on one clock: from the command on the control port to the
+           clone's report, or from a request's setup to its completion (ep0)
   evdev    input events, timed by the kernel as the HID driver handles each report from the clone
   host     this program's clock, read as it writes a command
-  outcome  no times: what each side answered (ep0)
+  outcome  no times: what each side answered (ep0 without usbmon)
 """
 
 import argparse
@@ -50,13 +54,13 @@ import sys
 import threading
 import time
 
-VERSION = "1.0.0"
+VERSION = "1.1.0"
 
 STOCK_BAUD = 4_000_000
 MEDIUS_BAUD = 6_000_000
 
 LAYERS = {
-    "wire": "USB packets on the PC's bus, timed by usbmon: the command to the control port and the clone's report on one clock.",
+    "wire": "USB packets on the PC's bus, timed by usbmon on one clock: from the command on the control port to the clone's report, or from a request's setup to its completion.",
     "evdev": "Input events, timed by the kernel as the HID driver handles each report from the clone.",
     "host": "This program's clock, read as it writes a command.",
     "outcome": "No times: what each side answered.",
@@ -561,6 +565,44 @@ EP0_REQUESTS = [
 ]
 
 
+EP0_TIMED_N = 100
+
+
+def ep0_times(dev, n=EP0_TIMED_N):
+    """Each timed request's time on the bus, its setup's submission to its completion (usbmon), p50 over n reads,
+    as the comparison times endpoint 0. None without usbmon."""
+    bus, num = bus_dev(dev)
+    node = f"/dev/bus/usb/{bus:03d}/{num:03d}"
+    desc = control_read(node, 0x80, 6, 0x0100, 0, 18)
+    head = control_read(node, 0x80, 6, 0x0200, 0, 9)
+    if not isinstance(desc, bytes) or len(desc) < 18 or not isinstance(head, bytes) or len(head) < 4:
+        return None
+    timed = [("device descriptor", 0x80, 6, 0x0100, 0, 18),
+             ("configuration descriptor", 0x80, 6, 0x0200, 0, head[2] | head[3] << 8),
+             ("GET_STATUS device", 0x80, 0, 0, 0, 2)]
+    if desc[15]:
+        timed.insert(2, ("product string", 0x80, 6, 0x0300 | desc[15], 0x0409, 255))
+    out = []
+    for name, bmt, req, wv, wi, wl in timed:
+        with Usbmon(bus, [num]) as mon:
+            if not mon.ok:
+                return None
+            for _ in range(n):
+                control_read(node, bmt, req, wv, wi, wl)
+            time.sleep(0.05)
+        times, sub = [], None
+        for ts, kind, xt, ep, dn, ln, data in mon.take():
+            if xt != 2:
+                continue
+            if kind == "S":
+                sub = ts
+            elif kind == "C" and sub is not None:
+                times.append(ts - sub)
+                sub = None
+        out.append({"request": name, "n": len(times), "p50_us": round(pct(times, 50), 1) if times else None})
+    return out
+
+
 def ep0_read_device(dev):
     """Every EP0 request against one USB device directory, plus the report descriptor from sysfs."""
     bus, num = bus_dev(dev)
@@ -748,7 +790,7 @@ class MediusBox:
         try:
             v = self.dev.query_version()
         except self._m.BadProtoVerError:
-            raise SystemExit(f"the box speaks another control protocol than medius {self._m.version_string()}: "
+            raise SystemExit(f"medius {self._m.version_string()} speaks a different control protocol from the box: "
                              "install the medius release made for the box's firmware")
         return f"{v.fw_major}.{v.fw_minor}.{v.fw_patch} (proto {v.proto_ver})"
 
@@ -912,7 +954,7 @@ def t_query(rig, n):
                     "submit_to_reply_samples_us": [round(p[0] * 1e6, 2) for p in pairs]}
         elif mon:
             mon.__exit__()
-        rows.append({"id": name, "label": f"{name} query", "n": n,
+        rows.append({"id": name, "label": f"{name.capitalize()} query", "n": n,
                      "host": summary([x * 1e6 for x in host]), "wire": wire,
                      "host_samples_us": [round(x * 1e6, 2) for x in host]})
     layer = "wire" if any(r["wire"] for r in rows) else "host"
@@ -988,7 +1030,7 @@ def t_move_latency(rig, n):
         r["label"] = ("Immediate move, 1 count" if r["now"] else "Default move, 1 count")
         r["id"] = "now-1" if r["now"] else "default-1"
     layer = "wire" if any(r["wire_first"] for r in rows) else "evdev"
-    return {"about": "One-count moves, then immediate ones, into the still mouse: the time to the first report "
+    return {"about": "Default one-count moves, then immediate ones, into the still mouse: the time to the first report "
                      "carrying each.",
             "layer": layer, "rows": rows}
 
@@ -1023,8 +1065,8 @@ def t_move_spread(rig, sizes, n):
                          "last_count": summary([x for x in last if x is not None]),
                          "reports": summary(reports, unit="reports"),
                          "last_count_samples_us": [round(x, 1) if x is not None else None for x in last]})
-    return {"about": "Moves of 1, 10 and 100 counts, then immediate ones: the time to the last count, and the "
-                     "reports carrying it.", "layer": "evdev", "rows": rows}
+    return {"about": "Default moves of 1, 10 and 100 counts, then immediate ones: the time to the last count, and how many "
+                     "reports carry each move.", "layer": "evdev", "rows": rows}
 
 
 def t_move_accept(rig, rates, secs, burst):
@@ -1130,11 +1172,11 @@ def t_malformed(rig):
         time.sleep(0.5)
         arrived = sum(r.get(REL_X, 0) for _, r, _ in cap.peek())
         rows.append({"id": name, "label": {"garbage": "64 KB of random bytes",
-                                            "cut": "Half a move, the check move 100 ms later"}[name],
+                                            "cut": "Half a move, the valid move 100 ms later"}[name],
                      "acted_counts": acted, "valid_move_arrives": arrived >= 7,
                      "in_step_after": box.answers_in_step()})
-    return {"about": "Random bytes, then half a move, each followed by a 7-count move: whether it arrives, and "
-                     "whether the box still answers each query with its own reply.",
+    return {"about": "Random bytes, then half a move, each followed by a 7-count move: whether the valid move "
+                     "arrives, and whether the box falls one command behind.",
             "layer": "evdev", "rows": rows}
 
 
@@ -1196,7 +1238,7 @@ def t_release(rig, hold_s, window_s):
     rows.append({"id": "lock", "label": "X axis lock",
                  "locked_while_connected": locked_before,
                  "released": locked_after is False,
-                 "readback": "locked" if locked_after else ("released" if locked_after is False else "unknown")})
+                 "readback": "still in effect" if locked_after else ("released" if locked_after is False else "unknown")})
     box.unlock_x()
     box.keepalive(0.1)
     return {"about": "The left button held, a key held and X locked, then the control port closed: whether each "
@@ -1228,13 +1270,17 @@ def _reopen(box):
 
 def t_ep0(rig, native_arg):
     """Endpoint 0 replies: the standard read-only requests off the clone, then off the same mouse plugged
-    straight into this PC, reply bytes and outcome compared. Lines up with devices-endpoint-0."""
+    straight into this PC, reply bytes and outcome compared, and the device descriptor, configuration descriptor,
+    product string and GET_STATUS timed on the bus on each side. Lines up with devices-endpoint-0."""
     clone = ep0_read_device(rig.clone_dir)
+    # Closed while timing: the PC polls an open control port, which shares the clone's hub and slows its replies.
+    rig.box.close()
+    clone_t = ep0_times(rig.clone_dir)
     vid, pid = usb_ids(rig.clone_dir)
     print("\n  ep0: move the mouse from the box's USB3 to this PC.")
     print(f"  Press Enter once it is plugged in (the tool looks for {vid:04x}:{pid:04x}), or type s and Enter to skip.")
     ans = sys.stdin.readline().strip().lower()
-    native = None
+    native = native_t = None
     native_err = None
     if ans != "s":
         native_dir = None
@@ -1251,8 +1297,10 @@ def t_ep0(rig, native_arg):
                 time.sleep(0.5)
         if native_dir and os.path.exists(os.path.join(native_dir, "idVendor")):
             native = ep0_read_device(native_dir)
+            native_t = ep0_times(native_dir)
         else:
             native_err = "native mouse not found on the PC"
+    _reopen(rig.box)
     rows = []
     by_native = {r["request"]: r["value"] for r in (native or [])}
     for r in clone:
@@ -1260,9 +1308,16 @@ def t_ep0(rig, native_arg):
         rows.append({"id": r["request"].split()[0].lower(), "request": r["request"],
                      "clone": r["value"], "native": nv,
                      "match": (nv == r["value"]) if native else None})
+    nat_t = {r["request"]: r["p50_us"] for r in (native_t or [])}
+    timed = []
+    for r in clone_t or []:
+        nv = nat_t.get(r["request"])
+        timed.append({"request": r["request"], "n": r["n"], "clone_us": r["p50_us"], "native_us": nv,
+                      "past_native_us": round(r["p50_us"] - nv, 1) if None not in (r["p50_us"], nv) else None})
     return {"about": "The descriptor and status reads a PC makes at enumeration, to the clone and to the mouse "
-                     "on the PC: whether the replies match.", "layer": "outcome",
-            "native_read": native is not None, "native_error": native_err, "rows": rows}
+                     "on the PC: whether the replies match, and each timed reply's time on the bus over native.",
+            "layer": "wire" if timed else "outcome",
+            "native_read": native is not None, "native_error": native_err, "rows": rows, "timed": timed}
 
 
 # ---------------------------------------------------------------------------
@@ -1274,8 +1329,8 @@ def t_ep0(rig, native_arg):
 # only runs while it answers in step. ep0 runs last: it has the mouse moved off the box.
 ALL_TESTS = ["query", "move-latency", "move-spread", "release", "move-accept", "malformed", "ep0"]
 CONTROL_PORT = {"query", "move-latency", "move-spread", "release", "move-accept", "malformed"}
-BEHIND = ("the box answered a query with the reply before it, so it is one command behind: power-cycle it "
-          "(unplug every cable) and run again")
+BEHIND = ("the box is one command behind, answering each query with the reply before it. Unplug everything from "
+          "it, plug it back in and run again")
 
 _CLEANUP = {"box": None, "rig": None}
 
@@ -1378,7 +1433,7 @@ def run(args):
 # report
 # ---------------------------------------------------------------------------
 
-def _two_col(label, a, b, width=38):
+def _two_col(label, a, b, width=44):
     return f"  {label:<{width}} {str(a):>16}  {str(b):>16}"
 
 
@@ -1396,8 +1451,8 @@ def report(args):
     a, b = by_box.get("stock", {}), by_box.get("medius", {})
     print(f"medius-compare report  (tool {a.get('tool_version', '-')} / {b.get('tool_version', '-')})\n")
     print(_two_col("", "Stock", "Medius"))
-    print(_two_col("firmware", a.get("box_firmware", "-"), b.get("box_firmware", "-")))
-    print(_two_col("clone", _clone_str(a), _clone_str(b)))
+    print(_two_col("Firmware", a.get("box_firmware", "-"), b.get("box_firmware", "-")))
+    print(_two_col("Clone", _clone_str(a), _clone_str(b)))
     print()
 
     for name in ALL_TESTS:
@@ -1433,6 +1488,19 @@ def _report_rows(name, ta, tb):
         x, y = ra.get(i, {}), rb.get(i, {})
         label = x.get("label") or y.get("label") or x.get("request") or y.get("request") or i
         print(_two_col(label, _cell(name, x), _cell(name, y)))
+    if name == "ep0":
+        ta_t = {r["request"]: r for r in (ta or {}).get("timed", [])}
+        tb_t = {r["request"]: r for r in (tb or {}).get("timed", [])}
+        for i in list(ta_t) + [i for i in tb_t if i not in ta_t]:
+            print(_two_col(f"{i}, time over native", _past(ta_t.get(i)), _past(tb_t.get(i))))
+
+
+def _past(r):
+    if not r or r.get("clone_us") is None:
+        return "-"
+    if r.get("past_native_us") is None:
+        return f"p50 {r['clone_us']}us"
+    return f"{r['past_native_us']:+}us"
 
 
 def _cell(name, r):
@@ -1454,16 +1522,17 @@ def _cell(name, r):
     if name == "move-accept":
         return f"{r.get('arrived')}/{r.get('sent')}"
     if name == "malformed":
-        return f"move {'ok' if r.get('valid_move_arrives') else 'LOST'}, step {'ok' if r.get('in_step_after') else 'NO'}"
+        return (f"move {'arrives' if r.get('valid_move_arrives') else 'lost'}, "
+                f"replies {'correct' if r.get('in_step_after') else 'one behind'}")
     if name == "release":
         if r.get("id") == "lock":
             return r.get("readback", "?")
         if r.get("released"):
             return f"released +{r.get('released_after_close_ms','?')}ms"
-        return "still held" if r.get("held_at_end") else "released?"
+        return "still held" if r.get("held_at_end") else "unknown"
     if name == "ep0":
         m = r.get("match")
-        return "match" if m else ("differs" if m is False else "clone only")
+        return "native reply" if m else ("not native" if m is False else "clone only")
     return str(r)
 
 
@@ -1474,7 +1543,7 @@ def _cell(name, r):
 def main():
     ap = argparse.ArgumentParser(
         prog="medius-compare.py",
-        description="The Medius comparison's tests that need no USB device emulator: run them on a box, or compare two runs.",
+        description="The Medius comparison's tests that need only a USB mouse: run them on a box, or compare two runs.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="Tests: " + ", ".join(ALL_TESTS))
     sub = ap.add_subparsers(dest="cmd", required=True)

@@ -2,29 +2,37 @@ import { For, type Component } from 'solid-js';
 import { A } from '@solidjs/router';
 import { PageHeader } from '../../shell/PageHeader';
 import { DocSection } from '../../shell/DocSection';
+import { BoardFigure, type Port, type PortSpec } from '../../shell/Board';
 import { routeFor } from '../../routes';
 import { RESULTS } from '../../data/comparison';
 import { COMPARISON_PAGES } from '../../data/comparison/pages';
 
-// One box's wiring. The other is wired the same way, on the same PC.
-const RIG = `+-------------------------+
-|    PC: tests, usbmon    |
-+------------+------------+
-             |
-+------------+------------+
-|           hub           |
-+---+--------+--------+---+
-    |        |        |
-  USB1     USB2   emulator
-  clone   control  control
-    |        |        |
-+---+--------+---+    |
-|      box       |    |
-+-------+--------+    |
-        | USB3        |
-+-------+-------------+---+
-|   USB device emulator   |
-+-------------------------+`;
+// One box's wiring. The other is wired the same way, on the same PC and hubs.
+const RIG = `+--------------------------------+
+|       PC: tests, usbmon        |
++-------+-----------------+------+
+        |                 |
++-------+-------+   +-----+-----+
+|  Genesys hub  |   |  VIA hub  |
++---+-------+---+   +-----+-----+
+    |       |             |
+  USB1    USB2        emulator
+  clone   control     control
+    |       |             |
++---+-------+---+         |
+|      box      |         |
++-------+-------+         |
+        | USB3            |
++-------+-----------------+------+
+|      USB device emulator       |
++--------------------------------+`;
+
+// The box wired for the comparison tool: the clone and the control port on this PC, the mouse on USB3.
+const TOOL_WIRING: Record<Port, PortSpec> = {
+  USB1: { state: 'in', label: 'This PC', tone: 'pc' },
+  USB2: { state: 'in', label: 'This PC', tone: 'pc' },
+  USB3: { state: 'in', label: 'Mouse', tone: 'dev' },
+};
 
 const LAYER: Record<string, string> = { wire: 'Wire', host: 'Host', evdev: 'evdev', hidraw: 'hidraw', emulator: 'Emulator' };
 
@@ -32,12 +40,12 @@ const LAYER: Record<string, string> = { wire: 'Wire', host: 'Host', evdev: 'evde
 // the results it compares with.
 const TOOL_TESTS: { id: string; sends: string; layer: string; sections: string[] }[] = [
   { id: 'query', sends: '400 version queries, then 400 status queries, one at a time', layer: 'Wire, or Host on two buses', sections: ['link-queries'] },
-  { id: 'move-latency', sends: '100 one-count moves, then 100 immediate ones, 30-60 ms apart', layer: 'Wire, or Host on two buses', sections: ['inj-latency'] },
+  { id: 'move-latency', sends: '100 one-count moves, then 100 immediate ones, 30-60 ms apart', layer: 'Wire, or evdev on two buses', sections: ['inj-latency'] },
   { id: 'move-spread', sends: '10 moves each of 1, 10 and 100 counts, then the same immediate', layer: 'evdev', sections: ['inj-settings'] },
-  { id: 'release', sends: 'A left press and an X lock, then the control port closed', layer: 'evdev', sections: ['recovery-program-exit'] },
-  { id: 'move-accept', sends: 'One-count moves at 500, 1,000, 2,000 and 5,000 a second for 1 s, then 200 back to back', layer: 'evdev', sections: ['link-paced-rest', 'link-one-write'] },
+  { id: 'release', sends: 'A left press, a key press (if the clone has a keyboard) and an X lock, the control port closed after each', layer: 'evdev', sections: ['recovery-program-exit'] },
+  { id: 'move-accept', sends: 'One-count moves at 500, 1,000, 2,000 and 5,000/s for 1 s each, then 200 at once: one write on stock, back to back on Medius', layer: 'evdev', sections: ['link-paced-rest', 'link-one-write'] },
   { id: 'malformed', sends: '64 KB of random bytes, then half a move, each followed by a 7-count move', layer: 'evdev', sections: ['link-malformed'] },
-  { id: 'ep0', sends: 'The descriptor and status reads a PC makes at enumeration, to the clone, then to the mouse on the PC', layer: 'Not timed', sections: ['devices-endpoint-0'] },
+  { id: 'ep0', sends: 'The descriptor and status reads a PC makes at enumeration, to the clone, then to the mouse plugged into the PC. The device descriptor, configuration descriptor, product string and GET_STATUS are timed over 100 reads each', layer: 'Wire', sections: ['devices-endpoint-0'] },
 ];
 
 // Each section of the results, by id: its page's address and its title.
@@ -48,11 +56,11 @@ const SECTIONS = new Map(
 const Method: Component = () => (
   <>
     <PageHeader>
-      <p>How each result was measured.</p>
+      <p>How each result was measured, and a tool that runs some of the tests on any MAKCU box.</p>
     </PageHeader>
 
     <DocSection id="rig" title="Rig">
-      <p>Both boxes are wired like this, behind the same hub on the same PC.</p>
+      <p>Both boxes are wired like this on one PC, and tested one at a time.</p>
       <pre class="diagram">{RIG}</pre>
       <div class="table-scroll">
         <table class="api-params names">
@@ -66,8 +74,9 @@ const Method: Component = () => (
           <tbody>
             <tr><td>Firmware</td><td>Stock {RESULTS.firmware.stock}, Medius {RESULTS.firmware.medius}</td></tr>
             <tr><td>Real device</td><td>A USB device emulator on each box's USB3, presenting the same device and native reports to both</td></tr>
-            <tr><td>Hub</td><td>One Genesys Logic hub for both boxes. One box was tested at a time. The other box's emulator presented a silent mouse, or was the native reference</td></tr>
-            <tr><td>Native reference</td><td>The other box's emulator, plugged straight into the PC and presenting the same device, for the tests that compare a clone with native: endpoint 0 replies, requests passed to the device, device stacks and polls</td></tr>
+            <tr><td>Hubs</td><td>Genesys Logic for both boxes' <code>USB1</code> and <code>USB2</code>. VIA Labs for the emulators' control ports and the native reference</td></tr>
+            <tr><td>Box not under test</td><td>Its emulator presents a silent mouse, or is the native reference</td></tr>
+            <tr><td>Native reference</td><td>The other box's emulator on the PC, presenting the same device, for every result compared with native</td></tr>
             <tr><td>PC</td><td>Linux</td></tr>
           </tbody>
         </table>
@@ -152,11 +161,13 @@ const Method: Component = () => (
 
     <DocSection id="tool" title="Comparison tool">
       <p>
-        <a href="/comparison/medius-compare.py" download="">medius-compare.py</a> runs the tests that need no USB
-        device emulator, on any MAKCU box and USB mouse. Run it on stock firmware and on Medius, then compare the two
-        runs. A run takes 1-2 minutes, plus the time you take to move the mouse for the last test. The figures depend on
-        your mouse and PC, so they won't match the ones here exactly.
+        The results come from the USB device emulator in the <A href="#rig">rig</A>, which isn't public. Most tests
+        need it. It plays scripted native reports, presents device shapes no product has, and records what the box
+        relays to it. <a href="/comparison/medius-compare.py" download="">medius-compare.py</a> runs tests from 8 of
+        the 47 measured sections with a USB mouse, on any MAKCU box. A run takes 1-2 minutes. The figures depend on
+        your mouse and PC, so they won't match the published ones exactly.
       </p>
+      <BoardFigure ports={TOOL_WIRING} />
       <div class="table-scroll">
         <table class="api-params names">
           <colgroup>
@@ -164,41 +175,35 @@ const Method: Component = () => (
             <col />
           </colgroup>
           <thead>
-            <tr><th>Requirement</th><th>Value</th></tr>
+            <tr><th>Item</th><th>Detail</th></tr>
           </thead>
           <tbody>
             <tr><td>PC</td><td>Linux, run as root</td></tr>
-            <tr><td>Python</td><td><code>3.10</code> or newer, with <code>pyserial</code>, installed where <code>sudo python3</code> finds it</td></tr>
-            <tr><td>Medius run</td><td>the <A href="/bindings/python/install"><code>medius</code></A> package too, the release made for the box's firmware</td></tr>
-            <tr><td>Wire timing</td><td><code>USB1</code> and <code>USB2</code> on one of the PC's USB buses (<code>lsusb -t</code>). On two buses, the tool uses Host timing</td></tr>
+            <tr><td>Python</td><td><code>3.10</code> or newer, with <code>pyserial</code> installed for root</td></tr>
+            <tr><td>Medius run</td><td>The <A href="/bindings/python/install"><code>medius</code></A> package release made for the box's firmware, installed for root</td></tr>
+            <tr><td>Wire timing</td><td><code>USB1</code> and <code>USB2</code> on one USB bus (<code>lsusb -t</code>). On two buses, <code>query</code> falls back to Host timing and <code>move-latency</code> to evdev</td></tr>
           </tbody>
         </table>
       </div>
-      <ul>
-        <li><code>USB1</code> (clone) → this PC</li>
-        <li><code>USB2</code> (control) → this PC</li>
-        <li><code>USB3</code> (mouse) → your mouse</li>
-      </ul>
-      <p>
-        The tool grabs the clone while it runs, so nothing it injects reaches your desktop. Before it lets go, it
-        releases every button, key and lock it set, on Ctrl-C too. Leave the mouse still for the whole run.
-      </p>
     </DocSection>
 
     <DocSection id="tool-run" title="Run the tool">
       <ol>
         <li>
-          Find the box's control port with <code>ls /dev/serial/by-id/</code>, then run the tool on it:
+          On stock firmware, find the box's control port with <code>ls /dev/serial/by-id/</code>, then run the tool
+          on it:
           <pre><code class="language-bash">{`sudo python3 medius-compare.py run --box stock --out stock.json \\
     --port /dev/serial/by-id/usb-1a86_USB_Single_Serial_<serial>-if00`}</code></pre>
+          Leave the mouse still while it runs. The tool grabs the clone, so nothing it injects reaches your desktop. It
+          releases every button, key and lock it set before it exits, Ctrl-C included.
         </li>
         <li>
           For the last test, <code>ep0</code>, move the mouse from <code>USB3</code> to the PC when the tool asks,
           and press Enter. Type <code>s</code> and Enter to skip it.
         </li>
         <li>
-          <A href="/dashboard/flash">Flash</A> the other firmware (the page flashes Medius or MAKCU's stock), put the
-          mouse back on <code>USB3</code>, and run again with <code>--box medius --out medius.json</code>.
+          <A href="/dashboard/flash">Flash</A> Medius, put the mouse back on <code>USB3</code>, and run again with{' '}
+          <code>--box medius --out medius.json</code>.
         </li>
         <li>
           Compare the two runs:
@@ -207,9 +212,10 @@ const Method: Component = () => (
       </ol>
       <div class="callout callout--warning">
         <p>
-          On stock, <code>move-accept</code> and <code>malformed</code> can leave the parser one command behind until
-          the box is unplugged (<A href="/comparison/control-link">Control link</A>). The tool runs them after every
-          other test that sends the box commands, and skips a test that sends commands while the box is behind.
+          On stock, <code>move-accept</code> and <code>malformed</code> can leave the parser one command behind until a
+          power cycle (<A href="/comparison/control-link">Control link</A>). The tool runs them after every other test
+          that sends commands, and skips any test that sends commands while the box is behind. If a run ends with the
+          box behind, unplug everything from it and plug it back in before the next run.
         </p>
       </div>
     </DocSection>
@@ -218,7 +224,7 @@ const Method: Component = () => (
       <div class="table-scroll">
         <table class="api-params">
           <thead>
-            <tr><th>Test</th><th>Sends</th><th>Timed by</th><th>Compares with</th></tr>
+            <tr><th>Test</th><th>Sends</th><th>Layer</th><th>Section</th></tr>
           </thead>
           <tbody>
             <For each={TOOL_TESTS}>
@@ -231,7 +237,7 @@ const Method: Component = () => (
                     <For each={t.sections}>
                       {(id, k) => (
                         <>
-                          {k() ? ', ' : ''}
+                          {k() ? <br /> : ''}
                           <A href={SECTIONS.get(id)!.href}>{SECTIONS.get(id)!.title}</A>
                         </>
                       )}
@@ -243,10 +249,6 @@ const Method: Component = () => (
           </tbody>
         </table>
       </div>
-      <p>
-        Each run writes every sample it took to the file <code>--out</code> names, with the box's firmware and the
-        clone it read.
-      </p>
     </DocSection>
   </>
 );
