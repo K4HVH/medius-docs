@@ -10734,7 +10734,7 @@
         {
           "id": "inj-latency",
           "title": "Move latency",
-          "about": "One move at a time, timed on the PC's USB bus from the command to the report carrying it. A default move goes through each box's default smoothing, and an immediate move skips it. Medius smooths only once it has seen the mouse move since it was cloned. The still mouse here never has, so its default moves go out unsmoothed.",
+          "about": "One move at a time, timed on the PC's USB bus from the command to the report carrying it. A default move goes through each box's default smoothing, and an immediate move skips it. The resting mouse moved for 3 s before it rested: Medius smooths only once it has seen the mouse move since it was cloned, as a mouse in use has.",
           "tables": [
             {
               "kind": "measure",
@@ -10752,34 +10752,34 @@
               "rows": [
                 {
                   "id": "inj-lat-rest-1",
-                  "label": "Still mouse, 1 count",
+                  "label": "Resting mouse, 1 count",
                   "stock": {
-                    "lo": 64.2,
-                    "hi": 64.2,
+                    "lo": 64.1,
+                    "hi": 64.1,
                     "src": [
                       {
-                        "file": "inject_latency_stock_v4122.json",
+                        "file": "inject_latency_stock_v4122_rested.json",
                         "ptr": "/cells/0/wire/done/p50",
                         "unit": "us"
                       },
                       {
-                        "file": "inject_latency_stock_v4122_r2.json",
+                        "file": "inject_latency_stock_v4122_rested_r2.json",
                         "ptr": "/cells/0/wire/done/p50",
                         "unit": "us"
                       }
                     ]
                   },
                   "medius": {
-                    "lo": 0.927,
-                    "hi": 0.943,
+                    "lo": 2.31,
+                    "hi": 2.34,
                     "src": [
                       {
-                        "file": "inject_latency_medius_v347.json",
+                        "file": "inject_latency_medius_v350_rested.json",
                         "ptr": "/cells/0/wire/done/p50",
                         "unit": "us"
                       },
                       {
-                        "file": "inject_latency_medius_v347_r2.json",
+                        "file": "inject_latency_medius_v350_rested_r2.json",
                         "ptr": "/cells/0/wire/done/p50",
                         "unit": "us"
                       }
@@ -10788,34 +10788,34 @@
                 },
                 {
                   "id": "inj-lat-rest-50",
-                  "label": "Still mouse, 50 counts",
+                  "label": "Resting mouse, 50 counts",
                   "stock": {
                     "lo": 64.2,
-                    "hi": 64.2,
+                    "hi": 64.3,
                     "src": [
                       {
-                        "file": "inject_latency_stock_v4122.json",
+                        "file": "inject_latency_stock_v4122_rested.json",
                         "ptr": "/cells/2/wire/done/p50",
                         "unit": "us"
                       },
                       {
-                        "file": "inject_latency_stock_v4122_r2.json",
+                        "file": "inject_latency_stock_v4122_rested_r2.json",
                         "ptr": "/cells/2/wire/done/p50",
                         "unit": "us"
                       }
                     ]
                   },
                   "medius": {
-                    "lo": 0.924,
-                    "hi": 0.952,
+                    "lo": 9.93,
+                    "hi": 9.96,
                     "src": [
                       {
-                        "file": "inject_latency_medius_v347.json",
+                        "file": "inject_latency_medius_v350_rested.json",
                         "ptr": "/cells/2/wire/done/p50",
                         "unit": "us"
                       },
                       {
-                        "file": "inject_latency_medius_v347_r2.json",
+                        "file": "inject_latency_medius_v350_rested_r2.json",
                         "ptr": "/cells/2/wire/done/p50",
                         "unit": "us"
                       }
@@ -10876,34 +10876,34 @@
               "rows": [
                 {
                   "id": "inj-lat-p95-rest-1",
-                  "label": "Still mouse, 1 count",
+                  "label": "Resting mouse, 1 count",
                   "stock": {
                     "lo": 64.6,
                     "hi": 64.6,
                     "src": [
                       {
-                        "file": "inject_latency_stock_v4122.json",
+                        "file": "inject_latency_stock_v4122_rested.json",
                         "ptr": "/cells/0/wire/done/p95",
                         "unit": "us"
                       },
                       {
-                        "file": "inject_latency_stock_v4122_r2.json",
+                        "file": "inject_latency_stock_v4122_rested_r2.json",
                         "ptr": "/cells/0/wire/done/p95",
                         "unit": "us"
                       }
                     ]
                   },
                   "medius": {
-                    "lo": 1.37,
-                    "hi": 1.39,
+                    "lo": 5.41,
+                    "hi": 5.51,
                     "src": [
                       {
-                        "file": "inject_latency_medius_v347.json",
+                        "file": "inject_latency_medius_v350_rested.json",
                         "ptr": "/cells/0/wire/done/p95",
                         "unit": "us"
                       },
                       {
-                        "file": "inject_latency_medius_v347_r2.json",
+                        "file": "inject_latency_medius_v350_rested_r2.json",
                         "ptr": "/cells/0/wire/done/p95",
                         "unit": "us"
                       }
@@ -10912,34 +10912,34 @@
                 },
                 {
                   "id": "inj-lat-p95-rest-50",
-                  "label": "Still mouse, 50 counts",
+                  "label": "Resting mouse, 50 counts",
                   "stock": {
                     "lo": 64.6,
                     "hi": 64.6,
                     "src": [
                       {
-                        "file": "inject_latency_stock_v4122.json",
+                        "file": "inject_latency_stock_v4122_rested.json",
                         "ptr": "/cells/2/wire/done/p95",
                         "unit": "us"
                       },
                       {
-                        "file": "inject_latency_stock_v4122_r2.json",
+                        "file": "inject_latency_stock_v4122_rested_r2.json",
                         "ptr": "/cells/2/wire/done/p95",
                         "unit": "us"
                       }
                     ]
                   },
                   "medius": {
-                    "lo": 1.38,
-                    "hi": 1.4,
+                    "lo": 13.1,
+                    "hi": 13.7,
                     "src": [
                       {
-                        "file": "inject_latency_medius_v347.json",
+                        "file": "inject_latency_medius_v350_rested.json",
                         "ptr": "/cells/2/wire/done/p95",
                         "unit": "us"
                       },
                       {
-                        "file": "inject_latency_medius_v347_r2.json",
+                        "file": "inject_latency_medius_v350_rested_r2.json",
                         "ptr": "/cells/2/wire/done/p95",
                         "unit": "us"
                       }
@@ -11000,34 +11000,34 @@
               "rows": [
                 {
                   "id": "inj-lat-now-rest-1",
-                  "label": "Still mouse, 1 count",
+                  "label": "Resting mouse, 1 count",
                   "stock": {
                     "lo": 1.08,
-                    "hi": 1.2,
+                    "hi": 1.23,
                     "src": [
                       {
-                        "file": "inject_latency_stock_v4122.json",
+                        "file": "inject_latency_stock_v4122_rested.json",
                         "ptr": "/cells/1/wire/done/p50",
                         "unit": "us"
                       },
                       {
-                        "file": "inject_latency_stock_v4122_r2.json",
+                        "file": "inject_latency_stock_v4122_rested_r2.json",
                         "ptr": "/cells/1/wire/done/p50",
                         "unit": "us"
                       }
                     ]
                   },
                   "medius": {
-                    "lo": 0.936,
-                    "hi": 0.959,
+                    "lo": 0.901,
+                    "hi": 0.932,
                     "src": [
                       {
-                        "file": "inject_latency_medius_v347.json",
+                        "file": "inject_latency_medius_v350_rested.json",
                         "ptr": "/cells/1/wire/done/p50",
                         "unit": "us"
                       },
                       {
-                        "file": "inject_latency_medius_v347_r2.json",
+                        "file": "inject_latency_medius_v350_rested_r2.json",
                         "ptr": "/cells/1/wire/done/p50",
                         "unit": "us"
                       }
@@ -11036,34 +11036,34 @@
                 },
                 {
                   "id": "inj-lat-now-rest-50",
-                  "label": "Still mouse, 50 counts",
+                  "label": "Resting mouse, 50 counts",
                   "stock": {
-                    "lo": 1.11,
-                    "hi": 1.21,
+                    "lo": 1.18,
+                    "hi": 1.23,
                     "src": [
                       {
-                        "file": "inject_latency_stock_v4122.json",
+                        "file": "inject_latency_stock_v4122_rested.json",
                         "ptr": "/cells/3/wire/done/p50",
                         "unit": "us"
                       },
                       {
-                        "file": "inject_latency_stock_v4122_r2.json",
+                        "file": "inject_latency_stock_v4122_rested_r2.json",
                         "ptr": "/cells/3/wire/done/p50",
                         "unit": "us"
                       }
                     ]
                   },
                   "medius": {
-                    "lo": 0.913,
-                    "hi": 0.941,
+                    "lo": 0.962,
+                    "hi": 1.01,
                     "src": [
                       {
-                        "file": "inject_latency_medius_v347.json",
+                        "file": "inject_latency_medius_v350_rested.json",
                         "ptr": "/cells/3/wire/done/p50",
                         "unit": "us"
                       },
                       {
-                        "file": "inject_latency_medius_v347_r2.json",
+                        "file": "inject_latency_medius_v350_rested_r2.json",
                         "ptr": "/cells/3/wire/done/p50",
                         "unit": "us"
                       }
@@ -11232,18 +11232,18 @@
               "rows": [
                 {
                   "id": "inj-lat-now-p95-rest-1",
-                  "label": "Still mouse, 1 count",
+                  "label": "Resting mouse, 1 count",
                   "stock": {
-                    "lo": 1.64,
-                    "hi": 1.67,
+                    "lo": 1.63,
+                    "hi": 1.65,
                     "src": [
                       {
-                        "file": "inject_latency_stock_v4122.json",
+                        "file": "inject_latency_stock_v4122_rested.json",
                         "ptr": "/cells/1/wire/done/p95",
                         "unit": "us"
                       },
                       {
-                        "file": "inject_latency_stock_v4122_r2.json",
+                        "file": "inject_latency_stock_v4122_rested_r2.json",
                         "ptr": "/cells/1/wire/done/p95",
                         "unit": "us"
                       }
@@ -11251,15 +11251,15 @@
                   },
                   "medius": {
                     "lo": 1.35,
-                    "hi": 1.36,
+                    "hi": 1.37,
                     "src": [
                       {
-                        "file": "inject_latency_medius_v347.json",
+                        "file": "inject_latency_medius_v350_rested.json",
                         "ptr": "/cells/1/wire/done/p95",
                         "unit": "us"
                       },
                       {
-                        "file": "inject_latency_medius_v347_r2.json",
+                        "file": "inject_latency_medius_v350_rested_r2.json",
                         "ptr": "/cells/1/wire/done/p95",
                         "unit": "us"
                       }
@@ -11268,34 +11268,34 @@
                 },
                 {
                   "id": "inj-lat-now-p95-rest-50",
-                  "label": "Still mouse, 50 counts",
+                  "label": "Resting mouse, 50 counts",
                   "stock": {
-                    "lo": 1.62,
-                    "hi": 1.65,
+                    "lo": 1.64,
+                    "hi": 1.66,
                     "src": [
                       {
-                        "file": "inject_latency_stock_v4122.json",
+                        "file": "inject_latency_stock_v4122_rested.json",
                         "ptr": "/cells/3/wire/done/p95",
                         "unit": "us"
                       },
                       {
-                        "file": "inject_latency_stock_v4122_r2.json",
+                        "file": "inject_latency_stock_v4122_rested_r2.json",
                         "ptr": "/cells/3/wire/done/p95",
                         "unit": "us"
                       }
                     ]
                   },
                   "medius": {
-                    "lo": 1.41,
-                    "hi": 1.41,
+                    "lo": 1.37,
+                    "hi": 1.38,
                     "src": [
                       {
-                        "file": "inject_latency_medius_v347.json",
+                        "file": "inject_latency_medius_v350_rested.json",
                         "ptr": "/cells/3/wire/done/p95",
                         "unit": "us"
                       },
                       {
-                        "file": "inject_latency_medius_v347_r2.json",
+                        "file": "inject_latency_medius_v350_rested_r2.json",
                         "ptr": "/cells/3/wire/done/p95",
                         "unit": "us"
                       }
@@ -11463,17 +11463,17 @@
               "rows": [
                 {
                   "id": "inj-delivered-rest-1",
-                  "label": "Still mouse, 1 count",
+                  "label": "Resting mouse, 1 count",
                   "stock": {
                     "value": 400,
                     "of": 400,
                     "src": [
                       {
-                        "file": "inject_latency_stock_v4122.json",
+                        "file": "inject_latency_stock_v4122_rested.json",
                         "ptr": "/cells/0/delivered"
                       },
                       {
-                        "file": "inject_latency_stock_v4122_r2.json",
+                        "file": "inject_latency_stock_v4122_rested_r2.json",
                         "ptr": "/cells/0/delivered"
                       }
                     ]
@@ -11483,11 +11483,11 @@
                     "of": 400,
                     "src": [
                       {
-                        "file": "inject_latency_medius_v347.json",
+                        "file": "inject_latency_medius_v350_rested.json",
                         "ptr": "/cells/0/delivered"
                       },
                       {
-                        "file": "inject_latency_medius_v347_r2.json",
+                        "file": "inject_latency_medius_v350_rested_r2.json",
                         "ptr": "/cells/0/delivered"
                       }
                     ]
@@ -11495,17 +11495,17 @@
                 },
                 {
                   "id": "inj-delivered-rest-50",
-                  "label": "Still mouse, 50 counts",
+                  "label": "Resting mouse, 50 counts",
                   "stock": {
                     "value": 400,
                     "of": 400,
                     "src": [
                       {
-                        "file": "inject_latency_stock_v4122.json",
+                        "file": "inject_latency_stock_v4122_rested.json",
                         "ptr": "/cells/2/delivered"
                       },
                       {
-                        "file": "inject_latency_stock_v4122_r2.json",
+                        "file": "inject_latency_stock_v4122_rested_r2.json",
                         "ptr": "/cells/2/delivered"
                       }
                     ]
@@ -11515,11 +11515,11 @@
                     "of": 400,
                     "src": [
                       {
-                        "file": "inject_latency_medius_v347.json",
+                        "file": "inject_latency_medius_v350_rested.json",
                         "ptr": "/cells/2/delivered"
                       },
                       {
-                        "file": "inject_latency_medius_v347_r2.json",
+                        "file": "inject_latency_medius_v350_rested_r2.json",
                         "ptr": "/cells/2/delivered"
                       }
                     ]
@@ -11670,16 +11670,16 @@
               "rows": [
                 {
                   "id": "inj-exact-rest-1",
-                  "label": "Still mouse, 1 count",
+                  "label": "Resting mouse, 1 count",
                   "stock": {
                     "value": 400,
                     "src": [
                       {
-                        "file": "inject_latency_stock_v4122.json",
+                        "file": "inject_latency_stock_v4122_rested.json",
                         "ptr": "/cells/0/exact"
                       },
                       {
-                        "file": "inject_latency_stock_v4122_r2.json",
+                        "file": "inject_latency_stock_v4122_rested_r2.json",
                         "ptr": "/cells/0/exact"
                       }
                     ],
@@ -11689,11 +11689,11 @@
                     "value": 400,
                     "src": [
                       {
-                        "file": "inject_latency_medius_v347.json",
+                        "file": "inject_latency_medius_v350_rested.json",
                         "ptr": "/cells/0/exact"
                       },
                       {
-                        "file": "inject_latency_medius_v347_r2.json",
+                        "file": "inject_latency_medius_v350_rested_r2.json",
                         "ptr": "/cells/0/exact"
                       }
                     ],
@@ -11702,16 +11702,16 @@
                 },
                 {
                   "id": "inj-exact-rest-50",
-                  "label": "Still mouse, 50 counts",
+                  "label": "Resting mouse, 50 counts",
                   "stock": {
                     "value": 400,
                     "src": [
                       {
-                        "file": "inject_latency_stock_v4122.json",
+                        "file": "inject_latency_stock_v4122_rested.json",
                         "ptr": "/cells/2/exact"
                       },
                       {
-                        "file": "inject_latency_stock_v4122_r2.json",
+                        "file": "inject_latency_stock_v4122_rested_r2.json",
                         "ptr": "/cells/2/exact"
                       }
                     ],
@@ -11721,11 +11721,11 @@
                     "value": 400,
                     "src": [
                       {
-                        "file": "inject_latency_medius_v347.json",
+                        "file": "inject_latency_medius_v350_rested.json",
                         "ptr": "/cells/2/exact"
                       },
                       {
-                        "file": "inject_latency_medius_v347_r2.json",
+                        "file": "inject_latency_medius_v350_rested_r2.json",
                         "ptr": "/cells/2/exact"
                       }
                     ],
@@ -11869,7 +11869,7 @@
               "unit": "reports",
               "better": "lower",
               "layer": "wire",
-              "n": "40 moves, mouse still",
+              "n": "40 moves, mouse resting",
               "commands": {
                 "stock": "km.move",
                 "medius": "MOVE"
@@ -11882,7 +11882,7 @@
                     "value": 2520,
                     "src": [
                       {
-                        "file": "render_shape_stock_v4122.json",
+                        "file": "render_shape_stock_v4122_rested.json",
                         "ptr": "/cells/0/empty_in_payout"
                       }
                     ]
@@ -11891,7 +11891,7 @@
                     "value": 0,
                     "src": [
                       {
-                        "file": "render_shape_medius_v347.json",
+                        "file": "render_shape_medius_v350.json",
                         "ptr": "/cells/12/empty_in_payout"
                       }
                     ]
@@ -11904,7 +11904,7 @@
                     "value": 2160,
                     "src": [
                       {
-                        "file": "render_shape_stock_v4122.json",
+                        "file": "render_shape_stock_v4122_rested.json",
                         "ptr": "/cells/1/empty_in_payout"
                       }
                     ]
@@ -11913,7 +11913,7 @@
                     "value": 0,
                     "src": [
                       {
-                        "file": "render_shape_medius_v347.json",
+                        "file": "render_shape_medius_v350.json",
                         "ptr": "/cells/13/empty_in_payout"
                       }
                     ]
@@ -11926,7 +11926,7 @@
                     "value": 440,
                     "src": [
                       {
-                        "file": "render_shape_stock_v4122.json",
+                        "file": "render_shape_stock_v4122_rested.json",
                         "ptr": "/cells/2/empty_in_payout"
                       }
                     ]
@@ -11935,7 +11935,7 @@
                     "value": 0,
                     "src": [
                       {
-                        "file": "render_shape_medius_v347.json",
+                        "file": "render_shape_medius_v350.json",
                         "ptr": "/cells/14/empty_in_payout"
                       }
                     ]
@@ -11959,34 +11959,34 @@
               "rows": [
                 {
                   "id": "inj-every-p95-rest-1",
-                  "label": "Still mouse, 1 count",
+                  "label": "Resting mouse, 1 count",
                   "stock": {
                     "lo": 64.7,
                     "hi": 64.7,
                     "src": [
                       {
-                        "file": "inject_latency_stock_v4122.json",
+                        "file": "inject_latency_stock_v4122_rested.json",
                         "ptr": "/cells/0/done_every_move/p95",
                         "unit": "us"
                       },
                       {
-                        "file": "inject_latency_stock_v4122_r2.json",
+                        "file": "inject_latency_stock_v4122_rested_r2.json",
                         "ptr": "/cells/0/done_every_move/p95",
                         "unit": "us"
                       }
                     ]
                   },
                   "medius": {
-                    "lo": 1.49,
-                    "hi": 1.51,
+                    "lo": 5.46,
+                    "hi": 5.56,
                     "src": [
                       {
-                        "file": "inject_latency_medius_v347.json",
+                        "file": "inject_latency_medius_v350_rested.json",
                         "ptr": "/cells/0/done_every_move/p95",
                         "unit": "us"
                       },
                       {
-                        "file": "inject_latency_medius_v347_r2.json",
+                        "file": "inject_latency_medius_v350_rested_r2.json",
                         "ptr": "/cells/0/done_every_move/p95",
                         "unit": "us"
                       }
@@ -11995,34 +11995,34 @@
                 },
                 {
                   "id": "inj-every-p95-rest-50",
-                  "label": "Still mouse, 50 counts",
+                  "label": "Resting mouse, 50 counts",
                   "stock": {
                     "lo": 64.7,
                     "hi": 64.7,
                     "src": [
                       {
-                        "file": "inject_latency_stock_v4122.json",
+                        "file": "inject_latency_stock_v4122_rested.json",
                         "ptr": "/cells/2/done_every_move/p95",
                         "unit": "us"
                       },
                       {
-                        "file": "inject_latency_stock_v4122_r2.json",
+                        "file": "inject_latency_stock_v4122_rested_r2.json",
                         "ptr": "/cells/2/done_every_move/p95",
                         "unit": "us"
                       }
                     ]
                   },
                   "medius": {
-                    "lo": 1.47,
-                    "hi": 1.47,
+                    "lo": 13.1,
+                    "hi": 13.8,
                     "src": [
                       {
-                        "file": "inject_latency_medius_v347.json",
+                        "file": "inject_latency_medius_v350_rested.json",
                         "ptr": "/cells/2/done_every_move/p95",
                         "unit": "us"
                       },
                       {
-                        "file": "inject_latency_medius_v347_r2.json",
+                        "file": "inject_latency_medius_v350_rested_r2.json",
                         "ptr": "/cells/2/done_every_move/p95",
                         "unit": "us"
                       }
