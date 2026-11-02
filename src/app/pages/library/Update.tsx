@@ -204,7 +204,7 @@ device.update_firmware(UpdateTarget::Device, &image, &mut |p| {
         <p>
           A chip on <A href="/native/commands/update#rollback">probation</A> refuses another update,
           so <code>stage_firmware</code> waits on this first. The device chip confirms after 10&nbsp;s
-          of running. The host chip confirms on a clock exchange over the inter-chip link. This call
+          of running, once the mouse is still (25&nbsp;s at the latest). The host chip confirms on a clock exchange over the inter-chip link. This call
           keeps asking while the box reboots after an activate.
         </p>
         <div class="table-scroll">
