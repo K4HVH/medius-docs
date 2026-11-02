@@ -62,6 +62,29 @@ describe('checkResults', () => {
     names(broken((d) => delete row(d).medius), 'medius');
   });
 
+  it('wants a row ranked nearer to hold one of native or target, and no count of a total', () => {
+    const nearer = (d: Json, aim: Json): Json => {
+      const r: Json = { id: 'out-slow', label: 'HID interrupt OUT', stock: { value: 110.1, src: [ref('s.json', '/r')] }, medius: { value: 153.5, src: [ref('m.json', '/r')] }, ...aim };
+      sections(d)[0].tables.push({ kind: 'measure', label: 'Rate', key: 'Endpoint', unit: '/s', better: 'nearer', rows: [r] });
+      return r;
+    };
+    const native = { native: { value: 196, src: [ref('n.json', '/r')] } };
+    expect(broken((d) => nearer(d, native))).toEqual([]);
+    expect(broken((d) => nearer(d, { target: 50 }))).toEqual([]);
+    names(broken((d) => nearer(d, {})), 'one of native or target');
+    names(broken((d) => nearer(d, { ...native, target: 50 })), 'one of native or target');
+    names(broken((d) => nearer(d, { target: '50' })), 'target must be a number');
+    names(broken((d) => nearer(d, { native: { value: 196 } })), 'src');
+    names(broken((d) => nearer(d, { native: { value: 196, of: 200, src: [ref('n.json', '/r')] } })), 'of has no place');
+    names(broken((d) => {
+      const r = nearer(d, { target: 50 });
+      r.stock = { value: 1, of: 3, src: [ref('c.json', '/a')] };
+      r.medius = { value: 2, of: 3, src: [ref('c.json', '/b')] };
+    }), 'of has no place');
+    names(broken((d) => Object.assign(row(d), native)), 'belongs only');
+    names(broken((d) => (row(d, 1).target = 1)), 'belongs only');
+  });
+
   it('checks values', () => {
     names(broken((d) => (row(d, 0, 0, 1).medius.value = '1.02')), 'number');
     names(broken((d) => delete row(d, 0, 0, 1).medius.value), 'value');

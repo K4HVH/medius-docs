@@ -17,7 +17,7 @@ const TABLE: Record<string, Set<string>> = {
   feature: new Set(['kind', 'label', 'key', 'rows', 'ranked']),
   settings: new Set(['kind', 'label', 'key', 'rows', 'columns', 'layer', 'n']),
 };
-const ROW = new Set(['id', 'label', 'stock', 'medius', 'note']);
+const ROW = new Set(['id', 'label', 'stock', 'medius', 'note', 'native', 'target']);
 const SETTINGS_ROW = new Set(['id', 'box', 'label', 'default', 'values']);
 const COLUMN = new Set(['id', 'label', 'unit', 'better']);
 const VALUE = new Set(['value', 'lo', 'hi', 'of', 'src']);
@@ -150,7 +150,8 @@ export function checkResults(d: unknown): string[] {
           if (t.unit === 'us' || t.unit === '\u03bcs') fault(tw, `unit ${JSON.stringify(t.unit)} must be written µs (the micro sign)`);
           if (typeof t.stat === 'string' && t.stat !== 'p50' && typeof t.label === 'string' && !t.label.includes(t.stat))
             fault(tw, `label must name the statistic ${JSON.stringify(t.stat)}: the site shows no other`);
-          if ('better' in t && t.better !== 'lower' && t.better !== 'higher') fault(tw, `better ${JSON.stringify(t.better)} must be lower or higher`);
+          if ('better' in t && t.better !== 'lower' && t.better !== 'higher' && t.better !== 'nearer')
+            fault(tw, `better ${JSON.stringify(t.better)} must be lower, higher or nearer`);
           if ('stat' in t) text(t, 'stat', tw);
           if ('hubs' in t && t.hubs !== 'both') fault(tw, `hubs ${JSON.stringify(t.hubs)} must be both`);
         }
@@ -196,6 +197,17 @@ export function checkResults(d: unknown): string[] {
             }
             return;
           }
+          const nearer = kind === 'measure' && t.better === 'nearer';
+          const refsTo = (['native', 'target'] as const).filter((k) => k in r);
+          if (nearer) {
+            if (refsTo.length !== 1) fault(rw, 'a row ranked nearer holds one of native or target');
+            if ('native' in r) {
+              value(r.native, `${rw}.native`);
+              if (isObj(r.native) && 'of' in r.native) fault(`${rw}.native`, 'of has no place in a table ranked nearer');
+            }
+            if ('target' in r && !isNumber(r.target)) fault(rw, 'target must be a number');
+            for (const b of BOXES) if (isObj(r[b]) && 'of' in r[b]) fault(`${rw}.${b}`, 'of has no place in a table ranked nearer');
+          } else if (refsTo.length) fault(rw, `${refsTo.join(' and ')} belongs only to a measure table ranked nearer`);
           if (kind === 'measure' && isObj(r.stock) && isObj(r.medius)) {
             const [s, m] = [r.stock, r.medius];
             if ('of' in s !== 'of' in m) fault(rw, 'of must be on both cells or neither');

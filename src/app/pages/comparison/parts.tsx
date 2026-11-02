@@ -39,6 +39,14 @@ const Bar = (props: { v: Value; max: number }) => {
 
 const valueOf = (item: Item, box: Box) => (item.row as MeasureRow)[box];
 
+// What a row ranked nearer is ranked against: the real device's own value, or the test's target.
+const aim = (item: Item) => {
+  if (item.table.kind !== 'measure' || item.table.better !== 'nearer') return null;
+  const { native, target } = item.row as MeasureRow;
+  const unit = item.table.unit;
+  return native ? `Native ${showValue(native, unit)}` : target !== undefined ? `Target ${showValue({ value: target, src: [] }, unit)}` : null;
+};
+
 // A box's cell: a measure's value and its bar, an outcome's word, or a feature's command (as code) or tool
 // (in words). The box behind is dimmed. Where the two match or neither is better, neither is dimmed.
 const PairCell = (props: { item: Item; box: Box; result: Result; max: number }) => {
@@ -124,6 +132,9 @@ export const PairTable = (props: { key: string; commands?: Record<Box, string>; 
                       </Show>
                       <Show when={item.row.note}>
                         <span class="sub">{item.row.note}</span>
+                      </Show>
+                      <Show when={aim(item)}>
+                        <span class="sub">{aim(item)}</span>
                       </Show>
                     </td>
                     <For each={BOXES}>{(b) => <PairCell item={item} box={b} result={result} max={max} />}</For>

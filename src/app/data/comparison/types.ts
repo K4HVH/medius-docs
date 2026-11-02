@@ -23,6 +23,10 @@ interface RowBase {
 export interface MeasureRow extends RowBase {
   stock: Value;
   medius: Value;
+  // In a table ranked nearer: the same test on the real device plugged straight into the PC, or a number the
+  // test's design sets.
+  native?: Value;
+  target?: number;
 }
 export interface OutcomeRow extends RowBase {
   stock: Outcome;
@@ -54,7 +58,7 @@ interface TableBase {
 export interface MeasureTable extends TableBase {
   kind: 'measure';
   unit: string;
-  better?: 'lower' | 'higher';
+  better?: 'lower' | 'higher' | 'nearer';
   stat?: string;
   layer?: string;
   n?: string;

@@ -64,6 +64,25 @@ describe('a measure', () => {
     expect(table.querySelectorAll('td.behind').length).toBe(0);
   });
 
+  it('writes what a row ranked nearer is ranked against under its label', () => {
+    const src = [{ file: 'a.json', ptr: '/a' }];
+    const rate: MeasureTable = {
+      kind: 'measure', label: 'Rate', key: 'Endpoint', unit: '/s', better: 'nearer',
+      rows: [{ id: 'a', label: 'Bulk OUT', stock: { value: 237.9, src }, medius: { value: 206.1, src }, native: { value: 196, src } }],
+    };
+    const hold: MeasureTable = {
+      kind: 'measure', label: 'Hold', key: 'Click', unit: 'ms', better: 'nearer',
+      rows: [{ id: 'b', label: 'The box', stock: { value: 49.9, src }, medius: { value: 50.3, src }, target: 50 }],
+    };
+    const items = [rate, hold].map((t) => ({ table: t, row: t.rows[0] }));
+    const el = show(() => <PairTable key="Test" items={items} scale="row" defects={[]} />);
+    const [bulk, box] = [rowOf(el, 'Bulk OUT'), rowOf(el, 'The box')];
+    expect(bulk.querySelector('td .sub')!.textContent).toBe('Native 196/s');
+    expect(box.querySelector('td .sub')!.textContent).toBe('Target 50 ms');
+    expect(cells(bulk)[3].textContent).toBe('Medius');
+    expect(cells(box)[3].textContent).toBe('Stock');
+  });
+
   it('marks a row a defect names, linked to that defect', () => {
     const a = rowOf(section(0), 'Fresh clone').querySelector('a.status.bad')!;
     expect(a.getAttribute('href')).toBe('/comparison/defect-fresh-clone');
