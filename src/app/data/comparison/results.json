@@ -12909,7 +12909,7 @@
         {
           "id": "inj-reports-emitted",
           "title": "Extra reports",
-          "about": "Reports each box emitted while injecting: beside a 1 kHz mouse moving in every report, in a steady stream of moves into a still mouse, and beside a mouse reporting at 1 kHz or 125 Hz. A 1 kHz mouse sends ~2,500 reports in 2.5 s, a 125 Hz one ~312.",
+          "about": "Reports each box emitted while injecting: beside a 1 kHz mouse moving in every report, in a steady stream of moves into a still mouse, and beside a mouse reporting at 1 kHz or 125 Hz.",
           "tables": [
             {
               "kind": "measure",
@@ -14007,11 +14007,12 @@
             },
             {
               "kind": "measure",
-              "label": "Reports in 2.5 s beside a moving mouse, injecting for 2 s",
+              "label": "Reports carrying only injected motion in 2.5 s beside a moving mouse, injecting for 2 s",
               "key": "Mouse and moves",
               "unit": "reports",
+              "better": "lower",
               "layer": "hidraw",
-              "n": "One run per row",
+              "n": "2 runs",
               "commands": {
                 "stock": "km.move",
                 "medius": "MOVE"
@@ -14021,20 +14022,30 @@
                   "id": "inj-beside-1k-1000",
                   "label": "1 kHz mouse, 1,000 moves/s",
                   "stock": {
-                    "value": 2501,
+                    "lo": 3,
+                    "hi": 4,
                     "src": [
                       {
-                        "file": "inject_shape_stock_v4122.json",
-                        "ptr": "/results/30/reports"
+                        "file": "inject_shape_stock_v4122_native_r1.json",
+                        "ptr": "/results/0/box_only"
+                      },
+                      {
+                        "file": "inject_shape_stock_v4122_native_r2.json",
+                        "ptr": "/results/0/box_only"
                       }
                     ]
                   },
                   "medius": {
-                    "value": 2501,
+                    "lo": 0,
+                    "hi": 0,
                     "src": [
                       {
-                        "file": "inject_shape_medius_v347.json",
-                        "ptr": "/results/30/reports"
+                        "file": "inject_shape_medius_v350_native_r1.json",
+                        "ptr": "/results/0/box_only"
+                      },
+                      {
+                        "file": "inject_shape_medius_v350_native_r2.json",
+                        "ptr": "/results/0/box_only"
                       }
                     ]
                   }
@@ -14043,20 +14054,30 @@
                   "id": "inj-beside-1k-125",
                   "label": "1 kHz mouse, 125 moves/s",
                   "stock": {
-                    "value": 2492,
+                    "lo": 0,
+                    "hi": 0,
                     "src": [
                       {
-                        "file": "inject_shape_stock_v4122.json",
-                        "ptr": "/results/31/reports"
+                        "file": "inject_shape_stock_v4122_native_r1.json",
+                        "ptr": "/results/1/box_only"
+                      },
+                      {
+                        "file": "inject_shape_stock_v4122_native_r2.json",
+                        "ptr": "/results/1/box_only"
                       }
                     ]
                   },
                   "medius": {
-                    "value": 2494,
+                    "lo": 0,
+                    "hi": 0,
                     "src": [
                       {
-                        "file": "inject_shape_medius_v347.json",
-                        "ptr": "/results/31/reports"
+                        "file": "inject_shape_medius_v350_native_r1.json",
+                        "ptr": "/results/1/box_only"
+                      },
+                      {
+                        "file": "inject_shape_medius_v350_native_r2.json",
+                        "ptr": "/results/1/box_only"
                       }
                     ]
                   }
@@ -14065,20 +14086,30 @@
                   "id": "inj-beside-125-1000",
                   "label": "125 Hz mouse, 1,000 moves/s",
                   "stock": {
-                    "value": 2071,
+                    "lo": 1749,
+                    "hi": 1752,
                     "src": [
                       {
-                        "file": "inject_shape_stock_v4122.json",
-                        "ptr": "/results/32/reports"
+                        "file": "inject_shape_stock_v4122_native_r1.json",
+                        "ptr": "/results/2/box_only"
+                      },
+                      {
+                        "file": "inject_shape_stock_v4122_native_r2.json",
+                        "ptr": "/results/2/box_only"
                       }
                     ]
                   },
                   "medius": {
-                    "value": 312,
+                    "lo": 0,
+                    "hi": 0,
                     "src": [
                       {
-                        "file": "inject_shape_medius_v347.json",
-                        "ptr": "/results/32/reports"
+                        "file": "inject_shape_medius_v350_native_r1.json",
+                        "ptr": "/results/2/box_only"
+                      },
+                      {
+                        "file": "inject_shape_medius_v350_native_r2.json",
+                        "ptr": "/results/2/box_only"
                       }
                     ]
                   }
@@ -14087,20 +14118,30 @@
                   "id": "inj-beside-125-125",
                   "label": "125 Hz mouse, 125 moves/s",
                   "stock": {
-                    "value": 569,
+                    "lo": 250,
+                    "hi": 250,
                     "src": [
                       {
-                        "file": "inject_shape_stock_v4122.json",
-                        "ptr": "/results/33/reports"
+                        "file": "inject_shape_stock_v4122_native_r1.json",
+                        "ptr": "/results/3/box_only"
+                      },
+                      {
+                        "file": "inject_shape_stock_v4122_native_r2.json",
+                        "ptr": "/results/3/box_only"
                       }
                     ]
                   },
                   "medius": {
-                    "value": 312,
+                    "lo": 0,
+                    "hi": 0,
                     "src": [
                       {
-                        "file": "inject_shape_medius_v347.json",
-                        "ptr": "/results/33/reports"
+                        "file": "inject_shape_medius_v350_native_r1.json",
+                        "ptr": "/results/3/box_only"
+                      },
+                      {
+                        "file": "inject_shape_medius_v350_native_r2.json",
+                        "ptr": "/results/3/box_only"
                       }
                     ]
                   }
