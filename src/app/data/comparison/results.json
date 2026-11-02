@@ -22864,28 +22864,38 @@
               "better": "lower",
               "stat": "p50",
               "layer": "wire",
-              "n": "5 locks per row",
+              "n": "10 locks per row, 2 runs",
               "rows": [
                 {
                   "id": "input-lock2-y-on",
                   "label": "Y, moving every millisecond",
                   "stock": {
-                    "lo": 4.2,
-                    "hi": 4.2,
+                    "lo": 2.27,
+                    "hi": 6.05,
                     "src": [
                       {
-                        "file": "locks2_stock_v4122.json",
+                        "file": "locks2_stock_v4122_r1.json",
+                        "ptr": "/results/0/still_through_after_lock/p50",
+                        "unit": "us"
+                      },
+                      {
+                        "file": "locks2_stock_v4122_r2.json",
                         "ptr": "/results/0/still_through_after_lock/p50",
                         "unit": "us"
                       }
                     ]
                   },
                   "medius": {
-                    "lo": 0.728,
-                    "hi": 0.728,
+                    "lo": 0.074,
+                    "hi": 0.66,
                     "src": [
                       {
-                        "file": "locks2_medius_v347.json",
+                        "file": "locks2_medius_v350.json",
+                        "ptr": "/results/0/still_through_after_lock/p50",
+                        "unit": "us"
+                      },
+                      {
+                        "file": "locks2_medius_v350_r2.json",
                         "ptr": "/results/0/still_through_after_lock/p50",
                         "unit": "us"
                       }
@@ -22896,22 +22906,32 @@
                   "id": "input-lock2-y-pos-on",
                   "label": "Positive Y only, moving +1 and -1",
                   "stock": {
-                    "lo": 4.5,
-                    "hi": 4.5,
+                    "lo": 3.37,
+                    "hi": 3.52,
                     "src": [
                       {
-                        "file": "locks2_stock_v4122.json",
+                        "file": "locks2_stock_v4122_r1.json",
+                        "ptr": "/results/1/still_through_after_lock/p50",
+                        "unit": "us"
+                      },
+                      {
+                        "file": "locks2_stock_v4122_r2.json",
                         "ptr": "/results/1/still_through_after_lock/p50",
                         "unit": "us"
                       }
                     ]
                   },
                   "medius": {
-                    "lo": 0.463,
-                    "hi": 0.463,
+                    "lo": 0,
+                    "hi": 0.192,
                     "src": [
                       {
-                        "file": "locks2_medius_v347.json",
+                        "file": "locks2_medius_v350.json",
+                        "ptr": "/results/1/still_through_after_lock/p50",
+                        "unit": "us"
+                      },
+                      {
+                        "file": "locks2_medius_v350_r2.json",
                         "ptr": "/results/1/still_through_after_lock/p50",
                         "unit": "us"
                       }
@@ -22920,78 +22940,35 @@
                 },
                 {
                   "id": "input-lock2-wheel-on",
-                  "label": "Wheel, every 10 ms",
+                  "label": "Wheel, every millisecond",
                   "stock": {
-                    "lo": 0,
-                    "hi": 0,
+                    "lo": 3.28,
+                    "hi": 4.72,
                     "src": [
                       {
-                        "file": "locks2_stock_v4122.json",
+                        "file": "locks2_stock_v4122_r1.json",
+                        "ptr": "/results/2/still_through_after_lock/p50",
+                        "unit": "us"
+                      },
+                      {
+                        "file": "locks2_stock_v4122_r2.json",
                         "ptr": "/results/2/still_through_after_lock/p50",
                         "unit": "us"
                       }
                     ]
                   },
                   "medius": {
-                    "lo": 0,
-                    "hi": 0,
+                    "lo": 0.163,
+                    "hi": 0.293,
                     "src": [
                       {
-                        "file": "locks2_medius_v347.json",
+                        "file": "locks2_medius_v350.json",
                         "ptr": "/results/2/still_through_after_lock/p50",
                         "unit": "us"
-                      }
-                    ]
-                  }
-                },
-                {
-                  "id": "input-lock2-right-on",
-                  "label": "Right button, 50 ms clicks",
-                  "stock": {
-                    "lo": 7,
-                    "hi": 7,
-                    "src": [
+                      },
                       {
-                        "file": "locks2_stock_v4122.json",
-                        "ptr": "/results/3/still_through_after_lock/p50",
-                        "unit": "us"
-                      }
-                    ]
-                  },
-                  "medius": {
-                    "lo": 99.5,
-                    "hi": 99.5,
-                    "src": [
-                      {
-                        "file": "locks2_medius_v347.json",
-                        "ptr": "/results/3/still_through_after_lock/p50",
-                        "unit": "us"
-                      }
-                    ]
-                  },
-                  "note": "Medius lets a press already under way finish before the lock blocks the button. The PC never gets a release the real device didn't report"
-                },
-                {
-                  "id": "input-lock2-key-on",
-                  "label": "Key 'a', 50 ms taps",
-                  "stock": {
-                    "lo": 1,
-                    "hi": 1,
-                    "src": [
-                      {
-                        "file": "locks2_stock_v4122.json",
-                        "ptr": "/results/4/still_through_after_lock/p50",
-                        "unit": "us"
-                      }
-                    ]
-                  },
-                  "medius": {
-                    "lo": 0,
-                    "hi": 0,
-                    "src": [
-                      {
-                        "file": "locks2_medius_v347.json",
-                        "ptr": "/results/4/still_through_after_lock/p50",
+                        "file": "locks2_medius_v350_r2.json",
+                        "ptr": "/results/2/still_through_after_lock/p50",
                         "unit": "us"
                       }
                     ]
@@ -23001,38 +22978,52 @@
                   "id": "input-lock2-right-held-on",
                   "label": "Right button, held",
                   "stock": {
-                    "lo": 7.48,
-                    "hi": 7.48,
+                    "lo": 7.63,
+                    "hi": 7.65,
                     "src": [
                       {
-                        "file": "locks2_stock_v4122.json",
+                        "file": "locks2_stock_v4122_r1.json",
+                        "ptr": "/results/5/still_through_after_lock/p50",
+                        "unit": "us"
+                      },
+                      {
+                        "file": "locks2_stock_v4122_r2.json",
                         "ptr": "/results/5/still_through_after_lock/p50",
                         "unit": "us"
                       }
                     ]
                   },
                   "medius": {
-                    "lo": 99.5,
-                    "hi": 99.5,
+                    "lo": 0.025,
+                    "hi": 0.0695,
                     "src": [
                       {
-                        "file": "locks2_medius_v347.json",
+                        "file": "locks2_medius_v350.json",
+                        "ptr": "/results/5/still_through_after_lock/p50",
+                        "unit": "us"
+                      },
+                      {
+                        "file": "locks2_medius_v350_r2.json",
                         "ptr": "/results/5/still_through_after_lock/p50",
                         "unit": "us"
                       }
                     ]
-                  },
-                  "note": "Medius lets a press already under way finish before the lock blocks the button. The PC never gets a release the real device didn't report"
+                  }
                 },
                 {
                   "id": "input-lock2-key-held-on",
                   "label": "Key 'a', held",
                   "stock": {
-                    "lo": 2.37,
-                    "hi": 2.37,
+                    "lo": 0.628,
+                    "hi": 1.2,
                     "src": [
                       {
-                        "file": "locks2_stock_v4122.json",
+                        "file": "locks2_stock_v4122_r1.json",
+                        "ptr": "/results/6/still_through_after_lock/p50",
+                        "unit": "us"
+                      },
+                      {
+                        "file": "locks2_stock_v4122_r2.json",
                         "ptr": "/results/6/still_through_after_lock/p50",
                         "unit": "us"
                       }
@@ -23040,10 +23031,15 @@
                   },
                   "medius": {
                     "lo": 0,
-                    "hi": 0,
+                    "hi": 0.25,
                     "src": [
                       {
-                        "file": "locks2_medius_v347.json",
+                        "file": "locks2_medius_v350.json",
+                        "ptr": "/results/6/still_through_after_lock/p50",
+                        "unit": "us"
+                      },
+                      {
+                        "file": "locks2_medius_v350_r2.json",
                         "ptr": "/results/6/still_through_after_lock/p50",
                         "unit": "us"
                       }
@@ -23060,28 +23056,38 @@
               "better": "lower",
               "stat": "p50",
               "layer": "wire",
-              "n": "5 locks per row",
+              "n": "10 locks per row, 2 runs",
               "rows": [
                 {
                   "id": "input-lock2-y-off",
                   "label": "Y, moving every millisecond",
                   "stock": {
-                    "lo": 4.8,
-                    "hi": 4.8,
+                    "lo": 3.57,
+                    "hi": 7.22,
                     "src": [
                       {
-                        "file": "locks2_stock_v4122.json",
+                        "file": "locks2_stock_v4122_r1.json",
+                        "ptr": "/results/0/back_after_unlock/p50",
+                        "unit": "us"
+                      },
+                      {
+                        "file": "locks2_stock_v4122_r2.json",
                         "ptr": "/results/0/back_after_unlock/p50",
                         "unit": "us"
                       }
                     ]
                   },
                   "medius": {
-                    "lo": 0.85,
-                    "hi": 0.85,
+                    "lo": 0.976,
+                    "hi": 1.26,
                     "src": [
                       {
-                        "file": "locks2_medius_v347.json",
+                        "file": "locks2_medius_v350.json",
+                        "ptr": "/results/0/back_after_unlock/p50",
+                        "unit": "us"
+                      },
+                      {
+                        "file": "locks2_medius_v350_r2.json",
                         "ptr": "/results/0/back_after_unlock/p50",
                         "unit": "us"
                       }
@@ -23092,22 +23098,32 @@
                   "id": "input-lock2-y-pos-off",
                   "label": "Positive Y only, moving +1 and -1",
                   "stock": {
-                    "lo": 8.7,
-                    "hi": 8.7,
+                    "lo": 4.36,
+                    "hi": 4.94,
                     "src": [
                       {
-                        "file": "locks2_stock_v4122.json",
+                        "file": "locks2_stock_v4122_r1.json",
+                        "ptr": "/results/1/back_after_unlock/p50",
+                        "unit": "us"
+                      },
+                      {
+                        "file": "locks2_stock_v4122_r2.json",
                         "ptr": "/results/1/back_after_unlock/p50",
                         "unit": "us"
                       }
                     ]
                   },
                   "medius": {
-                    "lo": 2.6,
-                    "hi": 2.6,
+                    "lo": 1.4,
+                    "hi": 1.42,
                     "src": [
                       {
-                        "file": "locks2_medius_v347.json",
+                        "file": "locks2_medius_v350.json",
+                        "ptr": "/results/1/back_after_unlock/p50",
+                        "unit": "us"
+                      },
+                      {
+                        "file": "locks2_medius_v350_r2.json",
                         "ptr": "/results/1/back_after_unlock/p50",
                         "unit": "us"
                       }
@@ -23116,77 +23132,35 @@
                 },
                 {
                   "id": "input-lock2-wheel-off",
-                  "label": "Wheel, every 10 ms",
+                  "label": "Wheel, every millisecond",
                   "stock": {
-                    "lo": 4.07,
-                    "hi": 4.07,
+                    "lo": 4.27,
+                    "hi": 6.02,
                     "src": [
                       {
-                        "file": "locks2_stock_v4122.json",
+                        "file": "locks2_stock_v4122_r1.json",
+                        "ptr": "/results/2/back_after_unlock/p50",
+                        "unit": "us"
+                      },
+                      {
+                        "file": "locks2_stock_v4122_r2.json",
                         "ptr": "/results/2/back_after_unlock/p50",
                         "unit": "us"
                       }
                     ]
                   },
                   "medius": {
-                    "lo": 6.59,
-                    "hi": 6.59,
+                    "lo": 1.09,
+                    "hi": 1.49,
                     "src": [
                       {
-                        "file": "locks2_medius_v347.json",
+                        "file": "locks2_medius_v350.json",
                         "ptr": "/results/2/back_after_unlock/p50",
                         "unit": "us"
-                      }
-                    ]
-                  }
-                },
-                {
-                  "id": "input-lock2-right-off",
-                  "label": "Right button, 50 ms clicks",
-                  "stock": {
-                    "lo": 8.6,
-                    "hi": 8.6,
-                    "src": [
+                      },
                       {
-                        "file": "locks2_stock_v4122.json",
-                        "ptr": "/results/3/back_after_unlock/p50",
-                        "unit": "us"
-                      }
-                    ]
-                  },
-                  "medius": {
-                    "lo": 0.403,
-                    "hi": 0.403,
-                    "src": [
-                      {
-                        "file": "locks2_medius_v347.json",
-                        "ptr": "/results/3/back_after_unlock/p50",
-                        "unit": "us"
-                      }
-                    ]
-                  }
-                },
-                {
-                  "id": "input-lock2-key-off",
-                  "label": "Key 'a', 50 ms taps",
-                  "stock": {
-                    "lo": 4.2,
-                    "hi": 4.2,
-                    "src": [
-                      {
-                        "file": "locks2_stock_v4122.json",
-                        "ptr": "/results/4/back_after_unlock/p50",
-                        "unit": "us"
-                      }
-                    ]
-                  },
-                  "medius": {
-                    "lo": 0.895,
-                    "hi": 0.895,
-                    "src": [
-                      {
-                        "file": "locks2_medius_v347.json",
-                        "ptr": "/results/4/back_after_unlock/p50",
+                        "file": "locks2_medius_v350_r2.json",
+                        "ptr": "/results/2/back_after_unlock/p50",
                         "unit": "us"
                       }
                     ]
@@ -23196,22 +23170,32 @@
                   "id": "input-lock2-right-held-off",
                   "label": "Right button, held",
                   "stock": {
-                    "lo": 8.78,
-                    "hi": 8.78,
+                    "lo": 8.53,
+                    "hi": 8.55,
                     "src": [
                       {
-                        "file": "locks2_stock_v4122.json",
+                        "file": "locks2_stock_v4122_r1.json",
+                        "ptr": "/results/5/back_after_unlock/p50",
+                        "unit": "us"
+                      },
+                      {
+                        "file": "locks2_stock_v4122_r2.json",
                         "ptr": "/results/5/back_after_unlock/p50",
                         "unit": "us"
                       }
                     ]
                   },
                   "medius": {
-                    "lo": 0.502,
-                    "hi": 0.502,
+                    "lo": 1.07,
+                    "hi": 1.27,
                     "src": [
                       {
-                        "file": "locks2_medius_v347.json",
+                        "file": "locks2_medius_v350.json",
+                        "ptr": "/results/5/back_after_unlock/p50",
+                        "unit": "us"
+                      },
+                      {
+                        "file": "locks2_medius_v350_r2.json",
                         "ptr": "/results/5/back_after_unlock/p50",
                         "unit": "us"
                       }
@@ -23222,22 +23206,32 @@
                   "id": "input-lock2-key-held-off",
                   "label": "Key 'a', held",
                   "stock": {
-                    "lo": 3.72,
-                    "hi": 3.72,
+                    "lo": 1.41,
+                    "hi": 2.15,
                     "src": [
                       {
-                        "file": "locks2_stock_v4122.json",
+                        "file": "locks2_stock_v4122_r1.json",
+                        "ptr": "/results/6/back_after_unlock/p50",
+                        "unit": "us"
+                      },
+                      {
+                        "file": "locks2_stock_v4122_r2.json",
                         "ptr": "/results/6/back_after_unlock/p50",
                         "unit": "us"
                       }
                     ]
                   },
                   "medius": {
-                    "lo": 0.89,
-                    "hi": 0.89,
+                    "lo": 0.81,
+                    "hi": 0.837,
                     "src": [
                       {
-                        "file": "locks2_medius_v347.json",
+                        "file": "locks2_medius_v350.json",
+                        "ptr": "/results/6/back_after_unlock/p50",
+                        "unit": "us"
+                      },
+                      {
+                        "file": "locks2_medius_v350_r2.json",
                         "ptr": "/results/6/back_after_unlock/p50",
                         "unit": "us"
                       }
