@@ -435,7 +435,7 @@ const Update: Component = () => {
               <tr><th>Chip</th><th>Confirmed by</th><th>Grace</th></tr>
             </thead>
             <tbody>
-              <tr><td>Device</td><td>10 s of a running main loop.</td><td>30 s</td></tr>
+              <tr><td>Device</td><td>10 s of a running main loop, once the mouse is still (25 s at the latest).</td><td>30 s</td></tr>
               <tr><td>Host</td><td>A completed clock exchange over the link, only.</td><td>40 s</td></tr>
             </tbody>
           </table>
