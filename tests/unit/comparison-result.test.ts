@@ -33,6 +33,20 @@ describe('resultOf', () => {
     expect(resultOf(...measure('higher', of(1, 2), of(2, 4)))).toBe('equal');
   });
 
+  it('ranks a table ranked nearer by the gap to the native value or target', () => {
+    const nearer = (stock: Value, medius: Value, aim: { native: Value } | { target: number }) => {
+      const row = { id: 'r', label: 'Row', stock, medius, ...aim };
+      return [{ kind: 'measure', label: 'Rate', key: 'Endpoint', unit: '/s', better: 'nearer', rows: [row] }, row] as [MeasureTable, MeasureTable['rows'][0]];
+    };
+    expect(resultOf(...nearer(v(110.1), v(153.5), { native: v(196) }))).toBe('medius');
+    expect(resultOf(...nearer(v(237.9), v(206.1), { native: v(196) }))).toBe('medius');
+    expect(resultOf(...nearer(v(195), v(240), { native: r(190, 200) }))).toBe('stock');
+    expect(resultOf(...nearer(v(49.9), v(50.3), { target: 50 }))).toBe('stock');
+    expect(resultOf(...nearer(v(49.8), v(50.2), { target: 50 }))).toBe('equal');
+    expect(resultOf(...nearer(r(49.9, 50), r(49.8, 49.9), { target: 50 }))).toBe('equal');
+    expect(resultOf(...nearer(r(48, 49), r(50.5, 51), { target: 50 }))).toBe('medius');
+  });
+
   it('gives no result where neither direction is better', () => {
     expect(resultOf(...measure(undefined, v(43), v(1)))).toBeNull();
   });

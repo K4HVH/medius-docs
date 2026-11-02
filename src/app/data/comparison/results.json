@@ -9472,6 +9472,7 @@
               "label": "OUT packets taken per second, real device taking one every 5 ms",
               "key": "Endpoint",
               "unit": "/s",
+              "better": "nearer",
               "layer": "host",
               "n": "100 packets per endpoint, 1 run",
               "rows": [
@@ -9488,11 +9489,25 @@
                     ]
                   },
                   "medius": {
-                    "value": 153.5,
+                    "value": 153.8,
                     "src": [
                       {
-                        "file": "out_rate_medius_v347.json",
-                        "ptr": "/results/6/per_second"
+                        "file": "out_rate_medius_v350_slow.json",
+                        "ptr": "/results/0/per_second"
+                      }
+                    ]
+                  },
+                  "native": {
+                    "lo": 201.4,
+                    "hi": 201.6,
+                    "src": [
+                      {
+                        "file": "out_rate_native_r1.json",
+                        "ptr": "/results/0/per_second"
+                      },
+                      {
+                        "file": "out_rate_native_r2.json",
+                        "ptr": "/results/0/per_second"
                       }
                     ]
                   }
@@ -9510,11 +9525,25 @@
                     ]
                   },
                   "medius": {
-                    "value": 153.5,
+                    "value": 153.9,
                     "src": [
                       {
-                        "file": "out_rate_medius_v347.json",
-                        "ptr": "/results/7/per_second"
+                        "file": "out_rate_medius_v350_slow.json",
+                        "ptr": "/results/1/per_second"
+                      }
+                    ]
+                  },
+                  "native": {
+                    "lo": 201.4,
+                    "hi": 201.5,
+                    "src": [
+                      {
+                        "file": "out_rate_native_r1.json",
+                        "ptr": "/results/1/per_second"
+                      },
+                      {
+                        "file": "out_rate_native_r2.json",
+                        "ptr": "/results/1/per_second"
                       }
                     ]
                   }
@@ -9532,11 +9561,25 @@
                     ]
                   },
                   "medius": {
-                    "value": 206.1,
+                    "value": 206.2,
                     "src": [
                       {
-                        "file": "out_rate_medius_v347.json",
-                        "ptr": "/results/8/per_second"
+                        "file": "out_rate_medius_v350_slow.json",
+                        "ptr": "/results/2/per_second"
+                      }
+                    ]
+                  },
+                  "native": {
+                    "lo": 202.1,
+                    "hi": 202.3,
+                    "src": [
+                      {
+                        "file": "out_rate_native_r1.json",
+                        "ptr": "/results/2/per_second"
+                      },
+                      {
+                        "file": "out_rate_native_r2.json",
+                        "ptr": "/results/2/per_second"
                       }
                     ]
                   }
@@ -23146,6 +23189,7 @@
               "label": "Shortest 50 ms click hold",
               "key": "Timed by",
               "unit": "ms",
+              "better": "nearer",
               "layer": "wire",
               "n": "5 runs of 10 clicks",
               "commands": {
@@ -23217,7 +23261,8 @@
                         "unit": "us"
                       }
                     ]
-                  }
+                  },
+                  "target": 50
                 },
                 {
                   "id": "input-click-host-min",
@@ -23283,7 +23328,8 @@
                         "unit": "us"
                       }
                     ]
-                  }
+                  },
+                  "target": 50
                 }
               ]
             },
@@ -23292,6 +23338,7 @@
               "label": "Longest 50 ms click hold",
               "key": "Timed by",
               "unit": "ms",
+              "better": "nearer",
               "layer": "wire",
               "n": "5 runs of 10 clicks",
               "commands": {
@@ -23363,7 +23410,8 @@
                         "unit": "us"
                       }
                     ]
-                  }
+                  },
+                  "target": 50
                 },
                 {
                   "id": "input-click-host-max",
@@ -23429,7 +23477,8 @@
                         "unit": "us"
                       }
                     ]
-                  }
+                  },
+                  "target": 50
                 }
               ]
             },
@@ -23507,6 +23556,7 @@
               "label": "Time to type 30 characters",
               "key": "String",
               "unit": "ms",
+              "better": "lower",
               "layer": "wire",
               "n": "5 runs",
               "commands": {
