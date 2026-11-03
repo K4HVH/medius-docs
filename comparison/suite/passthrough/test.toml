@@ -136,7 +136,7 @@ ptr = "/outcomes/pass-bytes-kbd-burst"
 section = "pass-timing"
 order = 1
 kind = "measure"
-label = "Reports >10% early or late, in 15 s"
+label = "Reports a poll early or late, in 15 s"
 key = "Mouse"
 unit = "intervals"
 better = "lower"
@@ -147,22 +147,22 @@ resolution = 1
 [[tables.rows]]
 id = "pass-timing-off-1000"
 label = "1 kHz mouse"
-ptr = "/base/results/0/wire/outside_10pct"
+ptr = "/base/results/0/wire/poll_grid/early_late"
 
 [[tables.rows]]
 id = "pass-timing-off-500"
 label = "500 Hz mouse"
-ptr = "/base/results/1/wire/outside_10pct"
+ptr = "/base/results/1/wire/poll_grid/early_late"
 
 [[tables.rows]]
 id = "pass-timing-off-250"
 label = "250 Hz mouse"
-ptr = "/base/results/2/wire/outside_10pct"
+ptr = "/base/results/2/wire/poll_grid/early_late"
 
 [[tables.rows]]
 id = "pass-timing-off-125"
 label = "125 Hz mouse"
-ptr = "/base/results/3/wire/outside_10pct"
+ptr = "/base/results/3/wire/poll_grid/early_late"
 
 [[tables]]
 section = "pass-timing"
@@ -200,7 +200,7 @@ ptr = "/base/results/3/wire/gaps_over_1_5x"
 section = "pass-timing"
 order = 3
 kind = "measure"
-label = "Reports >10% early or late, in 2 minutes"
+label = "Reports a poll early or late, in 2 minutes"
 key = "Mouse"
 unit = "intervals"
 better = "lower"
@@ -211,7 +211,7 @@ resolution = 1
 [[tables.rows]]
 id = "pass-timing-off-500-long"
 label = "500 Hz mouse"
-ptr = "/500long/results/0/wire/outside_10pct"
+ptr = "/500long/results/0/wire/poll_grid/early_late"
 
 [[tables]]
 section = "pass-timing"

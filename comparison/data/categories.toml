@@ -56,7 +56,7 @@ about = "Each box relayed mice and keyboards at several report rates, 15 s each,
 [[categories.sections]]
 id = "pass-timing"
 title = "Report timing"
-about = "The relay runs above, timed on the PC's USB bus."
+about = "The relay runs above, timed on the PC's USB bus. Each report is placed on the PC's polls, so it counts as early or late only when it moved by a whole poll; the PC's own timing jitter doesn't count."
 
 [[categories.sections]]
 id = "pass-latency"

@@ -17,7 +17,7 @@ device = "sim:counting-keyboard-250"
 section = "pass-timing"
 order = 6
 kind = "measure"
-label = "Keyboard reports >10% early or late, in 15 s"
+label = "Keyboard reports a poll early or late, in 15 s"
 key = "Keyboard"
 unit = "reports"
 better = "lower"
@@ -28,9 +28,9 @@ resolution = 1
 [[tables.rows]]
 id = "pass-timing-off-kbd-500"
 label = "500 Hz keyboard"
-ptr = "/results/0/outside_10pct"
+ptr = "/results/0/poll_grid/early_late"
 
 [[tables.rows]]
 id = "pass-timing-off-kbd-250"
 label = "250 Hz keyboard"
-ptr = "/results/1/outside_10pct"
+ptr = "/results/1/poll_grid/early_late"
