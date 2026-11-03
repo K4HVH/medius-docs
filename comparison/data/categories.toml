@@ -237,7 +237,7 @@ about = "A program pressed the left button through each box, then closed the por
 [[categories.sections]]
 id = "recovery-replug"
 title = "Replug"
-about = "The real device was unplugged and plugged back in, 10 times a run, three runs."
+about = "The real device was unplugged and plugged back in, 10 times a run."
 
 [[categories.sections]]
 id = "recovery-pc-restart"
