@@ -150,3 +150,16 @@ def test_replug_by_hand_waits_for_the_port_to_go_and_come_back(tmp_path, capsys)
     b.replug_by_hand("stock", every=0.01)
     assert done == ["unplugged", "plugged"]
     assert "Unplug the stock box" in capsys.readouterr().err
+
+
+def test_under_sudo_the_config_is_the_invoking_users(tmp_path, monkeypatch):
+    import pwd
+    import tomllib
+    from medius_compare import bench as bench_mod
+    home = tmp_path / "home"
+    (home / ".config" / "medius-compare").mkdir(parents=True)
+    (home / ".config" / "medius-compare" / "bench.toml").write_text("[names]\n")
+    monkeypatch.setenv("HOME", str(tmp_path / "root"))
+    monkeypatch.setenv("SUDO_USER", "someone")
+    monkeypatch.setattr(pwd, "getpwnam", lambda name: type("P", (), {"pw_dir": str(home)})())
+    assert bench_mod.default_config() == home / ".config" / "medius-compare" / "bench.toml"
