@@ -1939,6 +1939,7 @@ medius_clip_unbind_packet(clip, &held);   /* by key */`}</code></pre>
               <tr><td><code>MEDIUS_STATUS_ERR_REWRITE_POOL_FULL</code></td><td><code>35</code></td><td>A rewrite payload larger than the room the held rules leave in <code>MEDIUS_REWRITE_PAYLOAD_POOL</code> (2048). An overwrite counts the bytes it replaces as free.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_TRANSFER_TIMEOUT_RANGE</code></td><td><code>36</code></td><td>A transfer timeout outside 1 to 65535 ms.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_TRANSFER_REPLY_INCOMPLETE</code></td><td><code>37</code></td><td>A transfer reply that lost a chunk between the box's chips or on the control link.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_PORT_BUSY</code></td><td><code>38</code></td><td>On Linux, another process has the control port open. <code>medius_last_error_message</code> names each holder as <code>"name (pid N)"</code>.</td></tr>
             </tbody>
           </table>
         </div>

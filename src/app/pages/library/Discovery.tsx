@@ -30,7 +30,7 @@ const Discovery: Component = () => {
           speak <A href="/library/connection#zero-config"><code>PROTO_VER</code></A> has{' '}
           <code>device</code> <code>None</code>, so a box that needs a firmware update still shows
           up. Open it with <A href="/library/update#open-for-update"><code>open_for_update</code></A>{' '}
-          to update it.
+          to update it. On Linux, a box whose port another process holds open is left out.
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`use medius::Device;
