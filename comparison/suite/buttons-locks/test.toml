@@ -1,10 +1,25 @@
-# Seeded from the 2026-11-03 results; legs and pointers are set when the test is ported.
 id = "buttons-locks"
 version = 1
 category = "input"
 layout = "main"
 boxes = ["stock", "medius"]
 jams_stock = false
+
+[[legs]]
+id = "rest"
+device = "still-mouse"
+
+[[legs]]
+id = "held-left"
+device = "sim:held-left"
+
+[[legs]]
+id = "clicking"
+device = "sim:clicking"
+
+[[legs]]
+id = "moving-x"
+device = "sim:moving-x"
 
 [[tables]]
 section = "input-together"
@@ -57,7 +72,7 @@ unit = "ms"
 better = "lower"
 stat = "p50"
 layer = "wire"
-n = "3 runs"
+n = "20 locks a run, 3 runs"
 commands = { stock = "km.lock_mx", medius = "LOCK" }
 resolution = 0.001
 
@@ -77,7 +92,7 @@ unit = "ms"
 better = "lower"
 stat = "p50"
 layer = "wire"
-n = "3 runs"
+n = "20 locks a run, 3 runs"
 commands = { stock = "km.lock_mx", medius = "LOCK" }
 resolution = 0.01
 

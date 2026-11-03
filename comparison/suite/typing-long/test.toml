@@ -1,10 +1,13 @@
-# Seeded from the 2026-11-03 results; legs and pointers are set when the test is ported.
 id = "typing-long"
 version = 1
 category = "input"
 layout = "main"
 boxes = ["stock", "medius"]
 jams_stock = true
+
+[[legs]]
+id = "keyboard"
+device = "still-keyboard"
 
 [[tables]]
 section = "input-typing-long"
