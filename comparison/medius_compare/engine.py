@@ -9,6 +9,7 @@ from datetime import datetime
 from pathlib import Path
 
 from . import TOOL_VERSION
+from . import integrity
 from .devices import LegUnavailable
 from .runfile import RunFile
 
@@ -167,7 +168,8 @@ class Engine:
 
             for k in range(done, runs):
                 ctx = Context(box_name=box_name, box=box, legs=[leg.id for leg in legs], run_index=k, _present=present)
-                raw = module.run(ctx)
+                with integrity.collecting(ctx.integrity):
+                    raw = module.run(ctx)
                 rf.data["tests"][t.id]["devices"] = [p.record(leg) for leg, p in presented.items()]
                 if any(ctx.integrity.values()):
                     rf.fail(t.id, "capture lost data: " + ", ".join(f"{k} {v}" for k, v in ctx.integrity.items() if v))
