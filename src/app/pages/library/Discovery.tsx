@@ -28,8 +28,9 @@ const Discovery: Component = () => {
           name) and its cloned{' '}
           <A href="/library/types/structs#device-info"><code>DeviceInfo</code></A>. A box that doesn't
           speak <A href="/library/connection#zero-config"><code>PROTO_VER</code></A> has{' '}
-          <code>device</code> <code>None</code>, so a box that needs a{' '}
-          <A href="/dashboard/update">firmware update</A> still shows up.
+          <code>device</code> <code>None</code>, so a box that needs a firmware update still shows
+          up. Open it with <A href="/library/update#open-for-update"><code>open_for_update</code></A>{' '}
+          to update it.
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`use medius::Device;

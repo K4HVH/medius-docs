@@ -59,7 +59,9 @@ const Errors: Component = () => {
                   The box replied to the <A href="/library/connection">handshake</A> with a{' '}
                   <code>proto_ver</code> other than <code>10</code>, carried in <code>got</code>. The{' '}
                   <A href="/library/discovery">discovery</A> openers return it for a matched box on
-                  another protocol.
+                  another protocol. On a device opened with{' '}
+                  <A href="/library/update#open-for-update"><code>open_for_update</code></A>, it is also
+                  every call outside the update path, while the box is on an older protocol.
                 </td>
               </tr>
               <tr>

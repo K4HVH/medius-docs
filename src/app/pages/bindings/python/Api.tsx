@@ -191,6 +191,8 @@ const Api: Component = () => {
           <table class="api-params">
             <thead><tr><th>Call</th><th>Does</th></tr></thead>
             <tbody>
+              <tr><td><code>Device.open_for_update(path)</code></td><td>Open a box on any control protocol from 5 on, to update it. On this package's protocol the device is a full one. On another it is update-only: the version and firmware queries and the calls below work, and every other call raises <code>BadProtoVerError</code>. A box older than 5 raises <code>BadProtoVerError</code>. See <A href="/library/update#open-for-update"><code>open_for_update</code></A>.</td></tr>
+              <tr><td><code>dev.is_update_only</code></td><td>Whether the device reaches only the update path: its box speaks an older protocol than this package.</td></tr>
               <tr><td><code>dev.stage_firmware(target, image, progress=None)</code></td><td>Write one image into that chip's spare slot, without booting it. <code>target</code> is an <A href="/bindings/python/types#updatetarget"><code>UpdateTarget</code></A>.</td></tr>
               <tr><td><code>dev.activate_firmware()</code></td><td>Commit everything staged and boot into it, host chip first.</td></tr>
               <tr><td><code>dev.abort_update(target)</code></td><td>Throw a staged or in-flight transfer away.</td></tr>
@@ -361,7 +363,7 @@ reply = dev.transfer(0, Setup(0x80, 0x06, 0x0100, 0, 18), timeout_ms=10_000)`}</
               <tr><td><code>MockBox()</code></td><td>A fresh mock that records every frame and replies to queries. A context manager: <code>with MockBox() as mock:</code> frees it on exit, as <code>mock.close()</code> does.</td></tr>
               <tr><td><code>mock.open()</code></td><td>A <A href="/bindings/python/api#connect"><code>Device</code></A> over the mock, after the handshake.</td></tr>
               <tr><td><code>mock.with_device()</code></td><td>A <code>Device</code> over the mock, with no handshake.</td></tr>
-              <tr><td><code>Device.open_mock(mock)</code> / <code>Device.with_mock(mock)</code></td><td>The same two, named as in Rust.</td></tr>
+              <tr><td><code>Device.open_mock(mock)</code> / <code>Device.with_mock(mock)</code> / <code>Device.open_mock_for_update(mock)</code></td><td>The same three, named as in Rust.</td></tr>
               <tr><td><code>mock.clone()</code></td><td>Another handle to the same mock state.</td></tr>
             </tbody>
           </table>

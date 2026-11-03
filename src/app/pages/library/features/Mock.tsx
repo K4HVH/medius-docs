@@ -36,10 +36,11 @@ let device = Device::with_mock(mock.clone());
 // \`device\` drives the fake; \`mock\` still scripts and observes it.`}</code></pre>
       </DocSection>
 
-      <DocSection id="wrap" title="Device wrapper" caption="with_mock and open_mock">
+      <DocSection id="wrap" title="Device wrapper" caption="with_mock, open_mock and open_mock_for_update">
         <pre class="api-signature">fn with_mock(mock: MockBox) -&gt; Device</pre>
         <p><span class="api-badge api-badge--executed">No round-trip</span></p>
         <pre class="api-signature">fn open_mock(mock: MockBox) -&gt; Result&lt;Device&gt;</pre>
+        <pre class="api-signature">fn open_mock_for_update(mock: MockBox) -&gt; Result&lt;Device&gt;</pre>
         <p><span class="api-badge api-badge--responded">Blocks</span></p>
 
         <div class="api-response-label">CONSTRUCTORS</div>
@@ -65,6 +66,12 @@ let device = Device::with_mock(mock.clone());
                 <td>Yes</td>
                 <td><A href="/library/types/errors"><code>Result&lt;Device&gt;</code></A></td>
                 <td>Also runs the version handshake, so it can fail as a real port can.</td>
+              </tr>
+              <tr>
+                <td><code>open_mock_for_update</code></td>
+                <td>Yes</td>
+                <td><A href="/library/types/errors"><code>Result&lt;Device&gt;</code></A></td>
+                <td>Runs the handshake <A href="/library/update#open-for-update"><code>open_for_update</code></A> runs: a mock set to an older protocol with <code>with_version</code> opens update-only.</td>
               </tr>
             </tbody>
           </table>
