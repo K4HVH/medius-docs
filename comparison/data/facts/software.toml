@@ -1,0 +1,189 @@
+[[tables]]
+section = "software-tools"
+order = 1
+label = "Owner tool"
+key = "System"
+
+[[tables.rows]]
+id = "software-tool-windows"
+label = "Windows"
+stock = "MAKCU Toolkit"
+medius = "Medius dashboard"
+
+[[tables.rows]]
+id = "software-tool-linux"
+label = "Linux"
+stock = "makcu.com Device Control"
+medius = "Medius dashboard"
+
+[[tables.rows]]
+id = "software-tool-macos"
+label = "macOS"
+stock = "makcu.com Device Control"
+medius = "Medius dashboard"
+
+[[tables]]
+section = "software-programs"
+order = 1
+label = "Program support"
+key = "Program"
+
+[[tables.rows]]
+id = "software-programs-kmbox-net"
+label = "KMBox Net programs"
+stock = "Toolkit Forwarding mode"
+note = "Move, wheel, three buttons and keys only"
+
+[[tables.rows]]
+id = "software-programs-kmbox-b-pro"
+label = "KMBox B Pro programs"
+stock = "Toolkit Forwarding mode"
+note = "Marked as in testing"
+
+[[tables.rows]]
+id = "software-programs-ferrum"
+label = "Ferrum programs"
+stock = "Toolkit Forwarding mode"
+note = "Marked as in testing"
+
+[[tables.rows]]
+id = "software-programs-shared"
+label = "Several programs on one box"
+stock = "Toolkit Forwarding mode"
+
+[[tables]]
+section = "software-libraries"
+order = 1
+label = "Client library"
+key = "Language"
+
+[[tables.rows]]
+id = "software-library-python"
+label = "Python"
+stock = "makxd"
+medius = "medius"
+
+[[tables.rows]]
+id = "software-library-rust"
+label = "Rust"
+stock = "makxd"
+medius = "medius"
+
+[[tables.rows]]
+id = "software-library-c"
+label = "C"
+stock = "mak-suite"
+medius = "medius.h"
+
+[[tables.rows]]
+id = "software-library-cpp"
+label = "C++"
+stock = "mak-suite"
+medius = "medius.h"
+
+[[tables.rows]]
+id = "software-library-csharp"
+label = "C#"
+stock = "mak-suite"
+
+[[tables.rows]]
+id = "software-library-go"
+label = "Go"
+stock = "Makcu-Go"
+note = "Third party"
+
+[[tables]]
+section = "software-updates"
+order = 1
+label = "Updates"
+key = "Capability"
+
+[[tables.rows]]
+id = "software-update-windows"
+label = "Update on Windows without pressing a button on the box"
+stock = "MAKCU Toolkit"
+medius = "Medius dashboard"
+
+[[tables.rows]]
+id = "software-update-rollback"
+label = "Rollback after an update"
+stock = "Roll back to official"
+medius = "Medius dashboard"
+
+[[tables.rows]]
+id = "software-update-recovery"
+label = "Recovery from a failed update without pressing a button on the box"
+stock = "Recovery loader"
+medius = "Bootloader rollback"
+
+[[tables.rows]]
+id = "software-update-fallback"
+label = "Previous build kept as a fallback"
+medius = "Bootloader rollback"
+
+[[tables.rows]]
+id = "software-update-backup"
+label = "Restore from a flash backup"
+stock = "Restore a backup"
+
+[[tables.rows]]
+id = "software-update-signed-package"
+label = "Signed firmware packages"
+stock = "ECDSA P-256 signature"
+
+[[tables.rows]]
+id = "software-update-signed-catalogue"
+label = "Signed firmware catalogue"
+stock = "Ed25519 signature"
+
+[[tables]]
+section = "software-data"
+order = 1
+label = "Data sent"
+key = "Item"
+ranked = false
+
+[[tables.rows]]
+id = "software-data-launch"
+label = "Every launch"
+stock = "Update and firmware assignment check"
+medius = "Usage report"
+
+[[tables.rows]]
+id = "software-data-diagnostic"
+label = "Diagnostic report to support"
+stock = "Toolkit Help & reports"
+
+[[tables.rows]]
+id = "software-data-public-stats"
+label = "Public usage statistics"
+medius = "Dashboard stats page"
+
+[[tables]]
+section = "software-docs"
+order = 1
+label = "Documentation"
+key = "Item"
+
+[[tables.rows]]
+id = "software-docs-english"
+label = "English"
+stock = "makcu.com"
+medius = "medius.k4tech.net"
+
+[[tables.rows]]
+id = "software-docs-chinese"
+label = "Chinese"
+stock = "makcu.com"
+
+[[tables.rows]]
+id = "software-docs-commands"
+label = "Command reference"
+stock = "makcu.com API page"
+medius = "medius.k4tech.net Native API"
+
+[[tables.rows]]
+id = "software-docs-mcp"
+label = "MCP server for AI tools"
+stock = "makcu.com/mcp"
+medius = "medius.k4tech.net/mcp"

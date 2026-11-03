@@ -1,0 +1,251 @@
+# Seeded from the 2026-11-03 results; legs and pointers are set when the test is ported.
+id = "iface-data"
+version = 1
+category = "devices"
+layout = "main"
+boxes = ["stock", "medius"]
+jams_stock = false
+
+[[tables]]
+section = "devices-endpoint-data"
+order = 1
+kind = "outcome"
+label = "Endpoints delivering"
+key = "Device"
+outcomes = ["Every endpoint at the native rate", "Not cloned", "An endpoint sends nothing"]
+
+[[tables.rows]]
+# outcome from stock: /results/0/per_second; medius: /results/0/per_second
+id = "devices-ep-data-vendorintr"
+label = "Vendor interrupt IN"
+ptr = "/outcomes/devices-ep-data-vendorintr"
+
+[[tables.rows]]
+# outcome from stock: /results/1/per_second; medius: /results/1/per_second
+id = "devices-ep-data-vendintrep-0x84"
+label = "Vendor IN numbered 0x84"
+ptr = "/outcomes/devices-ep-data-vendintrep-0x84"
+
+[[tables.rows]]
+# outcome from stock: /results/2/per_second; medius: /results/2/per_second
+id = "devices-ep-data-vendintrep-0x85"
+label = "Vendor IN numbered 0x85"
+ptr = "/outcomes/devices-ep-data-vendintrep-0x85"
+
+[[tables.rows]]
+# outcome from stock: /results/3/per_second; medius: /results/3/per_second
+id = "devices-ep-data-vendintrep-0x86"
+label = "Vendor IN numbered 0x86"
+ptr = "/outcomes/devices-ep-data-vendintrep-0x86"
+
+[[tables.rows]]
+# outcome from stock: /results/4/present; medius: /results/4/cloned
+id = "devices-ep-data-vendintrep-0x87"
+label = "Vendor IN numbered 0x87"
+ptr = "/outcomes/devices-ep-data-vendintrep-0x87"
+
+[[tables.rows]]
+# outcome from stock: /results/5/per_second; medius: /results/5/per_second
+id = "devices-ep-data-altsetting"
+label = "Vendor IN in an alternate setting"
+ptr = "/outcomes/devices-ep-data-altsetting"
+
+[[tables.rows]]
+# outcome from stock: /results/6/per_second; medius: /results/6/per_second
+id = "devices-ep-data-cdcnotify"
+label = "CDC notification endpoint"
+ptr = "/outcomes/devices-ep-data-cdcnotify"
+
+[[tables.rows]]
+# outcome from stock: /results/7/per_second; medius: /results/7/per_second
+id = "devices-ep-data-hidtwoin"
+label = "HID interface with two INs"
+ptr = "/outcomes/devices-ep-data-hidtwoin"
+
+[[tables.rows]]
+# outcome from stock: /results/8/per_second; medius: /results/8/cloned
+id = "devices-ep-data-vendbulkhigh"
+label = "Vendor bulk IN numbered 0x85"
+ptr = "/outcomes/devices-ep-data-vendbulkhigh"
+
+[[tables.rows]]
+# outcome from stock: /results/9/per_second; medius: /results/9/cloned
+id = "devices-ep-data-hidbulkin"
+label = "HID interface with a bulk IN"
+ptr = "/outcomes/devices-ep-data-hidbulkin"
+
+[[tables.rows]]
+# outcome from stock: /results/10/per_second; medius: /results/10/cloned
+id = "devices-ep-data-vendorbulk-1000-0"
+label = "Vendor bulk pair"
+ptr = "/outcomes/devices-ep-data-vendorbulk-1000-0"
+
+[[tables.rows]]
+# outcome from stock: /results/11/per_second; medius: /results/11/cloned
+id = "devices-ep-data-widehid-65-65"
+label = "HID IN declaring 65 bytes"
+ptr = "/outcomes/devices-ep-data-widehid-65-65"
+
+[[tables.rows]]
+# outcome from stock: /results/12/per_second, /results/13/per_second, /results/14/per_second; medius: /results/12/per_second, /results/13/per_second, /results/14/per_second
+id = "devices-ep-data-two-high-in"
+label = "Two high-numbered INs beside a mouse"
+ptr = "/outcomes/devices-ep-data-two-high-in"
+
+[[tables.rows]]
+# outcome from stock: /results/15/per_second, /results/16/per_second, /results/17/per_second, /results/18/per_second, /results/19/per_second; medius: /results/15/cloned, /results/16/cloned, /results/17/cloned, /results/18/cloned, /results/19/cloned
+id = "devices-ep-data-five-in"
+label = "Mouse with a vendor interface, five INs"
+ptr = "/outcomes/devices-ep-data-five-in"
+
+[[tables.rows]]
+# outcome from stock: /results/20/per_second, /results/21/present, /results/22/present, /results/23/present, /results/24/present, /results/25/present; medius: /results/20/cloned, /results/21/cloned, /results/22/cloned, /results/23/cloned, /results/24/cloned, /results/25/cloned
+id = "devices-ep-data-six-in"
+label = "Mouse with a vendor interface, six INs"
+ptr = "/outcomes/devices-ep-data-six-in"
+
+[[tables.rows]]
+# outcome from stock: /results/26/per_second, /results/27/per_second, /results/28/per_second; medius: /results/26/per_second, /results/27/per_second, /results/28/per_second
+id = "devices-ep-data-ten-interfaces"
+label = "Ten interfaces"
+ptr = "/outcomes/devices-ep-data-ten-interfaces"
+
+[[tables.rows]]
+# outcome from stock: /results/29/per_second; medius: /results/29/per_second
+id = "devices-ep-data-high-interface"
+label = "Vendor interface numbered 12"
+ptr = "/outcomes/devices-ep-data-high-interface"
+
+[[tables.rows]]
+# outcome from stock: /results/30/per_second, /results/31/per_second, /results/32/per_second, /results/33/per_second; medius: /results/30/per_second, /results/31/per_second, /results/32/per_second, /results/33/per_second
+id = "devices-ep-data-xinput"
+label = "XInput pad, four INs"
+ptr = "/outcomes/devices-ep-data-xinput"
+
+[[tables.rows]]
+# outcome from stock: /results/34/per_second, /results/35/per_second, /results/36/per_second, /results/37/per_second, /results/38/per_second; medius: /results/34/cloned, /results/35/cloned, /results/36/cloned, /results/37/cloned, /results/38/cloned
+id = "devices-ep-data-five-hid"
+label = "Keyboard with five HID interfaces, an IN on each"
+ptr = "/outcomes/devices-ep-data-five-hid"
+
+[[tables]]
+section = "devices-endpoint-data"
+order = 2
+kind = "outcome"
+label = "Endpoints delivering, Medius with imperfect clones on"
+key = "Device"
+outcomes = ["Every endpoint at the native rate", "Not cloned", "An endpoint sends nothing"]
+
+[[tables.rows]]
+# outcome from stock: /results/0/per_second; medius: /results/0/per_second
+id = "devices-ep-data-imp-vendorintr"
+label = "Vendor interrupt IN"
+ptr = "/outcomes/devices-ep-data-imp-vendorintr"
+
+[[tables.rows]]
+# outcome from stock: /results/1/per_second; medius: /results/1/per_second
+id = "devices-ep-data-imp-vendintrep-0x84"
+label = "Vendor IN numbered 0x84"
+ptr = "/outcomes/devices-ep-data-imp-vendintrep-0x84"
+
+[[tables.rows]]
+# outcome from stock: /results/2/per_second; medius: /results/2/per_second
+id = "devices-ep-data-imp-vendintrep-0x85"
+label = "Vendor IN numbered 0x85"
+ptr = "/outcomes/devices-ep-data-imp-vendintrep-0x85"
+
+[[tables.rows]]
+# outcome from stock: /results/3/per_second; medius: /results/3/per_second
+id = "devices-ep-data-imp-vendintrep-0x86"
+label = "Vendor IN numbered 0x86"
+ptr = "/outcomes/devices-ep-data-imp-vendintrep-0x86"
+
+[[tables.rows]]
+# outcome from stock: /results/4/present; medius: /results/4/cloned
+id = "devices-ep-data-imp-vendintrep-0x87"
+label = "Vendor IN numbered 0x87"
+ptr = "/outcomes/devices-ep-data-imp-vendintrep-0x87"
+
+[[tables.rows]]
+# outcome from stock: /results/5/per_second; medius: /results/5/per_second
+id = "devices-ep-data-imp-altsetting"
+label = "Vendor IN in an alternate setting"
+ptr = "/outcomes/devices-ep-data-imp-altsetting"
+
+[[tables.rows]]
+# outcome from stock: /results/6/per_second; medius: /results/6/per_second
+id = "devices-ep-data-imp-cdcnotify"
+label = "CDC notification endpoint"
+ptr = "/outcomes/devices-ep-data-imp-cdcnotify"
+
+[[tables.rows]]
+# outcome from stock: /results/7/per_second; medius: /results/7/per_second
+id = "devices-ep-data-imp-hidtwoin"
+label = "HID interface with two INs"
+ptr = "/outcomes/devices-ep-data-imp-hidtwoin"
+
+[[tables.rows]]
+# outcome from stock: /results/8/per_second; medius: /results/8/per_second
+id = "devices-ep-data-imp-vendbulkhigh"
+label = "Vendor bulk IN numbered 0x85"
+ptr = "/outcomes/devices-ep-data-imp-vendbulkhigh"
+
+[[tables.rows]]
+# outcome from stock: /results/9/per_second; medius: /results/9/per_second
+id = "devices-ep-data-imp-hidbulkin"
+label = "HID interface with a bulk IN"
+ptr = "/outcomes/devices-ep-data-imp-hidbulkin"
+
+[[tables.rows]]
+# outcome from stock: /results/10/per_second; medius: /results/10/per_second
+id = "devices-ep-data-imp-vendorbulk-1000-0"
+label = "Vendor bulk pair"
+ptr = "/outcomes/devices-ep-data-imp-vendorbulk-1000-0"
+
+[[tables.rows]]
+# outcome from stock: /results/11/per_second; medius: /results/11/cloned
+id = "devices-ep-data-imp-widehid-65-65"
+label = "HID IN declaring 65 bytes"
+ptr = "/outcomes/devices-ep-data-imp-widehid-65-65"
+
+[[tables.rows]]
+# outcome from stock: /results/12/per_second, /results/13/per_second, /results/14/per_second; medius: /results/12/per_second, /results/13/per_second, /results/14/per_second
+id = "devices-ep-data-imp-two-high-in"
+label = "Two high-numbered INs beside a mouse"
+ptr = "/outcomes/devices-ep-data-imp-two-high-in"
+
+[[tables.rows]]
+# outcome from stock: /results/15/per_second, /results/16/per_second, /results/17/per_second, /results/18/per_second, /results/19/per_second; medius: /results/15/per_second, /results/16/per_second, /results/17/per_second, /results/18/per_second, /results/19/per_second
+id = "devices-ep-data-imp-five-in"
+label = "Mouse with a vendor interface, five INs"
+ptr = "/outcomes/devices-ep-data-imp-five-in"
+
+[[tables.rows]]
+# outcome from stock: /results/20/per_second, /results/21/present, /results/22/present, /results/23/present, /results/24/present, /results/25/present; medius: /results/20/per_second, /results/21/per_second, /results/22/per_second, /results/23/per_second, /results/24/per_second, /results/25/per_second
+id = "devices-ep-data-imp-six-in"
+label = "Mouse with a vendor interface, six INs"
+ptr = "/outcomes/devices-ep-data-imp-six-in"
+
+[[tables.rows]]
+# outcome from stock: /results/26/per_second, /results/27/per_second, /results/28/per_second; medius: /results/26/per_second, /results/27/per_second, /results/28/per_second
+id = "devices-ep-data-imp-ten-interfaces"
+label = "Ten interfaces"
+ptr = "/outcomes/devices-ep-data-imp-ten-interfaces"
+
+[[tables.rows]]
+# outcome from stock: /results/29/per_second; medius: /results/29/per_second
+id = "devices-ep-data-imp-high-interface"
+label = "Vendor interface numbered 12"
+ptr = "/outcomes/devices-ep-data-imp-high-interface"
+
+[[tables.rows]]
+# outcome from stock: /results/30/per_second, /results/31/per_second, /results/32/per_second, /results/33/per_second; medius: /results/30/per_second, /results/31/per_second, /results/32/per_second, /results/33/per_second
+id = "devices-ep-data-imp-xinput"
+label = "XInput pad, four INs"
+ptr = "/outcomes/devices-ep-data-imp-xinput"
+
+[[tables.rows]]
+# outcome from stock: /results/34/per_second, /results/35/per_second, /results/36/per_second, /results/37/per_second, /results/38/per_second; medius: /results/34/per_second, /results/35/per_second, /results/36/per_second, /results/37/per_second, /results/38/per_second
+id = "devices-ep-data-imp-five-hid"
+label = "Keyboard with five HID interfaces, an IN on each"
+ptr = "/outcomes/devices-ep-data-imp-five-hid"

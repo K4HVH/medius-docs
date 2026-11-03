@@ -1,0 +1,317 @@
+# Seeded from the 2026-11-03 results; legs and pointers are set when the test is ported.
+id = "inject-latency"
+version = 1
+category = "injection"
+layout = "main"
+boxes = ["stock", "medius"]
+jams_stock = false
+
+[[tables]]
+section = "inj-latency"
+order = 1
+kind = "measure"
+label = "Default move latency, p50"
+key = "Mouse and move"
+unit = "ms"
+better = "lower"
+stat = "p50"
+layer = "wire"
+n = "200 moves a run, 2 runs"
+commands = { stock = "km.move", medius = "MOVE" }
+resolution = 0.01
+
+[[tables.rows]]
+id = "inj-lat-rest-1"
+label = "Resting mouse, 1 count"
+ptr = "/rested/cells/0/wire/done/p50"
+unit = "us"
+
+[[tables.rows]]
+id = "inj-lat-rest-50"
+label = "Resting mouse, 50 counts"
+ptr = "/rested/cells/2/wire/done/p50"
+unit = "us"
+
+[[tables.rows]]
+id = "inj-lat-1k-50"
+label = "Moving 1 kHz mouse, 50 counts"
+ptr = "/base/cells/6/wire/done/p50"
+unit = "us"
+
+[[tables]]
+section = "inj-latency"
+order = 2
+kind = "measure"
+label = "Default move latency, p95"
+key = "Mouse and move"
+unit = "ms"
+better = "lower"
+stat = "p95"
+layer = "wire"
+n = "200 moves a run, 2 runs"
+commands = { stock = "km.move", medius = "MOVE" }
+resolution = 0.01
+
+[[tables.rows]]
+id = "inj-lat-p95-rest-1"
+label = "Resting mouse, 1 count"
+ptr = "/rested/cells/0/wire/done/p95"
+unit = "us"
+
+[[tables.rows]]
+id = "inj-lat-p95-rest-50"
+label = "Resting mouse, 50 counts"
+ptr = "/rested/cells/2/wire/done/p95"
+unit = "us"
+
+[[tables.rows]]
+id = "inj-lat-p95-1k-50"
+label = "Moving 1 kHz mouse, 50 counts"
+ptr = "/base/cells/6/wire/done/p95"
+unit = "us"
+
+[[tables]]
+section = "inj-latency"
+order = 3
+kind = "measure"
+label = "Immediate move latency, p50"
+key = "Mouse and move"
+unit = "ms"
+better = "lower"
+stat = "p50"
+layer = "wire"
+n = "200 moves a run, 2 runs"
+commands = { stock = "km.move_now", medius = "MOVE(NOW)" }
+resolution = 0.001
+
+[[tables.rows]]
+id = "inj-lat-now-rest-1"
+label = "Resting mouse, 1 count"
+ptr = "/rested/cells/1/wire/done/p50"
+unit = "us"
+
+[[tables.rows]]
+id = "inj-lat-now-rest-50"
+label = "Resting mouse, 50 counts"
+ptr = "/rested/cells/3/wire/done/p50"
+unit = "us"
+
+[[tables.rows]]
+id = "inj-lat-now-1k-1"
+label = "Moving 1 kHz mouse, 1 count"
+ptr = "/base/cells/5/wire/done/p50"
+unit = "us"
+
+[[tables.rows]]
+id = "inj-lat-now-1k-50"
+label = "Moving 1 kHz mouse, 50 counts"
+ptr = "/base/cells/7/wire/done/p50"
+unit = "us"
+
+[[tables.rows]]
+id = "inj-lat-now-125-1"
+label = "Moving 125 Hz mouse, 1 count"
+ptr = "/base/cells/9/wire/done/p50"
+unit = "us"
+
+[[tables.rows]]
+id = "inj-lat-now-125-50"
+label = "Moving 125 Hz mouse, 50 counts"
+ptr = "/base/cells/11/wire/done/p50"
+unit = "us"
+
+[[tables]]
+section = "inj-latency"
+order = 4
+kind = "measure"
+label = "Immediate move latency, p95"
+key = "Mouse and move"
+unit = "ms"
+better = "lower"
+stat = "p95"
+layer = "wire"
+n = "200 moves a run, 2 runs"
+commands = { stock = "km.move_now", medius = "MOVE(NOW)" }
+resolution = 0.01
+
+[[tables.rows]]
+id = "inj-lat-now-p95-rest-1"
+label = "Resting mouse, 1 count"
+ptr = "/rested/cells/1/wire/done/p95"
+unit = "us"
+
+[[tables.rows]]
+id = "inj-lat-now-p95-rest-50"
+label = "Resting mouse, 50 counts"
+ptr = "/rested/cells/3/wire/done/p95"
+unit = "us"
+
+[[tables.rows]]
+id = "inj-lat-now-p95-1k-1"
+label = "Moving 1 kHz mouse, 1 count"
+ptr = "/base/cells/5/wire/done/p95"
+unit = "us"
+
+[[tables.rows]]
+id = "inj-lat-now-p95-1k-50"
+label = "Moving 1 kHz mouse, 50 counts"
+ptr = "/base/cells/7/wire/done/p95"
+unit = "us"
+
+[[tables.rows]]
+id = "inj-lat-now-p95-125-1"
+label = "Moving 125 Hz mouse, 1 count"
+ptr = "/base/cells/9/wire/done/p95"
+unit = "us"
+
+[[tables.rows]]
+id = "inj-lat-now-p95-125-50"
+label = "Moving 125 Hz mouse, 50 counts"
+ptr = "/base/cells/11/wire/done/p95"
+unit = "us"
+
+[[tables]]
+section = "inj-latency"
+order = 5
+kind = "measure"
+label = "Default moves with their first count within 0.5 s"
+key = "Mouse and move"
+unit = "moves"
+better = "higher"
+layer = "evdev"
+n = "200 moves a run, 2 runs"
+commands = { stock = "km.move", medius = "MOVE" }
+
+[[tables.rows]]
+id = "inj-delivered-rest-1"
+label = "Resting mouse, 1 count"
+ptr = "/rested/cells/0/delivered"
+of = 200
+
+[[tables.rows]]
+id = "inj-delivered-rest-50"
+label = "Resting mouse, 50 counts"
+ptr = "/rested/cells/2/delivered"
+of = 200
+
+[[tables.rows]]
+id = "inj-delivered-1k-1"
+label = "Moving 1 kHz mouse, 1 count"
+ptr = "/base/cells/4/delivered"
+of = 200
+
+[[tables.rows]]
+id = "inj-delivered-1k-50"
+label = "Moving 1 kHz mouse, 50 counts"
+ptr = "/base/cells/6/delivered"
+of = 200
+
+[[tables.rows]]
+id = "inj-delivered-125-1"
+label = "Moving 125 Hz mouse, 1 count"
+ptr = "/base/cells/8/delivered"
+of = 200
+
+[[tables.rows]]
+id = "inj-delivered-125-50"
+label = "Moving 125 Hz mouse, 50 counts"
+ptr = "/base/cells/10/delivered"
+of = 200
+
+[[tables]]
+section = "inj-latency"
+order = 6
+kind = "measure"
+label = "Default moves arriving in full before the next"
+key = "Mouse and move"
+unit = "moves"
+better = "higher"
+layer = "evdev"
+n = "200 moves a run, 2 runs"
+commands = { stock = "km.move", medius = "MOVE" }
+
+[[tables.rows]]
+id = "inj-exact-rest-1"
+label = "Resting mouse, 1 count"
+ptr = "/rested/cells/0/exact"
+of = 200
+
+[[tables.rows]]
+id = "inj-exact-rest-50"
+label = "Resting mouse, 50 counts"
+ptr = "/rested/cells/2/exact"
+of = 200
+
+[[tables.rows]]
+id = "inj-exact-1k-1"
+label = "Moving 1 kHz mouse, 1 count"
+ptr = "/base/cells/4/exact"
+of = 200
+
+[[tables.rows]]
+id = "inj-exact-1k-50"
+label = "Moving 1 kHz mouse, 50 counts"
+ptr = "/base/cells/6/exact"
+of = 200
+
+[[tables.rows]]
+id = "inj-exact-125-1"
+label = "Moving 125 Hz mouse, 1 count"
+ptr = "/base/cells/8/exact"
+of = 200
+
+[[tables.rows]]
+id = "inj-exact-125-50"
+label = "Moving 125 Hz mouse, 50 counts"
+ptr = "/base/cells/10/exact"
+of = 200
+
+[[tables]]
+section = "inj-latency"
+order = 8
+kind = "measure"
+label = "Default move latency counting every move, p95"
+key = "Mouse and move"
+unit = "ms"
+better = "lower"
+stat = "p95"
+layer = "evdev"
+n = "200 moves a run, 2 runs"
+commands = { stock = "km.move", medius = "MOVE" }
+resolution = 0.01
+
+[[tables.rows]]
+id = "inj-every-p95-rest-1"
+label = "Resting mouse, 1 count"
+ptr = "/rested/cells/0/done_every_move/p95"
+unit = "us"
+
+[[tables.rows]]
+id = "inj-every-p95-rest-50"
+label = "Resting mouse, 50 counts"
+ptr = "/rested/cells/2/done_every_move/p95"
+unit = "us"
+
+[[tables.rows]]
+id = "inj-every-p95-1k-1"
+label = "Moving 1 kHz mouse, 1 count"
+ptr = "/base/cells/4/done_every_move/p95"
+unit = "us"
+
+[[tables.rows]]
+id = "inj-every-p95-1k-50"
+label = "Moving 1 kHz mouse, 50 counts"
+ptr = "/base/cells/6/done_every_move/p95"
+unit = "us"
+
+[[tables.rows]]
+id = "inj-every-p95-125-1"
+label = "Moving 125 Hz mouse, 1 count"
+ptr = "/base/cells/8/done_every_move/p95"
+unit = "us"
+
+[[tables.rows]]
+id = "inj-every-p95-125-50"
+label = "Moving 125 Hz mouse, 50 counts"
+ptr = "/base/cells/10/done_every_move/p95"
+unit = "us"

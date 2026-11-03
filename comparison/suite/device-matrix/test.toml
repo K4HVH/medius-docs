@@ -1,0 +1,284 @@
+# Seeded from the 2026-11-03 results; legs and pointers are set when the test is ported.
+id = "device-matrix"
+version = 1
+category = "devices"
+layout = "main"
+boxes = ["stock", "medius"]
+jams_stock = false
+
+[[tables]]
+section = "devices-shapes"
+order = 1
+kind = "outcome"
+label = "Native data reaching the PC"
+key = "Device"
+outcomes = ["All data arrives", "Not cloned", "An interface sends nothing"]
+
+[[tables.rows]]
+# outcome from stock: /results/51/boxes/stock/hid_reports_1s/3-2.2:1.0, /results/57/boxes/stock/hid_reports_1s/3-2.2:1.0, /results/52/boxes/stock/hid_reports_1s/3-2.2:1.0; medius: /results/52/boxes/medius/hid_reports_1s/3-2.3:1.0, /results/58/boxes/medius/hid_reports_1s/3-2.3:1.0, /results/53/boxes/medius/hid_reports_1s/3-2.3:1.0
+id = "devices-data-mice-1ms"
+label = "Three mice with a 1 ms interval"
+note = "8-bit and 16-bit axes, and a mouse and keyboard in one"
+ptr = "/outcomes/devices-data-mice-1ms"
+
+[[tables.rows]]
+# outcome from stock: /results/53/boxes/stock/hid_reports_1s/3-2.2:1.0; medius: /results/54/boxes/medius/hid_reports_1s/3-2.3:1.0
+id = "devices-data-boot-keyboard"
+label = "Boot keyboard"
+ptr = "/outcomes/devices-data-boot-keyboard"
+
+[[tables.rows]]
+# outcome from stock: /results/58/boxes/stock/hid_reports_1s/3-2.2:1.0, /results/58/boxes/stock/hid_reports_1s/3-2.2:1.1; medius: /results/59/boxes/medius/hid_reports_1s/3-2.3:1.0, /results/59/boxes/medius/hid_reports_1s/3-2.3:1.1
+id = "devices-data-hid-stream-beside-mouse"
+label = "Mouse with a second, streaming HID interface"
+ptr = "/outcomes/devices-data-hid-stream-beside-mouse"
+
+[[tables.rows]]
+# outcome from stock: /results/5/boxes/stock/hid_reports_1s/3-2.2:1.0, /results/15/boxes/stock/hid_reports_1s/3-2.2:1.0, /results/29/boxes/stock/hid_reports_1s/3-2.2:1.0; medius: /results/5/boxes/medius/hid_reports_1s/3-2.3:1.0, /results/15/boxes/medius/hid_reports_1s/3-2.3:1.0, /results/30/boxes/medius/hid_reports_1s/3-2.3:1.0
+id = "devices-data-hid-variants"
+label = "Three unusual HID interfaces"
+note = "Alternate settings, a 64-byte endpoint, the HID descriptor after the endpoint"
+ptr = "/outcomes/devices-data-hid-variants"
+
+[[tables.rows]]
+# outcome from stock: /results/27/boxes/stock/hid_reports_1s/3-2.2:1.0, /results/27/boxes/stock/hid_reports_1s/3-2.2:1.2, /results/28/boxes/stock/hid_reports_1s/3-2.2:1.1, /results/28/boxes/stock/hid_reports_1s/3-2.2:1.2; medius: /results/28/boxes/medius/hid_reports_1s/3-2.3:1.0, /results/28/boxes/medius/hid_reports_1s/3-2.3:1.2, /results/29/boxes/medius/hid_reports_1s/3-2.3:1.1, /results/29/boxes/medius/hid_reports_1s/3-2.3:1.2
+id = "devices-data-layouts"
+label = "Two unusual interface layouts"
+note = "A gap in the interface numbers, numbering from 1"
+ptr = "/outcomes/devices-data-layouts"
+
+[[tables.rows]]
+# outcome from stock: /results/31/boxes/stock/hid_reports_1s/3-2.2:1.0, /results/32/boxes/stock/hid_reports_1s/3-2.2:1.0, /results/33/boxes/stock/hid_reports_1s/3-2.2:1.0, /results/34/boxes/stock/hid_reports_1s/3-2.2:1.0; medius: /results/32/boxes/medius/hid_reports_1s/3-2.3:1.0, /results/33/boxes/medius/hid_reports_1s/3-2.3:1.0, /results/34/boxes/medius/hid_reports_1s/3-2.3:1.0, /results/35/boxes/medius/hid_reports_1s/3-2.3:1.0
+id = "devices-data-slow-report"
+label = "Four devices slow to give their report descriptor"
+note = "450 or 700 ms late, or refused"
+ptr = "/outcomes/devices-data-slow-report"
+
+[[tables.rows]]
+# outcome from stock: /results/41/boxes/stock/hid_reports_1s/3-2.2:1.0, /results/42/boxes/stock/hid_reports_1s/3-2.2:1.0; medius: /results/42/boxes/medius/hid_reports_1s/3-2.3:1.0, /results/43/boxes/medius/hid_reports_1s/3-2.3:1.0
+id = "devices-data-qualifier"
+label = "Two mice, with and without a device qualifier"
+ptr = "/outcomes/devices-data-qualifier"
+
+[[tables.rows]]
+# outcome from stock: /results/0/boxes/stock/hid_reports_1s/3-2.2:1.0, /results/1/boxes/stock/hid_reports_1s/3-2.2:1.0, /results/1/boxes/stock/hid_reports_1s/3-2.2:1.1, /results/22/boxes/stock/hid_reports_1s/3-2.2:1.0, /results/25/boxes/stock/hid_reports_1s/3-2.2:1.0, /results/54/boxes/stock/hid_reports_1s/3-2.2:1.0; medius: /results/0/boxes/medius/hid_reports_1s/3-2.3:1.0, /results/1/boxes/medius/hid_reports_1s/3-2.3:1.0, /results/1/boxes/medius/hid_reports_1s/3-2.3:1.1, /results/22/boxes/medius/hid_reports_1s/3-2.3:1.0, /results/26/boxes/medius/hid_reports_1s/3-2.3:1.0, /results/55/boxes/medius/hid_reports_1s/3-2.3:1.0
+id = "devices-data-mice-slow"
+label = "Five mice with an 8 or 10 ms interval"
+note = "Including a two-mouse device and a mouse with two configurations"
+ptr = "/outcomes/devices-data-mice-slow"
+
+[[tables.rows]]
+# outcome from stock: /results/18/boxes/stock/snapshot/interfaces/0/driver, /results/18/boxes/stock/snapshot/interfaces/0/hid; medius: /results/18/boxes/medius/hid_reports_1s/3-2.3:1.0
+id = "devices-data-report-1500"
+label = "Mouse with a 1,500-byte report descriptor"
+ptr = "/outcomes/devices-data-report-1500"
+
+[[tables.rows]]
+# outcome from stock: /results/13/boxes/stock/hid_reports_1s/3-2.2:1.4, /results/13/boxes/stock/hid_reports_1s/3-2.2:1.2; medius: /results/13/boxes/medius/cloned
+id = "devices-data-five-hid"
+label = "Keyboard with five HID interfaces, an IN endpoint on each"
+ptr = "/outcomes/devices-data-five-hid"
+
+[[tables.rows]]
+# outcome from stock: /results/12/boxes/stock/vs_authored/config0, /results/12/boxes/stock/snapshot/interfaces; medius: /results/12/boxes/medius/cloned
+id = "devices-data-six-in"
+label = "Mouse with a vendor interface, six IN endpoints"
+ptr = "/outcomes/devices-data-six-in"
+
+[[tables.rows]]
+# outcome from stock: /results/19/boxes/stock/hid_reports_1s/3-2.2:1.0; medius: /results/19/boxes/medius/hid_reports_1s/3-2.3:1.0
+id = "devices-data-report-declared-3000"
+label = "Mouse claiming a 3,000-byte report descriptor"
+note = "It sends 50 bytes, which the PC pads to 3,000 with zeros"
+ptr = "/outcomes/devices-data-report-declared-3000"
+
+[[tables.rows]]
+# outcome from stock: /results/24/boxes/stock/hid_reports_1s/3-2.2:1.0; medius: /results/24/boxes/medius/hid_reports_1s/3-2.3:1.0
+id = "devices-data-second-config"
+label = "Mouse with an unused second configuration"
+ptr = "/outcomes/devices-data-second-config"
+
+[[tables.rows]]
+# outcome from stock: /results/36/boxes/stock/hid_reports_1s/3-2.2:1.0; medius: /results/37/boxes/medius/hid_reports_1s/3-2.3:1.0
+id = "devices-data-nine-alternates"
+label = "Mouse with a vendor interface of nine settings"
+ptr = "/outcomes/devices-data-nine-alternates"
+
+[[tables.rows]]
+# outcome from stock: /results/0/boxes/stock/hid_reports_1s/3-2.2:1.0; medius: /results/0/boxes/medius/hid_reports_1s/3-2.3:1.0
+id = "devices-ep0-data-8"
+label = "Mouse with an 8-byte endpoint 0"
+test = "ep0-shapes"
+ptr = "/outcomes/devices-ep0-data-8"
+
+[[tables.rows]]
+# outcome from stock: /results/1/boxes/stock/hid_reports_1s/3-2.2:1.0; medius: /results/1/boxes/medius/hid_reports_1s/3-2.3:1.0
+id = "devices-ep0-data-16"
+label = "Mouse with a 16-byte endpoint 0"
+test = "ep0-shapes"
+ptr = "/outcomes/devices-ep0-data-16"
+
+[[tables.rows]]
+# outcome from stock: /results/2/boxes/stock/hid_reports_1s/3-2.2:1.0; medius: /results/2/boxes/medius/hid_reports_1s/3-2.3:1.0
+id = "devices-ep0-data-32"
+label = "Mouse with a 32-byte endpoint 0"
+test = "ep0-shapes"
+ptr = "/outcomes/devices-ep0-data-32"
+
+[[tables.rows]]
+# outcome from stock: /results/3/boxes/stock/hid_reports_1s/3-2.2:1.0; medius: /results/3/boxes/medius/hid_reports_1s/3-2.3:1.0
+id = "devices-ep0-data-strings"
+label = "Mouse with name and serial strings"
+test = "ep0-shapes"
+ptr = "/outcomes/devices-ep0-data-strings"
+
+[[tables.rows]]
+# outcome from stock: /results/38/boxes/stock/hid_reports_1s/3-2.2:1.200; medius: /results/39/boxes/medius/hid_reports_1s/3-2.3:1.200
+id = "devices-data-far-interfaces"
+label = "HID interface numbered 200 beside a vendor one numbered 60"
+ptr = "/outcomes/devices-data-far-interfaces"
+
+[[tables.rows]]
+# outcome from stock: /results/43/boxes/stock/hid_reports_1s/3-2.2:1.0; medius: /results/44/boxes/medius/hid_reports_1s/3-2.3:1.0
+id = "devices-data-builtin-gamingmouse"
+label = "Gaming mouse"
+ptr = "/outcomes/devices-data-builtin-gamingmouse"
+
+[[tables.rows]]
+# outcome from stock: /results/44/boxes/stock/hid_reports_1s/3-2.2:1.0; medius: /results/45/boxes/medius/hid_reports_1s/3-2.3:1.0
+id = "devices-data-builtin-keyboard"
+label = "Keyboard"
+ptr = "/outcomes/devices-data-builtin-keyboard"
+
+[[tables.rows]]
+# outcome from stock: /results/46/boxes/stock/hid_reports_1s/3-2.2:1.0; medius: /results/47/boxes/medius/hid_reports_1s/3-2.3:1.0
+id = "devices-data-builtin-hsmouse"
+label = "High-speed mouse"
+ptr = "/outcomes/devices-data-builtin-hsmouse"
+
+[[tables.rows]]
+# outcome from stock: /results/47/boxes/stock/hid_reports_1s/3-2.2:1.0; medius: /results/48/boxes/medius/hid_reports_1s/3-2.3:1.0
+id = "devices-data-builtin-stall"
+label = "Mouse that stalls its endpoint after 200 reports"
+ptr = "/outcomes/devices-data-builtin-stall"
+
+[[tables]]
+section = "devices-shapes"
+order = 3
+kind = "measure"
+label = "Time from device appearing to clone configured, min to max"
+key = "Devices"
+unit = "s"
+better = "lower"
+stat = "min to max"
+layer = "host"
+n = "One clone of each device"
+resolution = 0.01
+
+[[tables.rows]]
+# pointers differed by box; medius: ['/base/results/0/boxes/medius/enum_s', '/base/results/1/boxes/medius/enum_s', '/base/results/2/boxes/medius/enum_s', '/base/results/4/boxes/medius/enum_s', '/base/results/5/boxes/medius/enum_s', '/base/results/7/boxes/medius/enum_s', '/base/results/8/boxes/medius/enum_s', '/base/results/9/boxes/medius/enum_s', '/base/results/10/boxes/medius/enum_s', '/base/results/15/boxes/medius/enum_s', '/base/results/17/boxes/medius/enum_s', '/base/results/18/boxes/medius/enum_s', '/base/results/21/boxes/medius/enum_s', '/base/results/22/boxes/medius/enum_s', '/base/results/23/boxes/medius/enum_s', '/base/results/26/boxes/medius/enum_s', '/base/results/27/boxes/medius/enum_s', '/base/results/28/boxes/medius/enum_s', '/base/results/29/boxes/medius/enum_s', '/base/results/30/boxes/medius/enum_s', '/base/results/31/boxes/medius/enum_s', '/base/results/32/boxes/medius/enum_s', '/base/results/33/boxes/medius/enum_s', '/base/results/34/boxes/medius/enum_s', '/base/results/35/boxes/medius/enum_s', '/base/results/36/boxes/medius/enum_s', '/base/results/37/boxes/medius/enum_s', '/base/results/38/boxes/medius/enum_s', '/base/results/39/boxes/medius/enum_s', '/base/results/41/boxes/medius/enum_s', '/base/results/42/boxes/medius/enum_s', '/base/results/43/boxes/medius/enum_s', '/base/results/44/boxes/medius/enum_s', '/base/results/45/boxes/medius/enum_s', '/base/results/46/boxes/medius/enum_s', '/base/results/47/boxes/medius/enum_s', '/base/results/48/boxes/medius/enum_s', '/base/results/51/boxes/medius/enum_s', '/base/results/52/boxes/medius/enum_s', '/base/results/53/boxes/medius/enum_s', '/base/results/54/boxes/medius/enum_s', '/base/results/55/boxes/medius/enum_s', '/base/results/58/boxes/medius/enum_s', '/base/results/59/boxes/medius/enum_s', '/base/results/56/boxes/medius/enum_s', '/base/results/57/boxes/medius/enum_s']
+id = "devices-clone-time-all"
+label = "The 46 devices both boxes clone"
+ptr = ["/base/results/0/boxes/stock/enum_s", "/base/results/1/boxes/stock/enum_s", "/base/results/2/boxes/stock/enum_s", "/base/results/4/boxes/stock/enum_s", "/base/results/5/boxes/stock/enum_s", "/base/results/7/boxes/stock/enum_s", "/base/results/8/boxes/stock/enum_s", "/base/results/9/boxes/stock/enum_s", "/base/results/10/boxes/stock/enum_s", "/base/results/15/boxes/stock/enum_s", "/base/results/17/boxes/stock/enum_s", "/base/results/18/boxes/stock/enum_s", "/base/results/21/boxes/stock/enum_s", "/base/results/22/boxes/stock/enum_s", "/base/results/23/boxes/stock/enum_s", "/base/results/25/boxes/stock/enum_s", "/base/results/26/boxes/stock/enum_s", "/base/results/27/boxes/stock/enum_s", "/base/results/28/boxes/stock/enum_s", "/base/results/29/boxes/stock/enum_s", "/base/results/30/boxes/stock/enum_s", "/base/results/31/boxes/stock/enum_s", "/base/results/32/boxes/stock/enum_s", "/base/results/33/boxes/stock/enum_s", "/base/results/34/boxes/stock/enum_s", "/base/results/35/boxes/stock/enum_s", "/base/results/36/boxes/stock/enum_s", "/base/results/37/boxes/stock/enum_s", "/base/results/38/boxes/stock/enum_s", "/base/results/40/boxes/stock/enum_s", "/base/results/41/boxes/stock/enum_s", "/base/results/42/boxes/stock/enum_s", "/base/results/43/boxes/stock/enum_s", "/base/results/44/boxes/stock/enum_s", "/base/results/45/boxes/stock/enum_s", "/base/results/46/boxes/stock/enum_s", "/base/results/47/boxes/stock/enum_s", "/base/results/50/boxes/stock/enum_s", "/base/results/51/boxes/stock/enum_s", "/base/results/52/boxes/stock/enum_s", "/base/results/53/boxes/stock/enum_s", "/base/results/54/boxes/stock/enum_s", "/base/results/57/boxes/stock/enum_s", "/base/results/58/boxes/stock/enum_s", "/base/results/55/boxes/stock/enum_s", "/base/results/56/boxes/stock/enum_s"]
+
+[[tables]]
+section = "devices-intervals"
+order = 1
+kind = "outcome"
+label = "Interval the PC polls at"
+key = "Device"
+outcomes = ["Native interval", "1 ms"]
+
+[[tables.rows]]
+# outcome from stock: /results/0/boxes/stock/snapshot/descriptors, /results/1/boxes/stock/snapshot/descriptors, /results/22/boxes/stock/snapshot/descriptors, /results/25/boxes/stock/snapshot/descriptors; medius: /results/0/boxes/medius/snapshot/descriptors, /results/1/boxes/medius/snapshot/descriptors, /results/22/boxes/medius/snapshot/descriptors, /results/26/boxes/medius/snapshot/descriptors
+id = "devices-interval-mouse-10"
+label = "Four mice with a 10 ms interval"
+note = "Including a two-mouse device and a mouse with two configurations"
+ptr = "/outcomes/devices-interval-mouse-10"
+
+[[tables.rows]]
+# outcome from stock: /results/54/boxes/stock/vs_authored/config0; medius: /results/55/boxes/medius/vs_authored/config0
+id = "devices-interval-mouse-8"
+label = "Mouse with an 8 ms interval"
+ptr = "/outcomes/devices-interval-mouse-8"
+
+[[tables.rows]]
+# outcome from stock: /results/2/boxes/stock/snapshot/descriptors; medius: /results/2/boxes/medius/snapshot/descriptors
+id = "devices-interval-mouse-4"
+label = "Mouse with a 4 ms interval"
+ptr = "/outcomes/devices-interval-mouse-4"
+
+[[tables.rows]]
+# outcome from stock: /results/1/boxes/stock/snapshot/descriptors; medius: /results/1/boxes/medius/snapshot/descriptors
+id = "devices-interval-mouse-2"
+label = "Mouse with a 2 ms interval"
+ptr = "/outcomes/devices-interval-mouse-2"
+
+[[tables.rows]]
+# outcome from stock: /results/18/boxes/stock/snapshot/descriptors; medius: /results/18/boxes/medius/snapshot/descriptors
+id = "devices-interval-mouse-big-report"
+label = "Mouse with a 10 ms interval and a 1,500-byte report descriptor"
+ptr = "/outcomes/devices-interval-mouse-big-report"
+
+[[tables.rows]]
+# outcome from stock: /results/15/boxes/stock/snapshot/descriptors; medius: /results/15/boxes/medius/snapshot/descriptors
+id = "devices-interval-vendor-hid"
+label = "Vendor HID interface with a 4 ms interval"
+ptr = "/outcomes/devices-interval-vendor-hid"
+
+[[tables.rows]]
+# outcome from stock: /results/40/boxes/stock/vs_authored/config0; medius: /results/41/boxes/medius/vs_authored/config0
+id = "devices-interval-xinput"
+label = "XInput pad with 2-64 ms intervals"
+ptr = "/outcomes/devices-interval-xinput"
+
+[[tables]]
+section = "devices-intervals"
+order = 2
+kind = "outcome"
+label = "Reports/s reaching the PC"
+key = "Device"
+outcomes = ["Native rate", "Above native rate"]
+
+[[tables.rows]]
+# outcome from stock: /results/25/boxes/stock/hid_reports_1s/3-2.2:1.0; medius: /results/26/boxes/medius/hid_reports_1s/3-2.3:1.0
+id = "devices-poll-reports-1ms-behind-10ms"
+label = "Mouse reporting every 1 ms with a 10 ms interval"
+note = "Native rate: 125/s"
+ptr = "/outcomes/devices-poll-reports-1ms-behind-10ms"
+
+[[tables.rows]]
+# outcome from stock: /results/54/boxes/stock/hid_reports_1s/3-2.2:1.0; medius: /results/55/boxes/medius/hid_reports_1s/3-2.3:1.0
+id = "devices-poll-reports-8ms-behind-8ms"
+label = "Mouse reporting every 8 ms with an 8 ms interval"
+ptr = "/outcomes/devices-poll-reports-8ms-behind-8ms"
+
+[[tables]]
+section = "devices-intervals"
+order = 3
+kind = "outcome"
+label = "Interval the clone declares for a high-speed mouse"
+key = "Device"
+outcomes = ["Native bInterval 4", "1 ms"]
+ranked = false
+
+[[tables.rows]]
+# outcome from stock: /results/46/boxes/stock/snapshot/descriptors, /results/46/boxes/stock/hid_reports_1s/3-2.2:1.0; medius: /results/47/boxes/medius/snapshot/descriptors, /results/47/boxes/medius/hid_reports_1s/3-2.3:1.0
+id = "devices-interval-hs-mouse"
+label = "High-speed mouse declaring bInterval 4 (1 ms at high speed)"
+note = "Both clones run at full speed, where the PC reads bInterval 4 as 4 ms"
+ptr = "/outcomes/devices-interval-hs-mouse"
+
+[[tables]]
+section = "devices-imperfect"
+order = 1
+kind = "outcome"
+label = "Native data reaching the PC"
+key = "Device"
+outcomes = ["All data arrives", "Not cloned", "An interface sends nothing"]
+
+[[tables.rows]]
+# outcome from stock: /results/13/boxes/stock/hid_reports_1s/3-2.2:1.4, /results/13/boxes/stock/hid_reports_1s/3-2.2:1.2; medius: /results/4/boxes/medius/hid_reports_1s/3-2.3:1.2, /results/4/boxes/medius/hid_reports_1s/3-2.3:1.4
+id = "devices-imperfect-data-five-hid"
+label = "Keyboard with five HID interfaces, an IN endpoint on each"
+ptr = "/outcomes/devices-imperfect-data-five-hid"

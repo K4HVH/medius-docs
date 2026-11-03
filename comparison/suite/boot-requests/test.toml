@@ -1,0 +1,39 @@
+# Seeded from the 2026-11-03 results; legs and pointers are set when the test is ported.
+id = "boot-requests"
+version = 1
+category = "passthrough"
+layout = "main"
+boxes = ["stock", "medius"]
+jams_stock = false
+
+[[tables]]
+section = "pass-boot"
+order = 1
+kind = "measure"
+label = "Tries with a request left unanswered"
+key = "Requests"
+unit = "tries"
+better = "lower"
+n = "20 tries, 1 run"
+
+[[tables.rows]]
+id = "pass-boot-unanswered"
+label = "SET_PROTOCOL, SET_IDLE and GET_PROTOCOL to 2 interfaces"
+ptr = "/results/0/tries_with_a_request_unanswered"
+of = 20
+
+[[tables]]
+section = "pass-boot"
+order = 2
+kind = "measure"
+label = "Reports from before the switch read after it, min to max"
+key = "Mouse"
+unit = "reports"
+better = "lower"
+n = "20 tries, 1 run"
+resolution = 1
+
+[[tables.rows]]
+id = "pass-boot-stale"
+label = "Gaming mouse, read through usbfs"
+ptr = ["/results/0/tries/0/reports_before_first_boot_report", "/results/0/tries/1/reports_before_first_boot_report", "/results/0/tries/2/reports_before_first_boot_report", "/results/0/tries/3/reports_before_first_boot_report", "/results/0/tries/4/reports_before_first_boot_report", "/results/0/tries/5/reports_before_first_boot_report", "/results/0/tries/6/reports_before_first_boot_report", "/results/0/tries/7/reports_before_first_boot_report", "/results/0/tries/8/reports_before_first_boot_report", "/results/0/tries/9/reports_before_first_boot_report", "/results/0/tries/10/reports_before_first_boot_report", "/results/0/tries/11/reports_before_first_boot_report", "/results/0/tries/12/reports_before_first_boot_report", "/results/0/tries/13/reports_before_first_boot_report", "/results/0/tries/14/reports_before_first_boot_report", "/results/0/tries/15/reports_before_first_boot_report", "/results/0/tries/16/reports_before_first_boot_report", "/results/0/tries/17/reports_before_first_boot_report", "/results/0/tries/18/reports_before_first_boot_report", "/results/0/tries/19/reports_before_first_boot_report"]

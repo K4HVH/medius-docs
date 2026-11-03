@@ -1,0 +1,50 @@
+# Seeded from the 2026-11-03 results; legs and pointers are set when the test is ported.
+id = "pause-relay"
+version = 1
+category = "passthrough"
+layout = "main"
+boxes = ["stock", "medius"]
+jams_stock = false
+
+[[tables]]
+section = "pass-pause"
+order = 1
+kind = "measure"
+label = "Counter values skipped"
+key = "Endpoint"
+unit = "values"
+better = "lower"
+n = "8,000 reports per interrupt endpoint, 48,000 bulk packets, 1 run"
+resolution = 1
+
+[[tables.rows]]
+id = "pass-pause-skip-hid"
+label = "Vendor-page HID interrupt IN"
+ptr = "/results/0/endpoints/0x82/skipped"
+
+[[tables.rows]]
+id = "pass-pause-skip-vendor"
+label = "Vendor interrupt IN"
+ptr = "/results/0/endpoints/0x83/skipped"
+
+[[tables.rows]]
+id = "pass-pause-skip-bulk"
+label = "Vendor bulk IN"
+ptr = "/results/1/endpoints/0x83/skipped"
+
+[[tables]]
+section = "pass-pause"
+order = 2
+kind = "measure"
+label = "Bulk IN packets read per second, back to back"
+key = "Endpoint"
+unit = "/s"
+better = "higher"
+layer = "host"
+n = "20,000 packets, 1 run"
+resolution = 0.1
+
+[[tables.rows]]
+id = "pass-pause-bulk-rate"
+label = "Vendor bulk IN, 64-byte packets"
+ptr = "/results/1/endpoints/0x83/phases/settle/per_second"

@@ -1,0 +1,51 @@
+# Seeded from the 2026-11-03 results; legs and pointers are set when the test is ported.
+id = "raw-move"
+version = 1
+category = "injection"
+layout = "main"
+boxes = ["stock", "medius"]
+jams_stock = false
+
+[[tables]]
+section = "inj-raw-move"
+order = 1
+kind = "measure"
+label = "Unsmoothed move latency, p50"
+key = "Mouse"
+unit = "ms"
+better = "lower"
+stat = "p50"
+layer = "wire"
+n = "40 moves per row, 2 runs"
+commands = { stock = "RAW_MOVE", medius = "MOVE(NOW)" }
+resolution = 0.001
+
+[[tables.rows]]
+id = "inj-raw-lat-rest"
+label = "Still mouse"
+ptr = "/results/0/latency/p50"
+unit = "us"
+
+[[tables.rows]]
+id = "inj-raw-lat-moving"
+label = "Moving 1 kHz mouse"
+ptr = "/results/1/latency/p50"
+unit = "us"
+
+[[tables]]
+section = "inj-raw-move"
+order = 2
+kind = "measure"
+label = "Counts arriving from 200 unsmoothed moves at 1,000/s"
+key = "Mouse"
+unit = "counts"
+better = "higher"
+layer = "wire"
+n = "One stream of 200 moves"
+commands = { stock = "RAW_MOVE", medius = "MOVE(NOW)" }
+
+[[tables.rows]]
+id = "inj-raw-stream"
+label = "Still mouse"
+ptr = "/results/2/total"
+of = 200

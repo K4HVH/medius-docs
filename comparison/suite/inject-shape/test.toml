@@ -1,0 +1,83 @@
+# Seeded from the 2026-11-03 results; legs and pointers are set when the test is ported.
+id = "inject-shape"
+version = 1
+category = "injection"
+layout = "main"
+boxes = ["stock", "medius"]
+jams_stock = false
+
+[[tables]]
+section = "inj-reports-emitted"
+order = 4
+kind = "measure"
+label = "Empty reports in 2 s of one-count moves, mouse still"
+key = "Moves/s"
+unit = "reports"
+better = "lower"
+layer = "hidraw"
+n = "One 2-second stream per rate"
+commands = { stock = "km.move", medius = "MOVE" }
+resolution = 1
+
+[[tables.rows]]
+id = "inj-stream-empty-1000"
+label = "1,000"
+ptr = "/base/results/24/zero_reports"
+
+[[tables.rows]]
+id = "inj-stream-empty-500"
+label = "500"
+ptr = "/base/results/25/zero_reports"
+
+[[tables.rows]]
+id = "inj-stream-empty-250"
+label = "250"
+ptr = "/base/results/26/zero_reports"
+
+[[tables.rows]]
+id = "inj-stream-empty-125"
+label = "125"
+ptr = "/base/results/27/zero_reports"
+
+[[tables.rows]]
+id = "inj-stream-empty-60"
+label = "60"
+ptr = "/base/results/28/zero_reports"
+
+[[tables.rows]]
+id = "inj-stream-empty-30"
+label = "30"
+ptr = "/base/results/29/zero_reports"
+
+[[tables]]
+section = "inj-reports-emitted"
+order = 5
+kind = "measure"
+label = "Reports carrying only injected motion in 2.5 s beside a moving mouse, injecting for 2 s"
+key = "Mouse and moves"
+unit = "reports"
+better = "lower"
+layer = "hidraw"
+n = "2 runs"
+commands = { stock = "km.move", medius = "MOVE" }
+resolution = 1
+
+[[tables.rows]]
+id = "inj-beside-1k-1000"
+label = "1 kHz mouse, 1,000 moves/s"
+ptr = "/native/results/0/box_only"
+
+[[tables.rows]]
+id = "inj-beside-1k-125"
+label = "1 kHz mouse, 125 moves/s"
+ptr = "/native/results/1/box_only"
+
+[[tables.rows]]
+id = "inj-beside-125-1000"
+label = "125 Hz mouse, 1,000 moves/s"
+ptr = "/native/results/2/box_only"
+
+[[tables.rows]]
+id = "inj-beside-125-125"
+label = "125 Hz mouse, 125 moves/s"
+ptr = "/native/results/3/box_only"

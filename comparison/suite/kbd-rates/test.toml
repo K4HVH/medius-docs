@@ -1,0 +1,29 @@
+# Seeded from the 2026-11-03 results; legs and pointers are set when the test is ported.
+id = "kbd-rates"
+version = 1
+category = "passthrough"
+layout = "main"
+boxes = ["stock", "medius"]
+jams_stock = false
+
+[[tables]]
+section = "pass-timing"
+order = 6
+kind = "measure"
+label = "Keyboard reports >10% early or late, in 15 s"
+key = "Keyboard"
+unit = "reports"
+better = "lower"
+layer = "wire"
+n = "1 run of 15 s"
+resolution = 1
+
+[[tables.rows]]
+id = "pass-timing-off-kbd-500"
+label = "500 Hz keyboard"
+ptr = "/results/0/outside_10pct"
+
+[[tables.rows]]
+id = "pass-timing-off-kbd-250"
+label = "250 Hz keyboard"
+ptr = "/results/1/outside_10pct"

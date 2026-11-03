@@ -1,0 +1,93 @@
+# Seeded from the 2026-11-03 results; legs and pointers are set when the test is ported.
+id = "locks2"
+version = 1
+category = "input"
+layout = "main"
+boxes = ["stock", "medius"]
+jams_stock = false
+
+[[tables]]
+section = "input-lock-leak"
+order = 5
+kind = "measure"
+label = "Native input still reaching the PC after the lock, p50"
+key = "Lock"
+unit = "ms"
+better = "lower"
+stat = "p50"
+layer = "wire"
+n = "10 locks per row, 2 runs"
+resolution = 0.0001
+
+[[tables.rows]]
+id = "input-lock2-y-on"
+label = "Y, moving every millisecond"
+ptr = "/results/0/still_through_after_lock/p50"
+unit = "us"
+
+[[tables.rows]]
+id = "input-lock2-y-pos-on"
+label = "Positive Y only, moving +1 and -1"
+ptr = "/results/1/still_through_after_lock/p50"
+unit = "us"
+
+[[tables.rows]]
+id = "input-lock2-wheel-on"
+label = "Wheel, every millisecond"
+ptr = "/results/2/still_through_after_lock/p50"
+unit = "us"
+
+[[tables.rows]]
+id = "input-lock2-right-held-on"
+label = "Right button, held"
+ptr = "/results/5/still_through_after_lock/p50"
+unit = "us"
+
+[[tables.rows]]
+id = "input-lock2-key-held-on"
+label = "Key 'a', held"
+ptr = "/results/6/still_through_after_lock/p50"
+unit = "us"
+
+[[tables]]
+section = "input-lock-leak"
+order = 6
+kind = "measure"
+label = "Native input back after the unlock, p50"
+key = "Lock"
+unit = "ms"
+better = "lower"
+stat = "p50"
+layer = "wire"
+n = "10 locks per row, 2 runs"
+resolution = 0.001
+
+[[tables.rows]]
+id = "input-lock2-y-off"
+label = "Y, moving every millisecond"
+ptr = "/results/0/back_after_unlock/p50"
+unit = "us"
+
+[[tables.rows]]
+id = "input-lock2-y-pos-off"
+label = "Positive Y only, moving +1 and -1"
+ptr = "/results/1/back_after_unlock/p50"
+unit = "us"
+
+[[tables.rows]]
+id = "input-lock2-wheel-off"
+label = "Wheel, every millisecond"
+ptr = "/results/2/back_after_unlock/p50"
+unit = "us"
+
+[[tables.rows]]
+id = "input-lock2-right-held-off"
+label = "Right button, held"
+ptr = "/results/5/back_after_unlock/p50"
+unit = "us"
+
+[[tables.rows]]
+id = "input-lock2-key-held-off"
+label = "Key 'a', held"
+ptr = "/results/6/back_after_unlock/p50"
+unit = "us"

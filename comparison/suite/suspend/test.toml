@@ -1,0 +1,55 @@
+# Seeded from the 2026-11-03 results; legs and pointers are set when the test is ported.
+id = "suspend"
+version = 1
+category = "recovery"
+layout = "main"
+boxes = ["stock", "medius"]
+jams_stock = false
+
+[[tables]]
+section = "recovery-pc-sleep"
+order = 1
+kind = "outcome"
+label = "Real device while the PC sleeps"
+key = "Device"
+outcomes = ["Suspended", "Kept awake"]
+
+[[tables.rows]]
+# outcome from stock: /results/0/device_suspend_edges, /results/1/device_suspend_edges, /results/2/device_suspend_edges; medius: /results/0/device_suspend_edges, /results/1/device_suspend_edges, /results/2/device_suspend_edges
+id = "recovery-sleep-device"
+label = "Mouse"
+ptr = "/outcomes/recovery-sleep-device"
+
+[[tables]]
+section = "recovery-pc-sleep"
+order = 2
+kind = "outcome"
+label = "PC while asleep"
+key = "Case"
+outcomes = ["Asleep", "Woken"]
+
+[[tables.rows]]
+# outcome from stock: /results/0/idle_pc_stayed_asleep, /results/1/idle_pc_stayed_asleep, /results/2/idle_pc_stayed_asleep; medius: /results/0/idle_pc_stayed_asleep, /results/1/idle_pc_stayed_asleep, /results/2/idle_pc_stayed_asleep
+id = "recovery-sleep-idle"
+label = "Nothing sent for 2 s"
+ptr = "/outcomes/recovery-sleep-idle"
+
+[[tables]]
+section = "recovery-pc-sleep"
+order = 3
+kind = "outcome"
+label = "Waking the sleeping PC"
+key = "Wakeup"
+outcomes = ["Wakes the PC", "PC stays asleep"]
+
+[[tables.rows]]
+# outcome from stock: /results/0/inject_pc_woken_ms, /results/0/inject_total, /results/1/inject_pc_woken_ms, /results/1/inject_total, /results/2/inject_pc_woken_ms, /results/2/inject_total; medius: /results/0/inject_pc_woken_ms, /results/0/inject_total, /results/1/inject_pc_woken_ms, /results/1/inject_total, /results/2/inject_pc_woken_ms, /results/2/inject_total
+id = "recovery-wake-inject"
+label = "Injected move"
+ptr = "/outcomes/recovery-wake-inject"
+
+[[tables.rows]]
+# outcome from stock: /results/0/wake_fired, /results/0/wake_pc_woken, /results/1/wake_fired, /results/1/wake_pc_woken, /results/2/wake_fired, /results/2/wake_pc_woken; medius: /results/0/wake_fired, /results/0/wake_pc_woken, /results/1/wake_fired, /results/1/wake_pc_woken, /results/2/wake_fired, /results/2/wake_pc_woken
+id = "recovery-wake-device"
+label = "The real device's remote wakeup"
+ptr = "/outcomes/recovery-wake-device"

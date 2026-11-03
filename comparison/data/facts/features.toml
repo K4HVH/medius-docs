@@ -1,0 +1,707 @@
+[[tables]]
+section = "feat-motion"
+order = 1
+label = "Moves"
+key = "Capability"
+
+[[tables.rows]]
+id = "feat-move-relative"
+label = "Relative move"
+stock = "km.move"
+medius = "MOVE"
+
+[[tables.rows]]
+id = "feat-move-immediate"
+label = "Immediate move"
+stock = "km.move_now"
+medius = "MOVE(NOW)"
+
+[[tables.rows]]
+id = "feat-move-receipt"
+label = "Move with a receipt"
+stock = "RAW_MOVE"
+
+[[tables.rows]]
+id = "feat-move-pending"
+label = "Query for pending motion"
+stock = "km.moving"
+
+[[tables.rows]]
+id = "feat-move-flush"
+label = "Flush held motion"
+medius = "MOVE(FLUSH)"
+
+[[tables.rows]]
+id = "feat-move-discard"
+label = "Discard held motion"
+medius = "MOVE(DISCARD)"
+
+[[tables.rows]]
+id = "feat-move-absolute"
+label = "Absolute move on a virtual screen"
+stock = "km.moveto"
+
+[[tables.rows]]
+id = "feat-move-position"
+label = "Tracked pointer position"
+stock = "km.getpos"
+
+[[tables.rows]]
+id = "feat-move-click-back"
+label = "Move, click and move back"
+stock = "km.silent"
+medius = "CLIP_APPEND"
+
+[[tables.rows]]
+id = "feat-move-wheel"
+label = "Wheel"
+stock = "km.wheel"
+medius = "MOVE"
+
+[[tables.rows]]
+id = "feat-move-pan"
+label = "Horizontal scroll (AC Pan)"
+medius = "MOVE"
+
+[[tables]]
+section = "feat-motion"
+order = 2
+label = "Smoothing"
+key = "Capability"
+
+[[tables.rows]]
+id = "feat-spread-command-rate"
+label = "Spread over the command interval"
+stock = "INTERPOLATE"
+medius = "OPTION(SPREAD)"
+
+[[tables.rows]]
+id = "feat-spread-set-time"
+label = "Spread over a set time"
+stock = "INTERPOLATE"
+
+[[tables.rows]]
+id = "feat-render-model"
+label = "Render through a mouse model"
+medius = "OPTION(RENDER)"
+
+[[tables.rows]]
+id = "feat-render-native"
+label = "Render native motion"
+medius = "OPTION(RENDER)"
+
+[[tables.rows]]
+id = "feat-ride-native"
+label = "Carry injected motion only in native reports"
+medius = "OPTION(MOVE_RIDE)"
+
+[[tables]]
+section = "feat-buttons"
+order = 1
+label = "Press and release"
+key = "Button"
+
+[[tables.rows]]
+id = "feat-press-left"
+label = "Left"
+stock = "km.left"
+medius = "INJECT"
+
+[[tables.rows]]
+id = "feat-press-right"
+label = "Right"
+stock = "km.right"
+medius = "INJECT"
+
+[[tables.rows]]
+id = "feat-press-middle"
+label = "Middle"
+stock = "km.middle"
+medius = "INJECT"
+
+[[tables.rows]]
+id = "feat-press-side1"
+label = "Side 1"
+stock = "km.side1"
+medius = "INJECT"
+
+[[tables.rows]]
+id = "feat-press-side2"
+label = "Side 2"
+stock = "km.side2"
+medius = "INJECT"
+
+[[tables.rows]]
+id = "feat-press-6-16"
+label = "Buttons 6-16"
+medius = "INJECT"
+
+[[tables]]
+section = "feat-buttons"
+order = 2
+label = "Clicks and queries"
+key = "Capability"
+
+[[tables.rows]]
+id = "feat-click-timed"
+label = "Clicks timed by the box"
+stock = "km.click"
+medius = "CLIP_APPEND"
+
+[[tables.rows]]
+id = "feat-query-physical-buttons"
+label = "Query native buttons"
+stock = "PHYS_BUTTONS"
+
+[[tables]]
+section = "feat-keys"
+order = 1
+label = "Key commands"
+key = "Capability"
+
+[[tables.rows]]
+id = "feat-key-down"
+label = "Key down"
+stock = "km.down"
+medius = "INJECT"
+
+[[tables.rows]]
+id = "feat-key-up"
+label = "Key up"
+stock = "km.up"
+medius = "INJECT"
+
+[[tables.rows]]
+id = "feat-key-press-timed"
+label = "Key press timed by the box"
+stock = "km.press"
+medius = "CLIP_APPEND"
+
+[[tables.rows]]
+id = "feat-key-multi-down"
+label = "Several keys down in one command"
+stock = "km.multidown"
+
+[[tables.rows]]
+id = "feat-key-multi-up"
+label = "Several keys up in one command"
+stock = "km.multiup"
+
+[[tables.rows]]
+id = "feat-key-multi-press"
+label = "Several keys pressed in one command"
+stock = "km.multipress"
+
+[[tables.rows]]
+id = "feat-key-string"
+label = "String typed by the box"
+stock = "km.string"
+medius = "CLIP_APPEND"
+
+[[tables.rows]]
+id = "feat-key-release-all"
+label = "Release every injected key"
+stock = "km.init"
+medius = "RESET"
+
+[[tables.rows]]
+id = "feat-key-query"
+label = "Query a key's state"
+stock = "km.isdown"
+
+[[tables.rows]]
+id = "feat-key-media"
+label = "Media key down and up"
+medius = "INJECT"
+
+[[tables]]
+section = "feat-locks"
+order = 1
+label = "Button locks"
+key = "Button"
+
+[[tables.rows]]
+id = "feat-block-left"
+label = "Left"
+stock = "km.left_mask"
+medius = "LOCK"
+
+[[tables.rows]]
+id = "feat-block-right"
+label = "Right"
+stock = "km.right_mask"
+medius = "LOCK"
+
+[[tables.rows]]
+id = "feat-block-middle"
+label = "Middle"
+stock = "km.middle_mask"
+medius = "LOCK"
+
+[[tables.rows]]
+id = "feat-block-side1"
+label = "Side 1"
+stock = "km.side1_mask"
+medius = "LOCK"
+
+[[tables.rows]]
+id = "feat-block-side2"
+label = "Side 2"
+stock = "km.side2_mask"
+medius = "LOCK"
+
+[[tables.rows]]
+id = "feat-block-6-16"
+label = "Buttons 6-16"
+medius = "LOCK"
+
+[[tables]]
+section = "feat-locks"
+order = 2
+label = "Other locks"
+key = "Capability"
+
+[[tables.rows]]
+id = "feat-block-motion"
+label = "Block cursor motion per direction"
+stock = "km.move_mask"
+medius = "LOCK"
+
+[[tables.rows]]
+id = "feat-block-wheel"
+label = "Block the wheel per direction"
+stock = "km.wheel_mask"
+medius = "LOCK"
+
+[[tables.rows]]
+id = "feat-block-pan"
+label = "Block horizontal scroll"
+medius = "LOCK"
+
+[[tables.rows]]
+id = "feat-block-key"
+label = "Block a key"
+stock = "km.mask"
+medius = "LOCK"
+
+[[tables.rows]]
+id = "feat-block-media"
+label = "Block a media key"
+medius = "LOCK"
+
+[[tables.rows]]
+id = "feat-block-all-keys"
+label = "Block every key in one command"
+medius = "LOCK"
+
+[[tables.rows]]
+id = "feat-block-one-edge"
+label = "Block only the press or only the release"
+medius = "LOCK"
+
+[[tables.rows]]
+id = "feat-lock-query"
+label = "Query active locks"
+stock = "INJECT_SNAPSHOT"
+medius = "QUERY(LOCKS)"
+
+[[tables]]
+section = "feat-locks"
+order = 3
+label = "Motion scaling"
+key = "Capability"
+
+[[tables.rows]]
+id = "feat-scale-motion"
+label = "Scale motion, 0-255%"
+medius = "LOCK"
+
+[[tables.rows]]
+id = "feat-scale-reverse"
+label = "Reverse motion"
+medius = "LOCK"
+
+[[tables.rows]]
+id = "feat-scale-bearing"
+label = "Scale motion with or against the injected direction"
+medius = "LOCK"
+
+[[tables.rows]]
+id = "feat-scale-vector"
+label = "Scale only motion along the injected direction"
+medius = "OPTION(BEARING)"
+
+[[tables]]
+section = "feat-locks"
+order = 4
+label = "Remaps"
+key = "Capability"
+
+[[tables.rows]]
+id = "feat-remap-key-key"
+label = "Key to key"
+stock = "km.remap"
+
+[[tables.rows]]
+id = "feat-remap-button-button"
+label = "Button to button"
+medius = "TRANSFORM"
+
+[[tables.rows]]
+id = "feat-remap-button-key"
+label = "Button to key"
+medius = "TRANSFORM"
+
+[[tables.rows]]
+id = "feat-remap-button-media"
+label = "Button to media key"
+medius = "TRANSFORM"
+
+[[tables.rows]]
+id = "feat-remap-axis-axis"
+label = "Axis to axis"
+medius = "TRANSFORM"
+
+[[tables.rows]]
+id = "feat-remap-swap-axes"
+label = "Swap two axes"
+medius = "TRANSFORM"
+
+[[tables.rows]]
+id = "feat-remap-query"
+label = "Query active remaps"
+medius = "QUERY(TRANSFORMS)"
+
+[[tables]]
+section = "feat-pads"
+order = 1
+label = "Pad commands"
+key = "Capability"
+
+[[tables.rows]]
+id = "feat-pad-read"
+label = "Read the pad's state"
+stock = "km.controller_physical"
+
+[[tables.rows]]
+id = "feat-pad-stream"
+label = "Stream pad changes"
+stock = "km.controller"
+
+[[tables.rows]]
+id = "feat-pad-drive"
+label = "Drive the pad state the PC gets"
+stock = "km.controller_state"
+
+[[tables.rows]]
+id = "feat-pad-mask"
+label = "Block a pad control"
+stock = "km.controller_mask"
+
+[[tables.rows]]
+id = "feat-pad-kind"
+label = "Recognise the pad's kind"
+stock = "DEVICE"
+
+[[tables.rows]]
+id = "feat-pad-curves"
+label = "Pad response curves and deadzones"
+stock = "CONNECTION"
+
+[[tables.rows]]
+id = "feat-pad-translation"
+label = "Mouse and keyboard as a pad"
+stock = "CONNECTION"
+
+[[tables.rows]]
+id = "feat-pad-presets"
+label = "Saved pad presets"
+stock = "CONNECTION"
+
+[[tables]]
+section = "feat-pads"
+order = 2
+label = "Pads driven"
+key = "Pad"
+
+[[tables.rows]]
+id = "feat-pad-hid"
+label = "HID pad"
+stock = "km.controller_state"
+
+[[tables.rows]]
+id = "feat-pad-ds4"
+label = "DualShock 4"
+stock = "km.controller_state"
+
+[[tables.rows]]
+id = "feat-pad-dualsense"
+label = "DualSense"
+stock = "km.controller_state"
+
+[[tables.rows]]
+id = "feat-pad-dualsense-edge"
+label = "DualSense Edge"
+stock = "km.controller_state"
+
+[[tables.rows]]
+id = "feat-pad-gip"
+label = "Xbox One and Series (GIP)"
+stock = "km.controller_state"
+
+[[tables.rows]]
+id = "feat-pad-xinput"
+label = "Xbox 360 (XInput)"
+stock = "km.controller_state"
+
+[[tables]]
+section = "feat-observe"
+order = 1
+label = "Capture commands"
+key = "Capability"
+
+[[tables.rows]]
+id = "feat-obs-buttons"
+label = "Stream native button changes"
+stock = "km.buttons"
+medius = "CATCH(BTN)"
+
+[[tables.rows]]
+id = "feat-obs-keys"
+label = "Stream native key changes"
+stock = "km.keys"
+medius = "CATCH(KEY)"
+
+[[tables.rows]]
+id = "feat-obs-media"
+label = "Stream native media key changes"
+medius = "CATCH(MEDIA)"
+
+[[tables.rows]]
+id = "feat-obs-motion"
+label = "Stream native motion"
+medius = "CATCH(AXIS)"
+
+[[tables.rows]]
+id = "feat-obs-hid-in"
+label = "Capture native HID reports"
+stock = "RAW_PASSTHROUGH"
+medius = "CATCH(HID_IN)"
+
+[[tables.rows]]
+id = "feat-obs-hid-out"
+label = "Capture HID OUT reports"
+medius = "CATCH(HID_OUT)"
+
+[[tables.rows]]
+id = "feat-obs-vendor-intr"
+label = "Capture vendor interrupt traffic"
+medius = "CATCH(VEND_INTR)"
+
+[[tables.rows]]
+id = "feat-obs-vendor-bulk"
+label = "Capture vendor bulk traffic"
+medius = "CATCH(VEND_BULK)"
+
+[[tables.rows]]
+id = "feat-obs-control"
+label = "Capture control transfers"
+medius = "CATCH(CONTROL)"
+
+[[tables.rows]]
+id = "feat-obs-emit"
+label = "Capture reports the clone emits"
+medius = "CATCH(EMIT)"
+
+[[tables.rows]]
+id = "feat-obs-bus"
+label = "Watch bus events"
+medius = "CATCH(BUS)"
+
+[[tables]]
+section = "feat-device"
+order = 1
+label = "Device commands"
+key = "Capability"
+
+[[tables.rows]]
+id = "feat-dev-transfer"
+label = "Control transfer to the real device"
+medius = "TRANSFER"
+
+[[tables.rows]]
+id = "feat-dev-raw-pc"
+label = "Raw report to the PC"
+medius = "RAW"
+
+[[tables.rows]]
+id = "feat-dev-raw-device"
+label = "Raw packet to the real device"
+medius = "RAW"
+
+[[tables.rows]]
+id = "feat-dev-rewrite"
+label = "Rewrite packets in flight"
+medius = "REWRITE"
+
+[[tables.rows]]
+id = "feat-dev-drop"
+label = "Drop packets in flight"
+medius = "REWRITE"
+
+[[tables.rows]]
+id = "feat-dev-answer"
+label = "Reply to control requests from the box"
+medius = "REWRITE"
+
+[[tables.rows]]
+id = "feat-dev-patch"
+label = "Patch the descriptors the PC reads"
+medius = "PATCH"
+
+[[tables]]
+section = "feat-clips"
+order = 1
+label = "Clip commands"
+key = "Capability"
+
+[[tables.rows]]
+id = "feat-clip-load"
+label = "Load onto the box"
+medius = "CLIP_APPEND"
+
+[[tables.rows]]
+id = "feat-clip-play"
+label = "Play, pause and stop"
+medius = "CLIP_CTRL"
+
+[[tables.rows]]
+id = "feat-clip-loop"
+label = "Loop"
+medius = "CLIP_SET"
+
+[[tables.rows]]
+id = "feat-clip-retain"
+label = "Keep to replay"
+medius = "CLIP_SET"
+
+[[tables.rows]]
+id = "feat-clip-autolock"
+label = "Lock native input while playing"
+medius = "CLIP_SET"
+
+[[tables.rows]]
+id = "feat-clip-trigger-input"
+label = "Start on a button, key or media key"
+medius = "CLIP_TRIGGER"
+
+[[tables.rows]]
+id = "feat-clip-trigger-packet"
+label = "Start on a matched packet"
+medius = "CLIP_TRIGGER"
+
+[[tables]]
+section = "feat-box"
+order = 1
+label = "Queries"
+key = "Capability"
+
+[[tables.rows]]
+id = "feat-box-version"
+label = "Firmware version number"
+stock = "FIRMWARE_VERSION"
+medius = "QUERY(VERSION)"
+
+[[tables.rows]]
+id = "feat-box-device-kind"
+label = "Real device's kind"
+stock = "DEVICE"
+medius = "QUERY(DEVICE_INFO)"
+
+[[tables.rows]]
+id = "feat-box-device-id"
+label = "Real device's VID and PID"
+medius = "QUERY(DEVICE_INFO)"
+
+[[tables.rows]]
+id = "feat-box-report-period"
+label = "Native report rate"
+stock = "km.device"
+medius = "QUERY(RATE)"
+
+[[tables.rows]]
+id = "feat-box-device-inputs"
+label = "Inputs the real device declares"
+medius = "QUERY(CAPS)"
+
+[[tables.rows]]
+id = "feat-box-injected-state"
+label = "Injected state snapshot"
+stock = "INJECT_SNAPSHOT"
+
+[[tables.rows]]
+id = "feat-box-health"
+label = "Health flags"
+medius = "QUERY(HEALTH)"
+
+[[tables.rows]]
+id = "feat-box-counters"
+label = "Drop and reset counters"
+medius = "QUERY(STATS)"
+
+[[tables.rows]]
+id = "feat-box-log"
+label = "Diagnostic log"
+medius = "LOG"
+
+[[tables]]
+section = "feat-box"
+order = 2
+label = "Settings"
+key = "Capability"
+
+[[tables.rows]]
+id = "feat-box-emit-pace"
+label = "Emit rate"
+medius = "OPTION(EMIT)"
+
+[[tables.rows]]
+id = "feat-box-force-interval"
+label = "Forced poll rate"
+medius = "OPTION(EMIT)"
+note = "With imperfect clones on"
+
+[[tables.rows]]
+id = "feat-box-name"
+label = "Box name"
+medius = "OPTION(NAME)"
+
+[[tables.rows]]
+id = "feat-box-led"
+label = "Status LED"
+medius = "LED"
+
+[[tables.rows]]
+id = "feat-box-reboot"
+label = "Reboot"
+medius = "REBOOT"
+
+[[tables.rows]]
+id = "feat-box-passthrough"
+label = "Return to passthrough"
+medius = "RESET"
+
+[[tables.rows]]
+id = "feat-box-erase"
+label = "Erase stored settings"
+medius = "RESET(NVS)"
+
+[[tables.rows]]
+id = "feat-box-baud"
+label = "Baud rate"
+stock = "km.baud"
+
+[[tables.rows]]
+id = "feat-box-echo"
+label = "Command echo"
+stock = "km.echo"

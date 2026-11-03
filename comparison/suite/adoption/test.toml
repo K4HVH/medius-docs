@@ -1,0 +1,47 @@
+# Seeded from the 2026-11-03 results; legs and pointers are set when the test is ported.
+id = "adoption"
+version = 1
+category = "software"
+layout = "main"
+boxes = ["stock", "medius"]
+jams_stock = false
+
+[[tables]]
+section = "software-adoption"
+order = 1
+kind = "measure"
+label = "Downloads of each box's packages"
+key = "Registry"
+unit = "downloads"
+better = "higher"
+resolution = 1
+
+[[tables.rows]]
+# pointers differed by box; medius: /pypi-pypistats-medius-recent/data/last_month
+id = "software-pypi-every"
+label = "PyPI, last 30 days"
+note = "makcu, pymakcu and makxd against medius"
+ptr = ["/pypi-pypistats-makcu-recent/data/last_month", "/pypi-pypistats-pymakcu-recent/data/last_month", "/pypi-pypistats-makxd-recent/data/last_month"]
+
+[[tables.rows]]
+# pointers differed by box; medius: /crates-medius/crate/recent_downloads
+id = "software-crates-every"
+label = "crates.io, last 90 days"
+note = "makcu, makcu-rs and makxd against medius"
+ptr = ["/crates-makcu/crate/recent_downloads", "/crates-makcu-rs/crate/recent_downloads", "/crates-makxd/crate/recent_downloads"]
+
+[[tables]]
+section = "software-community"
+order = 1
+kind = "measure"
+label = "Members"
+key = "Server"
+unit = "members"
+better = "higher"
+resolution = 1
+
+[[tables.rows]]
+# pointers differed by box; medius: /community-discord-invite-medius/approximate_member_count
+id = "software-discord-members"
+label = "Discord"
+ptr = "/community-discord-invite-makcu/approximate_member_count"

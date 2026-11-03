@@ -1,0 +1,57 @@
+# Seeded from the 2026-11-03 results; legs and pointers are set when the test is ported.
+id = "wire-rtt"
+version = 1
+category = "control-link"
+layout = "main"
+boxes = ["stock", "medius"]
+jams_stock = false
+
+[[tables]]
+section = "link-queries"
+order = 1
+kind = "measure"
+label = "Query round trip, p50"
+key = "Query"
+unit = "µs"
+better = "lower"
+stat = "p50"
+layer = "wire"
+n = "3,000 queries a run, 2 runs"
+resolution = 1
+
+[[tables.rows]]
+id = "link-rtt-version-p50"
+label = "Version"
+note = "km.version against QUERY(VERSION)"
+ptr = "/results/0/submit_to_reply/p50"
+
+[[tables.rows]]
+id = "link-rtt-status-p50"
+label = "Status"
+note = "km.moving against QUERY(HEALTH)"
+ptr = "/results/1/submit_to_reply/p50"
+
+[[tables]]
+section = "link-queries"
+order = 2
+kind = "measure"
+label = "Query round trip, p95"
+key = "Query"
+unit = "µs"
+better = "lower"
+stat = "p95"
+layer = "wire"
+n = "3,000 queries a run, 2 runs"
+resolution = 1
+
+[[tables.rows]]
+id = "link-rtt-version-p95"
+label = "Version"
+note = "km.version against QUERY(VERSION)"
+ptr = "/results/0/submit_to_reply/p95"
+
+[[tables.rows]]
+id = "link-rtt-status-p95"
+label = "Status"
+note = "km.moving against QUERY(HEALTH)"
+ptr = "/results/1/submit_to_reply/p95"

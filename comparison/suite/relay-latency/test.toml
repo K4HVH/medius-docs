@@ -1,0 +1,156 @@
+# Seeded from the 2026-11-03 results; legs and pointers are set when the test is ported.
+id = "relay-latency"
+version = 1
+category = "passthrough"
+layout = "main"
+boxes = ["stock", "medius"]
+jams_stock = false
+
+[[tables]]
+section = "pass-latency"
+order = 1
+kind = "measure"
+label = "Report latency, p50"
+key = "Mouse"
+unit = "ms"
+better = "lower"
+stat = "p50"
+layer = "emulator"
+n = "2 runs of 24 s"
+resolution = 0.01
+
+[[tables.rows]]
+id = "pass-latency-p50-1000"
+label = "1 kHz mouse"
+ptr = "/results/0/latency_us/p50"
+unit = "us"
+
+[[tables.rows]]
+id = "pass-latency-p50-500"
+label = "500 Hz mouse"
+ptr = "/results/1/latency_us/p50"
+unit = "us"
+
+[[tables.rows]]
+id = "pass-latency-p50-250"
+label = "250 Hz mouse"
+ptr = "/results/2/latency_us/p50"
+unit = "us"
+
+[[tables.rows]]
+id = "pass-latency-p50-125"
+label = "125 Hz mouse"
+note = "Stock's clone declares 1 ms, the mouse 8 ms (see Poll interval)"
+ptr = "/results/3/latency_us/p50"
+unit = "us"
+
+[[tables]]
+section = "pass-latency"
+order = 2
+kind = "measure"
+label = "Report latency, p95"
+key = "Mouse"
+unit = "ms"
+better = "lower"
+stat = "p95"
+layer = "emulator"
+n = "2 runs of 24 s"
+resolution = 0.01
+
+[[tables.rows]]
+id = "pass-latency-p95-1000"
+label = "1 kHz mouse"
+ptr = "/results/0/latency_us/p95"
+unit = "us"
+
+[[tables.rows]]
+id = "pass-latency-p95-500"
+label = "500 Hz mouse"
+ptr = "/results/1/latency_us/p95"
+unit = "us"
+
+[[tables.rows]]
+id = "pass-latency-p95-250"
+label = "250 Hz mouse"
+ptr = "/results/2/latency_us/p95"
+unit = "us"
+
+[[tables.rows]]
+id = "pass-latency-p95-125"
+label = "125 Hz mouse"
+ptr = "/results/3/latency_us/p95"
+unit = "us"
+
+[[tables]]
+section = "pass-latency"
+order = 3
+kind = "measure"
+label = "Report latency, p99"
+key = "Mouse"
+unit = "ms"
+better = "lower"
+stat = "p99"
+layer = "emulator"
+n = "2 runs of 24 s"
+resolution = 0.01
+
+[[tables.rows]]
+id = "pass-latency-p99-1000"
+label = "1 kHz mouse"
+ptr = "/results/0/latency_us/p99"
+unit = "us"
+
+[[tables.rows]]
+id = "pass-latency-p99-500"
+label = "500 Hz mouse"
+ptr = "/results/1/latency_us/p99"
+unit = "us"
+
+[[tables.rows]]
+id = "pass-latency-p99-250"
+label = "250 Hz mouse"
+ptr = "/results/2/latency_us/p99"
+unit = "us"
+
+[[tables.rows]]
+id = "pass-latency-p99-125"
+label = "125 Hz mouse"
+ptr = "/results/3/latency_us/p99"
+unit = "us"
+
+[[tables]]
+section = "pass-latency"
+order = 4
+kind = "measure"
+label = "Report latency, fastest"
+key = "Mouse"
+unit = "µs"
+better = "lower"
+stat = "fastest"
+layer = "emulator"
+n = "2 runs of 24 s"
+resolution = 1
+
+[[tables.rows]]
+id = "pass-latency-min-1000"
+label = "1 kHz mouse"
+ptr = "/results/0/latency_us/min"
+unit = "us"
+
+[[tables.rows]]
+id = "pass-latency-min-500"
+label = "500 Hz mouse"
+ptr = "/results/1/latency_us/min"
+unit = "us"
+
+[[tables.rows]]
+id = "pass-latency-min-250"
+label = "250 Hz mouse"
+ptr = "/results/2/latency_us/min"
+unit = "us"
+
+[[tables.rows]]
+id = "pass-latency-min-125"
+label = "125 Hz mouse"
+ptr = "/results/3/latency_us/min"
+unit = "us"

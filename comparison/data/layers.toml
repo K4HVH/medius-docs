@@ -1,0 +1,6 @@
+# The clock each table's layer names.
+wire = "USB packets on the PC's bus, timed by the kernel's usbmon"
+evdev = "Input events, timed by the kernel as the HID driver handles each report"
+hidraw = "Each report byte for byte, timed when the reading program wakes"
+host = "The PC's clock, read by the test program when it writes a command, or when the clone connects or disconnects"
+emulator = "When the emulator queued each native report, on its clock. Its control link's packets on usbmon map that clock to the bus clock within ±95 µs"

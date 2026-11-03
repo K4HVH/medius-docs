@@ -1,0 +1,53 @@
+# Seeded from the 2026-11-03 results; legs and pointers are set when the test is ported.
+id = "controller"
+version = 1
+category = "passthrough"
+layout = "main"
+boxes = ["stock", "medius"]
+jams_stock = false
+
+[[tables]]
+section = "pass-pads"
+order = 1
+kind = "outcome"
+label = "Stick values on the PC"
+key = "Pad"
+outcomes = ["Unchanged", "Changed"]
+
+[[tables.rows]]
+# outcome from stock: /results/0/cloned, /results/0/interfaces/0/1, /results/0/abs_x_seen; medius: /results/0/cloned, /results/0/interfaces/0/1, /results/0/abs_x_seen
+id = "pass-pad-xinput"
+label = "Xbox 360 pad (XInput)"
+ptr = "/outcomes/pass-pad-xinput"
+
+[[tables.rows]]
+# outcome from stock: /results/0/cloned, /results/0/interfaces/0/1, /results/0/abs_x_seen; medius: /results/2/cloned, /results/2/interfaces/0/1, /results/2/abs_x_seen
+id = "pass-pad-gip"
+label = "Xbox One pad (GIP)"
+ptr = "/outcomes/pass-pad-gip"
+
+[[tables.rows]]
+# outcome from stock: /results/1/cloned, /results/1/interfaces/0/1, /results/1/abs_x_seen; medius: /results/1/cloned, /results/1/interfaces/0/1, /results/1/abs_x_seen
+id = "pass-pad-hid"
+label = "HID pad"
+ptr = "/outcomes/pass-pad-hid"
+
+[[tables]]
+section = "pass-pads"
+order = 2
+kind = "outcome"
+label = "PC output reaching the pad"
+key = "Pad"
+outcomes = ["Reaches the pad", "Lost"]
+
+[[tables.rows]]
+# outcome from stock: /results/0/pad_out_log/packets, /results/0/pad_out_log/crc; medius: /results/0/pad_out_log/packets, /results/0/pad_out_log/crc
+id = "pass-pad-out-xinput"
+label = "Xbox 360 pad, LED command"
+ptr = "/outcomes/pass-pad-out-xinput"
+
+[[tables.rows]]
+# outcome from stock: /results/0/pad_out_log/packets, /results/0/pad_out_log/crc; medius: /results/2/pad_out_log/packets, /results/2/pad_out_log/crc
+id = "pass-pad-out-gip"
+label = "Xbox One pad, start-up packets"
+ptr = "/outcomes/pass-pad-out-gip"
