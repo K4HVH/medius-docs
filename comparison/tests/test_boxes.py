@@ -240,6 +240,9 @@ class FakeDevice:
         self.calls.append(("set_spread", (percent,)))
         self.state["spread"] = percent
 
+    def query_health(self):
+        return None
+
     def query_imperfect(self):
         return medius.ImperfectStatus(allowed=self.state["optin"], over_capacity=False, clone_imperfect=False)
 
@@ -317,3 +320,19 @@ def test_medius_held_port_is_port_busy(monkeypatch):
     monkeypatch.setattr(medius.Device, "open", classmethod(busy))
     with pytest.raises(boxes.PortBusy, match=r"dashboard \(pid 7\)"):
         boxes.MediusBox("/dev/null")
+
+
+def test_medius_settings_wait_out_a_box_restarting(monkeypatch):
+    device = FakeDevice()
+    box = open_medius(monkeypatch, device)
+    real = device.query_spread
+    misses = [2]
+
+    def flaky():
+        if misses[0]:
+            misses[0] -= 1
+            raise medius.QueryTimeoutError(medius.Status.ERR_QUERY_TIMEOUT, "query timed out")
+        return real()
+
+    device.query_spread = flaky
+    assert box.settings()["spread"] == 100

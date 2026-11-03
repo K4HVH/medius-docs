@@ -177,10 +177,10 @@ class Engine:
         box = self.boxes.get(box_name)
         presented, playing = {}, {}
         try:
+            rf.begin_test(t.id, t.version, t.layout, [leg.id for leg in legs], [], {}, skipped)
             try:
                 state = self._apply_state(box, t.state.get(box_name, {}))
             except StateMismatch as e:
-                rf.begin_test(t.id, t.version, t.layout, [leg.id for leg in legs], [], {}, skipped)
                 rf.fail(t.id, str(e))
                 return
             rf.begin_test(t.id, t.version, t.layout, [leg.id for leg in legs], [], state, skipped)

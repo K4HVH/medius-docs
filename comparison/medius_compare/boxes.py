@@ -390,17 +390,30 @@ class MediusBox:
     def unlock(self, target):
         self.device.unlock(self._target(target), self.medius.Direction.BOTH)
 
+    def _answered(self, query, timeout=15.0):
+        """A query's answer, waiting out a box that is restarting (as it does when the opt-in changes)."""
+        end = time.monotonic() + timeout
+        while True:
+            try:
+                return query()
+            except self.medius.QueryTimeoutError:
+                if time.monotonic() > end:
+                    raise
+                time.sleep(0.2)
+
     def settings(self):
         d = self.device
-        pace = d.query_emit_pace()
+        self._answered(d.query_health)
+        pace = self._answered(d.query_emit_pace)
         mode = pace.mode
         emit = f"fixed:{mode.hz}" if mode.mode == self.medius.EmitMode.FIXED else mode.mode.name.lower()
-        bearing = d.query_bearing()
-        render = d.query_render()
-        return {"optin": d.query_imperfect().allowed, "riding": d.query_movement_riding() or 0, "emit": emit,
+        bearing = self._answered(d.query_bearing)
+        render = self._answered(d.query_render)
+        optin, riding = self._answered(d.query_imperfect).allowed, self._answered(d.query_movement_riding)
+        return {"optin": optin, "riding": riding or 0, "emit": emit,
                 "force_hz": pace.force_hz or 0, "bearing": bearing.window_ms or 0,
                 "bearing_mode": bearing.mode.name.lower(), "render": render.mode.name.lower(),
-                "full": render.full, "spread": d.query_spread().percent}
+                "full": render.full, "spread": self._answered(d.query_spread).percent}
 
     def _pace(self, emit):
         if emit.startswith("fixed:"):
