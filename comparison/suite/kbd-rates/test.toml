@@ -1,10 +1,17 @@
-# Seeded from the 2026-11-03 results; legs and pointers are set when the test is ported.
 id = "kbd-rates"
 version = 1
 category = "passthrough"
 layout = "main"
 boxes = ["stock", "medius"]
 jams_stock = false
+
+[[legs]]
+id = "500"
+device = "sim:counting-keyboard-500"
+
+[[legs]]
+id = "250"
+device = "sim:counting-keyboard-250"
 
 [[tables]]
 section = "pass-timing"
@@ -15,7 +22,7 @@ key = "Keyboard"
 unit = "reports"
 better = "lower"
 layer = "wire"
-n = "1 run of 15 s"
+n = "3 runs of 15 s"
 resolution = 1
 
 [[tables.rows]]

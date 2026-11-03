@@ -1,10 +1,20 @@
-# Seeded from the 2026-11-03 results; legs and pointers are set when the test is ported.
 id = "pause-relay"
 version = 1
 category = "passthrough"
 layout = "main"
 boxes = ["stock", "medius"]
 jams_stock = false
+
+[state.medius]
+optin = true
+
+[[legs]]
+id = "interrupt"
+device = "sim:counter-device"
+
+[[legs]]
+id = "bulk"
+device = "sim:bulk-counter-device"
 
 [[tables]]
 section = "pass-pause"
@@ -14,7 +24,7 @@ label = "Counter values skipped"
 key = "Endpoint"
 unit = "values"
 better = "lower"
-n = "8,000 reports per interrupt endpoint, 48,000 bulk packets, 1 run"
+n = "8,000 reports per interrupt endpoint, 48,000 bulk packets, 3 runs"
 resolution = 1
 
 [[tables.rows]]
@@ -41,7 +51,7 @@ key = "Endpoint"
 unit = "/s"
 better = "higher"
 layer = "host"
-n = "20,000 packets, 1 run"
+n = "20,000 packets a run, 3 runs"
 resolution = 0.1
 
 [[tables.rows]]

@@ -1,10 +1,20 @@
-# Seeded from the 2026-11-03 results; legs and pointers are set when the test is ported.
 id = "out-rate"
 version = 1
 category = "passthrough"
 layout = "native"
 boxes = ["stock", "medius", "native"]
 jams_stock = false
+
+[state.medius]
+optin = true
+
+[[legs]]
+id = "fast"
+device = "sim:out-device"
+
+[[legs]]
+id = "slow"
+device = "sim:slow-out-device"
 
 [[tables]]
 section = "pass-pc-device"
@@ -41,7 +51,7 @@ key = "Endpoint"
 unit = "/s"
 better = "higher"
 layer = "host"
-n = "1,000 packets per endpoint, 1 run"
+n = "1,000 packets per endpoint, 3 runs"
 resolution = 0.1
 
 [[tables.rows]]
@@ -83,25 +93,22 @@ key = "Endpoint"
 unit = "/s"
 better = "nearer"
 layer = "host"
-n = "100 packets per endpoint, 1 run"
+n = "100 packets per endpoint, 3 runs"
 resolution = 0.1
 
 [[tables.rows]]
-# pointers differed by box; medius: /slow/results/0/per_second
 id = "pass-out-rate-slow-02"
 label = "HID interrupt OUT"
 ptr = "/base/results/6/per_second"
 native_ptr = "/base/results/0/per_second"
 
 [[tables.rows]]
-# pointers differed by box; medius: /slow/results/1/per_second
 id = "pass-out-rate-slow-03"
 label = "Vendor interrupt OUT"
 ptr = "/base/results/7/per_second"
 native_ptr = "/base/results/1/per_second"
 
 [[tables.rows]]
-# pointers differed by box; medius: /slow/results/2/per_second
 id = "pass-out-rate-slow-04"
 label = "Vendor bulk OUT"
 ptr = "/base/results/8/per_second"
