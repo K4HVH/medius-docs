@@ -1,10 +1,13 @@
-# Seeded from the 2026-11-03 results; legs and pointers are set when the test is ported.
 id = "ep0-compare"
 version = 1
 category = "devices"
 layout = "native"
 boxes = ["stock", "medius"]
 jams_stock = false
+
+[[legs]]
+id = "mouse"
+device = "sim:request_mouse"
 
 [[tables]]
 section = "devices-endpoint-0"
@@ -15,55 +18,46 @@ key = "Request"
 outcomes = ["Native reply", "STALL"]
 
 [[tables.rows]]
-# outcome from stock: /results/0/native_match, /results/1/native_match, /results/2/native_match, /results/0/native_match, /results/1/native_match, /results/2/native_match; medius: /results/0/native_match, /results/1/native_match, /results/2/native_match, /results/0/native_match, /results/1/native_match, /results/2/native_match
 id = "devices-ep0-device-descriptor"
 label = "Device descriptor"
 ptr = "/outcomes/devices-ep0-device-descriptor"
 
 [[tables.rows]]
-# outcome from stock: /results/3/native_match, /results/4/native_match, /results/3/native_match, /results/4/native_match; medius: /results/3/native_match, /results/4/native_match, /results/3/native_match, /results/4/native_match
 id = "devices-ep0-configuration"
 label = "Configuration descriptor"
 ptr = "/outcomes/devices-ep0-configuration"
 
 [[tables.rows]]
-# outcome from stock: /results/6/native_match, /results/7/native_match, /results/8/native_match, /results/9/native_match, /results/6/native_match, /results/7/native_match, /results/8/native_match, /results/9/native_match; medius: /results/6/native_match, /results/7/native_match, /results/8/native_match, /results/9/native_match, /results/6/native_match, /results/7/native_match, /results/8/native_match, /results/9/native_match
 id = "devices-ep0-strings"
 label = "String descriptors"
 ptr = "/outcomes/devices-ep0-strings"
 
 [[tables.rows]]
-# outcome from stock: /results/5/native_match, /results/10/native_match, /results/11/native_match, /results/12/native_match, /results/13/native_match, /results/14/native_match, /results/5/native_match, /results/10/native_match, /results/11/native_match, /results/12/native_match, /results/13/native_match, /results/14/native_match; medius: /results/5/native_match, /results/10/native_match, /results/11/native_match, /results/12/native_match, /results/13/native_match, /results/14/native_match, /results/5/native_match, /results/10/native_match, /results/11/native_match, /results/12/native_match, /results/13/native_match, /results/14/native_match
 id = "devices-ep0-absent-descriptors"
 label = "Descriptors the real device doesn't have"
 ptr = "/outcomes/devices-ep0-absent-descriptors"
 
 [[tables.rows]]
-# outcome from stock: /results/15/native_match, /results/15/native_match; medius: /results/15/native_match, /results/15/native_match
 id = "devices-ep0-report-descriptor"
 label = "HID report descriptor"
 ptr = "/outcomes/devices-ep0-report-descriptor"
 
 [[tables.rows]]
-# outcome from stock: /results/16/native_match, /results/16/got, /results/16/native_match, /results/16/got; medius: /results/16/native_match, /results/16/native_match
 id = "devices-ep0-hid-descriptor"
 label = "HID class descriptor"
 ptr = "/outcomes/devices-ep0-hid-descriptor"
 
 [[tables.rows]]
-# outcome from stock: /results/17/native_match, /results/18/native_match, /results/19/native_match, /results/21/native_match, /results/22/native_match, /results/17/native_match, /results/18/native_match, /results/19/native_match, /results/21/native_match, /results/22/native_match; medius: /results/17/native_match, /results/18/native_match, /results/19/native_match, /results/21/native_match, /results/22/native_match, /results/17/native_match, /results/18/native_match, /results/19/native_match, /results/21/native_match, /results/22/native_match
 id = "devices-ep0-status"
 label = "GET_STATUS, GET_CONFIGURATION and GET_INTERFACE"
 ptr = "/outcomes/devices-ep0-status"
 
 [[tables.rows]]
-# outcome from stock: /results/23/native_match, /results/23/native_match; medius: /results/23/native_match, /results/23/native_match
 id = "devices-ep0-feature-report"
 label = "Feature report 3"
 ptr = "/outcomes/devices-ep0-feature-report"
 
 [[tables.rows]]
-# outcome from stock: /results/28/native_match, /results/29/native_match, /results/28/native_match, /results/29/native_match; medius: /results/28/native_match, /results/29/native_match, /results/28/native_match, /results/29/native_match
 id = "devices-ep0-vendor"
 label = "Vendor requests"
 ptr = "/outcomes/devices-ep0-vendor"
@@ -77,7 +71,7 @@ key = "Request"
 unit = "µs"
 better = "lower"
 layer = "wire"
-n = "200 requests a run, 2 runs"
+n = "200 requests a run, 3 runs"
 resolution = 0.1
 
 [[tables.rows]]
