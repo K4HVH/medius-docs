@@ -158,6 +158,10 @@ class StockBox:
     def send(self, cmd):
         self.s.write(cmd.encode() + b"\r\n")
 
+    def write(self, data):
+        """Bytes as they are, for a test that paces or breaks commands on purpose."""
+        self.s.write(data)
+
     def _prompt(self, timeout):
         end = time.monotonic() + timeout
         with self.cv:
@@ -240,7 +244,7 @@ class StockBox:
         return {"version": f"V{n // 1000}.{n % 1000:03d}"}
 
     def move(self, dx, dy, now=False):
-        self.send(f"km.move({dx},{dy})")
+        self.send(f"km.{'move_now' if now else 'move'}({dx},{dy})")
 
     def wheel(self, d):
         self.send(f"km.wheel({d})")

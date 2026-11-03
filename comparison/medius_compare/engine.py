@@ -42,10 +42,22 @@ class Context:
     run_index: int
     _present: object
     integrity: dict = field(default_factory=dict)
+    _sim: object = None
 
     def device(self, leg: str):
         """The device for `leg`, presented (or found) on first use; LegUnavailable if it can't be had."""
         return self._present(leg)
+
+    def native(self, leg: str):
+        """The device for `leg` presented on the native sim (the one lent to the PC hub), beside the box's own."""
+        return self._present(leg, "native")
+
+    def sim(self, on=None):
+        """An open link to the sim playing this box's legs, or with `on="native"` the native sim (close it when
+        done); LegUnavailable without one."""
+        if self._sim is None:
+            raise LegUnavailable("this needs the sim")
+        return self._sim(on or self.box_name)
 
     def log(self, msg: str) -> None:
         print(f"[{self.box_name}] {msg}", file=sys.stderr, flush=True)
@@ -161,24 +173,38 @@ class Engine:
             rf.begin_test(t.id, t.version, t.layout, [leg.id for leg in legs], [], state, skipped)
             module = self._module(t)
             by_id = {leg.id: leg for leg in legs}
-            presented = {}
+            presented, playing = {}, {}
 
-            def present(leg_id):
+            def present(leg_id, on=box_name):
                 if leg_id not in by_id:
                     raise LegUnavailable(f"leg {leg_id} is not one this run takes")
-                if leg_id not in presented:
-                    presented[leg_id] = self.devices.present(by_id[leg_id], box_name)
-                return presented[leg_id]
+                if on != box_name and self.entry == "no-sim":
+                    raise LegUnavailable("the native reference needs the sim")
+                if (leg_id, on) not in playing:
+                    for key in [k for k in playing if k[1] == on]:
+                        del playing[key]
+                    playing[(leg_id, on)] = self.devices.present(by_id[leg_id], on,
+                                                                 shapes=getattr(module, "SHAPES", None))
+                    presented[(leg_id, on)] = playing[(leg_id, on)]
+                return playing[(leg_id, on)]
 
             for k in range(done, runs):
-                ctx = Context(box_name=box_name, box=box, legs=[leg.id for leg in legs], run_index=k, _present=present)
+                ctx = Context(box_name=box_name, box=box, legs=[leg.id for leg in legs], run_index=k, _present=present,
+                              _sim=getattr(self.devices, "sim_link", None))
                 with integrity.collecting(ctx.integrity):
                     raw = module.run(ctx)
-                rf.data["tests"][t.id]["devices"] = [p.record(leg) for leg, p in presented.items()]
+                rf.data["tests"][t.id]["devices"] = [p.record(leg if on == box_name else f"{leg}@{on}")
+                                                     for (leg, on), p in presented.items()]
                 if any(ctx.integrity.values()):
                     rf.fail(t.id, "capture lost data: " + ", ".join(f"{k} {v}" for k, v in ctx.integrity.items() if v))
                     return
                 rf.add_run(t.id, raw)
+                if t.jams_stock and box_name == "stock" and k + 1 < runs:
+                    if hasattr(box, "leave"):
+                        box.leave()
+                    if box.lagging():
+                        self._unjam(box, stamp)
+                        playing.clear()
         except LegUnavailable as e:
             rf.fail(t.id, str(e))
         except Exception as e:
