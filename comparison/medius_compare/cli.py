@@ -13,19 +13,20 @@ SUITE = Path(__file__).resolve().parent.parent / "suite"
 
 def _engine(entry: str, args, suite) -> Engine:
     from . import boxes as boxes_mod
-    from . import devices as devices_mod
     from .bench import Bench, SoloBench
+    from .devices import RealDevices, SimDevices
     if entry == "no-sim":
         if not args.box or not args.port:
             raise SystemExit("name the box and its control port: --box stock|medius --port /dev/ttyACMn")
         box = boxes_mod.open_box(args.box, args.port)
-        return Engine(entry=entry, bench=SoloBench(), devices=devices_mod.RealDevices(box_name=args.box),
-                      boxes={args.box: box}, suite=suite, out_dir=args.out)
+        return Engine(entry=entry, bench=SoloBench(), devices=RealDevices(args.box), boxes={args.box: box},
+                      suite=suite, out_dir=args.out)
     bench = Bench.load(args.bench)
-    wanted = [args.box] if args.box else ["stock", "medius"]
-    boxes = {k: boxes_mod.open_box(k, bench.control_port(k)) for k in wanted if k != "native"}
-    return Engine(entry=entry, bench=bench, devices=devices_mod.SimDevices(bench), boxes=boxes, suite=suite,
-                  out_dir=args.out)
+    devices = SimDevices(bench)
+    bench._locate, bench._describe = devices.locate, devices.describe_sim
+    wanted = [args.box] if args.box in ("stock", "medius") else ["stock", "medius"]
+    boxes = {k: boxes_mod.open_box(k, bench.control_port(k)) for k in wanted}
+    return Engine(entry=entry, bench=bench, devices=devices, boxes=boxes, suite=suite, out_dir=args.out)
 
 
 def main(entry: str, argv=None) -> int:
@@ -53,6 +54,8 @@ def main(entry: str, argv=None) -> int:
         return 0
     if os.geteuid() != 0:
         raise SystemExit("run as root: the tests read the clone's input nodes and the USB bus")
+    from medius_bench import clone_guard
+    clone_guard.engage()
     engine = _engine(entry, args, suite)
     selection = Selection(tests=args.test, categories=args.category, boxes=[args.box] if args.box else [],
                           layouts=[args.layout] if getattr(args, "layout", None) else [])

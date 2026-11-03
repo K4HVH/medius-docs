@@ -79,6 +79,13 @@ class Bench:
             raise FileNotFoundError(f"the {self._name(box)}'s control port ({serial}) is not plugged in")
         return found[0]
 
+    def sim_port(self, name):
+        serial = self.sim[name]["serial"]
+        found = sorted(glob.glob(str(self.by_id / f"*_{serial}-if*")))
+        if not found:
+            raise FileNotFoundError(f"the {self._name('sim.' + name)}'s control adapter ({serial}) is not plugged in")
+        return found[0]
+
     def cabling_for(self, layout, box):
         if layout == "main":
             return ("main",)
