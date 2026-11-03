@@ -87,8 +87,11 @@ device.activate_firmware()?;`}</code></pre>
           </table>
         </div>
         <p>
-          A box that comes back on an older protocol after an update keeps answering the update path,
-          so a device opened this way can also move a box back to an older release. Once the update is
+          It tries the 6&nbsp;Mbaud control rate first, then the 4&nbsp;Mbaud that firmware before 3.4.0
+          runs. <code>wait_firmware_confirmed</code> follows the box to the other rate when it reboots
+          into firmware on it. A box that comes back on an older protocol after an update keeps
+          answering the update path, so a device opened this way can also move a box back to an older
+          release. Once the update is
           confirmed, open the box again to use it.
         </p>
         <div class="api-response-label">EXAMPLE</div>
@@ -250,7 +253,10 @@ device.update_firmware(UpdateTarget::Device, &image, &mut |p| {
           A chip on <A href="/native/commands/update#rollback">probation</A> refuses another update,
           so <code>stage_firmware</code> waits on this first. The device chip confirms after 10&nbsp;s
           of running, once the mouse is still (25&nbsp;s at the latest). The host chip confirms on a clock exchange over the inter-chip link. This call
-          keeps asking while the box reboots after an activate.
+          keeps asking while the box reboots after an activate. Right after an activate a chip can still
+          answer from the image it is replacing, so a reply counts only once the box shows the reboot
+          (its <A href="/native/connection#hello">ready hello</A>, or a query left unanswered), or after
+          5&nbsp;s.
         </p>
         <div class="table-scroll">
           <table class="api-params">

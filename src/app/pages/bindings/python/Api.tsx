@@ -44,7 +44,7 @@ const Api: Component = () => {
             <thead><tr><th>Call</th><th>Does</th></tr></thead>
             <tbody>
               <tr><td><code>medius.list_boxes(cap=16)</code></td><td>Enumerate every connected box as a <A href="/bindings/python/types#boxinfo"><code>BoxInfo</code></A>. Reads each box's version, and its device info if it speaks this protocol (<code>device</code> is <code>None</code> for a box on another protocol).</td></tr>
-              <tr><td><code>Device.open_by_id(id)</code></td><td>Open the box whose identity matches <code>id</code> (device MAC hex or CH343 serial) and handshake. Raises <code>BadProtoVerError</code> when that box speaks another protocol, <code>NotFoundError</code> when no box matches.</td></tr>
+              <tr><td><code>Device.open_by_id(id)</code></td><td>Open the box whose identity matches <code>id</code> (device MAC hex or CH343 serial) and handshake. Raises <code>BadProtoVerError</code> when that box speaks another protocol, <code>NotFoundError</code> when no box matches, <code>PortBusyError</code> when none matches and another process holds a box's port.</td></tr>
               <tr><td><code>Device.find_mouse_box()</code></td><td>Open the first box whose clone is a mouse. If none is found and a connected box is on another protocol, raises <code>BadProtoVerError</code> (that box's clone can't be read).</td></tr>
               <tr><td><code>Device.find_keyboard_box()</code></td><td>Open the first box whose clone is a keyboard, with the same errors.</td></tr>
             </tbody>
