@@ -16,17 +16,40 @@ def _engine(entry: str, args, suite) -> Engine:
     from .bench import Bench, SoloBench
     from .devices import RealDevices, SimDevices
     if entry == "no-sim":
-        if not args.box or not args.port:
-            raise SystemExit("name the box and its control port: --box stock|medius --port /dev/ttyACMn")
         box = boxes_mod.open_box(args.box, args.port)
         return Engine(entry=entry, bench=SoloBench(), devices=RealDevices(args.box), boxes={args.box: box},
                       suite=suite, out_dir=args.out)
     bench = Bench.load(args.bench)
+    if bench.sim_library:
+        from medius_shapes import personalities
+        personalities.SIM_LIBRARY = bench.sim_library
     devices = SimDevices(bench)
     bench._locate, bench._describe = devices.locate, devices.describe_sim
     wanted = [args.box] if args.box in ("stock", "medius") else ["stock", "medius"]
     boxes = {k: boxes_mod.open_box(k, bench.control_port(k)) for k in wanted}
     return Engine(entry=entry, bench=bench, devices=devices, boxes=boxes, suite=suite, out_dir=args.out)
+
+
+def _clone_port(box: str, port: str) -> str:
+    """The USB port the box's clone is on: a Medius box says what it cloned; stock can't, so it is named."""
+    from medius_bench import quiet
+    if box == "medius":
+        import medius
+        return quiet.clone_usb_port(medius.Device.open(port))
+    found = "; ".join(f"{p} ({ident}{', ' + name if name else ''})" for p, ident, name in quiet.input_ports())
+    raise SystemExit("name the stock box's clone with --usb-port: the USB port its PC cable is on, carrying the "
+                     f"mouse or keyboard plugged into the box. Input devices on this PC: {found or 'none'}")
+
+
+def _run(entry: str, args, suite) -> int:
+    from medius_bench import clone_guard
+    clone_guard.engage()
+    engine = _engine(entry, args, suite)
+    selection = Selection(tests=args.test, categories=args.category, boxes=[args.box] if args.box else [],
+                          layouts=[args.layout] if getattr(args, "layout", None) else [])
+    for path in engine.run(selection, runs=args.runs, resume=args.resume):
+        print(path)
+    return 0
 
 
 def main(entry: str, argv=None) -> int:
@@ -42,6 +65,8 @@ def main(entry: str, argv=None) -> int:
     r.add_argument("--resume", help="carry on a stopped run, by its stamp (the run file's name)")
     if entry == "no-sim":
         r.add_argument("--port", help="the box's control port, e.g. /dev/ttyACM0")
+        r.add_argument("--usb-port", help="the USB port the box's clone is on, e.g. 1-4 (found from a Medius box; "
+                                          "name it for stock)")
     else:
         r.add_argument("--bench", type=Path, default=None, help="the bench config (default ~/.config/medius-compare/bench.toml)")
         r.add_argument("--layout", choices=["main", "native"], help="only the tests run in this cabling")
@@ -54,11 +79,10 @@ def main(entry: str, argv=None) -> int:
         return 0
     if os.geteuid() != 0:
         raise SystemExit("run as root: the tests read the clone's input nodes and the USB bus")
-    from medius_bench import clone_guard
-    clone_guard.engage()
-    engine = _engine(entry, args, suite)
-    selection = Selection(tests=args.test, categories=args.category, boxes=[args.box] if args.box else [],
-                          layouts=[args.layout] if getattr(args, "layout", None) else [])
-    for path in engine.run(selection, runs=args.runs, resume=args.resume):
-        print(path)
-    return 0
+    if entry == "no-sim":
+        if not args.box or not args.port:
+            raise SystemExit("name the box and its control port: --box stock|medius --port /dev/ttyACMn")
+        from medius_bench import quiet
+        with quiet.quieted([args.usb_port or _clone_port(args.box, args.port)]):
+            return _run(entry, args, suite)
+    return _run(entry, args, suite)

@@ -2,7 +2,8 @@
 
     from medius_bench import clone_guard; clone_guard.engage()
 
-Exits unless `comparison/quiet_clone.py` is running with its rule naming the clone's USB port. Then holds an
+Exits unless a live process keeps the clone quiet (`comparison/quiet_clone.py`, or the no-sim run itself, through
+`medius_bench.quiet`) with its rule naming the clone's USB port. Then holds an
 exclusive grab (EVIOCGRAB) on every input node on that port for the life of the process, taking each new
 node as the clone re-enumerates. When the process opens a node, the grab is handed to that fd, and comes
 back when it is closed or ungrabbed. So a test reads its nodes as usual, and nothing injected reaches
@@ -14,7 +15,6 @@ import fcntl
 import io
 import os
 import re
-import subprocess
 import sys
 import threading
 import time
@@ -50,8 +50,12 @@ def _rule_ports():
 
 
 def _quiet_running():
-    r = subprocess.run(["pgrep", "-f", "quiet_clone.py"], capture_output=True, text=True)
-    return bool(r.stdout.strip())
+    try:
+        text = _real_open(RULE).read()
+    except OSError:
+        return False
+    m = re.search(r"^# holder (\d+)$", text, re.M)
+    return bool(m) and os.path.exists(f"/proc/{m.group(1)}")
 
 
 def _on_port(name):
@@ -156,7 +160,7 @@ def _scan():
         if d in _usb_start or any(d == p or d.startswith(p + ".") for p in _covered):
             continue
         if any(os.path.realpath(f"/sys/class/input/{n}/device").find(f"/{d}/") >= 0 for n in names):
-            _die(f"a new input device appeared on USB port {d}, not {_port} that quiet_clone covers; "
+            _die(f"a new input device appeared on USB port {d}, not {_port} that the quiet rule covers; "
                  "the clone may have moved: stopping")
 
 
@@ -217,7 +221,7 @@ def _patched_open(file, *a, **k):
 
 
 def engage():
-    """Check quiet_clone and start holding the clone's input nodes. Exits if the desktop is not covered."""
+    """Check the clone is kept quiet and start holding its input nodes. Exits if the desktop is not covered."""
     global _port, _covered, _usb_start
     if _port is not None:
         return _port
@@ -225,7 +229,7 @@ def engage():
         _die("run as root: the clone's input nodes have to be grabbed")
     ports = _rule_ports()
     if not _quiet_running() or not ports:
-        _die("quiet_clone.py is not running (or its udev rule is gone): start it before injecting")
+        _die("nothing keeps the clone quiet (quiet_clone.py, or its udev rule is gone): start it before injecting")
     _port, _covered = ports[0], ports
     port = _port
     _usb_start = _usb_devices()
@@ -233,7 +237,7 @@ def engage():
     end = time.monotonic() + 10.0
     while not os.path.exists(f"/sys/bus/usb/devices/{port}"):
         if time.monotonic() > end:
-            _die(f"nothing on USB port {port}, which quiet_clone covers: the clone has moved")
+            _die(f"nothing on USB port {port}, which the quiet rule covers: the clone has moved")
         time.sleep(0.05)
     fcntl.ioctl = _patched_ioctl
     os.open = _patched_os_open

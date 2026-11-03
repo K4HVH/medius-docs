@@ -1,8 +1,8 @@
 """Bench helpers for running tests against a box: which USB port its clone is on, which input node is
 the clone's mouse, whether a device is connected on a hub port, and who else holds a serial port.
 
-`comparison/quiet_clone.py` keeps the clone off this desktop while tests run against it, and writes the
-udev rule these helpers read. Linux only.
+`quiet` keeps the clone off this desktop while tests run against it (run by `comparison/quiet_clone.py`, or
+by the no-sim run itself), and writes the udev rule these helpers read. Linux only.
 """
 import os
 import re
@@ -13,7 +13,7 @@ QUIET_RULE = "/run/udev/rules.d/99-medius-quiet-clone.rules"
 
 
 def clone_usb_port(rule=QUIET_RULE):
-    """The USB port tests guard (`3-2.3`): the first one `quiet_clone.py` names in its rule, or None
+    """The USB port tests guard (`1-4`): the first one the quiet rule names, or None
     without one.
 
     A second box's clone can carry the same VID:PID as this one's, so a lookup by VID:PID alone reads
@@ -106,7 +106,7 @@ def _clone_event_node_once(vid, pid):
 
 
 class HubPort:
-    """Whether a device is connected on a USB port (`3-2.3`), read from its hub with GET_STATUS(port) on
+    """Whether a device is connected on a USB port (`1-4`), read from its hub with GET_STATUS(port) on
     demand. It shows a device arriving or leaving within a read (~0.3 ms), where the kernel's hub driver
     hears of it at the hub's next status poll (every 256 ms on common hubs). Needs root."""
 

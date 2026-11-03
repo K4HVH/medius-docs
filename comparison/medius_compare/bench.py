@@ -26,7 +26,7 @@ def default_config():
         return Path(pwd.getpwnam(os.environ["SUDO_USER"]).pw_dir) / CONFIG
     return mine
 BOXES = ("stock", "medius")
-KEYS = {"": {"names", "box", "sim"}, "box": {"control", "clone", "power"}, "power": {"hub", "ports"},
+KEYS = {"": {"names", "box", "sim", "sim_library"}, "box": {"control", "clone", "power"}, "power": {"hub", "ports"},
         "sim": {"serial", "box", "native"}}
 
 
@@ -67,6 +67,7 @@ class Bench:
         self.names = config.get("names", {})
         self.box = config.get("box", {})
         self.sim = config.get("sim", {})
+        self.sim_library = config.get("sim_library")
         self._locate = locate
         self._describe = describe or (lambda serial: {})
         self.by_id = Path(by_id)
