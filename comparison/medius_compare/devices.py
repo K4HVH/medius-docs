@@ -128,19 +128,22 @@ class RealDevices:
     guards). It must sit still while a leg runs: a hand on it would be measured as the box."""
 
     def __init__(self, box_name, clone_port=None, settle_s=1.0, nodes=usb_nodes, kinds=kinds_of, moved=moved,
-                 describe=describe):
+                 describe=describe, wait_s=30.0, every=0.2):
         if clone_port is None:
             from medius_bench import clone_usb_port
             clone_port = clone_usb_port()
         self.box_name, self.clone_port, self.settle_s = box_name, clone_port, settle_s
         self._nodes, self._kinds, self._moved, self._describe = nodes, kinds, moved, describe
+        self.wait_s, self.every = wait_s, every
 
     def present(self, leg, box, shapes=None):
         if leg.device not in STILL:
             raise LegUnavailable(f"leg {leg.id} plays {leg.device}, which needs the sim")
         if not self.clone_port:
             raise LegUnavailable("quiet_clone.py is not running with the clone's USB port")
-        nodes = self._nodes(self.clone_port)
+        end = time.monotonic() + self.wait_s
+        while not (nodes := self._nodes(self.clone_port)) and time.monotonic() < end:
+            time.sleep(self.every)
         events = [n for n in nodes if "/input/" in n]
         have = set().union(*(self._kinds(n) for n in events)) if events else set()
         for kind in STILL[leg.device]:

@@ -64,3 +64,34 @@ def test_the_seeded_suite_loads():
     from medius_compare.declare import unported
     root = Path(__file__).parent.parent / "suite"
     assert len(load_suite(root)) + len(unported(root)) == len(list(root.glob("*/test.toml")))
+
+
+def test_an_outcome_table_takes_a_label_for_runs_that_disagree(tmp_path):
+    d = tmp_path / "out"
+    d.mkdir()
+    (d / "test.toml").write_text('''id = "out"
+version = 1
+category = "devices"
+layout = "main"
+boxes = ["stock", "medius"]
+
+[[legs]]
+id = "rest"
+device = "still-mouse"
+
+[[tables]]
+section = "s"
+order = 1
+kind = "outcome"
+label = "Device"
+key = "Devices"
+outcomes = ["In step", "Sometimes behind", "Behind"]
+varies = "Sometimes behind"
+
+[[tables.rows]]
+id = "r"
+label = "Row"
+ptr = "/outcomes/r"
+''')
+    (d / "test.py").write_text("def run(ctx):\n    return {}\n")
+    assert load_suite(tmp_path)["out"].tables[0].varies == "Sometimes behind"
