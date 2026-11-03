@@ -54,6 +54,15 @@ const Errors: Component = () => {
                 </td>
               </tr>
               <tr>
+                <td><code>PortBusy {'{'} holders {'}'}</code></td>
+                <td>
+                  On Linux, another process has the control port open, such as the dashboard in a
+                  browser. The port takes one reader, so the{' '}
+                  <A href="/library/connection#open">openers</A> refuse it rather than split the box's
+                  replies. <code>holders</code> names each one as <code>"name (pid N)"</code>.
+                </td>
+              </tr>
+              <tr>
                 <td><code>BadProtoVer {'{'} got {'}'}</code></td>
                 <td>
                   The box replied to the <A href="/library/connection">handshake</A> with a{' '}

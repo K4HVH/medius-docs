@@ -1693,6 +1693,7 @@ except MediusError as e:     # any other failure
                 <tr><td><code>RewritePoolFullError</code></td><td><code>ERR_REWRITE_POOL_FULL</code></td></tr>
                 <tr><td><code>TransferTimeoutRangeError</code></td><td><code>ERR_TRANSFER_TIMEOUT_RANGE</code></td></tr>
                 <tr><td><code>TransferReplyIncompleteError</code></td><td><code>ERR_TRANSFER_REPLY_INCOMPLETE</code></td></tr>
+                <tr><td><code>PortBusyError</code></td><td><code>ERR_PORT_BUSY</code></td></tr>
               </tbody>
             </table>
           </div>
@@ -1779,6 +1780,7 @@ except MediusError as e:     # any other failure
                 <tr><td><code>ERR_REWRITE_TABLE_FULL</code></td><td><code>26</code></td><td><code>ERR_CLIP_PACKET_TRIGGER</code></td><td><code>33</code></td></tr>
                 <tr><td><code>ERR_REWRITE_MATCH_TOO_LONG</code></td><td><code>34</code></td><td><code>ERR_REWRITE_POOL_FULL</code></td><td><code>35</code></td></tr>
                 <tr><td><code>ERR_TRANSFER_TIMEOUT_RANGE</code></td><td><code>36</code></td><td><code>ERR_TRANSFER_REPLY_INCOMPLETE</code></td><td><code>37</code></td></tr>
+                <tr><td><code>ERR_PORT_BUSY</code></td><td><code>38</code></td><td></td><td></td></tr>
               </tbody>
             </table>
           </div>

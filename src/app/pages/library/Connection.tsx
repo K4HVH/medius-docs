@@ -26,7 +26,9 @@ const Connection: Component = () => {
           <code>open</code> and <code>find</code> block on the{' '}
           <A href="/native/connection#handshake">handshake</A>. Auto-detect matches the{' '}
           <A href="/native/transport">USB identity</A> of the WCH CH343 bridge in every box (vid{' '}
-          <code>0x1A86</code>, pid <code>0x55D3</code>).
+          <code>0x1A86</code>, pid <code>0x55D3</code>). On Linux, a port another process holds open
+          is refused with <A href="/library/types/errors"><code>Error::PortBusy</code></A>: the port
+          takes one reader.
         </p>
         <div class="api-response-label">FUNCTIONS</div>
         <div class="table-scroll">
