@@ -90,6 +90,10 @@ let dev = Device::open("/dev/ttyACM0")?;`}</code></pre>
                 <td><code>PROTO_VER</code></td>
                 <td><code>10</code></td>
               </tr>
+              <tr>
+                <td><code>MIN_PROTO_VER</code></td>
+                <td><code>5</code></td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -97,7 +101,10 @@ let dev = Device::open("/dev/ttyACM0")?;`}</code></pre>
           <code>PROTO_VER</code> is the{' '}
           <A href="/native/frame#layout">control protocol</A> version this build speaks.
           A box reporting anything else is refused at the{' '}
-          <A href="/native/connection#handshake">handshake</A>.
+          <A href="/native/connection#handshake">handshake</A>. <code>MIN_PROTO_VER</code> is the
+          oldest protocol whose update path this build speaks:{' '}
+          <A href="/library/update#open-for-update"><code>open_for_update</code></A> reaches a box from
+          there on to update it.
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`use medius::{DEFAULT_QUERY_TIMEOUT, DEFAULT_KEEPALIVE_CADENCE, PROTO_VER};

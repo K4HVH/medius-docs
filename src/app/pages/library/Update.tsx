@@ -19,9 +19,9 @@ const Update: Component = () => {
         </p>
         <div class="callout callout--info">
           <p>
-            These calls need a box the library can open. A box it refuses, such as a 3.4.1 box on
-            protocol 8 (<A href="/library/types/errors"><code>Error::BadProtoVer</code></A>), is updated
-            from the dashboard's <A href="/dashboard/update">Update page</A>.
+            A box on an older control protocol, such as a 3.4.1 box on protocol 8, is refused by{' '}
+            <A href="/library/connection#open"><code>open</code></A>. Open it with{' '}
+            <A href="/library/update#open-for-update"><code>open_for_update</code></A> to update it.
           </p>
         </div>
         <div class="table-scroll">
@@ -62,6 +62,51 @@ device.stage_firmware(UpdateTarget::Device, &dev, &mut |p| {
 })?;
 device.activate_firmware()?;`}</code></pre>
       </PageHeader>
+
+      <DocSection id="open-for-update" title="open_for_update" caption="Open a box on any protocol from 5 on, to update it">
+        <pre class="api-signature">fn open_for_update(path: impl AsRef&lt;Path&gt;) -&gt; Result&lt;Device&gt;</pre>
+        <pre class="api-signature">fn is_update_only(&amp;self) -&gt; bool</pre>
+        <p><span class="api-badge api-badge--responded">Blocks</span></p>
+        <p>
+          Opens the box at <code>path</code> as{' '}
+          <A href="/library/connection#open"><code>open</code></A> does, but accepts any control
+          protocol from <code>MIN_PROTO_VER</code> (5) on. The update path hasn't changed since then.
+          A box older than that returns{' '}
+          <A href="/library/types/errors"><code>Error::BadProtoVer</code></A>.
+        </p>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead>
+              <tr><th>The box speaks</th><th>The device</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>PROTO_VER</code></td><td>A full one, as from <code>open</code>. <code>is_update_only</code> is false.</td></tr>
+              <tr><td>another, from 5 on</td><td>Update-only. <code>query_version</code>, <code>firmware_info</code> and the five calls on this page work. Every other call returns <code>Error::BadProtoVer</code>. It holds no state and sends nothing on its own.</td></tr>
+              <tr><td>below 5</td><td>Refused: <code>Error::BadProtoVer</code>.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>
+          A box that comes back on an older protocol after an update keeps answering the update path,
+          so a device opened this way can also move a box back to an older release. Once the update is
+          confirmed, open the box again to use it.
+        </p>
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`use medius::{Device, UpdateTarget};
+
+let device = Device::open_for_update("/dev/ttyACM0")?;
+if device.is_update_only() {
+    println!("box on protocol {}, updating", device.query_version()?.proto_ver);
+}
+let host = std::fs::read("medius_host.bin")?;
+let dev = std::fs::read("medius_device.bin")?;
+device.stage_firmware(UpdateTarget::Host, &host, &mut |_| {})?;
+device.stage_firmware(UpdateTarget::Device, &dev, &mut |_| {})?;
+device.activate_firmware()?;
+device.wait_firmware_confirmed()?;
+drop(device);
+let device = Device::open("/dev/ttyACM0")?;     // now on this build's protocol`}</code></pre>
+      </DocSection>
 
       <DocSection id="stage-firmware" title="stage_firmware" caption="Write an image to a chip's spare slot">
         <pre class="api-signature">fn stage_firmware(&self, target: UpdateTarget, image: &amp;[u8], progress: &amp;mut dyn FnMut(UpdateProgress)) -&gt; Result&lt;u32&gt;</pre>
@@ -223,6 +268,8 @@ println!("now on ota_{} ({})", fw.device.slot, fw.device.state);`}</code></pre>
       </DocSection>
 
       <DocSection id="async" title="On AsyncDevice" caption="Same calls, awaitable">
+        <pre class="api-signature">fn AsyncDevice::open_for_update(path: impl AsRef&lt;Path&gt;) -&gt; Result&lt;AsyncDevice&gt;</pre>
+        <pre class="api-signature">fn is_update_only(&amp;self) -&gt; bool</pre>
         <pre class="api-signature">async fn stage_firmware(&self, target: UpdateTarget, image: &amp;[u8], progress: &amp;mut dyn FnMut(UpdateProgress)) -&gt; Result&lt;u32&gt;</pre>
         <pre class="api-signature">async fn activate_firmware(&self) -&gt; Result&lt;()&gt;</pre>
         <pre class="api-signature">async fn abort_update(&self, target: UpdateTarget) -&gt; Result&lt;()&gt;</pre>

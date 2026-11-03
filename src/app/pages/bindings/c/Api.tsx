@@ -210,6 +210,8 @@ medius_device_free(dev);`}</code></pre>
           <table class="api-params">
             <thead><tr><th>Function</th><th>Does</th></tr></thead>
             <tbody>
+              <tr><td><code>medius_device_open_for_update(const char *path, MediusDevice **out)</code></td><td>Open a box on any control protocol from 5 on, to update it. On this library's protocol the handle is a full one. On another it is update-only: the version and firmware queries and the functions below work, and every other call returns <code>MEDIUS_STATUS_ERR_BAD_PROTO_VER</code>. A box older than 5 gives <code>MEDIUS_STATUS_ERR_BAD_PROTO_VER</code>. See <A href="/library/update#open-for-update"><code>open_for_update</code></A>.</td></tr>
+              <tr><td><code>bool medius_device_is_update_only(const MediusDevice *dev)</code></td><td>Whether the handle reaches only the update path: its box speaks an older protocol than this library. False for a null handle.</td></tr>
               <tr><td><code>medius_device_firmware_info(dev, MediusFirmwareInfo *out)</code></td><td>Both chips' versions, the slot each runs, and what is staged.</td></tr>
               <tr><td><code>medius_device_stage_firmware(dev, target, image, len, progress, user)</code></td><td>Write <code>len</code> bytes into <code>target</code>'s spare slot (0 = device chip, 1 = host chip). Inert until activated; <code>progress</code> may be <code>NULL</code>.</td></tr>
               <tr><td><code>medius_device_activate_firmware(dev)</code></td><td>Commit every staged image and reboot into it. Blocks while the host chip reboots and comes back.</td></tr>
@@ -547,6 +549,7 @@ if (medius_device_transfer(dev, 0, get_config, NULL, 0, reply, sizeof reply, &ou
               <tr><td><code>medius_mock_clone</code> / <code>medius_mock_free(MediusMockBox *mock)</code></td><td>Share (same state) / free a mock handle.</td></tr>
               <tr><td><code>medius_device_with_mock(const MediusMockBox *mock, MediusDevice **out)</code></td><td>Build a <code>MediusDevice</code> over the mock <em>without</em> a handshake.</td></tr>
               <tr><td><code>medius_device_open_mock(const MediusMockBox *mock, MediusDevice **out)</code></td><td>Build a <code>MediusDevice</code> over the mock <em>and</em> run the handshake.</td></tr>
+              <tr><td><code>medius_device_open_mock_for_update(const MediusMockBox *mock, MediusDevice **out)</code></td><td>Build a <code>MediusDevice</code> over the mock and run the handshake <code>medius_device_open_for_update</code> runs.</td></tr>
               <tr><td><code>medius_mock_set_version / _health / _device_info / _caps / _mouse_caps /</code> <code>_kbd_caps / _rate / _stats / _locks / _catch_state / _imperfect_status</code></td><td>Set the value the mock returns for each query.</td></tr>
               <tr><td><code>medius_mock_set_movement_riding(mock, bool enabled, uint32_t window_ms)</code></td><td>Set the movement-riding window the mock reports.</td></tr>
               <tr><td><code>medius_mock_set_bearing(mock, uint16_t window_ms, uint8_t mode)</code></td><td>Set the bearing the mock reports. A mode no constant names is ignored, as the box ignores it.</td></tr>
