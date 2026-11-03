@@ -1,10 +1,13 @@
-# Seeded from the 2026-11-03 results; legs and pointers are set when the test is ported.
 id = "conservation-rates"
 version = 1
 category = "injection"
 layout = "main"
 boxes = ["stock", "medius"]
 jams_stock = false
+
+[[legs]]
+id = "idle"
+device = "sim:idle_mouse"
 
 [[tables]]
 section = "inj-totals"
@@ -16,31 +19,26 @@ commands = { stock = "km.move", medius = "MOVE" }
 outcomes = ["Exact", "Counts lost", "Counts added"]
 
 [[tables.rows]]
-# outcome from stock: /results/0/delivered, /results/0/commanded; medius: /results/0/delivered, /results/0/commanded
 id = "inj-total-rate-500"
 label = "Still mouse, 500 moves/s"
 ptr = "/outcomes/inj-total-rate-500"
 
 [[tables.rows]]
-# outcome from stock: /results/1/delivered, /results/1/commanded; medius: /results/1/delivered, /results/1/commanded
 id = "inj-total-rate-250"
 label = "Still mouse, 250 moves/s"
 ptr = "/outcomes/inj-total-rate-250"
 
 [[tables.rows]]
-# outcome from stock: /results/2/delivered, /results/2/commanded; medius: /results/2/delivered, /results/2/commanded
 id = "inj-total-rate-125"
 label = "Still mouse, 125 moves/s"
 ptr = "/outcomes/inj-total-rate-125"
 
 [[tables.rows]]
-# outcome from stock: /results/3/delivered, /results/3/commanded; medius: /results/3/delivered, /results/3/commanded
 id = "inj-total-rate-60"
 label = "Still mouse, 60 moves/s"
 ptr = "/outcomes/inj-total-rate-60"
 
 [[tables.rows]]
-# outcome from stock: /results/4/delivered, /results/4/commanded; medius: /results/4/delivered, /results/4/commanded
 id = "inj-total-rate-30"
 label = "Still mouse, 30 moves/s"
 ptr = "/outcomes/inj-total-rate-30"

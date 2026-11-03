@@ -1,10 +1,17 @@
-# Seeded from the 2026-11-03 results; legs and pointers are set when the test is ported.
 id = "raw-move"
 version = 1
 category = "injection"
 layout = "main"
 boxes = ["stock", "medius"]
 jams_stock = false
+
+[[legs]]
+id = "rest"
+device = "sim:idle_mouse"
+
+[[legs]]
+id = "moving"
+device = "sim:moving"
 
 [[tables]]
 section = "inj-raw-move"
@@ -16,7 +23,7 @@ unit = "ms"
 better = "lower"
 stat = "p50"
 layer = "wire"
-n = "40 moves per row, 2 runs"
+n = "40 moves per row, 3 runs"
 commands = { stock = "RAW_MOVE", medius = "MOVE(NOW)" }
 resolution = 0.001
 
@@ -36,12 +43,12 @@ unit = "us"
 section = "inj-raw-move"
 order = 2
 kind = "measure"
-label = "Counts arriving from 200 unsmoothed moves at 1,000/s"
+label = "Counts arriving from 200 unsmoothed moves 5 ms apart"
 key = "Mouse"
 unit = "counts"
 better = "higher"
 layer = "wire"
-n = "One stream of 200 moves"
+n = "One stream of 200 moves a run, 3 runs"
 commands = { stock = "RAW_MOVE", medius = "MOVE(NOW)" }
 
 [[tables.rows]]

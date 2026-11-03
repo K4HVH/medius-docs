@@ -1,10 +1,29 @@
-# Seeded from the 2026-11-03 results; legs and pointers are set when the test is ported.
 id = "inject-native-rate"
 version = 1
 category = "passthrough"
 layout = "main"
 boxes = ["stock", "medius"]
 jams_stock = false
+
+[[legs]]
+id = "count"
+device = "sim:count"
+
+[[legs]]
+id = "alt"
+device = "sim:alt"
+
+[[legs]]
+id = "const1"
+device = "sim:const1"
+
+[[legs]]
+id = "const100"
+device = "sim:const100"
+
+[[legs]]
+id = "sine"
+device = "sim:sine"
 
 [[tables]]
 section = "pass-inject"
@@ -15,7 +34,7 @@ key = "Moves sent"
 unit = "reports"
 better = "higher"
 layer = "hidraw"
-n = "One 15 s run per row, then 0.5 s"
+n = "One 15 s run per row, then 0.5 s, 3 runs"
 commands = { stock = "km.move", medius = "MOVE" }
 resolution = 1
 
@@ -48,7 +67,7 @@ key = "Moves sent"
 unit = "reports"
 better = "higher"
 layer = "hidraw"
-n = "2 runs of 15 s, then 0.5 s"
+n = "15 s then 0.5 s a run, 3 runs"
 commands = { stock = "km.move", medius = "MOVE" }
 resolution = 1
 
@@ -76,7 +95,7 @@ key = "Mouse"
 unit = "reports"
 better = "higher"
 layer = "hidraw"
-n = "One 15 s run per row, then 0.5 s"
+n = "One 15 s run per row, then 0.5 s, 3 runs"
 commands = { stock = "km.move", medius = "MOVE" }
 resolution = 1
 
@@ -104,7 +123,7 @@ key = "Commands sent"
 unit = "reports"
 better = "higher"
 layer = "hidraw"
-n = "One 5 s run per row, then 0.5 s"
+n = "One 5 s run per row, then 0.5 s, 3 runs"
 resolution = 1
 
 [[tables.rows]]
@@ -131,29 +150,29 @@ ptr = "/sine_query/results/0/hidraw_native"
 section = "inj-reports-emitted"
 order = 2
 kind = "measure"
-label = "Reports carrying only injected motion beside a mouse moving at a varying speed, in 30 s"
+label = "Reports carrying only injected motion beside a mouse moving at a varying speed, in 15 s"
 key = "Moves sent"
 unit = "reports"
 better = "lower"
 layer = "evdev"
-n = "2 runs of 15 s, summed"
+n = "15 s a run, 3 runs"
 commands = { stock = "km.move", medius = "MOVE" }
 resolution = 1
 
 [[tables.rows]]
 id = "inj-box-only-sine-1000"
 label = "1,000 moves/s"
-ptr = ["/sine/results/0/per_second/0/box_only", "/sine/results/0/per_second/1/box_only", "/sine/results/0/per_second/2/box_only", "/sine/results/0/per_second/3/box_only", "/sine/results/0/per_second/4/box_only", "/sine/results/0/per_second/5/box_only", "/sine/results/0/per_second/6/box_only", "/sine/results/0/per_second/7/box_only", "/sine/results/0/per_second/8/box_only", "/sine/results/0/per_second/9/box_only", "/sine/results/0/per_second/10/box_only", "/sine/results/0/per_second/11/box_only", "/sine/results/0/per_second/12/box_only", "/sine/results/0/per_second/13/box_only", "/sine/results/0/per_second/14/box_only"]
+ptr = "/sine/results/0/box_only"
 
 [[tables.rows]]
 id = "inj-box-only-sine-500"
 label = "500 moves/s"
-ptr = ["/sine/results/1/per_second/0/box_only", "/sine/results/1/per_second/1/box_only", "/sine/results/1/per_second/2/box_only", "/sine/results/1/per_second/3/box_only", "/sine/results/1/per_second/4/box_only", "/sine/results/1/per_second/5/box_only", "/sine/results/1/per_second/6/box_only", "/sine/results/1/per_second/7/box_only", "/sine/results/1/per_second/8/box_only", "/sine/results/1/per_second/9/box_only", "/sine/results/1/per_second/10/box_only", "/sine/results/1/per_second/11/box_only", "/sine/results/1/per_second/12/box_only", "/sine/results/1/per_second/13/box_only", "/sine/results/1/per_second/14/box_only"]
+ptr = "/sine/results/1/box_only"
 
 [[tables.rows]]
 id = "inj-box-only-sine-125"
 label = "125 moves/s"
-ptr = ["/sine/results/2/per_second/0/box_only", "/sine/results/2/per_second/1/box_only", "/sine/results/2/per_second/2/box_only", "/sine/results/2/per_second/3/box_only", "/sine/results/2/per_second/4/box_only", "/sine/results/2/per_second/5/box_only", "/sine/results/2/per_second/6/box_only", "/sine/results/2/per_second/7/box_only", "/sine/results/2/per_second/8/box_only", "/sine/results/2/per_second/9/box_only", "/sine/results/2/per_second/10/box_only", "/sine/results/2/per_second/11/box_only", "/sine/results/2/per_second/12/box_only", "/sine/results/2/per_second/13/box_only", "/sine/results/2/per_second/14/box_only"]
+ptr = "/sine/results/2/box_only"
 
 [[tables]]
 section = "inj-reports-emitted"
@@ -164,19 +183,19 @@ key = "Moves sent"
 unit = "reports"
 better = "lower"
 layer = "evdev"
-n = "One 5 s run"
+n = "5 s a run, 3 runs"
 commands = { stock = "km.move", medius = "MOVE" }
 resolution = 1
 
 [[tables.rows]]
 id = "inj-box-only-slow-30"
 label = "30 moves/s"
-ptr = ["/sine_slow/results/1/per_second/0/box_only", "/sine_slow/results/1/per_second/1/box_only", "/sine_slow/results/1/per_second/2/box_only", "/sine_slow/results/1/per_second/3/box_only", "/sine_slow/results/1/per_second/4/box_only"]
+ptr = "/sine_slow/results/1/box_only"
 
 [[tables.rows]]
 id = "inj-box-only-slow-10"
 label = "10 moves/s"
-ptr = ["/sine_slow/results/0/per_second/0/box_only", "/sine_slow/results/0/per_second/1/box_only", "/sine_slow/results/0/per_second/2/box_only", "/sine_slow/results/0/per_second/3/box_only", "/sine_slow/results/0/per_second/4/box_only"]
+ptr = "/sine_slow/results/0/box_only"
 
 [[tables]]
 section = "inj-totals"
@@ -187,7 +206,7 @@ key = "Mouse and moves"
 unit = "counts"
 better = "higher"
 layer = "evdev"
-n = "One 15 s run per row"
+n = "One 15 s run per row, 3 runs"
 commands = { stock = "km.move", medius = "MOVE" }
 
 [[tables.rows]]
