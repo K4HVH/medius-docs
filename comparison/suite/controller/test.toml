@@ -1,10 +1,21 @@
-# Seeded from the 2026-11-03 results; legs and pointers are set when the test is ported.
 id = "controller"
 version = 1
 category = "passthrough"
 layout = "main"
 boxes = ["stock", "medius"]
 jams_stock = false
+
+[[legs]]
+id = "xinput"
+device = "sim:xinput-pad"
+
+[[legs]]
+id = "hidpad"
+device = "sim:hid-pad"
+
+[[legs]]
+id = "gip"
+device = "sim:gip-pad"
 
 [[tables]]
 section = "pass-pads"
@@ -17,13 +28,13 @@ outcomes = ["Unchanged", "Changed"]
 [[tables.rows]]
 # outcome from stock: /results/0/cloned, /results/0/interfaces/0/1, /results/0/abs_x_seen; medius: /results/0/cloned, /results/0/interfaces/0/1, /results/0/abs_x_seen
 id = "pass-pad-xinput"
-label = "Xbox 360 pad (XInput)"
+label = "XInput pad"
 ptr = "/outcomes/pass-pad-xinput"
 
 [[tables.rows]]
 # outcome from stock: /results/0/cloned, /results/0/interfaces/0/1, /results/0/abs_x_seen; medius: /results/2/cloned, /results/2/interfaces/0/1, /results/2/abs_x_seen
 id = "pass-pad-gip"
-label = "Xbox One pad (GIP)"
+label = "GIP pad"
 ptr = "/outcomes/pass-pad-gip"
 
 [[tables.rows]]
@@ -43,11 +54,11 @@ outcomes = ["Reaches the pad", "Lost"]
 [[tables.rows]]
 # outcome from stock: /results/0/pad_out_log/packets, /results/0/pad_out_log/crc; medius: /results/0/pad_out_log/packets, /results/0/pad_out_log/crc
 id = "pass-pad-out-xinput"
-label = "Xbox 360 pad, LED command"
+label = "XInput pad, LED command"
 ptr = "/outcomes/pass-pad-out-xinput"
 
 [[tables.rows]]
 # outcome from stock: /results/0/pad_out_log/packets, /results/0/pad_out_log/crc; medius: /results/2/pad_out_log/packets, /results/2/pad_out_log/crc
 id = "pass-pad-out-gip"
-label = "Xbox One pad, start-up packets"
+label = "GIP pad, start-up packets"
 ptr = "/outcomes/pass-pad-out-gip"

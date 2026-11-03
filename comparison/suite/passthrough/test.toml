@@ -1,10 +1,33 @@
-# Seeded from the 2026-11-03 results; legs and pointers are set when the test is ported.
 id = "passthrough"
 version = 1
 category = "passthrough"
 layout = "main"
 boxes = ["stock", "medius"]
 jams_stock = false
+
+[[legs]]
+id = "1000"
+device = "sim:counting-mouse-1000"
+
+[[legs]]
+id = "500"
+device = "sim:counting-mouse-500"
+
+[[legs]]
+id = "250"
+device = "sim:counting-mouse-250"
+
+[[legs]]
+id = "125"
+device = "sim:counting-mouse-125"
+
+[[legs]]
+id = "burst"
+device = "sim:counting-mouse-burst"
+
+[[legs]]
+id = "inject"
+device = "sim:counting-mouse-inject"
 
 [[tables]]
 section = "pass-relay"
@@ -118,7 +141,7 @@ key = "Mouse"
 unit = "intervals"
 better = "lower"
 layer = "wire"
-n = "2 runs of 15 s"
+n = "3 runs of 15 s"
 resolution = 1
 
 [[tables.rows]]
@@ -150,7 +173,7 @@ key = "Mouse"
 unit = "gaps"
 better = "lower"
 layer = "wire"
-n = "2 runs of 15 s"
+n = "3 runs of 15 s"
 resolution = 1
 
 [[tables.rows]]
@@ -182,7 +205,7 @@ key = "Mouse"
 unit = "intervals"
 better = "lower"
 layer = "wire"
-n = "One 2-minute run on each box"
+n = "3 runs of 2 minutes"
 resolution = 1
 
 [[tables.rows]]
@@ -199,7 +222,7 @@ key = "Mouse"
 unit = "gaps"
 better = "lower"
 layer = "wire"
-n = "One 2-minute run on each box"
+n = "3 runs of 2 minutes"
 resolution = 1
 
 [[tables.rows]]
@@ -216,7 +239,7 @@ key = "Load"
 unit = "reports"
 better = "higher"
 layer = "wire"
-n = "2 runs of 15.5 s"
+n = "3 runs of 15.5 s"
 commands = { stock = "km.move", medius = "MOVE" }
 resolution = 1
 
@@ -234,7 +257,7 @@ key = "Mouse"
 unit = "reports"
 better = "lower"
 layer = "hidraw"
-n = "15,000 moves a run, 2 runs"
+n = "15,000 moves a run, 3 runs"
 commands = { stock = "km.move", medius = "MOVE" }
 resolution = 1
 
@@ -252,7 +275,7 @@ key = "Mouse and moves"
 unit = "counts"
 better = "higher"
 layer = "hidraw"
-n = "15,000 moves a run, 2 runs"
+n = "15,000 moves a run, 3 runs"
 commands = { stock = "km.move", medius = "MOVE" }
 
 [[tables.rows]]

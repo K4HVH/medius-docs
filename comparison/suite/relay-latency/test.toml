@@ -1,10 +1,25 @@
-# Seeded from the 2026-11-03 results; legs and pointers are set when the test is ported.
 id = "relay-latency"
 version = 1
 category = "passthrough"
 layout = "main"
 boxes = ["stock", "medius"]
 jams_stock = false
+
+[[legs]]
+id = "1000"
+device = "sim:slow-clock-mouse-1000"
+
+[[legs]]
+id = "500"
+device = "sim:slow-clock-mouse-500"
+
+[[legs]]
+id = "250"
+device = "sim:slow-clock-mouse-250"
+
+[[legs]]
+id = "125"
+device = "sim:slow-clock-mouse-125"
 
 [[tables]]
 section = "pass-latency"
@@ -16,7 +31,7 @@ unit = "ms"
 better = "lower"
 stat = "p50"
 layer = "emulator"
-n = "2 runs of 24 s"
+n = "3 runs of 24 s"
 resolution = 0.01
 
 [[tables.rows]]
@@ -54,7 +69,7 @@ unit = "ms"
 better = "lower"
 stat = "p95"
 layer = "emulator"
-n = "2 runs of 24 s"
+n = "3 runs of 24 s"
 resolution = 0.01
 
 [[tables.rows]]
@@ -91,7 +106,7 @@ unit = "ms"
 better = "lower"
 stat = "p99"
 layer = "emulator"
-n = "2 runs of 24 s"
+n = "3 runs of 24 s"
 resolution = 0.01
 
 [[tables.rows]]
@@ -128,7 +143,7 @@ unit = "µs"
 better = "lower"
 stat = "fastest"
 layer = "emulator"
-n = "2 runs of 24 s"
+n = "3 runs of 24 s"
 resolution = 1
 
 [[tables.rows]]

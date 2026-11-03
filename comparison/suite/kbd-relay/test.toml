@@ -1,10 +1,21 @@
-# Seeded from the 2026-11-03 results; legs and pointers are set when the test is ported.
 id = "kbd-relay"
 version = 1
 category = "passthrough"
 layout = "main"
 boxes = ["stock", "medius"]
 jams_stock = false
+
+[[legs]]
+id = "1000"
+device = "sim:counting-keyboard-1000"
+
+[[legs]]
+id = "125"
+device = "sim:counting-keyboard-125"
+
+[[legs]]
+id = "burst"
+device = "sim:counting-keyboard-burst"
 
 [[tables]]
 section = "pass-relay"
@@ -55,7 +66,7 @@ key = "Keyboard"
 unit = "intervals"
 better = "lower"
 layer = "wire"
-n = "2 runs of 15 s"
+n = "3 runs of 15 s"
 resolution = 1
 
 [[tables.rows]]

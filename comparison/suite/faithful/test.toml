@@ -1,10 +1,33 @@
-# Seeded from the 2026-11-03 results; legs and pointers are set when the test is ported.
 id = "faithful"
 version = 1
 category = "passthrough"
 layout = "main"
 boxes = ["stock", "medius"]
 jams_stock = false
+
+[[legs]]
+id = "gaming"
+device = "sim:builtin:gamingmouse"
+
+[[legs]]
+id = "mouse"
+device = "sim:builtin:mouse"
+
+[[legs]]
+id = "stall"
+device = "sim:stall-mouse"
+
+[[legs]]
+id = "altsetting"
+device = "sim:builtin:altsetting"
+
+[[legs]]
+id = "zlp"
+device = "sim:zlp-mouse"
+
+[[legs]]
+id = "multiconfig"
+device = "sim:builtin:multiconfig"
 
 [[tables]]
 section = "pass-pc-device"
