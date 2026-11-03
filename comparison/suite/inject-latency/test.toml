@@ -1,10 +1,25 @@
-# Seeded from the 2026-11-03 results; legs and pointers are set when the test is ported.
 id = "inject-latency"
 version = 1
 category = "injection"
 layout = "main"
 boxes = ["stock", "medius"]
 jams_stock = false
+
+[[legs]]
+id = "idle"
+device = "sim:idle_mouse"
+
+[[legs]]
+id = "moving_1k"
+device = "sim:moving_1k"
+
+[[legs]]
+id = "moving_125"
+device = "sim:moving_125"
+
+[[legs]]
+id = "rested"
+device = "sim:rested"
 
 [[tables]]
 section = "inj-latency"
@@ -16,7 +31,7 @@ unit = "ms"
 better = "lower"
 stat = "p50"
 layer = "wire"
-n = "200 moves a run, 2 runs"
+n = "200 moves a run, 3 runs"
 commands = { stock = "km.move", medius = "MOVE" }
 resolution = 0.01
 
@@ -48,7 +63,7 @@ unit = "ms"
 better = "lower"
 stat = "p95"
 layer = "wire"
-n = "200 moves a run, 2 runs"
+n = "200 moves a run, 3 runs"
 commands = { stock = "km.move", medius = "MOVE" }
 resolution = 0.01
 
@@ -80,7 +95,7 @@ unit = "ms"
 better = "lower"
 stat = "p50"
 layer = "wire"
-n = "200 moves a run, 2 runs"
+n = "200 moves a run, 3 runs"
 commands = { stock = "km.move_now", medius = "MOVE(NOW)" }
 resolution = 0.001
 
@@ -130,7 +145,7 @@ unit = "ms"
 better = "lower"
 stat = "p95"
 layer = "wire"
-n = "200 moves a run, 2 runs"
+n = "200 moves a run, 3 runs"
 commands = { stock = "km.move_now", medius = "MOVE(NOW)" }
 resolution = 0.01
 
@@ -179,7 +194,7 @@ key = "Mouse and move"
 unit = "moves"
 better = "higher"
 layer = "evdev"
-n = "200 moves a run, 2 runs"
+n = "200 moves a run, 3 runs"
 commands = { stock = "km.move", medius = "MOVE" }
 
 [[tables.rows]]
@@ -227,7 +242,7 @@ key = "Mouse and move"
 unit = "moves"
 better = "higher"
 layer = "evdev"
-n = "200 moves a run, 2 runs"
+n = "200 moves a run, 3 runs"
 commands = { stock = "km.move", medius = "MOVE" }
 
 [[tables.rows]]
@@ -276,7 +291,7 @@ unit = "ms"
 better = "lower"
 stat = "p95"
 layer = "evdev"
-n = "200 moves a run, 2 runs"
+n = "200 moves a run, 3 runs"
 commands = { stock = "km.move", medius = "MOVE" }
 resolution = 0.01
 

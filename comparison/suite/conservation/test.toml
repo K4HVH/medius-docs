@@ -1,10 +1,25 @@
-# Seeded from the 2026-11-03 results; legs and pointers are set when the test is ported.
 id = "conservation"
 version = 1
 category = "injection"
 layout = "main"
 boxes = ["stock", "medius"]
 jams_stock = false
+
+[[legs]]
+id = "idle"
+device = "sim:idle_mouse"
+
+[[legs]]
+id = "moving_1k"
+device = "sim:moving_1k"
+
+[[legs]]
+id = "moving_125"
+device = "sim:moving_125"
+
+[[legs]]
+id = "moving_var"
+device = "sim:moving_var"
 
 [[tables]]
 section = "inj-totals"
@@ -13,52 +28,44 @@ kind = "outcome"
 label = "Total, default moves"
 key = "Mouse and moves"
 commands = { stock = "km.move", medius = "MOVE" }
-outcomes = ["Exact", "1 count short"]
+outcomes = ["Exact", "1 count short", "Counts lost", "Counts added"]
 
 [[tables.rows]]
-# outcome from stock: /results/0/delivered, /results/0/delivered, /results/0/delivered, /results/0/commanded, /results/0/commanded, /results/0/commanded; medius: /results/0/delivered, /results/0/commanded, /results/0/delivered, /results/0/commanded, /results/0/delivered, /results/0/commanded
 id = "inj-total-rest-spaced"
 label = "Still mouse, 400 moves 30-60 ms apart"
 ptr = "/outcomes/inj-total-rest-spaced"
 
 [[tables.rows]]
-# outcome from stock: /results/1/delivered, /results/1/delivered, /results/1/delivered, /results/1/commanded, /results/1/commanded, /results/1/commanded; medius: /results/1/delivered, /results/1/commanded, /results/1/delivered, /results/1/commanded, /results/1/delivered, /results/1/commanded
 id = "inj-total-rest-1000"
 label = "Still mouse, 2,000 moves at 1,000/s"
 ptr = "/outcomes/inj-total-rest-1000"
 
 [[tables.rows]]
-# outcome from stock: /results/4/delivered, /results/4/delivered, /results/4/delivered, /results/4/commanded, /results/4/commanded, /results/4/commanded; medius: /results/4/delivered, /results/4/commanded, /results/4/delivered, /results/4/commanded, /results/4/delivered, /results/4/commanded
 id = "inj-total-1k-spaced"
 label = "Moving 1 kHz mouse, 400 moves 30-60 ms apart"
 ptr = "/outcomes/inj-total-1k-spaced"
 
 [[tables.rows]]
-# outcome from stock: /results/5/delivered, /results/5/delivered, /results/5/delivered, /results/5/commanded, /results/5/commanded, /results/5/commanded; medius: /results/5/delivered, /results/5/commanded, /results/5/delivered, /results/5/commanded, /results/5/delivered, /results/5/commanded
 id = "inj-total-1k-1000"
 label = "Moving 1 kHz mouse, 2,000 moves at 1,000/s"
 ptr = "/outcomes/inj-total-1k-1000"
 
 [[tables.rows]]
-# outcome from stock: /results/8/delivered, /results/8/delivered, /results/8/delivered, /results/8/commanded, /results/8/commanded, /results/8/commanded; medius: /results/8/delivered, /results/8/commanded, /results/8/delivered, /results/8/commanded, /results/8/delivered, /results/8/commanded
 id = "inj-total-125-spaced"
 label = "Moving 125 Hz mouse, 400 moves 30-60 ms apart"
 ptr = "/outcomes/inj-total-125-spaced"
 
 [[tables.rows]]
-# outcome from stock: /results/9/delivered, /results/9/delivered, /results/9/delivered, /results/9/commanded, /results/9/commanded, /results/9/commanded; medius: /results/9/delivered, /results/9/commanded, /results/9/delivered, /results/9/commanded, /results/9/delivered, /results/9/commanded
 id = "inj-total-125-1000"
 label = "Moving 125 Hz mouse, 2,000 moves at 1,000/s"
 ptr = "/outcomes/inj-total-125-1000"
 
 [[tables.rows]]
-# outcome from stock: /results/0/delivered, /results/0/commanded; medius: /results/0/delivered, /results/0/commanded
 id = "inj-total-var-spaced"
 label = "Mouse moving at a varying speed, 400 moves 30-60 ms apart"
 ptr = "/outcomes/inj-total-var-spaced"
 
 [[tables.rows]]
-# outcome from stock: /results/1/delivered, /results/1/commanded; medius: /results/1/delivered, /results/1/commanded
 id = "inj-total-var-1000"
 label = "Mouse moving at a varying speed, 2,000 moves at 1,000/s"
 ptr = "/outcomes/inj-total-var-1000"
@@ -73,49 +80,41 @@ commands = { stock = "km.move_now", medius = "MOVE(NOW)" }
 outcomes = ["Exact", "Counts lost", "Counts added"]
 
 [[tables.rows]]
-# outcome from stock: /results/2/delivered, /results/2/delivered, /results/2/delivered, /results/2/commanded, /results/2/commanded, /results/2/commanded; medius: /results/2/delivered, /results/2/commanded, /results/2/delivered, /results/2/commanded, /results/2/delivered, /results/2/commanded
 id = "inj-total-now-rest-spaced"
 label = "Still mouse, 400 moves 30-60 ms apart"
 ptr = "/outcomes/inj-total-now-rest-spaced"
 
 [[tables.rows]]
-# outcome from stock: /results/3/delivered, /results/3/delivered, /results/3/delivered, /results/3/commanded, /results/3/commanded, /results/3/commanded; medius: /results/3/delivered, /results/3/commanded, /results/3/delivered, /results/3/commanded, /results/3/delivered, /results/3/commanded
 id = "inj-total-now-rest-1000"
 label = "Still mouse, 2,000 moves at 1,000/s"
 ptr = "/outcomes/inj-total-now-rest-1000"
 
 [[tables.rows]]
-# outcome from stock: /results/6/delivered, /results/6/delivered, /results/6/delivered, /results/6/commanded, /results/6/commanded, /results/6/commanded; medius: /results/6/delivered, /results/6/commanded, /results/6/delivered, /results/6/commanded, /results/6/delivered, /results/6/commanded
 id = "inj-total-now-1k-spaced"
 label = "Moving 1 kHz mouse, 400 moves 30-60 ms apart"
 ptr = "/outcomes/inj-total-now-1k-spaced"
 
 [[tables.rows]]
-# outcome from stock: /results/7/delivered, /results/7/delivered, /results/7/delivered, /results/7/commanded, /results/7/commanded, /results/7/commanded; medius: /results/7/delivered, /results/7/commanded, /results/7/delivered, /results/7/commanded, /results/7/delivered, /results/7/commanded
 id = "inj-total-now-1k-1000"
 label = "Moving 1 kHz mouse, 2,000 moves at 1,000/s"
 ptr = "/outcomes/inj-total-now-1k-1000"
 
 [[tables.rows]]
-# outcome from stock: /results/10/delivered, /results/10/delivered, /results/10/delivered, /results/10/commanded, /results/10/commanded, /results/10/commanded; medius: /results/10/delivered, /results/10/commanded, /results/10/delivered, /results/10/commanded, /results/10/delivered, /results/10/commanded
 id = "inj-total-now-125-spaced"
 label = "Moving 125 Hz mouse, 400 moves 30-60 ms apart"
 ptr = "/outcomes/inj-total-now-125-spaced"
 
 [[tables.rows]]
-# outcome from stock: /results/11/delivered, /results/11/delivered, /results/11/delivered, /results/11/commanded, /results/11/commanded, /results/11/commanded; medius: /results/11/delivered, /results/11/commanded, /results/11/delivered, /results/11/commanded, /results/11/delivered, /results/11/commanded
 id = "inj-total-now-125-1000"
 label = "Moving 125 Hz mouse, 2,000 moves at 1,000/s"
 ptr = "/outcomes/inj-total-now-125-1000"
 
 [[tables.rows]]
-# outcome from stock: /results/2/delivered, /results/2/commanded; medius: /results/2/delivered, /results/2/commanded
 id = "inj-total-now-var-spaced"
 label = "Mouse moving at a varying speed, 400 moves 30-60 ms apart"
 ptr = "/outcomes/inj-total-now-var-spaced"
 
 [[tables.rows]]
-# outcome from stock: /results/3/delivered, /results/3/commanded; medius: /results/3/delivered, /results/3/commanded
 id = "inj-total-now-var-1000"
 label = "Mouse moving at a varying speed, 2,000 moves at 1,000/s"
 ptr = "/outcomes/inj-total-now-var-1000"
@@ -130,19 +129,16 @@ commands = { stock = "km.move", medius = "MOVE" }
 outcomes = ["None", "Some"]
 
 [[tables.rows]]
-# outcome from stock: /results/4/hist, /results/4/hist, /results/4/hist; medius: /results/4/hist, /results/4/hist, /results/4/hist
 id = "inj-reversed-1k"
 label = "Moving 1 kHz mouse, 400 moves 30-60 ms apart"
 ptr = "/outcomes/inj-reversed-1k"
 
 [[tables.rows]]
-# outcome from stock: /results/8/hist, /results/8/hist, /results/8/hist; medius: /results/8/hist, /results/8/hist, /results/8/hist
 id = "inj-reversed-125"
 label = "Moving 125 Hz mouse, 400 moves 30-60 ms apart"
 ptr = "/outcomes/inj-reversed-125"
 
 [[tables.rows]]
-# outcome from stock: /results/0/hist; medius: /results/0/hist
 id = "inj-reversed-var"
 label = "Mouse moving at a varying speed, 400 moves 30-60 ms apart"
 ptr = "/outcomes/inj-reversed-var"

@@ -1,10 +1,21 @@
-# Seeded from the 2026-11-03 results; legs and pointers are set when the test is ported.
 id = "inject-shape"
 version = 1
 category = "injection"
 layout = "main"
 boxes = ["stock", "medius"]
 jams_stock = false
+
+[[legs]]
+id = "idle"
+device = "sim:quiet"
+
+[[legs]]
+id = "native_1k"
+device = "sim:native_1k"
+
+[[legs]]
+id = "native_125"
+device = "sim:native_125"
 
 [[tables]]
 section = "inj-reports-emitted"
@@ -15,7 +26,7 @@ key = "Moves/s"
 unit = "reports"
 better = "lower"
 layer = "hidraw"
-n = "One 2-second stream per rate"
+n = "One 2-second stream per rate a run, 3 runs"
 commands = { stock = "km.move", medius = "MOVE" }
 resolution = 1
 
@@ -58,7 +69,7 @@ key = "Mouse and moves"
 unit = "reports"
 better = "lower"
 layer = "hidraw"
-n = "2 runs"
+n = "3 runs"
 commands = { stock = "km.move", medius = "MOVE" }
 resolution = 1
 
