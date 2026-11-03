@@ -1,0 +1,28 @@
+id = "fake-test"
+version = 2
+category = "injection"
+layout = "main"
+boxes = ["stock", "medius"]
+jams_stock = false
+
+[state.medius]
+optin = false
+
+[[legs]]
+id = "rest"
+device = "still-mouse"
+
+[[tables]]
+section = "inj-latency"
+order = 1
+kind = "measure"
+label = "Fake latency"
+key = "Condition"
+unit = "ms"
+better = "lower"
+resolution = 0.01
+
+[[tables.rows]]
+id = "fake-row"
+label = "Fake condition"
+ptr = "/rest/value"
