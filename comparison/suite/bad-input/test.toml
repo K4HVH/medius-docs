@@ -1,10 +1,13 @@
-# Seeded from the 2026-11-03 results; legs and pointers are set when the test is ported.
 id = "bad-input"
 version = 1
 category = "control-link"
 layout = "main"
 boxes = ["stock", "medius"]
-jams_stock = false
+jams_stock = true
+
+[[legs]]
+id = "rest"
+device = "still-mouse"
 
 [[tables]]
 section = "link-malformed"
@@ -16,55 +19,46 @@ commands = { stock = "km.move", medius = "MOVE(NOW)" }
 outcomes = ["Arrives", "Lost"]
 
 [[tables.rows]]
-# outcome from stock: /results/0/check_arrived; medius: /results/0/check_arrived
 id = "link-bad-garbage"
 label = "64 KB of random bytes"
 ptr = "/outcomes/link-bad-garbage"
 
 [[tables.rows]]
-# outcome from stock: /results/1/check_arrived; medius: /results/1/check_arrived
 id = "link-bad-cut"
 label = "Half a move, the valid move 100 ms later"
 ptr = "/outcomes/link-bad-cut"
 
 [[tables.rows]]
-# outcome from stock: /results/2/check_arrived; medius: /results/2/check_arrived
 id = "link-bad-cut-now"
 label = "Half a move, the valid move straight after"
 ptr = "/outcomes/link-bad-cut-now"
 
 [[tables.rows]]
-# outcome from stock: /results/3/check_arrived; medius: /results/3/check_arrived
 id = "link-bad-length"
 label = "Move with a length field too long"
 ptr = "/outcomes/link-bad-length"
 
 [[tables.rows]]
-# outcome from stock: /results/4/check_arrived; medius: /results/4/check_arrived
 id = "link-bad-unknown"
 label = "Unknown command"
 ptr = "/outcomes/link-bad-unknown"
 
 [[tables.rows]]
-# outcome from stock: /results/5/check_arrived; medius: /results/5/check_arrived
 id = "link-bad-short"
 label = "Move too short"
 ptr = "/outcomes/link-bad-short"
 
 [[tables.rows]]
-# outcome from stock: /results/7/check_arrived; medius: /results/6/check_arrived
 id = "link-bad-corrupt"
 label = "5-count move with one bit flipped"
 ptr = "/outcomes/link-bad-corrupt"
 
 [[tables.rows]]
-# outcome from stock: /results/8/check_arrived; medius: /results/7/check_arrived
 id = "link-bad-bytewise"
 label = "Move written one byte a millisecond"
 ptr = "/outcomes/link-bad-bytewise"
 
 [[tables.rows]]
-# outcome from stock: /results/9/interleaved_delivered; medius: /results/8/interleaved_delivered
 id = "link-bad-interleaved"
 label = "100 moves, a zero byte after each"
 ptr = "/outcomes/link-bad-interleaved"
@@ -78,7 +72,7 @@ key = "Malformed input"
 unit = "counts"
 better = "lower"
 layer = "wire"
-n = "One run per case"
+n = "One try per case in each of 3 runs"
 resolution = 1
 
 [[tables.rows]]
@@ -97,7 +91,6 @@ label = "Move too short"
 ptr = "/results/5/acted"
 
 [[tables.rows]]
-# pointers differed by box; medius: /results/6/acted
 id = "link-bad-moved-corrupt"
 label = "5-count move with one bit flipped"
 ptr = "/results/7/acted"
@@ -111,7 +104,6 @@ key = "Check"
 outcomes = ["Correct", "One behind"]
 
 [[tables.rows]]
-# outcome from stock: /results/0/in_step, /results/1/in_step, /results/2/in_step, /results/3/in_step, /results/4/in_step, /results/5/in_step, /results/7/in_step, /results/8/in_step, /results/9/in_step; medius: /results/0/in_step, /results/1/in_step, /results/2/in_step, /results/3/in_step, /results/4/in_step, /results/5/in_step, /results/6/in_step, /results/7/in_step, /results/8/in_step
 id = "link-bad-parser"
 label = "After each malformed input"
 ptr = "/outcomes/link-bad-parser"

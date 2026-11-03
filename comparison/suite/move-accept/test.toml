@@ -1,10 +1,17 @@
-# Seeded from the 2026-11-03 results; legs and pointers are set when the test is ported.
 id = "move-accept"
 version = 1
 category = "control-link"
 layout = "main"
 boxes = ["stock", "medius"]
 jams_stock = true
+
+[[legs]]
+id = "rest"
+device = "still-mouse"
+
+[[legs]]
+id = "moving"
+device = "sim:sine-mouse"
 
 [[tables]]
 section = "link-paced-rest"
@@ -15,7 +22,7 @@ key = "Moves/s"
 unit = "counts"
 better = "higher"
 layer = "evdev"
-n = "One run per row"
+n = "One run per row in each of 3 runs"
 commands = { stock = "MOVE (0x18)", medius = "MOVE" }
 
 [[tables.rows]]
@@ -57,39 +64,34 @@ key = "Moves/s"
 unit = "counts"
 better = "higher"
 layer = "evdev"
-n = "One run per row"
+n = "One run per row in each of 3 runs"
 commands = { stock = "km.move", medius = "MOVE" }
 
 [[tables.rows]]
-# pointers differed by box; medius: /rest/results/0/x_delivered
 id = "link-rest-text-500"
 label = "500/s"
 ptr = "/rest/results/5/x_delivered"
 of = 500
 
 [[tables.rows]]
-# pointers differed by box; medius: /rest/results/1/x_delivered
 id = "link-rest-text-1000"
 label = "1,000/s"
 ptr = "/rest/results/6/x_delivered"
 of = 1000
 
 [[tables.rows]]
-# pointers differed by box; medius: /rest/results/2/x_delivered
 id = "link-rest-text-1500"
 label = "1,500/s"
 ptr = "/rest/results/7/x_delivered"
 of = 1500
 
 [[tables.rows]]
-# pointers differed by box; medius: /rest/results/3/x_delivered
 id = "link-rest-text-2000"
 label = "2,000/s"
 ptr = "/rest/results/8/x_delivered"
 of = 2000
 
 [[tables.rows]]
-# pointers differed by box; medius: /rest/results/4/x_delivered
 id = "link-rest-text-5000"
 label = "5,000/s"
 ptr = "/rest/results/9/x_delivered"
@@ -104,7 +106,7 @@ key = "Moves/s"
 unit = "counts"
 better = "higher"
 layer = "evdev"
-n = "One run per row"
+n = "One run per row in each of 3 runs"
 commands = { stock = "MOVE (0x18)", medius = "MOVE" }
 
 [[tables.rows]]
@@ -134,7 +136,7 @@ key = "Moves/s"
 unit = "counts"
 better = "higher"
 layer = "evdev"
-n = "One run per row, two at 500"
+n = "One run per row, two at 500, in each of 3 runs"
 commands = { stock = "MOVE (0x18)", medius = "MOVE" }
 
 [[tables.rows]]
@@ -170,32 +172,28 @@ key = "Moves/s"
 unit = "counts"
 better = "higher"
 layer = "evdev"
-n = "One run per row, two at 500"
+n = "One run per row, two at 500, in each of 3 runs"
 commands = { stock = "km.move", medius = "MOVE" }
 
 [[tables.rows]]
-# pointers differed by box; medius: /rest_5s/results/2/x_delivered
 id = "link-rest-5s-text-250"
 label = "250/s"
 ptr = "/rest_5s/results/7/x_delivered"
 of = 1250
 
 [[tables.rows]]
-# pointers differed by box; medius: ['/rest_5s/results/0/x_delivered', '/rest_5s/results/1/x_delivered']
 id = "link-rest-5s-text-500"
 label = "500/s"
 ptr = ["/rest_5s/results/5/x_delivered", "/rest_5s/results/6/x_delivered"]
 of = 2500
 
 [[tables.rows]]
-# pointers differed by box; medius: /rest_5s/results/3/x_delivered
 id = "link-rest-5s-text-1000"
 label = "1,000/s"
 ptr = "/rest_5s/results/8/x_delivered"
 of = 5000
 
 [[tables.rows]]
-# pointers differed by box; medius: /rest_5s/results/4/x_delivered
 id = "link-rest-5s-text-2000"
 label = "2,000/s"
 ptr = "/rest_5s/results/9/x_delivered"
@@ -210,7 +208,7 @@ key = "Moves/s"
 unit = "counts"
 better = "higher"
 layer = "evdev"
-n = "One run per row"
+n = "One run per row in each of 3 runs"
 commands = { stock = "MOVE (0x18)", medius = "MOVE" }
 
 [[tables.rows]]
@@ -264,53 +262,46 @@ key = "Moves/s"
 unit = "counts"
 better = "higher"
 layer = "evdev"
-n = "One run per row"
+n = "One run per row in each of 3 runs"
 commands = { stock = "km.move", medius = "MOVE" }
 
 [[tables.rows]]
-# pointers differed by box; medius: /moving/results/0/x_delivered
 id = "link-moving-text-125"
 label = "125/s"
 ptr = "/moving/results/7/x_delivered"
 of = 125
 
 [[tables.rows]]
-# pointers differed by box; medius: /moving/results/1/x_delivered
 id = "link-moving-text-500"
 label = "500/s"
 ptr = "/moving/results/8/x_delivered"
 of = 500
 
 [[tables.rows]]
-# pointers differed by box; medius: /moving/results/2/x_delivered
 id = "link-moving-text-1000"
 label = "1,000/s"
 ptr = "/moving/results/9/x_delivered"
 of = 1000
 
 [[tables.rows]]
-# pointers differed by box; medius: /moving/results/3/x_delivered
 id = "link-moving-text-1500"
 label = "1,500/s"
 ptr = "/moving/results/10/x_delivered"
 of = 1500
 
 [[tables.rows]]
-# pointers differed by box; medius: /moving/results/4/x_delivered
 id = "link-moving-text-2000"
 label = "2,000/s"
 ptr = "/moving/results/11/x_delivered"
 of = 2000
 
 [[tables.rows]]
-# pointers differed by box; medius: /moving/results/5/x_delivered
 id = "link-moving-text-3000"
 label = "3,000/s"
 ptr = "/moving/results/12/x_delivered"
 of = 3000
 
 [[tables.rows]]
-# pointers differed by box; medius: /moving/results/6/x_delivered
 id = "link-moving-text-5000"
 label = "5,000/s"
 ptr = "/moving/results/13/x_delivered"
@@ -325,7 +316,7 @@ key = "Moves/s"
 unit = "counts"
 better = "higher"
 layer = "evdev"
-n = "One run per row"
+n = "One run per row in each of 3 runs"
 commands = { stock = "MOVE (0x18)", medius = "MOVE" }
 
 [[tables.rows]]
@@ -355,7 +346,7 @@ key = "Moves/s"
 unit = "counts"
 better = "higher"
 layer = "evdev"
-n = "One run per row, two at 500"
+n = "One run per row, two at 500, in each of 3 runs"
 commands = { stock = "MOVE (0x18)", medius = "MOVE" }
 
 [[tables.rows]]
@@ -391,32 +382,28 @@ key = "Moves/s"
 unit = "counts"
 better = "higher"
 layer = "evdev"
-n = "One run per row, two at 500"
+n = "One run per row, two at 500, in each of 3 runs"
 commands = { stock = "km.move", medius = "MOVE" }
 
 [[tables.rows]]
-# pointers differed by box; medius: /moving_5s/results/0/x_delivered
 id = "link-moving-5s-text-125"
 label = "125/s"
 ptr = "/moving_5s/results/5/x_delivered"
 of = 625
 
 [[tables.rows]]
-# pointers differed by box; medius: /moving_5s/results/1/x_delivered
 id = "link-moving-5s-text-250"
 label = "250/s"
 ptr = "/moving_5s/results/6/x_delivered"
 of = 1250
 
 [[tables.rows]]
-# pointers differed by box; medius: ['/moving_5s/results/2/x_delivered', '/moving_5s/results/3/x_delivered']
 id = "link-moving-5s-text-500"
 label = "500/s"
 ptr = ["/moving_5s/results/7/x_delivered", "/moving_5s/results/8/x_delivered"]
 of = 2500
 
 [[tables.rows]]
-# pointers differed by box; medius: /moving_5s/results/4/x_delivered
 id = "link-moving-5s-text-1000"
 label = "1,000/s"
 ptr = "/moving_5s/results/9/x_delivered"
@@ -431,7 +418,7 @@ key = "Moves/s"
 unit = "counts"
 better = "higher"
 layer = "evdev"
-n = "One run per row"
+n = "One run per row in each of 3 runs"
 commands = { stock = "MOVE (0x18)", medius = "MOVE" }
 
 [[tables.rows]]
@@ -473,7 +460,7 @@ key = "Moves/s"
 unit = "counts"
 better = "higher"
 layer = "evdev"
-n = "One run per row"
+n = "One run per row in each of 3 runs"
 commands = { stock = "MOVE (0x18)", medius = "MOVE" }
 
 [[tables.rows]]
@@ -515,7 +502,7 @@ key = "Moves/s"
 unit = "counts"
 better = "higher"
 layer = "evdev"
-n = "One run per row"
+n = "One run per row in each of 3 runs"
 commands = { stock = "MOVE (0x18)", medius = "MOVE" }
 
 [[tables.rows]]
@@ -557,39 +544,34 @@ key = "Moves/s"
 unit = "counts"
 better = "higher"
 layer = "evdev"
-n = "One run per row"
+n = "One run per row in each of 3 runs"
 commands = { stock = "km.move", medius = "MOVE" }
 
 [[tables.rows]]
-# pointers differed by box; medius: /dx/results/0/x_delivered
 id = "link-size-text-10-500"
 label = "500/s"
 ptr = "/dx/results/15/x_delivered"
 of = 5000
 
 [[tables.rows]]
-# pointers differed by box; medius: /dx/results/1/x_delivered
 id = "link-size-text-10-1000"
 label = "1,000/s"
 ptr = "/dx/results/16/x_delivered"
 of = 10000
 
 [[tables.rows]]
-# pointers differed by box; medius: /dx/results/2/x_delivered
 id = "link-size-text-10-1500"
 label = "1,500/s"
 ptr = "/dx/results/17/x_delivered"
 of = 15000
 
 [[tables.rows]]
-# pointers differed by box; medius: /dx/results/3/x_delivered
 id = "link-size-text-10-2000"
 label = "2,000/s"
 ptr = "/dx/results/18/x_delivered"
 of = 20000
 
 [[tables.rows]]
-# pointers differed by box; medius: /dx/results/4/x_delivered
 id = "link-size-text-10-5000"
 label = "5,000/s"
 ptr = "/dx/results/19/x_delivered"
@@ -604,39 +586,34 @@ key = "Moves/s"
 unit = "counts"
 better = "higher"
 layer = "evdev"
-n = "One run per row"
+n = "One run per row in each of 3 runs"
 commands = { stock = "km.move", medius = "MOVE" }
 
 [[tables.rows]]
-# pointers differed by box; medius: /dx/results/5/x_delivered
 id = "link-size-text-100-500"
 label = "500/s"
 ptr = "/dx/results/20/x_delivered"
 of = 50000
 
 [[tables.rows]]
-# pointers differed by box; medius: /dx/results/6/x_delivered
 id = "link-size-text-100-1000"
 label = "1,000/s"
 ptr = "/dx/results/21/x_delivered"
 of = 100000
 
 [[tables.rows]]
-# pointers differed by box; medius: /dx/results/7/x_delivered
 id = "link-size-text-100-1500"
 label = "1,500/s"
 ptr = "/dx/results/22/x_delivered"
 of = 150000
 
 [[tables.rows]]
-# pointers differed by box; medius: /dx/results/8/x_delivered
 id = "link-size-text-100-2000"
 label = "2,000/s"
 ptr = "/dx/results/23/x_delivered"
 of = 200000
 
 [[tables.rows]]
-# pointers differed by box; medius: /dx/results/9/x_delivered
 id = "link-size-text-100-5000"
 label = "5,000/s"
 ptr = "/dx/results/24/x_delivered"
@@ -651,39 +628,34 @@ key = "Moves/s"
 unit = "counts"
 better = "higher"
 layer = "evdev"
-n = "One run per row"
+n = "One run per row in each of 3 runs"
 commands = { stock = "km.move", medius = "MOVE" }
 
 [[tables.rows]]
-# pointers differed by box; medius: /dx/results/10/x_delivered
 id = "link-size-text-1000-500"
 label = "500/s"
 ptr = "/dx/results/25/x_delivered"
 of = 500000
 
 [[tables.rows]]
-# pointers differed by box; medius: /dx/results/11/x_delivered
 id = "link-size-text-1000-1000"
 label = "1,000/s"
 ptr = "/dx/results/26/x_delivered"
 of = 1000000
 
 [[tables.rows]]
-# pointers differed by box; medius: /dx/results/12/x_delivered
 id = "link-size-text-1000-1500"
 label = "1,500/s"
 ptr = "/dx/results/27/x_delivered"
 of = 1500000
 
 [[tables.rows]]
-# pointers differed by box; medius: /dx/results/13/x_delivered
 id = "link-size-text-1000-2000"
 label = "2,000/s"
 ptr = "/dx/results/28/x_delivered"
 of = 2000000
 
 [[tables.rows]]
-# pointers differed by box; medius: /dx/results/14/x_delivered
 id = "link-size-text-1000-5000"
 label = "5,000/s"
 ptr = "/dx/results/29/x_delivered"
@@ -698,7 +670,7 @@ key = "Moves/s"
 unit = "counts"
 better = "higher"
 layer = "evdev"
-n = "One second per row"
+n = "One second per row in each of 3 runs"
 commands = { stock = "MOVE (0x18)", medius = "MOVE" }
 
 [[tables.rows]]
@@ -708,10 +680,9 @@ ptr = "/rest_clump16/results/0/x_delivered"
 of = 1000
 
 [[tables.rows]]
-# pointers differed by box; medius: /clumped/results/1/x_delivered
 id = "link-clump-2000-32"
 label = "2,000/s, 32 per write"
-ptr = "/c2000_16/results/0/x_delivered"
+ptr = "/clumped/results/1/x_delivered"
 of = 2000
 
 [[tables]]
@@ -723,7 +694,7 @@ key = "Write"
 unit = "counts"
 better = "higher"
 layer = "evdev"
-n = "One run"
+n = "3 runs"
 commands = { stock = "MOVE (0x18)", medius = "MOVE" }
 
 [[tables.rows]]
@@ -742,13 +713,11 @@ commands = { stock = "MOVE (0x18)", medius = "MOVE" }
 outcomes = ["In step", "One command behind until a power cycle"]
 
 [[tables.rows]]
-# outcome from stock: /results/0/in_step_after; medius: /results/1/x_delivered, /results/1/x_wanted
 id = "link-clump-parser-2000"
 label = "2,000/s, 32 per write"
 ptr = "/outcomes/link-clump-parser-2000"
 
 [[tables.rows]]
-# outcome from stock: /results/1/in_step_after; medius: /results/1/x_delivered, /results/1/x_wanted
 id = "link-back-to-back-parser"
 label = "12,871 moves back to back"
 ptr = "/outcomes/link-back-to-back-parser"
