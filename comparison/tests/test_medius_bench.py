@@ -48,3 +48,14 @@ def test_port_holders_names_another_process():
         child.kill()
         child.wait()
         os.close(master)
+
+
+def test_restore_vmin_leaves_a_port_that_has_gone(monkeypatch):
+    import termios
+    from medius_bench import restore_vmin
+
+    def gone(fd):
+        raise termios.error(5, "Input/output error")
+
+    monkeypatch.setattr(termios, "tcgetattr", gone)
+    restore_vmin(type("S", (), {"fileno": lambda self: 99})())
