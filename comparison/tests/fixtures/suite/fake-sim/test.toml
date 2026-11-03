@@ -1,0 +1,29 @@
+id = "fake-sim"
+version = 1
+category = "injection"
+layout = "main"
+boxes = ["medius"]
+jams_stock = false
+
+[[legs]]
+id = "rest"
+device = "still-mouse"
+
+[[legs]]
+id = "sine"
+device = "sim:sine-mouse"
+
+[[tables]]
+section = "inj-latency"
+order = 2
+kind = "measure"
+label = "Fake sim latency"
+key = "Condition"
+unit = "ms"
+better = "lower"
+resolution = 0.1
+
+[[tables.rows]]
+id = "fake-sim-row"
+label = "Fake sim condition"
+ptr = "/sine/value"
