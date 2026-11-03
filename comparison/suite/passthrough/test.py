@@ -120,8 +120,8 @@ def _wire_intervals(events, dev, period_us, poll=None, burst=False):
 
 
 def _inject(box, secs):
-    sent, nxt, end = 0, time.monotonic(), time.monotonic() + secs
-    while time.monotonic() < end:
+    sent, nxt = 0, time.monotonic()
+    for _ in range(round(secs * 1000)):
         nxt += 0.001
         box.move(1, 0)
         sent += 1
