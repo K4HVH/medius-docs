@@ -173,7 +173,7 @@ class Bench:
         for s, cfg in self.sim.items():
             if cfg["box"] == box:
                 cables += f" and the {self._name('sim.' + s)}'s device cable from its USB3 socket"
-        print(f"POWER CYCLE BY HAND: the {self._name(box)} is one reply behind and only a power cycle clears it. "
+        print(f"POWER CYCLE BY HAND: the {self._name(box)} is in a state only a power cycle clears. "
               f"Unplug {cables}, wait 3 s, and plug them back in.", file=sys.stderr, flush=True)
         for gone in (True, False):
             while True:
@@ -209,7 +209,7 @@ class SoloBench:
         raise power.PowerCycleFailed("this bench has no hub to switch")
 
     def replug_by_hand(self, box):
-        print("The stock box is one reply behind and only a power cycle clears it: unplug both its USB cables, "
+        print("The stock box is in a state only a power cycle clears: unplug both its USB cables, "
               "wait 3 s, plug them back in, then press Enter.", file=sys.stderr, flush=True)
         input()
 
