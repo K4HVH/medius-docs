@@ -1,10 +1,13 @@
-# Seeded from the 2026-11-03 results; legs and pointers are set when the test is ported.
 id = "ctrl-relay-cmp"
 version = 1
 category = "devices"
 layout = "native"
 boxes = ["stock", "medius"]
 jams_stock = false
+
+[[legs]]
+id = "start"
+device = "sim:fresh_mouse"
 
 [[tables]]
 section = "devices-control-relay"
@@ -14,7 +17,7 @@ label = "Endpoint 0 requests given the native reply"
 key = "Request"
 unit = "requests"
 better = "higher"
-n = "47 requests, 1 run"
+n = "47 requests a run, 3 runs"
 
 [[tables.rows]]
 id = "devices-relay-ep0-reads"
@@ -102,7 +105,7 @@ label = "Second control endpoint requests given the native reply"
 key = "Request"
 unit = "requests"
 better = "higher"
-n = "49 requests, 1 run"
+n = "49 requests a run, 3 runs"
 
 [[tables.rows]]
 id = "devices-relay-ep2-reads"

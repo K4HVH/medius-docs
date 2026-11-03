@@ -1,10 +1,13 @@
-# Seeded from the 2026-11-03 results; legs and pointers are set when the test is ported.
 id = "ep0-stacks"
 version = 1
 category = "devices"
 layout = "native"
 boxes = ["stock", "medius"]
 jams_stock = false
+
+[[legs]]
+id = "start"
+device = "sim:fresh_mouse"
 
 [[tables]]
 section = "devices-ep0-stacks"
@@ -14,158 +17,136 @@ label = "Requests given the native reply"
 key = "Device stack"
 unit = "requests"
 better = "higher"
-n = "316 requests per stack, 1 run"
+n = "316 requests per stack a run, 3 runs"
 
 [[tables.rows]]
-# pointers differed by box; medius: /base/results/permissive/medius/match
 id = "devices-ep0-stack-permissive"
 label = "Stack acting on every request as written"
-ptr = "/native/results/permissive/stock/match"
+ptr = "/results/permissive/match"
 of = 316
 
 [[tables.rows]]
-# pointers differed by box; medius: /base/results/strict/medius/match
 id = "devices-ep0-stack-strict"
 label = "Stack refusing a request with the wrong direction bit"
-ptr = "/native/results/strict/stock/match"
+ptr = "/results/strict/match"
 of = 316
 
 [[tables.rows]]
-# pointers differed by box; medius: /base/results/twobit/medius/match
 id = "devices-ep0-stack-twobit"
 label = "Stack reading two recipient bits"
-ptr = "/native/results/twobit/stock/match"
+ptr = "/results/twobit/match"
 of = 316
 
 [[tables.rows]]
-# pointers differed by box; medius: /base/results/lax/medius/match
 id = "devices-ep0-stack-lax"
 label = "Stack ignoring the recipient and refusing the HID descriptor"
-ptr = "/native/results/lax/stock/match"
+ptr = "/results/lax/match"
 of = 316
 
 [[tables.rows]]
-# pointers differed by box; medius: /base/results/hidown/medius/match
 id = "devices-ep0-stack-hidown"
 label = "Stack serving the HID descriptor from a separate copy"
-ptr = "/native/results/hidown/stock/match"
+ptr = "/results/hidown/match"
 of = 316
 
 [[tables.rows]]
-# pointers differed by box; medius: /base/results/laxstrict/medius/match
 id = "devices-ep0-stack-laxstrict"
 label = "Stack ignoring the recipient and refusing the wrong direction"
-ptr = "/native/results/laxstrict/stock/match"
+ptr = "/results/laxstrict/match"
 of = 316
 
 [[tables.rows]]
-# pointers differed by box; medius: /base/results/wlenstatus/medius/match
 id = "devices-ep0-stack-wlenstatus"
 label = "Stack refusing GET_STATUS at another length"
-ptr = "/native/results/wlenstatus/stock/match"
+ptr = "/results/wlenstatus/match"
 of = 316
 
 [[tables.rows]]
-# pointers differed by box; medius: /base/results/wlenconfig/medius/match
 id = "devices-ep0-stack-wlenconfig"
 label = "Stack refusing GET_CONFIGURATION at another length"
-ptr = "/native/results/wlenconfig/stock/match"
+ptr = "/results/wlenconfig/match"
 of = 316
 
 [[tables.rows]]
-# pointers differed by box; medius: /base/results/wlenshort/medius/match
 id = "devices-ep0-stack-wlenshort"
 label = "Stack refusing GET_STATUS and GET_CONFIGURATION at a shorter length"
-ptr = "/native/results/wlenshort/stock/match"
+ptr = "/results/wlenshort/match"
 of = 316
 
 [[tables.rows]]
-# pointers differed by box; medius: /base/results/epdesc/medius/match
 id = "devices-ep0-stack-epdesc"
 label = "Stack answering GET_DESCRIPTOR addressed to an endpoint"
-ptr = "/native/results/epdesc/stock/match"
+ptr = "/results/epdesc/match"
 of = 316
 
 [[tables.rows]]
-# pointers differed by box; medius: /base/results/rwtaken/medius/match
 id = "devices-ep0-stack-rwtaken"
 label = "Stack taking remote wakeup at any wIndex"
-ptr = "/native/results/rwtaken/stock/match"
+ptr = "/results/rwtaken/match"
 of = 316
 
 [[tables.rows]]
-# pointers differed by box; medius: /base/results/rwrefused/medius/match
 id = "devices-ep0-stack-rwrefused"
 label = "Stack refusing remote wakeup"
-ptr = "/native/results/rwrefused/stock/match"
+ptr = "/results/rwrefused/match"
 of = 316
 
 [[tables.rows]]
-# pointers differed by box; medius: /base/results/in0nak/medius/match
 id = "devices-ep0-stack-in0nak"
 label = "Stack leaving device-to-host requests with no data stage unanswered"
-ptr = "/native/results/in0nak/stock/match"
+ptr = "/results/in0nak/match"
 of = 316
 
 [[tables.rows]]
-# pointers differed by box; medius: /base/results/in0strict/medius/match
 id = "devices-ep0-stack-in0strict"
 label = "Stack refusing the wrong direction, leaving device-to-host requests with no data stage unanswered"
-ptr = "/native/results/in0strict/stock/match"
+ptr = "/results/in0strict/match"
 of = 316
 
 [[tables.rows]]
-# pointers differed by box; medius: /base/results/ifstrict/medius/match
 id = "devices-ep0-stack-ifstrict"
 label = "Stack refusing GET_STATUS and GET_INTERFACE at an interface"
-ptr = "/native/results/ifstrict/stock/match"
+ptr = "/results/ifstrict/match"
 of = 316
 
 [[tables.rows]]
-# pointers differed by box; medius: /base/results/lufa/medius/match
 id = "devices-ep0-stack-lufa"
 label = "LUFA"
-ptr = "/native/results/lufa/stock/match"
+ptr = "/results/lufa/match"
 of = 316
 
 [[tables.rows]]
-# pointers differed by box; medius: /base/results/stm32/medius/match
 id = "devices-ep0-stack-stm32"
 label = "STM32's USB library"
-ptr = "/native/results/stm32/stock/match"
+ptr = "/results/stm32/match"
 of = 316
 
 [[tables.rows]]
-# pointers differed by box; medius: /base/results/vusb/medius/match
 id = "devices-ep0-stack-vusb"
 label = "V-USB"
-ptr = "/native/results/vusb/stock/match"
+ptr = "/results/vusb/match"
 of = 316
 
 [[tables.rows]]
-# pointers differed by box; medius: /base/results/cherry/medius/match
 id = "devices-ep0-stack-cherry"
 label = "CherryUSB"
-ptr = "/native/results/cherry/stock/match"
+ptr = "/results/cherry/match"
 of = 316
 
 [[tables.rows]]
-# pointers differed by box; medius: /base/results/twolimit/medius/match
 id = "devices-ep0-stack-twolimit"
 label = "Stack reading two recipient bits and checking interface and endpoint numbers"
-ptr = "/native/results/twolimit/stock/match"
+ptr = "/results/twolimit/match"
 of = 316
 
 [[tables.rows]]
-# pointers differed by box; medius: /base/results/padded/medius/match
 id = "devices-ep0-stack-padded"
 label = "Stack padding replies out to wLength"
-ptr = "/native/results/padded/stock/match"
+ptr = "/results/padded/match"
 of = 316
 
 [[tables.rows]]
-# pointers differed by box; medius: /base/results/longbuf/medius/match
 id = "devices-ep0-stack-longbuf"
 label = "Stack answering long reads from its buffer and SET_DESCRIPTOR only after a read"
-ptr = "/native/results/longbuf/stock/match"
+ptr = "/results/longbuf/match"
 of = 316

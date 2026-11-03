@@ -1,10 +1,16 @@
-# Seeded from the 2026-11-03 results; legs and pointers are set when the test is ported.
 id = "bulk-rate"
 version = 1
 category = "devices"
 layout = "native"
 boxes = ["stock", "medius"]
 jams_stock = false
+
+[state.medius]
+optin = true
+
+[[legs]]
+id = "start"
+device = "sim:fresh_mouse"
 
 [[tables]]
 section = "devices-imperfect"
@@ -15,7 +21,7 @@ key = "Endpoint"
 unit = "/s"
 better = "higher"
 layer = "host"
-n = "2 runs of 3 s"
+n = "2 rounds of 3 s a run, 3 runs"
 resolution = 0.1
 
 [[tables.rows]]
