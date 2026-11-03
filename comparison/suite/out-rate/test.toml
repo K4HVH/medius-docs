@@ -1,0 +1,108 @@
+# Seeded from the 2026-11-03 results; legs and pointers are set when the test is ported.
+id = "out-rate"
+version = 1
+category = "passthrough"
+layout = "native"
+boxes = ["stock", "medius", "native"]
+jams_stock = false
+
+[[tables]]
+section = "pass-pc-device"
+order = 3
+kind = "outcome"
+label = "OUT packets reaching the real device"
+key = "Writes"
+outcomes = ["All, once, in order", "Lost, merged or out of order"]
+
+[[tables.rows]]
+# outcome from stock: /results/0/verdict, /results/1/verdict, /results/2/verdict; medius: /results/0/verdict, /results/1/verdict, /results/2/verdict
+id = "pass-out-verdict-alone"
+label = "1,000 packets on each endpoint in turn"
+ptr = "/outcomes/pass-out-verdict-alone"
+
+[[tables.rows]]
+# outcome from stock: /results/3/verdict, /results/4/verdict, /results/5/verdict; medius: /results/3/verdict, /results/4/verdict, /results/5/verdict
+id = "pass-out-verdict-together"
+label = "1,000 packets on 3 endpoints at once"
+ptr = "/outcomes/pass-out-verdict-together"
+
+[[tables.rows]]
+# outcome from stock: /results/6/verdict, /results/7/verdict, /results/8/verdict; medius: /results/6/verdict, /results/7/verdict, /results/8/verdict
+id = "pass-out-verdict-slow"
+label = "100 packets on 3 endpoints, real device taking one every 5 ms"
+ptr = "/outcomes/pass-out-verdict-slow"
+
+[[tables]]
+section = "pass-pc-device"
+order = 4
+kind = "measure"
+label = "OUT packets taken per second, written at the PC's full rate"
+key = "Endpoint"
+unit = "/s"
+better = "higher"
+layer = "host"
+n = "1,000 packets per endpoint, 1 run"
+resolution = 0.1
+
+[[tables.rows]]
+id = "pass-out-rate-alone-02"
+label = "HID interrupt OUT, one endpoint at a time"
+ptr = "/base/results/0/per_second"
+
+[[tables.rows]]
+id = "pass-out-rate-alone-03"
+label = "Vendor interrupt OUT, one endpoint at a time"
+ptr = "/base/results/1/per_second"
+
+[[tables.rows]]
+id = "pass-out-rate-alone-04"
+label = "Vendor bulk OUT, one endpoint at a time"
+ptr = "/base/results/2/per_second"
+
+[[tables.rows]]
+id = "pass-out-rate-together-02"
+label = "HID interrupt OUT, all 3 at once"
+ptr = "/base/results/3/per_second"
+
+[[tables.rows]]
+id = "pass-out-rate-together-03"
+label = "Vendor interrupt OUT, all 3 at once"
+ptr = "/base/results/4/per_second"
+
+[[tables.rows]]
+id = "pass-out-rate-together-04"
+label = "Vendor bulk OUT, all 3 at once"
+ptr = "/base/results/5/per_second"
+
+[[tables]]
+section = "pass-pc-device"
+order = 5
+kind = "measure"
+label = "OUT packets taken per second, real device taking one every 5 ms"
+key = "Endpoint"
+unit = "/s"
+better = "nearer"
+layer = "host"
+n = "100 packets per endpoint, 1 run"
+resolution = 0.1
+
+[[tables.rows]]
+# pointers differed by box; medius: /slow/results/0/per_second
+id = "pass-out-rate-slow-02"
+label = "HID interrupt OUT"
+ptr = "/base/results/6/per_second"
+native_ptr = "/base/results/0/per_second"
+
+[[tables.rows]]
+# pointers differed by box; medius: /slow/results/1/per_second
+id = "pass-out-rate-slow-03"
+label = "Vendor interrupt OUT"
+ptr = "/base/results/7/per_second"
+native_ptr = "/base/results/1/per_second"
+
+[[tables.rows]]
+# pointers differed by box; medius: /slow/results/2/per_second
+id = "pass-out-rate-slow-04"
+label = "Vendor bulk OUT"
+ptr = "/base/results/8/per_second"
+native_ptr = "/base/results/2/per_second"

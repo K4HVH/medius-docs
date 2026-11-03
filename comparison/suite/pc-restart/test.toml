@@ -1,0 +1,77 @@
+# Seeded from the 2026-11-03 results; legs and pointers are set when the test is ported.
+id = "pc-restart"
+version = 1
+category = "recovery"
+layout = "main"
+boxes = ["stock", "medius"]
+jams_stock = false
+
+[[tables]]
+section = "recovery-pc-restart"
+order = 1
+kind = "measure"
+label = "Time until the clone is back, min to max"
+key = "PC action"
+unit = "s"
+better = "lower"
+stat = "min to max"
+layer = "host"
+n = "5 cycles a run, 2 runs"
+resolution = 0.001
+
+[[tables.rows]]
+id = "recovery-restart-back-port-cycle"
+label = "Port off 3 s, then on"
+ptr = ["/base/results/0/back_s", "/base/results/1/back_s", "/base/results/2/back_s", "/base/results/3/back_s", "/base/results/4/back_s"]
+
+[[tables.rows]]
+id = "recovery-restart-back-reconfigure"
+label = "Unconfigured 3 s, then configured"
+ptr = ["/base/results/5/back_s", "/base/results/6/back_s", "/base/results/7/back_s", "/base/results/8/back_s", "/base/results/9/back_s"]
+
+[[tables]]
+section = "recovery-pc-restart"
+order = 2
+kind = "outcome"
+label = "First move after the clone is back"
+key = "PC action"
+commands = { stock = "km.move_now", medius = "MOVE(NOW)" }
+outcomes = ["Arrives at once", "Sometimes held >1 s"]
+
+[[tables.rows]]
+# outcome from stock: /results/0/first_ms, /results/1/first_ms, /results/2/first_ms, /results/3/first_ms, /results/4/first_ms, /results/0/first_ms, /results/1/first_ms, /results/2/first_ms, /results/3/first_ms, /results/4/first_ms; medius: /results/0/first_ms, /results/1/first_ms, /results/2/first_ms, /results/3/first_ms, /results/4/first_ms, /results/0/first_ms, /results/1/first_ms, /results/2/first_ms, /results/3/first_ms, /results/4/first_ms
+id = "recovery-restart-move-port-cycle"
+label = "Port off 3 s, then on"
+ptr = "/outcomes/recovery-restart-move-port-cycle"
+
+[[tables.rows]]
+# outcome from stock: /results/5/first_ms, /results/6/first_ms, /results/7/first_ms, /results/8/first_ms, /results/9/first_ms, /results/5/first_ms, /results/6/first_ms, /results/7/first_ms, /results/8/first_ms, /results/9/first_ms; medius: /results/5/first_ms, /results/6/first_ms, /results/7/first_ms, /results/8/first_ms, /results/9/first_ms, /results/5/first_ms, /results/6/first_ms, /results/7/first_ms, /results/8/first_ms, /results/9/first_ms
+id = "recovery-restart-move-reconfigure"
+label = "Unconfigured 3 s, then configured"
+ptr = "/outcomes/recovery-restart-move-reconfigure"
+
+[[tables]]
+section = "recovery-pc-restart"
+order = 3
+kind = "measure"
+label = "First move after the clone is back, device reporting every 8 ms, min to max"
+key = "PC action"
+unit = "ms"
+better = "lower"
+stat = "min to max"
+layer = "hidraw"
+n = "5 cycles each"
+commands = { stock = "km.move_now", medius = "MOVE(NOW)" }
+resolution = 0.01
+
+[[tables.rows]]
+id = "recovery-restart-busy-port"
+label = "Port off 3 s, then on"
+ptr = ["/busy/results/0/first_ms", "/busy/results/1/first_ms", "/busy/results/2/first_ms", "/busy/results/3/first_ms", "/busy/results/4/first_ms"]
+unit = "ms"
+
+[[tables.rows]]
+id = "recovery-restart-busy-deauth"
+label = "Unconfigured 3 s, then configured"
+ptr = ["/busy/results/5/first_ms", "/busy/results/6/first_ms", "/busy/results/7/first_ms", "/busy/results/8/first_ms", "/busy/results/9/first_ms"]
+unit = "ms"

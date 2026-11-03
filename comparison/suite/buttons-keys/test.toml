@@ -1,0 +1,74 @@
+# Seeded from the 2026-11-03 results; legs and pointers are set when the test is ported.
+id = "buttons-keys"
+version = 1
+category = "input"
+layout = "main"
+boxes = ["stock", "medius"]
+jams_stock = true
+
+[[tables]]
+section = "input-buttons-keys"
+order = 1
+kind = "outcome"
+label = "Presses reaching the PC"
+key = "Input"
+commands = { stock = "km.left, km.down, km.up", medius = "INJECT" }
+outcomes = ["All arrive", "Some lost"]
+
+[[tables.rows]]
+# outcome from stock: /results/2/missed_press, /results/2/missed_release, /results/3/missed_press, /results/3/missed_release, /results/4/missed_press, /results/4/missed_release, /results/5/missed_press, /results/5/missed_release; medius: /results/1/missed_press, /results/1/missed_release, /results/2/missed_press, /results/2/missed_release, /results/3/missed_press, /results/3/missed_release, /results/4/missed_press, /results/4/missed_release
+id = "input-bk-buttons"
+label = "Right, middle and side buttons, 20 clicks each"
+ptr = "/outcomes/input-bk-buttons"
+
+[[tables.rows]]
+# outcome from stock: /results/10/mods_ok_at_j, /results/11/mods_ok_at_j, /results/12/mods_ok_at_j, /results/13/mods_ok_at_j, /results/14/mods_ok_at_j, /results/15/mods_ok_at_j, /results/16/mods_ok_at_j, /results/17/mods_ok_at_j, /results/18/mods_ok_at_j; medius: /results/7/mods_ok_at_j, /results/8/mods_ok_at_j, /results/9/mods_ok_at_j, /results/10/mods_ok_at_j, /results/11/mods_ok_at_j, /results/12/mods_ok_at_j, /results/13/mods_ok_at_j, /results/14/mods_ok_at_j, /results/15/mods_ok_at_j
+id = "input-bk-mods-boot"
+label = "Modifiers held over J, one at a time and 4 at once, boot keyboard"
+ptr = "/outcomes/input-bk-mods-boot"
+
+[[tables.rows]]
+# outcome from stock: /results/24/mods_ok_at_j, /results/25/mods_ok_at_j, /results/26/mods_ok_at_j, /results/27/mods_ok_at_j, /results/28/mods_ok_at_j, /results/29/mods_ok_at_j, /results/30/mods_ok_at_j, /results/31/mods_ok_at_j, /results/32/mods_ok_at_j; medius: /results/19/mods_ok_at_j, /results/20/mods_ok_at_j, /results/21/mods_ok_at_j, /results/22/mods_ok_at_j, /results/23/mods_ok_at_j, /results/24/mods_ok_at_j, /results/25/mods_ok_at_j, /results/26/mods_ok_at_j, /results/27/mods_ok_at_j
+id = "input-bk-mods-nkro"
+label = "Modifiers held over J, one at a time and 4 at once, NKRO keyboard"
+ptr = "/outcomes/input-bk-mods-nkro"
+
+[[tables.rows]]
+# outcome from stock: /results/6/all_held, /results/6/in_order; medius: /results/5/all_held, /results/5/in_order
+id = "input-bk-mouse-chord"
+label = "5-button chord"
+ptr = "/outcomes/input-bk-mouse-chord"
+
+[[tables.rows]]
+# outcome from stock: /results/19/all_held, /results/19/in_order; medius: /results/16/all_held, /results/16/in_order
+id = "input-bk-boot-6"
+label = "6 keys rolled, boot keyboard"
+ptr = "/outcomes/input-bk-boot-6"
+
+[[tables.rows]]
+# outcome from stock: /results/34/all_held, /results/34/in_order; medius: /results/29/all_held, /results/29/in_order
+id = "input-bk-nkro-10"
+label = "10 keys rolled, NKRO keyboard"
+ptr = "/outcomes/input-bk-nkro-10"
+
+[[tables.rows]]
+# outcome from stock: /results/35/all_held, /results/35/in_order; medius: /results/30/all_held, /results/30/in_order
+id = "input-bk-nkro-20"
+label = "20 keys rolled, NKRO keyboard"
+ptr = "/outcomes/input-bk-nkro-20"
+
+[[tables]]
+section = "input-buttons-keys"
+order = 2
+kind = "outcome"
+label = "8 keys rolled on a 6-key boot keyboard"
+key = "Keyboard"
+commands = { stock = "km.down, km.up", medius = "INJECT" }
+outcomes = ["Last 2 refused", "Last 2 pressed once a key is up"]
+ranked = false
+
+[[tables.rows]]
+# outcome from stock: /results/20/refused, /results/20/reps/0/presses; medius: /results/17/reps/0/presses, /results/17/reps/0/held_at_peak
+id = "input-bk-boot-8"
+label = "Boot keyboard, 6 key slots"
+ptr = "/outcomes/input-bk-boot-8"

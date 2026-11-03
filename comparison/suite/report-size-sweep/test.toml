@@ -1,0 +1,33 @@
+# Seeded from the 2026-11-03 results; legs and pointers are set when the test is ported.
+id = "report-size-sweep"
+version = 1
+category = "devices"
+layout = "main"
+boxes = ["stock", "medius"]
+jams_stock = false
+
+[[tables]]
+section = "devices-report-size"
+order = 1
+kind = "outcome"
+label = "HID driver on the PC"
+key = "Report descriptor"
+outcomes = ["Loads", "Doesn't load"]
+
+[[tables.rows]]
+# outcome from stock: /results/0/boxes/stock/rdesc_bytes, /results/0/boxes/stock/driver, /results/1/boxes/stock/rdesc_bytes, /results/1/boxes/stock/driver; medius: /results/0/boxes/medius/rdesc_bytes, /results/0/boxes/medius/driver, /results/1/boxes/medius/rdesc_bytes, /results/1/boxes/medius/driver
+id = "devices-report-256-512"
+label = "256 or 512 bytes"
+ptr = "/outcomes/devices-report-256-512"
+
+[[tables.rows]]
+# outcome from stock: /results/0/boxes/stock/driver, /results/1/boxes/stock/driver, /results/2/boxes/stock/driver, /results/3/boxes/stock/driver, /results/4/boxes/stock/driver, /results/5/boxes/stock/driver; medius: /results/0/boxes/medius/driver, /results/1/boxes/medius/driver, /results/2/boxes/medius/driver, /results/3/boxes/medius/driver, /results/4/boxes/medius/driver, /results/5/boxes/medius/driver
+id = "devices-report-513-700"
+label = "513-700 bytes"
+ptr = "/outcomes/devices-report-513-700"
+
+[[tables.rows]]
+# outcome from stock: /results/2/boxes/stock/rdesc_bytes, /results/2/boxes/stock/driver, /results/3/boxes/stock/rdesc_bytes, /results/3/boxes/stock/driver, /results/4/boxes/stock/rdesc_bytes, /results/4/boxes/stock/driver, /results/5/boxes/stock/rdesc_bytes, /results/5/boxes/stock/driver, /results/6/boxes/stock/rdesc_bytes, /results/6/boxes/stock/driver, /results/7/boxes/stock/rdesc_bytes, /results/7/boxes/stock/driver, /results/8/boxes/stock/rdesc_bytes, /results/8/boxes/stock/driver, /results/9/boxes/stock/rdesc_bytes, /results/9/boxes/stock/driver, /results/10/boxes/stock/rdesc_bytes, /results/10/boxes/stock/driver, /results/11/boxes/stock/rdesc_bytes, /results/11/boxes/stock/driver, /results/12/boxes/stock/rdesc_bytes, /results/12/boxes/stock/driver, /results/13/boxes/stock/rdesc_bytes, /results/13/boxes/stock/driver, /results/14/boxes/stock/rdesc_bytes, /results/14/boxes/stock/driver; medius: /results/2/boxes/medius/rdesc_bytes, /results/2/boxes/medius/driver, /results/3/boxes/medius/rdesc_bytes, /results/3/boxes/medius/driver, /results/4/boxes/medius/rdesc_bytes, /results/4/boxes/medius/driver, /results/5/boxes/medius/rdesc_bytes, /results/5/boxes/medius/driver, /results/6/boxes/medius/rdesc_bytes, /results/6/boxes/medius/driver, /results/7/boxes/medius/rdesc_bytes, /results/7/boxes/medius/driver, /results/8/boxes/medius/rdesc_bytes, /results/8/boxes/medius/driver, /results/9/boxes/medius/rdesc_bytes, /results/9/boxes/medius/driver, /results/10/boxes/medius/rdesc_bytes, /results/10/boxes/medius/driver, /results/11/boxes/medius/rdesc_bytes, /results/11/boxes/medius/driver, /results/12/boxes/medius/rdesc_bytes, /results/12/boxes/medius/driver, /results/13/boxes/medius/rdesc_bytes, /results/13/boxes/medius/driver, /results/14/boxes/medius/rdesc_bytes, /results/14/boxes/medius/driver
+id = "devices-report-768-2047"
+label = "768-2,047 bytes"
+ptr = "/outcomes/devices-report-768-2047"

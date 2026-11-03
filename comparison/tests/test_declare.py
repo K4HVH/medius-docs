@@ -37,3 +37,30 @@ def test_a_leg_device_must_be_still_or_sim(tmp_path):
     (d / "test.py").write_text("def run(ctx):\n    return {}\n")
     with pytest.raises(DeclarationError, match="wiggly"):
         load_suite(tmp_path)
+
+
+def test_a_declaration_without_its_test_py_is_unported(tmp_path):
+    from medius_compare.declare import unported
+    for name, with_code in (("ported", True), ("seeded", False)):
+        d = tmp_path / name
+        d.mkdir()
+        (d / "test.toml").write_text((FIXTURES / "fake-test" / "test.toml").read_text().replace('"fake-test"', f'"{name}"'))
+        if with_code:
+            (d / "test.py").write_text("def run(ctx):\n    return {}\n")
+    assert list(load_suite(tmp_path)) == ["ported"]
+    assert unported(tmp_path) == ["seeded"]
+
+
+def test_an_unported_declaration_is_still_checked(tmp_path):
+    d = tmp_path / "seeded"
+    d.mkdir()
+    (d / "test.toml").write_text((FIXTURES / "fake-test" / "test.toml").read_text().replace('"fake-test"', '"seeded"')
+                                 + "\nflavour = 1\n")
+    with pytest.raises(DeclarationError, match="flavour"):
+        load_suite(tmp_path)
+
+
+def test_the_seeded_suite_loads():
+    from medius_compare.declare import unported
+    root = Path(__file__).parent.parent / "suite"
+    assert len(load_suite(root)) + len(unported(root)) == len(list(root.glob("*/test.toml")))

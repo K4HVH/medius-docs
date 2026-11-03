@@ -1,0 +1,33 @@
+# Seeded from the 2026-11-03 results; legs and pointers are set when the test is ported.
+id = "replug"
+version = 1
+category = "recovery"
+layout = "main"
+boxes = ["stock", "medius"]
+jams_stock = false
+
+[[tables]]
+section = "recovery-replug"
+order = 1
+kind = "measure"
+label = "Replug times"
+key = "Interval"
+unit = "s"
+better = "lower"
+n = "10 cycles a run, 2 runs"
+resolution = 0.01
+
+[[tables.rows]]
+id = "recovery-replug-gone"
+label = "Unplug to clone gone"
+ptr = "/results/0/gone/p50"
+
+[[tables.rows]]
+id = "recovery-replug-back"
+label = "Replug to clone back"
+ptr = "/results/0/configured/p50"
+
+[[tables.rows]]
+id = "recovery-replug-first-report"
+label = "Replug to first report"
+ptr = "/results/0/first_report/p50"

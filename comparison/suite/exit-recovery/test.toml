@@ -1,0 +1,64 @@
+# Seeded from the 2026-11-03 results; legs and pointers are set when the test is ported.
+id = "exit-recovery"
+version = 1
+category = "recovery"
+layout = "main"
+boxes = ["stock", "medius"]
+jams_stock = true
+
+[[tables]]
+section = "recovery-program-exit"
+order = 2
+kind = "outcome"
+label = "Held input 3 s after the program stops, 3 tries"
+key = "Case"
+commands = { stock = "km.left, km.down, km.lock_mx, km.lock_ml", medius = "INJECT, LOCK" }
+outcomes = ["Released", "Still in effect"]
+
+[[tables.rows]]
+# outcome from stock: /results/0/cases/0/released, /results/0/cases/1/released, /results/0/cases/2/released; medius: /results/0/cases/0/released, /results/0/cases/1/released, /results/0/cases/2/released
+id = "recovery-exit-button-close"
+label = "Left button held, port closed"
+ptr = "/outcomes/recovery-exit-button-close"
+
+[[tables.rows]]
+# outcome from stock: /results/0/cases/3/released, /results/0/cases/4/released, /results/0/cases/5/released; medius: /results/0/cases/3/released, /results/0/cases/4/released, /results/0/cases/5/released
+id = "recovery-exit-button-silent"
+label = "Left button held, program silent"
+ptr = "/outcomes/recovery-exit-button-silent"
+
+[[tables.rows]]
+# outcome from stock: /results/0/cases/6/released, /results/0/cases/7/released, /results/0/cases/8/released; medius: /results/0/cases/6/released, /results/0/cases/7/released, /results/0/cases/8/released
+id = "recovery-exit-key-close"
+label = "Key held, port closed"
+ptr = "/outcomes/recovery-exit-key-close"
+
+[[tables.rows]]
+# outcome from stock: /results/0/cases/9/released, /results/0/cases/10/released, /results/0/cases/11/released; medius: /results/0/cases/9/released, /results/0/cases/10/released, /results/0/cases/11/released
+id = "recovery-exit-key-silent"
+label = "Key held, program silent"
+ptr = "/outcomes/recovery-exit-key-silent"
+
+[[tables.rows]]
+# outcome from stock: /results/0/cases/12/released, /results/0/cases/13/released, /results/0/cases/14/released; medius: /results/0/cases/12/released, /results/0/cases/13/released, /results/0/cases/14/released
+id = "recovery-exit-lock-x-close"
+label = "X axis locked, port closed"
+ptr = "/outcomes/recovery-exit-lock-x-close"
+
+[[tables.rows]]
+# outcome from stock: /results/0/cases/15/released, /results/0/cases/16/released, /results/0/cases/17/released; medius: /results/0/cases/15/released, /results/0/cases/16/released, /results/0/cases/17/released
+id = "recovery-exit-lock-x-silent"
+label = "X axis locked, program silent"
+ptr = "/outcomes/recovery-exit-lock-x-silent"
+
+[[tables.rows]]
+# outcome from stock: /results/0/cases/18/released, /results/0/cases/19/released, /results/0/cases/20/released; medius: /results/0/cases/18/released, /results/0/cases/19/released, /results/0/cases/20/released
+id = "recovery-exit-lock-left-close"
+label = "Left button locked, port closed"
+ptr = "/outcomes/recovery-exit-lock-left-close"
+
+[[tables.rows]]
+# outcome from stock: /results/0/cases/21/released, /results/0/cases/22/released, /results/0/cases/23/released; medius: /results/0/cases/21/released, /results/0/cases/22/released, /results/0/cases/23/released
+id = "recovery-exit-lock-left-silent"
+label = "Left button locked, program silent"
+ptr = "/outcomes/recovery-exit-lock-left-silent"

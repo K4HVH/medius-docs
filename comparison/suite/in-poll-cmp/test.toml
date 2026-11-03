@@ -1,0 +1,118 @@
+# Seeded from the 2026-11-03 results; legs and pointers are set when the test is ported.
+id = "in-poll-cmp"
+version = 1
+category = "passthrough"
+layout = "native"
+boxes = ["stock", "medius"]
+jams_stock = false
+
+[[tables]]
+section = "pass-polls"
+order = 1
+kind = "outcome"
+label = "Polls while read and while unread"
+key = "Endpoint"
+outcomes = ["Native polling", "Polled while unread", "Polled at another rate"]
+
+[[tables.rows]]
+# outcome from stock: /rows/0/match, /rows/1/match, /rows/2/match; medius: /rows/0/match, /rows/1/match, /rows/2/match
+id = "pass-polls-vendor-1ms"
+label = "Vendor interrupt IN declaring 1 ms"
+ptr = "/outcomes/pass-polls-vendor-1ms"
+
+[[tables.rows]]
+# outcome from stock: /rows/3/match, /rows/4/match, /rows/5/match; medius: /rows/3/match, /rows/4/match, /rows/5/match
+id = "pass-polls-vendor-4ms"
+label = "Vendor interrupt IN declaring 4 ms"
+ptr = "/outcomes/pass-polls-vendor-4ms"
+
+[[tables.rows]]
+# outcome from stock: /rows/6/match, /rows/7/match, /rows/8/match; medius: /rows/6/match, /rows/7/match, /rows/8/match
+id = "pass-polls-vendor-8ms"
+label = "Vendor interrupt IN declaring 8 ms"
+ptr = "/outcomes/pass-polls-vendor-8ms"
+
+[[tables.rows]]
+# outcome from stock: /rows/9/match, /rows/10/match, /rows/11/match; medius: /rows/9/match, /rows/10/match, /rows/11/match
+id = "pass-polls-hid-1ms"
+label = "Vendor-page HID interrupt IN declaring 1 ms"
+ptr = "/outcomes/pass-polls-hid-1ms"
+
+[[tables.rows]]
+# outcome from stock: /rows/12/match, /rows/13/match, /rows/14/match; medius: /rows/12/match, /rows/13/match, /rows/14/match
+id = "pass-polls-hid-4ms"
+label = "Vendor-page HID interrupt IN declaring 4 ms"
+ptr = "/outcomes/pass-polls-hid-4ms"
+
+[[tables.rows]]
+# outcome from stock: /rows/15/match, /rows/16/match, /rows/17/match; medius: /rows/15/match, /rows/16/match, /rows/17/match
+id = "pass-polls-hid-8ms"
+label = "Vendor-page HID interrupt IN declaring 8 ms"
+ptr = "/outcomes/pass-polls-hid-8ms"
+
+[[tables]]
+section = "pass-polls"
+order = 2
+kind = "measure"
+label = "Polls while unread"
+key = "Endpoint"
+unit = "/s"
+better = "lower"
+n = "2 s before and 2 s after reading, 1 run"
+resolution = 0.1
+
+[[tables.rows]]
+id = "pass-polls-vendor-1ms-unread"
+label = "Vendor interrupt IN declaring 1 ms"
+ptr = ["/rows/0/box", "/rows/2/box"]
+
+[[tables.rows]]
+id = "pass-polls-vendor-4ms-unread"
+label = "Vendor interrupt IN declaring 4 ms"
+ptr = ["/rows/3/box", "/rows/5/box"]
+
+[[tables.rows]]
+id = "pass-polls-vendor-8ms-unread"
+label = "Vendor interrupt IN declaring 8 ms"
+ptr = ["/rows/6/box", "/rows/8/box"]
+
+[[tables.rows]]
+id = "pass-polls-hid-1ms-unread"
+label = "Vendor-page HID interrupt IN declaring 1 ms"
+ptr = ["/rows/9/box", "/rows/11/box"]
+
+[[tables.rows]]
+id = "pass-polls-hid-4ms-unread"
+label = "Vendor-page HID interrupt IN declaring 4 ms"
+ptr = ["/rows/12/box", "/rows/14/box"]
+
+[[tables.rows]]
+id = "pass-polls-hid-8ms-unread"
+label = "Vendor-page HID interrupt IN declaring 8 ms"
+ptr = ["/rows/15/box", "/rows/17/box"]
+
+[[tables]]
+section = "pass-polls"
+order = 3
+kind = "outcome"
+label = "First packet after SET_INTERFACE moves a stream"
+key = "Switches"
+outcomes = ["≤30 ms after native", ">30 ms after native"]
+
+[[tables.rows]]
+# outcome from stock: /rows/18/match; medius: /rows/18/match
+id = "pass-polls-move-one"
+label = "One SET_INTERFACE"
+ptr = "/outcomes/pass-polls-move-one"
+
+[[tables.rows]]
+# outcome from stock: /rows/19/match; medius: /rows/19/match
+id = "pass-polls-move-two"
+label = "Two back to back"
+ptr = "/outcomes/pass-polls-move-two"
+
+[[tables.rows]]
+# outcome from stock: /rows/20/match; medius: /rows/20/match
+id = "pass-polls-move-three"
+label = "Three back to back"
+ptr = "/outcomes/pass-polls-move-three"

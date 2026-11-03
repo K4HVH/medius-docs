@@ -1,0 +1,754 @@
+# Seeded from the 2026-11-03 results; legs and pointers are set when the test is ported.
+id = "move-accept"
+version = 1
+category = "control-link"
+layout = "main"
+boxes = ["stock", "medius"]
+jams_stock = true
+
+[[tables]]
+section = "link-paced-rest"
+order = 1
+kind = "measure"
+label = "Counts arriving from 1 s of moves, binary"
+key = "Moves/s"
+unit = "counts"
+better = "higher"
+layer = "evdev"
+n = "One run per row"
+commands = { stock = "MOVE (0x18)", medius = "MOVE" }
+
+[[tables.rows]]
+id = "link-rest-bin-500"
+label = "500/s"
+ptr = "/rest/results/0/x_delivered"
+of = 500
+
+[[tables.rows]]
+id = "link-rest-bin-1000"
+label = "1,000/s"
+ptr = "/rest/results/1/x_delivered"
+of = 1000
+
+[[tables.rows]]
+id = "link-rest-bin-1500"
+label = "1,500/s"
+ptr = "/rest/results/2/x_delivered"
+of = 1500
+
+[[tables.rows]]
+id = "link-rest-bin-2000"
+label = "2,000/s"
+ptr = "/rest/results/3/x_delivered"
+of = 2000
+
+[[tables.rows]]
+id = "link-rest-bin-5000"
+label = "5,000/s"
+ptr = "/rest/results/4/x_delivered"
+of = 5000
+
+[[tables]]
+section = "link-paced-rest"
+order = 2
+kind = "measure"
+label = "Counts arriving from 1 s of moves, text"
+key = "Moves/s"
+unit = "counts"
+better = "higher"
+layer = "evdev"
+n = "One run per row"
+commands = { stock = "km.move", medius = "MOVE" }
+
+[[tables.rows]]
+# pointers differed by box; medius: /rest/results/0/x_delivered
+id = "link-rest-text-500"
+label = "500/s"
+ptr = "/rest/results/5/x_delivered"
+of = 500
+
+[[tables.rows]]
+# pointers differed by box; medius: /rest/results/1/x_delivered
+id = "link-rest-text-1000"
+label = "1,000/s"
+ptr = "/rest/results/6/x_delivered"
+of = 1000
+
+[[tables.rows]]
+# pointers differed by box; medius: /rest/results/2/x_delivered
+id = "link-rest-text-1500"
+label = "1,500/s"
+ptr = "/rest/results/7/x_delivered"
+of = 1500
+
+[[tables.rows]]
+# pointers differed by box; medius: /rest/results/3/x_delivered
+id = "link-rest-text-2000"
+label = "2,000/s"
+ptr = "/rest/results/8/x_delivered"
+of = 2000
+
+[[tables.rows]]
+# pointers differed by box; medius: /rest/results/4/x_delivered
+id = "link-rest-text-5000"
+label = "5,000/s"
+ptr = "/rest/results/9/x_delivered"
+of = 5000
+
+[[tables]]
+section = "link-paced-rest"
+order = 3
+kind = "measure"
+label = "Counts arriving from 1 s of moves, one move per write"
+key = "Moves/s"
+unit = "counts"
+better = "higher"
+layer = "evdev"
+n = "One run per row"
+commands = { stock = "MOVE (0x18)", medius = "MOVE" }
+
+[[tables.rows]]
+id = "link-rest-single-1000"
+label = "1,000/s"
+ptr = "/rest_single/results/0/x_delivered"
+of = 1000
+
+[[tables.rows]]
+id = "link-rest-single-2000"
+label = "2,000/s"
+ptr = "/rest_single/results/1/x_delivered"
+of = 2000
+
+[[tables.rows]]
+id = "link-rest-single-5000"
+label = "5,000/s"
+ptr = "/rest_single/results/2/x_delivered"
+of = 5000
+
+[[tables]]
+section = "link-paced-rest"
+order = 4
+kind = "measure"
+label = "Counts arriving from 5 s of moves, binary"
+key = "Moves/s"
+unit = "counts"
+better = "higher"
+layer = "evdev"
+n = "One run per row, two at 500"
+commands = { stock = "MOVE (0x18)", medius = "MOVE" }
+
+[[tables.rows]]
+id = "link-rest-5s-bin-250"
+label = "250/s"
+ptr = "/rest_5s/results/2/x_delivered"
+of = 1250
+
+[[tables.rows]]
+id = "link-rest-5s-bin-500"
+label = "500/s"
+ptr = ["/rest_5s/results/0/x_delivered", "/rest_5s/results/1/x_delivered"]
+of = 2500
+
+[[tables.rows]]
+id = "link-rest-5s-bin-1000"
+label = "1,000/s"
+ptr = "/rest_5s/results/3/x_delivered"
+of = 5000
+
+[[tables.rows]]
+id = "link-rest-5s-bin-2000"
+label = "2,000/s"
+ptr = "/rest_5s/results/4/x_delivered"
+of = 10000
+
+[[tables]]
+section = "link-paced-rest"
+order = 5
+kind = "measure"
+label = "Counts arriving from 5 s of moves, text"
+key = "Moves/s"
+unit = "counts"
+better = "higher"
+layer = "evdev"
+n = "One run per row, two at 500"
+commands = { stock = "km.move", medius = "MOVE" }
+
+[[tables.rows]]
+# pointers differed by box; medius: /rest_5s/results/2/x_delivered
+id = "link-rest-5s-text-250"
+label = "250/s"
+ptr = "/rest_5s/results/7/x_delivered"
+of = 1250
+
+[[tables.rows]]
+# pointers differed by box; medius: ['/rest_5s/results/0/x_delivered', '/rest_5s/results/1/x_delivered']
+id = "link-rest-5s-text-500"
+label = "500/s"
+ptr = ["/rest_5s/results/5/x_delivered", "/rest_5s/results/6/x_delivered"]
+of = 2500
+
+[[tables.rows]]
+# pointers differed by box; medius: /rest_5s/results/3/x_delivered
+id = "link-rest-5s-text-1000"
+label = "1,000/s"
+ptr = "/rest_5s/results/8/x_delivered"
+of = 5000
+
+[[tables.rows]]
+# pointers differed by box; medius: /rest_5s/results/4/x_delivered
+id = "link-rest-5s-text-2000"
+label = "2,000/s"
+ptr = "/rest_5s/results/9/x_delivered"
+of = 10000
+
+[[tables]]
+section = "link-paced-moving"
+order = 1
+kind = "measure"
+label = "Counts arriving from 1 s of moves, binary"
+key = "Moves/s"
+unit = "counts"
+better = "higher"
+layer = "evdev"
+n = "One run per row"
+commands = { stock = "MOVE (0x18)", medius = "MOVE" }
+
+[[tables.rows]]
+id = "link-moving-bin-125"
+label = "125/s"
+ptr = "/moving/results/0/x_delivered"
+of = 125
+
+[[tables.rows]]
+id = "link-moving-bin-500"
+label = "500/s"
+ptr = "/moving/results/1/x_delivered"
+of = 500
+
+[[tables.rows]]
+id = "link-moving-bin-1000"
+label = "1,000/s"
+ptr = "/moving/results/2/x_delivered"
+of = 1000
+
+[[tables.rows]]
+id = "link-moving-bin-1500"
+label = "1,500/s"
+ptr = "/moving/results/3/x_delivered"
+of = 1500
+
+[[tables.rows]]
+id = "link-moving-bin-2000"
+label = "2,000/s"
+ptr = "/moving/results/4/x_delivered"
+of = 2000
+
+[[tables.rows]]
+id = "link-moving-bin-3000"
+label = "3,000/s"
+ptr = "/moving/results/5/x_delivered"
+of = 3000
+
+[[tables.rows]]
+id = "link-moving-bin-5000"
+label = "5,000/s"
+ptr = "/moving/results/6/x_delivered"
+of = 5000
+
+[[tables]]
+section = "link-paced-moving"
+order = 2
+kind = "measure"
+label = "Counts arriving from 1 s of moves, text"
+key = "Moves/s"
+unit = "counts"
+better = "higher"
+layer = "evdev"
+n = "One run per row"
+commands = { stock = "km.move", medius = "MOVE" }
+
+[[tables.rows]]
+# pointers differed by box; medius: /moving/results/0/x_delivered
+id = "link-moving-text-125"
+label = "125/s"
+ptr = "/moving/results/7/x_delivered"
+of = 125
+
+[[tables.rows]]
+# pointers differed by box; medius: /moving/results/1/x_delivered
+id = "link-moving-text-500"
+label = "500/s"
+ptr = "/moving/results/8/x_delivered"
+of = 500
+
+[[tables.rows]]
+# pointers differed by box; medius: /moving/results/2/x_delivered
+id = "link-moving-text-1000"
+label = "1,000/s"
+ptr = "/moving/results/9/x_delivered"
+of = 1000
+
+[[tables.rows]]
+# pointers differed by box; medius: /moving/results/3/x_delivered
+id = "link-moving-text-1500"
+label = "1,500/s"
+ptr = "/moving/results/10/x_delivered"
+of = 1500
+
+[[tables.rows]]
+# pointers differed by box; medius: /moving/results/4/x_delivered
+id = "link-moving-text-2000"
+label = "2,000/s"
+ptr = "/moving/results/11/x_delivered"
+of = 2000
+
+[[tables.rows]]
+# pointers differed by box; medius: /moving/results/5/x_delivered
+id = "link-moving-text-3000"
+label = "3,000/s"
+ptr = "/moving/results/12/x_delivered"
+of = 3000
+
+[[tables.rows]]
+# pointers differed by box; medius: /moving/results/6/x_delivered
+id = "link-moving-text-5000"
+label = "5,000/s"
+ptr = "/moving/results/13/x_delivered"
+of = 5000
+
+[[tables]]
+section = "link-paced-moving"
+order = 3
+kind = "measure"
+label = "Counts arriving from 1 s of moves, one move per write"
+key = "Moves/s"
+unit = "counts"
+better = "higher"
+layer = "evdev"
+n = "One run per row"
+commands = { stock = "MOVE (0x18)", medius = "MOVE" }
+
+[[tables.rows]]
+id = "link-moving-single-1000"
+label = "1,000/s"
+ptr = "/moving_single/results/0/x_delivered"
+of = 1000
+
+[[tables.rows]]
+id = "link-moving-single-2000"
+label = "2,000/s"
+ptr = "/moving_single/results/1/x_delivered"
+of = 2000
+
+[[tables.rows]]
+id = "link-moving-single-5000"
+label = "5,000/s"
+ptr = "/moving_single/results/2/x_delivered"
+of = 5000
+
+[[tables]]
+section = "link-paced-moving"
+order = 4
+kind = "measure"
+label = "Counts arriving from 5 s of moves, binary"
+key = "Moves/s"
+unit = "counts"
+better = "higher"
+layer = "evdev"
+n = "One run per row, two at 500"
+commands = { stock = "MOVE (0x18)", medius = "MOVE" }
+
+[[tables.rows]]
+id = "link-moving-5s-bin-125"
+label = "125/s"
+ptr = "/moving_5s/results/0/x_delivered"
+of = 625
+
+[[tables.rows]]
+id = "link-moving-5s-bin-250"
+label = "250/s"
+ptr = "/moving_5s/results/1/x_delivered"
+of = 1250
+
+[[tables.rows]]
+id = "link-moving-5s-bin-500"
+label = "500/s"
+ptr = ["/moving_5s/results/2/x_delivered", "/moving_5s/results/3/x_delivered"]
+of = 2500
+
+[[tables.rows]]
+id = "link-moving-5s-bin-1000"
+label = "1,000/s"
+ptr = "/moving_5s/results/4/x_delivered"
+of = 5000
+
+[[tables]]
+section = "link-paced-moving"
+order = 5
+kind = "measure"
+label = "Counts arriving from 5 s of moves, text"
+key = "Moves/s"
+unit = "counts"
+better = "higher"
+layer = "evdev"
+n = "One run per row, two at 500"
+commands = { stock = "km.move", medius = "MOVE" }
+
+[[tables.rows]]
+# pointers differed by box; medius: /moving_5s/results/0/x_delivered
+id = "link-moving-5s-text-125"
+label = "125/s"
+ptr = "/moving_5s/results/5/x_delivered"
+of = 625
+
+[[tables.rows]]
+# pointers differed by box; medius: /moving_5s/results/1/x_delivered
+id = "link-moving-5s-text-250"
+label = "250/s"
+ptr = "/moving_5s/results/6/x_delivered"
+of = 1250
+
+[[tables.rows]]
+# pointers differed by box; medius: ['/moving_5s/results/2/x_delivered', '/moving_5s/results/3/x_delivered']
+id = "link-moving-5s-text-500"
+label = "500/s"
+ptr = ["/moving_5s/results/7/x_delivered", "/moving_5s/results/8/x_delivered"]
+of = 2500
+
+[[tables.rows]]
+# pointers differed by box; medius: /moving_5s/results/4/x_delivered
+id = "link-moving-5s-text-1000"
+label = "1,000/s"
+ptr = "/moving_5s/results/9/x_delivered"
+of = 5000
+
+[[tables]]
+section = "link-move-size"
+order = 1
+kind = "measure"
+label = "Counts arriving from 1 s of 10-count moves, binary"
+key = "Moves/s"
+unit = "counts"
+better = "higher"
+layer = "evdev"
+n = "One run per row"
+commands = { stock = "MOVE (0x18)", medius = "MOVE" }
+
+[[tables.rows]]
+id = "link-size-bin-10-500"
+label = "500/s"
+ptr = "/dx/results/0/x_delivered"
+of = 5000
+
+[[tables.rows]]
+id = "link-size-bin-10-1000"
+label = "1,000/s"
+ptr = "/dx/results/1/x_delivered"
+of = 10000
+
+[[tables.rows]]
+id = "link-size-bin-10-1500"
+label = "1,500/s"
+ptr = "/dx/results/2/x_delivered"
+of = 15000
+
+[[tables.rows]]
+id = "link-size-bin-10-2000"
+label = "2,000/s"
+ptr = "/dx/results/3/x_delivered"
+of = 20000
+
+[[tables.rows]]
+id = "link-size-bin-10-5000"
+label = "5,000/s"
+ptr = "/dx/results/4/x_delivered"
+of = 50000
+
+[[tables]]
+section = "link-move-size"
+order = 2
+kind = "measure"
+label = "Counts arriving from 1 s of 100-count moves, binary"
+key = "Moves/s"
+unit = "counts"
+better = "higher"
+layer = "evdev"
+n = "One run per row"
+commands = { stock = "MOVE (0x18)", medius = "MOVE" }
+
+[[tables.rows]]
+id = "link-size-bin-100-500"
+label = "500/s"
+ptr = "/dx/results/5/x_delivered"
+of = 50000
+
+[[tables.rows]]
+id = "link-size-bin-100-1000"
+label = "1,000/s"
+ptr = "/dx/results/6/x_delivered"
+of = 100000
+
+[[tables.rows]]
+id = "link-size-bin-100-1500"
+label = "1,500/s"
+ptr = "/dx/results/7/x_delivered"
+of = 150000
+
+[[tables.rows]]
+id = "link-size-bin-100-2000"
+label = "2,000/s"
+ptr = "/dx/results/8/x_delivered"
+of = 200000
+
+[[tables.rows]]
+id = "link-size-bin-100-5000"
+label = "5,000/s"
+ptr = "/dx/results/9/x_delivered"
+of = 500000
+
+[[tables]]
+section = "link-move-size"
+order = 3
+kind = "measure"
+label = "Counts arriving from 1 s of 1,000-count moves, binary"
+key = "Moves/s"
+unit = "counts"
+better = "higher"
+layer = "evdev"
+n = "One run per row"
+commands = { stock = "MOVE (0x18)", medius = "MOVE" }
+
+[[tables.rows]]
+id = "link-size-bin-1000-500"
+label = "500/s"
+ptr = "/dx/results/10/x_delivered"
+of = 500000
+
+[[tables.rows]]
+id = "link-size-bin-1000-1000"
+label = "1,000/s"
+ptr = "/dx/results/11/x_delivered"
+of = 1000000
+
+[[tables.rows]]
+id = "link-size-bin-1000-1500"
+label = "1,500/s"
+ptr = "/dx/results/12/x_delivered"
+of = 1500000
+
+[[tables.rows]]
+id = "link-size-bin-1000-2000"
+label = "2,000/s"
+ptr = "/dx/results/13/x_delivered"
+of = 2000000
+
+[[tables.rows]]
+id = "link-size-bin-1000-5000"
+label = "5,000/s"
+ptr = "/dx/results/14/x_delivered"
+of = 5000000
+
+[[tables]]
+section = "link-move-size"
+order = 4
+kind = "measure"
+label = "Counts arriving from 1 s of 10-count moves, text"
+key = "Moves/s"
+unit = "counts"
+better = "higher"
+layer = "evdev"
+n = "One run per row"
+commands = { stock = "km.move", medius = "MOVE" }
+
+[[tables.rows]]
+# pointers differed by box; medius: /dx/results/0/x_delivered
+id = "link-size-text-10-500"
+label = "500/s"
+ptr = "/dx/results/15/x_delivered"
+of = 5000
+
+[[tables.rows]]
+# pointers differed by box; medius: /dx/results/1/x_delivered
+id = "link-size-text-10-1000"
+label = "1,000/s"
+ptr = "/dx/results/16/x_delivered"
+of = 10000
+
+[[tables.rows]]
+# pointers differed by box; medius: /dx/results/2/x_delivered
+id = "link-size-text-10-1500"
+label = "1,500/s"
+ptr = "/dx/results/17/x_delivered"
+of = 15000
+
+[[tables.rows]]
+# pointers differed by box; medius: /dx/results/3/x_delivered
+id = "link-size-text-10-2000"
+label = "2,000/s"
+ptr = "/dx/results/18/x_delivered"
+of = 20000
+
+[[tables.rows]]
+# pointers differed by box; medius: /dx/results/4/x_delivered
+id = "link-size-text-10-5000"
+label = "5,000/s"
+ptr = "/dx/results/19/x_delivered"
+of = 50000
+
+[[tables]]
+section = "link-move-size"
+order = 5
+kind = "measure"
+label = "Counts arriving from 1 s of 100-count moves, text"
+key = "Moves/s"
+unit = "counts"
+better = "higher"
+layer = "evdev"
+n = "One run per row"
+commands = { stock = "km.move", medius = "MOVE" }
+
+[[tables.rows]]
+# pointers differed by box; medius: /dx/results/5/x_delivered
+id = "link-size-text-100-500"
+label = "500/s"
+ptr = "/dx/results/20/x_delivered"
+of = 50000
+
+[[tables.rows]]
+# pointers differed by box; medius: /dx/results/6/x_delivered
+id = "link-size-text-100-1000"
+label = "1,000/s"
+ptr = "/dx/results/21/x_delivered"
+of = 100000
+
+[[tables.rows]]
+# pointers differed by box; medius: /dx/results/7/x_delivered
+id = "link-size-text-100-1500"
+label = "1,500/s"
+ptr = "/dx/results/22/x_delivered"
+of = 150000
+
+[[tables.rows]]
+# pointers differed by box; medius: /dx/results/8/x_delivered
+id = "link-size-text-100-2000"
+label = "2,000/s"
+ptr = "/dx/results/23/x_delivered"
+of = 200000
+
+[[tables.rows]]
+# pointers differed by box; medius: /dx/results/9/x_delivered
+id = "link-size-text-100-5000"
+label = "5,000/s"
+ptr = "/dx/results/24/x_delivered"
+of = 500000
+
+[[tables]]
+section = "link-move-size"
+order = 6
+kind = "measure"
+label = "Counts arriving from 1 s of 1,000-count moves, text"
+key = "Moves/s"
+unit = "counts"
+better = "higher"
+layer = "evdev"
+n = "One run per row"
+commands = { stock = "km.move", medius = "MOVE" }
+
+[[tables.rows]]
+# pointers differed by box; medius: /dx/results/10/x_delivered
+id = "link-size-text-1000-500"
+label = "500/s"
+ptr = "/dx/results/25/x_delivered"
+of = 500000
+
+[[tables.rows]]
+# pointers differed by box; medius: /dx/results/11/x_delivered
+id = "link-size-text-1000-1000"
+label = "1,000/s"
+ptr = "/dx/results/26/x_delivered"
+of = 1000000
+
+[[tables.rows]]
+# pointers differed by box; medius: /dx/results/12/x_delivered
+id = "link-size-text-1000-1500"
+label = "1,500/s"
+ptr = "/dx/results/27/x_delivered"
+of = 1500000
+
+[[tables.rows]]
+# pointers differed by box; medius: /dx/results/13/x_delivered
+id = "link-size-text-1000-2000"
+label = "2,000/s"
+ptr = "/dx/results/28/x_delivered"
+of = 2000000
+
+[[tables.rows]]
+# pointers differed by box; medius: /dx/results/14/x_delivered
+id = "link-size-text-1000-5000"
+label = "5,000/s"
+ptr = "/dx/results/29/x_delivered"
+of = 5000000
+
+[[tables]]
+section = "link-clumped"
+order = 1
+kind = "measure"
+label = "Counts arriving from moves written in clumps every 16 ms"
+key = "Moves/s"
+unit = "counts"
+better = "higher"
+layer = "evdev"
+n = "One second per row"
+commands = { stock = "MOVE (0x18)", medius = "MOVE" }
+
+[[tables.rows]]
+id = "link-clump-1000-16"
+label = "1,000/s, 16 per write"
+ptr = "/rest_clump16/results/0/x_delivered"
+of = 1000
+
+[[tables.rows]]
+# pointers differed by box; medius: /clumped/results/1/x_delivered
+id = "link-clump-2000-32"
+label = "2,000/s, 32 per write"
+ptr = "/c2000_16/results/0/x_delivered"
+of = 2000
+
+[[tables]]
+section = "link-clumped"
+order = 2
+kind = "measure"
+label = "Counts arriving from 12,871 moves written back to back"
+key = "Write"
+unit = "counts"
+better = "higher"
+layer = "evdev"
+n = "One run"
+commands = { stock = "MOVE (0x18)", medius = "MOVE" }
+
+[[tables.rows]]
+id = "link-back-to-back"
+label = "4,096-byte writes"
+ptr = "/blast/results/1/x_delivered"
+of = 12871
+
+[[tables]]
+section = "link-clumped"
+order = 3
+kind = "outcome"
+label = "Parser afterwards"
+key = "Write"
+commands = { stock = "MOVE (0x18)", medius = "MOVE" }
+outcomes = ["In step", "One command behind until a power cycle"]
+
+[[tables.rows]]
+# outcome from stock: /results/0/in_step_after; medius: /results/1/x_delivered, /results/1/x_wanted
+id = "link-clump-parser-2000"
+label = "2,000/s, 32 per write"
+ptr = "/outcomes/link-clump-parser-2000"
+
+[[tables.rows]]
+# outcome from stock: /results/1/in_step_after; medius: /results/1/x_delivered, /results/1/x_wanted
+id = "link-back-to-back-parser"
+label = "12,871 moves back to back"
+ptr = "/outcomes/link-back-to-back-parser"

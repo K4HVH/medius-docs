@@ -1,0 +1,343 @@
+# The comparison's categories and their sections, in page order.
+
+[[categories]]
+id = "devices"
+title = "Devices"
+
+[[categories.sections]]
+id = "devices-shapes"
+title = "Cloned devices"
+about = "Both boxes got the same 60 emulated devices, one box at a time behind one hub. Medius had imperfect clones off, as it ships. A faithful clone gives the PC the native replies and the native report rate."
+
+[[categories.sections]]
+id = "devices-intervals"
+title = "Poll interval"
+about = "How often the PC polls each clone, against the native interval."
+
+[[categories.sections]]
+id = "devices-imperfect"
+title = "Medius with imperfect clones on"
+about = "The devices Medius refuses as it ships, given to it again with imperfect clones on. Stock has no such setting, so its column is stock as it ships."
+
+[[categories.sections]]
+id = "devices-endpoint-data"
+title = "Data through every endpoint"
+about = "Each device streams a counter on every IN endpoint in turn, at its declared rate (bulk at 1,000 packets/s). The PC reads each endpoint through usbfs with eight transfers queued. A cloned endpoint delivering <95% of the native rate counts as sending nothing. Medius as it ships, imperfect clones off."
+
+[[categories.sections]]
+id = "devices-report-size"
+title = "Large report descriptors"
+about = "A mouse with its report descriptor padded to 256-2,047 bytes."
+
+[[categories.sections]]
+id = "devices-endpoint-0"
+title = "Endpoint 0 replies"
+about = "The PC sent standard, class and vendor requests to each clone and to the native reference, timed on the PC's USB bus."
+
+[[categories.sections]]
+id = "devices-ep0-stacks"
+title = "Standard requests across device stacks"
+about = "A mouse with a vendor-page HID interface and a vendor interface, answering standard requests as 22 device stacks do. Each clone and the native reference get the same 316 reads. A request is given the native reply when its outcome, the PC's error and every byte match native. A timeout counts only where the native request times out too."
+
+[[categories.sections]]
+id = "devices-control-relay"
+title = "Relayed requests"
+about = "The PC sent the same raw transfers to each clone and to the native reference, on endpoint 0 and on a second control endpoint. A request is given the native reply when its outcome and every byte match native (data before a STALL included). Its reply must also come ≤1.5 ms before or ≤3 ms after the native reply."
+
+[[categories]]
+id = "passthrough"
+title = "Passthrough"
+
+[[categories.sections]]
+id = "pass-relay"
+title = "Relayed reports"
+about = "Each box relayed mice and keyboards at several report rates, 15 s each, with every report numbered."
+
+[[categories.sections]]
+id = "pass-timing"
+title = "Report timing"
+about = "The relay runs above, timed on the PC's USB bus."
+
+[[categories.sections]]
+id = "pass-latency"
+title = "Report latency"
+about = "Each native report is timed from the emulator queuing it to the PC receiving the clone's copy. The emulator runs 1,000 ppm slow, so its reports land at every point between polls. Plugged straight into a PC, a native report waits half the native interval on average (4 ms for a 125 Hz mouse)."
+
+[[categories.sections]]
+id = "pass-inject"
+title = "Reads while injecting"
+about = "The emulated mouse sends its next report only after the box reads the last one, so the count is how often the box read the mouse. Read every millisecond, a 1 kHz mouse gives 15,500 reports in 15.5 s and 5,500 in 5.5 s."
+
+[[categories.sections]]
+id = "pass-pc-device"
+title = "PC to real device"
+about = "Requests and reports the PC sent the real device, through its clone."
+
+[[categories.sections]]
+id = "pass-boot"
+title = "Boot protocol requests"
+about = "The PC sends SET_PROTOCOL(boot) and SET_IDLE(0) to both HID interfaces of a gaming mouse, GET_PROTOCOL to both, reads the mouse for 0.5 s, then sends SET_PROTOCOL(report), as a host's HID driver sets up a boot device. 20 tries, each request given 1 s."
+
+[[categories.sections]]
+id = "pass-device-pc"
+title = "Real device to PC"
+about = "A real device stalling its endpoint, one replying to polls with empty packets, and a vendor interface streaming a counter."
+
+[[categories.sections]]
+id = "pass-pause"
+title = "Reads after a pause"
+about = "The real device sends a counter every millisecond on 2 interrupt endpoints, and back to back on a bulk endpoint. The PC reads in batches with pauses of 0-1,000 ms between them. Natively, a report the PC hasn't taken stays in the real device, and no counter value is skipped."
+
+[[categories.sections]]
+id = "pass-polls"
+title = "Polls the real device gets"
+about = "A silent vendor interrupt IN and a silent vendor-page HID interrupt IN, declaring 1, 4 and 8 ms, read by the PC for 2 s with 2 s unread before and after. The real device counts the polls it gets. Natively an endpoint is polled at its declared rate while read, and not at all while unread. SET_INTERFACE moves a vendor interrupt IN to another address, 40 times per row."
+
+[[categories.sections]]
+id = "pass-pads"
+title = "Game pads"
+about = "Three emulated pads, each moving its left stick through set values for 1.5 s."
+
+[[categories]]
+id = "injection"
+title = "Injected motion"
+
+[[categories.sections]]
+id = "inj-latency"
+title = "Move latency"
+about = "One move at a time, timed on the PC's USB bus from the command to the report carrying it. A default move goes through each box's default smoothing, and an immediate move skips it. The resting mouse moved for 3 s before it rested: Medius smooths only once it has seen the mouse move since it was cloned, as a mouse in use has."
+
+[[categories.sections]]
+id = "inj-stream-lag"
+title = "Delay in a stream of moves"
+about = "A steady 2 s stream of one-count moves into a still mouse, each box on its default smoothing. Each count is matched to its command and timed from it."
+
+[[categories.sections]]
+id = "inj-settings"
+title = "Smoothing settings"
+about = "Each box's smoothing settings, measured the same way on the PC's USB bus: 40 single moves into a still mouse, and 100 one-count moves 150-250 ms apart into a moving 1 kHz mouse."
+
+[[categories.sections]]
+id = "inj-reports-emitted"
+title = "Extra reports"
+about = "Reports each box emitted while injecting: beside a 1 kHz mouse moving in every report, in a steady stream of moves into a still mouse, and beside a mouse reporting at 1 kHz or 125 Hz."
+
+[[categories.sections]]
+id = "inj-totals"
+title = "Counts arriving"
+about = "Runs of one-count moves, with the total on the PC checked against the counts sent."
+
+[[categories.sections]]
+id = "inj-directions"
+title = "Moves in every direction"
+about = "Moves in 8 directions, sparse, streamed and wider than the report's field, default and immediate, into a still or moving 1 kHz mouse with 16-bit and 8-bit fields. 49 legs per mouse."
+
+[[categories.sections]]
+id = "inj-fresh-clone"
+title = "Move into a new clone"
+about = "A move and a click sent right after the box cloned a new device, three tries each."
+
+[[categories.sections]]
+id = "inj-wheel-pan"
+title = "Wheel and horizontal scroll"
+about = "Injected wheel and horizontal scroll (pan), one command at a time, timed on the PC's USB bus."
+
+[[categories.sections]]
+id = "inj-raw-move"
+title = "Unsmoothed moves"
+about = "Stock's RAW_MOVE (documented as skipping its smoothing) against Medius's MOVE(NOW), timed on the PC's USB bus: one at a time, and as a stream of 200 at 1,000/s."
+
+[[categories]]
+id = "control-link"
+title = "Control link"
+
+[[categories.sections]]
+id = "link-queries"
+title = "Query round trip"
+about = "A program sent each box 3,000 queries one at a time, in two runs, timed on the PC's USB bus."
+
+[[categories.sections]]
+id = "link-paced-rest"
+title = "Paced moves, mouse still"
+about = "One-count moves at a steady rate into a still mouse: stock's binary and text forms against Medius's MOVE frames, sent in 1 ms batches unless the table says otherwise. Each count adds 1 to the clone's X."
+
+[[categories.sections]]
+id = "link-paced-moving"
+title = "Paced moves, mouse moving"
+about = "The same moves into a 1 kHz mouse whose Y moves 1-10 and back every 200 ms. Here stock refuses some moves, replying DE AD 01 00 18 FF to a binary move and ERR to a text one."
+
+[[categories.sections]]
+id = "link-move-size"
+title = "Move size"
+about = "Moves of 10, 100 and 1,000 counts each, paced in 1 ms batches for 1 s into a still mouse."
+
+[[categories.sections]]
+id = "link-one-write"
+title = "Moves in one write"
+about = "One write holding a clump of one-count moves, then 100 more paced 1 ms apart. Stock's binary moves are 9 bytes, its text moves 14, Medius's frames 12."
+
+[[categories.sections]]
+id = "link-paced-fast"
+title = "Fast paced moves"
+about = "One-count moves paced in 1 ms batches for 2 s into a still mouse: stock's binary form at each rate and its text form at 8,000/s, against Medius at the same rates. Stock was power-cycled after each run that left its parser one command behind."
+
+[[categories.sections]]
+id = "link-clumped"
+title = "Clumped and back-to-back writes"
+about = "One-count binary moves into a still mouse, written in clumps every 16 ms (as a sender whose timer wakes every 16 ms writes them), or 12,871 back to back in 4,096-byte writes. Stock was power-cycled after each run that left its parser one command behind."
+
+[[categories.sections]]
+id = "link-malformed"
+title = "Malformed input"
+about = "Malformed input sent to each box, then a valid move. One try each."
+
+[[categories]]
+id = "input"
+title = "Buttons, keys and locks"
+
+[[categories.sections]]
+id = "input-latency"
+title = "Button and key latency"
+about = "Injected left button and 'a' key, timed on the PC's USB bus from the command to the clone's report. The mouse was still, moving every millisecond, or moving while the box also injected a move every millisecond."
+
+[[categories.sections]]
+id = "input-together"
+title = "Native and injected presses"
+about = "A native key or button held while each box injected another key, or injected a release or click of that same button."
+
+[[categories.sections]]
+id = "input-buttons-keys"
+title = "Buttons, modifiers and key rolls"
+about = "Each button clicked 20 times, a five-button chord, each modifier held over a J press, and keys rolled down and up 25 ms apart, on a mouse, a boot keyboard and an NKRO keyboard. Five tries each."
+
+[[categories.sections]]
+id = "input-lock-leak"
+title = "Locks"
+about = "Each box held a lock for 10 s against native motion and clicks. On the PC's USB bus, a lock is timed from the command to the last native input through, an unlock to the first one back."
+
+[[categories.sections]]
+id = "input-box-timed"
+title = "Clicks and typing timed by the box"
+about = "Ten 50 ms clicks and a 30-character string timed by the box (stock's km.click and km.string, a Medius clip), against the same clicks timed by the PC. Read off the PC's USB bus, five runs each."
+
+[[categories.sections]]
+id = "input-typing-long"
+title = "Typing 300 characters"
+about = "300 characters with capitals, digits and symbols, typed by the PC as key presses on a boot keyboard: shift down, key down, key up, shift up, one change every 10, 4 or 2 ms."
+
+[[categories]]
+id = "recovery"
+title = "Recovery"
+
+[[categories.sections]]
+id = "recovery-program-exit"
+title = "Program exit"
+about = "A program pressed the left button through each box, then closed the port without releasing it."
+
+[[categories.sections]]
+id = "recovery-replug"
+title = "Replug"
+about = "The real device was unplugged and plugged back in, 10 times a run, two runs."
+
+[[categories.sections]]
+id = "recovery-pc-restart"
+title = "PC restart"
+about = "The PC turned the clone's port off for 3 s (as a restart does) or unconfigured the clone for 3 s, then sent a move once the clone was back."
+
+[[categories.sections]]
+id = "recovery-pc-sleep"
+title = "PC sleep"
+about = "The PC put each clone to sleep 3 times."
+
+[[categories]]
+id = "features"
+title = "Features"
+
+[[categories.sections]]
+id = "feat-motion"
+title = "Motion"
+about = "Moves, the wheel and horizontal scroll, and how each box smooths them."
+
+[[categories.sections]]
+id = "feat-buttons"
+title = "Mouse buttons"
+about = "Stock has a command for each of five buttons. Medius's INJECT covers every button the mouse has, up to 16."
+
+[[categories.sections]]
+id = "feat-keys"
+title = "Keys and media keys"
+about = "Keyboard keys, and media keys such as volume and play."
+
+[[categories.sections]]
+id = "feat-locks"
+title = "Locks, scaling and remaps"
+about = "On both boxes a lock or a scale acts on native input and leaves injected input alone."
+
+[[categories.sections]]
+id = "feat-pads"
+title = "Game pads"
+about = "Stock's commands for game pads. Medius relays a pad and has no command for one."
+
+[[categories.sections]]
+id = "feat-observe"
+title = "Input and traffic capture"
+about = "Watching native input and USB traffic from the control port."
+
+[[categories.sections]]
+id = "feat-device"
+title = "Device control"
+about = "Commands that act on the real device or its traffic. Medius's commands here need imperfect clones on."
+
+[[categories.sections]]
+id = "feat-clips"
+title = "Clips"
+about = "A clip is a set of moves, clicks and keys stored on the box and timed by the box."
+
+[[categories.sections]]
+id = "feat-box"
+title = "Box queries and settings"
+about = "Queries about the box and the real device, and the box's settings."
+
+[[categories]]
+id = "software"
+title = "Software"
+
+[[categories.sections]]
+id = "software-tools"
+title = "Owner tools"
+about = "The MAKCU Toolkit is a Windows app. The Medius dashboard and makcu.com Device Control run in Chrome or Edge."
+
+[[categories.sections]]
+id = "software-programs"
+title = "Programs"
+about = "Programs written for other boxes, and several programs on one box. Stock's side is from the MAKCU Toolkit's code, not a test."
+
+[[categories.sections]]
+id = "software-libraries"
+title = "Client libraries"
+about = "A client library for each language, the firmware maker's where there is one."
+
+[[categories.sections]]
+id = "software-updates"
+title = "Updates"
+about = "From the MAKCU Toolkit's code, makcu.com and the Medius dashboard, not a test."
+
+[[categories.sections]]
+id = "software-data"
+title = "Data sent off the PC"
+about = "What each owner tool uploads, from the MAKCU Toolkit's code and the Medius privacy page."
+
+[[categories.sections]]
+id = "software-docs"
+title = "Documentation"
+about = "Each firmware's documentation site, as of 11 October 2026."
+
+[[categories.sections]]
+id = "software-adoption"
+title = "Adoption"
+about = "Package downloads as of 29 October 2026, KMBox packages left out."
+
+[[categories.sections]]
+id = "software-community"
+title = "Community"
+about = "Members of each project's Discord, as of 29 October 2026."

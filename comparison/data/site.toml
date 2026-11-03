@@ -1,0 +1,7 @@
+# What the site says the comparison is of.
+[firmware]
+stock = "V4.122"
+medius = "3.5.0"
+
+[site]
+rig = "A Linux PC, each box fed by a USB device emulator on its USB3, both boxes behind one USB hub and tested one at a time"
