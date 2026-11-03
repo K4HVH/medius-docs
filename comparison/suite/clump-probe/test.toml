@@ -1,10 +1,13 @@
-# Seeded from the 2026-11-03 results; legs and pointers are set when the test is ported.
 id = "clump-probe"
 version = 1
 category = "control-link"
 layout = "main"
 boxes = ["stock", "medius"]
 jams_stock = true
+
+[[legs]]
+id = "rest"
+device = "still-mouse"
 
 [[tables]]
 section = "link-one-write"
@@ -15,18 +18,16 @@ key = "Moves in the write"
 unit = "counts"
 better = "higher"
 layer = "evdev"
-n = "One write per row"
+n = "One write per row in each of 3 runs"
 commands = { stock = "km.move", medius = "MOVE" }
 
 [[tables.rows]]
-# pointers differed by box; medius: /base/results/0/x_delivered
 id = "link-write-text-8"
 label = "8"
 ptr = "/text/results/0/x_delivered"
 of = 8
 
 [[tables.rows]]
-# pointers differed by box; medius: /base/results/1/x_delivered
 id = "link-write-text-16"
 label = "16"
 ptr = "/text/results/1/x_delivered"
