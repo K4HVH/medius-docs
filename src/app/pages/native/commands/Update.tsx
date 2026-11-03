@@ -323,7 +323,7 @@ const Update: Component = () => {
           <p>
             After a failed <code>ACTIVATE</code>, either retry the whole update, or first send{' '}
             <A href="/native/commands/update#abort"><code>ABORT</code></A> for each staged target (as
-            the dashboard and both reference clients do).
+            the dashboard and the library's <code>update_firmware</code> do).
           </p>
         </div>
         <div class="api-response-label">EXAMPLE</div>
