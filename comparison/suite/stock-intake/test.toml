@@ -18,7 +18,7 @@ key = "Moves in the write"
 unit = "counts"
 better = "higher"
 layer = "evdev"
-n = "One write per row in each of 3 runs"
+n = "One write per row in each of 3 runs (1 on stock)"
 commands = { stock = "MOVE (0x18)", medius = "MOVE" }
 
 [[tables.rows]]
@@ -96,7 +96,7 @@ key = "Moves/s"
 unit = "counts"
 better = "higher"
 layer = "wire"
-n = "One run per row in each of 3 runs"
+n = "One run per row in each of 3 runs (1 on stock)"
 commands = { stock = "MOVE (0x18)", medius = "MOVE" }
 
 [[tables.rows]]
@@ -138,7 +138,7 @@ key = "Runs"
 unit = "counts"
 better = "higher"
 layer = "wire"
-n = "3 runs of 2 s in each of 3 runs"
+n = "3 runs of 2 s in each of 3 runs (1 on stock)"
 commands = { stock = "km.move", medius = "MOVE" }
 
 [[tables.rows]]

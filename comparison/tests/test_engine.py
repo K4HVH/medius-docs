@@ -391,3 +391,14 @@ def test_a_box_that_fails_to_take_settings_fails_that_test_only(tmp_path):
     tests = load(paths, "medius")["tests"]
     assert "query timed out" in tests["fake-test"]["failed"]
     assert len(tests["fake-sim"]["runs"]) == 1
+
+
+def test_a_test_that_jams_stock_runs_the_stock_jam_count_on_stock_only(tmp_path):
+    import dataclasses
+    suite = load_suite(FIXTURES)
+    suite["fake-test"] = dataclasses.replace(suite["fake-test"], jams_stock=True)
+    paths = Engine(entry="sim", bench=FakeBench(), devices=FakeDevices(),
+                   boxes={"stock": FakeBox("stock"), "medius": FakeBox("medius")}, suite=suite,
+                   out_dir=tmp_path).run(Selection(tests=["fake-test"]), runs=3, stock_jam_runs=1)
+    assert len(load(paths, "stock")["tests"]["fake-test"]["runs"]) == 1
+    assert len(load(paths, "medius")["tests"]["fake-test"]["runs"]) == 3

@@ -121,7 +121,8 @@ class Engine:
                  and (not selection.layouts or t.layout in selection.layouts)]
         return sorted(tests, key=lambda t: t.id)
 
-    def run(self, selection: Selection, runs: int = 3, resume: str | None = None) -> list:
+    def run(self, selection: Selection, runs: int = 3, resume: str | None = None,
+            stock_jam_runs: int | None = None) -> list:
         stamp = resume or datetime.now().strftime("%Y%m%d-%H%M%S")
         tests = self.select(selection)
         if not tests:
@@ -150,7 +151,8 @@ class Engine:
                 if b != parked and hasattr(self.devices, "park_others"):
                     self.devices.park_others(b)
                     parked = b
-                self._run_test(t, b, files[b], runs, stamp)
+                n = stock_jam_runs if stock_jam_runs is not None and b == "stock" and t.jams_stock else runs
+                self._run_test(t, b, files[b], n, stamp)
         for rf in files.values():
             rf.close()
         return [rf.path for rf in files.values()]

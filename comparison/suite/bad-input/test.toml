@@ -72,7 +72,7 @@ key = "Malformed input"
 unit = "counts"
 better = "lower"
 layer = "wire"
-n = "One try per case in each of 3 runs"
+n = "One try per case in each of 3 runs (1 on stock)"
 resolution = 1
 
 [[tables.rows]]

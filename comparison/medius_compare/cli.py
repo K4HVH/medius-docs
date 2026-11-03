@@ -47,7 +47,7 @@ def _run(entry: str, args, suite) -> int:
     engine = _engine(entry, args, suite)
     selection = Selection(tests=args.test, categories=args.category, boxes=[args.box] if args.box else [],
                           layouts=[args.layout] if getattr(args, "layout", None) else [])
-    for path in engine.run(selection, runs=args.runs, resume=args.resume):
+    for path in engine.run(selection, runs=args.runs, resume=args.resume, stock_jam_runs=args.stock_jam_runs):
         print(path)
     return 0
 
@@ -61,6 +61,8 @@ def main(entry: str, argv=None) -> int:
     r.add_argument("--category", action="append", default=[], help="every test in a category (repeat for more)")
     r.add_argument("--box", choices=["stock", "medius"] + (["native"] if entry == "sim" else []))
     r.add_argument("--runs", type=int, default=3, help="runs of each test (default 3)")
+    r.add_argument("--stock-jam-runs", type=int, help="runs on stock of each test that can leave it one command "
+                                                       "behind, each needing a power cycle (default: --runs)")
     r.add_argument("--out", type=Path, default=Path("runs"), help="where run files go (default ./runs)")
     r.add_argument("--resume", help="carry on a stopped run, by its stamp (the run file's name)")
     if entry == "no-sim":

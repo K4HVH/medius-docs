@@ -22,7 +22,7 @@ key = "Mouse"
 unit = "ms"
 better = "lower"
 layer = "wire"
-n = "10 cycles a run, 3 runs"
+n = "10 cycles a run, 3 runs (1 on stock)"
 commands = { stock = "km.move_now", medius = "MOVE (NOW)" }
 resolution = 0.01
 
@@ -46,7 +46,7 @@ unit = "ms"
 better = "lower"
 stat = "max"
 layer = "wire"
-n = "10 cycles a run, 3 runs"
+n = "10 cycles a run, 3 runs (1 on stock)"
 commands = { stock = "km.move_now", medius = "MOVE (NOW)" }
 resolution = 0.01
 

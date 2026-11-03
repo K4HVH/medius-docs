@@ -10,9 +10,9 @@ import medius_bench as mb  # noqa: E402
 
 def test_clone_usb_port_reads_first_rule_port(tmp_path):
     rule = tmp_path / "99-medius-quiet-clone.rules"
-    rule.write_text('SUBSYSTEM=="input", KERNELS=="3-2.3", ENV{LIBINPUT_IGNORE_DEVICE}="1"\n'
-                    'SUBSYSTEM=="input", KERNELS=="3-2.2", ENV{LIBINPUT_IGNORE_DEVICE}="1"\n')
-    assert mb.clone_usb_port(str(rule)) == "3-2.3"
+    rule.write_text('SUBSYSTEM=="input", KERNELS=="1-3", ENV{LIBINPUT_IGNORE_DEVICE}="1"\n'
+                    'SUBSYSTEM=="input", KERNELS=="1-4", ENV{LIBINPUT_IGNORE_DEVICE}="1"\n')
+    assert mb.clone_usb_port(str(rule)) == "1-3"
 
 
 def test_clone_usb_port_without_a_rule(tmp_path):
@@ -21,9 +21,9 @@ def test_clone_usb_port_without_a_rule(tmp_path):
 
 def test_native_sim_parses_comment(tmp_path):
     rule = tmp_path / "99-medius-quiet-clone.rules"
-    rule.write_text('SUBSYSTEM=="input", KERNELS=="3-2.3", ENV{LIBINPUT_IGNORE_DEVICE}="1"\n'
-                    "# native-sim SIM0000001 3-1.4\n")
-    assert mb.native_sim(str(rule)) == ("/dev/serial/by-id/usb-1a86_USB_Single_Serial_SIM0000001-if00", "3-1.4")
+    rule.write_text('SUBSYSTEM=="input", KERNELS=="1-3", ENV{LIBINPUT_IGNORE_DEVICE}="1"\n'
+                    "# native-sim SIM0000001 1-5\n")
+    assert mb.native_sim(str(rule)) == ("/dev/serial/by-id/usb-1a86_USB_Single_Serial_SIM0000001-if00", "1-5")
 
 
 def test_port_holders_excludes_self_unless_asked():
