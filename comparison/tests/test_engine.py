@@ -92,3 +92,18 @@ def test_an_empty_selection_is_refused(tmp_path):
     else:
         raise AssertionError("ran an empty selection")
     assert bench.moves == [] and not any(tmp_path.iterdir())
+
+
+def test_a_capture_that_lost_data_fails_the_test(tmp_path, monkeypatch):
+    from medius_compare import integrity
+
+    class Lossy:
+        @staticmethod
+        def run(ctx):
+            integrity.report("usbmon_lost", 2)
+            return {"value": 1}
+
+    monkeypatch.setattr(Engine, "_module", lambda self, t: Lossy)
+    paths = engine(tmp_path).run(Selection(tests=["fake-test"]), runs=3)
+    entry = load(paths, "medius")["tests"]["fake-test"]
+    assert "usbmon_lost 2" in entry["failed"] and entry["runs"] == []
