@@ -38,6 +38,8 @@ export interface TableDecl {
   resolution?: number;
   commands?: Record<Box, string>;
   outcomes?: string[];
+  // The outcome a row reads when its runs disagree; otherwise the worst run's.
+  varies?: string;
   ranked?: false;
   columns?: { id: string; label: string; unit: string; better?: 'lower' | 'higher' }[];
   rows: RowDecl[];
@@ -271,7 +273,7 @@ export function generate(input: GenerateInput): Generated {
             const o = p && outcome(p, test, r, outcomes, `${where(r.id)}, ${b}`);
             if (!o) continue;
             if (o.varied) varied.push(`${r.id}:${b}`);
-            got[b] = { is: o.is, src: o.src };
+            got[b] = { is: o.varied && td.varies ? td.varies : o.is, src: o.src };
           }
           if (got.stock && got.medius) rows.push({ id: r.id, label: r.label, ...(r.note ? { note: r.note } : {}), stock: got.stock, medius: got.medius });
         }

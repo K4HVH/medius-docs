@@ -73,3 +73,13 @@ it('a defect shows on a count short of its total, or an outcome short of the bes
   ];
   expect(generate(i).faults).toEqual(['defect medius-drops: row lat-delivered no longer shows medius short of the best']);
 });
+
+it("uses the table's label for runs that disagree, where it has one", () => {
+  const i = input({ stockData: ['All data arrives', 'Some data lost', 'All data arrives'] });
+  const data = i.tests.find((t) => t.id === 'data')!;
+  data.tables[0] = { ...data.tables[0], outcomes: ['All data arrives', 'Sometimes lost', 'Some data lost', 'Nothing arrives'], varies: 'Sometimes lost' };
+  const { results, varied, faults } = generate(i);
+  expect(faults).toEqual([]);
+  expect((rowOf(results, 'data-mouse') as OutcomeRow).stock.is).toBe('Sometimes lost');
+  expect(varied).toEqual(['data-mouse:stock']);
+});

@@ -192,15 +192,19 @@ def devnum(port, sysfs="/sys"):
         return None
 
 
-def reenumerated(port, before, timeout, sysfs="/sys"):
-    """Wait until the device on `port` is a new enumeration (another device number) with input nodes."""
-    end = time.monotonic() + timeout
+def reenumerated(port, before, timeout, sysfs="/sys", keep_s=3.0):
+    """Wait until the device on `port` is a new enumeration (another device number) with input nodes, or is still
+    the same one `keep_s` later: a clone already of that device can be kept rather than made again."""
+    start = time.monotonic()
     while True:
         now = devnum(port, sysfs)
-        if now is not None and now != before and usb_nodes(port, sysfs):
-            time.sleep(1.0)
-            return True
-        if time.monotonic() >= end:
+        if now is not None and usb_nodes(port, sysfs):
+            if now != before:
+                time.sleep(1.0)
+                return True
+            if time.monotonic() - start >= keep_s:
+                return True
+        if time.monotonic() - start >= timeout:
             return False
         time.sleep(0.1)
 
@@ -274,6 +278,20 @@ class SimDevices:
         if not self._appears(port, vid, pid, self.timeout):
             raise LegUnavailable(f"{leg.device} did not appear on {port} as {vid:04x}:{pid:04x}")
         return Presented(**self._describe(port), nodes=self._nodes(port), usb=port)
+
+    def park_others(self, box):
+        """A silent mouse on every other box's sim, unless that sim is lent to the PC hub: the PC then polls a
+        quiet clone beside the one under test, the same for both boxes."""
+        cabling = self.bench.layout_now()
+        lent = cabling.split(":", 1)[1] if cabling.startswith("native:") else None
+        for name, cfg in self.bench.sim.items():
+            if cfg["box"] == box or (lent and cfg["box"] != lent):
+                continue
+            link = self._link(self.bench.sim_port(name))
+            try:
+                link.present_builtin(self._builtin("silentmouse"))
+            finally:
+                link.close()
 
     def sim_link(self, box):
         """An open link to the sim playing `box`'s legs."""

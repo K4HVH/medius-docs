@@ -6,7 +6,7 @@ from pathlib import Path
 TEST_KEYS = {"id", "version", "category", "layout", "boxes", "jams_stock", "state", "legs", "tables"}
 LEG_KEYS = {"id", "device"}
 TABLE_KEYS = {"section", "order", "kind", "label", "key", "unit", "better", "stat", "layer", "n", "hubs",
-              "resolution", "commands", "outcomes", "ranked", "columns", "rows"}
+              "resolution", "commands", "outcomes", "varies", "ranked", "columns", "rows"}
 ROW_KEYS = {"id", "label", "note", "ptr", "unit", "of", "of_ptr", "native_ptr", "target", "test", "box", "default",
             "values"}
 LAYOUTS = {"main", "native"}

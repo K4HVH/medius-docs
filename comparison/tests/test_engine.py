@@ -229,3 +229,70 @@ def test_a_jammed_stock_box_is_cleared_after_every_run(tmp_path, monkeypatch):
            out_dir=tmp_path).run(Selection(tests=["fake-test"]), runs=3)
     assert started_jammed == [False, False, False] and bench.cycled == ["stock"] * 3
     assert [leg for leg, _, _ in devices.presented] == ["rest"] * 3
+
+
+def test_a_test_clears_a_jammed_stock_box_mid_run(tmp_path, monkeypatch):
+    import dataclasses
+    suite = load_suite(FIXTURES)
+    suite["fake-test"] = dataclasses.replace(suite["fake-test"], jams_stock=True, boxes=["stock"])
+    box = FakeBox("stock")
+    box.jammed = False
+    box.lagging = lambda: box.jammed
+    box.reopen = lambda: None
+    seen = []
+
+    class TwoJams:
+        @staticmethod
+        def run(ctx):
+            ctx.device("rest")
+            ctx.box.jammed = True
+            ctx.unjam()
+            seen.append(ctx.box.jammed)
+            ctx.device("rest")
+            return {"value": 1}
+
+    bench = FakeBench()
+    bench.power_cycle = lambda name: (bench.cycled.append(name), setattr(box, "jammed", False))
+    devices = FakeDevices()
+    monkeypatch.setattr(Engine, "_module", lambda self, t: TwoJams)
+    Engine(entry="sim", bench=bench, devices=devices, boxes={"stock": box}, suite=suite,
+           out_dir=tmp_path).run(Selection(tests=["fake-test"]), runs=1)
+    assert seen == [False] and bench.cycled == ["stock"]
+    assert [leg for leg, _, _ in devices.presented] == ["rest", "rest"]
+
+
+def test_a_test_with_no_legs_runs(tmp_path, monkeypatch):
+    import dataclasses
+
+    class NoDevice:
+        @staticmethod
+        def run(ctx):
+            return {"value": 1}
+
+    monkeypatch.setattr(Engine, "_module", lambda self, t: NoDevice)
+    suite = load_suite(FIXTURES)
+    suite["fake-test"] = dataclasses.replace(suite["fake-test"], legs=[])
+    paths = Engine(entry="no-sim", bench=FakeBench(), devices=FakeDevices(), boxes={"medius": FakeBox("medius")},
+                   suite=suite, out_dir=tmp_path).run(Selection(tests=["fake-test"], boxes=["medius"]), runs=1)
+    assert len(load(paths, "medius")["tests"]["fake-test"]["runs"]) == 1
+
+
+def test_the_native_sim_is_restored_after_a_test_used_it(tmp_path, monkeypatch):
+    class Both:
+        @staticmethod
+        def run(ctx):
+            ctx.native("rest")
+            return {"value": 1}
+
+    monkeypatch.setattr(Engine, "_module", lambda self, t: Both)
+    devices = FakeDevices()
+    engine(tmp_path, devices=devices).run(Selection(tests=["fake-test"], boxes=["medius"]), runs=1)
+    assert devices.restored == ["medius", "native"]
+
+
+def test_the_other_box_is_parked_before_a_box_runs(tmp_path):
+    devices = FakeDevices()
+    devices.parked = []
+    devices.park_others = devices.parked.append
+    engine(tmp_path, devices=devices).run(Selection(tests=["fake-test"]), runs=1)
+    assert devices.parked == ["stock", "medius"]

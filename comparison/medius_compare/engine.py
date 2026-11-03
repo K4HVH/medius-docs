@@ -43,6 +43,7 @@ class Context:
     _present: object
     integrity: dict = field(default_factory=dict)
     _sim: object = None
+    _unjam: object = None
 
     def device(self, leg: str):
         """The device for `leg`, presented (or found) on first use; LegUnavailable if it can't be had."""
@@ -51,6 +52,11 @@ class Context:
     def native(self, leg: str):
         """The device for `leg` presented on the native sim (the one lent to the PC hub), beside the box's own."""
         return self._present(leg, "native")
+
+    def unjam(self):
+        """Clear a stock box left one reply behind (a power cycle), and present each leg again on next use."""
+        if self._unjam is not None:
+            self._unjam()
 
     def sim(self, on=None):
         """An open link to the sim playing this box's legs, or with `on="native"` the native sim (close it when
@@ -114,7 +120,11 @@ class Engine:
                 accept = next(iter(groups))
                 self.bench.move_to(accept[0])
                 self.bench.wait_for(accept[0])
+            parked = None
             for b, t in sorted(groups.pop(accept), key=lambda bt: BOX_ORDER.index(bt[0])):
+                if b != parked and hasattr(self.devices, "park_others"):
+                    self.devices.park_others(b)
+                    parked = b
                 self._run_test(t, b, files[b], runs, stamp)
         for rf in files.values():
             rf.close()
@@ -159,10 +169,11 @@ class Engine:
         if done >= runs:
             return
         legs, skipped = self._legs(t)
-        if not legs:
-            rf.skip(t.id, t.version, "; ".join(skipped.values()) or "no legs")
+        if t.legs and not legs:
+            rf.skip(t.id, t.version, "; ".join(skipped.values()))
             return
         box = self.boxes.get(box_name)
+        presented, playing = {}, {}
         try:
             try:
                 state = self._apply_state(box, t.state.get(box_name, {}))
@@ -173,7 +184,11 @@ class Engine:
             rf.begin_test(t.id, t.version, t.layout, [leg.id for leg in legs], [], state, skipped)
             module = self._module(t)
             by_id = {leg.id: leg for leg in legs}
-            presented, playing = {}, {}
+
+            def unjam():
+                if box_name == "stock" and box.lagging():
+                    self._unjam(box, stamp)
+                    playing.clear()
 
             def present(leg_id, on=box_name):
                 if leg_id not in by_id:
@@ -190,7 +205,7 @@ class Engine:
 
             for k in range(done, runs):
                 ctx = Context(box_name=box_name, box=box, legs=[leg.id for leg in legs], run_index=k, _present=present,
-                              _sim=getattr(self.devices, "sim_link", None))
+                              _sim=getattr(self.devices, "sim_link", None), _unjam=unjam)
                 with integrity.collecting(ctx.integrity):
                     raw = module.run(ctx)
                 rf.data["tests"][t.id]["devices"] = [p.record(leg if on == box_name else f"{leg}@{on}")
@@ -213,6 +228,8 @@ class Engine:
             if box is not None and hasattr(box, "leave"):
                 box.leave()
             self.devices.restore(box_name)
+            if box_name != "native" and any(on == "native" for _, on in presented):
+                self.devices.restore("native")
             if t.jams_stock and box_name == "stock":
                 self._unjam(box, stamp)
 

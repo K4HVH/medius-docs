@@ -44,6 +44,7 @@ class Box(Protocol):
     def apply(self, settings: dict) -> None: ...
     def lagging(self) -> bool: ...
     def leave(self) -> None: ...
+    def drop(self) -> None: ...
     def reopen(self) -> None: ...
     def close(self) -> None: ...
 
@@ -131,6 +132,10 @@ class StockBox:
             self.apply(self._initial)
         finally:
             self._shut()
+
+    def drop(self):
+        """Close the port as a program that exits does, releasing nothing; `reopen()` comes back."""
+        self._shut()
 
     def reopen(self, timeout=15.0):
         """Open the port again, after a power cycle: the port goes away and comes back."""
@@ -330,6 +335,10 @@ class MediusBox:
             self.apply(self._initial)
         finally:
             self.device.close()
+
+    def drop(self):
+        """Close the package's connection as a program that exits does; `reopen()` comes back."""
+        self.device.close()
 
     def reopen(self, timeout=15.0):
         try:
