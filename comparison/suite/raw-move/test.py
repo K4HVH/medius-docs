@@ -9,6 +9,10 @@ moves:
   stream   200 into the idle mouse, 5 ms after each command (stock's after its reply), presented again
 Per leg: latency from the command's packet reaching the box's control port to the clone report carrying it,
 reports per move, the total, and stock's reply and receipt states.
+
+Once a stream of receipted moves has gone unread, stock refuses every later one (reply ff03) until a power cycle,
+ordinary moves unaffected. So before its legs the run sends one receipted move, and power-cycles a stock box that
+refuses it (`power_cycled_first`).
 """
 import random
 import struct
@@ -90,12 +94,22 @@ def _leg(box, p, name, n, gap):
     return rec
 
 
+def _receipts_refused(box):
+    return _head(_mak(box, 0x69, struct.pack("<IhhH", _next_id(), 1, 0, 0))) == "ff03"
+
+
 def run(ctx):
-    results = []
+    results, cycled = [], False
     for name, leg, n, gap in LEGS:
         p = ctx.device(leg)
         time.sleep(SETTLE_S)
+        if ctx.box_name == "stock" and not results and _receipts_refused(ctx.box):
+            ctx.log("stock refuses every receipted move: power cycle first")
+            ctx.unjam(force=True)
+            cycled = True
+            p = ctx.device(leg)
+            time.sleep(SETTLE_S)
         r = _leg(ctx.box, p, name, n, gap)
         results.append(r)
         ctx.log(f"{name}: total {r['total']}/{n}, arrived {r['arrived']}, p50 {r['latency'].get('p50')} us")
-    return {"results": results}
+    return {"results": results, "power_cycled_first": cycled}

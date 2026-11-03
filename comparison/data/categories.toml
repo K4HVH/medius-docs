@@ -145,7 +145,7 @@ about = "Injected wheel and horizontal scroll (pan), one command at a time, time
 [[categories.sections]]
 id = "inj-raw-move"
 title = "Unsmoothed moves"
-about = "Stock's RAW_MOVE (documented as skipping its smoothing) against Medius's MOVE(NOW), timed on the PC's USB bus: one at a time, and as a stream of 200 sent 5 ms apart."
+about = "Stock's RAW_MOVE (documented as skipping its smoothing) against Medius's MOVE(NOW), timed on the PC's USB bus: one at a time, and as a stream of 200 sent 5 ms apart. Once a stream's receipts go unread, stock refuses every later RAW_MOVE until a power cycle, so it is power-cycled first when it does."
 
 [[categories]]
 id = "control-link"

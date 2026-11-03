@@ -1,9 +1,9 @@
 id = "raw-move"
-version = 1
+version = 2
 category = "injection"
 layout = "main"
 boxes = ["stock", "medius"]
-jams_stock = false
+jams_stock = true
 
 [[legs]]
 id = "rest"
@@ -23,7 +23,7 @@ unit = "ms"
 better = "lower"
 stat = "p50"
 layer = "wire"
-n = "40 moves per row, 3 runs"
+n = "40 moves per row, 3 runs (1 on stock)"
 commands = { stock = "RAW_MOVE", medius = "MOVE(NOW)" }
 resolution = 0.001
 
@@ -48,7 +48,7 @@ key = "Mouse"
 unit = "counts"
 better = "higher"
 layer = "wire"
-n = "One stream of 200 moves a run, 3 runs"
+n = "One stream of 200 moves a run, 3 runs (1 on stock)"
 commands = { stock = "RAW_MOVE", medius = "MOVE(NOW)" }
 
 [[tables.rows]]

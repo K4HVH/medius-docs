@@ -402,3 +402,34 @@ def test_a_test_that_jams_stock_runs_the_stock_jam_count_on_stock_only(tmp_path)
                    out_dir=tmp_path).run(Selection(tests=["fake-test"]), runs=3, stock_jam_runs=1)
     assert len(load(paths, "stock")["tests"]["fake-test"]["runs"]) == 1
     assert len(load(paths, "medius")["tests"]["fake-test"]["runs"]) == 3
+
+
+def test_a_test_can_ask_for_a_power_cycle_of_a_stock_box_that_is_not_behind(tmp_path, monkeypatch):
+    import dataclasses
+    from medius_compare.power import PowerCycleFailed
+    suite = load_suite(FIXTURES)
+    suite["fake-test"] = dataclasses.replace(suite["fake-test"], boxes=["stock"])
+
+    class Stuck:
+        @staticmethod
+        def run(ctx):
+            ctx.unjam(force=True)
+            return {"value": 1}
+
+    monkeypatch.setattr(Engine, "_module", lambda self, t: Stuck)
+    bench = FakeBench()
+    Engine(entry="sim", bench=bench, devices=FakeDevices(), boxes={"stock": FakeBox("stock")}, suite=suite,
+           out_dir=tmp_path).run(Selection(tests=["fake-test"]), runs=1)
+    assert bench.cycled == ["stock"]
+
+    hands = []
+
+    def no_hub(name):
+        raise PowerCycleFailed("no hub")
+
+    bench = FakeBench()
+    bench.power_cycle = no_hub
+    bench.replug_by_hand = hands.append
+    Engine(entry="sim", bench=bench, devices=FakeDevices(), boxes={"stock": FakeBox("stock")}, suite=suite,
+           out_dir=tmp_path / "b").run(Selection(tests=["fake-test"]), runs=1)
+    assert hands == ["stock"]
