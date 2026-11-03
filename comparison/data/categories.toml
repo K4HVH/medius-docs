@@ -179,17 +179,17 @@ about = "One write holding a clump of one-count moves, then 100 more paced 1 ms 
 [[categories.sections]]
 id = "link-paced-fast"
 title = "Fast paced moves"
-about = "One-count moves paced in 1 ms batches for 2 s into a still mouse: stock's binary form at each rate and its text form at 8,000/s, against Medius at the same rates. Stock was power-cycled after each run that left its parser one command behind."
+about = "One-count moves paced in 1 ms batches for 2 s into a still mouse: stock's binary form at each rate and its text form at 8,000/s, against Medius at the same rates. Stock was power-cycled before any step it would have started one command behind."
 
 [[categories.sections]]
 id = "link-clumped"
 title = "Clumped and back-to-back writes"
-about = "One-count binary moves into a still mouse, written in clumps every 16 ms (as a sender whose timer wakes every 16 ms writes them), or 12,871 back to back in 4,096-byte writes. Stock was power-cycled after each run that left its parser one command behind."
+about = "One-count binary moves into a still mouse, written in clumps every 16 ms (as a sender whose timer wakes every 16 ms writes them), or 12,871 back to back in 4,096-byte writes. Stock was power-cycled before any step it would have started one command behind."
 
 [[categories.sections]]
 id = "link-malformed"
 title = "Malformed input"
-about = "Malformed input sent to each box, then a valid move. One try each."
+about = "Malformed input sent to each box, then a valid move. Three tries each."
 
 [[categories]]
 id = "input"
@@ -335,9 +335,9 @@ about = "Each firmware's documentation site, as of 11 October 2026."
 [[categories.sections]]
 id = "software-adoption"
 title = "Adoption"
-about = "Package downloads as of 29 October 2026, KMBox packages left out."
+about = "Package downloads, fetched when the comparison runs, KMBox packages left out."
 
 [[categories.sections]]
 id = "software-community"
 title = "Community"
-about = "Members of each project's Discord, as of 29 October 2026."
+about = "Members of each project's Discord, fetched when the comparison runs."

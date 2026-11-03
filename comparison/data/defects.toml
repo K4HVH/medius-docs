@@ -43,7 +43,7 @@ rows = ["devices-interval-mouse-8", "devices-interval-mouse-10", "devices-interv
 [[defects]]
 id = "pass-stock-class-requests-unanswered"
 box = "stock"
-text = "Class requests to the clone sometimes go unanswered: SET_IDLE, SET_PROTOCOL or GET_PROTOCOL in 7/20 tries. In 1/10 port cycles of a PC restart, the clone took 6.1 s to come back: the kernel log shows the PC's HID driver waiting 5 s for such a request."
+text = "Class requests to the clone sometimes go unanswered: SET_IDLE, SET_PROTOCOL or GET_PROTOCOL in {row:pass-boot-unanswered:stock} tries. It can miss one while the PC sets it up too, and the PC's HID driver waits 5 s before asking again, so the clone comes up late."
 rows = ["pass-boot-unanswered"]
 
 [[defects]]
