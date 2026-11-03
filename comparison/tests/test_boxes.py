@@ -172,6 +172,19 @@ def test_stock_move_now_is_its_own_command():
         box.close()
 
 
+def test_stock_drop_closes_without_releasing():
+    fake = StockFake()
+    box = boxes.StockBox(fake.path)
+    box.press("left")
+    box.drop()
+    time.sleep(0.05)
+    assert "km.left(1)" in fake.lines and "km.left(0)" not in fake.lines
+    box.reopen()
+    box.close()
+    time.sleep(0.05)
+    assert "km.left(0)" in fake.lines
+
+
 def test_stock_leave_releases_what_was_pressed_and_locked():
     fake = StockFake()
     box = boxes.StockBox(fake.path)

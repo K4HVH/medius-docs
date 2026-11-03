@@ -131,3 +131,22 @@ def test_a_builtin_leg_presents_the_sims_own_device():
     d._changed = lambda port, before, timeout: True
     p = d.present(LegDecl("rest", "sim:builtin:gamingmouse"), "medius")
     assert FakeLink.uploads[-1] == ("/dev/serial/by-id/sim-medius", 22) and p.usb == CLONE
+
+
+def test_a_builtin_the_clone_keeps_counts_as_presented(tmp_path):
+    from medius_compare.devices import reenumerated
+    fake_sysfs(tmp_path, "1-2.3", 0x1D50, 0x6160)
+    (tmp_path / "bus" / "usb" / "devices" / "1-2.3" / "devnum").write_text("9\n")
+    assert reenumerated("1-2.3", 9, 3.0, sysfs=str(tmp_path), keep_s=0.2)
+    assert not reenumerated("1-2.4", 9, 0.3, sysfs=str(tmp_path), keep_s=0.2)
+
+
+def test_the_other_box_sim_is_parked_unless_it_is_lent():
+    FakeLink.uploads = []
+    d = SimDevices(FakeBench("main"), link=FakeLink)
+    d._builtin = lambda name: {"silentmouse": 25}[name]
+    d.park_others("medius")
+    assert FakeLink.uploads == [("/dev/serial/by-id/sim-stock", 25)]
+    FakeLink.uploads = []
+    SimDevices(FakeBench("native:medius"), link=FakeLink).park_others("medius")
+    assert FakeLink.uploads == []
