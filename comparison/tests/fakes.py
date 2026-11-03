@@ -47,6 +47,11 @@ class FakeBench:
     def layout_now(self):
         return self.layout
 
+    def cabling_for(self, layout, box):
+        if layout == "native" and box == "native":
+            return ("native:stock", "native:medius")
+        return (f"native:{box}",) if layout == "native" else (layout,)
+
     def move_to(self, layout):
         self.moves.append(layout)
         self.layout = layout

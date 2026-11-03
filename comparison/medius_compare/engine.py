@@ -11,6 +11,7 @@ from pathlib import Path
 from . import TOOL_VERSION
 from . import integrity
 from .devices import LegUnavailable
+from .power import PowerCycleFailed
 from .runfile import RunFile
 
 BOX_ORDER = ("stock", "medius", "native")
@@ -89,17 +90,20 @@ class Engine:
                  if (not selection.boxes or b in selection.boxes) and any(b in t.boxes for t in tests)
                  and (b == "native" or b in self.boxes)]
         files = {b: self._file(b, stamp, resume) for b in boxes}
-        here = self.bench.layout_now()
-        layouts = sorted({t.layout for t in tests}, key=lambda lay: lay != here)
-        for layout in layouts:
-            group = [t for t in tests if t.layout == layout]
-            if self.bench.layout_now() != layout:
-                self.bench.move_to(layout)
-                self.bench.wait_for(layout)
-            for b in boxes:
-                for t in group:
-                    if b in t.boxes:
-                        self._run_test(t, b, files[b], runs, stamp)
+        groups = {}
+        for b in boxes:
+            for t in tests:
+                if b in t.boxes:
+                    groups.setdefault(tuple(self.bench.cabling_for(t.layout, b)), []).append((b, t))
+        while groups:
+            now = self.bench.layout_now()
+            accept = next((a for a in groups if now in a), None)
+            if accept is None:
+                accept = next(iter(groups))
+                self.bench.move_to(accept[0])
+                self.bench.wait_for(accept[0])
+            for b, t in sorted(groups.pop(accept), key=lambda bt: BOX_ORDER.index(bt[0])):
+                self._run_test(t, b, files[b], runs, stamp)
         for rf in files.values():
             rf.close()
         return [rf.path for rf in files.values()]
@@ -189,8 +193,13 @@ class Engine:
     def _unjam(self, box, stamp):
         if not box.lagging():
             return
-        self.bench.power_cycle("stock")
-        if hasattr(box, "reopen"):
+        try:
+            self.bench.power_cycle("stock")
+            box.reopen()
+        except (PowerCycleFailed, FileNotFoundError) as e:
+            print(f"[stock] power cycle failed: {e}", file=sys.stderr, flush=True)
+        if box.lagging():
+            self.bench.replug_by_hand("stock")
             box.reopen()
         if box.lagging():
             raise StockStillJammed(f"the stock box is still one reply behind after a power cycle; carry on with "

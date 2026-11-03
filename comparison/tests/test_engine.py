@@ -107,3 +107,15 @@ def test_a_capture_that_lost_data_fails_the_test(tmp_path, monkeypatch):
     paths = engine(tmp_path).run(Selection(tests=["fake-test"]), runs=3)
     entry = load(paths, "medius")["tests"]["fake-test"]
     assert "usbmon_lost 2" in entry["failed"] and entry["runs"] == []
+
+
+def test_each_box_runs_in_its_own_native_cabling_with_no_extra_moves(tmp_path):
+    import dataclasses
+    suite = load_suite(FIXTURES)
+    suite["fake-test"] = dataclasses.replace(suite["fake-test"], layout="native", boxes=["stock", "medius", "native"])
+    bench = FakeBench(layout="native:medius")
+    eng = Engine(entry="sim", bench=bench, devices=FakeDevices(),
+                 boxes={"stock": FakeBox("stock"), "medius": FakeBox("medius")}, suite=suite, out_dir=tmp_path)
+    paths = eng.run(Selection(tests=["fake-test"]), runs=1)
+    assert bench.moves == ["native:stock"]
+    assert all(len(load(paths, b)["tests"]["fake-test"]["runs"]) == 1 for b in ("stock", "medius", "native"))
