@@ -296,3 +296,15 @@ def test_the_other_box_is_parked_before_a_box_runs(tmp_path):
     devices.park_others = devices.parked.append
     engine(tmp_path, devices=devices).run(Selection(tests=["fake-test"]), runs=1)
     assert devices.parked == ["stock", "medius"]
+
+
+def test_a_box_returns_to_its_defaults_before_each_test(tmp_path):
+    import dataclasses
+    suite = load_suite(FIXTURES)
+    suite["fake-sim"] = dataclasses.replace(suite["fake-sim"], state={"medius": {"optin": True}})
+    suite["fake-test"] = dataclasses.replace(suite["fake-test"], state={})
+    box = FakeBox("medius")
+    box.DEFAULTS = {"optin": False, "spread": 100}
+    Engine(entry="sim", bench=FakeBench(), devices=FakeDevices(), boxes={"medius": box}, suite=suite,
+           out_dir=tmp_path).run(Selection(tests=["fake-sim", "fake-test"], boxes=["medius"]), runs=1)
+    assert box.settings()["optin"] is False

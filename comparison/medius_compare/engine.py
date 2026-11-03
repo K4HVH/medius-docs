@@ -148,11 +148,13 @@ class Engine:
         return legs, skipped
 
     def _apply_state(self, box, wanted: dict) -> dict:
-        if not wanted:
+        """The box at its defaults with the test's settings over them, read back."""
+        target = {**getattr(box, "DEFAULTS", {}), **wanted}
+        if box is None or not target:
             return {}
-        box.apply(wanted)
+        box.apply(target)
         got = box.settings()
-        wrong = [f"{k} was {got.get(k)!r}, wanted {v!r}" for k, v in wanted.items() if got.get(k) != v]
+        wrong = [f"{k} was {got.get(k)!r}, wanted {v!r}" for k, v in target.items() if got.get(k) != v]
         if wrong:
             raise StateMismatch("state readback: " + ", ".join(wrong))
         return {k: got.get(k) for k in wanted}
