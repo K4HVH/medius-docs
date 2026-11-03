@@ -2,6 +2,7 @@ import type { Component } from 'solid-js';
 import { A } from '@solidjs/router';
 import { PageHeader } from '../../shell/PageHeader';
 import { DocSection } from '../../shell/DocSection';
+import { FixLink } from '../../shell/Filter';
 
 const Connection: Component = () => {
   return (
@@ -78,7 +79,18 @@ const Connection: Component = () => {
         </div>
       </DocSection>
 
-      <DocSection id="hello" title="Ready hello" caption="Unsolicited RESP(VERSION), twice per boot">
+      <DocSection
+        id="hello"
+        title="Ready hello"
+        caption="Unsolicited RESP(VERSION), twice per boot"
+        aside={
+          <span class="cross" data-search-skip data-agent-hide>
+            <FixLink href="/library/update#wait-firmware-confirmed" label="How the library uses the hello after an update">
+              Library
+            </FixLink>
+          </span>
+        }
+      >
         <p>
           Treat either hello as ready and skip the{' '}
           <A href="/native/commands/requests#version"><code>QUERY(VERSION)</code></A>.
