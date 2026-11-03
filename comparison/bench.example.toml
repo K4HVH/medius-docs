@@ -1,0 +1,36 @@
+# The bench compare_sim.py runs on. Copy to ~/.config/medius-compare/bench.toml and fill in your own.
+# USB ports are sysfs names (`ls /sys/bus/usb/devices`); serials are the USB serial numbers of the
+# boxes' control ports and the sims' control adapters (`ls /dev/serial/by-id`).
+
+# What the person moving cables calls each box, sim and socket. Cable moves are asked for in these words.
+[names]
+stock = "stock box"
+medius = "Medius box"
+"sim.stock" = "stock sim"
+"sim.medius" = "Medius sim"
+"1-1.2" = "PC hub socket 2"
+
+# Each box: its control port's serial and the USB port its clone enumerates on.
+[box.stock]
+control = "STOCK_CONTROL_SERIAL"
+clone = "1-2.2"
+# The hub ports that carry all the stock box's power: its two cables and its sim's control adapter (the sim
+# feeds the box through USB3 while its adapter has power). The hub must switch each port's power
+# (uhubctl lists it as "ppps").
+power = { hub = "1-1", ports = [1, 3, 4] }
+
+[box.medius]
+control = "MEDIUS_CONTROL_SERIAL"
+clone = "1-2.3"
+
+# Each sim: its control adapter's serial, the box it sits behind, and the PC hub port its device plugs into
+# when it plays the native reference for the other box.
+[sim.stock]
+serial = "STOCK_SIM_SERIAL"
+box = "stock"
+native = "1-1.2"
+
+[sim.medius]
+serial = "MEDIUS_SIM_SERIAL"
+box = "medius"
+native = "1-1.2"
