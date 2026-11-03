@@ -150,3 +150,15 @@ def test_the_other_box_sim_is_parked_unless_it_is_lent():
     FakeLink.uploads = []
     SimDevices(FakeBench("native:medius"), link=FakeLink).park_others("medius")
     assert FakeLink.uploads == []
+
+
+def test_a_real_device_is_waited_for_after_a_power_cycle():
+    calls = []
+
+    def nodes(port):
+        calls.append(port)
+        return [] if len(calls) < 3 else ["/dev/input/event7"]
+
+    d = RealDevices("stock", clone_port=CLONE, nodes=nodes, kinds=lambda node: {"mouse"},
+                    moved=lambda nodes, secs: False, describe=found, wait_s=5.0, every=0.01)
+    assert d.present(LegDecl("rest", "still-mouse"), "stock").nodes == ["/dev/input/event7"]

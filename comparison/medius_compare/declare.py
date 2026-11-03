@@ -63,6 +63,7 @@ class TableDecl:
     resolution: float | None = None
     commands: dict | None = None
     outcomes: list | None = None
+    varies: str | None = None
     ranked: bool | None = None
     columns: list | None = None
 

@@ -308,3 +308,37 @@ def test_a_box_returns_to_its_defaults_before_each_test(tmp_path):
     Engine(entry="sim", bench=FakeBench(), devices=FakeDevices(), boxes={"medius": box}, suite=suite,
            out_dir=tmp_path).run(Selection(tests=["fake-sim", "fake-test"], boxes=["medius"]), runs=1)
     assert box.settings()["optin"] is False
+
+
+def test_a_power_cycle_mid_run_puts_the_tests_settings_back(tmp_path, monkeypatch):
+    import dataclasses
+    suite = load_suite(FIXTURES)
+    suite["fake-test"] = dataclasses.replace(suite["fake-test"], jams_stock=True, boxes=["stock"],
+                                             state={"stock": {"interp": 40}})
+    box = FakeBox("stock")
+    box.DEFAULTS = {"interp": 255}
+    box.jammed = False
+    box.lagging = lambda: box.jammed
+    box.reopen = lambda: None
+    seen = []
+
+    class Jams:
+        @staticmethod
+        def run(ctx):
+            ctx.box.jammed = True
+            ctx.unjam()
+            seen.append(ctx.box.settings()["interp"])
+            return {"value": 1}
+
+    bench = FakeBench()
+
+    def cycle(name):
+        bench.cycled.append(name)
+        box.jammed = False
+        box._settings = {"interp": 255}
+
+    bench.power_cycle = cycle
+    monkeypatch.setattr(Engine, "_module", lambda self, t: Jams)
+    Engine(entry="sim", bench=bench, devices=FakeDevices(), boxes={"stock": box}, suite=suite,
+           out_dir=tmp_path).run(Selection(tests=["fake-test"]), runs=1)
+    assert seen == [40]

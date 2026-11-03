@@ -190,6 +190,7 @@ class Engine:
             def unjam():
                 if box_name == "stock" and box.lagging():
                     self._unjam(box, stamp)
+                    self._apply_state(box, t.state.get(box_name, {}))
                     playing.clear()
 
             def present(leg_id, on=box_name):
@@ -221,6 +222,7 @@ class Engine:
                         box.leave()
                     if box.lagging():
                         self._unjam(box, stamp)
+                        self._apply_state(box, t.state.get(box_name, {}))
                         playing.clear()
         except LegUnavailable as e:
             rf.fail(t.id, str(e))
