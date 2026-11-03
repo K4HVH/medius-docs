@@ -154,7 +154,7 @@ title = "Control link"
 [[categories.sections]]
 id = "link-queries"
 title = "Query round trip"
-about = "A program sent each box 3,000 queries one at a time, in each of three runs, timed on the PC's USB bus."
+about = "A program sent each box 3,000 queries one at a time, in each of three runs, timed on the PC's USB bus, with a mouse at rest plugged in (sending nothing)."
 
 [[categories.sections]]
 id = "link-paced-rest"
