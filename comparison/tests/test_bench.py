@@ -39,7 +39,8 @@ def test_layout_now_reads_the_native_layout_from_sim_serials(tmp_path):
 
 def test_each_box_takes_its_own_native_cabling(tmp_path):
     b = bench(tmp_path, {})
-    assert b.cabling_for("main", "stock") == ("main",)
+    assert b.cabling_for("main", "stock") == ("main", "native:stock")
+    assert b.cabling_for("main", "medius") == ("main", "native:medius")
     assert b.cabling_for("native", "stock") == ("native:stock",)
     assert b.cabling_for("native", "medius") == ("native:medius",)
     assert set(b.cabling_for("native", "native")) == {"native:stock", "native:medius"}

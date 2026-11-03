@@ -88,7 +88,7 @@ class Bench:
 
     def cabling_for(self, layout, box):
         if layout == "main":
-            return ("main",)
+            return ("main", f"native:{box}") if box in BOXES else ("main",)
         if box in BOXES:
             return (f"native:{box}",)
         return tuple(f"native:{b}" for b in BOXES)
