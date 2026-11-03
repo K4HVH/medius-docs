@@ -6,6 +6,7 @@ device on the PC hub as the native reference). A sim's device carries no serial,
 the sim's serial, the USB port its device enumerates on, or None.
 """
 import glob
+import os
 import sys
 import time
 import tomllib
@@ -14,7 +15,16 @@ from pathlib import Path
 
 from . import power
 
-DEFAULT = Path("~/.config/medius-compare/bench.toml").expanduser()
+CONFIG = Path(".config/medius-compare/bench.toml")
+
+
+def default_config():
+    """The bench config in the user's home, or under sudo, in the home of the user who ran sudo."""
+    mine = Path.home() / CONFIG
+    if not mine.exists() and os.environ.get("SUDO_USER"):
+        import pwd
+        return Path(pwd.getpwnam(os.environ["SUDO_USER"]).pw_dir) / CONFIG
+    return mine
 BOXES = ("stock", "medius")
 KEYS = {"": {"names", "box", "sim"}, "box": {"control", "clone", "power"}, "power": {"hub", "ports"},
         "sim": {"serial", "box", "native"}}
@@ -63,7 +73,7 @@ class Bench:
 
     @classmethod
     def load(cls, path=None, **kw):
-        path = Path(path or DEFAULT)
+        path = Path(path or default_config())
         if not path.exists():
             raise SystemExit(f"no bench config at {path}; copy bench.example.toml there and fill it in")
         with open(path, "rb") as f:
