@@ -75,10 +75,11 @@ class Context:
         """The device for `leg` presented on the native sim (the one lent to the PC hub), beside the box's own."""
         return self._present(leg, "native")
 
-    def unjam(self):
-        """Clear a stock box left one reply behind (a power cycle), and present each leg again on next use."""
+    def unjam(self, force=False):
+        """Clear a stock box left one reply behind (a power cycle), and present each leg again on next use. With
+        `force`, power-cycle it anyway, for a state the test saw that only a power cycle clears."""
         if self._unjam is not None:
-            self._unjam()
+            self._unjam(force)
 
     def sim(self, on=None):
         """An open link to the sim playing this box's legs, or with `on="native"` the native sim (close it when
@@ -215,10 +216,10 @@ class Engine:
             module = self._module(t)
             by_id = {leg.id: leg for leg in legs}
 
-            def unjam():
+            def unjam(force=False):
                 port.get()
-                if box_name == "stock" and box.lagging():
-                    self._unjam(box, stamp)
+                if box_name == "stock" and (force or box.lagging()):
+                    self._unjam(box, stamp, force)
                     self._apply_state(box, t.state.get(box_name, {}))
                     playing.clear()
 
@@ -269,15 +270,17 @@ class Engine:
             if t.jams_stock and box_name == "stock":
                 self._unjam(box, stamp)
 
-    def _unjam(self, box, stamp):
-        if not box.lagging():
+    def _unjam(self, box, stamp, force=False):
+        if not force and not box.lagging():
             return
+        cycled = False
         try:
             self.bench.power_cycle("stock")
             box.reopen()
+            cycled = True
         except (PowerCycleFailed, FileNotFoundError) as e:
             print(f"[stock] power cycle failed: {e}", file=sys.stderr, flush=True)
-        if box.lagging():
+        if (force and not cycled) or box.lagging():
             self.bench.replug_by_hand("stock")
             box.reopen()
         if box.lagging():
