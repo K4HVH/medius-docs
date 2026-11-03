@@ -43,7 +43,7 @@ def usb_port_of(name):
 
 def clone_usb_port(box):
     """The one USB port carrying the identity the box says it cloned."""
-    with port as box:
+    with box:
         info = box.device_info()
     want = f"{info.vid:04x}:{info.pid:04x}"
     end = time.time() + 20.0
