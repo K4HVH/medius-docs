@@ -173,8 +173,11 @@ def restore_vmin(s):
     browser's Web Serial that opens the port next reads 0 bytes and calls the device lost."""
     try:
         import termios
+    except ImportError:
+        return
+    try:
         attrs = termios.tcgetattr(s.fileno())
         attrs[6][termios.VMIN] = 1
         termios.tcsetattr(s.fileno(), termios.TCSANOW, attrs)
-    except (ImportError, OSError, ValueError, AttributeError):
+    except (termios.error, OSError, ValueError, AttributeError):    # the port has gone
         pass
