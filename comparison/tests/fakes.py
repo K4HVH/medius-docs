@@ -8,15 +8,28 @@ class FakeBox:
         self._settings = {}
         self._readback = readback or {}
         self.closed = False
+        self.port_open = True
+
+    def _port(self):
+        if not self.port_open:
+            raise RuntimeError("the control port is closed")
 
     def firmware(self):
         return {"version": "V4.122"} if self.kind == "stock" else {"device": "3.5.0+fake", "proto": 10}
 
     def apply(self, settings):
+        self._port()
         self._settings.update(settings)
 
     def settings(self):
+        self._port()
         return {**self._settings, **self._readback}
+
+    def drop(self):
+        self.port_open = False
+
+    def reopen(self):
+        self.port_open = True
 
     def lagging(self):
         return False

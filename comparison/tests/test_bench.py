@@ -77,6 +77,9 @@ class JamBox(FakeBox):
         return not (self.record.exists() and "-a on" in self.record.read_text())
 
     def reopen(self):
+        if not self.port_open:
+            self.port_open = True
+            return
         self.reopened += 1
 
 
