@@ -119,3 +119,113 @@ def test_each_box_runs_in_its_own_native_cabling_with_no_extra_moves(tmp_path):
     paths = eng.run(Selection(tests=["fake-test"]), runs=1)
     assert bench.moves == ["native:stock"]
     assert all(len(load(paths, b)["tests"]["fake-test"]["runs"]) == 1 for b in ("stock", "medius", "native"))
+
+
+def test_a_tests_own_shapes_reach_the_devices(tmp_path, monkeypatch):
+    class WithShapes:
+        SHAPES = {"sine-mouse": lambda: "a sine mouse"}
+
+        @staticmethod
+        def run(ctx):
+            ctx.device("rest")
+            return {"value": 1}
+
+    monkeypatch.setattr(Engine, "_module", lambda self, t: WithShapes)
+    devices = FakeDevices()
+    engine(tmp_path, devices=devices).run(Selection(tests=["fake-test"]), runs=1)
+    assert list(devices.shapes) == ["sine-mouse"]
+
+
+def test_a_test_reaches_the_sim_behind_its_box(tmp_path, monkeypatch):
+    got = []
+
+    class UsesSim:
+        @staticmethod
+        def run(ctx):
+            got.append(ctx.sim())
+            return {"value": 1}
+
+    monkeypatch.setattr(Engine, "_module", lambda self, t: UsesSim)
+    devices = FakeDevices()
+    devices.sim_link = lambda box: f"link to {box}'s sim"
+    engine(tmp_path, devices=devices).run(Selection(tests=["fake-test"], boxes=["medius"]), runs=1)
+    assert got == ["link to medius's sim"]
+
+
+def test_a_box_run_can_present_on_the_native_sim_too(tmp_path, monkeypatch):
+    class Both:
+        @staticmethod
+        def run(ctx):
+            ctx.device("rest")
+            ctx.native("rest")
+            return {"value": 1}
+
+    monkeypatch.setattr(Engine, "_module", lambda self, t: Both)
+    devices = FakeDevices()
+    engine(tmp_path, devices=devices).run(Selection(tests=["fake-test"], boxes=["medius"]), runs=1)
+    assert [(leg, box) for leg, _, box in devices.presented] == [("rest", "medius"), ("rest", "native")]
+
+
+def test_a_leg_another_replaced_on_its_sim_is_presented_again(tmp_path, monkeypatch):
+    import dataclasses
+    from medius_compare.declare import LegDecl
+    suite = load_suite(FIXTURES)
+    suite["fake-test"] = dataclasses.replace(suite["fake-test"], legs=[LegDecl("a", "still-mouse"), LegDecl("b", "still-keyboard")])
+
+    class Alternates:
+        @staticmethod
+        def run(ctx):
+            ctx.device("a")
+            ctx.device("b")
+            ctx.device("a")
+            return {"value": 1}
+
+    monkeypatch.setattr(Engine, "_module", lambda self, t: Alternates)
+    devices = FakeDevices()
+    Engine(entry="sim", bench=FakeBench(), devices=devices, boxes={"medius": FakeBox("medius")}, suite=suite,
+           out_dir=tmp_path).run(Selection(tests=["fake-test"], boxes=["medius"]), runs=2)
+    assert [leg for leg, _, _ in devices.presented] == ["a", "b", "a", "b", "a"]
+
+
+def test_a_test_reaches_the_native_sim(tmp_path, monkeypatch):
+    got = []
+
+    class UsesNative:
+        @staticmethod
+        def run(ctx):
+            got.append(ctx.sim("native"))
+            return {"value": 1}
+
+    monkeypatch.setattr(Engine, "_module", lambda self, t: UsesNative)
+    devices = FakeDevices()
+    devices.sim_link = lambda box: f"link to {box}'s sim"
+    engine(tmp_path, devices=devices).run(Selection(tests=["fake-test"], boxes=["medius"]), runs=1)
+    assert got == ["link to native's sim"]
+
+
+def test_a_jammed_stock_box_is_cleared_after_every_run(tmp_path, monkeypatch):
+    import dataclasses
+    suite = load_suite(FIXTURES)
+    suite["fake-test"] = dataclasses.replace(suite["fake-test"], jams_stock=True, boxes=["stock"])
+    box = FakeBox("stock")
+    box.jammed = False
+    box.lagging = lambda: box.jammed
+    box.reopen = lambda: None
+    started_jammed = []
+
+    class Jams:
+        @staticmethod
+        def run(ctx):
+            ctx.device("rest")
+            started_jammed.append(ctx.box.jammed)
+            ctx.box.jammed = True
+            return {"value": 1}
+
+    bench = FakeBench()
+    bench.power_cycle = lambda name: (bench.cycled.append(name), setattr(box, "jammed", False))
+    devices = FakeDevices()
+    monkeypatch.setattr(Engine, "_module", lambda self, t: Jams)
+    Engine(entry="sim", bench=bench, devices=devices, boxes={"stock": box}, suite=suite,
+           out_dir=tmp_path).run(Selection(tests=["fake-test"]), runs=3)
+    assert started_jammed == [False, False, False] and bench.cycled == ["stock"] * 3
+    assert [leg for leg, _, _ in devices.presented] == ["rest"] * 3

@@ -30,8 +30,9 @@ class FakeDevices:
         self.presented = []
         self.restored = []
 
-    def present(self, leg, box):
+    def present(self, leg, box, shapes=None):
         self.presented.append((leg.id, leg.device, box))
+        self.shapes = shapes
         return Presented(vid=0x1D50, pid=0x6160, product="Fake mouse", nodes=[], descriptor_sha256="ab" * 32)
 
     def restore(self, box):

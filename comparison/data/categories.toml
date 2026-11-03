@@ -145,7 +145,7 @@ about = "Injected wheel and horizontal scroll (pan), one command at a time, time
 [[categories.sections]]
 id = "inj-raw-move"
 title = "Unsmoothed moves"
-about = "Stock's RAW_MOVE (documented as skipping its smoothing) against Medius's MOVE(NOW), timed on the PC's USB bus: one at a time, and as a stream of 200 at 1,000/s."
+about = "Stock's RAW_MOVE (documented as skipping its smoothing) against Medius's MOVE(NOW), timed on the PC's USB bus: one at a time, and as a stream of 200 sent 5 ms apart."
 
 [[categories]]
 id = "control-link"
@@ -154,7 +154,7 @@ title = "Control link"
 [[categories.sections]]
 id = "link-queries"
 title = "Query round trip"
-about = "A program sent each box 3,000 queries one at a time, in two runs, timed on the PC's USB bus."
+about = "A program sent each box 3,000 queries one at a time, in each of three runs, timed on the PC's USB bus."
 
 [[categories.sections]]
 id = "link-paced-rest"
@@ -237,7 +237,7 @@ about = "A program pressed the left button through each box, then closed the por
 [[categories.sections]]
 id = "recovery-replug"
 title = "Replug"
-about = "The real device was unplugged and plugged back in, 10 times a run, two runs."
+about = "The real device was unplugged and plugged back in, 10 times a run, three runs."
 
 [[categories.sections]]
 id = "recovery-pc-restart"

@@ -13,7 +13,7 @@ import pytest
 from medius_compare import boxes
 
 ANSWERS = {"km.echo()": "0", "km.screen()": "km.screen(1920,1080)", "km.version()": "km.MAKCU"}
-SETTER = re.compile(r"km\.(move|wheel|pan|left|right|middle|side1|side2|down|up|lock_m[xywlrm]|lock_ms[12])\(.+\)")
+SETTER = re.compile(r"km\.(move|move_now|wheel|pan|left|right|middle|side1|side2|down|up|lock_m[xywlrm]|lock_ms[12])\(.+\)")
 
 
 class StockFake:
@@ -158,6 +158,18 @@ def test_stock_settings_round_trip_and_close_puts_them_back():
         box.apply({"optin": True})
     box.close()
     assert fake.interp == 40
+
+
+def test_stock_move_now_is_its_own_command():
+    fake = StockFake()
+    box = boxes.StockBox(fake.path)
+    try:
+        box.move(1, 2)
+        box.move(-3, 4, now=True)
+        time.sleep(0.05)
+        assert fake.lines[-2:] == ["km.move(1,2)", "km.move_now(-3,4)"]
+    finally:
+        box.close()
 
 
 def test_stock_leave_releases_what_was_pressed_and_locked():
