@@ -342,3 +342,15 @@ def test_a_power_cycle_mid_run_puts_the_tests_settings_back(tmp_path, monkeypatc
     Engine(entry="sim", bench=bench, devices=FakeDevices(), boxes={"stock": box}, suite=suite,
            out_dir=tmp_path).run(Selection(tests=["fake-test"]), runs=1)
     assert seen == [40]
+
+
+def test_a_box_that_fails_to_take_settings_fails_that_test_only(tmp_path):
+    class Broken(FakeBox):
+        def apply(self, settings):
+            raise TimeoutError("query timed out")
+
+    paths = Engine(entry="sim", bench=FakeBench(), devices=FakeDevices(), boxes={"medius": Broken("medius")},
+                   suite=load_suite(FIXTURES), out_dir=tmp_path).run(Selection(boxes=["medius"]), runs=1)
+    tests = load(paths, "medius")["tests"]
+    assert "query timed out" in tests["fake-test"]["failed"]
+    assert len(tests["fake-sim"]["runs"]) == 1
