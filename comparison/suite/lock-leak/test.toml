@@ -1,10 +1,21 @@
-# Seeded from the 2026-11-03 results; legs and pointers are set when the test is ported.
 id = "lock-leak"
 version = 1
 category = "input"
 layout = "main"
 boxes = ["stock", "medius"]
 jams_stock = false
+
+[[legs]]
+id = "x-ramp"
+device = "sim:x-ramp"
+
+[[legs]]
+id = "x-ramp-click"
+device = "sim:x-ramp-click"
+
+[[legs]]
+id = "x-big"
+device = "sim:x-big"
 
 [[tables]]
 section = "input-lock-leak"
@@ -59,7 +70,7 @@ key = "Lock and injection"
 unit = "counts"
 better = "higher"
 layer = "evdev"
-n = "10 s of injection per row"
+n = "10 s of injection per row, 3 runs"
 commands = { stock = "km.move", medius = "MOVE" }
 
 [[tables.rows]]

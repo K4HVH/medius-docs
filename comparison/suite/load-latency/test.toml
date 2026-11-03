@@ -1,10 +1,17 @@
-# Seeded from the 2026-11-03 results; legs and pointers are set when the test is ported.
 id = "load-latency"
 version = 1
 category = "input"
 layout = "main"
 boxes = ["stock", "medius"]
 jams_stock = false
+
+[[legs]]
+id = "rest"
+device = "sim:rest"
+
+[[legs]]
+id = "moving"
+device = "sim:moving"
 
 [[tables]]
 section = "input-latency"
@@ -16,7 +23,7 @@ unit = "ms"
 better = "lower"
 stat = "p50"
 layer = "wire"
-n = "40 per row, 2 runs"
+n = "40 per row, 3 runs"
 commands = { stock = "km.left", medius = "INJECT" }
 resolution = 0.001
 
@@ -66,7 +73,7 @@ unit = "ms"
 better = "lower"
 stat = "p50"
 layer = "wire"
-n = "40 per row, 2 runs"
+n = "40 per row, 3 runs"
 commands = { stock = "km.down", medius = "INJECT" }
 resolution = 0.001
 
