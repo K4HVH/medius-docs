@@ -1,10 +1,13 @@
-# Seeded from the 2026-11-03 results; legs and pointers are set when the test is ported.
 id = "replug"
 version = 1
 category = "recovery"
 layout = "main"
 boxes = ["stock", "medius"]
 jams_stock = false
+
+[[legs]]
+id = "mouse"
+device = "sim:ticking-mouse"
 
 [[tables]]
 section = "recovery-replug"
@@ -14,7 +17,7 @@ label = "Replug times"
 key = "Interval"
 unit = "s"
 better = "lower"
-n = "10 cycles a run, 2 runs"
+n = "10 cycles a run, 3 runs"
 resolution = 0.01
 
 [[tables.rows]]

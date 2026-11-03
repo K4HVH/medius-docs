@@ -1,10 +1,17 @@
-# Seeded from the 2026-11-03 results; legs and pointers are set when the test is ported.
 id = "replug-move"
 version = 1
 category = "recovery"
 layout = "main"
 boxes = ["stock", "medius"]
 jams_stock = true
+
+[[legs]]
+id = "idle"
+device = "sim:slow-mouse"
+
+[[legs]]
+id = "busy"
+device = "sim:busy-mouse"
 
 [[tables]]
 section = "recovery-replug"
@@ -15,7 +22,7 @@ key = "Mouse"
 unit = "ms"
 better = "lower"
 layer = "wire"
-n = "10 cycles"
+n = "10 cycles a run, 3 runs"
 commands = { stock = "km.move_now", medius = "MOVE (NOW)" }
 resolution = 0.01
 
@@ -39,7 +46,7 @@ unit = "ms"
 better = "lower"
 stat = "max"
 layer = "wire"
-n = "10 cycles"
+n = "10 cycles a run, 3 runs"
 commands = { stock = "km.move_now", medius = "MOVE (NOW)" }
 resolution = 0.01
 
