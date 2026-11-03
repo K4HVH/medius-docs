@@ -210,7 +210,6 @@ def test_a_jammed_stock_box_is_cleared_after_every_run(tmp_path, monkeypatch):
     box = FakeBox("stock")
     box.jammed = False
     box.lagging = lambda: box.jammed
-    box.reopen = lambda: None
     started_jammed = []
 
     class Jams:
@@ -238,7 +237,6 @@ def test_a_test_clears_a_jammed_stock_box_mid_run(tmp_path, monkeypatch):
     box = FakeBox("stock")
     box.jammed = False
     box.lagging = lambda: box.jammed
-    box.reopen = lambda: None
     seen = []
 
     class TwoJams:
@@ -298,6 +296,46 @@ def test_the_other_box_is_parked_before_a_box_runs(tmp_path):
     assert devices.parked == ["stock", "medius"]
 
 
+def test_a_test_that_never_asks_for_the_box_runs_with_its_control_port_closed(tmp_path, monkeypatch):
+    box = FakeBox("medius")
+    seen = []
+
+    class Quiet:
+        @staticmethod
+        def run(ctx):
+            ctx.device("rest")
+            seen.append(box.port_open)
+            return {"value": 1}
+
+    monkeypatch.setattr(Engine, "_module", lambda self, t: Quiet)
+    engine(tmp_path, boxes={"medius": box}).run(Selection(tests=["fake-test"], boxes=["medius"]), runs=2)
+    assert seen == [False, False] and box.port_open
+
+
+def test_asking_for_the_box_opens_its_control_port(tmp_path, monkeypatch):
+    box = FakeBox("medius")
+    seen = []
+
+    class Drives:
+        @staticmethod
+        def run(ctx):
+            seen.append(ctx.box.settings() is not None and box.port_open)
+            return {"value": 1}
+
+    monkeypatch.setattr(Engine, "_module", lambda self, t: Drives)
+    engine(tmp_path, boxes={"medius": box}).run(Selection(tests=["fake-test"], boxes=["medius"]), runs=1)
+    assert seen == [True]
+
+
+def test_the_devices_are_told_the_cabling_in_force(tmp_path):
+    devices = FakeDevices()
+    devices.cablings = []
+    devices.cabled = devices.cablings.append
+    bench = FakeBench("native:stock")
+    engine(tmp_path, devices=devices, bench=bench).run(Selection(tests=["fake-test"]), runs=1)
+    assert bench.moves == ["main"] and devices.cablings == ["main"]
+
+
 def test_a_box_returns_to_its_defaults_before_each_test(tmp_path):
     import dataclasses
     suite = load_suite(FIXTURES)
@@ -319,7 +357,6 @@ def test_a_power_cycle_mid_run_puts_the_tests_settings_back(tmp_path, monkeypatc
     box.DEFAULTS = {"interp": 255}
     box.jammed = False
     box.lagging = lambda: box.jammed
-    box.reopen = lambda: None
     seen = []
 
     class Jams:

@@ -33,17 +33,39 @@ class Selection:
     layouts: list = field(default_factory=list)
 
 
+class _Port:
+    def __init__(self, box):
+        self.box, self.closed = box, False
+
+    def close(self):
+        if self.box is not None and hasattr(self.box, "drop") and not self.closed:
+            self.box.drop()
+            self.closed = True
+
+    def get(self):
+        if self.closed:
+            self.box.reopen()
+            self.closed = False
+        return self.box
+
+
 @dataclass
 class Context:
     """What a test's run(ctx) gets: the box under test, the legs it may take, and their devices."""
     box_name: str
-    box: object
+    _port: _Port
     legs: list
     run_index: int
     _present: object
     integrity: dict = field(default_factory=dict)
     _sim: object = None
     _unjam: object = None
+
+    @property
+    def box(self):
+        """The box under test. Its control port stays closed until a test first asks for the box: an open port
+        is polled on the bus beside the clone, and on a real desk it is on another PC."""
+        return self._port.get()
 
     def device(self, leg: str):
         """The device for `leg`, presented (or found) on first use; LegUnavailable if it can't be had."""
@@ -120,6 +142,9 @@ class Engine:
                 accept = next(iter(groups))
                 self.bench.move_to(accept[0])
                 self.bench.wait_for(accept[0])
+                now = accept[0]
+            if hasattr(self.devices, "cabled"):
+                self.devices.cabled(now)
             parked = None
             for b, t in sorted(groups.pop(accept), key=lambda bt: BOX_ORDER.index(bt[0])):
                 if b != parked and hasattr(self.devices, "park_others"):
@@ -175,6 +200,7 @@ class Engine:
             rf.skip(t.id, t.version, "; ".join(skipped.values()))
             return
         box = self.boxes.get(box_name)
+        port = _Port(box)
         presented, playing = {}, {}
         try:
             rf.begin_test(t.id, t.version, t.layout, [leg.id for leg in legs], [], {}, skipped)
@@ -188,6 +214,7 @@ class Engine:
             by_id = {leg.id: leg for leg in legs}
 
             def unjam():
+                port.get()
                 if box_name == "stock" and box.lagging():
                     self._unjam(box, stamp)
                     self._apply_state(box, t.state.get(box_name, {}))
@@ -207,10 +234,12 @@ class Engine:
                 return playing[(leg_id, on)]
 
             for k in range(done, runs):
-                ctx = Context(box_name=box_name, box=box, legs=[leg.id for leg in legs], run_index=k, _present=present,
-                              _sim=getattr(self.devices, "sim_link", None), _unjam=unjam)
+                ctx = Context(box_name=box_name, _port=port, legs=[leg.id for leg in legs], run_index=k,
+                              _present=present, _sim=getattr(self.devices, "sim_link", None), _unjam=unjam)
+                port.close()
                 with integrity.collecting(ctx.integrity):
                     raw = module.run(ctx)
+                port.get()
                 rf.data["tests"][t.id]["devices"] = [p.record(leg if on == box_name else f"{leg}@{on}")
                                                      for (leg, on), p in presented.items()]
                 if any(ctx.integrity.values()):
@@ -229,6 +258,7 @@ class Engine:
         except Exception as e:
             rf.fail(t.id, f"{type(e).__name__}: {e}")
         finally:
+            port.get()
             if box is not None and hasattr(box, "leave"):
                 box.leave()
             self.devices.restore(box_name)

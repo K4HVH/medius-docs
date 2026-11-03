@@ -236,6 +236,12 @@ class SimDevices:
         self._link, self._shapes, self._appears = link, shapes or {}, appears
         self._describe, self._nodes, self.timeout = describe, nodes, timeout
         self._builtin, self._changed = _builtin_id, reenumerated
+        self.cabling = None
+
+    def cabled(self, cabling):
+        """The bench's cabling from now on. Sims are never located again for a leg: locating plays a beacon on
+        every sim, the one behind the box under test included."""
+        self.cabling = cabling
 
     def _builder(self, device, shapes=None):
         if device in self._shapes:
@@ -251,7 +257,7 @@ class SimDevices:
         if box in self.bench.box:
             [name] = [s for s, cfg in self.bench.sim.items() if cfg["box"] == box]
             return name, self.bench.box[box]["clone"]
-        cabling = self.bench.layout_now()
+        cabling = self.cabling or ""
         if not cabling.startswith("native:"):
             raise LegUnavailable(f"the native reference needs a sim on the PC hub; the bench is cabled {cabling}")
         under_test = cabling.split(":", 1)[1]
@@ -285,7 +291,7 @@ class SimDevices:
     def park_others(self, box):
         """A silent mouse on every other box's sim, unless that sim is lent to the PC hub: the PC then polls a
         quiet clone beside the one under test, the same for both boxes."""
-        cabling = self.bench.layout_now()
+        cabling = self.cabling or ""
         lent = cabling.split(":", 1)[1] if cabling.startswith("native:") else None
         for name, cfg in self.bench.sim.items():
             if cfg["box"] == box or (lent and cfg["box"] != lent):
