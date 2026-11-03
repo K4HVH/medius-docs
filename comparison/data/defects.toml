@@ -25,8 +25,8 @@ text = "When the PC switches the clone's configuration, stock reconnects the clo
 [[defects]]
 id = "link-stock-parser-jam"
 box = "stock"
-text = "Moves arriving faster than stock takes them (29 or 30 binary moves in one write, ≥10,000 binary moves/s, 8,000 text moves/s, 32 per write every 16 ms, or back to back) are lost, most with no refusal. Every later command then runs one command late until a power cycle (after 29 moves in one write in 1/2 runs, after 8,000 text moves/s in 5/6). 30 characters sent as key presses back to back lose characters."
-rows = ["link-write-parser-29", "link-write-parser-30", "link-fast-parser-10000", "link-fast-parser-15000", "link-fast-parser-20000", "link-fast-parser-text-8000", "link-clump-parser-2000", "link-back-to-back-parser", "input-typing-pc-pairs"]
+text = "Moves arriving faster than stock takes them (about 30 or more binary moves in one write, ≥10,000 binary moves/s, 8,000 text moves/s, 32 per write every 16 ms, or back to back) are lost, most with no refusal. Every later command then runs one command late until a power cycle. At the edge (about 30 moves in one write, 8,000 text moves/s) some runs end that way and some don't. 30 characters sent as key presses back to back lose characters."
+rows = ["link-back-to-back-parser", "link-clump-parser-2000", "link-fast-parser-10000", "link-fast-parser-15000", "link-fast-parser-20000", "link-fast-parser-text-8000", "link-write-parser-29", "link-write-parser-30", "input-typing-pc-pairs"]
 
 [[defects]]
 id = "recovery-stock-no-wake"
@@ -43,7 +43,7 @@ rows = ["devices-interval-mouse-8", "devices-interval-mouse-10", "devices-interv
 [[defects]]
 id = "pass-stock-class-requests-unanswered"
 box = "stock"
-text = "Class requests to the clone sometimes go unanswered: SET_IDLE, SET_PROTOCOL or GET_PROTOCOL in {row:pass-boot-unanswered:stock} tries. It can miss one while the PC sets it up too, and the PC's HID driver waits 5 s before asking again, so the clone comes up late."
+text = "Requests to the clone sometimes go unanswered: SET_IDLE, SET_PROTOCOL or GET_PROTOCOL in {row:pass-boot-unanswered:stock} tries. While the PC sets the clone up, a descriptor read goes unanswered now and then too, a report descriptor among them, whether the real device answers it or STALLs it. The PC's HID driver waits 5 s before asking again, so the clone comes up late."
 rows = ["pass-boot-unanswered"]
 
 [[defects]]
@@ -94,11 +94,6 @@ box = "stock"
 text = "Descriptors are rewritten to fit the box: IN endpoint 0x87 becomes 0x82, and 65- or 1,024-byte packets are declared as 64 bytes."
 rows = ["devices-imperfect-clone-endpoint-7", "devices-imperfect-clone-wide-packets"]
 
-[[defects]]
-id = "devices-stock-refused-report-unanswered"
-box = "stock"
-text = "A report descriptor request the real device STALLs goes unanswered the first time. The PC waits 5.2 s for it, against 0.15 ms for the native STALL."
-rows = ["devices-clone-slow-report"]
 
 [[defects]]
 id = "devices-stock-bulk-rate"
