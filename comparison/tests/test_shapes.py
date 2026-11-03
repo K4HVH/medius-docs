@@ -12,7 +12,6 @@ import pytest
 
 import medius_shapes
 from medius_shapes import core
-from medius_shapes.personalities import SIM_LIBRARY
 
 HERE = Path(__file__).resolve().parent.parent
 
@@ -47,7 +46,7 @@ def test_shapes_are_data():
         assert all(isinstance(e, core.EndpointSpec) for e in p.endpoints), name
 
 
-needs_sim_library = pytest.mark.skipif(not os.path.isdir(os.path.join(SIM_LIBRARY, "rig")),
+needs_sim_library = pytest.mark.skipif(not os.path.isdir(os.path.join(os.environ.get("SIM_LIBRARY", ""), "rig")),
                                        reason="the sim's library is not checked out beside this repo")
 
 
@@ -83,3 +82,13 @@ def test_the_defaults_match_the_sim_library():
     assert core.Personality().encode() == rp.Personality().encode()
     assert core.device_desc() == rp.device_desc()
     assert core.hid_config() == rp.hid_config()
+
+
+def test_without_the_sim_library_the_shapes_say_where_to_name_it(monkeypatch):
+    import sys
+    from medius_shapes import personalities
+    monkeypatch.setattr(personalities, "SIM_LIBRARY", None)
+    monkeypatch.delenv("SIM_LIBRARY", raising=False)
+    monkeypatch.setitem(sys.modules, "rig", None)
+    with pytest.raises(RuntimeError, match="sim_library"):
+        personalities.sim_module("usbfs")

@@ -2,6 +2,9 @@
 # USB ports are sysfs names (`ls /sys/bus/usb/devices`); serials are the USB serial numbers of the
 # boxes' control ports and the sims' control adapters (`ls /dev/serial/by-id`).
 
+# The sim's library: the tools directory of its checkout, holding rig/ and sim_ctl.py.
+sim_library = "/path/to/sim/tools"
+
 # What the person moving cables calls each box, sim and socket. Cable moves are asked for in these words.
 [names]
 stock = "stock box"

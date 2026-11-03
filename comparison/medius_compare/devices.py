@@ -124,8 +124,8 @@ def describe(port, sysfs="/sys"):
 
 
 class RealDevices:
-    """The device an owner plugged into the box, found on the clone's USB port (the port quiet_clone.py
-    guards). It must sit still while a leg runs: a hand on it would be measured as the box."""
+    """The device an owner plugged into the box, found on the clone's USB port (the one kept off the desktop).
+    It must sit still while a leg runs: a hand on it would be measured as the box."""
 
     def __init__(self, box_name, clone_port=None, settle_s=1.0, nodes=usb_nodes, kinds=kinds_of, moved=moved,
                  describe=describe, wait_s=30.0, every=0.2):
@@ -140,7 +140,7 @@ class RealDevices:
         if leg.device not in STILL:
             raise LegUnavailable(f"leg {leg.id} plays {leg.device}, which needs the sim")
         if not self.clone_port:
-            raise LegUnavailable("quiet_clone.py is not running with the clone's USB port")
+            raise LegUnavailable("no USB port is known for the clone: nothing keeps it off the desktop")
         end = time.monotonic() + self.wait_s
         while not (nodes := self._nodes(self.clone_port)) and time.monotonic() < end:
             time.sleep(self.every)

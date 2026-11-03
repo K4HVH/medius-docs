@@ -1,6 +1,7 @@
 """Turning a shape into what the sim's library uploads, and the shapes of devices that stream, take OUT traffic,
 halt and switch settings. The sim's library is reached only through this module, from a checkout of it beside
-this repository (SIM_LIBRARY overrides where)."""
+whatever path the caller has it on, or from `SIM_LIBRARY` (set from the bench config's `sim_library`, or the
+environment variable of that name)."""
 import os
 import sys
 from dataclasses import asdict, fields
@@ -8,13 +9,21 @@ from dataclasses import asdict, fields
 from . import core
 from .clone_cases import VEND8_IN_DESC
 
-SIM_LIBRARY = os.environ.get("SIM_LIBRARY", os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), "..", "..", "..", "medius-box", "tools"))
+SIM_LIBRARY = None
 
 
 def _rig():
-    if SIM_LIBRARY not in sys.path:
-        sys.path.insert(0, SIM_LIBRARY)
+    try:
+        from rig import personality
+        return personality
+    except ImportError:
+        pass
+    where = SIM_LIBRARY or os.environ.get("SIM_LIBRARY")
+    if not where:
+        raise RuntimeError("the sim's library isn't on the path: name its tools directory as sim_library in the "
+                           "bench config, or in SIM_LIBRARY")
+    if where not in sys.path:
+        sys.path.insert(0, where)
     from rig import personality
     return personality
 

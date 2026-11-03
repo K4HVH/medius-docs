@@ -166,3 +166,20 @@ def test_under_sudo_the_config_is_the_invoking_users(tmp_path, monkeypatch):
     monkeypatch.setenv("SUDO_USER", "someone")
     monkeypatch.setattr(pwd, "getpwnam", lambda name: type("P", (), {"pw_dir": str(home)})())
     assert bench_mod.default_config() == home / ".config" / "medius-compare" / "bench.toml"
+
+
+def test_the_config_names_the_sim_library():
+    assert Bench({**CONFIG, "sim_library": "/opt/sim/tools"}).sim_library == "/opt/sim/tools"
+    assert Bench(CONFIG).sim_library is None
+
+
+def test_the_sim_entry_hands_the_shapes_the_configured_sim_library(monkeypatch, tmp_path):
+    from medius_compare import boxes, cli
+    from medius_shapes import personalities
+    monkeypatch.setattr(personalities, "SIM_LIBRARY", None)
+    monkeypatch.setattr(Bench, "load", classmethod(lambda cls, path=None: cls({**CONFIG, "sim_library": "/opt/sim"})))
+    monkeypatch.setattr(boxes, "open_box", lambda kind, port: FakeBox(kind))
+    monkeypatch.setattr(Bench, "control_port", lambda self, box: f"/dev/serial/{box}")
+    args = type("A", (), {"bench": None, "box": "medius", "out": tmp_path})()
+    cli._engine("sim", args, {})
+    assert personalities.SIM_LIBRARY == "/opt/sim"
