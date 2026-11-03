@@ -78,7 +78,9 @@ match Device::open_by_id("123456789abc") {
           <A href="/library/types/enums#device-kind"><code>DeviceKind</code></A> is a mouse. If no box
           clones a mouse, a connected box on another protocol (its clone unread) gives{' '}
           <A href="/library/types/errors"><code>Error::BadProtoVer</code></A>. With neither, it returns{' '}
-          <A href="/library/types/errors"><code>Error::NotFound</code></A>.
+          <A href="/library/types/errors"><code>Error::NotFound</code></A>, or{' '}
+          <A href="/library/types/errors"><code>Error::PortBusy</code></A> when another process holds
+          a box's port.
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`use medius::Device;

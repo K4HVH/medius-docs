@@ -27,8 +27,8 @@ const Api: Component = () => {
           <table class="api-params">
             <thead><tr><th>Call</th><th>Does</th></tr></thead>
             <tbody>
-              <tr><td><code>Device.open(path)</code></td><td>Open a serial path and <A href="/native/connection#handshake">handshake</A>.</td></tr>
-              <tr><td><code>Device.find()</code></td><td>Open the first box found, or raise <A href="/bindings/python/types#subclasses"><code>NotFoundError</code></A>.</td></tr>
+              <tr><td><code>Device.open(path)</code></td><td>Open a serial path and <A href="/native/connection#handshake">handshake</A>. On Linux, raises <code>PortBusyError</code> if another process holds the port.</td></tr>
+              <tr><td><code>Device.find()</code></td><td>Open the first box found, or raise <A href="/bindings/python/types#subclasses"><code>NotFoundError</code></A>. On Linux, raises <code>PortBusyError</code> if another process holds that box's port.</td></tr>
               <tr><td><code>dev.clone()</code></td><td>Another handle to the same link.</td></tr>
               <tr><td><code>dev.close()</code></td><td>Free the handle once no call on it is running (a call in another thread finishes first). A <a href="https://docs.python.org/3/reference/datamodel.html#context-managers" target="_blank" rel="noreferrer"><code>with</code></a> block and GC call it automatically.</td></tr>
               <tr><td><code>with Device.find() as dev:</code></td><td>Context manager that closes the link on block exit.</td></tr>
@@ -43,9 +43,9 @@ const Api: Component = () => {
           <table class="api-params">
             <thead><tr><th>Call</th><th>Does</th></tr></thead>
             <tbody>
-              <tr><td><code>medius.list_boxes(cap=16)</code></td><td>Enumerate every connected box as a <A href="/bindings/python/types#boxinfo"><code>BoxInfo</code></A>. Reads each box's version, and its device info if it speaks this protocol (<code>device</code> is <code>None</code> for a box on another protocol).</td></tr>
+              <tr><td><code>medius.list_boxes(cap=16)</code></td><td>Enumerate every connected box as a <A href="/bindings/python/types#boxinfo"><code>BoxInfo</code></A>. Reads each box's version, and its device info if it speaks this protocol (<code>device</code> is <code>None</code> for a box on another protocol). On Linux, a box whose port another process holds is left out. A box on firmware before 3.4.0 runs at 4&nbsp;Mbaud and isn't listed: open it by its port with <code>Device.open_for_update</code>.</td></tr>
               <tr><td><code>Device.open_by_id(id)</code></td><td>Open the box whose identity matches <code>id</code> (device MAC hex or CH343 serial) and handshake. Raises <code>BadProtoVerError</code> when that box speaks another protocol, <code>NotFoundError</code> when no box matches, <code>PortBusyError</code> when none matches and another process holds a box's port.</td></tr>
-              <tr><td><code>Device.find_mouse_box()</code></td><td>Open the first box whose clone is a mouse. If none is found and a connected box is on another protocol, raises <code>BadProtoVerError</code> (that box's clone can't be read).</td></tr>
+              <tr><td><code>Device.find_mouse_box()</code></td><td>Open the first box whose clone is a mouse. If none is found and a connected box is on another protocol, raises <code>BadProtoVerError</code> (that box's clone can't be read); if none is found and another process holds a box's port, <code>PortBusyError</code>.</td></tr>
               <tr><td><code>Device.find_keyboard_box()</code></td><td>Open the first box whose clone is a keyboard, with the same errors.</td></tr>
             </tbody>
           </table>
@@ -197,7 +197,7 @@ const Api: Component = () => {
               <tr><td><code>dev.activate_firmware()</code></td><td>Commit everything staged and boot into it, host chip first.</td></tr>
               <tr><td><code>dev.abort_update(target)</code></td><td>Throw a staged or in-flight transfer away.</td></tr>
               <tr><td><code>dev.update_firmware(target, image, progress=None)</code></td><td>Stage one image and activate it in a single call. A refused activate aborts the staged image before <code>UpdateError</code> is raised.</td></tr>
-              <tr><td><code>dev.wait_firmware_confirmed()</code></td><td><A href="/bindings/python/types#firmwareinfo"><code>FirmwareInfo</code></A> once neither chip is on <A href="/native/commands/update#rollback">probation</A>, polling the box through the reboot after an activate. After 55&nbsp;s it raises <code>UpdateError</code> if a chip is still on probation, <code>QueryTimeoutError</code> if the box has not replied.</td></tr>
+              <tr><td><code>dev.wait_firmware_confirmed()</code></td><td><A href="/bindings/python/types#firmwareinfo"><code>FirmwareInfo</code></A> once neither chip is on <A href="/native/commands/update#rollback">probation</A>, polling the box through the reboot after an activate. A reply counts only once the box shows the reboot (its <A href="/native/connection#hello">ready hello</A>, or a query left unanswered), or after 5&nbsp;s, and a device from <code>open_for_update</code> follows the box to its new control rate. After 55&nbsp;s it raises <code>UpdateError</code> if a chip is still on probation, <code>QueryTimeoutError</code> if the box has not replied.</td></tr>
             </tbody>
           </table>
         </div>
