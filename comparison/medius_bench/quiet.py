@@ -138,10 +138,26 @@ def hold(usb_ports, stop=None):
         os.close(fd)
 
 
+def held_elsewhere(usb_ports):
+    """Another live process (a quiet_clone.py left running) holds the rule, and it covers `usb_ports`."""
+    try:
+        text = open(RULE).read()
+    except OSError:
+        return False
+    m = re.search(r"^# holder (\d+)$", text, re.M)
+    if not m or int(m.group(1)) == os.getpid() or not os.path.exists(f"/proc/{m.group(1)}"):
+        return False
+    return set(usb_ports) <= set(re.findall(r'KERNELS=="([^"]+)"', text))
+
+
 @contextlib.contextmanager
 def quieted(usb_ports, native=None):
-    """The clone kept off this desktop for the body; the rule goes when it ends, Ctrl-C included."""
+    """The clone kept off this desktop for the body; the rule goes when it ends, Ctrl-C included. A rule another live
+    holder keeps for these ports is left as it is: removing it would hand that holder's clone back to the desktop."""
     ports = list(usb_ports) + ([native[1]] if native else [])
+    if held_elsewhere(ports):
+        yield
+        return
     stop = threading.Event()
     holder = threading.Thread(target=hold, args=(ports, stop), daemon=True, name="quiet")
     set_rule(ports, True, native)
