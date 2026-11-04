@@ -4,7 +4,7 @@ from medius_compare.declare import LegDecl
 from medius_compare.devices import LegUnavailable, Presented, RealDevices, SimDevices
 from medius_shapes import core
 
-CLONE = "1-2.3"
+CLONE = "2-3.1"
 
 
 def found(port):
@@ -50,9 +50,9 @@ class FakeLink:
 
 
 class FakeBench:
-    box = {"stock": {"clone": "1-2.2"}, "medius": {"clone": CLONE}}
-    sim = {"stock": {"serial": "SIMSTOCK", "box": "stock", "native": "1-1.2"},
-           "medius": {"serial": "SIMMEDIUS", "box": "medius", "native": "1-1.2"}}
+    box = {"stock": {"clone": "2-3.4"}, "medius": {"clone": CLONE}}
+    sim = {"stock": {"serial": "SIMSTOCK", "box": "stock", "native": "2-5.1"},
+           "medius": {"serial": "SIMMEDIUS", "box": "medius", "native": "2-5.1"}}
 
     def layout_now(self):
         raise AssertionError("located the sims again, which plays a beacon on every sim")
@@ -77,10 +77,10 @@ def test_sim_devices_presents_on_the_box_sim_and_native_sim():
     d.present(LegDecl("rest", "sim:fake"), "stock")
     d.present(LegDecl("rest", "sim:fake"), "native")
     assert [port for port, _ in FakeLink.uploads] == ["/dev/serial/by-id/sim-stock", "/dev/serial/by-id/sim-stock"]
-    assert appeared == [("1-2.2", 0x1D50, 0x6299), ("1-1.2", 0x1D50, 0x6299)]
+    assert appeared == [("2-3.4", 0x1D50, 0x6299), ("2-5.1", 0x1D50, 0x6299)]
     d = sim_devices("native:stock", appeared)
     p = d.present(LegDecl("rest", "sim:fake"), "native")
-    assert FakeLink.uploads[-1][0] == "/dev/serial/by-id/sim-medius" and p.nodes == ["/dev/input/1-1.2"]
+    assert FakeLink.uploads[-1][0] == "/dev/serial/by-id/sim-medius" and p.nodes == ["/dev/input/2-5.1"]
 
 
 def test_the_native_leg_leaves_the_box_sim_playing_its_leg():
@@ -95,7 +95,7 @@ def test_the_native_leg_leaves_the_box_sim_playing_its_leg():
 def test_a_shape_that_never_appears_is_unavailable():
     d = sim_devices("main", [])
     d._appears = lambda port, vid, pid, timeout: False
-    with pytest.raises(LegUnavailable, match="1-2.3"):
+    with pytest.raises(LegUnavailable, match="2-3.1"):
         d.present(LegDecl("rest", "sim:fake"), "medius")
 
 
@@ -118,17 +118,17 @@ def fake_sysfs(tmp_path, port, vid, pid):
 
 def test_appears_looks_once_even_with_no_time_to_wait(tmp_path):
     from medius_compare.devices import appears
-    fake_sysfs(tmp_path, "1-1.2", 0x1D50, 0x6FF0)
-    assert appears("1-1.2", 0x1D50, 0x6FF0, 0.0, sysfs=str(tmp_path))
-    assert not appears("1-1.2", 0x1D50, 0x6FF1, 0.0, sysfs=str(tmp_path))
+    fake_sysfs(tmp_path, "2-5.1", 0x1D50, 0x6FF0)
+    assert appears("2-5.1", 0x1D50, 0x6FF0, 0.0, sysfs=str(tmp_path))
+    assert not appears("2-5.1", 0x1D50, 0x6FF1, 0.0, sysfs=str(tmp_path))
 
 
 def test_locate_finds_the_port_the_beacon_appears_on():
-    seen = {"1-1.2": (0x1D50, 0x6FF0)}
+    seen = {"2-5.1": (0x1D50, 0x6FF0)}
     FakeLink.uploads = []
     d = SimDevices(FakeBench(), link=FakeLink,
                    appears=lambda port, vid, pid, timeout: seen.get(port) == (vid, pid))
-    assert d.locate("SIMSTOCK") == "1-1.2"
+    assert d.locate("SIMSTOCK") == "2-5.1"
     assert FakeLink.uploads[-1][0] == "/dev/serial/by-id/sim-stock"
 
 
@@ -143,10 +143,10 @@ def test_a_builtin_leg_presents_the_sims_own_device():
 
 def test_a_builtin_the_clone_keeps_counts_as_presented(tmp_path):
     from medius_compare.devices import reenumerated
-    fake_sysfs(tmp_path, "1-2.3", 0x1D50, 0x6160)
-    (tmp_path / "bus" / "usb" / "devices" / "1-2.3" / "devnum").write_text("9\n")
-    assert reenumerated("1-2.3", 9, 3.0, sysfs=str(tmp_path), keep_s=0.2)
-    assert not reenumerated("1-2.4", 9, 0.3, sysfs=str(tmp_path), keep_s=0.2)
+    fake_sysfs(tmp_path, "2-3.1", 0x1D50, 0x6160)
+    (tmp_path / "bus" / "usb" / "devices" / "2-3.1" / "devnum").write_text("9\n")
+    assert reenumerated("2-3.1", 9, 3.0, sysfs=str(tmp_path), keep_s=0.2)
+    assert not reenumerated("2-3.2", 9, 0.3, sysfs=str(tmp_path), keep_s=0.2)
 
 
 def test_the_other_box_sim_is_parked_unless_it_is_lent():

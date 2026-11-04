@@ -11,6 +11,7 @@ import { buildArtifacts, type PageRecord } from './lib/artifacts';
 import { ROUTES, routeFor } from '../src/app/routes';
 import { LIVE_PATHS } from '../src/app/site';
 import { comparisonFiles } from '../src/app/data/comparison/files';
+import { PYZ, packageComparison } from './comparison-package';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const DIST = join(ROOT, 'dist');
@@ -26,7 +27,7 @@ const embedColour = () => {
   if (meta && colour) meta.setAttribute('content', colour);
 };
 
-function writeFile(path: string, content: string): void {
+function writeFile(path: string, content: string | Uint8Array): void {
   mkdirSync(dirname(path), { recursive: true });
   writeFileSync(path, content);
 }
@@ -190,6 +191,7 @@ async function main(): Promise<void> {
 
   writeFile(join(DIST, 'routes.json'), JSON.stringify(ROUTES.map((r) => r.path)) + '\n');
   for (const [path, body] of comparisonFiles()) writeFile(join(DIST, path), body);
+  packageComparison(join(DIST, PYZ));
   buildArtifacts({ dist: DIST, site: SITE, pages: records, homeLastmod: lastmod['/'] });
   process.stdout.write(`prerendered ${records.length} routes + agent artifacts into ${DIST}\n`);
 }

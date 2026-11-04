@@ -83,6 +83,16 @@ describe('a measure', () => {
     expect(cells(box)[3].textContent).toBe('Stock');
   });
 
+  it('writes the native reference under the label of a row ranked another way', () => {
+    const src = [{ file: 'a.json', ptr: '/a' }];
+    const rate: MeasureTable = {
+      kind: 'measure', label: 'Rate', key: 'Endpoint', unit: '/s', better: 'higher',
+      rows: [{ id: 'a', label: 'Bulk IN', stock: { value: 3996.2, src }, medius: { value: 8758.2, src }, native: { lo: 13093, hi: 13104, src } }],
+    };
+    const el = show(() => <PairTable key="Test" items={[{ table: rate, row: rate.rows[0] }]} scale="row" defects={[]} />);
+    expect(rowOf(el, 'Bulk IN').querySelector('td .sub')!.textContent).toBe('Native 13,093-13,104/s');
+  });
+
   it('marks a row a defect names, linked to that defect', () => {
     const a = rowOf(section(0), 'Fresh clone').querySelector('a.status.bad')!;
     expect(a.getAttribute('href')).toBe('/comparison/defect-fresh-clone');

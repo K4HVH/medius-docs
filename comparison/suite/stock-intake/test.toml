@@ -138,7 +138,7 @@ key = "Runs"
 unit = "counts"
 better = "higher"
 layer = "wire"
-n = "3 runs of 2 s in each of 3 runs (1 on stock)"
+n = "Three 2 s tries in each of 3 runs (1 on stock)"
 commands = { stock = "km.move", medius = "MOVE" }
 
 [[tables.rows]]
@@ -174,5 +174,5 @@ ptr = "/outcomes/link-fast-parser-20000"
 
 [[tables.rows]]
 id = "link-fast-parser-text-8000"
-label = "8,000 text moves/s, 3 tries in each of 3 runs"
+label = "8,000 text moves/s, 3 tries a run"
 ptr = "/outcomes/link-fast-parser-text-8000"

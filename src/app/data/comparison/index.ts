@@ -1,4 +1,4 @@
-// The comparison's results, copied from medius-fw and checked by `bun run comparison:sync`.
+// The comparison's results, built from comparison/ by scripts/comparison-generate.ts before every dev, build and test run.
 import raw from './results.json';
 import type { Category, Defect, PairRow, Results, Section, SettingsTable, Table } from './types';
 

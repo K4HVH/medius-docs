@@ -213,34 +213,34 @@ commands = { stock = "km.move", medius = "MOVE" }
 id = "inj-total-count-1000"
 label = "Counting mouse, 1,000 moves/s"
 ptr = "/count/results/1/x_delivered"
-of = 15000
+of_ptr = "/count/results/1/sent"
 
 [[tables.rows]]
 id = "inj-total-count-500"
 label = "Counting mouse, 500 moves/s"
 ptr = "/count/results/2/x_delivered"
-of = 7500
+of_ptr = "/count/results/2/sent"
 
 [[tables.rows]]
 id = "inj-total-count-125"
 label = "Counting mouse, 125 moves/s"
 ptr = "/count/results/3/x_delivered"
-of = 1875
+of_ptr = "/count/results/3/sent"
 
 [[tables.rows]]
 id = "inj-total-sine-1000"
 label = "Mouse moving at a varying speed, 1,000 moves/s"
 ptr = "/sine/results/0/x_delivered"
-of = 15000
+of_ptr = "/sine/results/0/sent"
 
 [[tables.rows]]
 id = "inj-total-sine-500"
 label = "Mouse moving at a varying speed, 500 moves/s"
 ptr = "/sine/results/1/x_delivered"
-of = 7500
+of_ptr = "/sine/results/1/sent"
 
 [[tables.rows]]
 id = "inj-total-sine-125"
 label = "Mouse moving at a varying speed, 125 moves/s"
 ptr = "/sine/results/2/x_delivered"
-of = 1875
+of_ptr = "/sine/results/2/sent"

@@ -1,5 +1,5 @@
-// Each row's result, worked out from its values by the rules in medius-fw docs/comparison/results.schema.md,
-// and each value as the site writes it.
+// Each row's result, worked out from its values by the rules the Method page states, and each value as the site
+// writes it.
 import type { Box, FeatureRow, MeasureRow, OutcomeRow, PairRow, Table, Value } from './types';
 
 export type Result = Box | 'equal' | 'differs' | null;

@@ -95,3 +95,26 @@ def test_a_no_sim_run_keeps_the_clone_quiet_while_it_runs(monkeypatch, tmp_path)
     cli.main("no-sim", ["run", "--box", "stock", "--port", "/dev/ttyACM0", "--usb-port", "1-4",
                         "--out", str(tmp_path)])
     assert seen == [("quiet", ["1-4"]), ("guard",), ("run",), ("loud",)]
+
+
+def test_a_run_takes_each_jam_prone_test_once_on_stock_unless_told(monkeypatch, tmp_path):
+    from medius_compare import cli
+    seen = []
+
+    @contextlib.contextmanager
+    def quieted(ports, native=None):
+        yield
+
+    class Engine:
+        def run(self, selection, runs, resume, stock_jam_runs=None):
+            seen.append((runs, stock_jam_runs))
+            return []
+
+    monkeypatch.setattr(cli.os, "geteuid", lambda: 0)
+    monkeypatch.setattr(quiet, "quieted", quieted)
+    monkeypatch.setattr(clone_guard, "engage", lambda: None)
+    monkeypatch.setattr(cli, "_engine", lambda entry, args, suite: Engine())
+    base = ["run", "--box", "stock", "--port", "/dev/ttyACM0", "--usb-port", "1-4", "--out", str(tmp_path)]
+    cli.main("no-sim", base)
+    cli.main("no-sim", base + ["--stock-jam-runs", "3"])
+    assert seen == [(3, 1), (3, 3)]

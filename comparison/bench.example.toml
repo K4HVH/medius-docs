@@ -2,7 +2,7 @@
 # USB ports are sysfs names (`ls /sys/bus/usb/devices`); serials are the USB serial numbers of the
 # boxes' control ports and the sims' control adapters (`ls /dev/serial/by-id`).
 
-# The sim's library: the tools directory of its checkout, holding rig/ and sim_ctl.py.
+# The sim's library: the directory holding the sim's Python tools.
 sim_library = "/path/to/sim/tools"
 
 # What the person moving cables calls each box, sim and socket. Cable moves are asked for in these words.
@@ -11,29 +11,29 @@ stock = "stock box"
 medius = "Medius box"
 "sim.stock" = "stock sim"
 "sim.medius" = "Medius sim"
-"1-1.2" = "PC hub socket 2"
+"2-5.1" = "PC hub socket 2"
 
 # Each box: its control port's serial and the USB port its clone enumerates on.
 [box.stock]
 control = "STOCK_CONTROL_SERIAL"
-clone = "1-2.2"
+clone = "2-3.4"
 # The hub ports that carry all the stock box's power: its two cables and its sim's control adapter (the sim
 # feeds the box through USB3 while its adapter has power). The hub must switch each port's power
 # (uhubctl lists it as "ppps").
-power = { hub = "1-1", ports = [1, 3, 4] }
+power = { hub = "2-5", ports = [1, 3, 4] }
 
 [box.medius]
 control = "MEDIUS_CONTROL_SERIAL"
-clone = "1-2.3"
+clone = "2-3.1"
 
 # Each sim: its control adapter's serial, the box it sits behind, and the PC hub port its device plugs into
 # when it plays the native reference for the other box.
 [sim.stock]
 serial = "STOCK_SIM_SERIAL"
 box = "stock"
-native = "1-1.2"
+native = "2-5.1"
 
 [sim.medius]
 serial = "MEDIUS_SIM_SERIAL"
 box = "medius"
-native = "1-1.2"
+native = "2-5.1"

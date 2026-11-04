@@ -433,3 +433,23 @@ def test_a_test_can_ask_for_a_power_cycle_of_a_stock_box_that_is_not_behind(tmp_
     Engine(entry="sim", bench=bench, devices=FakeDevices(), boxes={"stock": FakeBox("stock")}, suite=suite,
            out_dir=tmp_path / "b").run(Selection(tests=["fake-test"]), runs=1)
     assert hands == ["stock"]
+
+
+def test_a_run_file_is_named_and_stamped_in_utc_and_names_no_distribution(tmp_path, monkeypatch):
+    import os
+    from datetime import datetime, timezone
+    from medius_compare import engine as engine_mod
+    monkeypatch.setenv("TZ", "Australia/Brisbane")
+    import time
+    time.tzset()
+    try:
+        monkeypatch.setattr(engine_mod.os, "uname", lambda: os.uname_result(("Linux", "pc", "7.2.13-200.fc44.x86_64", "#1", "x86_64")))
+        before = datetime.now(timezone.utc).replace(microsecond=0)
+        [path] = engine(tmp_path).run(Selection(tests=["fake-test"], boxes=["medius"]), runs=1)
+        named = datetime.strptime(path.stem, "%Y%m%d-%H%M%S").replace(tzinfo=timezone.utc)
+        assert abs((named - before).total_seconds()) < 60
+        doc = json.loads(path.read_text())
+        assert doc["host"]["kernel"] == "7.2.13"
+    finally:
+        monkeypatch.delenv("TZ")
+        time.tzset()

@@ -5,7 +5,7 @@ import os
 import platform
 import sys
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 from . import TOOL_VERSION
@@ -98,7 +98,7 @@ def _host() -> dict:
         package = medius.version_string()
     except Exception:
         package = None
-    return {"kernel": os.uname().release, "python": platform.python_version(), "medius_package": package}
+    return {"kernel": os.uname().release.split("-")[0], "python": platform.python_version(), "medius_package": package}
 
 
 class Engine:
@@ -124,7 +124,7 @@ class Engine:
 
     def run(self, selection: Selection, runs: int = 3, resume: str | None = None,
             stock_jam_runs: int | None = None) -> list:
-        stamp = resume or datetime.now().strftime("%Y%m%d-%H%M%S")
+        stamp = resume or datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
         tests = self.select(selection)
         if not tests:
             raise ValueError("no test matches that choice of tests, categories and layout")

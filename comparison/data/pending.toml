@@ -2,10 +2,10 @@
 id = "input-typing-string"
 category = "input"
 test = "300 characters typed by the box's typing command"
-needs = "A typing command on Medius. A host types through INJECT, and control-protocol.md (protocol 10) defines no typing command. Stock types them exactly with km.string at ~10 characters/s (typing_long_stock_v4122.json)"
+needs = "A typing command on Medius. A host types through INJECT, and the Medius protocol has no typing command. Stock types with km.string"
 
 [[pending]]
 id = "input-typing-burst"
 category = "input"
 test = "300 characters typed by the PC as key presses sent back to back"
-needs = "A stock run: commands back to back leave stock's parser one command behind until a power cycle. Medius keeps the order and leaves no key held, and delivers 86/300 past its 160-change record (typing_long_medius_v347.json)"
+needs = "A stock run: key presses sent back to back leave stock's parser one command behind until a power cycle"

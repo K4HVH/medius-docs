@@ -47,3 +47,7 @@ src/generated/
 
 # Python bytecode beside the public comparison tool
 __pycache__/
+
+# Written by scripts/comparison-generate.ts from comparison/ before every dev, build and test run
+src/app/data/comparison/results.json
+src/app/data/comparison/tool.json

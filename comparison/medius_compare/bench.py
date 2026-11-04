@@ -187,7 +187,7 @@ class Bench:
                 time.sleep(every)
 
     def sims(self):
-        return {name: {"serial": sim["serial"], **self._describe(sim["serial"])} for name, sim in self.sim.items()}
+        return {name: self._describe(sim["serial"]) for name, sim in self.sim.items()}
 
 
 class SoloBench:
