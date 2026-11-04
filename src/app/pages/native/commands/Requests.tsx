@@ -488,7 +488,7 @@ const Requests: Component = () => {
         </p>
         <p>
           <code>relay_drops</code> is counted apart from the native-input drop counters, so lost
-          relayed traffic doesn't read as lost native input. The eight narrowed counters clamp at
+          relayed traffic doesn't read as lost native input. The nine narrowed counters clamp at
           their max instead of wrapping. The three drop counts are full width.
         </p>
         <p>
@@ -503,7 +503,7 @@ const Requests: Component = () => {
           (the mouse, the keyboard, the consumer control) drops only the locks, injected usages and
           owed motion held on that role.
         </p>
-        <pre class="api-signature">QUERY  what = 5  ·  RESP 31 bytes</pre>
+        <pre class="api-signature">QUERY  what = 5  ·  RESP 33 bytes</pre>
         <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
         <div class="api-response-label">PAYLOAD</div>
         <div class="table-scroll">
@@ -525,6 +525,7 @@ const Requests: Component = () => {
               <tr><td>21</td><td><code>host_rx_drops</code></td><td><code>u32</code></td><td>the same count on the host chip, relayed over the link; should stay 0</td></tr>
               <tr><td>25</td><td><code>relay_drops</code></td><td><code>u32</code></td><td>relayed traffic and commands that went no further, none of it native input. IN: a vendor IN packet the host chip's link would not carry, or that found its endpoint's queue full of the control PC's <code>RAW</code> packets, or a native zero-length packet answering a poll the PC did not make (the one poll the box runs ahead of a suspended PC). OUT: a packet the box had no room to queue, that failed three times on the real device's bus, or that a bus reset or <code>SET_INTERFACE</code> overtook; a <code>RAW</code> OUT packet with no room to wait. Other: a relayed request, or a packet or step of one, the box could not queue (the request then ends, NAKed until the game PC gives up); a flagged <code>MOVE</code> the motion batch could not take; any frame other than native input that either chip's link receive ring dropped; a frame from the control PC its receive ring had no room for (one per frame), or an overrun of the control port's UART (one per overrun, however many frames it cost)</td></tr>
               <tr><td>29</td><td><code>session</code></td><td><code>u16</code></td><td>releases of host-set state; wraps at 0xFFFF, so compare for inequality</td></tr>
+              <tr><td>31</td><td><code>host_restarts</code></td><td><code>u16</code></td><td>restarts of the host chip since the device chip booted, each too short to drop the inter-chip link, so counted here and nowhere else; should stay 0 outside an <A href="/native/commands/update">update</A> or a <A href="/native/commands/admin#reboot"><code>REBOOT</code></A></td></tr>
             </tbody>
           </table>
         </div>
@@ -565,13 +566,13 @@ const Requests: Component = () => {
           </table>
         </div>
         <div class="api-response-label">EXAMPLE</div>
-        <p>4096 emits, every drop counter at 0, <code>session</code> at 2:</p>
+        <p>4096 emits, every drop counter at 0, <code>session</code> at 2, no host-chip restart:</p>
         <ByteStrip
           fields={[
             { value: 'A5', name: 'SOF' },
             { value: '06', name: 'TYPE' },
             { value: '00', name: 'SEQ' },
-            { value: '1F 00', name: 'LEN' },
+            { value: '21 00', name: 'LEN' },
             { value: '05', name: 'what' },
             { value: '00 10 00 00', name: 'inject_emits' },
             { value: '00 00', name: 'drops' },
@@ -585,6 +586,7 @@ const Requests: Component = () => {
             { value: '00 00 00 00', name: 'host_rx_drops' },
             { value: '00 00 00 00', name: 'relay_drops' },
             { value: '02 00', name: 'session' },
+            { value: '00 00', name: 'host_restarts' },
             { value: 'lo hi', name: 'CRC16' },
           ]}
         />

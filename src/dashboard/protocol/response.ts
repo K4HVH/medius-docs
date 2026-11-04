@@ -269,9 +269,9 @@ export function parseResp(payload: Uint8Array): Resp | null {
       };
     }
     case Q_STATS: {
-      // 31 bytes since protocol 9: the eight narrowed counters, the three full-width drop counts at
-      // payload offsets 17, 21 and 25, then the wrapping session count at 29.
-      if (payload.length < 31) return null;
+      // 33 bytes since protocol 10: the eight narrowed counters, the three full-width drop counts at
+      // payload offsets 17, 21 and 25, the wrapping session count at 29, then the host chip's restarts at 31.
+      if (payload.length < 33) return null;
       return {
         kind: 'stats',
         stats: {
@@ -287,6 +287,7 @@ export function parseResp(payload: Uint8Array): Resp | null {
           hostRxDrops: u32le(payload, 21),
           relayDrops: u32le(payload, 25),
           session: u16le(payload, 29),
+          hostRestarts: u16le(payload, 31),
         },
       };
     }

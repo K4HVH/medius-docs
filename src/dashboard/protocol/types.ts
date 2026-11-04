@@ -237,6 +237,8 @@ export interface Stats {
   relayDrops: number;
   // The times the box released state a host set. Wraps at 0xFFFF: compare for inequality.
   session: number;
+  // Restarts of the host chip since the device chip booted. Saturates; should stay 0 outside an update or a REBOOT.
+  hostRestarts: number;
 }
 
 // Injection override action, shared by INJECT across buttons, keys, and media (§3.2). Wire values

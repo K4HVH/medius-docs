@@ -467,8 +467,8 @@ assert!(matches!(err, Error::BadProtoVer { got: 11 }));`}</code></pre>
             <tbody>
               <tr>
                 <td><code>restart</code></td>
-                <td>A device-chip boot. A <code>RESET</code> with its store flag and <code>reboot(RebootTarget::DeviceRun)</code> restart the mock too.</td>
-                <td>The hello, sent now and again on the next frame the mock receives. <code>session</code> goes back to 0.</td>
+                <td>A device-chip boot. A <code>RESET</code> with its store flag and <code>reboot(RebootTarget::DeviceRun)</code> restart the mock too. <code>reboot(RebootTarget::HostRun)</code> restarts the host chip alone: it counts one in <code>host_restarts</code> and releases nothing.</td>
+                <td>The hello, sent now and again on the next frame the mock receives. <code>session</code> and <code>host_restarts</code> go back to 0.</td>
               </tr>
               <tr>
                 <td><code>link_lost</code></td>
