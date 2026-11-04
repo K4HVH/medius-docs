@@ -600,9 +600,9 @@ describe('LOCK command (§3.8)', () => {
     expect(MIN_PROTO_VER).toBeLessThanOrEqual(PROTO_VER);
   });
 
-  it('PROTO_VER matches the firmware that speaks this TRANSFER', () => {
+  it('PROTO_VER matches the firmware that speaks this TRANSFER and this STATS', () => {
     // v10 (firmware 3.5.0) puts the box's wait in TRANSFER and sends TRANSFER_RESP in chunks that name the
-    // stage. RESP(STATS) keeps the 31 bytes v9 (firmware 3.4.2) gave it.
+    // stage, and grows RESP(STATS) from v9's 31 bytes to 33, counting the host chip's restarts.
     expect(PROTO_VER).toBe(10);
   });
 
@@ -1574,12 +1574,14 @@ describe('device-info RESP decoding (v1.4.0)', () => {
     expect(nativeHz(resp.rate)).toBeNull();
   });
 
-  it('STATS (§4.6) with saturated fields, a 32-bit count, both link drop counts, relay drops and session', () => {
+  it('STATS (§4.6) with saturated fields, a 32-bit count, both link drop counts, relay drops, session and host restarts', () => {
     // The three u32 counters protocol 9 appends are full-width and do not saturate, so a value past
-    // what the narrowed fields can hold has to survive the decode. session is the u16 after them.
+    // what the narrowed fields can hold has to survive the decode. session is the u16 after them, and
+    // the host restart count protocol 10 appends the u16 after that.
     const p = new Uint8Array([
       5, 0x04, 0x03, 0x02, 0x01, 0xff, 0xff, 0x0a, 0x00, 0xff, 0x02, 0xff, 0xff, 0x07, 0x00, 0x09,
-      0x00, 0x2c, 0x01, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x70, 0x11, 0x01, 0x00, 0x03, 0x01,
+      0x00, 0x2c, 0x01, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x70, 0x11, 0x01, 0x00, 0x03, 0x01, 0x02,
+      0x01,
     ]);
     expect(parseResp(p)).toEqual({
       kind: 'stats',
@@ -1596,6 +1598,7 @@ describe('device-info RESP decoding (v1.4.0)', () => {
         hostRxDrops: 65536,
         relayDrops: 70000,
         session: 0x0103,
+        hostRestarts: 0x0102,
       },
     });
   });
@@ -1605,7 +1608,7 @@ describe('device-info RESP decoding (v1.4.0)', () => {
     expect(parseResp(new Uint8Array([2, 0, 0, 0, 0, 0, 0, 0, 0, 0]))).toBeNull(); // 10 bytes, one short of the header
     expect(parseResp(new Uint8Array([3, 5]))).toBeNull(); // CAPS needs 4
     expect(parseResp(new Uint8Array([4, 0xe8, 0x03]))).toBeNull(); // RATE needs 6
-    expect(parseResp(new Uint8Array([5, 0, 0, 0]))).toBeNull(); // STATS needs 31
+    expect(parseResp(new Uint8Array([5, 0, 0, 0]))).toBeNull(); // STATS needs 33
     // 17 bytes is the protocol-8 layout: enough for the eight counters, short of the link counts.
     expect(parseResp(new Uint8Array([5, ...new Array(16).fill(0)]))).toBeNull();
     // 25 is the layout before relay_drops was split out of tx_drops. Decoding it would leave
@@ -1613,6 +1616,8 @@ describe('device-info RESP decoding (v1.4.0)', () => {
     expect(parseResp(new Uint8Array([5, ...new Array(24).fill(0)]))).toBeNull();
     // 29 is the layout before session. Decoding it would leave session reading past the frame.
     expect(parseResp(new Uint8Array([5, ...new Array(28).fill(0)]))).toBeNull();
+    // 31 is the protocol-9 layout, which stops before hostRestarts.
+    expect(parseResp(new Uint8Array([5, ...new Array(30).fill(0)]))).toBeNull();
   });
 });
 

@@ -2,8 +2,8 @@
 
 export const SOF = 0xa5;
 export const MAX_PAYLOAD = 512;
-// Protocol 10 is firmware 3.5.0: TRANSFER carries the box's wait, and TRANSFER_RESP comes in chunks naming
-// the stage. Protocol 9 was 3.4.2: a 31-byte RESP(STATS).
+// Protocol 10 is firmware 3.5.0: TRANSFER carries the box's wait, TRANSFER_RESP comes in chunks naming the
+// stage, and a 33-byte RESP(STATS) counts the host chip's restarts. Protocol 9 was 3.4.2: a 31-byte RESP(STATS).
 export const PROTO_VER = 10;
 
 // The oldest wire this page will still open.

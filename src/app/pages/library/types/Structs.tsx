@@ -192,7 +192,7 @@ assert_eq!(r.native_hz(), Some(1000.0));`}</code></pre>
       <DocSection id="stats" title="Stats" caption="Delivery and telemetry counters">
         <p>
           Delivery counters from <A href="/library/requests#query-stats"><code>query_stats()</code></A>,
-          decoded from the 31-byte <A href="/native/commands/requests#stats"><code>RESP(STATS)</code></A>.
+          decoded from the 33-byte <A href="/native/commands/requests#stats"><code>RESP(STATS)</code></A>.
         </p>
         <p>
           Nonzero <code>tx_drops</code> or <code>tx_wedges</code> means native input was lost on the
@@ -218,6 +218,7 @@ assert_eq!(r.native_hz(), Some(1000.0));`}</code></pre>
               <tr><td><code>host_rx_drops</code></td><td><code>u32</code></td><td>The same count on the host chip, relayed over the link (should stay 0).</td></tr>
               <tr><td><code>relay_drops</code></td><td><code>u32</code></td><td>Relayed traffic and commands that went no further (none of it native input). Each of these counts: a vendor IN packet the host chip's link wouldn't carry, or that found its endpoint's queue full of the control PC's <code>RAW</code> packets; a native zero-length packet answering a poll the PC didn't make (the one poll the box runs ahead of a suspended PC); an OUT packet the box had no room to queue, that failed three times on the real device's bus, or that a bus reset or <code>SET_INTERFACE</code> overtook; a <code>RAW</code> OUT packet with no room to wait; a relayed request, or a packet or step of one, the box couldn't queue (the request then ends, NAKed until the game PC gives up); a flagged <code>MOVE</code> the motion batch couldn't take; any frame other than native input that either chip's link receive ring dropped; a frame from the control PC that its receive ring had no room for (one per frame); an overrun of the control port's UART (one per overrun, however many frames it cost).</td></tr>
               <tr><td><code>session</code></td><td><code>u16</code></td><td>Releases of some or all of the session state a host set: held input, locks, subscriptions, rules, transforms, the clip, and an LED override. The library re-sends all but the LED override. 0 at boot. It wraps, so compare for inequality. The library watches it for <A href="/library/lifecycle#restart">session recovery</A>. The native <A href="/native/commands/requests#stats"><code>RESP(STATS)</code></A> lists what counts.</td></tr>
+              <tr><td><code>host_restarts</code></td><td><code>u16</code></td><td>Restarts of the host chip since the device chip booted. A host-chip restart is too short to drop the inter-chip link, so nothing else counts it. Should stay 0 outside an <A href="/library/update#update-firmware"><code>update_firmware</code></A> or a <A href="/library/admin#reboot"><code>reboot</code></A>.</td></tr>
             </tbody>
           </table>
         </div>

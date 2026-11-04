@@ -121,7 +121,7 @@ const ANSWERS: Record<string, unknown> = {
   queryRate: { nativePeriodUs: on.has('razer125') ? 8000 : 1000, pollPeriodUs: 1000, confident: mouse, changeDriven: on.has('keyboard') },
   queryStats: {
     injectEmits: 0, txDrops: 0, txMerges: 0, txMaxdepth: 0, txWedges: 0, wakeups: 0, resetCount: 0,
-    configCount: 1, linkRxDrops: 0, hostRxDrops: 0, relayDrops: 0, session: 1,
+    configCount: 1, linkRxDrops: 0, hostRxDrops: 0, relayDrops: 0, session: 1, hostRestarts: 0,
   },
   queryLocks: { entries: [] },
   queryCatch: { tableFull: false, dropped: 0, clock: { offsetUs: 412, ratePpb: 0, delayUs: 6, ageMs: 212 }, entries: [] },
