@@ -1,4 +1,4 @@
-// The site's check of the comparison results: the faults medius-fw's tools/compare/results_check.py reports.
+// The site's check of the comparison results: every fault a results file can have.
 import { describe, expect, it } from 'vitest';
 import { checkResults } from '../../src/app/data/comparison/check';
 import { GOOD, ref } from './helpers/comparison-results';
@@ -81,8 +81,15 @@ describe('checkResults', () => {
       r.stock = { value: 1, of: 3, src: [ref('c.json', '/a')] };
       r.medius = { value: 2, of: 3, src: [ref('c.json', '/b')] };
     }), 'of has no place');
-    names(broken((d) => Object.assign(row(d), native)), 'belongs only');
     names(broken((d) => (row(d, 1).target = 1)), 'belongs only');
+  });
+
+  it('takes native on any measure row, and on no other kind', () => {
+    const native = { native: { value: 196, src: [ref('n.json', '/r')] } };
+    const outcome = (d: Json) => sections(d).flatMap((s: Json) => s.tables).find((t: Json) => t.kind === 'outcome').rows[0];
+    expect(broken((d) => Object.assign(row(d), native))).toEqual([]);
+    names(broken((d) => Object.assign(row(d), { native: { value: 196 } })), 'src');
+    names(broken((d) => Object.assign(outcome(d), native)), 'belongs only to a measure table');
   });
 
   it('checks values', () => {
@@ -183,6 +190,17 @@ describe('checkResults', () => {
   it('wants both boxes to cite the same number of runs', () => {
     names(broken((d) => row(d).medius.src.push(ref('lat_medius.json', '/cells/2/p50', 'us'))), 'runs');
     names(broken((d) => (row(d).stock = { value: 64.2, src: [ref('lat_stock_gl.json', '/cells/0/p50', 'us')] })), 'runs');
+  });
+
+  it('lets a test run once on stock cite one stock run beside three', () => {
+    const once = (d: Json, test: string) => {
+      d.once = ['raw-move'];
+      row(d).stock = { lo: 64.2, hi: 64.2, src: [ref('s.json', `/tests/${test}/runs/0/p50`, 'us')] };
+      row(d).medius.src = [0, 1, 2].map((k) => ref('m.json', `/tests/${test}/runs/${k}/p50`, 'us'));
+    };
+    expect(broken((d) => once(d, 'raw-move'))).toEqual([]);
+    names(broken((d) => once(d, 'replug-move')), 'runs');
+    names(broken((d) => (d.once = 'raw-move')), 'once');
   });
 
   it('lets a sum add up any number of refs', () => {

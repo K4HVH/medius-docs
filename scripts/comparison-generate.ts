@@ -1,11 +1,12 @@
-// Builds the comparison's results.json from the tests' declarations and the run files the comparison tool wrote:
+// Builds the comparison's results.json from the tests' declarations and the run files the comparison tool wrote,
+// and tool.json beside it (what the Method page lists that the results don't carry: the tool's tests, the run files):
 //   tsx scripts/comparison-generate.ts [--runs DIR] [--out FILE]
-// Prints each row whose runs disagreed, and every fault. A fault leaves the output unwritten and exits 1.
+// Prints each row whose runs disagreed, and every fault. A fault leaves both files unwritten and exits 1.
 import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
-import { join, relative } from 'node:path';
+import { dirname, join, relative } from 'node:path';
 import { parse } from 'smol-toml';
-import type { CategoryDecl, FactTable, GenerateInput, RunFileDoc, TestDecl } from '../src/app/data/comparison/generate';
-import { generate } from '../src/app/data/comparison/generate';
+import type { CategoryDecl, FactTable, GenerateInput, RunFileDoc, TestDecl, ToolData } from '../src/app/data/comparison/generate';
+import { generate, toolTests } from '../src/app/data/comparison/generate';
 import type { Defect, FeatureRow, Pending } from '../src/app/data/comparison/types';
 
 const ROOT = join(import.meta.dirname, '..');
@@ -68,13 +69,17 @@ export function readInput(runsDir: string): GenerateInput {
 if (import.meta.url === `file://${process.argv[1]}`) {
   const runsDir = arg('--runs', join(COMPARISON, 'runs'));
   const out = arg('--out', join(ROOT, 'src/app/data/comparison/results.json'));
-  const { results, varied, faults } = generate(readInput(runsDir));
+  const tool = join(dirname(out), 'tool.json');
+  const input = readInput(runsDir);
+  const { results, varied, faults } = generate(input);
   for (const v of varied) console.log(`varied across runs: ${v}`);
   if (faults.length) {
     for (const f of faults) console.error(f);
-    console.error(`${faults.length} faults; ${out} not written`);
+    console.error(`${faults.length} faults; ${out} and ${tool} not written`);
     process.exit(1);
   }
   writeFileSync(out, `${JSON.stringify(results, null, 2)}\n`);
+  const data: ToolData = { tests: toolTests(input.tests, results), runs: input.runs.map(({ path, doc }) => ({ box: doc.box, file: path })) };
+  writeFileSync(tool, `${JSON.stringify(data, null, 2)}\n`);
   console.log(`${out}: ${results.categories.reduce((n, c) => n + c.sections.reduce((m, s) => m + s.tables.reduce((k, t) => k + t.rows.length, 0), 0), 0)} rows`);
 }

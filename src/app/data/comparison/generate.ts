@@ -51,6 +51,9 @@ export interface TestDecl {
   category: string;
   layout: string;
   boxes: RunBox[];
+  // Each stock run of it needs power cycles by hand, so stock runs it once.
+  jams_stock?: boolean;
+  legs?: { id: string; device: string }[];
   tables: TableDecl[];
 }
 
@@ -100,6 +103,21 @@ export interface Generated {
   results: Results;
   varied: string[];
   faults: string[];
+}
+
+// A test the comparison tool runs without the USB device emulator: the still devices its legs take, the sections
+// of the results its rows appear in, and whether it can leave stock one reply behind until a power cycle.
+export interface ToolTest {
+  id: string;
+  devices: string[];
+  sections: string[];
+  jamsStock: boolean;
+}
+
+// What the Method page lists that the results don't carry: the tool's tests, and the run files.
+export interface ToolData {
+  tests: ToolTest[];
+  runs: { box: RunBox; file: string }[];
 }
 
 const RUNS = 3;
@@ -160,8 +178,9 @@ export function generate(input: GenerateInput): Generated {
       faults.push(`${where}: test ${test} on ${box} ran version ${p.entry.version}; the declaration is version ${decl.version}`);
       return undefined;
     }
-    if (p.entry.runs.length < RUNS) {
-      faults.push(`${where}: test ${test} on ${box} has ${p.entry.runs.length} runs; it needs ${RUNS}`);
+    const need = decl.jams_stock && box === 'stock' ? 1 : RUNS;
+    if (p.entry.runs.length < need) {
+      faults.push(`${where}: test ${test} on ${box} has ${p.entry.runs.length} runs; it needs ${need}`);
       return undefined;
     }
     return p;
@@ -233,11 +252,20 @@ export function generate(input: GenerateInput): Generated {
         for (const r of td.rows) {
           const test = r.test ?? t.id;
           const vals: Partial<Record<RunBox, Value>> = {};
-          for (const b of [...BOXES, ...(r.native_ptr !== undefined ? (['native'] as const) : [])]) {
+          // A test that never runs on the native reference measures it beside each box instead.
+          const beside = r.native_ptr !== undefined && !tests.get(test)?.boxes.includes('native');
+          const picks: Partial<Record<RunBox, Picked>> = {};
+          for (const b of [...BOXES, ...(r.native_ptr !== undefined && !beside ? (['native'] as const) : [])]) {
             const p = picked(test, b, where(r.id));
             if (!p) continue;
+            picks[b] = p;
             const v = value(p, test, r, b === 'native' ? r.native_ptr : r.ptr, td.unit, td.resolution, `${where(r.id)}, ${b}`);
             if (v) vals[b] = v;
+          }
+          if (beside && picks.stock && picks.medius) {
+            const got = BOXES.map((b) => value(picks[b]!, test, r, r.native_ptr, td.unit, td.resolution, `${where(r.id)}, native beside ${b}`));
+            if (got.some((v) => v && !('lo' in v) && v.of !== undefined)) faults.push(`${where(r.id)}: native measured beside the boxes can't be a count of a total`);
+            else if (got.every(Boolean)) vals.native = span(got as Value[]);
           }
           if (!vals.stock || !vals.medius) continue;
           rows.push({
@@ -353,12 +381,40 @@ export function generate(input: GenerateInput): Generated {
     categories,
     defects,
     pending: input.pending,
+    once: input.tests.filter((t) => t.jams_stock).map((t) => t.id).sort(),
   };
   faults.push(...checkResults(results));
   return { results, varied, faults };
 }
 
+const STILL = ['still-mouse', 'still-keyboard', 'still-composite'];
+
+// The tests the comparison tool runs without the emulator, in the order it runs them (by id, compared as code
+// points): each with a leg a still device can drive, or with no legs at all.
+export function toolTests(tests: TestDecl[], results: Results): ToolTest[] {
+  const order = results.categories.flatMap((c) => c.sections.map((s) => s.id));
+  return tests
+    .filter((t) => !t.legs?.length || t.legs.some((l) => STILL.includes(l.device)))
+    .map((t) => {
+      const fed = new Set(tests.flatMap((d) => d.tables.flatMap((td) => (td.rows.some((r) => (r.test ?? d.id) === t.id) ? [td.section] : []))));
+      return {
+        id: t.id,
+        devices: [...new Set((t.legs ?? []).map((l) => l.device).filter((d) => STILL.includes(d)))],
+        sections: order.filter((s) => fed.has(s)),
+        jamsStock: !!t.jams_stock,
+      };
+    })
+    .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+}
+
 const middle = (v: Value) => ('lo' in v ? (v.lo + v.hi) / 2 : v.value);
+
+function span(vs: Value[]): Value {
+  const lo = Math.min(...vs.map((v) => ('lo' in v ? v.lo : v.value)));
+  const hi = Math.max(...vs.map((v) => ('lo' in v ? v.hi : v.value)));
+  const src = vs.flatMap((v) => v.src);
+  return lo === hi ? { value: lo, src } : { lo, hi, src };
+}
 
 // Whether a row shows a box short of the best: a count under its total, an outcome other than the best, or a
 // measure worse than the other box.

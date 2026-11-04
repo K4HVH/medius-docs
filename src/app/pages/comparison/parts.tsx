@@ -39,12 +39,13 @@ const Bar = (props: { v: Value; max: number }) => {
 
 const valueOf = (item: Item, box: Box) => (item.row as MeasureRow)[box];
 
-// What a row ranked nearer is ranked against: the real device's own value, or the test's target.
+// The real device's own value, where the test measured it, or the target a row ranked nearer is ranked against.
 const aim = (item: Item) => {
-  if (item.table.kind !== 'measure' || item.table.better !== 'nearer') return null;
+  if (item.table.kind !== 'measure') return null;
   const { native, target } = item.row as MeasureRow;
   const unit = item.table.unit;
-  return native ? `Native ${showValue(native, unit)}` : target !== undefined ? `Target ${showValue({ value: target, src: [] }, unit)}` : null;
+  if (native) return `Native ${showValue(native, unit)}`;
+  return item.table.better === 'nearer' && target !== undefined ? `Target ${showValue({ value: target, src: [] }, unit)}` : null;
 };
 
 // A box's cell: a measure's value and its bar, an outcome's word, or a feature's command (as code) or tool

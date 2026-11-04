@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { unzipSync } from 'fflate';
 import { readFileSync } from 'node:fs';
 import { expect, it } from 'vitest';
-import { packageComparison } from '../../scripts/comparison-package';
+import { PYZ, comparisonPyz, packageComparison } from '../../scripts/comparison-package';
 
 it('packs the no-sim tool and nothing of the sim', () => {
   const out = join(mkdtempSync(join(tmpdir(), 'pyz-')), 'medius-compare.pyz');
@@ -23,4 +23,10 @@ it('runs from the single file', () => {
   packageComparison(out);
   const help = execFileSync('python3', [out, 'report', '--help'], { env: { ...process.env, HOME: dir }, encoding: 'utf8' });
   expect(help).toMatch(/usage: medius-compare report/);
+});
+
+it('builds the same bytes it writes, for the dev server to answer the download with', () => {
+  const out = join(mkdtempSync(join(tmpdir(), 'pyz-')), 'medius-compare.pyz');
+  packageComparison(out);
+  expect(Buffer.from(comparisonPyz()).equals(readFileSync(out))).toBe(true);
 });

@@ -13,6 +13,7 @@ Built with [SolidJS](https://solidjs.com) and MidnightUI.
 | Bindings | C ABI and Python bindings over the crate. |
 | Dashboard | In-browser box dashboard: connect, device info, firmware update, recovery, device log. |
 | AI Access | Per-page Markdown twins, `llms.txt`, and the MCP server. |
+| Comparison | Stock MAKCU firmware against Medius on the same hardware, built from the run files in `comparison/runs/`. |
 
 ## Development
 
@@ -33,6 +34,9 @@ bun run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
+
+`dev`, `build` and `test` first generate the Comparison section from `comparison/` (`bun run comparison:generate`).
+The comparison tool itself is `comparison/compare.py`; the Comparison section's Method page says how to run it.
 
 ### Build
 

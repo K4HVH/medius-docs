@@ -218,7 +218,7 @@ about = "Each box held a lock for 10 s against native motion and clicks. On the 
 [[categories.sections]]
 id = "input-box-timed"
 title = "Clicks and typing timed by the box"
-about = "Ten 50 ms clicks and a 30-character string timed by the box (stock's km.click and km.string, a Medius clip), against the same clicks timed by the PC. Read off the PC's USB bus, five runs each."
+about = "Ten 50 ms clicks and a 30-character string timed by the box (stock's km.click and km.string, a Medius clip), against the same clicks timed by the PC. Read off the PC's USB bus, five sets of each a run."
 
 [[categories.sections]]
 id = "input-typing-long"

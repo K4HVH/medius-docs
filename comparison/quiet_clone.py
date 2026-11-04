@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Keep the clone off this desktop while tests run against it.
 
-  sudo python3 comparison/quiet_clone.py [box port or id] [--usb-port 3-1.1 ...] [--native SIM_SERIAL@3-1.2]
+  sudo python3 comparison/quiet_clone.py [box port or id] [--usb-port 1-4 ...] [--native SIM_SERIAL@1-5]
 
 Tests grab the clone's input nodes only inside a capture, so between captures a device that moves drags
 this desktop's cursor. This tool makes libinput ignore whatever enumerates on the clone's USB port,

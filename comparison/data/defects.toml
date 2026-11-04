@@ -7,7 +7,7 @@ rows = ["devices-report-768-2047", "devices-report-513-700", "devices-clone-repo
 [[defects]]
 id = "pass-inject-reads"
 box = "stock"
-text = "While injecting, even at 10 moves/s, stock reads a 1 kHz mouse whose speed varies only ~290-490 times/s."
+text = "While injecting, even at 10 moves/s, stock reads a 1 kHz mouse whose speed varies only about 300-550 times/s ({row:pass-inject-slow-10:stock} of 5,500 reports in 5.5 s at 10 moves/s)."
 rows = ["pass-inject-varying", "pass-inject-slow-10", "pass-inject-slow-30", "pass-inject-sine-1000"]
 
 [[defects]]
@@ -25,7 +25,7 @@ text = "When the PC switches the clone's configuration, stock reconnects the clo
 [[defects]]
 id = "link-stock-parser-jam"
 box = "stock"
-text = "Moves arriving faster than stock takes them (about 30 or more binary moves in one write, ≥10,000 binary moves/s, 8,000 text moves/s, 32 per write every 16 ms, or back to back) are lost, most with no refusal. Every later command then runs one command late until a power cycle. At the edge (about 30 moves in one write, 8,000 text moves/s) some runs end that way and some don't. 30 characters sent as key presses back to back lose characters."
+text = "Moves arriving faster than stock takes them (about 30 or more binary moves in one write, ≥10,000 binary moves/s, 8,000 text moves/s, 32 per write every 16 ms, or back to back) are lost, most with no refusal. Every later command then runs one command late until a power cycle. At 8,000 text moves/s some tries end that way and some don't. 30 characters sent as key presses back to back lose characters."
 rows = ["link-back-to-back-parser", "link-clump-parser-2000", "link-fast-parser-10000", "link-fast-parser-15000", "link-fast-parser-20000", "link-fast-parser-text-8000", "link-write-parser-29", "link-write-parser-30", "input-typing-pc-pairs"]
 
 [[defects]]
@@ -49,20 +49,26 @@ rows = ["pass-boot-unanswered"]
 [[defects]]
 id = "link-stock-moving-refusals"
 box = "stock"
-text = "With the mouse moving, stock refuses moves past ~1,330/s and replies to each refusal (1,326/5,000 arrived at 5,000/s)."
+text = "With the mouse moving, stock refuses moves past about 1,325/s and replies to each refusal ({row:link-moving-bin-5000:stock} arrived at 5,000/s)."
 rows = ["link-moving-bin-5000", "link-moving-bin-1500", "link-moving-bin-2000", "link-moving-bin-3000", "link-moving-text-1500", "link-moving-text-2000", "link-moving-text-3000", "link-moving-text-5000", "link-moving-single-2000", "link-moving-single-5000"]
+
+[[defects]]
+id = "inj-stock-raw-move-refused"
+box = "stock"
+text = "In a stream of RAW_MOVEs whose receipts go unread, stock refuses all but the first few ({row:inj-raw-stream:stock} counts arrive), then every later RAW_MOVE until a power cycle. Ordinary moves are unaffected."
+rows = ["inj-raw-stream"]
 
 [[defects]]
 id = "pass-stock-pause-skips"
 box = "stock"
-text = "When the PC pauses reading an interrupt endpoint, stock drops reports the real device would have kept: 91 counter values skipped in 8,000 reports on each endpoint."
+text = "When the PC pauses reading an interrupt endpoint, stock drops reports the real device would have kept: {row:pass-pause-skip-hid:stock} counter values skipped in a run's 8,000 reports on each endpoint."
 rows = ["pass-pause-skip-hid", "pass-pause-skip-vendor"]
 
 [[defects]]
 id = "devices-stock-ep0-overrun"
 box = "stock"
-text = "Where the real device replies past wLength (LUFA, STM32's library, V-USB), stock STALLs the request. Standard requests the real device answers sometimes time out on stock (12 over 9 device stacks)."
-rows = ["devices-ep0-stack-stm32", "devices-ep0-stack-lufa", "devices-ep0-stack-vusb", "devices-ep0-stack-permissive", "devices-ep0-stack-twobit", "devices-ep0-stack-wlenconfig", "devices-ep0-stack-rwrefused", "devices-ep0-stack-cherry", "devices-ep0-stack-twolimit", "devices-ep0-stack-padded", "devices-ep0-stack-longbuf"]
+text = "Where the real device replies past wLength (LUFA, STM32's library, V-USB), stock STALLs the request."
+rows = ["devices-ep0-stack-stm32", "devices-ep0-stack-lufa", "devices-ep0-stack-vusb"]
 
 [[defects]]
 id = "devices-stock-control-relay"
@@ -73,7 +79,7 @@ rows = ["devices-relay-ep2-reads", "devices-relay-ep2-past-wlength", "devices-re
 [[defects]]
 id = "pass-stock-unread-polls"
 box = "stock"
-text = "While the PC reads nothing from an interrupt IN, stock still polls it at its declared rate (12/12 unread windows). Natively, an endpoint the PC doesn't read isn't polled."
+text = "While the PC reads nothing from an interrupt IN, stock still polls it at its declared rate. Natively, an endpoint the PC doesn't read isn't polled."
 rows = ["pass-polls-vendor-1ms", "pass-polls-vendor-4ms", "pass-polls-vendor-8ms", "pass-polls-hid-1ms", "pass-polls-hid-4ms", "pass-polls-hid-8ms", "pass-polls-vendor-1ms-unread", "pass-polls-vendor-4ms-unread", "pass-polls-vendor-8ms-unread", "pass-polls-hid-1ms-unread", "pass-polls-hid-4ms-unread", "pass-polls-hid-8ms-unread"]
 
 [[defects]]
@@ -85,7 +91,7 @@ rows = ["devices-relay-ep2-writes-refused", "devices-relay-ep0-writes-refused"]
 [[defects]]
 id = "devices-stock-interfaces-dropped"
 box = "stock"
-text = "Stock leaves interfaces it can't relay out of the clone's configuration descriptor (the vendor interface holding 5 of a mouse's 6 interrupt INs, an interface with a second control endpoint). On a keyboard with five HID interfaces, the fifth is declared but sends nothing: 0 reports/s, against 1,154 natively."
+text = "Stock leaves interfaces it can't relay out of the clone's configuration descriptor (the vendor interface holding 5 of a mouse's 6 interrupt INs, an interface with a second control endpoint). On a keyboard with five HID interfaces, the fifth is declared but sends nothing."
 rows = ["devices-imperfect-clone-six-in", "devices-imperfect-clone-five-hid", "devices-clone-control-endpoint", "devices-data-six-in", "devices-data-five-hid", "devices-imperfect-data-five-hid"]
 
 [[defects]]
@@ -98,5 +104,5 @@ rows = ["devices-imperfect-clone-endpoint-7", "devices-imperfect-clone-wide-pack
 [[defects]]
 id = "devices-stock-bulk-rate"
 box = "stock"
-text = "Back-to-back bulk is relayed at 27-36% of the native rate."
+text = "Back-to-back bulk is relayed at 28-39% of the native rate."
 rows = ["devices-bulk-rate-vendbulkhigh", "devices-bulk-rate-hidbulkin", "devices-bulk-rate-pair-in", "devices-bulk-rate-pair-out", "devices-bulk-rate-both-in", "devices-bulk-rate-both-out"]

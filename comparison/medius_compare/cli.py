@@ -61,8 +61,8 @@ def main(entry: str, argv=None) -> int:
     r.add_argument("--category", action="append", default=[], help="every test in a category (repeat for more)")
     r.add_argument("--box", choices=["stock", "medius"] + (["native"] if entry == "sim" else []))
     r.add_argument("--runs", type=int, default=3, help="runs of each test (default 3)")
-    r.add_argument("--stock-jam-runs", type=int, help="runs on stock of each test that can leave it one command "
-                                                       "behind, each needing a power cycle (default: --runs)")
+    r.add_argument("--stock-jam-runs", type=int, default=1, help="runs on stock of each test that can leave it one "
+                                                                  "command behind, each needing a power cycle (default 1)")
     r.add_argument("--out", type=Path, default=Path("runs"), help="where run files go (default ./runs)")
     r.add_argument("--resume", help="carry on a stopped run, by its stamp (the run file's name)")
     if entry == "no-sim":

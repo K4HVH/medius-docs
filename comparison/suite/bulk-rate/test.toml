@@ -27,35 +27,35 @@ resolution = 0.1
 [[tables.rows]]
 id = "devices-bulk-rate-vendbulkhigh"
 label = "Vendor bulk IN numbered 0x85"
-note = "Native rate: 13,997/s"
 ptr = "/rows/0/summary/0x85/box_per_second"
+native_ptr = "/rows/0/summary/0x85/native_per_second"
 
 [[tables.rows]]
 id = "devices-bulk-rate-hidbulkin"
 label = "HID interface with a bulk IN"
-note = "Native rate: 13,997-14,000/s"
 ptr = "/rows/1/summary/0x82/box_per_second"
+native_ptr = "/rows/1/summary/0x82/native_per_second"
 
 [[tables.rows]]
 id = "devices-bulk-rate-pair-in"
 label = "Vendor bulk pair, IN alone"
-note = "Native rate: 13,997/s"
 ptr = "/rows/2/summary/0x83/box_per_second"
+native_ptr = "/rows/2/summary/0x83/native_per_second"
 
 [[tables.rows]]
 id = "devices-bulk-rate-pair-out"
 label = "Vendor bulk pair, OUT alone"
-note = "Native rate: 12,562-12,611/s"
 ptr = "/rows/3/summary/0x03/box_per_second"
+native_ptr = "/rows/3/summary/0x03/native_per_second"
 
 [[tables.rows]]
 id = "devices-bulk-rate-both-in"
 label = "Vendor bulk pair, IN with OUT at once"
-note = "Native rate: 8,999/s"
 ptr = "/rows/4/summary/0x83/box_per_second"
+native_ptr = "/rows/4/summary/0x83/native_per_second"
 
 [[tables.rows]]
 id = "devices-bulk-rate-both-out"
 label = "Vendor bulk pair, OUT with IN at once"
-note = "Native rate: 8,999/s"
 ptr = "/rows/4/summary/0x03/box_per_second"
+native_ptr = "/rows/4/summary/0x03/native_per_second"

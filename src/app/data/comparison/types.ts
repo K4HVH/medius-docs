@@ -1,4 +1,4 @@
-// The comparison's results, as medius-fw docs/comparison/results.schema.md defines them (format 2).
+// The comparison's results (format 2), as scripts/comparison-generate.ts writes them and check.ts checks them.
 
 export type Box = 'stock' | 'medius';
 
@@ -23,8 +23,8 @@ interface RowBase {
 export interface MeasureRow extends RowBase {
   stock: Value;
   medius: Value;
-  // In a table ranked nearer: the same test on the real device plugged straight into the PC, or a number the
-  // test's design sets.
+  // The same test on the real device plugged straight into the PC (in a table ranked nearer, what the row is ranked
+  // against), or in a table ranked nearer, a number the test's design sets.
   native?: Value;
   target?: number;
 }
@@ -124,4 +124,6 @@ export interface Results {
   categories: Category[];
   defects: Defect[];
   pending: Pending[];
+  // Tests the tool runs once on stock unless asked for more.
+  once: string[];
 }
