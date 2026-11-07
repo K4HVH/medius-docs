@@ -1,0 +1,178 @@
+id = "stock-intake"
+version = 1
+category = "control-link"
+layout = "main"
+boxes = ["stock", "medius"]
+jams_stock = true
+
+[[legs]]
+id = "rest"
+device = "still-mouse"
+
+[[tables]]
+section = "link-one-write"
+order = 1
+kind = "measure"
+label = "Counts arriving from one write of moves, binary"
+key = "Moves in the write"
+unit = "counts"
+better = "higher"
+layer = "evdev"
+n = "One write per row in each of 3 runs (1 on stock)"
+commands = { stock = "MOVE (0x18)", medius = "MOVE" }
+
+[[tables.rows]]
+id = "link-write-bin-8"
+label = "8"
+test = "clump-probe"
+ptr = "/base/results/0/x_delivered"
+of = 8
+
+[[tables.rows]]
+id = "link-write-bin-16"
+label = "16"
+test = "clump-probe"
+ptr = "/base/results/1/x_delivered"
+of = 16
+
+[[tables.rows]]
+id = "link-write-bin-20"
+label = "20"
+test = "clump-probe"
+ptr = "/base/results/2/x_delivered"
+of = 20
+
+[[tables.rows]]
+id = "link-write-bin-24"
+label = "24"
+test = "clump-probe"
+ptr = "/base/results/3/x_delivered"
+of = 24
+
+[[tables.rows]]
+id = "link-write-bin-28"
+label = "28"
+ptr = "/results/0/delivered"
+of = 28
+
+[[tables.rows]]
+id = "link-write-bin-29"
+label = "29"
+ptr = "/results/1/delivered"
+of = 29
+
+[[tables.rows]]
+id = "link-write-bin-30"
+label = "30"
+ptr = "/results/2/delivered"
+of = 30
+
+[[tables]]
+section = "link-one-write"
+order = 3
+kind = "outcome"
+label = "Parser after one write of binary moves"
+key = "Write"
+commands = { stock = "MOVE (0x18)", medius = "MOVE" }
+outcomes = ["In step", "Sometimes one command behind until a power cycle", "One command behind until a power cycle"]
+varies = "Sometimes one command behind until a power cycle"
+
+[[tables.rows]]
+id = "link-write-parser-29"
+label = "29 moves, 261 bytes for stock"
+ptr = "/outcomes/link-write-parser-29"
+
+[[tables.rows]]
+id = "link-write-parser-30"
+label = "30 moves, 270 bytes for stock"
+ptr = "/outcomes/link-write-parser-30"
+
+[[tables]]
+section = "link-paced-fast"
+order = 1
+kind = "measure"
+label = "Counts arriving from 2 s of fast moves"
+key = "Moves/s"
+unit = "counts"
+better = "higher"
+layer = "wire"
+n = "One run per row in each of 3 runs (1 on stock)"
+commands = { stock = "MOVE (0x18)", medius = "MOVE" }
+
+[[tables.rows]]
+id = "link-fast-5000"
+label = "5,000"
+ptr = "/results/14/delivered"
+of = 10000
+
+[[tables.rows]]
+id = "link-fast-7000"
+label = "7,000"
+ptr = "/results/15/delivered"
+of = 14000
+
+[[tables.rows]]
+id = "link-fast-10000"
+label = "10,000"
+ptr = "/results/16/delivered"
+of = 20000
+
+[[tables.rows]]
+id = "link-fast-15000"
+label = "15,000"
+ptr = "/results/17/delivered"
+of = 30000
+
+[[tables.rows]]
+id = "link-fast-20000"
+label = "20,000"
+ptr = "/results/18/delivered"
+of = 40000
+
+[[tables]]
+section = "link-paced-fast"
+order = 2
+kind = "measure"
+label = "Counts arriving from 2 s of text moves at 8,000/s"
+key = "Runs"
+unit = "counts"
+better = "higher"
+layer = "wire"
+n = "Three 2 s tries in each of 3 runs (1 on stock)"
+commands = { stock = "km.move", medius = "MOVE" }
+
+[[tables.rows]]
+id = "link-fast-text-8000"
+label = "8,000/s"
+ptr = ["/results/19/delivered", "/results/20/delivered", "/results/21/delivered"]
+of = 16000
+
+[[tables]]
+section = "link-paced-fast"
+order = 3
+kind = "outcome"
+label = "Parser after 2 s of fast moves"
+key = "Moves"
+commands = { stock = "MOVE (0x18), km.move", medius = "MOVE" }
+outcomes = ["In step", "Sometimes one command behind until a power cycle", "One command behind until a power cycle"]
+varies = "Sometimes one command behind until a power cycle"
+
+[[tables.rows]]
+id = "link-fast-parser-10000"
+label = "10,000 binary moves/s"
+ptr = "/outcomes/link-fast-parser-10000"
+
+[[tables.rows]]
+id = "link-fast-parser-15000"
+label = "15,000 binary moves/s"
+ptr = "/outcomes/link-fast-parser-15000"
+
+[[tables.rows]]
+id = "link-fast-parser-20000"
+label = "20,000 binary moves/s"
+ptr = "/outcomes/link-fast-parser-20000"
+
+[[tables.rows]]
+id = "link-fast-parser-text-8000"
+label = "8,000 text moves/s, 3 tries a run"
+ptr = "/outcomes/link-fast-parser-text-8000"

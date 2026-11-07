@@ -1,0 +1,118 @@
+id = "buttons-locks"
+version = 1
+category = "input"
+layout = "main"
+boxes = ["stock", "medius"]
+jams_stock = false
+
+[[legs]]
+id = "rest"
+device = "still-mouse"
+
+[[legs]]
+id = "held-left"
+device = "sim:held-left"
+
+[[legs]]
+id = "clicking"
+device = "sim:clicking"
+
+[[legs]]
+id = "moving-x"
+device = "sim:moving-x"
+
+[[tables]]
+section = "input-together"
+order = 1
+kind = "outcome"
+label = "Native press after the injection"
+key = "Case"
+outcomes = ["Still held", "Released"]
+
+[[tables.rows]]
+# outcome from stock: /results/0/q_still_held, /results/0/events; medius: /results/0/q_still_held, /results/0/events
+id = "input-held-key-q"
+label = "Native Q held, box injects A"
+test = "keyboard"
+ptr = "/outcomes/input-held-key-q"
+
+[[tables.rows]]
+# outcome from stock: /results/2/held_after_injected_release, /results/2/held_after_injected_release, /results/2/held_after_injected_release; medius: /results/2/held_after_injected_release, /results/2/held_after_injected_release, /results/2/held_after_injected_release
+id = "input-held-left-release"
+label = "Native left held, box injects a left release"
+ptr = "/outcomes/input-held-left-release"
+
+[[tables.rows]]
+# outcome from stock: /results/2/held_after_injected_press_release, /results/2/held_after_injected_press_release, /results/2/held_after_injected_press_release; medius: /results/2/held_after_injected_press_release, /results/2/held_after_injected_press_release, /results/2/held_after_injected_press_release
+id = "input-held-left-click"
+label = "Native left held, box injects a left click"
+ptr = "/outcomes/input-held-left-click"
+
+[[tables]]
+section = "input-lock-leak"
+order = 2
+kind = "outcome"
+label = "Injected press reaching the PC"
+key = "Lock"
+outcomes = ["Arrives", "Blocked"]
+
+[[tables.rows]]
+# outcome from stock: /results/3/injected_press_while_masked_held, /results/3/injected_press_while_masked_held, /results/3/injected_press_while_masked_held; medius: /results/3/injected_press_while_masked_held, /results/3/injected_press_while_masked_held, /results/3/injected_press_while_masked_held
+id = "input-held-injected-locked"
+label = "Left button locked"
+ptr = "/outcomes/input-held-injected-locked"
+
+[[tables]]
+section = "input-lock-leak"
+order = 3
+kind = "measure"
+label = "Lock on X taking effect, p50"
+key = "Lock"
+unit = "ms"
+better = "lower"
+stat = "p50"
+layer = "wire"
+n = "20 locks a run, 3 runs"
+commands = { stock = "km.lock_mx", medius = "LOCK" }
+resolution = 0.001
+
+[[tables.rows]]
+id = "input-lock-x-on"
+label = "Native X motion every millisecond"
+ptr = "/results/4/last_native_after_lock/p50"
+unit = "us"
+
+[[tables]]
+section = "input-lock-leak"
+order = 4
+kind = "measure"
+label = "Lock on X lifting, p50"
+key = "Lock"
+unit = "ms"
+better = "lower"
+stat = "p50"
+layer = "wire"
+n = "20 locks a run, 3 runs"
+commands = { stock = "km.lock_mx", medius = "LOCK" }
+resolution = 0.01
+
+[[tables.rows]]
+id = "input-lock-x-off"
+label = "Native X motion every millisecond"
+ptr = "/results/4/first_native_after_unlock/p50"
+unit = "us"
+
+[[tables]]
+section = "recovery-program-exit"
+order = 1
+kind = "outcome"
+label = "Left button 3 s after the program exits"
+key = "Case"
+commands = { stock = "km.left", medius = "INJECT" }
+outcomes = ["Released", "Still held"]
+
+[[tables.rows]]
+# outcome from stock: /results/1/held_3s_after_close, /results/1/held_3s_after_close, /results/1/held_3s_after_close; medius: /results/1/held_3s_after_close, /results/1/held_3s_after_close, /results/1/held_3s_after_close
+id = "recovery-exit-left-button"
+label = "Pressed, then the port closed"
+ptr = "/outcomes/recovery-exit-left-button"

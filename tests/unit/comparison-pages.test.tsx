@@ -1,5 +1,6 @@
 // Each Comparison page draws every section of its categories and the diagrams it puts in them; Overview its
 // key rows and every defect; Method the rig, the layers, the tests not run yet and every download.
+import { existsSync } from 'node:fs';
 import { cleanup, render } from '@solidjs/testing-library';
 import { afterEach, describe, expect, it } from 'vitest';
 import { Router } from '@solidjs/router';
@@ -7,6 +8,7 @@ import type { Component } from 'solid-js';
 import { RESULTS, categoryOf, placeOf } from '../../src/app/data/comparison';
 import { COMPARISON_PAGES, KEY_ROWS, pageOfCategory } from '../../src/app/data/comparison/pages';
 import { comparisonFiles } from '../../src/app/data/comparison/files';
+import { PYZ } from '../../scripts/comparison-package';
 import { addressFor, routeFor } from '../../src/app/routes';
 import { holdsLink } from '../../src/app/shell/CopyLink';
 import Overview from '../../src/app/pages/comparison/Overview';
@@ -70,10 +72,11 @@ describe('every Comparison page', () => {
     }
   });
 
-  it('links only downloads the build writes', () => {
+  it('links only downloads the site serves: a file the build writes, or one in public/', () => {
     const files = comparisonFiles();
+    const served = (href: string) => files.has(href) || href === PYZ || existsSync(`public${href}`);
     for (const [path, Page] of ALL) {
-      for (const a of show(Page).querySelectorAll('a[download]')) expect(files.has(a.getAttribute('href')!), `${path} links ${a.getAttribute('href')}`).toBe(true);
+      for (const a of show(Page).querySelectorAll('a[download]')) expect(served(a.getAttribute('href')!), `${path} links ${a.getAttribute('href')}`).toBe(true);
       cleanup();
     }
   });
@@ -123,11 +126,25 @@ describe('Overview', () => {
 });
 
 describe('Method', () => {
-  it('names both versions, every timing layer, and a download for the whole and each page', () => {
+  it('names both versions, every timing layer, and a download for the whole, each page, then every run file', () => {
     const el = show(Method);
     expect(el.querySelector('section#rig')!.textContent).toContain(`Stock ${RESULTS.firmware.stock}, Medius ${RESULTS.firmware.medius}`);
     for (const detail of Object.values(RESULTS.layers)) expect(el.querySelector('section#layers')!.textContent).toContain(detail);
     const files = [...el.querySelectorAll('section#data a[download]')].map((a) => a.getAttribute('href'));
-    expect(files).toEqual(['/comparison.json', ...COMPARISON_PAGES.filter((p) => p.categories.length).map((p) => `${p.path}.json`)]);
+    const runs = [...comparisonFiles().keys()].filter((f) => f.startsWith('/comparison/runs/'));
+    expect(runs.length).toBeGreaterThan(0);
+    expect(files).toEqual(['/comparison.json', ...COMPARISON_PAGES.filter((p) => p.categories.length).map((p) => `${p.path}.json`), ...runs]);
+  });
+
+  it("names each run file's box beside it", () => {
+    const BOX: Record<string, string> = { stock: 'Stock', medius: 'Medius', native: 'Native reference' };
+    const links = [...show(Method).querySelectorAll('section#data a[href^="/comparison/runs/"]')];
+    expect(links.length).toBeGreaterThan(0);
+    for (const a of links) {
+      const [, , , box, file] = a.getAttribute('href')!.split('/');
+      const row = a.closest('tr')!;
+      expect(row.querySelector('td')!.textContent).toBe(BOX[box]);
+      expect(a.textContent).toBe(file);
+    }
   });
 });

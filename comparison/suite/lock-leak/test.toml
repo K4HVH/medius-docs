@@ -1,0 +1,98 @@
+id = "lock-leak"
+version = 1
+category = "input"
+layout = "main"
+boxes = ["stock", "medius"]
+jams_stock = false
+
+[[legs]]
+id = "x-ramp"
+device = "sim:x-ramp"
+
+[[legs]]
+id = "x-ramp-click"
+device = "sim:x-ramp-click"
+
+[[legs]]
+id = "x-big"
+device = "sim:x-big"
+
+[[tables]]
+section = "input-lock-leak"
+order = 1
+kind = "outcome"
+label = "Native input reaching the PC"
+key = "Lock"
+outcomes = ["None", "Some"]
+
+[[tables.rows]]
+# outcome from stock: /results/0/leak, /results/0/baseline_1s/x; medius: /results/0/leak, /results/0/baseline_1s/x
+id = "input-leak-x-idle"
+label = "X locked, box idle"
+ptr = "/outcomes/input-leak-x-idle"
+
+[[tables.rows]]
+# outcome from stock: /results/1/leak, /results/1/baseline_1s/x; medius: /results/1/leak, /results/1/baseline_1s/x
+id = "input-leak-x-inject-y-1khz"
+label = "X locked, box injecting Y at 1 kHz"
+ptr = "/outcomes/input-leak-x-inject-y-1khz"
+
+[[tables.rows]]
+# outcome from stock: /results/2/leak, /results/2/baseline_1s/x; medius: /results/2/leak, /results/2/baseline_1s/x
+id = "input-leak-x-inject-y-125hz"
+label = "X locked, box injecting Y at 125 Hz"
+ptr = "/outcomes/input-leak-x-inject-y-125hz"
+
+[[tables.rows]]
+# outcome from stock: /results/3/leak, /results/3/baseline_1s/x_pos; medius: /results/3/leak, /results/3/baseline_1s/x_pos
+id = "input-leak-x-inject-neg-x"
+label = "X locked, box injecting -1 X at 1 kHz"
+ptr = "/outcomes/input-leak-x-inject-neg-x"
+
+[[tables.rows]]
+# outcome from stock: /results/4/leak, /results/4/baseline_1s/presses; medius: /results/4/leak, /results/4/baseline_1s/presses
+id = "input-leak-left-idle"
+label = "Left button locked, box idle"
+ptr = "/outcomes/input-leak-left-idle"
+
+[[tables.rows]]
+# outcome from stock: /results/5/leak, /results/5/baseline_1s/presses; medius: /results/5/leak, /results/5/baseline_1s/presses
+id = "input-leak-left-inject-y"
+label = "Left button locked, box injecting Y at 1 kHz"
+ptr = "/outcomes/input-leak-left-inject-y"
+
+[[tables]]
+section = "input-lock-leak"
+order = 7
+kind = "measure"
+label = "Injected counts arriving while a lock is held"
+key = "Lock and injection"
+unit = "counts"
+better = "higher"
+layer = "evdev"
+n = "10 s of injection per row, 3 runs"
+commands = { stock = "km.move", medius = "MOVE" }
+
+[[tables.rows]]
+id = "input-lock-total-axis-inj-y"
+label = "X locked, Y injected at 1 kHz"
+ptr = "/results/1/locked/y"
+of = 10000
+
+[[tables.rows]]
+id = "input-lock-total-axis-inj-y125"
+label = "X locked, Y injected at 125 Hz"
+ptr = "/results/2/locked/y"
+of = 1250
+
+[[tables.rows]]
+id = "input-lock-total-axis-inj-negx"
+label = "X locked, -1 X injected at 1 kHz"
+ptr = "/results/3/locked/x_neg"
+of = 10000
+
+[[tables.rows]]
+id = "input-lock-total-button-inj-y"
+label = "Left button locked, Y injected at 1 kHz"
+ptr = "/results/5/locked/y"
+of = 10000

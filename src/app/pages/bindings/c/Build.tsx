@@ -102,7 +102,7 @@ int main(void) {
 }`}</code></pre>
         <pre><code class="language-bash">{`cc hello.c -I medius-capi/include -L target/release -lmedius_capi -lpthread -o hello
 LD_LIBRARY_PATH=target/release ./hello
-# medius 3.4.6, abi 10`}</code></pre>
+# medius 3.5.0, abi 11`}</code></pre>
         <div class="callout callout--info">
           <p>
             <code>-L</code> is link-time only. At <em>run</em> time the loader finds the shared

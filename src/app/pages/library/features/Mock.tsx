@@ -36,10 +36,11 @@ let device = Device::with_mock(mock.clone());
 // \`device\` drives the fake; \`mock\` still scripts and observes it.`}</code></pre>
       </DocSection>
 
-      <DocSection id="wrap" title="Device wrapper" caption="with_mock and open_mock">
+      <DocSection id="wrap" title="Device wrapper" caption="with_mock, open_mock and open_mock_for_update">
         <pre class="api-signature">fn with_mock(mock: MockBox) -&gt; Device</pre>
         <p><span class="api-badge api-badge--executed">No round-trip</span></p>
         <pre class="api-signature">fn open_mock(mock: MockBox) -&gt; Result&lt;Device&gt;</pre>
+        <pre class="api-signature">fn open_mock_for_update(mock: MockBox) -&gt; Result&lt;Device&gt;</pre>
         <p><span class="api-badge api-badge--responded">Blocks</span></p>
 
         <div class="api-response-label">CONSTRUCTORS</div>
@@ -65,6 +66,12 @@ let device = Device::with_mock(mock.clone());
                 <td>Yes</td>
                 <td><A href="/library/types/errors"><code>Result&lt;Device&gt;</code></A></td>
                 <td>Also runs the version handshake, so it can fail as a real port can.</td>
+              </tr>
+              <tr>
+                <td><code>open_mock_for_update</code></td>
+                <td>Yes</td>
+                <td><A href="/library/types/errors"><code>Result&lt;Device&gt;</code></A></td>
+                <td>Runs the handshake <A href="/library/update#open-for-update"><code>open_for_update</code></A> runs: a mock set to an older protocol with <code>with_version</code> opens update-only.</td>
               </tr>
             </tbody>
           </table>
@@ -125,7 +132,7 @@ device.move_rel(5, 5)?;`}</code></pre>
         <pre><code class="language-rust">{`use medius::{Device, Health, MockBox, Version};
 
 let mock = MockBox::new()
-    .with_version(Version { proto_ver: 9, fw_major: 5, fw_minor: 6, fw_patch: 7, mac: [0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc], name: "Loki".into() })
+    .with_version(Version { proto_ver: 10, fw_major: 5, fw_minor: 6, fw_patch: 7, mac: [0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc], name: "Loki".into() })
     .with_health(Health::from_flags(0x0F));
 let device = Device::with_mock(mock.clone());
 
@@ -365,6 +372,45 @@ assert_eq!(mock.clip_packet(TrafficClass::HidIn, 2, Direction::IN, &down), (None
 assert_eq!(device.clip().query_config()?.packet_triggers[0].hits, 2);`}</code></pre>
       </DocSection>
 
+      <DocSection id="transfer" title="Transfer replies" caption="with_transfer_reply, set_transfer_reply">
+        <pre class="api-signature">fn with_transfer_reply(self, reply: TransferOutcome) -&gt; MockBox</pre>
+        <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+        <pre class="api-signature">fn set_transfer_reply(&self, reply: TransferOutcome)</pre>
+        <p><span class="api-badge api-badge--executed">No round-trip</span></p>
+
+        <p>
+          Script the <A href="/library/types/structs#transfer-outcome"><code>TransferOutcome</code></A>{' '}
+          a <A href="/library/advanced/transfer#reply"><code>transfer</code></A> brings back. The mock
+          sends it a chunk a frame, ≤448 bytes each, as the box does.
+        </p>
+        <div class="api-response-label">EFFECT</div>
+        <div class="table-scroll">
+          <table class="api-params">
+            <thead><tr><th>Opt-in</th><th>Reply</th></tr></thead>
+            <tbody>
+              <tr><td>off (the default)</td><td><code>Refused</code> in stage <code>Setup</code>, no data, as the box replies.</td></tr>
+              <tr><td>on (<code>with_imperfect(true)</code>)</td><td>The scripted reply. Until one is set, <code>Ok</code> in stage <code>Status</code> with no data.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="api-response-label">EXAMPLE</div>
+        <pre><code class="language-rust">{`use medius::{Device, MockBox, Setup, TransferOutcome, TransferStage, TransferStatus};
+
+let mock = MockBox::new()
+    .with_imperfect(true)
+    .with_transfer_reply(TransferOutcome {
+        status: TransferStatus::Stall,
+        stage: TransferStage::Data,
+        data: vec![0x09, 0x02, 0x22, 0x00],
+    });
+let device = Device::with_mock(mock);
+
+let reply = device.transfer(0, Setup::new(0x80, 0x06, 0x0200, 0, 0xFFFF), &[])?;
+assert_eq!((reply.status, reply.stage), (TransferStatus::Stall, TransferStage::Data));
+assert_eq!(reply.data, [0x09, 0x02, 0x22, 0x00]);   // the bytes before the STALL`}</code></pre>
+      </DocSection>
+
       <DocSection id="silent" title="Silent box" caption="silent, and the handshake failures">
         <pre class="api-signature">fn silent(self) -&gt; MockBox</pre>
         <p><span class="api-badge api-badge--executed">No round-trip</span></p>
@@ -385,7 +431,7 @@ assert!(matches!(err, Error::NoReply));
 
 // A box on an unknown protocol version fails the handshake.
 let mock = MockBox::new().with_version(Version {
-    proto_ver: 10,
+    proto_ver: 11,
     fw_major: 0,
     fw_minor: 0,
     fw_patch: 0,
@@ -393,7 +439,7 @@ let mock = MockBox::new().with_version(Version {
     name: String::new(),
 });
 let err = Device::open_mock(mock).unwrap_err();
-assert!(matches!(err, Error::BadProtoVer { got: 10 }));`}</code></pre>
+assert!(matches!(err, Error::BadProtoVer { got: 11 }));`}</code></pre>
       </DocSection>
 
       <DocSection id="restart" title="Restart and release" caption="restart, link_lost, detach, attach">
@@ -401,7 +447,7 @@ assert!(matches!(err, Error::BadProtoVer { got: 10 }));`}</code></pre>
         <p><span class="api-badge api-badge--executed">No round-trip</span></p>
         <pre class="api-signature">fn link_lost(&self)</pre>
         <p><span class="api-badge api-badge--executed">No round-trip</span></p>
-        <pre class="api-signature">fn detach(&self, back_within_grace: bool)</pre>
+        <pre class="api-signature">fn detach(&self)</pre>
         <p><span class="api-badge api-badge--executed">No round-trip</span></p>
         <pre class="api-signature">fn attach(&self)</pre>
         <p><span class="api-badge api-badge--executed">No round-trip</span></p>
@@ -421,8 +467,8 @@ assert!(matches!(err, Error::BadProtoVer { got: 10 }));`}</code></pre>
             <tbody>
               <tr>
                 <td><code>restart</code></td>
-                <td>A device-chip boot. A <code>RESET</code> with its store flag and <code>reboot(RebootTarget::DeviceRun)</code> restart the mock too.</td>
-                <td>The hello, sent now and again on the next frame the mock receives. <code>session</code> goes back to 0.</td>
+                <td>A device-chip boot. A <code>RESET</code> with its store flag and <code>reboot(RebootTarget::DeviceRun)</code> restart the mock too. <code>reboot(RebootTarget::HostRun)</code> restarts the host chip alone: it counts one in <code>host_restarts</code> and releases nothing.</td>
+                <td>The hello, sent now and again on the next frame the mock receives. <code>session</code> and <code>host_restarts</code> go back to 0.</td>
               </tr>
               <tr>
                 <td><code>link_lost</code></td>
@@ -431,12 +477,12 @@ assert!(matches!(err, Error::BadProtoVer { got: 10 }));`}</code></pre>
               </tr>
               <tr>
                 <td><code>detach</code></td>
-                <td>The real device detaching. With <code>back_within_grace</code>, it re-attaches inside the 250 ms grace and the clone stays up. Without it, the clone is down until <code>attach</code>.</td>
+                <td>The real device detaching. The clone is down until <code>attach</code>.</td>
                 <td><code>session</code> moving. The recovery waits for a clone.</td>
               </tr>
               <tr>
                 <td><code>attach</code></td>
-                <td>A real device attaching. If the clone was up, it is cloned again, which releases the session. If it was down, it comes up with nothing to release.</td>
+                <td>The real device attaching again. The clone comes up with nothing to release.</td>
                 <td>A clone for the recovery to re-send to.</td>
               </tr>
             </tbody>
@@ -456,7 +502,7 @@ let device = Device::open_mock(mock.clone())?;
 device.scale(Axis::X, Direction::Both, 40)?;
 let scale_x = || device.query_locks().map(|l| l.scale_of(Axis::X, Direction::Positive));
 
-mock.detach(false);                 // the clone goes down, and the scale with it
+mock.detach();                      // the clone goes down, and the scale with it
 assert_eq!(scale_x()?, 100);
 mock.attach();                      // a new clone: the library re-sends the scale
 while scale_x()? != 40 {

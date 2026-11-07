@@ -1,0 +1,65 @@
+id = "wheel-pan"
+version = 1
+category = "injection"
+layout = "main"
+boxes = ["stock", "medius"]
+jams_stock = false
+
+[[legs]]
+id = "rest"
+device = "sim:rest"
+
+[[legs]]
+id = "moving"
+device = "sim:moving"
+
+[[tables]]
+section = "inj-wheel-pan"
+order = 1
+kind = "measure"
+label = "Wheel and pan latency, p50"
+key = "Command"
+unit = "ms"
+better = "lower"
+stat = "p50"
+layer = "wire"
+n = "100 commands per row, 3 runs"
+commands = { stock = "km.wheel", medius = "MOVE" }
+resolution = 0.001
+
+[[tables.rows]]
+id = "inj-wheel-lat-rest-1"
+label = "Wheel 1, mouse still"
+ptr = "/results/0/latency/p50"
+unit = "us"
+
+[[tables.rows]]
+id = "inj-wheel-lat-rest-5"
+label = "Wheel 5, mouse still"
+ptr = "/results/1/latency/p50"
+unit = "us"
+
+[[tables.rows]]
+id = "inj-wheel-lat-rest-neg3"
+label = "Wheel -3, mouse still"
+ptr = "/results/2/latency/p50"
+unit = "us"
+
+[[tables.rows]]
+id = "inj-wheel-lat-moving-1"
+label = "Wheel 1, 1 kHz mouse moving"
+ptr = "/results/4/latency/p50"
+unit = "us"
+
+[[tables]]
+section = "inj-wheel-pan"
+order = 2
+kind = "outcome"
+label = "Horizontal scroll reaching the PC"
+key = "Command"
+outcomes = ["Arrives", "Lost", "Refused"]
+
+[[tables.rows]]
+id = "inj-pan-arrives"
+label = "Pan 1, 100 times"
+ptr = "/outcomes/inj-pan-arrives"

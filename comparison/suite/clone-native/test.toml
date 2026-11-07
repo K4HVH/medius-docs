@@ -1,0 +1,208 @@
+id = "clone-native"
+version = 1
+category = "devices"
+layout = "native"
+boxes = ["stock", "medius"]
+jams_stock = false
+
+[[legs]]
+id = "start"
+device = "sim:fresh_mouse"
+
+[[tables]]
+section = "devices-shapes"
+order = 2
+kind = "outcome"
+label = "Clone faithfulness"
+key = "Device"
+outcomes = ["Faithful", "Imperfect"]
+
+[[tables.rows]]
+id = "devices-clone-mice-1ms"
+label = "Three mice with a 1 ms interval"
+note = "8-bit and 16-bit axes, and a mouse and keyboard in one"
+ptr = "/outcomes/devices-clone-mice-1ms"
+
+[[tables.rows]]
+id = "devices-clone-boot-keyboard"
+label = "Boot keyboard"
+ptr = "/outcomes/devices-clone-boot-keyboard"
+
+[[tables.rows]]
+id = "devices-clone-hid-stream-beside-mouse"
+label = "Mouse with a second, streaming HID interface"
+ptr = "/outcomes/devices-clone-hid-stream-beside-mouse"
+
+[[tables.rows]]
+id = "devices-clone-vendor-beside-mouse"
+label = "Five mice with a streaming vendor interface"
+ptr = "/outcomes/devices-clone-vendor-beside-mouse"
+
+[[tables.rows]]
+id = "devices-clone-hid-variants"
+label = "Six unusual HID interfaces"
+note = "Alternate settings, a 64-byte endpoint, two IN endpoints, OUT only, the HID descriptor after the endpoint, a physical descriptor first"
+ptr = "/outcomes/devices-clone-hid-variants"
+
+[[tables.rows]]
+id = "devices-clone-layouts"
+label = "Four unusual interface layouts"
+note = "An alternate setting, a gap in the interface numbers, numbering from 1, ten interfaces"
+ptr = "/outcomes/devices-clone-layouts"
+
+[[tables.rows]]
+id = "devices-clone-slow-report"
+label = "Four devices slow to give their report descriptor"
+note = "450 or 700 ms late, or refused"
+ptr = "/outcomes/devices-clone-slow-report"
+
+[[tables.rows]]
+id = "devices-clone-pad-serial"
+label = "XInput pad and a USB serial device"
+ptr = "/outcomes/devices-clone-pad-serial"
+
+[[tables.rows]]
+id = "devices-clone-qualifier"
+label = "Two mice, with and without a device qualifier"
+ptr = "/outcomes/devices-clone-qualifier"
+
+[[tables.rows]]
+id = "devices-clone-mice-slow"
+label = "Five mice with an 8 or 10 ms interval"
+note = "Including a two-mouse device and a mouse with two configurations"
+ptr = "/outcomes/devices-clone-mice-slow"
+
+[[tables.rows]]
+id = "devices-clone-mice-fast"
+label = "Two mice with a 2 or 4 ms interval"
+ptr = "/outcomes/devices-clone-mice-fast"
+
+[[tables.rows]]
+id = "devices-clone-control-endpoint"
+label = "Device with a second control endpoint"
+ptr = "/outcomes/devices-clone-control-endpoint"
+
+[[tables.rows]]
+id = "devices-clone-report-1500"
+label = "Mouse with a 1,500-byte report descriptor"
+ptr = "/outcomes/devices-clone-report-1500"
+
+[[tables.rows]]
+id = "devices-clone-report-declared-3000"
+label = "Mouse claiming a 3,000-byte report descriptor"
+note = "It sends 50 bytes, which the PC pads to 3,000 with zeros"
+ptr = "/outcomes/devices-clone-report-declared-3000"
+
+[[tables.rows]]
+id = "devices-clone-second-config"
+label = "Mouse with an unused second configuration"
+ptr = "/outcomes/devices-clone-second-config"
+
+[[tables.rows]]
+id = "devices-ep0-size-8"
+label = "Mouse with an 8-byte endpoint 0"
+test = "ep0-shapes"
+ptr = "/outcomes/devices-ep0-size-8"
+
+[[tables.rows]]
+id = "devices-ep0-size-16"
+label = "Mouse with a 16-byte endpoint 0"
+test = "ep0-shapes"
+ptr = "/outcomes/devices-ep0-size-16"
+
+[[tables.rows]]
+id = "devices-ep0-size-32"
+label = "Mouse with a 32-byte endpoint 0"
+test = "ep0-shapes"
+ptr = "/outcomes/devices-ep0-size-32"
+
+[[tables.rows]]
+id = "devices-ep0-size-strings"
+label = "Mouse with name and serial strings"
+test = "ep0-shapes"
+ptr = "/outcomes/devices-ep0-size-strings"
+
+[[tables.rows]]
+id = "devices-clone-nine-alternates"
+label = "Mouse with a vendor interface of nine settings"
+ptr = "/outcomes/devices-clone-nine-alternates"
+
+[[tables.rows]]
+id = "devices-clone-interface-12"
+label = "Vendor interface numbered 12"
+ptr = "/outcomes/devices-clone-interface-12"
+
+[[tables.rows]]
+id = "devices-clone-far-interfaces"
+label = "HID interface numbered 200 beside a vendor one numbered 60"
+ptr = "/outcomes/devices-clone-far-interfaces"
+
+[[tables.rows]]
+id = "devices-clone-builtins"
+label = "Gaming mouse, keyboard and silent mouse"
+ptr = "/outcomes/devices-clone-builtins"
+
+[[tables.rows]]
+id = "devices-clone-stall"
+label = "Mouse that stalls its endpoint after 200 reports"
+ptr = "/outcomes/devices-clone-stall"
+
+[[tables.rows]]
+id = "devices-clone-hsmouse"
+label = "High-speed mouse"
+note = "Both boxes' chips run at full speed only"
+ptr = "/outcomes/devices-clone-hsmouse"
+
+[[tables]]
+section = "devices-imperfect"
+order = 2
+kind = "outcome"
+label = "Clone faithfulness"
+key = "Device"
+outcomes = ["Faithful", "Imperfect", "Not cloned"]
+
+[[tables.rows]]
+id = "devices-imperfect-clone-isochronous"
+label = "Vendor interface with an isochronous endpoint"
+ptr = "/outcomes/devices-imperfect-clone-isochronous"
+
+[[tables.rows]]
+id = "devices-imperfect-clone-bulk"
+label = "Three devices with a bulk endpoint"
+note = "At 1,000 packets/s"
+ptr = "/outcomes/devices-imperfect-clone-bulk"
+
+[[tables.rows]]
+id = "devices-imperfect-clone-five-in"
+label = "Mouse with a vendor interface, five IN endpoints"
+ptr = "/outcomes/devices-imperfect-clone-five-in"
+
+[[tables.rows]]
+id = "devices-imperfect-clone-six-in"
+label = "Mouse with a vendor interface, six IN endpoints"
+ptr = "/outcomes/devices-imperfect-clone-six-in"
+
+[[tables.rows]]
+id = "devices-imperfect-clone-five-hid"
+label = "Keyboard with five HID interfaces, an IN endpoint on each"
+ptr = "/outcomes/devices-imperfect-clone-five-hid"
+
+[[tables.rows]]
+id = "devices-imperfect-clone-unused-five-in"
+label = "Mouse with five IN endpoints in an unused second configuration"
+ptr = "/outcomes/devices-imperfect-clone-unused-five-in"
+
+[[tables.rows]]
+id = "devices-imperfect-clone-endpoint-7"
+label = "Vendor IN numbered 0x87"
+ptr = "/outcomes/devices-imperfect-clone-endpoint-7"
+
+[[tables.rows]]
+id = "devices-imperfect-clone-wide-packets"
+label = "Two devices declaring 65- or 1,024-byte interrupt packets"
+ptr = "/outcomes/devices-imperfect-clone-wide-packets"
+
+[[tables.rows]]
+id = "devices-imperfect-clone-long-configuration"
+label = "Mouse with a 2,083-byte configuration descriptor"
+ptr = "/outcomes/devices-imperfect-clone-long-configuration"

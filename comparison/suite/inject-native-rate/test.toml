@@ -1,0 +1,246 @@
+id = "inject-native-rate"
+version = 1
+category = "passthrough"
+layout = "main"
+boxes = ["stock", "medius"]
+jams_stock = false
+
+[[legs]]
+id = "count"
+device = "sim:count"
+
+[[legs]]
+id = "alt"
+device = "sim:alt"
+
+[[legs]]
+id = "const1"
+device = "sim:const1"
+
+[[legs]]
+id = "const100"
+device = "sim:const100"
+
+[[legs]]
+id = "sine"
+device = "sim:sine"
+
+[[tables]]
+section = "pass-inject"
+order = 2
+kind = "measure"
+label = "Reports read from a 1 kHz counting mouse in 15.5 s"
+key = "Moves sent"
+unit = "reports"
+better = "higher"
+layer = "hidraw"
+n = "One 15 s run per row, then 0.5 s, 3 runs"
+commands = { stock = "km.move", medius = "MOVE" }
+resolution = 1
+
+[[tables.rows]]
+id = "pass-inject-count-none"
+label = "None"
+ptr = "/count/results/0/hidraw_native"
+
+[[tables.rows]]
+id = "pass-inject-count-1000"
+label = "1,000/s"
+ptr = "/count/results/1/hidraw_native"
+
+[[tables.rows]]
+id = "pass-inject-count-500"
+label = "500/s"
+ptr = "/count/results/2/hidraw_native"
+
+[[tables.rows]]
+id = "pass-inject-count-125"
+label = "125/s"
+ptr = "/count/results/3/hidraw_native"
+
+[[tables]]
+section = "pass-inject"
+order = 3
+kind = "measure"
+label = "Reports read from a 1 kHz mouse moving at a varying speed, in 15.5 s"
+key = "Moves sent"
+unit = "reports"
+better = "higher"
+layer = "hidraw"
+n = "15 s then 0.5 s a run, 3 runs"
+commands = { stock = "km.move", medius = "MOVE" }
+resolution = 1
+
+[[tables.rows]]
+id = "pass-inject-sine-1000"
+label = "1,000/s"
+ptr = "/sine/results/0/hidraw_native"
+
+[[tables.rows]]
+id = "pass-inject-sine-500"
+label = "500/s"
+ptr = "/sine/results/1/hidraw_native"
+
+[[tables.rows]]
+id = "pass-inject-sine-125"
+label = "125/s"
+ptr = "/sine/results/2/hidraw_native"
+
+[[tables]]
+section = "pass-inject"
+order = 4
+kind = "measure"
+label = "Reports read from a 1 kHz mouse in 15.5 s, injecting 1,000 moves/s"
+key = "Mouse"
+unit = "reports"
+better = "higher"
+layer = "hidraw"
+n = "One 15 s run per row, then 0.5 s, 3 runs"
+commands = { stock = "km.move", medius = "MOVE" }
+resolution = 1
+
+[[tables.rows]]
+id = "pass-inject-steady-const1"
+label = "Moving 1 count every report"
+ptr = "/const1/results/1/hidraw_native"
+
+[[tables.rows]]
+id = "pass-inject-steady-const100"
+label = "Moving 100 counts every report"
+ptr = "/const100/results/1/hidraw_native"
+
+[[tables.rows]]
+id = "pass-inject-steady-alt"
+label = "Moving 1 count, then -1, alternating"
+ptr = "/alt/results/1/hidraw_native"
+
+[[tables]]
+section = "pass-inject"
+order = 5
+kind = "measure"
+label = "Reports read from a 1 kHz mouse moving at a varying speed, in 5.5 s"
+key = "Commands sent"
+unit = "reports"
+better = "higher"
+layer = "hidraw"
+n = "One 5 s run per row, then 0.5 s, 3 runs"
+resolution = 1
+
+[[tables.rows]]
+id = "pass-inject-slow-10"
+label = "10 moves/s"
+ptr = "/sine_slow/results/0/hidraw_native"
+
+[[tables.rows]]
+id = "pass-inject-slow-30"
+label = "30 moves/s"
+ptr = "/sine_slow/results/1/hidraw_native"
+
+[[tables.rows]]
+id = "pass-inject-slow-move0"
+label = "1,000 zero-count moves/s"
+ptr = "/sine_move0/results/0/hidraw_native"
+
+[[tables.rows]]
+id = "pass-inject-slow-query"
+label = "100 queries/s"
+ptr = "/sine_query/results/0/hidraw_native"
+
+[[tables]]
+section = "inj-reports-emitted"
+order = 2
+kind = "measure"
+label = "Reports carrying only injected motion beside a mouse moving at a varying speed, in 15 s"
+key = "Moves sent"
+unit = "reports"
+better = "lower"
+layer = "evdev"
+n = "15 s a run, 3 runs"
+commands = { stock = "km.move", medius = "MOVE" }
+resolution = 1
+
+[[tables.rows]]
+id = "inj-box-only-sine-1000"
+label = "1,000 moves/s"
+ptr = "/sine/results/0/box_only"
+
+[[tables.rows]]
+id = "inj-box-only-sine-500"
+label = "500 moves/s"
+ptr = "/sine/results/1/box_only"
+
+[[tables.rows]]
+id = "inj-box-only-sine-125"
+label = "125 moves/s"
+ptr = "/sine/results/2/box_only"
+
+[[tables]]
+section = "inj-reports-emitted"
+order = 3
+kind = "measure"
+label = "Reports carrying only injected motion beside a mouse moving at a varying speed, in 5 s"
+key = "Moves sent"
+unit = "reports"
+better = "lower"
+layer = "evdev"
+n = "5 s a run, 3 runs"
+commands = { stock = "km.move", medius = "MOVE" }
+resolution = 1
+
+[[tables.rows]]
+id = "inj-box-only-slow-30"
+label = "30 moves/s"
+ptr = "/sine_slow/results/1/box_only"
+
+[[tables.rows]]
+id = "inj-box-only-slow-10"
+label = "10 moves/s"
+ptr = "/sine_slow/results/0/box_only"
+
+[[tables]]
+section = "inj-totals"
+order = 6
+kind = "measure"
+label = "Counts arriving from 15 s of default moves into a moving 1 kHz mouse"
+key = "Mouse and moves"
+unit = "counts"
+better = "higher"
+layer = "evdev"
+n = "One 15 s run per row, 3 runs"
+commands = { stock = "km.move", medius = "MOVE" }
+
+[[tables.rows]]
+id = "inj-total-count-1000"
+label = "Counting mouse, 1,000 moves/s"
+ptr = "/count/results/1/x_delivered"
+of_ptr = "/count/results/1/sent"
+
+[[tables.rows]]
+id = "inj-total-count-500"
+label = "Counting mouse, 500 moves/s"
+ptr = "/count/results/2/x_delivered"
+of_ptr = "/count/results/2/sent"
+
+[[tables.rows]]
+id = "inj-total-count-125"
+label = "Counting mouse, 125 moves/s"
+ptr = "/count/results/3/x_delivered"
+of_ptr = "/count/results/3/sent"
+
+[[tables.rows]]
+id = "inj-total-sine-1000"
+label = "Mouse moving at a varying speed, 1,000 moves/s"
+ptr = "/sine/results/0/x_delivered"
+of_ptr = "/sine/results/0/sent"
+
+[[tables.rows]]
+id = "inj-total-sine-500"
+label = "Mouse moving at a varying speed, 500 moves/s"
+ptr = "/sine/results/1/x_delivered"
+of_ptr = "/sine/results/1/sent"
+
+[[tables.rows]]
+id = "inj-total-sine-125"
+label = "Mouse moving at a varying speed, 125 moves/s"
+ptr = "/sine/results/2/x_delivered"
+of_ptr = "/sine/results/2/sent"

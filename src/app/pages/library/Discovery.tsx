@@ -28,8 +28,11 @@ const Discovery: Component = () => {
           name) and its cloned{' '}
           <A href="/library/types/structs#device-info"><code>DeviceInfo</code></A>. A box that doesn't
           speak <A href="/library/connection#zero-config"><code>PROTO_VER</code></A> has{' '}
-          <code>device</code> <code>None</code>, so a box that needs a{' '}
-          <A href="/dashboard/update">firmware update</A> still shows up.
+          <code>device</code> <code>None</code>, so a box that needs a firmware update still shows
+          up. Open it with <A href="/library/update#open-for-update"><code>open_for_update</code></A>{' '}
+          to update it. On Linux, a box whose port another process holds open is left out. A box on
+          firmware before 3.4.0 runs its control link at 4&nbsp;Mbaud and isn't listed: open it by
+          its port with <A href="/library/update#open-for-update"><code>open_for_update</code></A>.
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`use medius::Device;
@@ -52,7 +55,9 @@ for b in Device::list() {
           <A href="/library/types/structs#port-info">serial</A>. Returns{' '}
           <A href="/library/types/errors"><code>Error::BadProtoVer</code></A> if that box speaks
           another protocol, or <A href="/library/types/errors"><code>Error::NotFound</code></A> if no
-          box matches.
+          box matches. When none matches and another process holds a box's port, it returns{' '}
+          <A href="/library/types/errors"><code>Error::PortBusy</code></A> naming the holder, since
+          that box may be the one asked for.
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`use medius::{Device, Error};
@@ -73,7 +78,9 @@ match Device::open_by_id("123456789abc") {
           <A href="/library/types/enums#device-kind"><code>DeviceKind</code></A> is a mouse. If no box
           clones a mouse, a connected box on another protocol (its clone unread) gives{' '}
           <A href="/library/types/errors"><code>Error::BadProtoVer</code></A>. With neither, it returns{' '}
-          <A href="/library/types/errors"><code>Error::NotFound</code></A>.
+          <A href="/library/types/errors"><code>Error::NotFound</code></A>, or{' '}
+          <A href="/library/types/errors"><code>Error::PortBusy</code></A> when another process holds
+          a box's port.
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`use medius::Device;
@@ -104,7 +111,9 @@ kbd_box.press(Key::A)?;`}</code></pre>
           <A href="/library/types/structs#box-info"><code>BoxInfo</code></A> satisfies <code>pred</code>,
           preferring one that speaks <code>PROTO_VER</code>. A match on another protocol returns{' '}
           <A href="/library/types/errors"><code>Error::BadProtoVer</code></A>, and no match returns{' '}
-          <A href="/library/types/errors"><code>Error::NotFound</code></A>.
+          <A href="/library/types/errors"><code>Error::NotFound</code></A>, or{' '}
+          <A href="/library/types/errors"><code>Error::PortBusy</code></A> when another process holds
+          a box's port.
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`use medius::Device;

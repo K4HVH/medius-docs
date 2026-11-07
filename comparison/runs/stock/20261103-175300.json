@@ -1,0 +1,170 @@
+{
+ "format": "medius-compare-run/1",
+ "tool": {
+  "version": "1.0.0",
+  "entry": "sim"
+ },
+ "box": "stock",
+ "started": "2026-11-03T17:53:00+00:00",
+ "finished": "2026-11-03T20:45:02+00:00",
+ "host": {
+  "kernel": "7.2.13",
+  "python": "3.14.8",
+  "medius_package": "3.5.0"
+ },
+ "firmware": {
+  "version": "V4.122"
+ },
+ "sims": {
+  "stock": {
+   "build": 412816493
+  },
+  "medius": {
+   "build": 412816493
+  }
+ },
+ "tests": {
+  "raw-move": {
+   "version": 2,
+   "layout": "main",
+   "legs": [
+    "rest",
+    "moving"
+   ],
+   "skipped_legs": {},
+   "devices": [
+    {
+     "leg": "rest",
+     "vid": 8526,
+     "pid": 28720,
+     "product": "",
+     "descriptor_sha256": "10ab5d166809ab8d86328d42b55817fb4ede3ee69b5f9a5c50c94d84c81f99f7"
+    },
+    {
+     "leg": "moving",
+     "vid": 8526,
+     "pid": 29073,
+     "product": "",
+     "descriptor_sha256": "89033914efaf0bd124026ad8d6703c2a6fc812e22e83ccbe673584682f8aea74"
+    }
+   ],
+   "state": {},
+   "integrity": {
+    "usbmon_lost": 0,
+    "cut_transfers": 0
+   },
+   "runs": [
+    {
+     "results": [
+      {
+       "leg": "rest",
+       "sent": 40,
+       "packets_seen": 40,
+       "total": 40,
+       "arrived": 40,
+       "latency": {
+        "n": 40,
+        "unit": "us",
+        "mean": 629.67,
+        "sd": 256.39,
+        "min": 173.0,
+        "p50": 630.0,
+        "p95": 1095.35,
+        "p99": 1190.2,
+        "max": 1198.0
+       },
+       "reports_per_move": {
+        "n": 40,
+        "unit": "reports",
+        "mean": 1.0,
+        "sd": 0.0,
+        "min": 1,
+        "p50": 1.0,
+        "p95": 1.0,
+        "p99": 1.0,
+        "max": 1
+       },
+       "reply_heads": {
+        "0100": 40
+       },
+       "receipt_heads": {
+        "0200": 40
+       }
+      },
+      {
+       "leg": "moving",
+       "sent": 40,
+       "packets_seen": 40,
+       "total": 40,
+       "arrived": 40,
+       "latency": {
+        "n": 40,
+        "unit": "us",
+        "mean": 8038.47,
+        "sd": 1656.19,
+        "min": 2760.0,
+        "p50": 8628.0,
+        "p95": 9074.3,
+        "p99": 9083.05,
+        "max": 9085.0
+       },
+       "reports_per_move": {
+        "n": 40,
+        "unit": "reports",
+        "mean": 1.0,
+        "sd": 0.0,
+        "min": 1,
+        "p50": 1.0,
+        "p95": 1.0,
+        "p99": 1.0,
+        "max": 1
+       },
+       "reply_heads": {
+        "0100": 40
+       },
+       "receipt_heads": {
+        "0200": 40
+       }
+      },
+      {
+       "leg": "stream",
+       "sent": 200,
+       "packets_seen": 200,
+       "total": 16,
+       "arrived": 16,
+       "latency": {
+        "n": 16,
+        "unit": "us",
+        "mean": 663.88,
+        "sd": 288.04,
+        "min": 283.0,
+        "p50": 611.5,
+        "p95": 1080.25,
+        "p99": 1148.05,
+        "max": 1165.0
+       },
+       "reports_per_move": {
+        "n": 200,
+        "unit": "reports",
+        "mean": 0.08,
+        "sd": 0.27,
+        "min": 0,
+        "p50": 0.0,
+        "p95": 1.0,
+        "p99": 1.0,
+        "max": 1
+       },
+       "reply_heads": {
+        "0100": 16,
+        "ff03": 184
+       },
+       "receipt_heads": {}
+      }
+     ],
+     "power_cycled_first": true
+    }
+   ],
+   "failed": null
+  }
+ }
+}

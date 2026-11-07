@@ -1,0 +1,216 @@
+id = "iface-data"
+version = 1
+category = "devices"
+layout = "main"
+boxes = ["stock", "medius"]
+jams_stock = false
+
+[[legs]]
+id = "start"
+device = "sim:fresh_mouse"
+
+[[tables]]
+section = "devices-endpoint-data"
+order = 1
+kind = "outcome"
+label = "Endpoints delivering"
+key = "Device"
+outcomes = ["Every endpoint at the native rate", "Not cloned", "An endpoint sends nothing"]
+
+[[tables.rows]]
+id = "devices-ep-data-vendorintr"
+label = "Vendor interrupt IN"
+ptr = "/outcomes/devices-ep-data-vendorintr"
+
+[[tables.rows]]
+id = "devices-ep-data-vendintrep-0x84"
+label = "Vendor IN numbered 0x84"
+ptr = "/outcomes/devices-ep-data-vendintrep-0x84"
+
+[[tables.rows]]
+id = "devices-ep-data-vendintrep-0x85"
+label = "Vendor IN numbered 0x85"
+ptr = "/outcomes/devices-ep-data-vendintrep-0x85"
+
+[[tables.rows]]
+id = "devices-ep-data-vendintrep-0x86"
+label = "Vendor IN numbered 0x86"
+ptr = "/outcomes/devices-ep-data-vendintrep-0x86"
+
+[[tables.rows]]
+id = "devices-ep-data-vendintrep-0x87"
+label = "Vendor IN numbered 0x87"
+ptr = "/outcomes/devices-ep-data-vendintrep-0x87"
+
+[[tables.rows]]
+id = "devices-ep-data-altsetting"
+label = "Vendor IN in an alternate setting"
+ptr = "/outcomes/devices-ep-data-altsetting"
+
+[[tables.rows]]
+id = "devices-ep-data-cdcnotify"
+label = "CDC notification endpoint"
+ptr = "/outcomes/devices-ep-data-cdcnotify"
+
+[[tables.rows]]
+id = "devices-ep-data-hidtwoin"
+label = "HID interface with two INs"
+ptr = "/outcomes/devices-ep-data-hidtwoin"
+
+[[tables.rows]]
+id = "devices-ep-data-vendbulkhigh"
+label = "Vendor bulk IN numbered 0x85"
+ptr = "/outcomes/devices-ep-data-vendbulkhigh"
+
+[[tables.rows]]
+id = "devices-ep-data-hidbulkin"
+label = "HID interface with a bulk IN"
+ptr = "/outcomes/devices-ep-data-hidbulkin"
+
+[[tables.rows]]
+id = "devices-ep-data-vendorbulk-1000-0"
+label = "Vendor bulk pair"
+ptr = "/outcomes/devices-ep-data-vendorbulk-1000-0"
+
+[[tables.rows]]
+id = "devices-ep-data-widehid-65-65"
+label = "HID IN declaring 65 bytes"
+ptr = "/outcomes/devices-ep-data-widehid-65-65"
+
+[[tables.rows]]
+id = "devices-ep-data-two-high-in"
+label = "Two high-numbered INs beside a mouse"
+ptr = "/outcomes/devices-ep-data-two-high-in"
+
+[[tables.rows]]
+id = "devices-ep-data-five-in"
+label = "Mouse with a vendor interface, five INs"
+ptr = "/outcomes/devices-ep-data-five-in"
+
+[[tables.rows]]
+id = "devices-ep-data-six-in"
+label = "Mouse with a vendor interface, six INs"
+ptr = "/outcomes/devices-ep-data-six-in"
+
+[[tables.rows]]
+id = "devices-ep-data-ten-interfaces"
+label = "Ten interfaces"
+ptr = "/outcomes/devices-ep-data-ten-interfaces"
+
+[[tables.rows]]
+id = "devices-ep-data-high-interface"
+label = "Vendor interface numbered 12"
+ptr = "/outcomes/devices-ep-data-high-interface"
+
+[[tables.rows]]
+id = "devices-ep-data-xinput"
+label = "XInput pad, four INs"
+ptr = "/outcomes/devices-ep-data-xinput"
+
+[[tables.rows]]
+id = "devices-ep-data-five-hid"
+label = "Keyboard with five HID interfaces, an IN on each"
+ptr = "/outcomes/devices-ep-data-five-hid"
+
+[[tables]]
+section = "devices-endpoint-data"
+order = 2
+kind = "outcome"
+label = "Endpoints delivering, Medius with imperfect clones on"
+key = "Device"
+outcomes = ["Every endpoint at the native rate", "Not cloned", "An endpoint sends nothing"]
+
+[[tables.rows]]
+id = "devices-ep-data-imp-vendorintr"
+label = "Vendor interrupt IN"
+ptr = "/outcomes/devices-ep-data-imp-vendorintr"
+
+[[tables.rows]]
+id = "devices-ep-data-imp-vendintrep-0x84"
+label = "Vendor IN numbered 0x84"
+ptr = "/outcomes/devices-ep-data-imp-vendintrep-0x84"
+
+[[tables.rows]]
+id = "devices-ep-data-imp-vendintrep-0x85"
+label = "Vendor IN numbered 0x85"
+ptr = "/outcomes/devices-ep-data-imp-vendintrep-0x85"
+
+[[tables.rows]]
+id = "devices-ep-data-imp-vendintrep-0x86"
+label = "Vendor IN numbered 0x86"
+ptr = "/outcomes/devices-ep-data-imp-vendintrep-0x86"
+
+[[tables.rows]]
+id = "devices-ep-data-imp-vendintrep-0x87"
+label = "Vendor IN numbered 0x87"
+ptr = "/outcomes/devices-ep-data-imp-vendintrep-0x87"
+
+[[tables.rows]]
+id = "devices-ep-data-imp-altsetting"
+label = "Vendor IN in an alternate setting"
+ptr = "/outcomes/devices-ep-data-imp-altsetting"
+
+[[tables.rows]]
+id = "devices-ep-data-imp-cdcnotify"
+label = "CDC notification endpoint"
+ptr = "/outcomes/devices-ep-data-imp-cdcnotify"
+
+[[tables.rows]]
+id = "devices-ep-data-imp-hidtwoin"
+label = "HID interface with two INs"
+ptr = "/outcomes/devices-ep-data-imp-hidtwoin"
+
+[[tables.rows]]
+id = "devices-ep-data-imp-vendbulkhigh"
+label = "Vendor bulk IN numbered 0x85"
+ptr = "/outcomes/devices-ep-data-imp-vendbulkhigh"
+
+[[tables.rows]]
+id = "devices-ep-data-imp-hidbulkin"
+label = "HID interface with a bulk IN"
+ptr = "/outcomes/devices-ep-data-imp-hidbulkin"
+
+[[tables.rows]]
+id = "devices-ep-data-imp-vendorbulk-1000-0"
+label = "Vendor bulk pair"
+ptr = "/outcomes/devices-ep-data-imp-vendorbulk-1000-0"
+
+[[tables.rows]]
+id = "devices-ep-data-imp-widehid-65-65"
+label = "HID IN declaring 65 bytes"
+ptr = "/outcomes/devices-ep-data-imp-widehid-65-65"
+
+[[tables.rows]]
+id = "devices-ep-data-imp-two-high-in"
+label = "Two high-numbered INs beside a mouse"
+ptr = "/outcomes/devices-ep-data-imp-two-high-in"
+
+[[tables.rows]]
+id = "devices-ep-data-imp-five-in"
+label = "Mouse with a vendor interface, five INs"
+ptr = "/outcomes/devices-ep-data-imp-five-in"
+
+[[tables.rows]]
+id = "devices-ep-data-imp-six-in"
+label = "Mouse with a vendor interface, six INs"
+ptr = "/outcomes/devices-ep-data-imp-six-in"
+
+[[tables.rows]]
+id = "devices-ep-data-imp-ten-interfaces"
+label = "Ten interfaces"
+ptr = "/outcomes/devices-ep-data-imp-ten-interfaces"
+
+[[tables.rows]]
+id = "devices-ep-data-imp-high-interface"
+label = "Vendor interface numbered 12"
+ptr = "/outcomes/devices-ep-data-imp-high-interface"
+
+[[tables.rows]]
+id = "devices-ep-data-imp-xinput"
+label = "XInput pad, four INs"
+ptr = "/outcomes/devices-ep-data-imp-xinput"
+
+[[tables.rows]]
+id = "devices-ep-data-imp-five-hid"
+label = "Keyboard with five HID interfaces, an IN on each"
+ptr = "/outcomes/devices-ep-data-imp-five-hid"

@@ -1,0 +1,412 @@
+{
+ "format": "medius-compare-run/1",
+ "tool": {
+  "version": "1.0.0",
+  "entry": "sim"
+ },
+ "box": "native",
+ "started": "2026-11-04T03:04:33+00:00",
+ "finished": "2026-11-04T03:04:44+00:00",
+ "host": {
+  "kernel": "7.2.13",
+  "python": "3.14.8",
+  "medius_package": "3.5.0"
+ },
+ "firmware": {},
+ "sims": {
+  "stock": {
+   "build": 412816493
+  },
+  "medius": {
+   "build": 412816493
+  }
+ },
+ "tests": {
+  "out-rate": {
+   "version": 1,
+   "layout": "native",
+   "legs": [
+    "fast",
+    "slow"
+   ],
+   "skipped_legs": {},
+   "devices": [
+    {
+     "leg": "slow",
+     "vid": 7504,
+     "pid": 29539,
+     "product": "",
+     "descriptor_sha256": "66030ac8a389105a95323e09d0fc6de54f1c5419aac5a2311c6ca6dcf92ac6e8"
+    }
+   ],
+   "state": {},
+   "integrity": {
+    "usbmon_lost": 0,
+    "cut_transfers": 0
+   },
+   "runs": [
+    {
+     "base": {
+      "results": [
+       {
+        "leg": "slow",
+        "ep": "0x02",
+        "name": "HID interrupt OUT",
+        "clone_endpoint": {
+         "present": true,
+         "interface": 1,
+         "alt": 0,
+         "type": "interrupt",
+         "mps": 8,
+         "bInterval": 1
+        },
+        "submitted": 100,
+        "accepted_by_clone": 100,
+        "accepted_in_order": true,
+        "urb_errors": {},
+        "short_writes": 0,
+        "unfinished": 0,
+        "stopped": null,
+        "secs": 0.496,
+        "per_second": 201.7,
+        "device": {
+         "packets": 100,
+         "bytes": 800,
+         "crc": 14063
+        },
+        "received": 100,
+        "received_bytes": 800,
+        "sent": 100,
+        "sent_bytes": 800,
+        "lost": 0,
+        "merged": 0,
+        "repeated": 0,
+        "reordered": 0,
+        "verdict": "all, once, in order",
+        "pc_waited": true
+       },
+       {
+        "leg": "slow",
+        "ep": "0x03",
+        "name": "vendor interrupt OUT",
+        "clone_endpoint": {
+         "present": true,
+         "interface": 2,
+         "alt": 0,
+         "type": "interrupt",
+         "mps": 8,
+         "bInterval": 1
+        },
+        "submitted": 100,
+        "accepted_by_clone": 100,
+        "accepted_in_order": true,
+        "urb_errors": {},
+        "short_writes": 0,
+        "unfinished": 0,
+        "stopped": null,
+        "secs": 0.496,
+        "per_second": 201.6,
+        "device": {
+         "packets": 100,
+         "bytes": 800,
+         "crc": 5685
+        },
+        "received": 100,
+        "received_bytes": 800,
+        "sent": 100,
+        "sent_bytes": 800,
+        "lost": 0,
+        "merged": 0,
+        "repeated": 0,
+        "reordered": 0,
+        "verdict": "all, once, in order",
+        "pc_waited": true
+       },
+       {
+        "leg": "slow",
+        "ep": "0x04",
+        "name": "vendor bulk OUT",
+        "clone_endpoint": {
+         "present": true,
+         "interface": 2,
+         "alt": 0,
+         "type": "bulk",
+         "mps": 8,
+         "bInterval": 0
+        },
+        "submitted": 100,
+        "accepted_by_clone": 100,
+        "accepted_in_order": true,
+        "urb_errors": {},
+        "short_writes": 0,
+        "unfinished": 0,
+        "stopped": null,
+        "secs": 0.495,
+        "per_second": 202.1,
+        "device": {
+         "packets": 100,
+         "bytes": 800,
+         "crc": 59311
+        },
+        "received": 100,
+        "received_bytes": 800,
+        "sent": 100,
+        "sent_bytes": 800,
+        "lost": 0,
+        "merged": 0,
+        "repeated": 0,
+        "reordered": 0,
+        "verdict": "all, once, in order",
+        "pc_waited": true
+       }
+      ]
+     },
+     "outcomes": {
+      "pass-out-verdict-slow": "All, once, in order"
+     }
+    },
+    {
+     "base": {
+      "results": [
+       {
+        "leg": "slow",
+        "ep": "0x02",
+        "name": "HID interrupt OUT",
+        "clone_endpoint": {
+         "present": true,
+         "interface": 1,
+         "alt": 0,
+         "type": "interrupt",
+         "mps": 8,
+         "bInterval": 1
+        },
+        "submitted": 100,
+        "accepted_by_clone": 100,
+        "accepted_in_order": true,
+        "urb_errors": {},
+        "short_writes": 0,
+        "unfinished": 0,
+        "stopped": null,
+        "secs": 0.496,
+        "per_second": 201.6,
+        "device": {
+         "packets": 100,
+         "bytes": 800,
+         "crc": 14063
+        },
+        "received": 100,
+        "received_bytes": 800,
+        "sent": 100,
+        "sent_bytes": 800,
+        "lost": 0,
+        "merged": 0,
+        "repeated": 0,
+        "reordered": 0,
+        "verdict": "all, once, in order",
+        "pc_waited": true
+       },
+       {
+        "leg": "slow",
+        "ep": "0x03",
+        "name": "vendor interrupt OUT",
+        "clone_endpoint": {
+         "present": true,
+         "interface": 2,
+         "alt": 0,
+         "type": "interrupt",
+         "mps": 8,
+         "bInterval": 1
+        },
+        "submitted": 100,
+        "accepted_by_clone": 100,
+        "accepted_in_order": true,
+        "urb_errors": {},
+        "short_writes": 0,
+        "unfinished": 0,
+        "stopped": null,
+        "secs": 0.496,
+        "per_second": 201.6,
+        "device": {
+         "packets": 100,
+         "bytes": 800,
+         "crc": 5685
+        },
+        "received": 100,
+        "received_bytes": 800,
+        "sent": 100,
+        "sent_bytes": 800,
+        "lost": 0,
+        "merged": 0,
+        "repeated": 0,
+        "reordered": 0,
+        "verdict": "all, once, in order",
+        "pc_waited": true
+       },
+       {
+        "leg": "slow",
+        "ep": "0x04",
+        "name": "vendor bulk OUT",
+        "clone_endpoint": {
+         "present": true,
+         "interface": 2,
+         "alt": 0,
+         "type": "bulk",
+         "mps": 8,
+         "bInterval": 0
+        },
+        "submitted": 100,
+        "accepted_by_clone": 100,
+        "accepted_in_order": true,
+        "urb_errors": {},
+        "short_writes": 0,
+        "unfinished": 0,
+        "stopped": null,
+        "secs": 0.495,
+        "per_second": 202.0,
+        "device": {
+         "packets": 100,
+         "bytes": 800,
+         "crc": 59311
+        },
+        "received": 100,
+        "received_bytes": 800,
+        "sent": 100,
+        "sent_bytes": 800,
+        "lost": 0,
+        "merged": 0,
+        "repeated": 0,
+        "reordered": 0,
+        "verdict": "all, once, in order",
+        "pc_waited": true
+       }
+      ]
+     },
+     "outcomes": {
+      "pass-out-verdict-slow": "All, once, in order"
+     }
+    },
+    {
+     "base": {
+      "results": [
+       {
+        "leg": "slow",
+        "ep": "0x02",
+        "name": "HID interrupt OUT",
+        "clone_endpoint": {
+         "present": true,
+         "interface": 1,
+         "alt": 0,
+         "type": "interrupt",
+         "mps": 8,
+         "bInterval": 1
+        },
+        "submitted": 100,
+        "accepted_by_clone": 100,
+        "accepted_in_order": true,
+        "urb_errors": {},
+        "short_writes": 0,
+        "unfinished": 0,
+        "stopped": null,
+        "secs": 0.496,
+        "per_second": 201.5,
+        "device": {
+         "packets": 100,
+         "bytes": 800,
+         "crc": 14063
+        },
+        "received": 100,
+        "received_bytes": 800,
+        "sent": 100,
+        "sent_bytes": 800,
+        "lost": 0,
+        "merged": 0,
+        "repeated": 0,
+        "reordered": 0,
+        "verdict": "all, once, in order",
+        "pc_waited": true
+       },
+       {
+        "leg": "slow",
+        "ep": "0x03",
+        "name": "vendor interrupt OUT",
+        "clone_endpoint": {
+         "present": true,
+         "interface": 2,
+         "alt": 0,
+         "type": "interrupt",
+         "mps": 8,
+         "bInterval": 1
+        },
+        "submitted": 100,
+        "accepted_by_clone": 100,
+        "accepted_in_order": true,
+        "urb_errors": {},
+        "short_writes": 0,
+        "unfinished": 0,
+        "stopped": null,
+        "secs": 0.496,
+        "per_second": 201.4,
+        "device": {
+         "packets": 100,
+         "bytes": 800,
+         "crc": 5685
+        },
+        "received": 100,
+        "received_bytes": 800,
+        "sent": 100,
+        "sent_bytes": 800,
+        "lost": 0,
+        "merged": 0,
+        "repeated": 0,
+        "reordered": 0,
+        "verdict": "all, once, in order",
+        "pc_waited": true
+       },
+       {
+        "leg": "slow",
+        "ep": "0x04",
+        "name": "vendor bulk OUT",
+        "clone_endpoint": {
+         "present": true,
+         "interface": 2,
+         "alt": 0,
+         "type": "bulk",
+         "mps": 8,
+         "bInterval": 0
+        },
+        "submitted": 100,
+        "accepted_by_clone": 100,
+        "accepted_in_order": true,
+        "urb_errors": {},
+        "short_writes": 0,
+        "unfinished": 0,
+        "stopped": null,
+        "secs": 0.494,
+        "per_second": 202.3,
+        "device": {
+         "packets": 100,
+         "bytes": 800,
+         "crc": 59311
+        },
+        "received": 100,
+        "received_bytes": 800,
+        "sent": 100,
+        "sent_bytes": 800,
+        "lost": 0,
+        "merged": 0,
+        "repeated": 0,
+        "reordered": 0,
+        "verdict": "all, once, in order",
+        "pc_waited": true
+       }
+      ]
+     },
+     "outcomes": {
+      "pass-out-verdict-slow": "All, once, in order"
+     }
+    }
+   ],
+   "failed": null
+  }
+ }
+}

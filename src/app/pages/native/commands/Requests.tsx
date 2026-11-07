@@ -149,7 +149,7 @@ const Requests: Component = () => {
             </thead>
             <tbody>
               <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x00</td></tr>
-              <tr><td>1</td><td><code>proto_ver</code></td><td><code>u8</code></td><td>protocol version, expected 9</td></tr>
+              <tr><td>1</td><td><code>proto_ver</code></td><td><code>u8</code></td><td>protocol version, expected 10</td></tr>
               <tr><td>2</td><td><code>fw_major</code></td><td><code>u8</code></td><td>firmware major</td></tr>
               <tr><td>3</td><td><code>fw_minor</code></td><td><code>u8</code></td><td>firmware minor</td></tr>
               <tr><td>4</td><td><code>fw_patch</code></td><td><code>u8</code></td><td>firmware patch</td></tr>
@@ -166,7 +166,7 @@ const Requests: Component = () => {
           <A href="/library/requests#version"><code>query_version</code></A>.
         </p>
         <div class="api-response-label">EXAMPLE</div>
-        <p>Firmware <code>3.4.7</code>, protocol <code>9</code>, MAC <code>123456789abc</code>, name "Loki":</p>
+        <p>Firmware <code>3.5.0</code>, protocol <code>10</code>, MAC <code>123456789abc</code>, name "Loki":</p>
         <ByteStrip
           fields={[
             { value: 'A5', name: 'SOF' },
@@ -174,10 +174,10 @@ const Requests: Component = () => {
             { value: '00', name: 'SEQ' },
             { value: '0F 00', name: 'LEN' },
             { value: '00', name: 'what' },
-            { value: '09', name: 'proto' },
+            { value: '0A', name: 'proto' },
             { value: '03', name: 'major' },
-            { value: '04', name: 'minor' },
-            { value: '07', name: 'patch' },
+            { value: '05', name: 'minor' },
+            { value: '00', name: 'patch' },
             { value: '...', name: '...' },
             { value: '...', name: '...' },
             { value: '12 34 56 78 9A BC', name: 'mac (6 bytes)' },
@@ -488,7 +488,7 @@ const Requests: Component = () => {
         </p>
         <p>
           <code>relay_drops</code> is counted apart from the native-input drop counters, so lost
-          relayed traffic doesn't read as lost native input. The eight narrowed counters clamp at
+          relayed traffic doesn't read as lost native input. The nine narrowed counters clamp at
           their max instead of wrapping. The three drop counts are full width.
         </p>
         <p>
@@ -503,7 +503,7 @@ const Requests: Component = () => {
           (the mouse, the keyboard, the consumer control) drops only the locks, injected usages and
           owed motion held on that role.
         </p>
-        <pre class="api-signature">QUERY  what = 5  ·  RESP 31 bytes</pre>
+        <pre class="api-signature">QUERY  what = 5  ·  RESP 33 bytes</pre>
         <p><span class="api-badge api-badge--responded">Returns RESP</span></p>
         <div class="api-response-label">PAYLOAD</div>
         <div class="table-scroll">
@@ -514,7 +514,7 @@ const Requests: Component = () => {
             <tbody>
               <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x05</td></tr>
               <tr><td>1</td><td><code>inject_emits</code></td><td><code>u32</code></td><td>pure-injection reports emitted, little-endian</td></tr>
-              <tr><td>5</td><td><code>tx_drops</code></td><td><code>u16</code></td><td>reports the clone's IN queue couldn't hold, never reaching the game PC; should stay 0</td></tr>
+              <tr><td>5</td><td><code>tx_drops</code></td><td><code>u16</code></td><td>input reports that never reached the game PC: one the clone's IN queue couldn't hold, one the host chip's forwarder or link couldn't take, or one a stop of its stream (a setting switch, a halt, a suspend) cut short; should stay 0</td></tr>
               <tr><td>7</td><td><code>tx_merges</code></td><td><code>u16</code></td><td>backed-up reports merged instead of queued</td></tr>
               <tr><td>9</td><td><code>tx_maxdepth</code></td><td><code>u8</code></td><td>TX queue high-water mark</td></tr>
               <tr><td>10</td><td><code>tx_wedges</code></td><td><code>u8</code></td><td>wedged-endpoint recoveries</td></tr>
@@ -523,8 +523,9 @@ const Requests: Component = () => {
               <tr><td>15</td><td><code>config_count</code></td><td><code>u16</code></td><td>SET_CONFIGURATION events (re-enumerations)</td></tr>
               <tr><td>17</td><td><code>link_rx_drops</code></td><td><code>u32</code></td><td>host-chip input frames the device chip couldn't take off the link; should stay 0</td></tr>
               <tr><td>21</td><td><code>host_rx_drops</code></td><td><code>u32</code></td><td>the same count on the host chip, relayed over the link; should stay 0</td></tr>
-              <tr><td>25</td><td><code>relay_drops</code></td><td><code>u32</code></td><td>relayed traffic and commands that went no further, none of it native input. IN: a vendor IN packet that found its endpoint's queue full of the control PC's <code>RAW</code> packets, or a native zero-length packet answering a poll the PC did not make (the one poll the box runs ahead of a suspended PC). OUT: a packet the box had no room to queue, that failed three times on the real device's bus, or that a bus reset or <code>SET_INTERFACE</code> overtook; a <code>RAW</code> OUT packet with no room to wait. Other: a relayed request the box could not queue; a flagged <code>MOVE</code> the motion batch could not take; any frame other than native input that either chip's link receive ring dropped; a frame from the control PC its receive ring had no room for (one per frame), or an overrun of the control port's UART (one per overrun, however many frames it cost)</td></tr>
+              <tr><td>25</td><td><code>relay_drops</code></td><td><code>u32</code></td><td>relayed traffic and commands that went no further, none of it native input. IN: a vendor IN packet the host chip's link would not carry, or that found its endpoint's queue full of the control PC's <code>RAW</code> packets, or a native zero-length packet answering a poll the PC did not make (the one poll the box runs ahead of a suspended PC). OUT: a packet the box had no room to queue, that failed three times on the real device's bus, or that a bus reset or <code>SET_INTERFACE</code> overtook; a <code>RAW</code> OUT packet with no room to wait. Other: a relayed request, or a packet or step of one, the box could not queue (the request then ends, NAKed until the game PC gives up); a flagged <code>MOVE</code> the motion batch could not take; any frame other than native input that either chip's link receive ring dropped; a frame from the control PC its receive ring had no room for (one per frame), or an overrun of the control port's UART (one per overrun, however many frames it cost)</td></tr>
               <tr><td>29</td><td><code>session</code></td><td><code>u16</code></td><td>releases of host-set state; wraps at 0xFFFF, so compare for inequality</td></tr>
+              <tr><td>31</td><td><code>host_restarts</code></td><td><code>u16</code></td><td>restarts of the host chip since the device chip booted, each too short to drop the inter-chip link, so counted here and nowhere else; should stay 0 outside an <A href="/native/commands/update">update</A> or a <A href="/native/commands/admin#reboot"><code>REBOOT</code></A></td></tr>
             </tbody>
           </table>
         </div>
@@ -552,7 +553,7 @@ const Requests: Component = () => {
             <tbody>
               <tr><td><A href="/native/commands/admin#reset"><code>RESET</code></A></td><td>once</td></tr>
               <tr><td>the inter-chip link drops</td><td>once per outage</td></tr>
-              <tr><td>the real device detaches</td><td>once. The clone's teardown after the detach grace counts again only if a command arrived during the grace</td></tr>
+              <tr><td>the real device detaches</td><td>once, the clone's teardown included</td></tr>
               <tr><td>another device attaches</td><td>once</td></tr>
               <tr><td>a <code>PATCH</code> <code>APPLY</code> or <code>CLEAR</code>, or an <A href="/native/commands/option#imperfect"><code>OPTION(IMPERFECT)</code></A> toggle, that <A href="/native/commands/patch#presentation">presents</A> the clone again</td><td>once</td></tr>
               <tr><td>an <A href="/native/commands/update">update</A> takes the clone down</td><td>once</td></tr>
@@ -565,13 +566,13 @@ const Requests: Component = () => {
           </table>
         </div>
         <div class="api-response-label">EXAMPLE</div>
-        <p>4096 emits, every drop counter at 0, <code>session</code> at 2:</p>
+        <p>4096 emits, every drop counter at 0, <code>session</code> at 2, no host-chip restart:</p>
         <ByteStrip
           fields={[
             { value: 'A5', name: 'SOF' },
             { value: '06', name: 'TYPE' },
             { value: '00', name: 'SEQ' },
-            { value: '1F 00', name: 'LEN' },
+            { value: '21 00', name: 'LEN' },
             { value: '05', name: 'what' },
             { value: '00 10 00 00', name: 'inject_emits' },
             { value: '00 00', name: 'drops' },
@@ -585,6 +586,7 @@ const Requests: Component = () => {
             { value: '00 00 00 00', name: 'host_rx_drops' },
             { value: '00 00 00 00', name: 'relay_drops' },
             { value: '02 00', name: 'session' },
+            { value: '00 00', name: 'host_restarts' },
             { value: 'lo hi', name: 'CRC16' },
           ]}
         />
@@ -1167,7 +1169,7 @@ const Requests: Component = () => {
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <p>
-          Both chips on <code>3.4.7</code>, device on <code>ota_1</code>, host on{' '}
+          Both chips on <code>3.5.0</code>, device on <code>ota_1</code>, host on{' '}
           <code>ota_0</code>, both images <code>valid</code>, nothing staged:
         </p>
         <ByteStrip
@@ -1178,14 +1180,14 @@ const Requests: Component = () => {
             { value: '11 00', name: 'LEN' },
             { value: '0B', name: 'what' },
             { value: '03', name: 'devmaj' },
-            { value: '04', name: 'devmin' },
-            { value: '07', name: 'devpat' },
+            { value: '05', name: 'devmin' },
+            { value: '00', name: 'devpat' },
             { value: '01', name: 'devslt' },
             { value: '02', name: 'devsta' },
             { value: '01', name: 'hostpr' },
             { value: '03', name: 'hstmaj' },
-            { value: '04', name: 'hstmin' },
-            { value: '07', name: 'hstpat' },
+            { value: '05', name: 'hstmin' },
+            { value: '00', name: 'hstpat' },
             { value: '00', name: 'hstslt' },
             { value: '02', name: 'hststa' },
             { value: '00 00 0F 00', name: 'slot_size' },

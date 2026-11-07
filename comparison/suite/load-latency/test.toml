@@ -1,0 +1,114 @@
+id = "load-latency"
+version = 1
+category = "input"
+layout = "main"
+boxes = ["stock", "medius"]
+jams_stock = false
+
+[[legs]]
+id = "rest"
+device = "sim:rest"
+
+[[legs]]
+id = "moving"
+device = "sim:moving"
+
+[[tables]]
+section = "input-latency"
+order = 1
+kind = "measure"
+label = "Left button latency, p50"
+key = "Load and edge"
+unit = "ms"
+better = "lower"
+stat = "p50"
+layer = "wire"
+n = "40 per row, 3 runs"
+commands = { stock = "km.left", medius = "INJECT" }
+resolution = 0.001
+
+[[tables.rows]]
+id = "input-lat-rest-press"
+label = "Mouse still, press"
+ptr = "/results/0/latency/p50"
+unit = "us"
+
+[[tables.rows]]
+id = "input-lat-rest-release"
+label = "Mouse still, release"
+ptr = "/results/1/latency/p50"
+unit = "us"
+
+[[tables.rows]]
+id = "input-lat-moving-press"
+label = "Mouse moving, press"
+ptr = "/results/4/latency/p50"
+unit = "us"
+
+[[tables.rows]]
+id = "input-lat-moving-release"
+label = "Mouse moving, release"
+ptr = "/results/5/latency/p50"
+unit = "us"
+
+[[tables.rows]]
+id = "input-lat-stream-press"
+label = "Mouse moving, box injecting, press"
+ptr = "/results/8/latency/p50"
+unit = "us"
+
+[[tables.rows]]
+id = "input-lat-stream-release"
+label = "Mouse moving, box injecting, release"
+ptr = "/results/9/latency/p50"
+unit = "us"
+
+[[tables]]
+section = "input-latency"
+order = 2
+kind = "measure"
+label = "Key latency, p50"
+key = "Load and edge"
+unit = "ms"
+better = "lower"
+stat = "p50"
+layer = "wire"
+n = "40 per row, 3 runs"
+commands = { stock = "km.down", medius = "INJECT" }
+resolution = 0.001
+
+[[tables.rows]]
+id = "input-lat-rest-down"
+label = "Mouse still, down"
+ptr = "/results/2/latency/p50"
+unit = "us"
+
+[[tables.rows]]
+id = "input-lat-rest-up"
+label = "Mouse still, up"
+ptr = "/results/3/latency/p50"
+unit = "us"
+
+[[tables.rows]]
+id = "input-lat-moving-down"
+label = "Mouse moving, down"
+ptr = "/results/6/latency/p50"
+unit = "us"
+
+[[tables.rows]]
+id = "input-lat-moving-up"
+label = "Mouse moving, up"
+ptr = "/results/7/latency/p50"
+unit = "us"
+
+[[tables.rows]]
+id = "input-lat-stream-down"
+label = "Mouse moving, box injecting, down"
+ptr = "/results/10/latency/p50"
+unit = "us"
+
+[[tables.rows]]
+id = "input-lat-stream-up"
+label = "Mouse moving, box injecting, up"
+ptr = "/results/11/latency/p50"
+unit = "us"

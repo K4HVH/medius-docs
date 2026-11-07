@@ -25,6 +25,7 @@ import {
   PATCH_CLEAR,
   PatchSection,
   TransformOp,
+  XFER_REQ_HDR,
 } from './opcode';
 import {
   type ClipEntry,
@@ -259,10 +260,11 @@ export function rawPayload(epNum: number, dir: number, bytes: Uint8Array): Uint8
   return out;
 }
 
-// TRANSFER (§3.14): [ep u8][setup 8][OUT data..]. The setup packet is the 8 USB bytes
+// TRANSFER (§3.14): [ep u8][timeout_ms u16 LE][setup 8][OUT data..]. The setup packet is the 8 USB bytes
 // [bmRequestType u8][bRequest u8][wValue u16 LE][wIndex u16 LE][wLength u16 LE].
 export function transferPayload(
   ep: number,
+  timeoutMs: number,
   bmRequestType: number,
   bRequest: number,
   wValue: number,
@@ -270,15 +272,16 @@ export function transferPayload(
   wLength: number,
   out: Uint8Array = new Uint8Array(0),
 ): Uint8Array {
-  const buf = new Uint8Array(9 + out.length);
-  buf[0] = ep & 0xff;
-  buf[1] = bmRequestType & 0xff;
-  buf[2] = bRequest & 0xff;
+  const buf = new Uint8Array(XFER_REQ_HDR + out.length);
   const dv = new DataView(buf.buffer);
-  dv.setUint16(3, wValue & 0xffff, true);
-  dv.setUint16(5, wIndex & 0xffff, true);
-  dv.setUint16(7, wLength & 0xffff, true);
-  buf.set(out, 9);
+  buf[0] = ep & 0xff;
+  dv.setUint16(1, timeoutMs & 0xffff, true);
+  buf[3] = bmRequestType & 0xff;
+  buf[4] = bRequest & 0xff;
+  dv.setUint16(5, wValue & 0xffff, true);
+  dv.setUint16(7, wIndex & 0xffff, true);
+  dv.setUint16(9, wLength & 0xffff, true);
+  buf.set(out, XFER_REQ_HDR);
   return buf;
 }
 

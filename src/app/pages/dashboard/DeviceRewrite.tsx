@@ -43,7 +43,7 @@ const ACTION_BLURB: Record<number, string> = {
   [RewriteAction.Replace]: 'The packet becomes the payload.',
   [RewriteAction.Answer]: 'Replies with the payload without asking the device.',
   [RewriteAction.Stall]: 'Stalls the request.',
-  [RewriteAction.Nak]: 'On EP0, no reply until the host gives up. On other control endpoints, a stall.',
+  [RewriteAction.Nak]: 'NAKs the request until the PC gives up.',
   [RewriteAction.ReplyPatch]: "Overwrites an In request's reply at the offset, keeping the length.",
   [RewriteAction.ReplyReplace]: "An In request's reply becomes the payload.",
 };

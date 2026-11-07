@@ -1,0 +1,33 @@
+id = "report-size-sweep"
+version = 1
+category = "devices"
+layout = "main"
+boxes = ["stock", "medius"]
+jams_stock = false
+
+[[legs]]
+id = "start"
+device = "sim:fresh_mouse"
+
+[[tables]]
+section = "devices-report-size"
+order = 1
+kind = "outcome"
+label = "HID driver on the PC"
+key = "Report descriptor"
+outcomes = ["Loads", "Doesn't load"]
+
+[[tables.rows]]
+id = "devices-report-256-512"
+label = "256 or 512 bytes"
+ptr = "/outcomes/devices-report-256-512"
+
+[[tables.rows]]
+id = "devices-report-513-700"
+label = "513-700 bytes"
+ptr = "/outcomes/devices-report-513-700"
+
+[[tables.rows]]
+id = "devices-report-768-2047"
+label = "768-2,047 bytes"
+ptr = "/outcomes/devices-report-768-2047"

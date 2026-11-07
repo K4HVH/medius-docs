@@ -32,7 +32,9 @@ const Tracing: Component = () => {
                 <td>
                   The <code>connect</code> span and <code>connected</code> event (<code>INFO</code>),
                   handshake retries (<code>DEBUG</code>) and failures (<code>WARN</code>), query resolved
-                  (<code>DEBUG</code>) and timed out (<code>WARN</code>), the <code>reconnected</code>{' '}
+                  (<code>DEBUG</code>) and timed out (<code>WARN</code>), a blocking{' '}
+                  <code>transfer</code> resolved (<code>DEBUG</code>) and timed out (<code>WARN</code>)
+                  with <code>ep</code> and <code>seq</code>, the <code>reconnected</code>{' '}
                   event (<code>INFO</code>), plus box logs re-emitted with{' '}
                   <code>device_log=true</code>.
                 </td>
@@ -68,7 +70,7 @@ const Tracing: Component = () => {
         <pre><code class="language-rust">{`// With "medius=debug" and a box that replies on the second probe, the
 // fmt subscriber prints the span name on each nested event:
 //   DEBUG connect: medius::device: handshake: version probe timed out, retrying
-//   INFO  connect: medius::device: connected proto_ver=9 fw_major=3 fw_minor=4 fw_patch=2
+//   INFO  connect: medius::device: connected proto_ver=10 fw_major=3 fw_minor=5 fw_patch=0
 // "connect:" is the span; the rest is the event with its fields.`}</code></pre>
       </DocSection>
 
@@ -113,7 +115,7 @@ tracing_subscriber::fmt::init();
 let device = Device::find()?;
 device.move_rel(10, 0)?;
 // stderr carries the connect span and an INFO event, e.g.:
-//   INFO  connect: medius::device: connected proto_ver=9 fw_major=3 fw_minor=4 fw_patch=2`}</code></pre>
+//   INFO  connect: medius::device: connected proto_ver=10 fw_major=3 fw_minor=5 fw_patch=0`}</code></pre>
       </DocSection>
 
       <DocSection id="filtering" title="Filtering" caption="EnvFilter and RUST_LOG">
@@ -151,7 +153,7 @@ tracing_subscriber::fmt()
     .with_env_filter("medius=debug")
     .init();
 // one JSON line per event, e.g.:
-//   {"level":"INFO","target":"medius::device","fields":{"message":"connected","proto_ver":9}}`}</code></pre>
+//   {"level":"INFO","target":"medius::device","fields":{"message":"connected","proto_ver":10}}`}</code></pre>
       </DocSection>
     </>
   );

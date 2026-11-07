@@ -1,0 +1,152 @@
+id = "ep0-stacks"
+version = 1
+category = "devices"
+layout = "native"
+boxes = ["stock", "medius"]
+jams_stock = false
+
+[[legs]]
+id = "start"
+device = "sim:fresh_mouse"
+
+[[tables]]
+section = "devices-ep0-stacks"
+order = 1
+kind = "measure"
+label = "Requests given the native reply"
+key = "Device stack"
+unit = "requests"
+better = "higher"
+n = "316 requests per stack a run, 3 runs"
+
+[[tables.rows]]
+id = "devices-ep0-stack-permissive"
+label = "Stack acting on every request as written"
+ptr = "/results/permissive/match"
+of = 316
+
+[[tables.rows]]
+id = "devices-ep0-stack-strict"
+label = "Stack refusing a request with the wrong direction bit"
+ptr = "/results/strict/match"
+of = 316
+
+[[tables.rows]]
+id = "devices-ep0-stack-twobit"
+label = "Stack reading two recipient bits"
+ptr = "/results/twobit/match"
+of = 316
+
+[[tables.rows]]
+id = "devices-ep0-stack-lax"
+label = "Stack ignoring the recipient and refusing the HID descriptor"
+ptr = "/results/lax/match"
+of = 316
+
+[[tables.rows]]
+id = "devices-ep0-stack-hidown"
+label = "Stack serving the HID descriptor from a separate copy"
+ptr = "/results/hidown/match"
+of = 316
+
+[[tables.rows]]
+id = "devices-ep0-stack-laxstrict"
+label = "Stack ignoring the recipient and refusing the wrong direction"
+ptr = "/results/laxstrict/match"
+of = 316
+
+[[tables.rows]]
+id = "devices-ep0-stack-wlenstatus"
+label = "Stack refusing GET_STATUS at another length"
+ptr = "/results/wlenstatus/match"
+of = 316
+
+[[tables.rows]]
+id = "devices-ep0-stack-wlenconfig"
+label = "Stack refusing GET_CONFIGURATION at another length"
+ptr = "/results/wlenconfig/match"
+of = 316
+
+[[tables.rows]]
+id = "devices-ep0-stack-wlenshort"
+label = "Stack refusing GET_STATUS and GET_CONFIGURATION at a shorter length"
+ptr = "/results/wlenshort/match"
+of = 316
+
+[[tables.rows]]
+id = "devices-ep0-stack-epdesc"
+label = "Stack answering GET_DESCRIPTOR addressed to an endpoint"
+ptr = "/results/epdesc/match"
+of = 316
+
+[[tables.rows]]
+id = "devices-ep0-stack-rwtaken"
+label = "Stack taking remote wakeup at any wIndex"
+ptr = "/results/rwtaken/match"
+of = 316
+
+[[tables.rows]]
+id = "devices-ep0-stack-rwrefused"
+label = "Stack refusing remote wakeup"
+ptr = "/results/rwrefused/match"
+of = 316
+
+[[tables.rows]]
+id = "devices-ep0-stack-in0nak"
+label = "Stack leaving device-to-host requests with no data stage unanswered"
+ptr = "/results/in0nak/match"
+of = 316
+
+[[tables.rows]]
+id = "devices-ep0-stack-in0strict"
+label = "Stack refusing the wrong direction, leaving device-to-host requests with no data stage unanswered"
+ptr = "/results/in0strict/match"
+of = 316
+
+[[tables.rows]]
+id = "devices-ep0-stack-ifstrict"
+label = "Stack refusing GET_STATUS and GET_INTERFACE at an interface"
+ptr = "/results/ifstrict/match"
+of = 316
+
+[[tables.rows]]
+id = "devices-ep0-stack-lufa"
+label = "LUFA"
+ptr = "/results/lufa/match"
+of = 316
+
+[[tables.rows]]
+id = "devices-ep0-stack-stm32"
+label = "STM32's USB library"
+ptr = "/results/stm32/match"
+of = 316
+
+[[tables.rows]]
+id = "devices-ep0-stack-vusb"
+label = "V-USB"
+ptr = "/results/vusb/match"
+of = 316
+
+[[tables.rows]]
+id = "devices-ep0-stack-cherry"
+label = "CherryUSB"
+ptr = "/results/cherry/match"
+of = 316
+
+[[tables.rows]]
+id = "devices-ep0-stack-twolimit"
+label = "Stack reading two recipient bits and checking interface and endpoint numbers"
+ptr = "/results/twolimit/match"
+of = 316
+
+[[tables.rows]]
+id = "devices-ep0-stack-padded"
+label = "Stack padding replies out to wLength"
+ptr = "/results/padded/match"
+of = 316
+
+[[tables.rows]]
+id = "devices-ep0-stack-longbuf"
+label = "Stack answering long reads from its buffer and SET_DESCRIPTOR only after a read"
+ptr = "/results/longbuf/match"
+of = 316

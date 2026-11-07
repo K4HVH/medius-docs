@@ -37,6 +37,7 @@ const DATA: Results = {
   ],
   defects: [],
   pending: [],
+  once: [],
 };
 const PAGES: ComparisonPage[] = [
   { path: '/comparison', categories: [], own: ['injection-results', 'devices-results', 'defects'] },

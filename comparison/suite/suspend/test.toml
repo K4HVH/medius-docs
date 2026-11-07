@@ -1,0 +1,58 @@
+id = "suspend"
+version = 1
+category = "recovery"
+layout = "main"
+boxes = ["stock", "medius"]
+jams_stock = false
+
+[[legs]]
+id = "silent"
+device = "sim:silent-mouse"
+
+[[legs]]
+id = "reporting"
+device = "sim:sparse-mouse"
+
+[[tables]]
+section = "recovery-pc-sleep"
+order = 1
+kind = "outcome"
+label = "Real device while the PC sleeps"
+key = "Device"
+outcomes = ["Suspended", "Kept awake"]
+
+[[tables.rows]]
+id = "recovery-sleep-device"
+label = "Mouse"
+ptr = "/outcomes/recovery-sleep-device"
+
+[[tables]]
+section = "recovery-pc-sleep"
+order = 2
+kind = "outcome"
+label = "PC while asleep"
+key = "Case"
+outcomes = ["Asleep", "Woken"]
+
+[[tables.rows]]
+id = "recovery-sleep-idle"
+label = "Nothing sent for 2 s"
+ptr = "/outcomes/recovery-sleep-idle"
+
+[[tables]]
+section = "recovery-pc-sleep"
+order = 3
+kind = "outcome"
+label = "Waking the sleeping PC"
+key = "Wakeup"
+outcomes = ["Wakes the PC", "PC stays asleep"]
+
+[[tables.rows]]
+id = "recovery-wake-inject"
+label = "Injected move"
+ptr = "/outcomes/recovery-wake-inject"
+
+[[tables.rows]]
+id = "recovery-wake-device"
+label = "The real device's remote wakeup"
+ptr = "/outcomes/recovery-wake-device"

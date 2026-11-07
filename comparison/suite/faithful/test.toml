@@ -1,0 +1,124 @@
+id = "faithful"
+version = 1
+category = "passthrough"
+layout = "main"
+boxes = ["stock", "medius"]
+jams_stock = false
+
+[[legs]]
+id = "gaming"
+device = "sim:builtin:gamingmouse"
+
+[[legs]]
+id = "mouse"
+device = "sim:builtin:mouse"
+
+[[legs]]
+id = "stall"
+device = "sim:stall-mouse"
+
+[[legs]]
+id = "altsetting"
+device = "sim:builtin:altsetting"
+
+[[legs]]
+id = "zlp"
+device = "sim:zlp-mouse"
+
+[[legs]]
+id = "multiconfig"
+device = "sim:builtin:multiconfig"
+
+[[tables]]
+section = "pass-pc-device"
+order = 1
+kind = "outcome"
+label = "What reaches the real device"
+key = "PC sends"
+outcomes = ["Passed on", "Clone reconnects instead"]
+
+[[tables.rows]]
+# outcome from stock: /results/0/device_switched, /results/0/report_lengths_after/3; medius: /results/0/device_switched, /results/0/report_lengths_after/3
+id = "pass-pc-boot"
+label = "SET_PROTOCOL(boot)"
+ptr = "/outcomes/pass-pc-boot"
+
+[[tables.rows]]
+# outcome from stock: /results/3/device_halt_set, /results/3/device_halt_clear; medius: /results/3/device_halt_set, /results/3/device_halt_clear
+id = "pass-pc-halt"
+label = "Endpoint halt, then clear"
+ptr = "/outcomes/pass-pc-halt"
+
+[[tables.rows]]
+# outcome from stock: /results/5/device_alt_after_set1/1, /results/5/packets_on_alt1, /results/5/device_alt_after_set0/1; medius: /results/5/device_alt_after_set1/1, /results/5/packets_on_alt1, /results/5/device_alt_after_set0/1
+id = "pass-pc-altset"
+label = "Switch to alternate setting 1, then back"
+ptr = "/outcomes/pass-pc-altset"
+
+[[tables.rows]]
+# outcome from stock: /results/7/config_after_set2, /results/7/reenumerated, /results/0/config_after_set2, /results/0/reenumerated, /results/0/config_after_set2, /results/0/reenumerated, /results/0/device_resets_on_round_trip; medius: /results/7/config_after_set2, /results/7/packets_in_config2, /results/7/config_after_set1, /results/0/config_after_set2, /results/0/packets_in_config2, /results/0/config_after_set1, /results/0/config_after_set2, /results/0/packets_in_config2, /results/0/config_after_set1, /results/0/device_resets_on_round_trip
+id = "pass-pc-config"
+label = "Switch to configuration 2, then back"
+ptr = "/outcomes/pass-pc-config"
+
+[[tables.rows]]
+# outcome from stock: /results/0/led_reached_device, /results/0/ep0_log/data; medius: /results/0/led_reached_device, /results/0/ep0_log/data
+id = "pass-pc-led"
+label = "Keyboard LED report"
+test = "out-relay"
+ptr = "/outcomes/pass-pc-led"
+
+[[tables.rows]]
+# outcome from stock: /results/1/out_log/packets, /results/1/out_log/crc, /results/1/sent_crc; medius: /results/1/out_log/packets, /results/1/out_log/crc, /results/1/sent_crc
+id = "pass-pc-hid-out"
+label = "20 HID output reports"
+test = "out-relay"
+ptr = "/outcomes/pass-pc-hid-out"
+
+[[tables]]
+section = "pass-pc-device"
+order = 2
+kind = "outcome"
+label = "Resets the real device gets"
+key = "PC sends"
+outcomes = ["Once", "Twice"]
+ranked = false
+
+[[tables.rows]]
+# outcome from stock: /results/1/device_resets; medius: /results/1/device_resets
+id = "pass-pc-reset"
+label = "One bus reset"
+ptr = "/outcomes/pass-pc-reset"
+
+[[tables.rows]]
+# outcome from stock: /results/2/device_resets; medius: /results/2/device_resets
+id = "pass-pc-port-off"
+label = "Hub port off for 1 s"
+ptr = "/outcomes/pass-pc-port-off"
+
+[[tables]]
+section = "pass-device-pc"
+order = 1
+kind = "outcome"
+label = "What reaches the PC"
+key = "Native traffic"
+outcomes = ["Reaches the PC", "Hidden"]
+
+[[tables.rows]]
+# outcome from stock: /results/4/pc_saw, /results/4/device_stalled_before_pc, /results/4/device_cleared_before_pc; medius: /results/4/pc_saw, /results/4/device_stalled_before_pc, /results/4/device_cleared_before_pc
+id = "pass-dev-stall"
+label = "A STALL on its interrupt endpoint"
+ptr = "/outcomes/pass-dev-stall"
+
+[[tables.rows]]
+# outcome from stock: /results/6/zlps; medius: /results/6/zlps
+id = "pass-dev-zlp"
+label = "Empty packets on idle polls"
+ptr = "/outcomes/pass-dev-zlp"
+
+[[tables.rows]]
+# outcome from stock: /results/2/packets_1s, /results/2/counter_gaps; medius: /results/2/packets_1s, /results/2/counter_gaps
+id = "pass-dev-vendor"
+label = "Vendor stream at 1,000 packets/s"
+test = "out-relay"
+ptr = "/outcomes/pass-dev-vendor"

@@ -1,0 +1,36 @@
+id = "kbd-rates"
+version = 1
+category = "passthrough"
+layout = "main"
+boxes = ["stock", "medius"]
+jams_stock = false
+
+[[legs]]
+id = "500"
+device = "sim:counting-keyboard-500"
+
+[[legs]]
+id = "250"
+device = "sim:counting-keyboard-250"
+
+[[tables]]
+section = "pass-timing"
+order = 6
+kind = "measure"
+label = "Keyboard reports a poll early or late, in 15 s"
+key = "Keyboard"
+unit = "reports"
+better = "lower"
+layer = "wire"
+n = "3 runs of 15 s"
+resolution = 1
+
+[[tables.rows]]
+id = "pass-timing-off-kbd-500"
+label = "500 Hz keyboard"
+ptr = "/results/0/poll_grid/early_late"
+
+[[tables.rows]]
+id = "pass-timing-off-kbd-250"
+label = "250 Hz keyboard"
+ptr = "/results/1/poll_grid/early_late"

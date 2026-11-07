@@ -81,7 +81,7 @@ pre.api-signature {
 .callout > * + * { margin-top: 10px; }
 :where(.page-header, .doc-section) .callout { padding-left: 138px; min-height: 50px; border-left-width: 1px; border-left-color: var(--line); }
 :where(.page-header, .doc-section) .callout::before {
-  position: absolute; top: 0; bottom: 0; left: 0; width: 120px; padding: 16px;
+  position: absolute; top: 0; bottom: 0; left: 0; box-sizing: border-box; width: 120px; padding: 16px;
   border-right: 1px solid var(--line); color: var(--callout);
   font: 500 11px/1.5 var(--mono); letter-spacing: 0.12em; text-transform: uppercase;
 }

@@ -1,0 +1,148 @@
+id = "render-shape"
+version = 1
+category = "injection"
+layout = "main"
+boxes = ["stock", "medius"]
+jams_stock = false
+
+[[legs]]
+id = "idle"
+device = "sim:idle_mouse"
+
+[[legs]]
+id = "moving"
+device = "sim:moving"
+
+[[legs]]
+id = "rested"
+device = "sim:rested"
+
+[[tables]]
+section = "inj-latency"
+order = 7
+kind = "measure"
+label = "Empty reports while paying out 40 moves, default smoothing"
+key = "Counts per move"
+unit = "reports"
+better = "lower"
+layer = "wire"
+n = "40 moves a run, mouse resting, 3 runs"
+commands = { stock = "km.move", medius = "MOVE" }
+resolution = 1
+
+[[tables.rows]]
+id = "inj-empty-per-move-1"
+label = "1 count"
+ptr = "/rested/cells/0/empty_in_payout"
+
+[[tables.rows]]
+id = "inj-empty-per-move-10"
+label = "10 counts"
+ptr = "/rested/cells/1/empty_in_payout"
+
+[[tables.rows]]
+id = "inj-empty-per-move-100"
+label = "100 counts"
+ptr = "/rested/cells/2/empty_in_payout"
+
+[[tables]]
+section = "inj-settings"
+order = 1
+kind = "settings"
+label = "Each smoothing setting"
+key = "Setting"
+layer = "wire"
+n = "40 moves still and 100 moving a run, 3 runs"
+resolution = 0.001
+
+[[tables.columns]]
+id = "one"
+label = "One count, last count p50"
+unit = "ms"
+better = "lower"
+
+[[tables.columns]]
+id = "hundred"
+label = "100 counts, last count p50"
+unit = "ms"
+better = "lower"
+
+[[tables.columns]]
+id = "empty"
+label = "Empty reports, 40 one-count moves"
+unit = "reports"
+better = "lower"
+
+[[tables.columns]]
+id = "moving"
+label = "One count into a moving mouse, p50"
+unit = "ms"
+better = "lower"
+
+[[tables.rows]]
+id = "inj-setting-interpolation-auto"
+label = "Interpolation AUTO"
+box = "stock"
+default = true
+values = { one = { ptr = "/base/cells/0/last/p50", unit = "us" }, hundred = { ptr = "/base/cells/2/last/p50", unit = "us" }, empty = "/base/cells/0/empty_in_payout", moving = { ptr = "/base/cells/5/last/p50", unit = "us" } }
+
+[[tables.rows]]
+id = "inj-setting-interpolation-0"
+label = "Interpolation 0"
+box = "stock"
+values = { one = { ptr = "/base/cells/6/last/p50", unit = "us" }, hundred = { ptr = "/base/cells/8/last/p50", unit = "us" }, empty = "/base/cells/6/empty_in_payout", moving = { ptr = "/base/cells/11/last/p50", unit = "us" } }
+
+[[tables.rows]]
+id = "inj-setting-interpolation-25"
+label = "Interpolation 25"
+box = "stock"
+values = { one = { ptr = "/base/cells/12/last/p50", unit = "us" }, hundred = { ptr = "/base/cells/14/last/p50", unit = "us" }, empty = "/base/cells/12/empty_in_payout", moving = { ptr = "/base/cells/17/last/p50", unit = "us" } }
+
+[[tables.rows]]
+id = "inj-setting-interpolation-50"
+label = "Interpolation 50"
+box = "stock"
+values = { one = { ptr = "/base/cells/18/last/p50", unit = "us" }, hundred = { ptr = "/base/cells/20/last/p50", unit = "us" }, empty = "/base/cells/18/empty_in_payout", moving = { ptr = "/base/cells/23/last/p50", unit = "us" } }
+
+[[tables.rows]]
+id = "inj-setting-interpolation-100"
+label = "Interpolation 100"
+box = "stock"
+values = { one = { ptr = "/base/cells/24/last/p50", unit = "us" }, hundred = { ptr = "/base/cells/26/last/p50", unit = "us" }, empty = "/base/cells/24/empty_in_payout", moving = { ptr = "/base/cells/29/last/p50", unit = "us" } }
+
+[[tables.rows]]
+id = "inj-setting-render-despiked"
+label = "Render DESPIKED"
+box = "medius"
+default = true
+values = { one = { ptr = "/base/cells/0/last/p50", unit = "us" }, hundred = { ptr = "/base/cells/2/last/p50", unit = "us" }, empty = "/base/cells/0/empty_in_payout", moving = { ptr = "/base/cells/5/last/p50", unit = "us" } }
+
+[[tables.rows]]
+id = "inj-setting-render-unsmoothed"
+label = "Render UNSMOOTHED"
+box = "medius"
+values = { one = { ptr = "/base/cells/18/last/p50", unit = "us" }, hundred = { ptr = "/base/cells/20/last/p50", unit = "us" }, empty = "/base/cells/18/empty_in_payout", moving = { ptr = "/base/cells/23/last/p50", unit = "us" } }
+
+[[tables.rows]]
+id = "inj-setting-render-stock"
+label = "Render STOCK"
+box = "medius"
+values = { one = { ptr = "/base/cells/12/last/p50", unit = "us" }, hundred = { ptr = "/base/cells/14/last/p50", unit = "us" }, empty = "/base/cells/12/empty_in_payout", moving = { ptr = "/base/cells/17/last/p50", unit = "us" } }
+
+[[tables.rows]]
+id = "inj-setting-render-off"
+label = "Render OFF"
+box = "medius"
+values = { one = { ptr = "/base/cells/6/last/p50", unit = "us" }, hundred = { ptr = "/base/cells/8/last/p50", unit = "us" }, empty = "/base/cells/6/empty_in_payout", moving = { ptr = "/base/cells/11/last/p50", unit = "us" } }
+
+[[tables.rows]]
+id = "inj-setting-render-despiked-full"
+label = "Render DESPIKED, full rendering"
+box = "medius"
+values = { one = { ptr = "/base/cells/24/last/p50", unit = "us" }, hundred = { ptr = "/base/cells/26/last/p50", unit = "us" }, empty = "/base/cells/24/empty_in_payout", moving = { ptr = "/base/cells/29/last/p50", unit = "us" } }
+
+[[tables.rows]]
+id = "inj-setting-render-off-spread-0"
+label = "Render OFF, spread 0"
+box = "medius"
+values = { one = { ptr = "/base/cells/30/last/p50", unit = "us" }, hundred = { ptr = "/base/cells/32/last/p50", unit = "us" }, empty = "/base/cells/30/empty_in_payout", moving = { ptr = "/base/cells/35/last/p50", unit = "us" } }

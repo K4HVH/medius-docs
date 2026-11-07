@@ -280,7 +280,7 @@ const ENTRIES: Entry[] = [
   comparison('/comparison/software', 'Software', 'Software',
     'The software around MAKCU stock firmware and Medius: owner tools, programs for other boxes, libraries, updates, data sent, docs, adoption and community.'),
   comparison('/comparison/method', 'Method', 'Method',
-    'How MAKCU stock firmware and Medius were measured: the rig, the rules every result follows, timing layers, and the data.'),
+    'How MAKCU stock firmware and Medius were measured: the rig, the rules every result follows, timing layers, the data, and a tool that runs some tests.'),
 ];
 
 export const ROUTES: readonly RouteInfo[] = ENTRIES.map((e) => ({ ...e, kind: e.kind ?? 'article', index: e.index ?? true }));

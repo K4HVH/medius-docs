@@ -145,7 +145,7 @@ const CONTROL_WORDS: Record<ControlStatus, string> = {
 };
 
 // Flags are per class. Control keeps its handshake in the low two bits beside the rule bit. A clip
-// transfer's whole flags byte is its status, always named, OK included.
+// transfer's whole flags byte is its status, always named, OK included; a status with no name shows its byte.
 const trafficFlags = (t: TrafficEvent): string => {
   let out = '';
   const bits: string[] = [];
@@ -155,7 +155,10 @@ const trafficFlags = (t: TrafficEvent): string => {
   const handshake = trafficControlStatus(t);
   if (handshake !== null) out = CONTROL_WORDS[handshake];
   const status = trafficTransferStatus(t);
-  if (status !== null) out = ` ${transferStatusName(status).toUpperCase()}`;
+  if (status !== null) {
+    const name = transferStatusName(status);
+    out = name ? ` ${name.toUpperCase()}` : ` status 0x${status.toString(16).padStart(2, '0')}`;
+  }
   return trafficRuleActed(t) ? `${out} RULE` : out;
 };
 

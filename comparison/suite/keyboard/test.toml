@@ -1,0 +1,29 @@
+id = "keyboard"
+version = 1
+category = "input"
+layout = "main"
+boxes = ["stock", "medius"]
+jams_stock = true
+
+[[legs]]
+id = "hold-q"
+device = "sim:hold-q"
+
+[[legs]]
+id = "idle"
+device = "still-keyboard"
+
+[[tables]]
+section = "input-box-timed"
+order = 5
+kind = "outcome"
+label = "30 characters sent by the PC as key presses back to back"
+key = "String"
+commands = { stock = "km.down, km.up", medius = "INJECT" }
+outcomes = ["Exact", "Characters lost"]
+
+[[tables.rows]]
+# outcome from stock: /results/4/typed, /results/4/exact; medius: /results/3/typed, /results/3/exact
+id = "input-typing-pc-pairs"
+label = "the quick brown fox 0123456789"
+ptr = "/outcomes/input-typing-pc-pairs"

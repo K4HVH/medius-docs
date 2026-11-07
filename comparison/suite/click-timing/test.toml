@@ -1,0 +1,98 @@
+id = "click-timing"
+version = 1
+category = "input"
+layout = "main"
+boxes = ["stock", "medius"]
+jams_stock = false
+
+[[legs]]
+id = "rest"
+device = "sim:rest"
+
+[[tables]]
+section = "input-box-timed"
+order = 1
+kind = "measure"
+label = "Shortest 50 ms click hold"
+key = "Timed by"
+unit = "ms"
+better = "nearer"
+layer = "wire"
+n = "5 sets of 10 clicks a run, 3 runs"
+commands = { stock = "km.click", medius = "CLIP" }
+resolution = 0.1
+
+[[tables.rows]]
+id = "input-click-onbox-min"
+label = "The box"
+ptr = ["/results/0/hold/min", "/results/1/hold/min", "/results/2/hold/min", "/results/3/hold/min", "/results/4/hold/min"]
+unit = "us"
+target = 50
+
+[[tables.rows]]
+id = "input-click-host-min"
+label = "The PC"
+ptr = ["/results/5/hold/min", "/results/6/hold/min", "/results/7/hold/min", "/results/8/hold/min", "/results/9/hold/min"]
+unit = "us"
+target = 50
+
+[[tables]]
+section = "input-box-timed"
+order = 2
+kind = "measure"
+label = "Longest 50 ms click hold"
+key = "Timed by"
+unit = "ms"
+better = "nearer"
+layer = "wire"
+n = "5 sets of 10 clicks a run, 3 runs"
+commands = { stock = "km.click", medius = "CLIP" }
+resolution = 0.1
+
+[[tables.rows]]
+id = "input-click-onbox-max"
+label = "The box"
+ptr = ["/results/0/hold/max", "/results/1/hold/max", "/results/2/hold/max", "/results/3/hold/max", "/results/4/hold/max"]
+unit = "us"
+target = 50
+
+[[tables.rows]]
+id = "input-click-host-max"
+label = "The PC"
+ptr = ["/results/5/hold/max", "/results/6/hold/max", "/results/7/hold/max", "/results/8/hold/max", "/results/9/hold/max"]
+unit = "us"
+target = 50
+
+[[tables]]
+section = "input-box-timed"
+order = 3
+kind = "outcome"
+label = "30 characters the box typed"
+key = "String"
+commands = { stock = "km.string", medius = "CLIP" }
+outcomes = ["Exact", "Changed"]
+
+[[tables.rows]]
+# outcome from stock: /results/10/exact, /results/11/exact, /results/12/exact, /results/13/exact, /results/14/exact; medius: /results/10/exact, /results/11/exact, /results/12/exact, /results/13/exact, /results/14/exact
+id = "input-typing-box-exact"
+label = "the quick brown fox 0123456789, 5 strings a run"
+ptr = "/outcomes/input-typing-box-exact"
+
+[[tables]]
+section = "input-box-timed"
+order = 4
+kind = "measure"
+label = "Time to type 30 characters"
+key = "String"
+unit = "ms"
+better = "lower"
+layer = "wire"
+n = "5 strings a run, 3 runs"
+commands = { stock = "km.string", medius = "CLIP" }
+resolution = 0.1
+
+[[tables.rows]]
+id = "input-typing-box-time"
+label = "First key down to last key up"
+ptr = ["/results/10/total_ms", "/results/11/total_ms", "/results/12/total_ms", "/results/13/total_ms", "/results/14/total_ms"]
+unit = "ms"

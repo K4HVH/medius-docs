@@ -1,14 +1,14 @@
-// The faults medius-fw's tools/compare/results_check.py reports, checked on the site's copy: every one, or
-// none. The evidence stays in medius-fw, so refs are checked for shape here and resolved there.
+// The faults a results file can have: every one, or none. Refs are checked for shape here; the generator resolved
+// each against its run file.
 
 const ID = /^[a-z0-9][a-z0-9-]*$/;
-// What counts as blank: the same characters as the Python check, so both read a string alike.
+// What counts as blank: a string of nothing but Unicode whitespace.
 const BLANK = /^[ \t\n\r\f\v\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000\ufeff\x1c-\x1f\x85]*$/;
 const BOXES = ['stock', 'medius'] as const;
 const KINDS = ['measure', 'outcome', 'feature', 'settings'];
 const TIME = new Set(['us', 'µs', 'ms', 's']);
 
-const TOP = new Set(['format', 'firmware', 'rig', 'layers', 'categories', 'defects', 'pending']);
+const TOP = new Set(['format', 'firmware', 'rig', 'layers', 'categories', 'defects', 'pending', 'once']);
 const CATEGORY = new Set(['id', 'title', 'sections']);
 const SECTION = new Set(['id', 'title', 'about', 'tables']);
 const TABLE: Record<string, Set<string>> = {
@@ -17,7 +17,7 @@ const TABLE: Record<string, Set<string>> = {
   feature: new Set(['kind', 'label', 'key', 'rows', 'ranked']),
   settings: new Set(['kind', 'label', 'key', 'rows', 'columns', 'layer', 'n']),
 };
-const ROW = new Set(['id', 'label', 'stock', 'medius', 'note']);
+const ROW = new Set(['id', 'label', 'stock', 'medius', 'note', 'native', 'target']);
 const SETTINGS_ROW = new Set(['id', 'box', 'label', 'default', 'values']);
 const COLUMN = new Set(['id', 'label', 'unit', 'better']);
 const VALUE = new Set(['value', 'lo', 'hi', 'of', 'src']);
@@ -111,6 +111,10 @@ export function checkResults(d: unknown): string[] {
   if (d.format !== 2) fault('file', `format must be 2, not ${JSON.stringify(d.format)}`);
   if (fields(d.firmware, new Set(BOXES), 'firmware')) for (const b of BOXES) text(d.firmware, b, `firmware.${b}`);
   text(d, 'rig', 'rig');
+  // Tests the tool runs once on stock: a range of theirs cites one stock run beside the other box's three.
+  const once = new Set(listed(d, 'once', 'once', true).filter((t): t is string => typeof t === 'string'));
+  if (Array.isArray(d.once) && d.once.some((t) => typeof t !== 'string')) fault('once', 'must list test ids');
+  const testOf = (r: unknown) => (isObj(r) && typeof r.ptr === 'string' ? /^\/tests\/([^/]+)\/runs\//.exec(r.ptr)?.[1] : undefined);
   const layers = isObj(d.layers) ? d.layers : {};
   if (!isObj(d.layers)) fault('layers', 'must be an object');
   for (const [k, v] of Object.entries(layers)) {
@@ -150,7 +154,8 @@ export function checkResults(d: unknown): string[] {
           if (t.unit === 'us' || t.unit === '\u03bcs') fault(tw, `unit ${JSON.stringify(t.unit)} must be written µs (the micro sign)`);
           if (typeof t.stat === 'string' && t.stat !== 'p50' && typeof t.label === 'string' && !t.label.includes(t.stat))
             fault(tw, `label must name the statistic ${JSON.stringify(t.stat)}: the site shows no other`);
-          if ('better' in t && t.better !== 'lower' && t.better !== 'higher') fault(tw, `better ${JSON.stringify(t.better)} must be lower or higher`);
+          if ('better' in t && t.better !== 'lower' && t.better !== 'higher' && t.better !== 'nearer')
+            fault(tw, `better ${JSON.stringify(t.better)} must be lower, higher or nearer`);
           if ('stat' in t) text(t, 'stat', tw);
           if ('hubs' in t && t.hubs !== 'both') fault(tw, `hubs ${JSON.stringify(t.hubs)} must be both`);
         }
@@ -196,11 +201,29 @@ export function checkResults(d: unknown): string[] {
             }
             return;
           }
+          const nearer = kind === 'measure' && t.better === 'nearer';
+          const refsTo = (['native', 'target'] as const).filter((k) => k in r);
+          if (nearer) {
+            if (refsTo.length !== 1) fault(rw, 'a row ranked nearer holds one of native or target');
+            if ('native' in r) {
+              value(r.native, `${rw}.native`);
+              if (isObj(r.native) && 'of' in r.native) fault(`${rw}.native`, 'of has no place in a table ranked nearer');
+            }
+            if ('target' in r && !isNumber(r.target)) fault(rw, 'target must be a number');
+            for (const b of BOXES) if (isObj(r[b]) && 'of' in r[b]) fault(`${rw}.${b}`, 'of has no place in a table ranked nearer');
+          } else {
+            if ('target' in r) fault(rw, 'target belongs only to a measure table ranked nearer');
+            if ('native' in r) {
+              if (kind === 'measure') value(r.native, `${rw}.native`);
+              else fault(rw, 'native belongs only to a measure table');
+            }
+          }
           if (kind === 'measure' && isObj(r.stock) && isObj(r.medius)) {
             const [s, m] = [r.stock, r.medius];
             if ('of' in s !== 'of' in m) fault(rw, 'of must be on both cells or neither');
             // A range cites one ref per run, a sum cites its parts, so only ranges need matching counts.
-            if (('lo' in s || 'lo' in m) && Array.isArray(s.src) && Array.isArray(m.src) && s.src.length !== m.src.length)
+            const onceOnStock = Array.isArray(s.src) && s.src.length === 1 && once.has(testOf(s.src[0]) ?? '');
+            if (('lo' in s || 'lo' in m) && Array.isArray(s.src) && Array.isArray(m.src) && s.src.length !== m.src.length && !onceOnStock)
               fault(rw, `the boxes cite ${s.src.length} and ${m.src.length} runs: each box gets the same number`);
           }
           for (const b of BOXES) {

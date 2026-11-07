@@ -1,0 +1,192 @@
+id = "ctrl-relay-cmp"
+version = 1
+category = "devices"
+layout = "native"
+boxes = ["stock", "medius"]
+jams_stock = false
+
+[[legs]]
+id = "start"
+device = "sim:fresh_mouse"
+
+[[tables]]
+section = "devices-control-relay"
+order = 1
+kind = "measure"
+label = "Endpoint 0 requests given the native reply"
+key = "Request"
+unit = "requests"
+better = "higher"
+n = "47 requests a run, 3 runs"
+
+[[tables.rows]]
+id = "devices-relay-ep0-reads"
+label = "Reads of 0-4,096 bytes"
+ptr = "/summary/kinds/ep0/reads/same"
+of = 11
+
+[[tables.rows]]
+id = "devices-relay-ep0-past-wlength"
+label = "Reads answered past wLength or in the status stage"
+ptr = "/summary/kinds/ep0/past wLength/same"
+of = 5
+
+[[tables.rows]]
+id = "devices-relay-ep0-refused"
+label = "Reads the real device refuses, at once or partway"
+ptr = "/summary/kinds/ep0/refused/same"
+of = 4
+
+[[tables.rows]]
+id = "devices-relay-ep0-paced"
+label = "Reads answered 5 ms a packet"
+ptr = "/summary/kinds/ep0/paced/same"
+of = 2
+
+[[tables.rows]]
+id = "devices-relay-ep0-late"
+label = "Reads answered 100-1,900 ms late"
+ptr = "/summary/kinds/ep0/late/same"
+of = 5
+
+[[tables.rows]]
+id = "devices-relay-ep0-never"
+label = "Read the real device never answers"
+ptr = "/summary/kinds/ep0/never answered/same"
+of = 1
+
+[[tables.rows]]
+id = "devices-relay-ep0-beside"
+label = "Read beside an unanswered request on the other endpoint"
+ptr = "/summary/kinds/ep0/beside an unanswered request/same"
+of = 1
+
+[[tables.rows]]
+id = "devices-relay-ep0-abandoned"
+label = "Read right after an abandoned one"
+ptr = "/summary/kinds/ep0/after an abandoned request/same"
+of = 1
+
+[[tables.rows]]
+id = "devices-relay-ep0-writes"
+label = "Writes of 0-1,024 bytes, some answered in the status stage"
+ptr = "/summary/kinds/ep0/writes/same"
+of = 7
+
+[[tables.rows]]
+id = "devices-relay-ep0-writes-refused"
+label = "Writes the real device refuses, at once or partway"
+ptr = "/summary/kinds/ep0/writes refused/same"
+of = 3
+
+[[tables.rows]]
+id = "devices-relay-ep0-writes-paced"
+label = "Writes taken 5 ms a packet"
+ptr = "/summary/kinds/ep0/writes paced/same"
+of = 2
+
+[[tables.rows]]
+id = "devices-relay-ep0-writes-late"
+label = "Writes answered 100-1,900 ms late"
+ptr = "/summary/kinds/ep0/writes late/same"
+of = 3
+
+[[tables.rows]]
+id = "devices-relay-ep0-writes-never"
+label = "Writes the real device never answers"
+ptr = "/summary/kinds/ep0/writes never answered/same"
+of = 2
+
+[[tables]]
+section = "devices-control-relay"
+order = 2
+kind = "measure"
+label = "Second control endpoint requests given the native reply"
+key = "Request"
+unit = "requests"
+better = "higher"
+n = "49 requests a run, 3 runs"
+
+[[tables.rows]]
+id = "devices-relay-ep2-reads"
+label = "Reads of 0-4,096 bytes"
+ptr = "/summary/kinds/ep2/reads/same"
+of = 11
+
+[[tables.rows]]
+id = "devices-relay-ep2-past-wlength"
+label = "Reads answered past wLength or in the status stage"
+ptr = "/summary/kinds/ep2/past wLength/same"
+of = 5
+
+[[tables.rows]]
+id = "devices-relay-ep2-refused"
+label = "Reads the real device refuses, at once or partway"
+ptr = "/summary/kinds/ep2/refused/same"
+of = 4
+
+[[tables.rows]]
+id = "devices-relay-ep2-paced"
+label = "Reads answered 5 ms a packet"
+ptr = "/summary/kinds/ep2/paced/same"
+of = 2
+
+[[tables.rows]]
+id = "devices-relay-ep2-late"
+label = "Reads answered 100-1,900 ms late"
+ptr = "/summary/kinds/ep2/late/same"
+of = 5
+
+[[tables.rows]]
+id = "devices-relay-ep2-never"
+label = "Read the real device never answers"
+ptr = "/summary/kinds/ep2/never answered/same"
+of = 1
+
+[[tables.rows]]
+id = "devices-relay-ep2-beside"
+label = "Read beside an unanswered request on the other endpoint"
+ptr = "/summary/kinds/ep2/beside an unanswered request/same"
+of = 1
+
+[[tables.rows]]
+id = "devices-relay-ep2-abandoned"
+label = "Read right after an abandoned one"
+ptr = "/summary/kinds/ep2/after an abandoned request/same"
+of = 1
+
+[[tables.rows]]
+id = "devices-relay-ep2-across"
+label = "Reads answered 1 s late while another interface switches its setting"
+ptr = "/summary/kinds/ep2/across a setting switch/same"
+of = 2
+
+[[tables.rows]]
+id = "devices-relay-ep2-writes"
+label = "Writes of 0-1,024 bytes, some answered in the status stage"
+ptr = "/summary/kinds/ep2/writes/same"
+of = 7
+
+[[tables.rows]]
+id = "devices-relay-ep2-writes-refused"
+label = "Writes the real device refuses, at once or partway"
+ptr = "/summary/kinds/ep2/writes refused/same"
+of = 3
+
+[[tables.rows]]
+id = "devices-relay-ep2-writes-paced"
+label = "Writes taken 5 ms a packet"
+ptr = "/summary/kinds/ep2/writes paced/same"
+of = 2
+
+[[tables.rows]]
+id = "devices-relay-ep2-writes-late"
+label = "Writes answered 100-1,900 ms late"
+ptr = "/summary/kinds/ep2/writes late/same"
+of = 3
+
+[[tables.rows]]
+id = "devices-relay-ep2-writes-never"
+label = "Writes the real device never answers"
+ptr = "/summary/kinds/ep2/writes never answered/same"
+of = 2

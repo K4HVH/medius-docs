@@ -120,7 +120,7 @@ except NotFoundError:
 
       <DocSection id="run" title="Run it" caption="One command, expected output">
         <pre><code class="language-bash">{`python first.py
-# firmware 3.4.7, proto 9
+# firmware 3.5.0, proto 10
 # motion  dx=8 dy=-3 wheel=0`}</code></pre>
         <p>
           The last line needs a move or click on the real mouse within 5 s.{' '}

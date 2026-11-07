@@ -1,5 +1,5 @@
-// Each row's result, worked out from its values by the rules in medius-fw docs/comparison/results.schema.md,
-// and each value as the site writes it.
+// Each row's result, worked out from its values by the rules the Method page states, and each value as the site
+// writes it.
 import type { Box, FeatureRow, MeasureRow, OutcomeRow, PairRow, Table, Value } from './types';
 
 export type Result = Box | 'equal' | 'differs' | null;
@@ -11,13 +11,21 @@ export function span(v: Value): [number, number] {
   return [x, x];
 }
 
+// How far a range lies from the range it should meet: none where they meet, else the gap from the nearer end.
+const gap = ([lo, hi]: [number, number], [to, th]: [number, number]) => Math.max(0, lo - th, to - hi);
+
 export function resultOf(table: Table, row: PairRow): Result {
   if (table.kind === 'measure') {
     if (!table.better) return null;
-    const { stock, medius } = row as MeasureRow;
+    const { stock, medius, native, target } = row as MeasureRow;
     const [sl, sh] = span(stock);
     const [ml, mh] = span(medius);
     if (sl <= mh && ml <= sh) return 'equal';
+    if (table.better === 'nearer') {
+      const aim: [number, number] = native ? span(native) : [target!, target!];
+      const [s, m] = [gap([sl, sh], aim), gap([ml, mh], aim)];
+      return s === m ? 'equal' : s < m ? 'stock' : 'medius';
+    }
     return (sh < ml) === (table.better === 'lower') ? 'stock' : 'medius';
   }
   if (table.kind === 'outcome') {

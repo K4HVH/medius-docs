@@ -1,0 +1,252 @@
+id = "device-matrix"
+version = 1
+category = "devices"
+layout = "main"
+boxes = ["stock", "medius"]
+jams_stock = false
+
+[[legs]]
+id = "start"
+device = "sim:fresh_mouse"
+
+[[tables]]
+section = "devices-shapes"
+order = 1
+kind = "outcome"
+label = "Native data reaching the PC"
+key = "Device"
+outcomes = ["All data arrives", "Not cloned", "An interface sends nothing"]
+
+[[tables.rows]]
+id = "devices-data-mice-1ms"
+label = "Three mice with a 1 ms interval"
+note = "8-bit and 16-bit axes, and a mouse and keyboard in one"
+ptr = "/outcomes/devices-data-mice-1ms"
+
+[[tables.rows]]
+id = "devices-data-boot-keyboard"
+label = "Boot keyboard"
+ptr = "/outcomes/devices-data-boot-keyboard"
+
+[[tables.rows]]
+id = "devices-data-hid-stream-beside-mouse"
+label = "Mouse with a second, streaming HID interface"
+ptr = "/outcomes/devices-data-hid-stream-beside-mouse"
+
+[[tables.rows]]
+id = "devices-data-hid-variants"
+label = "Three unusual HID interfaces"
+note = "Alternate settings, a 64-byte endpoint, the HID descriptor after the endpoint"
+ptr = "/outcomes/devices-data-hid-variants"
+
+[[tables.rows]]
+id = "devices-data-layouts"
+label = "Two unusual interface layouts"
+note = "A gap in the interface numbers, numbering from 1"
+ptr = "/outcomes/devices-data-layouts"
+
+[[tables.rows]]
+id = "devices-data-slow-report"
+label = "Four devices slow to give their report descriptor"
+note = "450 or 700 ms late, or refused"
+ptr = "/outcomes/devices-data-slow-report"
+
+[[tables.rows]]
+id = "devices-data-qualifier"
+label = "Two mice, with and without a device qualifier"
+ptr = "/outcomes/devices-data-qualifier"
+
+[[tables.rows]]
+id = "devices-data-mice-slow"
+label = "Five mice with an 8 or 10 ms interval"
+note = "Including a two-mouse device and a mouse with two configurations"
+ptr = "/outcomes/devices-data-mice-slow"
+
+[[tables.rows]]
+id = "devices-data-report-1500"
+label = "Mouse with a 1,500-byte report descriptor"
+ptr = "/outcomes/devices-data-report-1500"
+
+[[tables.rows]]
+id = "devices-data-five-hid"
+label = "Keyboard with five HID interfaces, an IN endpoint on each"
+ptr = "/outcomes/devices-data-five-hid"
+
+[[tables.rows]]
+id = "devices-data-six-in"
+label = "Mouse with a vendor interface, six IN endpoints"
+ptr = "/outcomes/devices-data-six-in"
+
+[[tables.rows]]
+id = "devices-data-report-declared-3000"
+label = "Mouse claiming a 3,000-byte report descriptor"
+note = "It sends 50 bytes, which the PC pads to 3,000 with zeros"
+ptr = "/outcomes/devices-data-report-declared-3000"
+
+[[tables.rows]]
+id = "devices-data-second-config"
+label = "Mouse with an unused second configuration"
+ptr = "/outcomes/devices-data-second-config"
+
+[[tables.rows]]
+id = "devices-data-nine-alternates"
+label = "Mouse with a vendor interface of nine settings"
+ptr = "/outcomes/devices-data-nine-alternates"
+
+[[tables.rows]]
+id = "devices-ep0-data-8"
+label = "Mouse with an 8-byte endpoint 0"
+test = "ep0-shapes"
+ptr = "/outcomes/devices-ep0-data-8"
+
+[[tables.rows]]
+id = "devices-ep0-data-16"
+label = "Mouse with a 16-byte endpoint 0"
+test = "ep0-shapes"
+ptr = "/outcomes/devices-ep0-data-16"
+
+[[tables.rows]]
+id = "devices-ep0-data-32"
+label = "Mouse with a 32-byte endpoint 0"
+test = "ep0-shapes"
+ptr = "/outcomes/devices-ep0-data-32"
+
+[[tables.rows]]
+id = "devices-ep0-data-strings"
+label = "Mouse with name and serial strings"
+test = "ep0-shapes"
+ptr = "/outcomes/devices-ep0-data-strings"
+
+[[tables.rows]]
+id = "devices-data-far-interfaces"
+label = "HID interface numbered 200 beside a vendor one numbered 60"
+ptr = "/outcomes/devices-data-far-interfaces"
+
+[[tables.rows]]
+id = "devices-data-builtin-gamingmouse"
+label = "Gaming mouse"
+ptr = "/outcomes/devices-data-builtin-gamingmouse"
+
+[[tables.rows]]
+id = "devices-data-builtin-keyboard"
+label = "Keyboard"
+ptr = "/outcomes/devices-data-builtin-keyboard"
+
+[[tables.rows]]
+id = "devices-data-builtin-hsmouse"
+label = "High-speed mouse"
+ptr = "/outcomes/devices-data-builtin-hsmouse"
+
+[[tables.rows]]
+id = "devices-data-builtin-stall"
+label = "Mouse that stalls its endpoint after 200 reports"
+ptr = "/outcomes/devices-data-builtin-stall"
+
+[[tables]]
+section = "devices-shapes"
+order = 3
+kind = "measure"
+label = "Time from device appearing to clone configured, min to max"
+key = "Devices"
+unit = "s"
+better = "lower"
+stat = "min to max"
+layer = "host"
+n = "One clone of each device a run, 3 runs"
+resolution = 0.01
+
+[[tables.rows]]
+id = "devices-clone-time-all"
+label = "The 46 devices both boxes clone"
+ptr = ["/base/results/0/enum_s", "/base/results/1/enum_s", "/base/results/2/enum_s", "/base/results/4/enum_s", "/base/results/5/enum_s", "/base/results/7/enum_s", "/base/results/8/enum_s", "/base/results/9/enum_s", "/base/results/10/enum_s", "/base/results/15/enum_s", "/base/results/17/enum_s", "/base/results/18/enum_s", "/base/results/21/enum_s", "/base/results/22/enum_s", "/base/results/23/enum_s", "/base/results/26/enum_s", "/base/results/27/enum_s", "/base/results/28/enum_s", "/base/results/29/enum_s", "/base/results/30/enum_s", "/base/results/31/enum_s", "/base/results/32/enum_s", "/base/results/33/enum_s", "/base/results/34/enum_s", "/base/results/35/enum_s", "/base/results/36/enum_s", "/base/results/37/enum_s", "/base/results/38/enum_s", "/base/results/39/enum_s", "/base/results/41/enum_s", "/base/results/42/enum_s", "/base/results/43/enum_s", "/base/results/44/enum_s", "/base/results/45/enum_s", "/base/results/46/enum_s", "/base/results/47/enum_s", "/base/results/48/enum_s", "/base/results/51/enum_s", "/base/results/52/enum_s", "/base/results/53/enum_s", "/base/results/54/enum_s", "/base/results/55/enum_s", "/base/results/56/enum_s", "/base/results/57/enum_s", "/base/results/58/enum_s", "/base/results/59/enum_s"]
+
+[[tables]]
+section = "devices-intervals"
+order = 1
+kind = "outcome"
+label = "Interval the PC polls at"
+key = "Device"
+outcomes = ["Native interval", "1 ms"]
+
+[[tables.rows]]
+id = "devices-interval-mouse-10"
+label = "Four mice with a 10 ms interval"
+note = "Including a two-mouse device and a mouse with two configurations"
+ptr = "/outcomes/devices-interval-mouse-10"
+
+[[tables.rows]]
+id = "devices-interval-mouse-8"
+label = "Mouse with an 8 ms interval"
+ptr = "/outcomes/devices-interval-mouse-8"
+
+[[tables.rows]]
+id = "devices-interval-mouse-4"
+label = "Mouse with a 4 ms interval"
+ptr = "/outcomes/devices-interval-mouse-4"
+
+[[tables.rows]]
+id = "devices-interval-mouse-2"
+label = "Mouse with a 2 ms interval"
+ptr = "/outcomes/devices-interval-mouse-2"
+
+[[tables.rows]]
+id = "devices-interval-mouse-big-report"
+label = "Mouse with a 10 ms interval and a 1,500-byte report descriptor"
+ptr = "/outcomes/devices-interval-mouse-big-report"
+
+[[tables.rows]]
+id = "devices-interval-vendor-hid"
+label = "Vendor HID interface with a 4 ms interval"
+ptr = "/outcomes/devices-interval-vendor-hid"
+
+[[tables.rows]]
+id = "devices-interval-xinput"
+label = "XInput pad with 2-64 ms intervals"
+ptr = "/outcomes/devices-interval-xinput"
+
+[[tables]]
+section = "devices-intervals"
+order = 2
+kind = "outcome"
+label = "Reports/s reaching the PC"
+key = "Device"
+outcomes = ["Native rate", "Above native rate"]
+
+[[tables.rows]]
+id = "devices-poll-reports-1ms-behind-10ms"
+label = "Mouse reporting every 1 ms with a 10 ms interval"
+note = "Native rate: 125/s"
+ptr = "/outcomes/devices-poll-reports-1ms-behind-10ms"
+
+[[tables.rows]]
+id = "devices-poll-reports-8ms-behind-8ms"
+label = "Mouse reporting every 8 ms with an 8 ms interval"
+ptr = "/outcomes/devices-poll-reports-8ms-behind-8ms"
+
+[[tables]]
+section = "devices-intervals"
+order = 3
+kind = "outcome"
+label = "Interval the clone declares for a high-speed mouse"
+key = "Device"
+outcomes = ["Native bInterval 4", "1 ms"]
+ranked = false
+
+[[tables.rows]]
+id = "devices-interval-hs-mouse"
+label = "High-speed mouse declaring bInterval 4 (1 ms at high speed)"
+note = "Both clones run at full speed, where the PC reads bInterval 4 as 4 ms"
+ptr = "/outcomes/devices-interval-hs-mouse"
+
+[[tables]]
+section = "devices-imperfect"
+order = 1
+kind = "outcome"
+label = "Native data reaching the PC"
+key = "Device"
+outcomes = ["All data arrives", "Not cloned", "An interface sends nothing"]
+
+[[tables.rows]]
+id = "devices-imperfect-data-five-hid"
+label = "Keyboard with five HID interfaces, an IN endpoint on each"
+ptr = "/outcomes/devices-imperfect-data-five-hid"

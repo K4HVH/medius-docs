@@ -1,0 +1,43 @@
+id = "adoption"
+version = 1
+category = "software"
+layout = "main"
+boxes = ["stock", "medius"]
+jams_stock = false
+
+[[tables]]
+section = "software-adoption"
+order = 1
+kind = "measure"
+label = "Downloads of each box's packages"
+key = "Registry"
+unit = "downloads"
+better = "higher"
+resolution = 1
+
+[[tables.rows]]
+id = "software-pypi-every"
+label = "PyPI, last 30 days"
+note = "makcu, pymakcu and makxd against medius"
+ptr = "/pypi_last_month"
+
+[[tables.rows]]
+id = "software-crates-every"
+label = "crates.io, last 90 days"
+note = "makcu, makcu-rs and makxd against medius"
+ptr = "/crates_recent"
+
+[[tables]]
+section = "software-community"
+order = 1
+kind = "measure"
+label = "Members"
+key = "Server"
+unit = "members"
+better = "higher"
+resolution = 1
+
+[[tables.rows]]
+id = "software-discord-members"
+label = "Discord"
+ptr = "/discord_members"

@@ -1,0 +1,61 @@
+id = "replug-move"
+version = 1
+category = "recovery"
+layout = "main"
+boxes = ["stock", "medius"]
+jams_stock = true
+
+[[legs]]
+id = "idle"
+device = "sim:slow-mouse"
+
+[[legs]]
+id = "busy"
+device = "sim:busy-mouse"
+
+[[tables]]
+section = "recovery-replug"
+order = 2
+kind = "measure"
+label = "Immediate move sent as the clone is back, p50"
+key = "Mouse"
+unit = "ms"
+better = "lower"
+layer = "wire"
+n = "10 cycles a run, 3 runs (1 on stock)"
+commands = { stock = "km.move_now", medius = "MOVE (NOW)" }
+resolution = 0.01
+
+[[tables.rows]]
+id = "recovery-replug-move-idle-p50"
+label = "Mouse reporting every 2 s"
+ptr = "/results/0/shapes/0/move_first/p50"
+
+[[tables.rows]]
+id = "recovery-replug-move-busy-p50"
+label = "Mouse reporting every 8 ms"
+ptr = "/results/0/shapes/1/move_first/p50"
+
+[[tables]]
+section = "recovery-replug"
+order = 3
+kind = "measure"
+label = "Immediate move sent as the clone is back, max"
+key = "Mouse"
+unit = "ms"
+better = "lower"
+stat = "max"
+layer = "wire"
+n = "10 cycles a run, 3 runs (1 on stock)"
+commands = { stock = "km.move_now", medius = "MOVE (NOW)" }
+resolution = 0.01
+
+[[tables.rows]]
+id = "recovery-replug-move-idle-max"
+label = "Mouse reporting every 2 s"
+ptr = "/results/0/shapes/0/move_first/max"
+
+[[tables.rows]]
+id = "recovery-replug-move-busy-max"
+label = "Mouse reporting every 8 ms"
+ptr = "/results/0/shapes/1/move_first/max"

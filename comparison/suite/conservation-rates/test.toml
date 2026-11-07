@@ -1,0 +1,44 @@
+id = "conservation-rates"
+version = 1
+category = "injection"
+layout = "main"
+boxes = ["stock", "medius"]
+jams_stock = false
+
+[[legs]]
+id = "idle"
+device = "sim:idle_mouse"
+
+[[tables]]
+section = "inj-totals"
+order = 3
+kind = "outcome"
+label = "Total, default moves at a steady rate"
+key = "Mouse and moves"
+commands = { stock = "km.move", medius = "MOVE" }
+outcomes = ["Exact", "Counts lost", "Counts added"]
+
+[[tables.rows]]
+id = "inj-total-rate-500"
+label = "Still mouse, 500 moves/s"
+ptr = "/outcomes/inj-total-rate-500"
+
+[[tables.rows]]
+id = "inj-total-rate-250"
+label = "Still mouse, 250 moves/s"
+ptr = "/outcomes/inj-total-rate-250"
+
+[[tables.rows]]
+id = "inj-total-rate-125"
+label = "Still mouse, 125 moves/s"
+ptr = "/outcomes/inj-total-rate-125"
+
+[[tables.rows]]
+id = "inj-total-rate-60"
+label = "Still mouse, 60 moves/s"
+ptr = "/outcomes/inj-total-rate-60"
+
+[[tables.rows]]
+id = "inj-total-rate-30"
+label = "Still mouse, 30 moves/s"
+ptr = "/outcomes/inj-total-rate-30"

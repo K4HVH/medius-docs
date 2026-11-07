@@ -1,0 +1,285 @@
+id = "passthrough"
+version = 1
+category = "passthrough"
+layout = "main"
+boxes = ["stock", "medius"]
+jams_stock = false
+
+[[legs]]
+id = "1000"
+device = "sim:counting-mouse-1000"
+
+[[legs]]
+id = "500"
+device = "sim:counting-mouse-500"
+
+[[legs]]
+id = "250"
+device = "sim:counting-mouse-250"
+
+[[legs]]
+id = "125"
+device = "sim:counting-mouse-125"
+
+[[legs]]
+id = "burst"
+device = "sim:counting-mouse-burst"
+
+[[legs]]
+id = "inject"
+device = "sim:counting-mouse-inject"
+
+[[tables]]
+section = "pass-relay"
+order = 1
+kind = "outcome"
+label = "Mouse reports reaching the PC"
+key = "Mouse"
+outcomes = ["All, once, in order", "Repeated or out of order", "Some lost"]
+
+[[tables.rows]]
+# outcome from stock: /results/0/dropped, /results/0/duplicated, /results/0/merged, /results/0/reordered, /results/0/box_reports, /results/0/dropped, /results/0/duplicated, /results/0/merged, /results/0/reordered, /results/0/box_reports; medius: /results/0/dropped, /results/0/duplicated, /results/0/merged, /results/0/reordered, /results/0/box_reports, /results/0/dropped, /results/0/duplicated, /results/0/merged, /results/0/reordered, /results/0/box_reports
+id = "pass-seq-1000"
+label = "1 kHz mouse"
+ptr = "/outcomes/pass-seq-1000"
+
+[[tables.rows]]
+# outcome from stock: /results/1/dropped, /results/1/duplicated, /results/1/merged, /results/1/reordered, /results/1/box_reports, /results/1/dropped, /results/1/duplicated, /results/1/merged, /results/1/reordered, /results/1/box_reports; medius: /results/1/dropped, /results/1/duplicated, /results/1/merged, /results/1/reordered, /results/1/box_reports, /results/1/dropped, /results/1/duplicated, /results/1/merged, /results/1/reordered, /results/1/box_reports
+id = "pass-seq-500"
+label = "500 Hz mouse"
+ptr = "/outcomes/pass-seq-500"
+
+[[tables.rows]]
+# outcome from stock: /results/2/dropped, /results/2/duplicated, /results/2/merged, /results/2/reordered, /results/2/box_reports, /results/2/dropped, /results/2/duplicated, /results/2/merged, /results/2/reordered, /results/2/box_reports; medius: /results/2/dropped, /results/2/duplicated, /results/2/merged, /results/2/reordered, /results/2/box_reports, /results/2/dropped, /results/2/duplicated, /results/2/merged, /results/2/reordered, /results/2/box_reports
+id = "pass-seq-250"
+label = "250 Hz mouse"
+ptr = "/outcomes/pass-seq-250"
+
+[[tables.rows]]
+# outcome from stock: /results/3/dropped, /results/3/duplicated, /results/3/merged, /results/3/reordered, /results/3/box_reports, /results/3/dropped, /results/3/duplicated, /results/3/merged, /results/3/reordered, /results/3/box_reports; medius: /results/3/dropped, /results/3/duplicated, /results/3/merged, /results/3/reordered, /results/3/box_reports, /results/3/dropped, /results/3/duplicated, /results/3/merged, /results/3/reordered, /results/3/box_reports
+id = "pass-seq-125"
+label = "125 Hz mouse"
+ptr = "/outcomes/pass-seq-125"
+
+[[tables.rows]]
+# outcome from stock: /results/4/dropped, /results/4/duplicated, /results/4/merged, /results/4/reordered, /results/4/box_reports, /results/4/dropped, /results/4/duplicated, /results/4/merged, /results/4/reordered, /results/4/box_reports; medius: /results/4/dropped, /results/4/duplicated, /results/4/merged, /results/4/reordered, /results/4/box_reports, /results/4/dropped, /results/4/duplicated, /results/4/merged, /results/4/reordered, /results/4/box_reports
+id = "pass-seq-burst"
+label = "Mouse in bursts of 7 reports"
+ptr = "/outcomes/pass-seq-burst"
+
+[[tables.rows]]
+# outcome from stock: /results/0/dropped, /results/0/duplicated, /results/0/merged, /results/0/reordered, /results/0/box_reports; medius: /results/0/dropped, /results/0/duplicated, /results/0/merged, /results/0/reordered, /results/0/box_reports
+id = "pass-seq-500-long"
+label = "500 Hz mouse for 2 minutes"
+ptr = "/outcomes/pass-seq-500-long"
+
+[[tables]]
+section = "pass-relay"
+order = 3
+kind = "outcome"
+label = "Report bytes reaching the PC"
+key = "Device"
+outcomes = ["Unchanged", "Changed"]
+
+[[tables.rows]]
+# outcome from stock: /results/0/bad_bytes, /results/0/bad_bytes; medius: /results/0/bad_bytes, /results/0/bad_bytes
+id = "pass-bytes-mouse-1000"
+label = "1 kHz mouse"
+ptr = "/outcomes/pass-bytes-mouse-1000"
+
+[[tables.rows]]
+# outcome from stock: /results/1/bad_bytes, /results/1/bad_bytes; medius: /results/1/bad_bytes, /results/1/bad_bytes
+id = "pass-bytes-mouse-500"
+label = "500 Hz mouse"
+ptr = "/outcomes/pass-bytes-mouse-500"
+
+[[tables.rows]]
+# outcome from stock: /results/2/bad_bytes, /results/2/bad_bytes; medius: /results/2/bad_bytes, /results/2/bad_bytes
+id = "pass-bytes-mouse-250"
+label = "250 Hz mouse"
+ptr = "/outcomes/pass-bytes-mouse-250"
+
+[[tables.rows]]
+# outcome from stock: /results/3/bad_bytes, /results/3/bad_bytes; medius: /results/3/bad_bytes, /results/3/bad_bytes
+id = "pass-bytes-mouse-125"
+label = "125 Hz mouse"
+ptr = "/outcomes/pass-bytes-mouse-125"
+
+[[tables.rows]]
+# outcome from stock: /results/4/bad_bytes, /results/4/bad_bytes; medius: /results/4/bad_bytes, /results/4/bad_bytes
+id = "pass-bytes-mouse-burst"
+label = "Mouse in bursts of 7 reports"
+ptr = "/outcomes/pass-bytes-mouse-burst"
+
+[[tables.rows]]
+# outcome from stock: /results/0/bad_bytes, /results/0/bad_bytes; medius: /results/0/bad_bytes, /results/0/bad_bytes
+id = "pass-bytes-kbd-1000"
+label = "1 kHz keyboard"
+test = "kbd-relay"
+ptr = "/outcomes/pass-bytes-kbd-1000"
+
+[[tables.rows]]
+# outcome from stock: /results/1/bad_bytes, /results/1/bad_bytes; medius: /results/1/bad_bytes, /results/1/bad_bytes
+id = "pass-bytes-kbd-125"
+label = "125 Hz keyboard"
+test = "kbd-relay"
+ptr = "/outcomes/pass-bytes-kbd-125"
+
+[[tables.rows]]
+# outcome from stock: /results/2/bad_bytes, /results/2/bad_bytes; medius: /results/2/bad_bytes, /results/2/bad_bytes
+id = "pass-bytes-kbd-burst"
+label = "Keyboard in bursts of 7 reports"
+test = "kbd-relay"
+ptr = "/outcomes/pass-bytes-kbd-burst"
+
+[[tables]]
+section = "pass-timing"
+order = 1
+kind = "measure"
+label = "Reports a poll early or late, in 15 s"
+key = "Mouse"
+unit = "intervals"
+better = "lower"
+layer = "wire"
+n = "3 runs of 15 s"
+resolution = 1
+
+[[tables.rows]]
+id = "pass-timing-off-1000"
+label = "1 kHz mouse"
+ptr = "/base/results/0/wire/poll_grid/early_late"
+
+[[tables.rows]]
+id = "pass-timing-off-500"
+label = "500 Hz mouse"
+ptr = "/base/results/1/wire/poll_grid/early_late"
+
+[[tables.rows]]
+id = "pass-timing-off-250"
+label = "250 Hz mouse"
+ptr = "/base/results/2/wire/poll_grid/early_late"
+
+[[tables.rows]]
+id = "pass-timing-off-125"
+label = "125 Hz mouse"
+ptr = "/base/results/3/wire/poll_grid/early_late"
+
+[[tables]]
+section = "pass-timing"
+order = 2
+kind = "measure"
+label = "Gaps >1.5× the report interval, in 15 s"
+key = "Mouse"
+unit = "gaps"
+better = "lower"
+layer = "wire"
+n = "3 runs of 15 s"
+resolution = 1
+
+[[tables.rows]]
+id = "pass-timing-gap-1000"
+label = "1 kHz mouse"
+ptr = "/base/results/0/wire/gaps_over_1_5x"
+
+[[tables.rows]]
+id = "pass-timing-gap-500"
+label = "500 Hz mouse"
+ptr = "/base/results/1/wire/gaps_over_1_5x"
+
+[[tables.rows]]
+id = "pass-timing-gap-250"
+label = "250 Hz mouse"
+ptr = "/base/results/2/wire/gaps_over_1_5x"
+
+[[tables.rows]]
+id = "pass-timing-gap-125"
+label = "125 Hz mouse"
+ptr = "/base/results/3/wire/gaps_over_1_5x"
+
+[[tables]]
+section = "pass-timing"
+order = 3
+kind = "measure"
+label = "Reports a poll early or late, in 2 minutes"
+key = "Mouse"
+unit = "intervals"
+better = "lower"
+layer = "wire"
+n = "3 runs of 2 minutes"
+resolution = 1
+
+[[tables.rows]]
+id = "pass-timing-off-500-long"
+label = "500 Hz mouse"
+ptr = "/500long/results/0/wire/poll_grid/early_late"
+
+[[tables]]
+section = "pass-timing"
+order = 4
+kind = "measure"
+label = "Gaps >1.5× the report interval, in 2 minutes"
+key = "Mouse"
+unit = "gaps"
+better = "lower"
+layer = "wire"
+n = "3 runs of 2 minutes"
+resolution = 1
+
+[[tables.rows]]
+id = "pass-timing-gap-500-long"
+label = "500 Hz mouse"
+ptr = "/500long/results/0/wire/gaps_over_1_5x"
+
+[[tables]]
+section = "pass-inject"
+order = 1
+kind = "measure"
+label = "Reports read from a 1 kHz mouse in about 15.5 s"
+key = "Load"
+unit = "reports"
+better = "higher"
+layer = "wire"
+n = "3 runs of 15.5 s"
+commands = { stock = "km.move", medius = "MOVE" }
+resolution = 1
+
+[[tables.rows]]
+id = "pass-inject-varying"
+label = "Injecting 1,000 moves/s"
+ptr = "/base/results/5/wire/reports"
+
+[[tables]]
+section = "inj-reports-emitted"
+order = 1
+kind = "measure"
+label = "Reports carrying only injected motion"
+key = "Mouse"
+unit = "reports"
+better = "lower"
+layer = "hidraw"
+n = "15,000 moves a run, 3 runs"
+commands = { stock = "km.move", medius = "MOVE" }
+resolution = 1
+
+[[tables.rows]]
+id = "inj-emitted-counting-1000"
+label = "Moving 1 kHz mouse"
+ptr = "/base/results/5/box_reports"
+
+[[tables]]
+section = "inj-totals"
+order = 4
+kind = "measure"
+label = "Counts arriving from two runs of 15,000 default moves"
+key = "Mouse and moves"
+unit = "counts"
+better = "higher"
+layer = "hidraw"
+n = "15,000 moves a run, 3 runs"
+commands = { stock = "km.move", medius = "MOVE" }
+
+[[tables.rows]]
+id = "inj-total-counting-1000"
+label = "Moving 1 kHz mouse, 1,000 moves/s"
+ptr = "/base/results/5/x_total"
+of = 15000

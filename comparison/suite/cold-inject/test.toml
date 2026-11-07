@@ -1,0 +1,71 @@
+id = "cold-inject"
+version = 1
+category = "injection"
+layout = "main"
+boxes = ["stock", "medius"]
+jams_stock = false
+
+[[legs]]
+id = "never"
+device = "sim:never"
+
+[[legs]]
+id = "once"
+device = "sim:once"
+
+[[legs]]
+id = "every_100"
+device = "sim:every_100"
+
+[[tables]]
+section = "inj-fresh-clone"
+order = 1
+kind = "measure"
+label = "Counts arriving within 1 s from three 10-count moves"
+key = "Device"
+unit = "counts"
+better = "higher"
+layer = "evdev"
+n = "3 tries of 10 counts a run, 3 runs"
+commands = { stock = "km.move_now", medius = "MOVE(NOW)" }
+
+[[tables.rows]]
+id = "inj-fresh-never"
+label = "No native report yet"
+ptr = ["/results/0/move_delivered", "/results/1/move_delivered", "/results/2/move_delivered"]
+of = 10
+
+[[tables.rows]]
+id = "inj-fresh-every-100"
+label = "Native report every 100 ms"
+ptr = ["/results/6/move_delivered", "/results/7/move_delivered", "/results/8/move_delivered"]
+of = 10
+
+[[tables.rows]]
+id = "inj-fresh-once"
+label = "One native report at its start"
+ptr = ["/results/3/move_delivered", "/results/4/move_delivered", "/results/5/move_delivered"]
+of = 10
+
+[[tables]]
+section = "inj-fresh-clone"
+order = 2
+kind = "outcome"
+label = "Clicks arriving within 1 s, three tries"
+key = "Device"
+outcomes = ["All arrive", "Some arrive", "All lost"]
+
+[[tables.rows]]
+id = "inj-fresh-click-never"
+label = "No native report yet"
+ptr = "/outcomes/inj-fresh-click-never"
+
+[[tables.rows]]
+id = "inj-fresh-click-every-100"
+label = "Native report every 100 ms"
+ptr = "/outcomes/inj-fresh-click-every-100"
+
+[[tables.rows]]
+id = "inj-fresh-click-once"
+label = "One native report at its start"
+ptr = "/outcomes/inj-fresh-click-once"

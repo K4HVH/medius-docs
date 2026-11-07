@@ -1,0 +1,109 @@
+id = "bad-input"
+version = 1
+category = "control-link"
+layout = "main"
+boxes = ["stock", "medius"]
+jams_stock = true
+
+[[legs]]
+id = "rest"
+device = "still-mouse"
+
+[[tables]]
+section = "link-malformed"
+order = 1
+kind = "outcome"
+label = "Valid move after the malformed input"
+key = "Malformed input"
+commands = { stock = "km.move", medius = "MOVE(NOW)" }
+outcomes = ["Arrives", "Lost"]
+
+[[tables.rows]]
+id = "link-bad-garbage"
+label = "64 KB of random bytes"
+ptr = "/outcomes/link-bad-garbage"
+
+[[tables.rows]]
+id = "link-bad-cut"
+label = "Half a move, the valid move 100 ms later"
+ptr = "/outcomes/link-bad-cut"
+
+[[tables.rows]]
+id = "link-bad-cut-now"
+label = "Half a move, the valid move straight after"
+ptr = "/outcomes/link-bad-cut-now"
+
+[[tables.rows]]
+id = "link-bad-length"
+label = "Move with a length field too long"
+ptr = "/outcomes/link-bad-length"
+
+[[tables.rows]]
+id = "link-bad-unknown"
+label = "Unknown command"
+ptr = "/outcomes/link-bad-unknown"
+
+[[tables.rows]]
+id = "link-bad-short"
+label = "Move too short"
+ptr = "/outcomes/link-bad-short"
+
+[[tables.rows]]
+id = "link-bad-corrupt"
+label = "5-count move with one bit flipped"
+ptr = "/outcomes/link-bad-corrupt"
+
+[[tables.rows]]
+id = "link-bad-bytewise"
+label = "Move written one byte a millisecond"
+ptr = "/outcomes/link-bad-bytewise"
+
+[[tables.rows]]
+id = "link-bad-interleaved"
+label = "100 moves, a zero byte after each"
+ptr = "/outcomes/link-bad-interleaved"
+
+[[tables]]
+section = "link-malformed"
+order = 2
+kind = "measure"
+label = "Counts moved by the malformed input"
+key = "Malformed input"
+unit = "counts"
+better = "lower"
+layer = "wire"
+n = "One try per case in each of 3 runs (1 on stock)"
+resolution = 1
+
+[[tables.rows]]
+id = "link-bad-moved-garbage"
+label = "64 KB of random bytes"
+ptr = "/results/0/acted"
+
+[[tables.rows]]
+id = "link-bad-moved-unknown"
+label = "Unknown command"
+ptr = "/results/4/acted"
+
+[[tables.rows]]
+id = "link-bad-moved-short"
+label = "Move too short"
+ptr = "/results/5/acted"
+
+[[tables.rows]]
+id = "link-bad-moved-corrupt"
+label = "5-count move with one bit flipped"
+ptr = "/results/7/acted"
+
+[[tables]]
+section = "link-malformed"
+order = 3
+kind = "outcome"
+label = "Replies to queries afterwards"
+key = "Check"
+outcomes = ["Correct", "One behind"]
+
+[[tables.rows]]
+id = "link-bad-parser"
+label = "After each malformed input"
+ptr = "/outcomes/link-bad-parser"

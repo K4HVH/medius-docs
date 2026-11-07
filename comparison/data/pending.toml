@@ -1,0 +1,11 @@
+[[pending]]
+id = "input-typing-string"
+category = "input"
+test = "300 characters typed by the box's typing command"
+needs = "A typing command on Medius. A host types through INJECT, and the Medius protocol has no typing command. Stock types with km.string"
+
+[[pending]]
+id = "input-typing-burst"
+category = "input"
+test = "300 characters typed by the PC as key presses sent back to back"
+needs = "A stock run: key presses sent back to back leave stock's parser one command behind until a power cycle"
