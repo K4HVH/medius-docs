@@ -58,8 +58,9 @@ DIE = {"quiet": 4, "quietlax": 4, "wedge": 3, "reclonewedge": 5}
 TWO_CONFIGS = ("twocfg", "reclone", "reclonewedge")
 # Quirks under which a write with a data stage leaves endpoint 0 behind, or dead, until a bus reset.
 LATE_KINDS = Q_BEHIND | Q_WDATA_DEAD
-# The reclone kinds read as another device past this many GET_DESCRIPTOR(DEVICE), bus resets included.
-RECLONE_AFTER = 50
+# The reclone kinds read as another device past this many GET_DESCRIPTOR(DEVICE), bus resets included: past the
+# reads a box makes while it clones the device, which run to ~2,000.
+RECLONE_AFTER = 3000
 PID0 = 0x7080
 STRINGS = [bytes([4, 3, 0x09, 0x04]), sd("Test Lab"), sd("Request Mouse"), sd("SN-7080")]
 FEATURE = bytes([3, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77])
