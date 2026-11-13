@@ -60,6 +60,50 @@ def test_cable_move_names_sockets_from_bench_names(tmp_path):
         "Move the stock sim's device cable from the stock box's USB3 socket to PC hub socket 2.")
 
 
+OFF_BENCH = {**CONFIG, "box": {"medius": CONFIG["box"]["medius"]},
+             "sim": {"stock": {**CONFIG["sim"]["stock"], "native": "2-3.4"}, "medius": CONFIG["sim"]["medius"]}}
+
+
+def off_bench(tmp_path, where):
+    by_id = tmp_path / "by-id"
+    by_id.mkdir(exist_ok=True)
+    (by_id / "usb-1a86_USB_Single_Serial_MEDIUSSERIAL-if00").touch()
+    return Bench(OFF_BENCH, locate=lambda serial: where.get(serial), by_id=by_id)
+
+
+def test_a_sim_whose_box_is_off_the_bench_is_never_behind_it(tmp_path):
+    # the stock box gone, its sim plugged straight into the socket the box's PC cable used: the native reference
+    assert off_bench(tmp_path, {"SIMSTOCK": "2-3.4", "SIMMEDIUS": "2-3.1"}).layout_now() == "native:medius"
+    assert off_bench(tmp_path, {"SIMSTOCK": "2-5.1", "SIMMEDIUS": "2-3.1"}).layout_now() == "unknown"
+
+
+def test_a_bench_without_a_box_offers_only_the_cablings_it_can_reach(tmp_path):
+    b = off_bench(tmp_path, {})
+    assert b.cabling_for("main", "medius") == ("native:medius",)
+    assert b.cabling_for("native", "medius") == ("native:medius",)
+    assert b.cabling_for("native", "native") == ("native:medius",)
+    with pytest.raises(ValueError, match="leaves out"):
+        b.cabling_for("native", "stock")
+
+
+def test_a_cable_move_never_puts_a_sim_behind_a_box_off_the_bench(tmp_path):
+    b = off_bench(tmp_path, {"SIMSTOCK": None, "SIMMEDIUS": "2-3.1"})
+    with pytest.raises(ValueError, match="leaves out"):
+        b.move_to("main")
+    assert b.move_to("native:medius").text() == (
+        "Move the stock sim's device cable from wherever it is now to 2-3.4.")
+
+
+def test_a_run_opens_only_the_boxes_on_the_bench(tmp_path):
+    b = off_bench(tmp_path, {})
+    assert b.boxes_for("medius") == ["medius"]
+    assert b.boxes_for("native") == ["medius"]
+    assert b.boxes_for(None) == ["medius"]
+    with pytest.raises(SystemExit, match="no stock box"):
+        b.boxes_for("stock")
+    assert bench(tmp_path, {}).boxes_for(None) == ["stock", "medius"]
+
+
 def test_an_unknown_config_key_is_refused():
     with pytest.raises(ValueError, match="cloen"):
         Bench({**CONFIG, "box": {**CONFIG["box"], "medius": {"control": "X", "cloen": "2-3.1"}}})

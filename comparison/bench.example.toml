@@ -13,7 +13,8 @@ medius = "Medius box"
 "sim.medius" = "Medius sim"
 "2-5.1" = "PC hub socket 2"
 
-# Each box: its control port's serial and the USB port its clone enumerates on.
+# Each box: its control port's serial and the USB port its clone enumerates on. Leave out a box that is off the
+# bench: its sim is then never behind it, only the native reference, and its tests are left out of a run.
 [box.stock]
 control = "STOCK_CONTROL_SERIAL"
 clone = "2-3.4"

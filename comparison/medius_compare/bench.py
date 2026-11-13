@@ -97,24 +97,44 @@ class Bench:
             raise FileNotFoundError(f"the {self._name('sim.' + name)}'s control adapter ({serial}) is not plugged in")
         return found[0]
 
+    def boxes_for(self, box):
+        """The boxes a run on `box` opens: that box, or for the native group or every box, each box on the bench."""
+        if box in BOXES:
+            if box not in self.box:
+                raise SystemExit(f"the bench config has no {self._name(box)}: add its [box.{box}] entry")
+            return [box]
+        return [b for b in BOXES if b in self.box]
+
     def cabling_for(self, layout, box):
         if layout == "main":
-            return ("main", f"native:{box}") if box in BOXES else ("main",)
-        if box in BOXES:
-            return (f"native:{box}",)
-        return tuple(f"native:{b}" for b in BOXES)
+            wanted = ("main", f"native:{box}") if box in BOXES else ("main",)
+        elif box in BOXES:
+            wanted = (f"native:{box}",)
+        else:
+            wanted = tuple(f"native:{b}" for b in BOXES)
+        found = tuple(c for c in wanted if self._reachable(c))
+        if not found:
+            raise ValueError(f"a {layout} test on the {self._name(box)} needs a box this bench config leaves out")
+        return found
 
     def _where(self):
         return {name: self._locate(sim["serial"]) for name, sim in self.sim.items()}
 
+    def _state(self, s, where):
+        """Where sim `s` is: behind its box (only a box on the bench), on its PC hub socket, or neither (None)."""
+        cfg = self.sim[s]
+        box = self.box.get(cfg["box"])
+        if box is not None and where[s] == box["clone"]:
+            return "behind"
+        return "pc" if where[s] == cfg["native"] else None
+
     def _cabling(self, where):
-        behind = {s: where[s] == self.box[cfg["box"]]["clone"] for s, cfg in self.sim.items()}
-        on_pc = {s: where[s] == cfg["native"] for s, cfg in self.sim.items()}
-        if all(behind.values()):
+        state = {s: self._state(s, where) for s in self.sim}
+        if all(v == "behind" for v in state.values()):
             return "main"
-        if sum(on_pc.values()) == 1 and sum(behind.values()) == len(self.sim) - 1:
-            [lent] = [s for s, v in on_pc.items() if v]
-            [b] = [cfg["box"] for s, cfg in self.sim.items() if s != lent]
+        lent = [s for s, v in state.items() if v == "pc"]
+        if len(lent) == 1 and all(v == "behind" for s, v in state.items() if s != lent[0]):
+            [b] = [cfg["box"] for s, cfg in self.sim.items() if s != lent[0]]
             return f"native:{b}"
         return "unknown"
 
@@ -127,13 +147,18 @@ class Bench:
         box = target.split(":", 1)[1]
         return {s: ("behind" if cfg["box"] == box else "pc") for s, cfg in self.sim.items()}
 
+    def _reachable(self, target):
+        return all(self.sim[s]["box"] in self.box for s, w in self._wanted(target).items() if w == "behind")
+
     def move_to(self, target):
+        if not self._reachable(target):
+            raise ValueError(f"the bench can't be cabled {target}: a sim would go behind a box its config leaves out")
         where = self._where()
         steps = []
         for s, cfg in self.sim.items():
             usb3 = f"the {self._name(cfg['box'])}'s USB3 socket"
             pc = self._name(cfg["native"])
-            here = "behind" if where[s] == self.box[cfg["box"]]["clone"] else "pc" if where[s] == cfg["native"] else None
+            here = self._state(s, where)
             want = self._wanted(target)[s]
             if here == want:
                 continue

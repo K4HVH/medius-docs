@@ -13,7 +13,7 @@ SUITE = Path(__file__).resolve().parent.parent / "suite"
 
 def _engine(entry: str, args, suite) -> Engine:
     from . import boxes as boxes_mod
-    from .bench import Bench, SoloBench
+    from .bench import BOXES, Bench, SoloBench
     from .devices import RealDevices, SimDevices
     if entry == "no-sim":
         box = boxes_mod.open_box(args.box, args.port)
@@ -25,7 +25,11 @@ def _engine(entry: str, args, suite) -> Engine:
         personalities.SIM_LIBRARY = bench.sim_library
     devices = SimDevices(bench)
     bench._locate, bench._describe = devices.locate, devices.describe_sim
-    wanted = [args.box] if args.box in ("stock", "medius") else ["stock", "medius"]
+    wanted = bench.boxes_for(args.box)
+    if not args.box:
+        for k in sorted(set(BOXES) - set(wanted)):
+            print(f"the {bench._name(k)} is off the bench (its config leaves it out), so its tests are left out",
+                  file=sys.stderr, flush=True)
     boxes = {k: boxes_mod.open_box(k, bench.control_port(k)) for k in wanted}
     return Engine(entry=entry, bench=bench, devices=devices, boxes=boxes, suite=suite, out_dir=args.out)
 
