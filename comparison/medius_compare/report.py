@@ -15,7 +15,9 @@ def _cell(entry, ptr):
         return "skipped"
     if entry.get("failed"):
         return "failed"
-    ptrs = ptr if isinstance(ptr, list) else [ptr]
+    ptrs = [p for p in (ptr if isinstance(ptr, list) else [ptr]) if p is not None]
+    if not ptrs:
+        return "-"       # a row this box has nothing for
     vals = []
     for run in entry["runs"]:
         got = [resolve(run, p) for p in ptrs]

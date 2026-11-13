@@ -30,3 +30,8 @@ def test_report_refuses_two_runs_of_one_box(tmp_path):
     import pytest
     with pytest.raises(ValueError, match="one run per box"):
         report(a + b, suite)
+
+
+def test_a_row_with_no_pointer_for_a_box_reads_no_value():
+    from medius_compare.report import _cell
+    assert _cell({"runs": [{"x": 1}]}, None) == "-"
