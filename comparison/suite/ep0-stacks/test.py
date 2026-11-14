@@ -242,9 +242,7 @@ def _kind(ctx, links, ports, n, name):
     node = _find(ports[1], pid) if _present(links[1], p) else None
     native = _read_all(node, quirks, rows, 0.5) if node else None
     if native is None:
-        res["error"] = "the native sim did not come up"
-        ctx.log(f"{name}: {res['error']}")
-        return res
+        raise RuntimeError(f"{name}: the native sim did not come up, so there is nothing to compare the clone with")
     node = _find(ports[0], pid) if _present(links[0], p) else None
     clone = _read_all(node, quirks, rows, 1.0) if node else None
     if clone is None:

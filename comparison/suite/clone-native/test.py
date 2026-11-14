@@ -499,10 +499,10 @@ def _case(ctx, links, ports, name, spec):
     finally:
         for m in mons:
             m.__exit__(None, None, None)
-    row = {"case": name, "cloned": up[0], "native_up": up[1]}
     if not up[1]:
-        row["verdict"] = "native did not come up"
-    elif not up[0]:
+        raise RuntimeError(f"{name}: the native sim did not come up, so there is nothing to compare the clone with")
+    row = {"case": name, "cloned": up[0], "native_up": up[1]}
+    if not up[0]:
         row["verdict"] = "not cloned"
     else:
         tr = []
