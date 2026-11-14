@@ -104,6 +104,14 @@ def test_a_run_opens_only_the_boxes_on_the_bench(tmp_path):
     assert bench(tmp_path, {}).boxes_for(None) == ["stock", "medius"]
 
 
+def test_a_native_socket_that_is_the_sims_own_box_clone_socket_is_refused():
+    # plugged in there the sim reads as behind its box, never as the native reference, and a run would wait forever
+    cfg = {**CONFIG, "sim": {"stock": {**CONFIG["sim"]["stock"], "native": "2-3.4"}, "medius": CONFIG["sim"]["medius"]}}
+    with pytest.raises(ValueError, match="native socket 2-3.4"):
+        Bench(cfg, locate=lambda serial: None)
+    Bench(OFF_BENCH, locate=lambda serial: None)   # the same socket with the box off the bench is the bench as it is
+
+
 def test_an_unknown_config_key_is_refused():
     with pytest.raises(ValueError, match="cloen"):
         Bench({**CONFIG, "box": {**CONFIG["box"], "medius": {"control": "X", "cloen": "2-3.1"}}})

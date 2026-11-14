@@ -64,6 +64,11 @@ class Bench:
                 _check(f"box.{name}.power", box["power"], KEYS["power"])
         for name, sim in config.get("sim", {}).items():
             _check(f"sim.{name}", sim, KEYS["sim"])
+            box = config.get("box", {}).get(sim.get("box"))
+            if box is not None and sim.get("native") == box.get("clone"):
+                raise ValueError(f"bench config: sim.{name}'s native socket {sim['native']} is the clone socket of "
+                                 f"box.{sim['box']}, which is on the bench: plugged in there the sim reads as behind "
+                                 f"its box, never as the native reference. Leave the box out while it is off the bench")
         self.names = config.get("names", {})
         self.box = config.get("box", {})
         self.sim = config.get("sim", {})
