@@ -4,7 +4,7 @@
 import { expect, it } from 'vitest';
 import { checkResults } from '../../src/app/data/comparison/check';
 import { generate } from '../../src/app/data/comparison/generate';
-import { leadOf, pooled } from '../../src/app/data/comparison/lead';
+import { critical, leadOf, pooled } from '../../src/app/data/comparison/lead';
 import { resultOf } from '../../src/app/data/comparison/result';
 import type { MeasureRow, MeasureTable } from '../../src/app/data/comparison/types';
 import { LATENCY, input, runFile } from './helpers/comparison-runs';
@@ -26,10 +26,11 @@ it('widens the pooled error by the spread between runs', () => {
   expect(apart.variance).toBeGreaterThan(tight.variance * 10);
 });
 
-it('leads where the runs overlap but each box is steady', () => {
-  // 742-760 against 755-770: overlapping, but every run of each is a tight median of 400 samples
+it('leads only past the noise of both boxes\' runs', () => {
+  // 742-760 against 755-770: overlapping, each run a median of 400 samples
   expect(leadOf('lower', [run(742, 20, 400), run(751, 20, 400), run(760, 20, 400)], [run(755, 20, 400), run(762, 20, 400), run(770, 20, 400)])).toBe('equal');
-  expect(leadOf('lower', [run(700, 5, 400), run(701, 5, 400), run(702, 5, 400)], [run(701.5, 5, 400), run(703, 5, 400), run(704, 5, 400)])).toBe('stock');
+  // 700-702 against 706-708, steady: a lead
+  expect(leadOf('lower', [run(700, 5, 400), run(701, 5, 400), run(702, 5, 400)], [run(706, 5, 400), run(707, 5, 400), run(708, 5, 400)])).toBe('stock');
 });
 
 it('calls a gap inside the noise level, though the ranges are apart', () => {
@@ -78,8 +79,8 @@ const rowOf = (r: ReturnType<typeof generate>['results'], id: string) =>
     .find((x) => x.row.id === id)!;
 
 it('stores each measured row\'s result, which the page reads over the ranges', () => {
-  // overlapping ranges, steady boxes: a lead
-  const a = withLatency([summary(700, 5, 400), summary(701, 5, 400), summary(702, 5, 400)], [summary(701.5, 5, 400), summary(703, 5, 400), summary(704, 5, 400)]);
+  // steady boxes 5 us apart: a lead
+  const a = withLatency([summary(700, 5, 400), summary(701, 5, 400), summary(702, 5, 400)], [summary(706, 5, 400), summary(707, 5, 400), summary(708, 5, 400)]);
   expect(a.faults).toEqual([]);
   const ra = rowOf(a.results, 'lat-p50');
   expect(ra.row.result).toBe('stock');
@@ -95,4 +96,34 @@ it('stores each measured row\'s result, which the page reads over the ranges', (
 it('keeps the ranges\' rule for a count of a total', () => {
   const r = rowOf(generate(input()).results, 'lat-delivered');
   expect(r.row.result).toBeUndefined();
+});
+
+it('needs Student\'s t for the runs\' degrees of freedom, not 1.96', () => {
+  expect(critical(4)).toBeCloseTo(2.776, 3);
+  expect(critical(2)).toBeCloseTo(4.303, 3);
+  expect(critical(1000)).toBeCloseTo(1.96, 2);
+  // three runs a box, a gap of 2.3 standard errors: past 1.96, short of t(4)
+  const s3 = [{ y: 10 }, { y: 11 }, { y: 12 }];
+  const m3 = [{ y: 11.9 }, { y: 12.9 }, { y: 13.9 }];
+  expect(leadOf('lower', s3, m3)).toBe('equal');
+});
+
+it('weighs a box that ran once by the other\'s spread, at t for the other\'s runs', () => {
+  // one stock run 3 standard errors from three steady Medius runs: past t(4), short of t(2)
+  const m3 = [{ y: 100 }, { y: 101 }, { y: 102 }];
+  expect(leadOf('lower', [{ y: 97.8 }], m3)).toBe('equal');
+  expect(leadOf('lower', [{ y: 90 }], m3)).toBe('stock');
+});
+
+it('ranks against the native runs when neither box says how it spreads', () => {
+  expect(leadOf('nearer', [{ y: 99 }], [{ y: 105 }], { runs: [{ y: 104 }] })).toBe('medius');
+});
+
+it('counts the reference\'s own noise where the boxes sit either side of it', () => {
+  const runs = (y: number) => [run(y, 1), run(y + 0.01, 1), run(y - 0.01, 1)];
+  // 99 and 102 either side of a reference spread over 90-110: nearer by 1, inside the reference's noise
+  const wide = { runs: [{ y: 90 }, { y: 100 }, { y: 110 }] };
+  expect(leadOf('nearer', runs(99), runs(102), wide)).toBe('equal');
+  const tight = { runs: [{ y: 99.9 }, { y: 100 }, { y: 100.1 }] };
+  expect(leadOf('nearer', runs(99), runs(102), tight)).toBe('stock');
 });

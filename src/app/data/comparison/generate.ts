@@ -115,10 +115,31 @@ export interface ToolTest {
   jamsStock: boolean;
 }
 
-// What the Method page lists that the results don't carry: the tool's tests, and the run files.
+// What the Method page lists that the results don't carry: the tool's tests, the run files, and the power cycles stock's
+// runs needed inside its tests (a leg that ran right after one says so).
 export interface ToolData {
   tests: ToolTest[];
   runs: { box: RunBox; file: string }[];
+  stockCycles: { inside: number; tests: number };
+}
+
+// The power cycles stock's runs needed inside its tests, each test from the latest file holding it, and how many tests
+// needed one. A cycle after a test's last leg isn't recorded.
+export function stockCycles(input: GenerateInput): { inside: number; tests: number } {
+  const latest = new Map<string, unknown>();
+  for (const { doc } of [...input.runs].sort((a, b) => a.path.localeCompare(b.path)))
+    if (doc.box === 'stock') for (const [id, entry] of Object.entries(doc.tests)) latest.set(id, entry);
+  const count = (x: unknown): number =>
+    Array.isArray(x) ? x.reduce((a: number, y) => a + count(y), 0)
+    : x && typeof x === 'object' ? Object.entries(x).reduce((a, [k, y]) => a + (k === 'cycled_before' && y === true ? 1 : count(y)), 0)
+    : 0;
+  let inside = 0, tests = 0;
+  for (const entry of latest.values()) {
+    const n = count(entry);
+    inside += n;
+    if (n) tests++;
+  }
+  return { inside, tests };
 }
 
 const RUNS = 3;
@@ -229,12 +250,14 @@ export function generate(input: GenerateInput): Generated {
   };
 
   // Each run's statistic in the table's unit, with its sampling variance where the run's summary records the sample
-  // count and spread beside it (a mean or a percentile).
+  // count and spread beside it (a mean or a percentile). A row's several pointers in one run are one run's readings, so
+  // they average into one value: as separate values they would read as runs, and their shared phase as no spread.
   const runStats = (p: Picked, row: RowDecl, ptrs: Ptr | undefined, tableUnit: string | undefined): RunStat[] => {
     const scale = row.unit ? (TIME[row.unit] ?? NaN) / (TIME[tableUnit ?? ''] ?? NaN) : 1;
     if (Number.isNaN(scale)) return [];
     const out: RunStat[] = [];
     for (const raw of p.entry.runs) {
+      const got: RunStat[] = [];
       for (const ptr of list(ptrs)) {
         const y = resolve(raw, ptr);
         if (typeof y !== 'number' || !Number.isFinite(y)) continue;
@@ -243,8 +266,12 @@ export function generate(input: GenerateInput): Generated {
         const at = resolve(raw, ptr.slice(0, cut));
         const { n, sd } = (at && typeof at === 'object' ? at : {}) as { n?: unknown; sd?: unknown };
         const known = f !== undefined && typeof n === 'number' && n > 0 && typeof sd === 'number' && sd >= 0;
-        out.push(known ? { y: y * scale, v: (f * (sd as number) * scale) ** 2 / (n as number) } : { y: y * scale });
+        got.push(known ? { y: y * scale, v: (f * (sd as number) * scale) ** 2 / (n as number) } : { y: y * scale });
       }
+      if (!got.length) continue;
+      const y = got.reduce((a, g) => a + g.y, 0) / got.length;
+      const allKnown = got.every((g) => g.v !== undefined);
+      out.push(allKnown ? { y, v: got.reduce((a, g) => a + (g.v as number), 0) / got.length ** 2 } : { y });
     }
     return out;
   };

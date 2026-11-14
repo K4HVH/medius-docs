@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { expect, it } from 'vitest';
 import { checkResults } from '../../src/app/data/comparison/check';
-import { generate, toolTests } from '../../src/app/data/comparison/generate';
+import { generate, stockCycles, toolTests } from '../../src/app/data/comparison/generate';
 import type { MeasureRow, OutcomeRow } from '../../src/app/data/comparison/types';
 import { DATA, LATENCY, input } from './helpers/comparison-runs';
 
@@ -149,4 +149,38 @@ it("reads native beside each box's own runs where the test has no native runs", 
   expect(row.native).toMatchObject({ lo: 13093, hi: 13110 });
   expect(row.native!.src).toHaveLength(6);
   expect(checkResults(results)).toEqual([]);
+});
+
+it('takes a row\'s pointers in one run as one value, not as runs of their own', () => {
+  // two pointers a run, each pair a run's own reading: 3 runs, not 6
+  const i = input();
+  const t = { ...i.tests[0], tables: [{ section: 'timing', order: 3, kind: 'measure' as const, label: 'Pair', key: 'Pairs',
+    unit: 'ms', better: 'lower' as const, rows: [{ id: 'pair', label: 'Pair', ptr: ['/x/a', '/x/b'] }] }] };
+  i.tests = [t, ...i.tests.slice(1)];
+  i.defects = [];
+  const run = (a: number, b: number) => ({ x: { a, b } });
+  const entry = (runs: unknown[]) => ({ version: 2, layout: 'main', legs: ['rest'], devices: [], state: {}, integrity: {}, runs });
+  i.runs = i.runs.map((r) =>
+    r.doc.box === 'stock' ? { ...r, doc: { ...r.doc, tests: { ...r.doc.tests, latency: entry([run(10, 10.2), run(11, 11.2), run(12, 12.2)]) } } }
+    : r.doc.box === 'medius' ? { ...r, doc: { ...r.doc, tests: { ...r.doc.tests, latency: entry([run(12.1, 12.3), run(13.1, 13.3), run(14.1, 14.3)]) } } }
+    : r,
+  );
+  const row = rowOf(generate(i).results, 'pair') as MeasureRow;
+  // 3 runs a box: run means 10.1/11.1/12.1 against 12.2/13.2/14.2, 2.1 apart over a standard error of ~0.82, short of
+  // t(4) = 2.78 times it; taken as 6 values a box (standard error ~0.52, t(10)), the gap would read as a lead
+  expect(row.result).toBe('equal');
+});
+
+it("counts the power cycles stock's runs needed inside its tests, and the tests that needed them", () => {
+  const i = input();
+  const entry = (runs: unknown[]) => ({ version: 1, layout: 'main', legs: ['rest'], devices: [], state: {}, integrity: {}, runs });
+  i.runs = i.runs.map((r) =>
+    r.doc.box === 'stock'
+      ? { ...r, doc: { ...r.doc, tests: { ...r.doc.tests,
+          a: entry([{ results: [{ cycled_before: false }, { cycled_before: true }, { cycled_before: true }] }]),
+          b: entry([{ results: [{ cycled_before: true }] }]) } } }
+      : r.doc.box === 'medius' ? { ...r, doc: { ...r.doc, tests: { ...r.doc.tests, c: entry([{ results: [{ cycled_before: true }] }]) } } }
+      : r,
+  );
+  expect(stockCycles(i)).toEqual({ inside: 3, tests: 2 });
 });

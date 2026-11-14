@@ -6,7 +6,7 @@ import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 import { parse } from 'smol-toml';
 import type { CategoryDecl, FactTable, GenerateInput, RunFileDoc, TestDecl, ToolData } from '../src/app/data/comparison/generate';
-import { generate, toolTests } from '../src/app/data/comparison/generate';
+import { generate, stockCycles, toolTests } from '../src/app/data/comparison/generate';
 import type { Defect, FeatureRow, Pending } from '../src/app/data/comparison/types';
 
 const ROOT = join(import.meta.dirname, '..');
@@ -79,7 +79,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     process.exit(1);
   }
   writeFileSync(out, `${JSON.stringify(results, null, 2)}\n`);
-  const data: ToolData = { tests: toolTests(input.tests, results), runs: input.runs.map(({ path, doc }) => ({ box: doc.box, file: path })) };
+  const data: ToolData = { tests: toolTests(input.tests, results), runs: input.runs.map(({ path, doc }) => ({ box: doc.box, file: path })), stockCycles: stockCycles(input) };
   writeFileSync(tool, `${JSON.stringify(data, null, 2)}\n`);
   console.log(`${out}: ${results.categories.reduce((n, c) => n + c.sections.reduce((m, s) => m + s.tables.reduce((k, t) => k + t.rows.length, 0), 0), 0)} rows`);
 }
