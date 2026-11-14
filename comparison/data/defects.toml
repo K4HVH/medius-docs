@@ -85,7 +85,7 @@ rows = ["pass-polls-vendor-1ms", "pass-polls-vendor-4ms", "pass-polls-vendor-8ms
 [[defects]]
 id = "devices-medius-write-refused-partway"
 box = "medius"
-text = "When the real device STALLs a write partway, the PC reports 0 bytes written, against 64 natively. The clone ACKs each OUT packet before the real device sees it."
+text = "When the real device STALLs a write partway, the PC reports 0 bytes written (once 192), against 64 natively. The clone ACKs each OUT packet before the real device sees it."
 rows = ["devices-relay-ep2-writes-refused", "devices-relay-ep0-writes-refused"]
 
 [[defects]]
