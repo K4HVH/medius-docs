@@ -158,6 +158,7 @@ resolution = 0.01
 [[tables.rows]]
 id = "devices-clone-time-all"
 label = "The 46 devices both boxes clone"
+note = "Medius times each device's requests before its clone appears, so the clone's replies carry the device's own timing from the first one. A device plugged back in skips it (see Replug to clone back)"
 ptr = ["/base/results/0/enum_s", "/base/results/1/enum_s", "/base/results/2/enum_s", "/base/results/4/enum_s", "/base/results/5/enum_s", "/base/results/7/enum_s", "/base/results/8/enum_s", "/base/results/9/enum_s", "/base/results/10/enum_s", "/base/results/15/enum_s", "/base/results/17/enum_s", "/base/results/18/enum_s", "/base/results/21/enum_s", "/base/results/22/enum_s", "/base/results/23/enum_s", "/base/results/26/enum_s", "/base/results/27/enum_s", "/base/results/28/enum_s", "/base/results/29/enum_s", "/base/results/30/enum_s", "/base/results/31/enum_s", "/base/results/32/enum_s", "/base/results/33/enum_s", "/base/results/34/enum_s", "/base/results/35/enum_s", "/base/results/36/enum_s", "/base/results/37/enum_s", "/base/results/38/enum_s", "/base/results/39/enum_s", "/base/results/41/enum_s", "/base/results/42/enum_s", "/base/results/43/enum_s", "/base/results/44/enum_s", "/base/results/45/enum_s", "/base/results/46/enum_s", "/base/results/47/enum_s", "/base/results/48/enum_s", "/base/results/51/enum_s", "/base/results/52/enum_s", "/base/results/53/enum_s", "/base/results/54/enum_s", "/base/results/55/enum_s", "/base/results/56/enum_s", "/base/results/57/enum_s", "/base/results/58/enum_s", "/base/results/59/enum_s"]
 
 [[tables]]
