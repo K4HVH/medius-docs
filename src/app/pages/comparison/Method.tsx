@@ -260,8 +260,10 @@ const Method: Component = () => (
           can leave the box's parser one reply behind until a power cycle (
           <A href="/comparison/control-link">Control link</A>). Each runs once on stock unless{' '}
           <code>--stock-jam-runs</code> asks for more. When one leaves it behind, the tool asks for both the box's
-          cables to be unplugged for 3 s and plugged back in, and waits for Enter. <code>--test</code> runs only the
-          tests it names (repeat it for more), so a run can leave these out.
+          cables to be unplugged for 3 s and plugged back in, and waits for Enter. A full run takes about{' '}
+          12-{12 + JAMS.length} power cycles: our stock run needed 12 inside two of these tests, and each can need one
+          more after it. <code>--test</code> runs only the tests it names (repeat it for more), so a run can leave these
+          out.
         </p>
       </div>
     </DocSection>
