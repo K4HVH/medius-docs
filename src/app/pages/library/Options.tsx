@@ -70,9 +70,9 @@ const Options: Component = () => {
           <p>
             The box can't clone a real device faithfully if it: has &gt;4 IN endpoints live at once or
             &gt;6 HID interfaces; runs at high speed; has configurations the box didn't capture; has a
-            vendor bulk or isochronous endpoint; has a setting carrying more endpoint descriptors than
-            it declares (what fits is cloned, the rest left undriven); or has a report descriptor
-            truncated or never captured.
+            vendor bulk endpoint or an isochronous one of ≤64 bytes (a wider endpoint is never cloned); has
+            a setting carrying more endpoint descriptors than it declares (what fits is cloned, the rest
+            left undriven); or has a report descriptor truncated or never captured.
           </p>
         </div>
         <div class="callout callout--warning">
