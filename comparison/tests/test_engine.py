@@ -393,6 +393,19 @@ def test_a_box_that_fails_to_take_settings_fails_that_test_only(tmp_path):
     assert len(tests["fake-sim"]["runs"]) == 1
 
 
+def test_a_failed_test_says_so_and_how_to_run_it_again(tmp_path, capsys):
+    class Broken(FakeBox):
+        def apply(self, settings):
+            raise TimeoutError("query timed out")
+
+    [path] = Engine(entry="sim", bench=FakeBench(), devices=FakeDevices(), boxes={"medius": Broken("medius")},
+                    suite=load_suite(FIXTURES), out_dir=tmp_path).run(Selection(tests=["fake-test"], boxes=["medius"]),
+                                                                       runs=1)
+    err = capsys.readouterr().err
+    assert "[medius] fake-test failed: TimeoutError: query timed out" in err
+    assert f"--resume {path.stem}" in err
+
+
 def test_a_test_that_jams_stock_runs_the_stock_jam_count_on_stock_only(tmp_path):
     import dataclasses
     suite = load_suite(FIXTURES)

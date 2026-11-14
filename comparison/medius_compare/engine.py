@@ -210,7 +210,7 @@ class Engine:
             try:
                 state = self._apply_state(box, t.state.get(box_name, {}))
             except StateMismatch as e:
-                rf.fail(t.id, str(e))
+                self._fail(rf, t, box_name, str(e), stamp)
                 return
             rf.begin_test(t.id, t.version, t.layout, [leg.id for leg in legs], [], state, skipped)
             module = self._module(t)
@@ -246,7 +246,8 @@ class Engine:
                 rf.data["tests"][t.id]["devices"] = [p.record(leg if on == box_name else f"{leg}@{on}")
                                                      for (leg, on), p in presented.items()]
                 if any(ctx.integrity.values()):
-                    rf.fail(t.id, "capture lost data: " + ", ".join(f"{k} {v}" for k, v in ctx.integrity.items() if v))
+                    self._fail(rf, t, box_name, "capture lost data: " + ", ".join(
+                        f"{k} {v}" for k, v in ctx.integrity.items() if v), stamp)
                     return
                 rf.add_run(t.id, raw)
                 if t.jams_stock and box_name == "stock" and k + 1 < runs:
@@ -257,9 +258,9 @@ class Engine:
                         self._apply_state(box, t.state.get(box_name, {}))
                         playing.clear()
         except LegUnavailable as e:
-            rf.fail(t.id, str(e))
+            self._fail(rf, t, box_name, str(e), stamp)
         except Exception as e:
-            rf.fail(t.id, f"{type(e).__name__}: {e}")
+            self._fail(rf, t, box_name, f"{type(e).__name__}: {e}", stamp)
         finally:
             port.get()
             if box is not None and hasattr(box, "leave"):
@@ -269,6 +270,12 @@ class Engine:
                 self.devices.restore("native")
             if t.jams_stock and box_name == "stock":
                 self._unjam(box, stamp)
+
+    @staticmethod
+    def _fail(rf, t, box_name, reason, stamp):
+        rf.fail(t.id, reason)
+        print(f"[{box_name}] {t.id} failed: {reason} (run it again with --resume {stamp})", file=sys.stderr,
+              flush=True)
 
     def _unjam(self, box, stamp, force=False):
         if not force and not box.lagging():
