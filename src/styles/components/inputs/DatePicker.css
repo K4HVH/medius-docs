@@ -317,8 +317,8 @@
   z-index: 1;
 }
 
-.date-picker__day--range-start:hover,
 @media (hover: hover) {
+  .date-picker__day--range-start:hover,
   .date-picker__day--range-end:hover {
     background: var(--color-accent) !important;
   }

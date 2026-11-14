@@ -139,8 +139,8 @@
 }
 
 /* Hover for checked/indeterminate states */
-.checkbox:not(.checkbox--disabled):hover .checkbox__input:checked + .checkbox__box::before,
 @media (hover: hover) {
+  .checkbox:not(.checkbox--disabled):hover .checkbox__input:checked + .checkbox__box::before,
   .checkbox:not(.checkbox--disabled):hover .checkbox__input:indeterminate + .checkbox__box::before {
     background: rgba(255, 255, 255, 0.1);
   }
@@ -221,8 +221,8 @@
   }
 }
 
-.checkbox--icon:not(.checkbox--disabled):hover .checkbox__input:checked ~ .checkbox__icon-wrapper,
 @media (hover: hover) {
+  .checkbox--icon:not(.checkbox--disabled):hover .checkbox__input:checked ~ .checkbox__icon-wrapper,
   .checkbox--icon:not(.checkbox--disabled):hover .checkbox__input:indeterminate ~ .checkbox__icon-wrapper {
     color: var(--color-accent);
   }

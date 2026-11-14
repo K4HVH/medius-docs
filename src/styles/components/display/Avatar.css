@@ -194,8 +194,8 @@ button.avatar {
   color: var(--g-text-secondary);
 }
 
-.avatar--subtle.avatar--interactive:hover:not(:disabled) .avatar__initials,
 @media (hover: hover) {
+  .avatar--subtle.avatar--interactive:hover:not(:disabled) .avatar__initials,
   .avatar--subtle.avatar--interactive:hover:not(:disabled) .avatar__icon {
     color: var(--g-text-primary);
   }
