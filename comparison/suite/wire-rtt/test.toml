@@ -25,7 +25,7 @@ resolution = 1
 [[tables.rows]]
 id = "link-rtt-version-p50"
 label = "Version"
-note = "km.version against QUERY(VERSION)"
+note = "km.version against QUERY(VERSION), whose reply also carries the box's MAC and name"
 ptr = "/results/0/submit_to_reply/p50"
 
 [[tables.rows]]
@@ -50,7 +50,7 @@ resolution = 1
 [[tables.rows]]
 id = "link-rtt-version-p95"
 label = "Version"
-note = "km.version against QUERY(VERSION)"
+note = "km.version against QUERY(VERSION), whose reply also carries the box's MAC and name"
 ptr = "/results/0/submit_to_reply/p95"
 
 [[tables.rows]]

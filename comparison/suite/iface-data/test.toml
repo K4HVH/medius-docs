@@ -60,16 +60,19 @@ ptr = "/outcomes/devices-ep-data-hidtwoin"
 [[tables.rows]]
 id = "devices-ep-data-vendbulkhigh"
 label = "Vendor bulk IN numbered 0x85"
+note = "Refused unless imperfect clones are on: Medius relays bulk below the native rate (see Bulk packets relayed per second)"
 ptr = "/outcomes/devices-ep-data-vendbulkhigh"
 
 [[tables.rows]]
 id = "devices-ep-data-hidbulkin"
 label = "HID interface with a bulk IN"
+note = "Refused unless imperfect clones are on: Medius relays bulk below the native rate (see Bulk packets relayed per second)"
 ptr = "/outcomes/devices-ep-data-hidbulkin"
 
 [[tables.rows]]
 id = "devices-ep-data-vendorbulk-1000-0"
 label = "Vendor bulk pair"
+note = "Refused unless imperfect clones are on: Medius relays bulk below the native rate (see Bulk packets relayed per second)"
 ptr = "/outcomes/devices-ep-data-vendorbulk-1000-0"
 
 [[tables.rows]]
