@@ -5,20 +5,20 @@
   "entry": "sim"
  },
  "box": "native",
- "started": "2026-11-04T03:04:33+00:00",
- "finished": "2026-11-04T03:04:44+00:00",
+ "started": "2026-11-14T17:05:08+00:00",
+ "finished": "2026-11-14T17:05:18+00:00",
  "host": {
-  "kernel": "7.2.13",
-  "python": "3.14.8",
+  "kernel": "7.3.3",
+  "python": "3.14.10",
   "medius_package": "3.5.0"
  },
  "firmware": {},
  "sims": {
   "stock": {
-   "build": 412816493
+   "build": 3091833509
   },
   "medius": {
-   "build": 412816493
+   "build": 3091833509
   }
  },
  "tests": {
@@ -68,7 +68,7 @@
         "unfinished": 0,
         "stopped": null,
         "secs": 0.496,
-        "per_second": 201.7,
+        "per_second": 201.6,
         "device": {
          "packets": 100,
          "bytes": 800,
@@ -188,7 +188,7 @@
         "unfinished": 0,
         "stopped": null,
         "secs": 0.496,
-        "per_second": 201.6,
+        "per_second": 201.4,
         "device": {
          "packets": 100,
          "bytes": 800,
@@ -224,8 +224,8 @@
         "short_writes": 0,
         "unfinished": 0,
         "stopped": null,
-        "secs": 0.496,
-        "per_second": 201.6,
+        "secs": 0.497,
+        "per_second": 201.3,
         "device": {
          "packets": 100,
          "bytes": 800,
@@ -261,8 +261,8 @@
         "short_writes": 0,
         "unfinished": 0,
         "stopped": null,
-        "secs": 0.495,
-        "per_second": 202.0,
+        "secs": 0.494,
+        "per_second": 202.3,
         "device": {
          "packets": 100,
          "bytes": 800,
@@ -308,7 +308,7 @@
         "unfinished": 0,
         "stopped": null,
         "secs": 0.496,
-        "per_second": 201.5,
+        "per_second": 201.6,
         "device": {
          "packets": 100,
          "bytes": 800,
@@ -345,7 +345,7 @@
         "unfinished": 0,
         "stopped": null,
         "secs": 0.496,
-        "per_second": 201.4,
+        "per_second": 201.5,
         "device": {
          "packets": 100,
          "bytes": 800,
@@ -381,8 +381,8 @@
         "short_writes": 0,
         "unfinished": 0,
         "stopped": null,
-        "secs": 0.494,
-        "per_second": 202.3,
+        "secs": 0.495,
+        "per_second": 202.1,
         "device": {
          "packets": 100,
          "bytes": 800,
