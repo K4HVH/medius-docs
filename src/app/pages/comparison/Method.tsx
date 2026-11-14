@@ -106,7 +106,7 @@ const Method: Component = () => (
             <tr><td>Bar</td><td>Drawn to the largest value in its table, or in its row on the Overview</td></tr>
             <tr><td>Result</td><td>The box ahead, worked out from the values. The box behind is dimmed</td></tr>
             <tr><td>Faithful</td><td>If a test records native behaviour, the box that matches it is ahead</td></tr>
-            <tr><td>Equal</td><td>The two ranges overlap, or the outcomes match</td></tr>
+            <tr><td>Equal</td><td>The outcomes match, or the two measures are within 1.96 standard errors of each other. Each box's runs are pooled, weighing each run's own sampling error and the spread between runs. A box that ran once takes the other's spread between runs. A count of a total is equal where the two ranges overlap</td></tr>
             <tr><td>Differs</td><td>The boxes behave differently. Neither is better, or no test shows which is faithful</td></tr>
             <tr><td>Defect</td><td>A fault that reproduces, marked on its row and listed on the Overview</td></tr>
           </tbody>

@@ -1,6 +1,7 @@
 // Builds the comparison's results from the tests' declarations and the run files the comparison tool wrote.
 // Pure: the script around it reads the files and writes results.json.
 import { checkResults } from './check';
+import { leadOf, type RunStat, SE_FACTOR } from './lead';
 import { showValue } from './result';
 import type { Box, Category, Defect, FeatureTable, MeasureRow, OutcomeRow, Pending, Ref, Results, SettingsRow, Table, Value } from './types';
 
@@ -227,6 +228,27 @@ export function generate(input: GenerateInput): Generated {
     return lo === hi ? { value: lo, src } : { lo, hi, src };
   };
 
+  // Each run's statistic in the table's unit, with its sampling variance where the run's summary records the sample
+  // count and spread beside it (a mean or a percentile).
+  const runStats = (p: Picked, row: RowDecl, ptrs: Ptr | undefined, tableUnit: string | undefined): RunStat[] => {
+    const scale = row.unit ? (TIME[row.unit] ?? NaN) / (TIME[tableUnit ?? ''] ?? NaN) : 1;
+    if (Number.isNaN(scale)) return [];
+    const out: RunStat[] = [];
+    for (const raw of p.entry.runs) {
+      for (const ptr of list(ptrs)) {
+        const y = resolve(raw, ptr);
+        if (typeof y !== 'number' || !Number.isFinite(y)) continue;
+        const cut = ptr.lastIndexOf('/');
+        const f = SE_FACTOR[ptr.slice(cut + 1)];
+        const at = resolve(raw, ptr.slice(0, cut));
+        const { n, sd } = (at && typeof at === 'object' ? at : {}) as { n?: unknown; sd?: unknown };
+        const known = f !== undefined && typeof n === 'number' && n > 0 && typeof sd === 'number' && sd >= 0;
+        out.push(known ? { y: y * scale, v: (f * (sd as number) * scale) ** 2 / (n as number) } : { y: y * scale });
+      }
+    }
+    return out;
+  };
+
   const outcome = (p: Picked, test: string, row: RowDecl, outcomes: string[], where: string) => {
     const got = reads(p, test, row.ptr, undefined, where);
     const bad = got.find((g) => typeof g.v !== 'string' || !outcomes.includes(g.v));
@@ -268,6 +290,17 @@ export function generate(input: GenerateInput): Generated {
             else if (got.every(Boolean)) vals.native = span(got as Value[]);
           }
           if (!vals.stock || !vals.medius) continue;
+          const counted = (v: Value) => !('lo' in v) && v.of !== undefined;
+          let result: Box | 'equal' | undefined;
+          if (td.better && picks.stock && picks.medius && !counted(vals.stock) && !counted(vals.medius)) {
+            const s = runStats(picks.stock, r, r.ptr, td.unit);
+            const m = runStats(picks.medius, r, r.ptr, td.unit);
+            const ref = td.better !== 'nearer' ? undefined
+              : r.target !== undefined ? { target: r.target }
+              : { runs: beside ? [...runStats(picks.stock, r, r.native_ptr, td.unit), ...runStats(picks.medius, r, r.native_ptr, td.unit)]
+                  : picks.native ? runStats(picks.native, r, r.native_ptr, td.unit) : [] };
+            if (s.length && m.length) result = leadOf(td.better, s, m, ref);
+          }
           rows.push({
             id: r.id,
             label: r.label,
@@ -276,6 +309,7 @@ export function generate(input: GenerateInput): Generated {
             medius: vals.medius,
             ...(vals.native ? { native: vals.native } : {}),
             ...(r.target !== undefined ? { target: r.target } : {}),
+            ...(result ? { result } : {}),
           });
         }
         place(td.section, td.order, {
@@ -426,6 +460,7 @@ function shows(table: Table, row: MeasureRow | OutcomeRow, box: Box): boolean {
   const v = r[box];
   if (!('lo' in v) && v.of !== undefined) return v.value < v.of;
   if (!table.better) return true;
+  if (r.result) return r.result === other;
   const [mine, theirs] = [middle(v), middle(r[other])];
   if (table.better === 'lower') return mine > theirs;
   if (table.better === 'higher') return mine < theirs;

@@ -17,7 +17,8 @@ const gap = ([lo, hi]: [number, number], [to, th]: [number, number]) => Math.max
 export function resultOf(table: Table, row: PairRow): Result {
   if (table.kind === 'measure') {
     if (!table.better) return null;
-    const { stock, medius, native, target } = row as MeasureRow;
+    const { stock, medius, native, target, result } = row as MeasureRow;
+    if (result) return result;
     const [sl, sh] = span(stock);
     const [ml, mh] = span(medius);
     if (sl <= mh && ml <= sh) return 'equal';

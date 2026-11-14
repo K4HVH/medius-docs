@@ -17,7 +17,7 @@ const TABLE: Record<string, Set<string>> = {
   feature: new Set(['kind', 'label', 'key', 'rows', 'ranked']),
   settings: new Set(['kind', 'label', 'key', 'rows', 'columns', 'layer', 'n']),
 };
-const ROW = new Set(['id', 'label', 'stock', 'medius', 'note', 'native', 'target']);
+const ROW = new Set(['id', 'label', 'stock', 'medius', 'note', 'native', 'target', 'result']);
 const SETTINGS_ROW = new Set(['id', 'box', 'label', 'default', 'values']);
 const COLUMN = new Set(['id', 'label', 'unit', 'better']);
 const VALUE = new Set(['value', 'lo', 'hi', 'of', 'src']);
@@ -217,6 +217,11 @@ export function checkResults(d: unknown): string[] {
               if (kind === 'measure') value(r.native, `${rw}.native`);
               else fault(rw, 'native belongs only to a measure table');
             }
+          }
+          if ('result' in r) {
+            if (kind !== 'measure' || !t.better) fault(rw, 'result belongs only to a measure table that ranks its rows');
+            else if (r.result !== 'stock' && r.result !== 'medius' && r.result !== 'equal') fault(rw, 'result must be stock, medius or equal');
+            else if (isObj(r.stock) && 'of' in r.stock) fault(rw, 'a count of a total is ranked by its ranges, not a result');
           }
           if (kind === 'measure' && isObj(r.stock) && isObj(r.medius)) {
             const [s, m] = [r.stock, r.medius];

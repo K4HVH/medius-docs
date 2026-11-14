@@ -27,6 +27,9 @@ export interface MeasureRow extends RowBase {
   // against), or in a table ranked nearer, a number the test's design sets.
   native?: Value;
   target?: number;
+  // The box ahead, or equal, by the Method page's rule (lead.ts), where the table ranks its rows and neither value is a
+  // count of a total.
+  result?: Box | 'equal';
 }
 export interface OutcomeRow extends RowBase {
   stock: Outcome;
