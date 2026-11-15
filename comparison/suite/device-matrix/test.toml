@@ -59,7 +59,7 @@ ptr = "/outcomes/devices-data-qualifier"
 [[tables.rows]]
 id = "devices-data-mice-slow"
 label = "Five mice with an 8 or 10 ms interval"
-note = "Including a two-mouse device and a mouse with two configurations"
+note = "Including a two-mouse device and two mice with two configurations"
 ptr = "/outcomes/devices-data-mice-slow"
 
 [[tables.rows]]
@@ -69,12 +69,12 @@ ptr = "/outcomes/devices-data-report-1500"
 
 [[tables.rows]]
 id = "devices-data-five-hid"
-label = "Keyboard with five HID interfaces, an IN endpoint on each"
+label = "Keyboard with five HID interfaces, an IN on each"
 ptr = "/outcomes/devices-data-five-hid"
 
 [[tables.rows]]
 id = "devices-data-six-in"
-label = "Mouse with a vendor interface, six IN endpoints"
+label = "Mouse with a vendor interface, six INs"
 ptr = "/outcomes/devices-data-six-in"
 
 [[tables.rows]]
@@ -158,7 +158,7 @@ resolution = 0.01
 [[tables.rows]]
 id = "devices-clone-time-all"
 label = "46 devices both boxes clone"
-note = "Medius times the real device's replies before the clone appears. The clone's replies then have native timing from the first. A device plugged back in skips this (see Replug to clone back)"
+note = "Medius times native replies before the clone appears. The clone's replies then have native timing from the first. A device plugged back in skips this (see Replug to clone back)"
 ptr = ["/base/results/0/enum_s", "/base/results/1/enum_s", "/base/results/2/enum_s", "/base/results/4/enum_s", "/base/results/5/enum_s", "/base/results/7/enum_s", "/base/results/8/enum_s", "/base/results/9/enum_s", "/base/results/10/enum_s", "/base/results/15/enum_s", "/base/results/17/enum_s", "/base/results/18/enum_s", "/base/results/21/enum_s", "/base/results/22/enum_s", "/base/results/23/enum_s", "/base/results/26/enum_s", "/base/results/27/enum_s", "/base/results/28/enum_s", "/base/results/29/enum_s", "/base/results/30/enum_s", "/base/results/31/enum_s", "/base/results/32/enum_s", "/base/results/33/enum_s", "/base/results/34/enum_s", "/base/results/35/enum_s", "/base/results/36/enum_s", "/base/results/37/enum_s", "/base/results/38/enum_s", "/base/results/39/enum_s", "/base/results/41/enum_s", "/base/results/42/enum_s", "/base/results/43/enum_s", "/base/results/44/enum_s", "/base/results/45/enum_s", "/base/results/46/enum_s", "/base/results/47/enum_s", "/base/results/48/enum_s", "/base/results/51/enum_s", "/base/results/52/enum_s", "/base/results/53/enum_s", "/base/results/54/enum_s", "/base/results/55/enum_s", "/base/results/56/enum_s", "/base/results/57/enum_s", "/base/results/58/enum_s", "/base/results/59/enum_s"]
 
 [[tables]]
@@ -172,7 +172,7 @@ outcomes = ["Native interval", "1 ms"]
 [[tables.rows]]
 id = "devices-interval-mouse-10"
 label = "Four mice with a 10 ms interval"
-note = "Including a two-mouse device and a mouse with two configurations"
+note = "Including a two-mouse device and two mice with two configurations"
 ptr = "/outcomes/devices-interval-mouse-10"
 
 [[tables.rows]]
@@ -197,7 +197,7 @@ ptr = "/outcomes/devices-interval-mouse-big-report"
 
 [[tables.rows]]
 id = "devices-interval-vendor-hid"
-label = "Vendor HID interface with a 4 ms interval"
+label = "Vendor-page HID interface with a 4 ms interval"
 ptr = "/outcomes/devices-interval-vendor-hid"
 
 [[tables.rows]]
@@ -216,7 +216,7 @@ outcomes = ["Native rate", "Above native rate"]
 [[tables.rows]]
 id = "devices-poll-reports-1ms-behind-10ms"
 label = "Mouse reporting every 1 ms with a 10 ms interval"
-note = "Native rate: 125/s"
+note = "Native 125/s (the PC polls a 10 ms interval every 8 ms)"
 ptr = "/outcomes/devices-poll-reports-1ms-behind-10ms"
 
 [[tables.rows]]
@@ -249,5 +249,5 @@ outcomes = ["All data arrives", "Not cloned", "An interface sends nothing"]
 
 [[tables.rows]]
 id = "devices-imperfect-data-five-hid"
-label = "Keyboard with five HID interfaces, an IN endpoint on each"
+label = "Keyboard with five HID interfaces, an IN on each"
 ptr = "/outcomes/devices-imperfect-data-five-hid"

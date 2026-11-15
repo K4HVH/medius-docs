@@ -91,7 +91,7 @@ ptr = "/outcomes/link-write-parser-30"
 section = "link-paced-fast"
 order = 1
 kind = "measure"
-label = "Counts arriving from 2 s of fast moves"
+label = "Counts arriving from 2 s of moves, binary"
 key = "Moves/s"
 unit = "counts"
 better = "higher"
@@ -101,31 +101,31 @@ commands = { stock = "MOVE (0x18)", medius = "MOVE" }
 
 [[tables.rows]]
 id = "link-fast-5000"
-label = "5,000"
+label = "5,000/s"
 ptr = "/results/14/delivered"
 of = 10000
 
 [[tables.rows]]
 id = "link-fast-7000"
-label = "7,000"
+label = "7,000/s"
 ptr = "/results/15/delivered"
 of = 14000
 
 [[tables.rows]]
 id = "link-fast-10000"
-label = "10,000"
+label = "10,000/s"
 ptr = "/results/16/delivered"
 of = 20000
 
 [[tables.rows]]
 id = "link-fast-15000"
-label = "15,000"
+label = "15,000/s"
 ptr = "/results/17/delivered"
 of = 30000
 
 [[tables.rows]]
 id = "link-fast-20000"
-label = "20,000"
+label = "20,000/s"
 ptr = "/results/18/delivered"
 of = 40000
 
@@ -133,7 +133,7 @@ of = 40000
 section = "link-paced-fast"
 order = 2
 kind = "measure"
-label = "Counts arriving from 2 s of text moves"
+label = "Counts arriving from 2 s of moves, text"
 key = "Moves/s"
 unit = "counts"
 better = "higher"
@@ -143,7 +143,7 @@ commands = { stock = "km.move", medius = "MOVE" }
 
 [[tables.rows]]
 id = "link-fast-text-8000"
-label = "8,000, 3 tries a run"
+label = "8,000/s, 3 tries a run"
 ptr = ["/results/19/delivered", "/results/20/delivered", "/results/21/delivered"]
 of = 16000
 

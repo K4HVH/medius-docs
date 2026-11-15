@@ -60,7 +60,7 @@ unit = "us"
 
 [[tables.rows]]
 id = "input-lock2-wheel-on"
-label = "Wheel, every millisecond"
+label = "Wheel, moving every millisecond"
 ptr = "/results/2/still_through_after_lock/p50"
 unit = "us"
 
@@ -103,7 +103,7 @@ unit = "us"
 
 [[tables.rows]]
 id = "input-lock2-wheel-off"
-label = "Wheel, every millisecond"
+label = "Wheel, moving every millisecond"
 ptr = "/results/2/back_after_unlock/p50"
 unit = "us"
 

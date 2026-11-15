@@ -4,4 +4,4 @@ stock = "V4.122"
 medius = "3.5.0"
 
 [site]
-rig = "A Linux PC, each box fed by a USB device emulator on its USB3, both boxes behind one USB hub and tested one at a time"
+rig = "A Linux PC, a USB device emulator on each box's USB3, both boxes behind one USB hub and tested one at a time"

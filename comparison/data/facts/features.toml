@@ -23,7 +23,7 @@ stock = "RAW_MOVE"
 
 [[tables.rows]]
 id = "feat-move-pending"
-label = "Query for pending motion"
+label = "Query pending motion"
 stock = "km.moving"
 
 [[tables.rows]]
@@ -380,12 +380,12 @@ key = "Capability"
 
 [[tables.rows]]
 id = "feat-pad-read"
-label = "Read the pad's state"
+label = "Read native pad state"
 stock = "km.controller_physical"
 
 [[tables.rows]]
 id = "feat-pad-stream"
-label = "Stream pad changes"
+label = "Stream native pad changes"
 stock = "km.controller"
 
 [[tables.rows]]
@@ -551,7 +551,7 @@ medius = "REWRITE"
 
 [[tables.rows]]
 id = "feat-dev-answer"
-label = "Reply to control requests from the box"
+label = "Reply to control requests in place of the real device"
 medius = "REWRITE"
 
 [[tables.rows]]

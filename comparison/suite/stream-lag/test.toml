@@ -14,7 +14,7 @@ section = "inj-stream-lag"
 order = 1
 kind = "measure"
 label = "Delay of each count in a steady stream, p50"
-key = "Moves/s"
+key = "Moves sent"
 unit = "ms"
 better = "lower"
 stat = "p50"
@@ -25,36 +25,36 @@ resolution = 0.01
 
 [[tables.rows]]
 id = "inj-stream-lag-1000"
-label = "1,000"
+label = "1,000/s"
 ptr = "/results/0/lag/p50"
 unit = "us"
 
 [[tables.rows]]
 id = "inj-stream-lag-500"
-label = "500"
+label = "500/s"
 ptr = "/results/1/lag/p50"
 unit = "us"
 
 [[tables.rows]]
 id = "inj-stream-lag-250"
-label = "250"
+label = "250/s"
 ptr = "/results/2/lag/p50"
 unit = "us"
 
 [[tables.rows]]
 id = "inj-stream-lag-125"
-label = "125"
+label = "125/s"
 ptr = "/results/3/lag/p50"
 unit = "us"
 
 [[tables.rows]]
 id = "inj-stream-lag-60"
-label = "60"
+label = "60/s"
 ptr = "/results/4/lag/p50"
 unit = "us"
 
 [[tables.rows]]
 id = "inj-stream-lag-30"
-label = "30"
+label = "30/s"
 ptr = "/results/5/lag/p50"
 unit = "us"

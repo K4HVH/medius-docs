@@ -51,17 +51,17 @@ title = "Passthrough"
 [[categories.sections]]
 id = "pass-relay"
 title = "Relayed reports"
-about = "Each box relayed mice and keyboards at several report rates, 15 s each, with every report numbered."
+about = "Each box relayed mice and keyboards at several report rates, 15 s each, with every report numbered. A 500 Hz mouse was also relayed for 2 minutes."
 
 [[categories.sections]]
 id = "pass-timing"
 title = "Report timing"
-about = "The relay runs above, timed on the PC's USB bus. Each report is placed on the poll that carried it, and counts as early or late only when it moved by a whole poll. The PC's timestamp jitter doesn't count."
+about = "The runs above, timed on the PC's USB bus. Each report is placed on the poll that carried it, and counts as early or late only when it moved by a whole poll. The PC's timestamp jitter doesn't count."
 
 [[categories.sections]]
 id = "pass-latency"
 title = "Report latency"
-about = "Each native report is timed from the emulator queuing it to the PC receiving the clone's copy. The emulator runs 1,000 ppm slow, so its reports land at every point between polls. Plugged straight into a PC, a native report waits half the native interval on average (4 ms for a 125 Hz mouse)."
+about = "Each native report is timed from the emulator queuing it to the PC receiving the clone's copy. The emulator runs 1,000 ppm slow, so its reports land at every point between polls. Natively, a report waits half the poll interval on average (4 ms for a 125 Hz mouse)."
 
 [[categories.sections]]
 id = "pass-inject"
@@ -115,7 +115,7 @@ about = "A steady 2 s stream of one-count moves into a still mouse, each box on 
 [[categories.sections]]
 id = "inj-settings"
 title = "Smoothing settings"
-about = "Each box's smoothing settings, measured the same way on the PC's USB bus: 40 single moves into a still mouse, and 100 one-count moves 150-250 ms apart into a moving 1 kHz mouse."
+about = "Each box's smoothing settings, measured the same way on the PC's USB bus: 40 moves each of 1 and 100 counts into a still mouse, and 100 one-count moves 150-250 ms apart into a moving 1 kHz mouse."
 
 [[categories.sections]]
 id = "inj-reports-emitted"
@@ -145,7 +145,7 @@ about = "Injected wheel and horizontal scroll (pan), one command at a time, time
 [[categories.sections]]
 id = "inj-raw-move"
 title = "Unsmoothed moves"
-about = "Stock's RAW_MOVE (documented as skipping its smoothing) against Medius's MOVE(NOW), timed on the PC's USB bus: one at a time, and as a stream of 200 sent 5 ms apart. Once a stream's receipts go unread, stock refuses every later RAW_MOVE until a power cycle. Each run first sends one, and power-cycles stock if it's refused."
+about = "Stock's RAW_MOVE (documented as skipping its smoothing) against Medius's MOVE(NOW), timed on the PC's USB bus: one at a time, and as a stream of 200 sent 5 ms apart. Once a stream's receipts go unread, stock refuses every later RAW_MOVE until a power cycle. Each run first sends one, and stock is power-cycled if it's refused."
 
 [[categories]]
 id = "control-link"
@@ -154,7 +154,7 @@ title = "Control link"
 [[categories.sections]]
 id = "link-queries"
 title = "Query round trip"
-about = "A program sent each box 3,000 queries one at a time, in each of 3 runs, timed on the PC's USB bus, with a mouse at rest plugged in (sending nothing)."
+about = "A program sent each box 3,000 queries one at a time, in each of 3 runs, timed on the PC's USB bus, beside a still mouse."
 
 [[categories.sections]]
 id = "link-paced-rest"
@@ -179,12 +179,12 @@ about = "One write holding a clump of one-count moves, then 100 more paced 1 ms 
 [[categories.sections]]
 id = "link-paced-fast"
 title = "Fast paced moves"
-about = "One-count moves paced in 1 ms batches for 2 s into a still mouse: stock's binary form at each rate and its text form at 8,000/s, against Medius at the same rates. Stock was power-cycled before any step it would have started one command behind."
+about = "One-count moves paced in 1 ms batches for 2 s into a still mouse: stock's binary form at each rate and its text form at 8,000/s, against Medius at the same rates. Stock was power-cycled before any step that found it one command behind."
 
 [[categories.sections]]
 id = "link-clumped"
 title = "Clumped and back-to-back writes"
-about = "One-count binary moves into a still mouse, written in clumps every 16 ms (as a sender whose timer wakes every 16 ms writes them), or 12,871 back to back in 4,096-byte writes. Stock was power-cycled before any step it would have started one command behind."
+about = "One-count binary moves into a still mouse, written in clumps every 16 ms (as a sender whose timer wakes every 16 ms writes them), or 12,871 back to back in 4,096-byte writes. Stock was power-cycled before any step that found it one command behind."
 
 [[categories.sections]]
 id = "link-malformed"
@@ -247,7 +247,7 @@ about = "The PC turned the clone's port off for 3 s (as a restart does) or uncon
 [[categories.sections]]
 id = "recovery-pc-sleep"
 title = "PC sleep"
-about = "The PC put each clone to sleep 3 times."
+about = "The PC put each clone to sleep 3 times a run."
 
 [[categories]]
 id = "features"

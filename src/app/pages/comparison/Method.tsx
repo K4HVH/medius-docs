@@ -242,9 +242,9 @@ const Method: Component = () => (
         </li>
       </ol>
       <p>
-        While the tool runs, the clone is kept off the desktop, so nothing injected reaches it. It's handed back at
-        exit, <span class="nw">Ctrl-C</span> included. Leave the real device untouched: a leg refuses to start if it
-        moved.
+        While the tool runs, the clone is kept off the desktop, so nothing injected reaches the desktop. The tool puts
+        the clone back at exit, <span class="nw">Ctrl-C</span> included. Leave the real device untouched: a leg
+        refuses to start if it moved.
       </p>
       <div class="callout callout--warning">
         <p>

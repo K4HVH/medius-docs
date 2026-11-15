@@ -41,7 +41,7 @@ ptr = "/outcomes/devices-clone-vendor-beside-mouse"
 [[tables.rows]]
 id = "devices-clone-hid-variants"
 label = "Six unusual HID interfaces"
-note = "Alternate settings, a 64-byte endpoint, two IN endpoints, OUT only, the HID descriptor after the endpoint, a physical descriptor first"
+note = "Alternate settings, a 64-byte endpoint, two INs, OUT only, the HID descriptor after the endpoint, a physical descriptor first"
 ptr = "/outcomes/devices-clone-hid-variants"
 
 [[tables.rows]]
@@ -69,7 +69,7 @@ ptr = "/outcomes/devices-clone-qualifier"
 [[tables.rows]]
 id = "devices-clone-mice-slow"
 label = "Five mice with an 8 or 10 ms interval"
-note = "Including a two-mouse device and a mouse with two configurations"
+note = "Including a two-mouse device and two mice with two configurations"
 ptr = "/outcomes/devices-clone-mice-slow"
 
 [[tables.rows]]
@@ -174,22 +174,22 @@ ptr = "/outcomes/devices-imperfect-clone-bulk"
 
 [[tables.rows]]
 id = "devices-imperfect-clone-five-in"
-label = "Mouse with a vendor interface, five IN endpoints"
+label = "Mouse with a vendor interface, five INs"
 ptr = "/outcomes/devices-imperfect-clone-five-in"
 
 [[tables.rows]]
 id = "devices-imperfect-clone-six-in"
-label = "Mouse with a vendor interface, six IN endpoints"
+label = "Mouse with a vendor interface, six INs"
 ptr = "/outcomes/devices-imperfect-clone-six-in"
 
 [[tables.rows]]
 id = "devices-imperfect-clone-five-hid"
-label = "Keyboard with five HID interfaces, an IN endpoint on each"
+label = "Keyboard with five HID interfaces, an IN on each"
 ptr = "/outcomes/devices-imperfect-clone-five-hid"
 
 [[tables.rows]]
 id = "devices-imperfect-clone-unused-five-in"
-label = "Mouse with five IN endpoints in an unused second configuration"
+label = "Mouse with five INs in an unused second configuration"
 ptr = "/outcomes/devices-imperfect-clone-unused-five-in"
 
 [[tables.rows]]

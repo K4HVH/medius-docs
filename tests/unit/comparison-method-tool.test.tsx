@@ -66,9 +66,9 @@ describe('the Method page comparison tool', () => {
     expect(commands(show(), 'tool-run')).toEqual(COMMANDS.slice(1));
   });
 
-  it('says the clone is kept off the desktop and handed back, and how a stock box behind is power cycled', () => {
+  it('says the clone is kept off the desktop and put back, and how a stock box behind is power cycled', () => {
     const text = show().querySelector('section#tool-run')!.textContent!.replace(/\s+/g, ' ');
-    expect(text).toContain("the clone is kept off the desktop, so nothing injected reaches it. It's handed back at exit, Ctrl-C included.");
+    expect(text).toContain('the clone is kept off the desktop, so nothing injected reaches the desktop. The tool puts the clone back at exit, Ctrl-C included.');
     expect(text).toContain('a leg refuses to start if it moved');
     expect(text).toContain('unplugged for 3 s and plugged back in, and waits for Enter');
   });

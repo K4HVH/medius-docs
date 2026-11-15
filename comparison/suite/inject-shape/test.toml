@@ -22,7 +22,7 @@ section = "inj-reports-emitted"
 order = 4
 kind = "measure"
 label = "Empty reports in 2 s of one-count moves, mouse still"
-key = "Moves/s"
+key = "Moves sent"
 unit = "reports"
 better = "lower"
 layer = "hidraw"
@@ -32,32 +32,32 @@ resolution = 1
 
 [[tables.rows]]
 id = "inj-stream-empty-1000"
-label = "1,000"
+label = "1,000/s"
 ptr = "/base/results/24/zero_reports"
 
 [[tables.rows]]
 id = "inj-stream-empty-500"
-label = "500"
+label = "500/s"
 ptr = "/base/results/25/zero_reports"
 
 [[tables.rows]]
 id = "inj-stream-empty-250"
-label = "250"
+label = "250/s"
 ptr = "/base/results/26/zero_reports"
 
 [[tables.rows]]
 id = "inj-stream-empty-125"
-label = "125"
+label = "125/s"
 ptr = "/base/results/27/zero_reports"
 
 [[tables.rows]]
 id = "inj-stream-empty-60"
-label = "60"
+label = "60/s"
 ptr = "/base/results/28/zero_reports"
 
 [[tables.rows]]
 id = "inj-stream-empty-30"
-label = "30"
+label = "30/s"
 ptr = "/base/results/29/zero_reports"
 
 [[tables]]

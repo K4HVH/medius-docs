@@ -14,7 +14,7 @@ rows = ["pass-inject-varying", "pass-inject-slow-10", "pass-inject-slow-30", "pa
 id = "recovery-exit-held"
 box = "stock"
 rows = ["recovery-exit-left-button", "recovery-exit-button-close", "recovery-exit-button-silent", "recovery-exit-key-close", "recovery-exit-key-silent", "recovery-exit-lock-x-close", "recovery-exit-lock-x-silent", "recovery-exit-lock-left-close", "recovery-exit-lock-left-silent"]
-text = "If a program closes the port or stops sending while a button or key is held or an input locked, it stays in effect until another program releases it or the box restarts (24/24 tries)."
+text = "If a program closes the port or stops sending while a button or key is held or an input locked, it stays in effect until another program releases it or the box restarts (27/27 tries)."
 
 [[defects]]
 id = "pass-stock-config-reconnect"
@@ -25,13 +25,13 @@ text = "When the PC switches the clone's configuration, stock reconnects the clo
 [[defects]]
 id = "link-stock-parser-jam"
 box = "stock"
-text = "Moves arriving faster than stock takes them (~30 or more binary moves in one write, ≥10,000 binary moves/s, 8,000 text moves/s, 32 per write every 16 ms, or back to back) are lost. Stock refuses most of them at ≥10,000 binary moves/s, and none in the other cases. Its parser then stays one command behind until a power cycle (in 2/3 tries at 8,000 text moves/s). 30 characters sent as key presses back to back lose characters."
+text = "Moves arriving faster than stock takes them (~30 or more binary moves in one write, ≥10,000 binary moves/s, 8,000 text moves/s, 32 per write every 16 ms, or back to back) are lost. Stock refuses most of them at ≥10,000 binary moves/s, and none in the other cases. Its parser then stays one command behind until a power cycle (in 2/3 tries at 8,000 text moves/s). Typing 30 characters as key presses sent back to back loses characters."
 rows = ["link-back-to-back-parser", "link-clump-parser-2000", "link-fast-parser-10000", "link-fast-parser-15000", "link-fast-parser-20000", "link-fast-parser-text-8000", "link-write-parser-29", "link-write-parser-30", "input-typing-pc-pairs"]
 
 [[defects]]
 id = "recovery-stock-no-wake"
 box = "stock"
-text = "Neither an injected move nor the real device's remote wakeup wakes a sleeping PC."
+text = "Neither an injected move nor a native remote wakeup wakes a sleeping PC."
 rows = ["recovery-wake-device", "recovery-wake-inject"]
 
 [[defects]]
@@ -43,7 +43,7 @@ rows = ["devices-interval-mouse-8", "devices-interval-mouse-10", "devices-interv
 [[defects]]
 id = "pass-stock-class-requests-unanswered"
 box = "stock"
-text = "Requests to the clone sometimes go unanswered: SET_IDLE, SET_PROTOCOL or GET_PROTOCOL in {row:pass-boot-unanswered:stock} tries. While the PC sets the clone up, descriptor reads sometimes go unanswered too (report descriptors among them), whether the real device answers them or STALLs them. The PC's HID driver waits 5 s before asking again, so the clone comes up ~5 s late."
+text = "Requests to the clone sometimes go unanswered: SET_PROTOCOL in {row:pass-boot-unanswered:stock} tries. While the PC sets the clone up, report descriptor reads sometimes go unanswered too. The PC's HID driver waits 5 s before asking again, so the clone comes up ~5 s late."
 rows = ["pass-boot-unanswered"]
 
 [[defects]]
@@ -61,7 +61,7 @@ rows = ["inj-raw-stream"]
 [[defects]]
 id = "pass-stock-pause-skips"
 box = "stock"
-text = "When the PC pauses reading an interrupt endpoint, stock drops reports the real device would have kept: {row:pass-pause-skip-hid:stock} counter values skipped in a run's 8,000 reports on each endpoint."
+text = "When the PC pauses reading an interrupt endpoint, stock drops reports: {row:pass-pause-skip-hid:stock} counter values skipped in a run's 8,000 reports on each endpoint. Natively, a report the PC hasn't taken stays in the real device."
 rows = ["pass-pause-skip-hid", "pass-pause-skip-vendor"]
 
 [[defects]]
@@ -91,7 +91,7 @@ rows = ["devices-relay-ep2-writes-refused", "devices-relay-ep0-writes-refused"]
 [[defects]]
 id = "devices-stock-interfaces-dropped"
 box = "stock"
-text = "Stock leaves interfaces it can't relay out of the clone's configuration descriptor (the vendor interface holding 5 of a mouse's 6 interrupt INs, an interface with a second control endpoint). On a keyboard with five HID interfaces, the fifth is declared but sends nothing."
+text = "Stock leaves interfaces it can't relay out of the clone's configuration descriptor (the vendor interface holding 5 of a mouse's 6 interrupt INs, an interface with a second control endpoint). On a keyboard with five HID interfaces, the fifth is declared but emits nothing."
 rows = ["devices-imperfect-clone-six-in", "devices-imperfect-clone-five-hid", "devices-clone-control-endpoint", "devices-data-six-in", "devices-data-five-hid", "devices-imperfect-data-five-hid"]
 
 [[defects]]

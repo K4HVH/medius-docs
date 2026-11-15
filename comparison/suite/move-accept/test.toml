@@ -707,7 +707,7 @@ of = 12871
 section = "link-clumped"
 order = 3
 kind = "outcome"
-label = "Parser afterwards"
+label = "Parser after clumped and back-to-back writes"
 key = "Write"
 commands = { stock = "MOVE (0x18)", medius = "MOVE" }
 outcomes = ["In step", "One command behind until a power cycle"]
