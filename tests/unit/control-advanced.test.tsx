@@ -546,8 +546,8 @@ describe('The control transfer card', () => {
 
   it.each([
     ['Busy', TransferStatus.Busy, /held this endpoint until the timeout/],
-    ['Suspended', TransferStatus.Suspended, /put the clone to sleep/],
-    ['Error', TransferStatus.Error, /corrupt packets three times over/],
+    ['Suspended', TransferStatus.Suspended, /suspended the clone/],
+    ['Error', TransferStatus.Error, /corrupt on 3 tries/],
     ['Refused', TransferStatus.Refused, /no control endpoint with that number/],
   ])('names %s and says what it means', async (label, status, blurb) => {
     mock.transferReply = { ep: 0, status, stage: TransferStage.Setup, data: new Uint8Array() };

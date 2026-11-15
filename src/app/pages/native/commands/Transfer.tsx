@@ -208,8 +208,8 @@ const Transfer: Component = () => {
         </div>
         <div class="callout callout--info">
           <p>
-            Every status can carry data. A PC sees data past <code>wLength</code>, and data in a status
-            stage, as the transfer failing.
+            A status other than OK can still carry data, such as the bytes before a STALL. A PC sees
+            data past <code>wLength</code>, and data in a status stage, as the transfer failing.
           </p>
         </div>
         <Anchor id="status" label="STATUS">
@@ -284,7 +284,7 @@ const Transfer: Component = () => {
         <p>
           One <code>TRANSFER</code> is outstanding at a time, until its <code>LAST</code> chunk. If the
           box ends one because a chunk waited 1 s, it stays outstanding until the real device finishes
-          it. The control port keeps reading frames while it waits.
+          it.
         </p>
         <pre class="diagram">{`  TRANSFER A --> [ waits on the real device ] --> TRANSFER_RESP A ... LAST
   TRANSFER B --> TRANSFER_RESP B, 0xFC REFUSED, while A waits
@@ -297,7 +297,7 @@ const Transfer: Component = () => {
             </thead>
             <tbody>
               <tr><td>Wait on the real device</td><td><code>timeout_ms</code>. Time a long reply's next chunk waits for the control port isn't counted, up to 1 s a chunk.</td></tr>
-              <tr><td><code>LAST</code> chunk</td><td>Within <code>timeout_ms</code> + 0.5 s of the box taking the <code>TRANSFER</code>, plus any time its chunks waited for the control port. If the reply is lost between the chips, the <code>LAST</code> chunk still comes, with <code>0xFE</code> NO_ANSWER. If a chunk waits 1 s for the control port, the reply ends there: NO_ANSWER in stage 1, with the data passed on so far. The box still runs the transfer on the real device to its end.</td></tr>
+              <tr><td><code>LAST</code> chunk</td><td>Within <code>timeout_ms</code> + 0.5 s of the box taking the <code>TRANSFER</code>, plus any time its chunks waited for the control port. If the reply is lost between the chips, the <code>LAST</code> chunk still comes, with <code>0xFE</code> NO_ANSWER. If a chunk waits 1 s for the control port, the reply ends there: NO_ANSWER in stage 1, with the data passed on so far.</td></tr>
               <tr><td>Client's wait</td><td>At least <code>timeout_ms</code> + 0.5 s, plus the client's serial latency. The library waits <code>timeout_ms</code> + 2 s.</td></tr>
             </tbody>
           </table>
@@ -313,8 +313,7 @@ const Transfer: Component = () => {
 
       <DocSection id="proxy" title="Shared endpoints" caption="Game PC requests come first">
         <p>
-          Each control endpoint of the real device is one pipe. The game PC's requests on it come
-          before a <code>TRANSFER</code>, and a <code>TRANSFER</code> never waits on another endpoint.
+          Each control endpoint of the real device is one pipe.
         </p>
         <pre class="diagram">{`  game PC ----- EP0 ---> clone ------+
                                      |
@@ -332,7 +331,7 @@ const Transfer: Component = () => {
             </thead>
             <tbody>
               <tr><td>has a request waiting on that endpoint</td><td>waits behind it, inside <code>timeout_ms</code></td></tr>
-              <tr><td>gave up on a request there and sent no SETUP after it</td><td>waits behind it until the box ends it, 250-300 ms after the game PC's last poll; <code>0xF9</code> BUSY in stage <code>0</code> if <code>timeout_ms</code> runs out first</td></tr>
+              <tr><td>abandoned a request there and sent no SETUP after it</td><td>waits behind it until the box ends it, 250-300 ms after the game PC's last poll; <code>0xF9</code> BUSY in stage <code>0</code> if <code>timeout_ms</code> runs out first</td></tr>
               <tr><td>holds the pipe until <code>timeout_ms</code> runs out</td><td><code>0xF9</code> BUSY in stage <code>0</code>: nothing sent</td></tr>
               <tr><td>sends its next request on that endpoint, or causes a bus event, mid-transfer</td><td><code>0xF9</code> BUSY in the stage it reached</td></tr>
               <tr><td>uses another endpoint</td><td>runs on, unaffected</td></tr>

@@ -530,7 +530,7 @@ const Catch: Component = () => {
               <tbody>
                 <tr><td><code>0</code></td><td>OK</td><td>the transaction completed</td></tr>
                 <tr><td><code>1</code></td><td>STALL</td><td>the real device STALLed it, or a <code>STALL</code> rule refused it</td></tr>
-                <tr><td><code>2</code></td><td>NAK</td><td>the real device left it unanswered, it failed on the real device's bus, a <code>NAK</code> rule refused it, or the PC gave up on it before the real device finished</td></tr>
+                <tr><td><code>2</code></td><td>NAK</td><td>the real device left it unanswered; it failed on the real device's bus; a <code>NAK</code> rule refused it; the PC abandoned it before the real device finished; a SET_INTERFACE on its interface, a configuration change or a suspend ended it; or the box had no room to pass a step of it on</td></tr>
               </tbody>
             </table>
           </div>
@@ -542,9 +542,9 @@ const Catch: Component = () => {
               <tr><th>Transaction</th><th>Event</th></tr>
             </thead>
             <tbody>
-              <tr><td>one the PC gave up on</td><td>with NAK when the PC's next SETUP on that endpoint replaces it, or 250-300 ms after the PC stopped polling it, whichever comes first</td></tr>
-              <tr><td>one ended by a SET_INTERFACE on its interface, a configuration change or a suspend</td><td>at once, with NAK</td></tr>
-              <tr><td>one with a step the box had no room to pass on</td><td>at once, with NAK</td></tr>
+              <tr><td>one the PC abandoned</td><td>when the PC's next SETUP on that endpoint replaces it, or 250-300 ms after the PC stopped polling it, whichever comes first</td></tr>
+              <tr><td>one ended by a SET_INTERFACE on its interface, a configuration change or a suspend</td><td>at once</td></tr>
+              <tr><td>one with a step the box had no room to pass on</td><td>at once</td></tr>
             </tbody>
           </table>
         </div>

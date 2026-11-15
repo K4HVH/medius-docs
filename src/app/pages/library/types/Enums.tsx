@@ -606,7 +606,7 @@ match stream.recv()? {
             <tbody>
               <tr><td><code>Ok</code></td><td><code>0</code></td><td>The transaction completed.</td></tr>
               <tr><td><code>Stalled</code></td><td><code>1</code></td><td>The PC got a STALL: the real device STALLed the request, or a <code>Stall</code> rule refused it.</td></tr>
-              <tr><td><code>Naked</code></td><td><code>2</code></td><td>NAKed until the PC gave up: the real device left the request unanswered; it failed on the real device's bus; a <code>Nak</code> rule matched it; the PC gave up before the real device finished; a SET_INTERFACE on its interface, a configuration change or a suspend ended it; or the box had no room to pass a step of it on. For a request the PC gave up on, the event comes when the PC's next SETUP on that endpoint replaces it, or 250-300 ms after the PC stopped polling it, whichever is first.</td></tr>
+              <tr><td><code>Naked</code></td><td><code>2</code></td><td>NAKed until the PC gave up: the real device left the request unanswered; it failed on the real device's bus; a <code>Nak</code> rule matched it; the PC abandoned it before the real device finished; a SET_INTERFACE on its interface, a configuration change or a suspend ended it; or the box had no room to pass a step of it on. For a request the PC abandoned, the event comes when the PC's next SETUP on that endpoint replaces it, or 250-300 ms after the PC stopped polling it, whichever is first.</td></tr>
               <tr><td><code>Other(u8)</code></td><td><code>3</code></td><td>A handshake value with no variant in this build, carried verbatim.</td></tr>
             </tbody>
           </table>

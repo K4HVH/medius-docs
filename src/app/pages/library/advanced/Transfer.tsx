@@ -13,7 +13,7 @@ const Transfer: Component = () => {
           status, the stage it ended in, and the native reply, at any length.
         </p>
         <p>
-          It bypasses every <A href="/library/advanced/rewrite">rewrite rule</A>, and the game PC's
+          It bypasses every <A href="/library/advanced/rewrite">rewrite rule</A>. The game PC's
           requests on the same endpoint <A href="/native/commands/transfer#proxy">come first</A>.
         </p>
         <pre class="diagram">{`  real device            the box  (host chip  |  device chip = the clone)         game PC
@@ -28,7 +28,7 @@ const Transfer: Component = () => {
           <p>
             The advanced control layer needs{' '}
             <A href="/library/options#allow-imperfect-clones"><code>allow_imperfect_clones</code></A>.
-            With it off, the box replies <code>Refused</code> and never reaches the real device.
+            With it off, the box replies <code>Refused</code>, and the request never reaches the real device.
           </p>
         </div>
       </PageHeader>
@@ -62,8 +62,8 @@ const Transfer: Component = () => {
               <tr><td><code>out</code> isn't <code>setup.length</code> bytes for an OUT request, or isn't empty for an IN one</td><td><A href="/library/types/errors#errors"><code>Error::TransferData</code></A>, nothing sent</td></tr>
               <tr><td><code>out</code> is &gt;501 bytes</td><td><code>Error::FrameTooLong</code>, nothing sent</td></tr>
               <tr><td><code>timeout</code> is &lt;1 ms or &gt;65535 ms</td><td><code>Error::TransferTimeoutRange</code>, nothing sent</td></tr>
-              <tr><td>no last chunk within <code>timeout</code> + 2 s</td><td><code>Error::QueryTimeout</code></td></tr>
-              <tr><td>a chunk lost between the box's chips or on the control link</td><td><code>Error::TransferReplyIncomplete</code></td></tr>
+              <tr><td>No last chunk within <code>timeout</code> + 2 s</td><td><code>Error::QueryTimeout</code></td></tr>
+              <tr><td>A chunk lost between the box's chips or on the control link</td><td><code>Error::TransferReplyIncomplete</code></td></tr>
             </tbody>
           </table>
         </div>
@@ -112,7 +112,7 @@ let reply = device.transfer_timeout(0, get_device, &[], Duration::from_secs(10))
             <tbody>
               <tr><td>Wait on the real device</td><td><code>timeout</code>. Time a long reply's next chunk waits for the control port isn't counted, up to 1 s a chunk.</td></tr>
               <tr><td>Last chunk</td><td>Within <code>timeout</code> + 0.5 s of the box taking the transfer, plus any time its chunks waited for the control port. If a chunk waits 1 s for the control port, the reply ends there: <code>NoAnswer</code> in its data stage, with the data passed on so far.</td></tr>
-              <tr><td>Call's wait</td><td><code>timeout</code> + 2 s for the last chunk, then <code>Error::QueryTimeout</code>. Meanwhile the keepalive stops the box's 1 s silence clear from dropping held state.</td></tr>
+              <tr><td>Call's wait</td><td><code>timeout</code> + 2 s for the last chunk. Meanwhile the keepalive stops the box's 1 s silence clear from dropping held state.</td></tr>
               <tr><td>Transfers outstanding</td><td>One. Another sent while one waits is <code>Refused</code>. So is one sent while the real device still runs a transfer whose reply the box ended after a chunk waited 1 s.</td></tr>
             </tbody>
           </table>

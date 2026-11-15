@@ -1005,7 +1005,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>inject_emits</code></td><td><code>uint32_t</code></td><td>Pure-injection reports emitted.</td></tr>
-              <tr><td><code>tx_drops</code></td><td><code>uint16_t</code></td><td>Reports never emitted to the game PC: one the clone's IN queue could not hold, one the host chip's forwarder or link could not take, or one cut short when its stream stopped: a setting switch, a halt, a suspend (should stay 0).</td></tr>
+              <tr><td><code>tx_drops</code></td><td><code>uint16_t</code></td><td>Reports never emitted to the game PC: one the clone's IN queue could not hold, one the host chip's forwarder or link could not take, or one cut short when a setting switch, a halt or a suspend stopped its stream (should stay 0).</td></tr>
               <tr><td><code>tx_merges</code></td><td><code>uint16_t</code></td><td>Backed-up reports merged instead of queued.</td></tr>
               <tr><td><code>tx_maxdepth</code></td><td><code>uint8_t</code></td><td>Deepest the TX queue has reached.</td></tr>
               <tr><td><code>tx_wedges</code></td><td><code>uint8_t</code></td><td>Wedged-endpoint recoveries.</td></tr>
@@ -1426,7 +1426,7 @@ for (uintptr_t i = 0; i < n; i++) {
         <p>
           A <code>CONTROL</code> event is one transaction, not one stage, raised when it ends. A{' '}
           <code>CLIP_TRANSFER</code> event is one transfer a clip ran. <code>bytes</code> holds the
-          8-byte SETUP packet, then the data (on <code>CLIP_TRANSFER</code>, the reply, empty on an OUT
+          8-byte SETUP packet, then the data (the reply on <code>CLIP_TRANSFER</code>, empty on an OUT
           request with a data stage). <code>direction</code> is the data stage's direction. Split them
           with{' '}
           <A href="/bindings/c/api#inspectors"><code>medius_traffic_event_setup</code></A> and{' '}
@@ -1444,7 +1444,7 @@ for (uintptr_t i = 0; i < n; i++) {
             <tbody>
               <tr><td><code>MEDIUS_CONTROL_STATUS_OK</code></td><td><code>0</code></td><td>The transaction completed.</td></tr>
               <tr><td><code>MEDIUS_CONTROL_STATUS_STALLED</code></td><td><code>1</code></td><td>A STALL: the real device STALLed the request, or a <code>STALL</code> rule refused it.</td></tr>
-              <tr><td><code>MEDIUS_CONTROL_STATUS_NAKED</code></td><td><code>2</code></td><td>NAKs until the PC gave up: the real device left the request unanswered; it failed on the real device's bus; a <code>NAK</code> rule matched it; the PC gave up before the real device finished; a SET_INTERFACE on its interface, a configuration change or a suspend ended it; or the box had no room to pass a step of it on. For a request the PC gave up on, the event comes when the PC's next SETUP on that endpoint replaces it, or 250-300 ms after the PC stopped polling it, whichever is first.</td></tr>
+              <tr><td><code>MEDIUS_CONTROL_STATUS_NAKED</code></td><td><code>2</code></td><td>NAKs until the PC gave up: the real device left the request unanswered; it failed on the real device's bus; a <code>NAK</code> rule matched it; the PC abandoned it before the real device finished; a SET_INTERFACE on its interface, a configuration change or a suspend ended it; or the box had no room to pass a step of it on. For a request the PC abandoned, the event comes when the PC's next SETUP on that endpoint replaces it, or 250-300 ms after the PC stopped polling it, whichever is first.</td></tr>
               <tr><td><code>MEDIUS_CONTROL_STATUS_OTHER</code></td><td><code>3</code></td><td>A value this build does not know; read <code>flags</code> for it.</td></tr>
             </tbody>
           </table>
@@ -1742,8 +1742,8 @@ medius_clip_unbind_packet(clip, &held);   /* by key */`}</code></pre>
           <table class="api-params">
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>status</code></td><td><code>uint8_t</code></td><td>How the transfer ended, a <code>MEDIUS_TRANSFER_STATUS_*</code> value (below). A byte, so it carries a status no constant names; C++ compares it to one with a cast.</td></tr>
-              <tr><td><code>stage</code></td><td><code>uint8_t</code></td><td>Where it ended, a <code>MEDIUS_TRANSFER_STAGE_*</code> value (below).</td></tr>
+              <tr><td><code>status</code></td><td><code>uint8_t</code></td><td>How the transfer ended: a <code>MEDIUS_TRANSFER_STATUS_*</code> value (below), or a byte no constant names.</td></tr>
+              <tr><td><code>stage</code></td><td><code>uint8_t</code></td><td>Where it ended: a <code>MEDIUS_TRANSFER_STAGE_*</code> value (below), or a byte no constant names.</td></tr>
               <tr><td><code>len</code></td><td><code>uintptr_t</code></td><td>The reply's whole length. If it's over <code>reply_cap</code>, the buffer holds the first <code>reply_cap</code> bytes only.</td></tr>
             </tbody>
           </table>

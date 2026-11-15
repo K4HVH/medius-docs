@@ -71,7 +71,7 @@ let device = Device::with_mock(mock.clone());
                 <td><code>open_mock_for_update</code></td>
                 <td>Yes</td>
                 <td><A href="/library/types/errors"><code>Result&lt;Device&gt;</code></A></td>
-                <td>Runs the handshake <A href="/library/update#open-for-update"><code>open_for_update</code></A> runs: a mock set to an older protocol with <code>with_version</code> opens update-only.</td>
+                <td>Runs the handshake <A href="/library/update#open-for-update"><code>open_for_update</code></A> runs: a mock whose <code>with_version</code> names another protocol from 5 on opens update-only.</td>
               </tr>
             </tbody>
           </table>

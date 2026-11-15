@@ -1399,7 +1399,7 @@ for b in medius.list_boxes():
           <p>
             A <code>CONTROL</code> event is one transaction, not one stage, raised when it ends. A{' '}
             <code>CLIP_TRANSFER</code> event is one transfer a clip ran. <code>bytes</code> is{' '}
-            <code>[setup 8][data...]</code> (on <code>CLIP_TRANSFER</code>, the reply, empty on an OUT
+            <code>[setup 8][data...]</code> (the reply on <code>CLIP_TRANSFER</code>, empty on an OUT
             request with a data stage). <code>direction</code> says which way the data stage went.
           </p>
           <div class="table-scroll">
@@ -1424,7 +1424,7 @@ for b in medius.list_boxes():
               <tbody>
                 <tr><td><code>OK</code></td><td><code>0</code></td><td>the transaction completed</td></tr>
                 <tr><td><code>STALLED</code></td><td><code>1</code></td><td>the game PC got a STALL: the real device STALLed the request, or a <code>STALL</code> rule refused it</td></tr>
-                <tr><td><code>NAKED</code></td><td><code>2</code></td><td>NAKed until the PC gave up: the real device left the request unanswered; it failed on the real device's bus; a <code>NAK</code> rule matched it; the PC gave up before the real device finished; a SET_INTERFACE on its interface, a configuration change or a suspend ended it; or the box had no room to pass a step of it on (for a request the PC gave up on, the event comes when the PC's next SETUP on that endpoint replaces it, or 250-300 ms after the PC stopped polling it, whichever is first)</td></tr>
+                <tr><td><code>NAKED</code></td><td><code>2</code></td><td>NAKed until the PC gave up: the real device left the request unanswered; it failed on the real device's bus; a <code>NAK</code> rule matched it; the PC abandoned it before the real device finished; a SET_INTERFACE on its interface, a configuration change or a suspend ended it; or the box had no room to pass a step of it on (for a request the PC abandoned, the event comes when the PC's next SETUP on that endpoint replaces it, or 250-300 ms after the PC stopped polling it, whichever is first)</td></tr>
                 <tr><td><code>OTHER</code></td><td><code>3</code></td><td>a handshake value this build does not know; read it off <code>TrafficEvent.flags</code> bits 0-1</td></tr>
               </tbody>
             </table>

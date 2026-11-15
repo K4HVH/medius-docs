@@ -227,7 +227,7 @@ for event in &device.catch_events([filter])? {
         </p>
         <p>
           A <code>Control</code> event is one transaction the game PC received, on any control
-          endpoint, raised when it ends. One the PC gave up on reads <code>Naked</code>. A{' '}
+          endpoint, raised when it ends. One the PC abandoned reads <code>Naked</code>. A{' '}
           <code>Control</code> or <code>ClipTransfer</code> event carries <code>[setup 8][data...]</code>,
           split by <code>setup()</code> and <code>data()</code>.
         </p>

@@ -488,7 +488,7 @@ const Requests: Component = () => {
         </p>
         <p>
           <code>relay_drops</code> is counted apart from the native-input drop counters, so lost
-          relayed traffic doesn't read as lost native input. The nine narrowed counters clamp at
+          relayed traffic doesn't read as lost native input. The eight narrowed counters clamp at
           their max instead of wrapping. The three drop counts are full width.
         </p>
         <p>

@@ -31,8 +31,8 @@ const STATUS_LABEL: Record<number, string> = {
 const STATUS_BLURB: Record<number, string> = {
   [TransferStatus.Busy]:
     'The game PC held this endpoint until the timeout, or took it mid-transfer with its next request or a bus event.',
-  [TransferStatus.Suspended]: 'The game PC has put the clone to sleep, and the real device with it. Nothing was sent.',
-  [TransferStatus.Error]: 'The real device sent corrupt packets three times over, or a packet longer than the box asked for, or the box had no free channel to send it on.',
+  [TransferStatus.Suspended]: 'The game PC has suspended the clone, and the real device with it. Nothing was sent.',
+  [TransferStatus.Error]: "The real device's packets were corrupt on 3 tries or longer than the box asked for, or the box had no free channel to send the transfer on.",
   [TransferStatus.Refused]:
     "The box didn't send it: the real device has no control endpoint with that number, another transfer was still running, imperfect clones are off, or the box had no room for it at that moment.",
   [TransferStatus.NoAnswer]:

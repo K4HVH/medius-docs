@@ -45,7 +45,7 @@ const Api: Component = () => {
             <tbody>
               <tr><td><code>medius.list_boxes(cap=16)</code></td><td>Enumerate every connected box as a <A href="/bindings/python/types#boxinfo"><code>BoxInfo</code></A>. Reads each box's version, and its device info if it speaks this protocol (<code>device</code> is <code>None</code> for a box on another protocol). On Linux, a box whose port another process holds is left out. A box on firmware before 3.4.0 runs at 4&nbsp;Mbaud and isn't listed: open it by its port with <code>Device.open_for_update</code>.</td></tr>
               <tr><td><code>Device.open_by_id(id)</code></td><td>Open the box whose identity matches <code>id</code> (device MAC hex or CH343 serial) and handshake. Raises <code>BadProtoVerError</code> when that box speaks another protocol, <code>NotFoundError</code> when no box matches, <code>PortBusyError</code> when none matches and another process holds a box's port.</td></tr>
-              <tr><td><code>Device.find_mouse_box()</code></td><td>Open the first box whose clone is a mouse. If none is found and a connected box is on another protocol, raises <code>BadProtoVerError</code> (that box's clone can't be read). If none is found and another process holds a box's port, it raises <code>PortBusyError</code>.</td></tr>
+              <tr><td><code>Device.find_mouse_box()</code></td><td>Open the first box whose clone is a mouse. If none is found and a connected box is on another protocol, raises <code>BadProtoVerError</code> (that box's clone can't be read). If none is found and another process holds a box's port, raises <code>PortBusyError</code>.</td></tr>
               <tr><td><code>Device.find_keyboard_box()</code></td><td>Open the first box whose clone is a keyboard, with the same errors.</td></tr>
             </tbody>
           </table>
@@ -192,7 +192,7 @@ const Api: Component = () => {
             <thead><tr><th>Call</th><th>Does</th></tr></thead>
             <tbody>
               <tr><td><code>Device.open_for_update(path)</code></td><td>Open a box on any control protocol from 5 on, to update it. On this package's protocol the device is a full one. On another it is update-only: the version and firmware queries and the calls below work, and every other call raises <code>BadProtoVerError</code>. A box older than 5 raises <code>BadProtoVerError</code>. See <A href="/library/update#open-for-update"><code>open_for_update</code></A>.</td></tr>
-              <tr><td><code>dev.is_update_only</code></td><td>Whether the device reaches only the update path: its box speaks an older protocol than this package.</td></tr>
+              <tr><td><code>dev.is_update_only</code></td><td>Whether the device reaches only the update path: its box speaks a protocol other than this package's.</td></tr>
               <tr><td><code>dev.stage_firmware(target, image, progress=None)</code></td><td>Write one image into that chip's spare slot, without booting it. <code>target</code> is an <A href="/bindings/python/types#updatetarget"><code>UpdateTarget</code></A>.</td></tr>
               <tr><td><code>dev.activate_firmware()</code></td><td>Commit everything staged and boot into it, host chip first.</td></tr>
               <tr><td><code>dev.abort_update(target)</code></td><td>Throw a staged or in-flight transfer away.</td></tr>
@@ -247,7 +247,7 @@ const Api: Component = () => {
               <tr><td><code>.press(usage) / .release(usage) / .force_release(usage)</code></td><td>A one-edge press / soft-release / force-release frame; <code>usage</code> is a <A href="/bindings/python/types#input"><code>Usage</code></A> (button, key, or media).</td></tr>
               <tr><td><code>.edge(usage, action)</code></td><td>A one-edge frame for any <A href="/bindings/python/types#input"><code>Usage</code></A> with an explicit <A href="/bindings/python/types#action"><code>Action</code></A> (default press).</td></tr>
               <tr><td><code>.raw(ep, direction, data)</code></td><td>A frame carrying one raw report, as <A href="/bindings/python/api#advanced"><code>dev.raw</code></A> sends one; played only with the imperfect-clone opt-in on.</td></tr>
-              <tr><td><code>.transfer(ep, setup, out=b"")</code></td><td>A frame carrying one control transfer, as <code>dev.transfer</code> runs one, with 4 s for the real device to answer: <code>out</code> is <code>setup.length</code> bytes for an OUT request, empty for an IN one. The reply arrives as a <A href="/bindings/python/types#trafficclass"><code>TrafficClass.CLIP_TRANSFER</code></A> event. The box runs it only while the opt-in is on.</td></tr>
+              <tr><td><code>.transfer(ep, setup, out=b"")</code></td><td>A frame carrying one control transfer, as <code>dev.transfer</code> runs one: <code>out</code> is <code>setup.length</code> bytes for an OUT request, empty for an IN one. The real device has 4 s to answer. The reply arrives as a <A href="/bindings/python/types#trafficclass"><code>TrafficClass.CLIP_TRANSFER</code></A> event. The box runs it only while the opt-in is on.</td></tr>
               <tr><td><code>.frame(dx=0, dy=0, wheel=0, pan=0, edges=(), raw=(), transfers=())</code></td><td>One frame carrying the motion deltas plus <code>(usage, action)</code> edges, <code>(ep, direction, data)</code> raw reports, and <code>(ep, setup, out)</code> transfers, within the <A href="/bindings/python/types#clip-constants">clip constants</A>.</td></tr>
             </tbody>
           </table>
@@ -363,7 +363,7 @@ reply = dev.transfer(0, Setup(0x80, 0x06, 0x0100, 0, 18), timeout_ms=10_000)`}</
               <tr><td><code>MockBox()</code></td><td>A fresh mock that records every frame and replies to queries. A context manager: <code>with MockBox() as mock:</code> frees it on exit, as <code>mock.close()</code> does.</td></tr>
               <tr><td><code>mock.open()</code></td><td>A <A href="/bindings/python/api#connect"><code>Device</code></A> over the mock, after the handshake.</td></tr>
               <tr><td><code>mock.with_device()</code></td><td>A <code>Device</code> over the mock, with no handshake.</td></tr>
-              <tr><td><code>Device.open_mock(mock)</code> / <code>Device.with_mock(mock)</code> / <code>Device.open_mock_for_update(mock)</code></td><td>The same three, named as in Rust.</td></tr>
+              <tr><td><code>Device.open_mock(mock)</code> / <code>Device.with_mock(mock)</code> / <code>Device.open_mock_for_update(mock)</code></td><td>The two above, named as in Rust. <code>open_mock_for_update</code> runs the handshake <code>Device.open_for_update</code> runs.</td></tr>
               <tr><td><code>mock.clone()</code></td><td>Another handle to the same mock state.</td></tr>
             </tbody>
           </table>

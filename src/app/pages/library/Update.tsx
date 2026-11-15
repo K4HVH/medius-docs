@@ -86,10 +86,10 @@ device.activate_firmware()?;`}</code></pre>
         </div>
         <p>
           It tries the 6&nbsp;Mbaud control rate first, then the 4&nbsp;Mbaud that firmware before 3.4.0
-          runs. <code>wait_firmware_confirmed</code> follows the box to the other rate when it reboots
-          into firmware on it. A device opened this way can also move a box back to an older release:
-          the box keeps answering the update path on the older protocol. Once the update is
-          confirmed, open the box again to use it.
+          runs. If the box reboots into firmware on the other rate,{' '}
+          <code>wait_firmware_confirmed</code> follows it there. A device opened this way can also
+          move a box back to an older release: the box keeps answering the update path on the older
+          protocol. Once the update is confirmed, open the box again to use it.
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`use medius::{Device, UpdateTarget};

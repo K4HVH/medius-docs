@@ -207,7 +207,7 @@ assert_eq!(r.native_hz(), Some(1000.0));`}</code></pre>
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>inject_emits</code></td><td><code>u32</code></td><td>Pure-injection reports emitted.</td></tr>
-              <tr><td><code>tx_drops</code></td><td><code>u16</code></td><td>Reports the game PC never received: one the clone's IN queue could not hold, one the host chip's forwarder or link could not take, or one cut short when its stream stopped: a setting switch, a halt, a suspend (should stay 0).</td></tr>
+              <tr><td><code>tx_drops</code></td><td><code>u16</code></td><td>Reports the game PC never received: one the clone's IN queue could not hold, one the host chip's forwarder or link could not take, or one cut short when a setting switch, a halt or a suspend stopped its stream (should stay 0).</td></tr>
               <tr><td><code>tx_merges</code></td><td><code>u16</code></td><td>Backed-up reports merged instead of queued.</td></tr>
               <tr><td><code>tx_maxdepth</code></td><td><code>u8</code></td><td>Deepest the TX queue has reached.</td></tr>
               <tr><td><code>tx_wedges</code></td><td><code>u8</code></td><td>Wedged-endpoint recoveries.</td></tr>
@@ -526,9 +526,10 @@ for ev in device.input_events(CatchFilter::all_input())? {
         </div>
         <p>
           A <code>Control</code> event is one transaction the game PC received on any control
-          endpoint, raised when it ends. One the PC gave up on reads <code>Naked</code>. One served
-          from the box's value cache counts too. A <code>ClipTransfer</code> event is one transfer a
-          clip ran. In both, <code>bytes</code> is the 8-byte SETUP packet then the data, and{' '}
+          endpoint, raised when it ends. One the PC abandoned reads <code>Naked</code>. A request
+          served from the box's value cache raises one too. A <code>ClipTransfer</code> event is one
+          transfer a clip ran. In both, <code>bytes</code> is the 8-byte SETUP packet then the data,
+          and{' '}
           <code>direction</code> is the data stage's direction.
         </p>
         <div class="table-scroll">
