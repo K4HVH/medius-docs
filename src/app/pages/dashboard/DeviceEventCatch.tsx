@@ -76,7 +76,7 @@ const CLASS_NAMES: Record<number, string> = {
   [CatchClass.Button]: 'buttons',
   [CatchClass.Key]: 'keys',
   [CatchClass.Media]: 'media',
-  [CatchClass.Axis]: 'movement',
+  [CatchClass.Axis]: 'motion',
   [CatchClass.HidIn]: 'hid-in',
   [CatchClass.HidOut]: 'hid-out',
   [CatchClass.VendorInterrupt]: 'vendor-interrupt',
@@ -155,7 +155,10 @@ const trafficFlags = (t: TrafficEvent): string => {
   const handshake = trafficControlStatus(t);
   if (handshake !== null) out = CONTROL_WORDS[handshake];
   const status = trafficTransferStatus(t);
-  if (status !== null) out = ` ${transferStatusName(status).toUpperCase()}`;
+  if (status !== null) {
+    const name = transferStatusName(status);
+    out = name ? ` ${name.toUpperCase()}` : ` status 0x${status.toString(16).padStart(2, '0')}`;
+  }
   return trafficRuleActed(t) ? `${out} RULE` : out;
 };
 
@@ -477,7 +480,7 @@ const DeviceEventCatch = () => {
                   options={[
                     { value: 'input', label: 'All input' },
                     { value: 'buttons', label: 'Buttons' },
-                    { value: 'motion', label: 'Movement, wheel, pan' },
+                    { value: 'motion', label: 'Cursor, wheel, pan' },
                     { value: 'keys', label: 'Keyboard + media' },
                     { value: 'traffic', label: 'Raw endpoints' },
                     { value: 'bus', label: 'Bus events' },

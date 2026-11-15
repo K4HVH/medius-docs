@@ -1,0 +1,124 @@
+id = "ep0-compare"
+version = 1
+category = "devices"
+layout = "native"
+boxes = ["stock", "medius"]
+jams_stock = false
+
+[[legs]]
+id = "mouse"
+device = "sim:request_mouse"
+
+[[tables]]
+section = "devices-endpoint-0"
+order = 1
+kind = "outcome"
+label = "Reply the PC gets"
+key = "Request"
+outcomes = ["Native reply", "STALL"]
+
+[[tables.rows]]
+id = "devices-ep0-device-descriptor"
+label = "Device descriptor"
+ptr = "/outcomes/devices-ep0-device-descriptor"
+
+[[tables.rows]]
+id = "devices-ep0-configuration"
+label = "Configuration descriptor"
+ptr = "/outcomes/devices-ep0-configuration"
+
+[[tables.rows]]
+id = "devices-ep0-strings"
+label = "String descriptors"
+ptr = "/outcomes/devices-ep0-strings"
+
+[[tables.rows]]
+id = "devices-ep0-absent-descriptors"
+label = "Descriptors the real device doesn't have"
+ptr = "/outcomes/devices-ep0-absent-descriptors"
+
+[[tables.rows]]
+id = "devices-ep0-report-descriptor"
+label = "HID report descriptor"
+ptr = "/outcomes/devices-ep0-report-descriptor"
+
+[[tables.rows]]
+id = "devices-ep0-hid-descriptor"
+label = "HID class descriptor"
+ptr = "/outcomes/devices-ep0-hid-descriptor"
+
+[[tables.rows]]
+id = "devices-ep0-status"
+label = "GET_STATUS, GET_CONFIGURATION and GET_INTERFACE"
+ptr = "/outcomes/devices-ep0-status"
+
+[[tables.rows]]
+id = "devices-ep0-feature-report"
+label = "Feature report 3"
+ptr = "/outcomes/devices-ep0-feature-report"
+
+[[tables.rows]]
+id = "devices-ep0-vendor"
+label = "Vendor requests"
+ptr = "/outcomes/devices-ep0-vendor"
+
+[[tables]]
+section = "devices-endpoint-0"
+order = 2
+kind = "measure"
+label = "Reply time over native"
+key = "Request"
+unit = "µs"
+better = "lower"
+layer = "wire"
+n = "200 requests a run, 3 runs"
+resolution = 0.1
+
+[[tables.rows]]
+id = "devices-ep0-time-device-descriptor"
+label = "Device descriptor"
+ptr = "/results/0/wire_past_native"
+unit = "us"
+
+[[tables.rows]]
+id = "devices-ep0-time-configuration"
+label = "Configuration descriptor"
+note = "All 34 bytes"
+ptr = "/results/4/wire_past_native"
+unit = "us"
+
+[[tables.rows]]
+id = "devices-ep0-time-string"
+label = "Product string"
+ptr = "/results/8/wire_past_native"
+unit = "us"
+
+[[tables.rows]]
+id = "devices-ep0-time-report-descriptor"
+label = "HID report descriptor"
+ptr = "/results/15/wire_past_native"
+unit = "us"
+
+[[tables.rows]]
+id = "devices-ep0-time-absent-string"
+label = "String the real device doesn't have"
+ptr = "/results/10/wire_past_native"
+unit = "us"
+
+[[tables.rows]]
+id = "devices-ep0-time-status"
+label = "GET_STATUS"
+ptr = "/results/17/wire_past_native"
+unit = "us"
+
+[[tables.rows]]
+id = "devices-ep0-time-feature-report"
+label = "Feature report 3"
+ptr = "/results/23/wire_past_native"
+unit = "us"
+
+[[tables.rows]]
+id = "devices-ep0-time-vendor"
+label = "Vendor request 0x42"
+ptr = "/results/28/wire_past_native"
+unit = "us"

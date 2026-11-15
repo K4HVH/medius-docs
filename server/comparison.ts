@@ -12,7 +12,7 @@ import { SITE } from '../src/app/site';
 // ahead, since the comparison shows stock's wins beside Medius's.
 export const HIGHLIGHTS: { row: string; name: string }[] = [
   { row: 'pass-latency-p50-1000', name: 'Report latency, 1 kHz mouse' },
-  { row: 'inj-lat-rest-1', name: 'Injected move latency, still mouse' },
+  { row: 'inj-lat-rest-1', name: 'Injected move latency, resting mouse' },
   { row: 'pass-inject-varying', name: 'Mouse reports read in 15.5 s while injecting' },
   { row: 'software-programs-kmbox-net', name: 'KMBox Net programs' },
 ];

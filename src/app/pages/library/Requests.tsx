@@ -41,8 +41,8 @@ const Requests: Component = () => {
 
 let device = Device::find()?;          // or Device::open("/dev/ttyACM0")?
 let v = device.query_version()?;
-println!("{v}");                       // fw 3.4.7
-println!("proto {}", v.proto_ver);     // proto 9
+println!("{v}");                       // fw 3.5.0
+println!("proto {}", v.proto_ver);     // proto 10
 println!("name {}", v.name);           // Loki`}</code></pre>
 
         <div class="callout callout--info">
@@ -228,8 +228,8 @@ println!("opposing the injection at {}%", locks.scale_of(Axis::X, Direction::Aga
           two chips' timers.
         </p>
         <p>
-          <A href="/library/catch#catch-events"><code>catch_events</code></A> gets no reply, so the
-          only way to confirm each filter was accepted is to compare the entries (the{' '}
+          <A href="/library/catch#catch-events"><code>catch_events</code></A> gets no reply. To confirm
+          each filter was accepted, compare the entries (the{' '}
           <code>class / id / direction / capture</code> the box accepted) with the{' '}
           <A href="/library/types/structs#catch-filter">filters</A> sent.
         </p>

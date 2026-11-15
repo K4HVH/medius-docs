@@ -1,22 +1,23 @@
 {
   "name": "medius-docs",
-  "version": "2.3.0",
+  "version": "3.5.0",
   "description": "Documentation site for Medius: the mouse-passthrough firmware, its binary control protocol, and the medius Rust library",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
+    "dev": "tsx scripts/comparison-generate.ts && vite",
+    "build": "tsx scripts/comparison-generate.ts && vite build",
     "prerender": "tsx scripts/prerender.ts",
-    "build:full": "vite build && tsx scripts/prerender.ts && tsx scripts/searchindex.ts",
+    "build:full": "tsx scripts/comparison-generate.ts && vite build && tsx scripts/prerender.ts && tsx scripts/searchindex.ts",
     "searchindex": "tsx scripts/searchindex.ts",
     "serve": "vite preview",
-    "test": "./scripts/typecheck.sh && npm run conformance && vitest run",
+    "test": "tsx scripts/comparison-generate.ts && ./scripts/typecheck.sh && npm run conformance && vitest run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
     "typecheck": "./scripts/typecheck.sh",
     "conformance": "tsx scripts/conformance.ts",
     "crawlcheck": "tsx scripts/crawlcheck.ts",
-    "comparison:sync": "tsx scripts/comparison-sync.ts"
+    "comparison:generate": "tsx scripts/comparison-generate.ts",
+    "comparison:package": "tsx scripts/comparison-package.ts"
   },
   "license": "MIT",
   "devDependencies": {
@@ -46,6 +47,7 @@
     "mcp-lite": "^0.10.0",
     "opentype.js": "2.0.0",
     "prismjs": "^1.30.0",
+    "smol-toml": "^1.9.1",
     "solid-icons": "^1.2.0",
     "solid-js": "^1.9.5",
     "spark-md5": "^3.0.2"

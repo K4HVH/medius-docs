@@ -1,0 +1,18 @@
+id = "out-relay"
+version = 1
+category = "passthrough"
+layout = "main"
+boxes = ["stock", "medius"]
+jams_stock = false
+
+[[legs]]
+id = "kbd_led"
+device = "sim:led-keyboard"
+
+[[legs]]
+id = "hid_out"
+device = "sim:hid-out"
+
+[[legs]]
+id = "vendor_in"
+device = "sim:builtin:vendorintr"

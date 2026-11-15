@@ -1,0 +1,51 @@
+id = "inject-dirs"
+version = 1
+category = "injection"
+layout = "main"
+boxes = ["stock", "medius"]
+jams_stock = true
+
+[[legs]]
+id = "still"
+device = "sim:idle_mouse"
+
+[[legs]]
+id = "moving"
+device = "sim:moving"
+
+[[legs]]
+id = "still8"
+device = "sim:still8"
+
+[[legs]]
+id = "moving8"
+device = "sim:moving8"
+
+[[tables]]
+section = "inj-directions"
+order = 1
+kind = "outcome"
+label = "Total arriving in every leg"
+key = "Mouse"
+commands = { stock = "km.move, km.move_now", medius = "MOVE, MOVE(NOW)" }
+outcomes = ["Exact", "Off"]
+
+[[tables.rows]]
+id = "inj-dirs-still"
+label = "Still mouse, 16-bit fields"
+ptr = "/outcomes/inj-dirs-still"
+
+[[tables.rows]]
+id = "inj-dirs-moving"
+label = "Moving mouse, 16-bit fields"
+ptr = "/outcomes/inj-dirs-moving"
+
+[[tables.rows]]
+id = "inj-dirs-still8"
+label = "Still mouse, 8-bit fields"
+ptr = "/outcomes/inj-dirs-still8"
+
+[[tables.rows]]
+id = "inj-dirs-moving8"
+label = "Moving mouse, 8-bit fields"
+ptr = "/outcomes/inj-dirs-moving8"

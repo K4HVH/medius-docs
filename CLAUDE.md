@@ -4,7 +4,7 @@ Guidance for Claude Code in this repository: the **Medius documentation site**, 
 
 ## Project
 
-A static documentation site for Medius: replacement firmware for MAKCU-class mouse-passthrough boxes, its open binary control protocol, and the `medius` Rust library. Five sections:
+A static documentation site for Medius: replacement firmware for MAKCU-class mouse-passthrough boxes, its open binary control protocol, and the `medius` Rust library. Six sections:
 
 | Section | What |
 |---|---|
@@ -13,6 +13,7 @@ A static documentation site for Medius: replacement firmware for MAKCU-class mou
 | Bindings | C ABI and Python bindings over the crate. |
 | Dashboard | In-browser box dashboard: connect, view the box, firmware update, recovery, device log, public usage stats. |
 | AI Access | Markdown twins, `llms.txt`, and an MCP server. |
+| Comparison | Stock MAKCU firmware against Medius on the same hardware, every figure built from the comparison tool's committed run files (see Comparison below). |
 
 **MidnightUI** is the component library, in `src/components/` and `src/styles/`, synced from an upstream repo. Do not modify its source files.
 
@@ -35,6 +36,8 @@ bun run build        # Production build (output: dist/)
 bun run serve        # Preview production build
 bun run build:full   # Build and prerender every page, as the Docker image does
 bun run crawlcheck   # After build:full: checks every page's status, title, canonical and JSON-LD
+bun run comparison:generate   # results.json and tool.json from comparison/ (dev, build, build:full and test run it first)
+bun run comparison:package    # the comparison tool as one file (default dist/comparison/medius-compare.pyz)
 ```
 
 ## Project structure
@@ -61,6 +64,9 @@ src/
                                       # Select, LogBox, Board (the box drawn from a photo of its board)
     data/                             # Help answers, compatibility reports merged with the stats, the landing's
                                       # figures, and the bench captures the landing draws (never edited by hand)
+    data/comparison/                  # generate.ts (run files to results), check.ts, result.ts (each row's
+                                      # result), files.ts (the downloads), pages.ts; results.json and tool.json
+                                      # are generated and gitignored
     prism.ts                          # Prism and its languages; highlight.ts fetches it, once
     search/                           # Ctrl+K search: extract.ts (a rendered page to entries), rank.ts and
                                       # text.ts (the ranker), load.ts (the index, fetched on use), extra.ts
@@ -71,6 +77,8 @@ src/
       guide/                          # The Guide: Start here (/guide), Devices (/guide/compatibility), Help (/guide/help)
       DocsLayout.tsx                  # Every other page: nav, sidebar, the page in main, on-this-page rail, search
       AiAccess.tsx                    # Markdown twins, llms.txt, the MCP server
+      comparison/                     # /comparison: Overview, Features, a page per category, Method; parts.tsx
+                                      # draws the stock-against-Medius tables
       native/
         Introduction.tsx              # Native API overview
         Quickstart.tsx                # Open the port and send a MOVE
@@ -177,6 +185,36 @@ src/
                                       # landing, motion (editable)
     components/                       # MidnightUI component styles (DO NOT MODIFY)
 ```
+
+## Comparison
+
+The Comparison section is generated. `scripts/comparison-generate.ts` reads the tests' declarations, the hand-written
+data and the run files, and writes `src/app/data/comparison/results.json` and `tool.json`. A fault stops it and
+writes neither: a row with no run, a run on an older test version or firmware, too few runs, a defect whose rows no
+longer show it. Neither file is edited by hand.
+
+```
+comparison/
+  compare.py                  # the public entry: a still mouse or keyboard; tests needing the emulator are skipped
+  compare_sim.py              # the bench's entry: every test, with the USB device emulator; the published runs
+  pyz_main.py                 # the single-file download's entry (comparison:package builds medius-compare.pyz)
+  quiet_clone.py              # keeps a clone off the desktop while tests inject into it
+  medius_compare/             # the engine: selection, run files, boxes, bench cabling, captures, report
+  medius_bench/               # bench helpers the firmware's gates share: clone lookup, the quiet rule, the guard
+  medius_shapes/              # device shapes the emulator presents, shared with the firmware's gates
+  suite/<test>/               # test.toml (version, legs, tables and rows pointing into its run data), test.py
+  data/                       # hand-written: categories and section texts, defects, feature tables (facts/),
+                              # timing layers, pending, site (the firmware versions compared)
+  runs/<box>/<stamp>.json     # committed run files: stock, medius, native
+  tests/                      # pytest, no hardware: cd comparison && python3 -m pytest -q
+```
+
+| Rule | Detail |
+|---|---|
+| Every measured figure comes from a run file | Hand-written text holds method parameters only. A defect quotes a row with `{row:<id>:<box>}`; a row reads the real device's own figure with `native_ptr` |
+| A change to what a test measures bumps its `version` | The generator then refuses that test's older runs |
+| Three runs per box | A test with `jams_stock = true` needs one on stock: each stock run of it costs power cycles by hand |
+| Public text names shapes and behaviour | Never products, this bench's ports or serials, or private repos |
 
 ## Architecture
 

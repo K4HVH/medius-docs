@@ -1,40 +1,68 @@
 import { For, type Component } from 'solid-js';
+import { A } from '@solidjs/router';
 import { PageHeader } from '../../shell/PageHeader';
 import { DocSection } from '../../shell/DocSection';
+import { BoardFigure, type Port, type PortSpec } from '../../shell/Board';
 import { routeFor } from '../../routes';
 import { RESULTS } from '../../data/comparison';
 import { COMPARISON_PAGES } from '../../data/comparison/pages';
+import type { ToolData } from '../../data/comparison/generate';
+import tool from '../../data/comparison/tool.json';
 
-// One box's wiring. The other is wired the same way, on the same PC.
-const RIG = `+-------------------------+
-|    PC: tests, usbmon    |
-+------------+------------+
-             |
-+------------+------------+
-|           hub           |
-+---+--------+--------+---+
-    |        |        |
-  USB1     USB2   emulator
-  clone   control  control
-    |        |        |
-+---+--------+---+    |
-|      box       |    |
-+-------+--------+    |
-        | USB3        |
-+-------+-------------+---+
-|   USB device emulator   |
-+-------------------------+`;
+const RIG = `+--------------------------------+
+|       PC: tests, usbmon        |
++-------+-----------------+------+
+        |                 |
++-------+-------+   +-----+-----+
+|    STT hub    |   |  MTT hub  |
++---+-------+---+   +-----+-----+
+    |       |             |
+  USB1    USB2        emulator
+  clone   control     control
+    |       |             |
++---+-------+---+         |
+|      box      |         |
++-------+-------+         |
+        | USB3            |
++-------+-----------------+------+
+|      USB device emulator       |
++--------------------------------+`;
+
+const TOOL_WIRING: Record<Port, PortSpec> = {
+  USB1: { state: 'in', label: 'This PC', tone: 'pc' },
+  USB2: { state: 'in', label: 'This PC', tone: 'pc' },
+  USB3: { state: 'in', label: 'Mouse/keyboard', tone: 'dev' },
+};
 
 const LAYER: Record<string, string> = { wire: 'Wire', host: 'Host', evdev: 'evdev', hidraw: 'hidraw', emulator: 'Emulator' };
+
+const TOOL = tool as ToolData;
+const JAMS = TOOL.tests.filter((t) => t.jamsStock).map((t) => t.id);
+const CYCLES = TOOL.stockCycles;
+const WORDS = ['none', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
+
+const BOX: Record<string, string> = { stock: 'Stock', medius: 'Medius', native: 'Native reference' };
+const DEVICE: Record<string, string> = { 'still-mouse': 'mouse', 'still-keyboard': 'keyboard', 'still-composite': 'mouse and keyboard in one device' };
+const devices = (ids: string[]) => {
+  const said = ids.map((d) => DEVICE[d]).join(' or ') || 'none';
+  return said[0].toUpperCase() + said.slice(1);
+};
+
+const PORT = '/dev/serial/by-id/usb-1a86_USB_Single_Serial_<serial>-if00';
+const PYTHON = 'sudo ~/medius-compare/bin/python medius-compare.pyz';
+
+const SECTIONS = new Map(
+  RESULTS.categories.flatMap((c) => c.sections.map((s) => [s.id, { href: `/comparison/${c.id}/${s.id}`, title: s.title }] as const)),
+);
 
 const Method: Component = () => (
   <>
     <PageHeader>
-      <p>How each result was measured.</p>
+      <p>How each result was measured, and a tool that runs some of the tests on any MAKCU box.</p>
     </PageHeader>
 
     <DocSection id="rig" title="Rig">
-      <p>Both boxes are wired like this, behind the same hub on the same PC.</p>
+      <p>Both boxes are wired like this on one PC, and tested one at a time.</p>
       <pre class="diagram">{RIG}</pre>
       <div class="table-scroll">
         <table class="api-params names">
@@ -48,7 +76,10 @@ const Method: Component = () => (
           <tbody>
             <tr><td>Firmware</td><td>Stock {RESULTS.firmware.stock}, Medius {RESULTS.firmware.medius}</td></tr>
             <tr><td>Real device</td><td>A USB device emulator on each box's USB3, presenting the same device and native reports to both</td></tr>
-            <tr><td>Hub</td><td>One Genesys Logic hub for both boxes. One box was tested at a time. The other box's emulator presented a silent mouse</td></tr>
+            <tr><td>STT hub</td><td>A USB 2.0 hub with one transaction translator for all its ports, for both boxes' <code>USB1</code> and <code>USB2</code></td></tr>
+            <tr><td>MTT hub</td><td>A USB 2.0 hub with a transaction translator per port, for the emulators' control ports and the native reference</td></tr>
+            <tr><td>Box not under test</td><td>Its emulator presents a silent mouse, or is the native reference</td></tr>
+            <tr><td>Native reference</td><td>The other box's emulator on the PC, presenting the same device, for every result compared with native</td></tr>
             <tr><td>PC</td><td>Linux</td></tr>
           </tbody>
         </table>
@@ -70,10 +101,11 @@ const Method: Component = () => (
             <tr><td>Table</td><td>One quantity in one unit</td></tr>
             <tr><td>Time</td><td>The median (p50), unless the table names another statistic</td></tr>
             <tr><td>Range</td><td>Lowest to highest over the runs. The fainter part of a bar spans it</td></tr>
+            <tr><td>Count</td><td>A count of a total adds up the box's runs: 3, or 1 where stock runs a test once</td></tr>
             <tr><td>Bar</td><td>Drawn to the largest value in its table, or in its row on the Overview</td></tr>
             <tr><td>Result</td><td>The box ahead, worked out from the values. The box behind is dimmed</td></tr>
             <tr><td>Faithful</td><td>If a test records native behaviour, the box that matches it is ahead</td></tr>
-            <tr><td>Equal</td><td>The two ranges overlap, or the outcomes match</td></tr>
+            <tr><td>Equal</td><td>The outcomes match, or the gap between the two measures is within their noise. Each box's runs are pooled, weighing each run's sampling error and the spread between runs. A box leads only past Student's t for the runs' degrees of freedom: 2.78 standard errors with 3 runs a box, 4.30 where a box ran once and takes the other's spread between runs. A count of a total is equal where the two ranges overlap</td></tr>
             <tr><td>Differs</td><td>The boxes behave differently. Neither is better, or no test shows which is faithful</td></tr>
             <tr><td>Defect</td><td>A fault that reproduces, marked on its row and listed on the Overview</td></tr>
           </tbody>
@@ -103,7 +135,7 @@ const Method: Component = () => (
     </DocSection>
 
     <DocSection id="data" title="Data">
-      <p>The results as JSON, all in one file or split by area.</p>
+      <p>The results as JSON, all in one file or split by area, and the run files they were built from.</p>
       <div class="table-scroll">
         <table class="api-params names">
           <colgroup>
@@ -123,6 +155,141 @@ const Method: Component = () => (
                 <tr>
                   <td><a class="nw" href={`${p.path}.json`} download="">{p.path.slice(p.path.lastIndexOf('/') + 1)}.json</a></td>
                   <td>{routeFor(p.path)!.title}</td>
+                </tr>
+              )}
+            </For>
+          </tbody>
+        </table>
+      </div>
+      <div class="table-scroll">
+        <table class="api-params names">
+          <colgroup>
+            <col style={{ width: '24%' }} />
+            <col />
+          </colgroup>
+          <thead>
+            <tr><th>Box</th><th>Run file</th></tr>
+          </thead>
+          <tbody>
+            <For each={TOOL.runs}>
+              {(r) => {
+                const name = r.file.slice(r.file.lastIndexOf('/') + 1);
+                return (
+                  <tr>
+                    <td>{BOX[r.box]}</td>
+                    <td><a class="nw" href={`/comparison/${r.file}`} download={`${r.box}-${name}`}>{name}</a></td>
+                  </tr>
+                );
+              }}
+            </For>
+          </tbody>
+        </table>
+      </div>
+    </DocSection>
+
+    <DocSection id="tool" title="Comparison tool">
+      <p>
+        <a href="/comparison/medius-compare.pyz" download="">medius-compare.pyz</a> is the tool the published results
+        come from. Without the <A href="#rig">USB device emulator</A>, it runs the tests a still mouse or
+        keyboard can drive, on any MAKCU box. Every other test is skipped and named in the run file with its reason.
+      </p>
+      <BoardFigure ports={TOOL_WIRING} />
+      <div class="table-scroll">
+        <table class="api-params names">
+          <colgroup>
+            <col style={{ width: '24%' }} />
+            <col />
+          </colgroup>
+          <thead>
+            <tr><th>Item</th><th>Detail</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>PC</td><td>Linux, run as root</td></tr>
+            <tr><td>Python</td><td><code>3.11</code> or newer</td></tr>
+            <tr>
+              <td>Packages</td>
+              <td>
+                The <A href="/bindings/python/install"><code>medius</code></A> package release made for the box's
+                firmware, and <code>pyserial</code>, for the Python run as root
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>A venv keeps them off the system Python:</p>
+      <pre><code class="language-bash">{`python3 -m venv ~/medius-compare && ~/medius-compare/bin/pip install medius pyserial`}</code></pre>
+    </DocSection>
+
+    <DocSection id="tool-run" title="Run the tool">
+      <ol>
+        <li>
+          On stock, find the box's control port with <code>ls /dev/serial/by-id/</code> and run:
+          <pre><code class="language-bash">{`${PYTHON} run --box stock \\
+    --port ${PORT} \\
+    --usb-port <clone's USB port>`}</code></pre>
+          Leave out <code>--usb-port</code> and it lists this PC's input devices by USB port. The clone is the one
+          with the real device's VID:PID and name.
+        </li>
+        <li>
+          On Medius, the same with <code>--box medius</code> and no <code>--usb-port</code> (the box says what it
+          cloned):
+          <pre><code class="language-bash">{`${PYTHON} run --box medius \\
+    --port ${PORT}`}</code></pre>
+        </li>
+        <li>
+          Each run writes <code>runs/&lt;box&gt;/&lt;stamp&gt;.json</code>. Compare two:
+          <pre><code class="language-bash">{`python3 medius-compare.pyz report <stock file> <Medius file>`}</code></pre>
+        </li>
+      </ol>
+      <p>
+        While the tool runs, the clone is kept off the desktop, so nothing injected reaches the desktop. The tool puts
+        the clone back at exit, <span class="nw">Ctrl-C</span> included. Leave the real device untouched: a leg
+        refuses to start if it moved.
+      </p>
+      <div class="callout callout--warning">
+        <p>
+          On stock,{' '}
+          <For each={JAMS}>
+            {(id, k) => (
+              <>
+                {k() ? (k() === JAMS.length - 1 ? ' and ' : ', ') : ''}
+                <code>{id}</code>
+              </>
+            )}
+          </For>{' '}
+          can leave the box's parser one command behind until a power cycle (
+          <A href="/comparison/control-link">Control link</A>). Each runs once on stock unless{' '}
+          <code>--stock-jam-runs</code> asks for more. When one leaves the parser behind, the tool asks for both the
+          box's cables to be unplugged for 3 s and plugged back in, and waits for Enter. A full run takes ~{CYCLES.inside}-
+          {CYCLES.inside + JAMS.length} power cycles: our stock run needed {CYCLES.inside} inside{' '}
+          {WORDS[CYCLES.tests] ?? CYCLES.tests} of these tests, and each can need one more after it. To leave these
+          out, name the tests to run with <code>--test</code> (repeat it for more).
+        </p>
+      </div>
+    </DocSection>
+
+    <DocSection id="tool-tests" title="Tool tests">
+      <div class="table-scroll">
+        <table class="api-params">
+          <thead>
+            <tr><th>Test</th><th>Device</th><th>Sections</th></tr>
+          </thead>
+          <tbody>
+            <For each={TOOL.tests}>
+              {(t) => (
+                <tr>
+                  <td><code>{t.id}</code></td>
+                  <td>{devices(t.devices)}</td>
+                  <td>
+                    <For each={t.sections}>
+                      {(id, k) => (
+                        <>
+                          {k() ? <br /> : ''}
+                          <A href={SECTIONS.get(id)!.href}>{SECTIONS.get(id)!.title}</A>
+                        </>
+                      )}
+                    </For>
+                  </td>
                 </tr>
               )}
             </For>

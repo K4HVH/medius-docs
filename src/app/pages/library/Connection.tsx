@@ -26,7 +26,9 @@ const Connection: Component = () => {
           <code>open</code> and <code>find</code> block on the{' '}
           <A href="/native/connection#handshake">handshake</A>. Auto-detect matches the{' '}
           <A href="/native/transport">USB identity</A> of the WCH CH343 bridge in every box (vid{' '}
-          <code>0x1A86</code>, pid <code>0x55D3</code>).
+          <code>0x1A86</code>, pid <code>0x55D3</code>). On Linux, a port another process holds open
+          is refused with <A href="/library/types/errors"><code>Error::PortBusy</code></A>: the port
+          takes one reader.
         </p>
         <div class="api-response-label">FUNCTIONS</div>
         <div class="table-scroll">
@@ -88,7 +90,11 @@ let dev = Device::open("/dev/ttyACM0")?;`}</code></pre>
               </tr>
               <tr>
                 <td><code>PROTO_VER</code></td>
-                <td><code>9</code></td>
+                <td><code>10</code></td>
+              </tr>
+              <tr>
+                <td><code>MIN_PROTO_VER</code></td>
+                <td><code>5</code></td>
               </tr>
             </tbody>
           </table>
@@ -97,14 +103,17 @@ let dev = Device::open("/dev/ttyACM0")?;`}</code></pre>
           <code>PROTO_VER</code> is the{' '}
           <A href="/native/frame#layout">control protocol</A> version this build speaks.
           A box reporting anything else is refused at the{' '}
-          <A href="/native/connection#handshake">handshake</A>.
+          <A href="/native/connection#handshake">handshake</A>. <code>MIN_PROTO_VER</code> is the
+          oldest protocol whose update path this build speaks:{' '}
+          <A href="/library/update#open-for-update"><code>open_for_update</code></A> reaches a box from
+          there on to update it.
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`use medius::{DEFAULT_QUERY_TIMEOUT, DEFAULT_KEEPALIVE_CADENCE, PROTO_VER};
 
 println!("query timeout:     {:?}", DEFAULT_QUERY_TIMEOUT);   // 1s
 println!("keepalive cadence: {:?}", DEFAULT_KEEPALIVE_CADENCE); // 500ms
-println!("speaks protocol:   {}", PROTO_VER);                   // 9`}</code></pre>
+println!("speaks protocol:   {}", PROTO_VER);                   // 10`}</code></pre>
       </DocSection>
 
       <DocSection id="async" title="Async device" caption="Same link, awaitable queries">

@@ -13,7 +13,7 @@ const Frames: Component = () => {
           parsed frame.
         </p>
       </PageHeader>
-      <DocSection id="frame-type" title="FrameType" caption="A frame's TYPE byte">
+      <DocSection id="frame-type" title="FrameType" caption="Each frame's TYPE byte">
         <div class="table-scroll">
           <table class="api-params">
             <thead>
@@ -137,7 +137,7 @@ const Frames: Component = () => {
               <tr>
                 <td><code>TransferResp</code></td>
                 <td><code>0x1B</code></td>
-                <td>The native reply to a <code>Transfer</code> (box to PC).</td>
+                <td>One chunk of the reply to a <code>Transfer</code> (box to PC).</td>
               </tr>
               <tr>
                 <td><code>Rewrite</code></td>

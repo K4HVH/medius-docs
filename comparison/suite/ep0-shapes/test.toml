@@ -1,0 +1,10 @@
+id = "ep0-shapes"
+version = 1
+category = "devices"
+layout = "main"
+boxes = ["stock", "medius"]
+jams_stock = false
+
+[[legs]]
+id = "start"
+device = "sim:fresh_mouse"

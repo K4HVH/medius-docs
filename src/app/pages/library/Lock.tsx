@@ -168,7 +168,7 @@ device.unlock_axis(Axis::Wheel, Direction::Positive)?;`}</code></pre>
 
 let device = Device::find()?;
 device.lock_all(Blanket::Keys, Direction::Both)?;        // every key, both edges
-device.lock_all(Blanket::Keys, Direction::Positive)?;    // press edges only: a held key still releases
+device.lock_all(Blanket::Keys, Direction::Positive)?;    // press edges only: a key held now reads released
 device.unlock_all(Blanket::Keys, Direction::Both)?;
 device.scale_all(Blanket::Aim, Direction::Against, 40)?; // 40% of motion opposing the injection, X and Y`}</code></pre>
       </DocSection>

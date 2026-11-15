@@ -60,12 +60,12 @@ const Quickstart: Component = () => {
             <code>VERSION</code> payload.
           </li>
           <li>
-            Check <code>proto_ver == 9</code> before trusting the commands here.
+            Check <code>proto_ver == 10</code> before trusting the commands here.
           </li>
         </ol>
       </DocSection>
 
-      <DocSection id="first-move" title="Send a MOVE" caption="Relative cursor movement">
+      <DocSection id="first-move" title="Send a MOVE" caption="Relative cursor motion">
         <p>
           <A href="/native/commands/move#move"><code>MOVE</code></A> moves the PC's cursor.
         </p>

@@ -199,8 +199,8 @@
   transition: border-color var(--g-transition);
 }
 
-.divider--draggable:hover::before,
 @media (hover: hover) {
+  .divider--draggable:hover::before,
   .divider--draggable:hover::after {
     border-color: var(--color-accent);
   }

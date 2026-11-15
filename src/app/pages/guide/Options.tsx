@@ -83,8 +83,8 @@ const Options: Component = () => (
       />
       <Details
         rows={[
-          ['Limits', 'A device with >4 IN endpoints in use at once, >6 HID interfaces (input functions such as a mouse or a keyboard), a vendor bulk or isochronous endpoint, or high speed (480 Mbit/s).'],
-          ['Never cloned', 'A device with an endpoint numbered ≥7.'],
+          ['Limits', 'A device with >4 IN endpoints in use at once, >6 HID interfaces (input functions such as a mouse or a keyboard), a vendor bulk endpoint, an isochronous endpoint of ≤64 bytes, or high speed (480 Mbit/s).'],
+          ['Never cloned', 'A device with an endpoint numbered ≥7, or one >64 bytes wide (most isochronous endpoints, a headset\'s audio among them).'],
           ['Use', <>A device that doesn't work through the box, or one the dashboard or <Fixes /> names. A forced Wire rate and Control's Advanced tab need it too.</>],
           ['Cost', 'The clone no longer matches the real device byte for byte. With >4 IN endpoints, reports on the extra ones can be relayed ≥1 poll late. The mouse, keyboard and media endpoints are never delayed.'],
           ['Restart', 'On a change, while a device the box can\'t clone faithfully is plugged in or a Wire rate is forced.'],
@@ -166,7 +166,7 @@ const Options: Component = () => (
     </DocSection>
 
     <DocSection id="spread" title="Spread" aside={<Dashboard id="spread" />}>
-      <p>Spreads each command's delta (the movement it carries) across the command interval (the time until the next command). No single report carries the whole delta.</p>
+      <p>Spreads each command's delta (the motion it carries) across the command interval (the time until the next command). No single report carries the whole delta.</p>
       <Values
         delay
         rows={[

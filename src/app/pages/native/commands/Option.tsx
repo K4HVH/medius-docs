@@ -125,8 +125,8 @@ const Option: Component = () => {
         <div class="callout callout--info">
           <p>
             A device the box can't clone faithfully has any of these: &gt;4 IN endpoints live at once;
-            &gt;6 HID interfaces; high speed; configurations the box did not capture; a vendor bulk or
-            isochronous endpoint; a setting carrying more endpoint descriptors than it declares (what
+            &gt;6 HID interfaces; high speed; configurations the box did not capture; a vendor bulk endpoint
+            or an isochronous one of ≤64 bytes (a wider endpoint is never cloned); a setting carrying more endpoint descriptors than it declares (what
             fits is cloned, the rest left undriven); a report descriptor truncated or never captured.
           </p>
           <p>

@@ -323,7 +323,7 @@ const Update: Component = () => {
           <p>
             After a failed <code>ACTIVATE</code>, either retry the whole update, or first send{' '}
             <A href="/native/commands/update#abort"><code>ABORT</code></A> for each staged target (as
-            the dashboard and both reference clients do).
+            the dashboard and the library's <code>update_firmware</code> do).
           </p>
         </div>
         <div class="api-response-label">EXAMPLE</div>
@@ -435,7 +435,7 @@ const Update: Component = () => {
               <tr><th>Chip</th><th>Confirmed by</th><th>Grace</th></tr>
             </thead>
             <tbody>
-              <tr><td>Device</td><td>10 s of a running main loop.</td><td>30 s</td></tr>
+              <tr><td>Device</td><td>10 s of a running main loop, once the mouse is still (25 s at the latest).</td><td>30 s</td></tr>
               <tr><td>Host</td><td>A completed clock exchange over the link, only.</td><td>40 s</td></tr>
             </tbody>
           </table>

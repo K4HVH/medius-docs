@@ -57,15 +57,15 @@
 }
 
 /* Don't apply hover when hovering over interactive prefix/suffix */
-.textfield__wrapper:has(.textfield__prefix:hover .combobox),
 @media (hover: hover) {
+  .textfield__wrapper:has(.textfield__prefix:hover .combobox),
   .textfield__wrapper:has(.textfield__suffix:hover .combobox) {
     border-color: var(--g-border-color);
   }
 }
 
-.textfield__wrapper:has(.textfield__prefix:hover .combobox)::before,
 @media (hover: hover) {
+  .textfield__wrapper:has(.textfield__prefix:hover .combobox)::before,
   .textfield__wrapper:has(.textfield__suffix:hover .combobox)::before {
     background: rgba(255, 255, 255, 0);
   }
