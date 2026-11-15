@@ -329,9 +329,9 @@ The signature, the table, and the example carry the content. Prose is near zero.
 - A tab is the hash (`/dashboard#options`). An element id inside a tab opens it, even one that renders later (after Connect or a fetch).
 - `bun run dev`, then any dashboard page with `?fakebox`: Connect finds a fake box (`src/dev/fakeBox.ts`) that answers every query, for looking at the connected pages without hardware.
 - Site styles live in `src/styles/theme/`, imported after MidnightUI's `global.css` so the theme's tokens win. Those files are editable; `global.css` and `src/components/` / `src/styles/components/` are not. Element styles take their scope through `:where()` so the spacing rules after a heading or a label win: 44px from the last ink to a section's rule, 44px from the rule to the heading's capitals, 24px from the heading's baseline to the content.
-- No emojis except the ⚠️ on the USB3 hazard callout.
+- No emojis.
 - Terse, declarative wording. No filler, no marketing language. De-AI it: no "robust/seamless/leverage", no "**Bold**: explanation" bullets, and use contractions.
-- ASCII punctuation only. No em-dashes or en-dashes, ever (rewrite with commas, periods, parentheses, or "to" for ranges); no unicode minus (use "-"). Verify with a unicode-dash scan before committing.
+- No em-dashes or en-dashes (rewrite with commas, periods, parentheses, or "to" for ranges) and no unicode minus (use "-"). Text a reader sees may use ≥, ≤ and ×; identifiers, comments and code samples stay ASCII. Verify with a unicode-dash scan before committing.
 
 ### Page patterns
 
