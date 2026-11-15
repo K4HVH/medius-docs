@@ -44,7 +44,7 @@ const Catch: Component = () => {
                            and before injection`}</pre>
         <p>
           Addressing is the filter. The control link runs at 6&nbsp;Mbaud, and vendor bulk alone
-          measures ~630&nbsp;KiB/s through the box, so every class at once can't be delivered.
+          measures ~525&nbsp;KiB/s through the box, so every class at once can't be delivered.
         </p>
       </PageHeader>
 
@@ -250,7 +250,7 @@ const Catch: Component = () => {
               <tr><th><code>clk</code></th><th>Stamped by</th><th>Classes</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>0</code></td><td>the <strong>host</strong> chip, in USB interrupt context, when the real device's transfer completed</td><td><code>MOTION</code> / <code>USAGE</code>, <code>HID_IN</code>, the real device's <code>VEND_INTR</code> / <code>VEND_BULK</code> IN</td></tr>
+              <tr><td><code>0</code></td><td>the <strong>host</strong> chip, in USB interrupt context, when the real device's transfer completed</td><td><code>MOTION</code> / <code>USAGE</code>, <code>HID_IN</code>, native <code>VEND_INTR</code> / <code>VEND_BULK</code> IN</td></tr>
               <tr><td><code>1</code></td><td>the <strong>device</strong> chip, at the tap</td><td><code>HID_OUT</code>, <code>VEND_INTR</code>/<code>VEND_BULK</code> OUT, a vendor IN packet from <A href="/native/commands/raw#catch"><code>RAW</code></A> or a <A href="/native/commands/clip#items">clip raw entry</A>, <code>CONTROL</code>, <code>CLIP_XFER</code>, <code>EMIT</code>, <code>BUS</code></td></tr>
             </tbody>
           </table>
@@ -438,7 +438,7 @@ const Catch: Component = () => {
               <tr><td>6</td><td><code>id</code></td><td><code>u16</code></td><td>endpoint number or interface number, little-endian</td></tr>
               <tr><td>8</td><td><code>dir</code></td><td><code>u8</code></td><td><code>1</code> = IN (device to PC), <code>2</code> = OUT (PC to device), <code>0</code> for <code>BUS</code>, which is not a transfer</td></tr>
               <tr><td>9</td><td><code>flags</code></td><td><code>u8</code></td><td>class-specific (table below)</td></tr>
-              <tr><td>10</td><td><code>true_len</code></td><td><code>u16</code></td><td>packet length <em>before</em> truncation (by <code>snaplen</code> or the 172-byte control data-stage cap), little-endian; <code>65535</code> for a control transfer of 65535 bytes or more</td></tr>
+              <tr><td>10</td><td><code>true_len</code></td><td><code>u16</code></td><td>packet length <em>before</em> truncation (by <code>snaplen</code> or the 172-byte control data-stage cap), little-endian; <code>65535</code> for a control transfer of ≥65535 bytes</td></tr>
               <tr><td>12</td><td><code>bytes</code></td><td><code>u8[]</code></td><td>up to <code>snaplen</code> bytes; the frame <A href="/native/frame#layout"><code>LEN</code></A> gives how many arrived</td></tr>
             </tbody>
           </table>
@@ -503,7 +503,7 @@ const Catch: Component = () => {
           Every request that reaches the{' '}
           <A href="/native/commands/rewrite#endpoint-0">rewrite table</A> raises one: on endpoint 0, the
           class and vendor requests and the standard requests the clone relays. A request served from
-          the box's value cache still produces an event.
+          the box's value cache raises one too.
         </p>
         <pre class="diagram">{`  bytes = A1 01 00 01 00 00 08 00   01 00 00 00 00 00 00 00
           '------ setup (8) ------'   '---- data stage -------'
@@ -535,7 +535,6 @@ const Catch: Component = () => {
             </table>
           </div>
         </Anchor>
-        <p>The handshakes are the same on every control endpoint.</p>
         <div class="api-response-label">EVENT TIMING</div>
         <div class="table-scroll">
           <table class="api-params">
@@ -544,7 +543,7 @@ const Catch: Component = () => {
             </thead>
             <tbody>
               <tr><td>one the PC gave up on</td><td>with NAK when the PC's next SETUP on that endpoint replaces it, or 250-300 ms after the PC stopped polling it, whichever comes first</td></tr>
-              <tr><td>one a SET_INTERFACE on its interface, a configuration change or a suspend ended</td><td>at once, with NAK</td></tr>
+              <tr><td>one ended by a SET_INTERFACE on its interface, a configuration change or a suspend</td><td>at once, with NAK</td></tr>
               <tr><td>one with a step the box had no room to pass on</td><td>at once, with NAK</td></tr>
             </tbody>
           </table>
@@ -739,8 +738,8 @@ const Catch: Component = () => {
           plus input.
         </p>
         <p>
-          Under back-pressure the box drops events rather than stall the report path, so the stream
-          never delays reports to the game PC. Every drop is counted{' '}
+          Under back-pressure the box drops events, so the stream never delays reports to the game
+          PC. Every drop is counted{' '}
           <em>per entry</em> in{' '}
           <A href="/native/commands/requests#catch"><code>RESP(CATCH)</code></A>.
         </p>

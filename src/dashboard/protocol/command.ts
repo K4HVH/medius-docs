@@ -260,7 +260,7 @@ export function rawPayload(epNum: number, dir: number, bytes: Uint8Array): Uint8
   return out;
 }
 
-// TRANSFER (§3.14): [ep u8][timeout_ms u16 LE][setup 8][OUT data..]. The setup packet is the 8 USB bytes
+// TRANSFER: [ep u8][timeout_ms u16 LE][setup 8][OUT data..]. The setup packet is the 8 USB bytes
 // [bmRequestType u8][bRequest u8][wValue u16 LE][wIndex u16 LE][wLength u16 LE].
 export function transferPayload(
   ep: number,

@@ -192,9 +192,8 @@ const Raw: Component = () => {
         </div>
         <p>
           Native reports take ≤1 place in an interrupt IN queue. The box polls the real device's endpoint only
-          while the PC polls the clone's, and only as the PC takes what the last poll brought, so the rest of
-          the queue is room for{' '}
-          <code>RAW</code> reports. A native bulk stream takes as many places as the PC leaves unread,
+          while the PC polls the clone's, and only as the PC takes what the last poll brought. The rest of the
+          queue is room for <code>RAW</code> reports. A native bulk stream takes as many places as the PC leaves unread,
           up to all 8.
         </p>
         <p>

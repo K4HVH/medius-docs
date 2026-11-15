@@ -192,7 +192,7 @@ export class NoReplyError extends Error {
 // A TRANSFER_RESP chunk went missing, so the reply has a gap where its bytes belong.
 export class TransferReplyLostError extends Error {
   constructor() {
-    super('part of the transfer reply was lost on the way from the box');
+    super("part of the transfer reply was lost between the box's chips or on the control link");
     this.name = 'TransferReplyLostError';
   }
 }
@@ -285,7 +285,6 @@ interface Pending {
   timer: ReturnType<typeof setTimeout>;
 }
 
-// A TRANSFER_RESP waiter, keyed by the SEQ every chunk of the reply echoes.
 interface TransferWaiter {
   ep: number;
   chunks: TransferChunk[];

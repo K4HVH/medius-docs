@@ -70,28 +70,25 @@ device.activate_firmware()?;`}</code></pre>
         <p>
           Opens the box at <code>path</code> as{' '}
           <A href="/library/connection#open"><code>open</code></A> does, but accepts any control
-          protocol from <code>MIN_PROTO_VER</code> (5) on. The update path hasn't changed since then.
-          A box older than that returns{' '}
-          <A href="/library/types/errors"><code>Error::BadProtoVer</code></A>.
+          protocol from <code>MIN_PROTO_VER</code> (5) on.
         </p>
         <div class="table-scroll">
           <table class="api-params">
             <thead>
-              <tr><th>The box speaks</th><th>The device</th></tr>
+              <tr><th>Box protocol</th><th>Device</th></tr>
             </thead>
             <tbody>
               <tr><td><code>PROTO_VER</code></td><td>A full one, as from <code>open</code>. <code>is_update_only</code> is false.</td></tr>
-              <tr><td>another, from 5 on</td><td>Update-only. <code>query_version</code>, <code>firmware_info</code> and the five calls on this page work. Every other call returns <code>Error::BadProtoVer</code>. It holds no state and sends nothing on its own.</td></tr>
-              <tr><td>below 5</td><td>Refused: <code>Error::BadProtoVer</code>.</td></tr>
+              <tr><td>another, from 5 on</td><td>Update-only. <code>query_version</code>, <code>firmware_info</code> and the five calls on this page work. Every other call returns <code>Error::BadProtoVer</code>. It holds no state and sends nothing unprompted.</td></tr>
+              <tr><td>below 5</td><td>Refused: <A href="/library/types/errors"><code>Error::BadProtoVer</code></A>.</td></tr>
             </tbody>
           </table>
         </div>
         <p>
           It tries the 6&nbsp;Mbaud control rate first, then the 4&nbsp;Mbaud that firmware before 3.4.0
           runs. <code>wait_firmware_confirmed</code> follows the box to the other rate when it reboots
-          into firmware on it. A box that comes back on an older protocol after an update keeps
-          answering the update path, so a device opened this way can also move a box back to an older
-          release. Once the update is
+          into firmware on it. A device opened this way can also move a box back to an older release:
+          the box keeps answering the update path on the older protocol. Once the update is
           confirmed, open the box again to use it.
         </p>
         <div class="api-response-label">EXAMPLE</div>
@@ -252,10 +249,11 @@ device.update_firmware(UpdateTarget::Device, &image, &mut |p| {
         <p>
           A chip on <A href="/native/commands/update#rollback">probation</A> refuses another update,
           so <code>stage_firmware</code> waits on this first. The device chip confirms after 10&nbsp;s
-          of running, once the mouse is still (25&nbsp;s at the latest). The host chip confirms on a clock exchange over the inter-chip link. This call
-          keeps asking while the box reboots after an activate. Right after an activate a chip can still
-          answer from the image it is replacing, so a reply counts only once the box shows the reboot
-          (its <A href="/native/connection#hello">ready hello</A>, or a query left unanswered), or after
+          of running, once the mouse is still (25&nbsp;s at the latest). The host chip confirms on a
+          clock exchange over the inter-chip link. This call keeps asking while the box reboots after
+          an activate. Right after an activate, a chip can still answer from the image it is replacing.
+          A reply counts only once the box shows the reboot (its{' '}
+          <A href="/native/connection#hello">ready hello</A>, or a query left unanswered), or after
           5&nbsp;s.
         </p>
         <div class="table-scroll">

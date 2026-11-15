@@ -70,8 +70,8 @@ const Types: Component = () => {
               <tr><td><code>MEDIUS_CLIP_ENTRY_MAX</code></td><td><code>512</code></td><td>Encoded bytes of one <A href="/bindings/c/api#clip"><code>MediusClipFrame</code></A>: one <code>CLIP_APPEND</code> payload</td></tr>
               <tr><td><code>MEDIUS_MAX_CATCH_ENTRIES</code></td><td><code>32</code></td><td><A href="/bindings/c/types#catch-state"><code>MediusCatchState.entries</code></A></td></tr>
               <tr><td><code>MEDIUS_MAX_TRAFFIC_BYTES</code></td><td><code>180</code></td><td><A href="/bindings/c/types#traffic-event"><code>MediusTrafficEvent.bytes</code></A></td></tr>
-              <tr><td><code>MEDIUS_MAX_TRANSFER_OUT</code></td><td><code>501</code></td><td>The OUT data stage of one <A href="/bindings/c/api#advanced"><code>medius_device_transfer</code></A>: one frame less its header</td></tr>
-              <tr><td><code>MEDIUS_MAX_TRANSFER_REPLY</code></td><td><code>65536</code></td><td>The longest reply a transfer brings back (<code>wLength</code> 65535 rounded up to whole 64-byte packets), so a <code>reply</code> buffer this size holds any</td></tr>
+              <tr><td><code>MEDIUS_MAX_TRANSFER_OUT</code></td><td><code>501</code></td><td>OUT data in one <A href="/bindings/c/api#advanced"><code>medius_device_transfer</code></A>: one frame less its header</td></tr>
+              <tr><td><code>MEDIUS_MAX_TRANSFER_REPLY</code></td><td><code>65536</code></td><td>Reply bytes one transfer brings back (<code>wLength</code> 65535 rounded up to whole 64-byte packets): a <code>reply</code> buffer this size holds any</td></tr>
             </tbody>
           </table>
         </div>
@@ -153,8 +153,8 @@ const Types: Component = () => {
           <table class="api-params">
             <thead><tr><th>Enumerator</th><th>Value</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>MEDIUS_AXIS_X</code></td><td><code>0</code></td><td>Horizontal cursor movement.</td></tr>
-              <tr><td><code>MEDIUS_AXIS_Y</code></td><td><code>1</code></td><td>Vertical cursor movement.</td></tr>
+              <tr><td><code>MEDIUS_AXIS_X</code></td><td><code>0</code></td><td>Horizontal cursor motion.</td></tr>
+              <tr><td><code>MEDIUS_AXIS_Y</code></td><td><code>1</code></td><td>Vertical cursor motion.</td></tr>
               <tr><td><code>MEDIUS_AXIS_WHEEL</code></td><td><code>2</code></td><td>The scroll wheel.</td></tr>
               <tr><td><code>MEDIUS_AXIS_PAN</code></td><td><code>3</code></td><td>AC Pan (horizontal scroll).</td></tr>
             </tbody>
@@ -227,8 +227,8 @@ const Types: Component = () => {
           <table class="api-params">
             <thead><tr><th>Enumerator</th><th>Value</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr><td><code>MEDIUS_LOCK_TARGET_KIND_X</code></td><td><code>0</code></td><td>Horizontal movement.</td></tr>
-              <tr><td><code>MEDIUS_LOCK_TARGET_KIND_Y</code></td><td><code>1</code></td><td>Vertical movement.</td></tr>
+              <tr><td><code>MEDIUS_LOCK_TARGET_KIND_X</code></td><td><code>0</code></td><td>Horizontal motion.</td></tr>
+              <tr><td><code>MEDIUS_LOCK_TARGET_KIND_Y</code></td><td><code>1</code></td><td>Vertical motion.</td></tr>
               <tr><td><code>MEDIUS_LOCK_TARGET_KIND_WHEEL</code></td><td><code>2</code></td><td>Scroll wheel.</td></tr>
               <tr><td><code>MEDIUS_LOCK_TARGET_KIND_PAN</code></td><td><code>3</code></td><td>AC Pan (horizontal scroll).</td></tr>
               <tr><td><code>MEDIUS_LOCK_TARGET_KIND_USAGE</code></td><td><code>4</code></td><td>A momentary usage (the struct's <code>usage</code> field selects which).</td></tr>
@@ -595,7 +595,7 @@ const Types: Component = () => {
           <table class="api-params">
             <thead><tr><th>Macro</th><th>Value</th><th>Means</th></tr></thead>
             <tbody>
-              <tr><td><code>MEDIUS_CATCH_ID_ANY</code></td><td><code>65535</code></td><td>Every id in the class, as one table entry rather than one per id, like a blanket <A href="/library/lock">lock</A>.</td></tr>
+              <tr><td><code>MEDIUS_CATCH_ID_ANY</code></td><td><code>65535</code></td><td>Every id in the class, as one table entry rather than one per id.</td></tr>
               <tr><td><code>MEDIUS_CATCH_CLASS_ANY</code></td><td><code>255</code></td><td>Every class. A real <code>id</code> beside it addresses nothing and is refused.</td></tr>
               <tr><td><code>MEDIUS_MAX_CATCH_ENTRIES</code></td><td><code>32</code></td><td>Entries the box's table holds; more fails the call with <code>MEDIUS_STATUS_ERR_CATCH_TABLE_FULL</code>.</td></tr>
             </tbody>
@@ -776,8 +776,8 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>kind</code></td><td><A href="/bindings/c/types#motion-kind"><code>MediusMotionKind</code></A></td><td>Cursor, wheel, or pan.</td></tr>
-              <tr><td><code>dx</code></td><td><code>int16_t</code></td><td>X movement (Cursor only).</td></tr>
-              <tr><td><code>dy</code></td><td><code>int16_t</code></td><td>Y movement (Cursor only).</td></tr>
+              <tr><td><code>dx</code></td><td><code>int16_t</code></td><td>X motion (Cursor only).</td></tr>
+              <tr><td><code>dy</code></td><td><code>int16_t</code></td><td>Y motion (Cursor only).</td></tr>
               <tr><td><code>wheel</code></td><td><code>int16_t</code></td><td>Scroll delta (Wheel only).</td></tr>
               <tr><td><code>pan</code></td><td><code>int16_t</code></td><td>AC Pan delta (Pan only).</td></tr>
             </tbody>
@@ -1005,7 +1005,7 @@ medius_device_catch_events(dev, filters, 2, &events);`}</code></pre>
             <thead><tr><th>Field</th><th>C type</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>inject_emits</code></td><td><code>uint32_t</code></td><td>Pure-injection reports emitted.</td></tr>
-              <tr><td><code>tx_drops</code></td><td><code>uint16_t</code></td><td>Reports never emitted to the game PC: one the clone's IN queue could not hold, one the host chip's forwarder or link could not take, or one a stop of its stream (a setting switch, a halt, a suspend) cut short (should stay 0).</td></tr>
+              <tr><td><code>tx_drops</code></td><td><code>uint16_t</code></td><td>Reports never emitted to the game PC: one the clone's IN queue could not hold, one the host chip's forwarder or link could not take, or one cut short when its stream stopped: a setting switch, a halt, a suspend (should stay 0).</td></tr>
               <tr><td><code>tx_merges</code></td><td><code>uint16_t</code></td><td>Backed-up reports merged instead of queued.</td></tr>
               <tr><td><code>tx_maxdepth</code></td><td><code>uint8_t</code></td><td>Deepest the TX queue has reached.</td></tr>
               <tr><td><code>tx_wedges</code></td><td><code>uint8_t</code></td><td>Wedged-endpoint recoveries.</td></tr>
@@ -1424,10 +1424,11 @@ for (uintptr_t i = 0; i < n; i++) {
         </div>
         <div class="api-response-label">CONTROL EVENTS</div>
         <p>
-          A <code>CONTROL</code> event is one transaction, not one stage, raised when it ends; a{' '}
+          A <code>CONTROL</code> event is one transaction, not one stage, raised when it ends. A{' '}
           <code>CLIP_TRANSFER</code> event is one transfer a clip ran. <code>bytes</code> holds the
           8-byte SETUP packet, then the data (on <code>CLIP_TRANSFER</code>, the reply, empty on an OUT
-          request with a data stage); <code>direction</code> is the data stage's. Split them with{' '}
+          request with a data stage). <code>direction</code> is the data stage's direction. Split them
+          with{' '}
           <A href="/bindings/c/api#inspectors"><code>medius_traffic_event_setup</code></A> and{' '}
           <code>medius_traffic_event_data</code>.
         </p>
@@ -1443,7 +1444,7 @@ for (uintptr_t i = 0; i < n; i++) {
             <tbody>
               <tr><td><code>MEDIUS_CONTROL_STATUS_OK</code></td><td><code>0</code></td><td>The transaction completed.</td></tr>
               <tr><td><code>MEDIUS_CONTROL_STATUS_STALLED</code></td><td><code>1</code></td><td>A STALL: the real device STALLed the request, or a <code>STALL</code> rule refused it.</td></tr>
-              <tr><td><code>MEDIUS_CONTROL_STATUS_NAKED</code></td><td><code>2</code></td><td>NAKs until the PC gave up: the real device left the request unanswered or it failed on the real device's bus, a <code>NAK</code> rule matched it, the PC gave up before the real device finished, a SET_INTERFACE on its interface, a configuration change or a suspend ended it, or the box had no room to pass a step of it on. For a request the PC gave up on, the event comes when the PC's next SETUP on that endpoint replaces it, or 250-300 ms after the PC stopped polling it, whichever is first.</td></tr>
+              <tr><td><code>MEDIUS_CONTROL_STATUS_NAKED</code></td><td><code>2</code></td><td>NAKs until the PC gave up: the real device left the request unanswered; it failed on the real device's bus; a <code>NAK</code> rule matched it; the PC gave up before the real device finished; a SET_INTERFACE on its interface, a configuration change or a suspend ended it; or the box had no room to pass a step of it on. For a request the PC gave up on, the event comes when the PC's next SETUP on that endpoint replaces it, or 250-300 ms after the PC stopped polling it, whichever is first.</td></tr>
               <tr><td><code>MEDIUS_CONTROL_STATUS_OTHER</code></td><td><code>3</code></td><td>A value this build does not know; read <code>flags</code> for it.</td></tr>
             </tbody>
           </table>
@@ -1748,9 +1749,9 @@ medius_clip_unbind_packet(clip, &held);   /* by key */`}</code></pre>
           </table>
         </div>
         <p>
-          The reply is the IN data stage as the box received it, whole at any length: the bytes before a
-          STALL included, and bytes past <code>wLength</code> where the real device sent more in the
-          packets a host asks for. For an OUT transfer or one with <code>wLength</code> 0, it is what
+          The reply is the IN data stage as the box received it, whole at any length. It includes bytes
+          before a STALL, and bytes past <code>wLength</code> the real device sent in the packets a host
+          asks for. For an OUT transfer or one with <code>wLength</code> 0, it is what
           the real device sent where the status stage was due (≤1 packet, usually none).
         </p>
         <div class="api-response-label">MEDIUSTRANSFERSTATUS</div>
@@ -1938,7 +1939,7 @@ medius_clip_unbind_packet(clip, &held);   /* by key */`}</code></pre>
               <tr><td><code>MEDIUS_STATUS_ERR_CLIP_PACKET_TRIGGER</code></td><td><code>33</code></td><td>A <A href="/bindings/c/types#clip-packet-trigger"><code>MediusClipPacketTrigger</code></A> the box would refuse; <code>medius_last_error_message</code> says why.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_REWRITE_MATCH_TOO_LONG</code></td><td><code>34</code></td><td>A rewrite rule with more than <code>MEDIUS_MAX_REWRITE_MATCH</code> (16) match bytes.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_REWRITE_POOL_FULL</code></td><td><code>35</code></td><td>A rewrite payload larger than the room the held rules leave in <code>MEDIUS_REWRITE_PAYLOAD_POOL</code> (2048). An overwrite counts the bytes it replaces as free.</td></tr>
-              <tr><td><code>MEDIUS_STATUS_ERR_TRANSFER_TIMEOUT_RANGE</code></td><td><code>36</code></td><td>A transfer timeout outside 1 to 65535 ms.</td></tr>
+              <tr><td><code>MEDIUS_STATUS_ERR_TRANSFER_TIMEOUT_RANGE</code></td><td><code>36</code></td><td>A transfer timeout outside 1-65535 ms.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_TRANSFER_REPLY_INCOMPLETE</code></td><td><code>37</code></td><td>A transfer reply that lost a chunk between the box's chips or on the control link.</td></tr>
               <tr><td><code>MEDIUS_STATUS_ERR_PORT_BUSY</code></td><td><code>38</code></td><td>On Linux, another process has the control port open. <code>medius_last_error_message</code> names each holder as <code>"name (pid N)"</code>.</td></tr>
             </tbody>

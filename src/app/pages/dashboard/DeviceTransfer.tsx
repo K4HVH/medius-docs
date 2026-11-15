@@ -29,17 +29,14 @@ const STATUS_LABEL: Record<number, string> = {
   [TransferStatus.NoDevice]: 'No device',
 };
 const STATUS_BLURB: Record<number, string> = {
-  [TransferStatus.Ok]: 'The real device completed the transfer.',
   [TransferStatus.Busy]:
-    "The game PC's requests on this endpoint go first. One held the endpoint until the timeout, or the game PC took it over with its next request or a bus event.",
+    'The game PC held this endpoint until the timeout, or took it mid-transfer with its next request or a bus event.',
   [TransferStatus.Suspended]: 'The game PC has put the clone to sleep, and the real device with it. Nothing was sent.',
   [TransferStatus.Error]: 'The real device sent corrupt packets three times over, or a packet longer than the box asked for, or the box had no free channel to send it on.',
   [TransferStatus.Refused]:
     "The box didn't send it: the real device has no control endpoint with that number, another transfer was still running, imperfect clones are off, or the box had no room for it at that moment.",
-  [TransferStatus.Stall]: 'The real device stalled the request.',
   [TransferStatus.NoAnswer]:
-    "The real device didn't answer within the timeout, its answer was lost between the box's chips, or part of it waited over a second to reach this page.",
-  [TransferStatus.NoDevice]: 'No device plugged into the box.',
+    "The real device didn't answer within the timeout, the reply was lost between the box's chips, or part of it waited 1 s to reach this page.",
 };
 const STAGE_LABEL: Record<number, string> = {
   [TransferStage.Setup]: 'Setup stage',
@@ -51,7 +48,6 @@ const hexByte = (v: number) => `0x${v.toString(16).padStart(2, '0')}`;
 const statusLabel = (s: number) => STATUS_LABEL[s] ?? `Status ${hexByte(s)}`;
 const stageLabel = (s: number) => STAGE_LABEL[s] ?? `Stage ${s}`;
 
-// Refused, Busy and Suspended come from the box or the game PC, not the real device.
 const statusVariant = (s: number): 'success' | 'warning' | 'error' | 'neutral' => {
   if (s === TransferStatus.Ok) return 'success';
   if (s === TransferStatus.Refused || s === TransferStatus.Busy || s === TransferStatus.Suspended) return 'warning';
@@ -84,7 +80,7 @@ const DeviceTransfer = () => {
     const writes = (type & 0x80) === 0;
     const data = writes ? parseHex(out()) : new Uint8Array(0);
     if (data === null) return refuse('Out data must be hex.');
-    if (writes && length > TRANSFER_OUT_MAX) return refuse(`A request that writes carries ≤${TRANSFER_OUT_MAX} bytes.`);
+    if (writes && length > TRANSFER_OUT_MAX) return refuse(`Out data must be ≤${TRANSFER_OUT_MAX} bytes.`);
     if (data.length !== (writes ? length : 0)) return refuse('Out data must be wLength bytes.');
     setResult(null);
     cmd.run(async () => {

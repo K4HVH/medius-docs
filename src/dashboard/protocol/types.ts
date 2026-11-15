@@ -753,8 +753,7 @@ export interface SetupPacket {
   wLength: number;
 }
 
-// TRANSFER's payload without the timeout (§3.11). `out` is wLength bytes when bmRequestType bit 7 is clear,
-// else empty. The answer comes back as a ClipTransfer event.
+// TRANSFER's payload without the timeout; `out` is wLength bytes for a host-to-device request, else empty.
 export interface ClipTransferItem {
   ep: number;
   setup: SetupPacket;
@@ -1258,7 +1257,7 @@ export interface TransformTable {
   entries: Transform[];
 }
 
-// One TRANSFER_RESP frame (§3.14); only the last chunk's status and stage are the outcome.
+// One TRANSFER_RESP frame; only the last chunk's status and stage are the outcome.
 export interface TransferChunk {
   ep: number;
   status: TransferStatus;
@@ -1268,8 +1267,7 @@ export interface TransferChunk {
   data: Uint8Array;
 }
 
-// A TRANSFER's reply (§3.14). Status and stage keep the last chunk's bytes, so an unnamed byte never reads
-// as a named one.
+// A TRANSFER's reply; status and stage keep the last chunk's bytes.
 export interface TransferResult {
   ep: number;
   status: TransferStatus;

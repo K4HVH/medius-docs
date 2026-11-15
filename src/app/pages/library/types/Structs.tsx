@@ -207,7 +207,7 @@ assert_eq!(r.native_hz(), Some(1000.0));`}</code></pre>
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>inject_emits</code></td><td><code>u32</code></td><td>Pure-injection reports emitted.</td></tr>
-              <tr><td><code>tx_drops</code></td><td><code>u16</code></td><td>Reports the game PC never received: one the clone's IN queue could not hold, one the host chip's forwarder or link could not take, or one a stop of its stream (a setting switch, a halt, a suspend) cut short (should stay 0).</td></tr>
+              <tr><td><code>tx_drops</code></td><td><code>u16</code></td><td>Reports the game PC never received: one the clone's IN queue could not hold, one the host chip's forwarder or link could not take, or one cut short when its stream stopped: a setting switch, a halt, a suspend (should stay 0).</td></tr>
               <tr><td><code>tx_merges</code></td><td><code>u16</code></td><td>Backed-up reports merged instead of queued.</td></tr>
               <tr><td><code>tx_maxdepth</code></td><td><code>u8</code></td><td>Deepest the TX queue has reached.</td></tr>
               <tr><td><code>tx_wedges</code></td><td><code>u8</code></td><td>Wedged-endpoint recoveries.</td></tr>
@@ -418,7 +418,7 @@ if let CatchEvent::Motion(m) = stream.recv()? {
             <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>ts_us</code></td><td><code>u32</code></td><td>When the native report arrived, in box microseconds. <A href="/library/catch#timestamps">Catch timestamps</A> explains the clock.</td></tr>
-              <tr><td><code>clock</code></td><td><A href="/library/types/enums#clock-domain"><code>ClockDomain</code></A></td><td>Which chip's timer <code>ts_us</code> came from. Always <code>HostChip</code>: a held-usage snapshot is taken where the real device's report lands.</td></tr>
+              <tr><td><code>clock</code></td><td><A href="/library/types/enums#clock-domain"><code>ClockDomain</code></A></td><td>Which chip's timer <code>ts_us</code> came from. Always <code>HostChip</code>: a held-usage snapshot is taken where the native report lands.</td></tr>
               <tr><td><code>usages</code></td><td><code>Vec&lt;<A href="/library/types/structs#usage">Usage</A>&gt;</code></td><td>The held usages, one class per event.</td></tr>
             </tbody>
           </table>
@@ -526,10 +526,10 @@ for ev in device.input_events(CatchFilter::all_input())? {
         </div>
         <p>
           A <code>Control</code> event is one transaction the game PC received on any control
-          endpoint, raised when it ends; one the PC gave up on reads <code>Naked</code>, and one served
+          endpoint, raised when it ends. One the PC gave up on reads <code>Naked</code>. One served
           from the box's value cache counts too. A <code>ClipTransfer</code> event is one transfer a
-          clip ran. In both, <code>bytes</code> is the 8-byte SETUP packet then the data,
-          and <code>direction</code> is the data stage's.
+          clip ran. In both, <code>bytes</code> is the 8-byte SETUP packet then the data, and{' '}
+          <code>direction</code> is the data stage's direction.
         </p>
         <div class="table-scroll">
           <table class="api-params">
@@ -1337,7 +1337,7 @@ assert_eq!(setup.to_bytes(), [0x80, 0x06, 0x00, 0x01, 0x00, 0x00, 0x12, 0x00]);`
         <p>
           What <A href="/library/advanced/transfer#transfer"><code>transfer</code></A> returns. A
           non-<code>Ok</code> <A href="/library/types/enums#transfer-status"><code>status</code></A>{' '}
-          is a result, not an error, and <code>data</code> is meaningful on any status.
+          is a result, not an error. <code>data</code> is meaningful on any status.
         </p>
         <div class="table-scroll">
           <table class="api-params">
@@ -1345,7 +1345,7 @@ assert_eq!(setup.to_bytes(), [0x80, 0x06, 0x00, 0x01, 0x00, 0x00, 0x12, 0x00]);`
             <tbody>
               <tr><td><code>status</code></td><td><A href="/library/types/enums#transfer-status"><code>TransferStatus</code></A></td><td>How the transfer ended.</td></tr>
               <tr><td><code>stage</code></td><td><A href="/library/types/enums#transfer-stage"><code>TransferStage</code></A></td><td>Where it ended: <code>Status</code> for a completed transfer.</td></tr>
-              <tr><td><code>data</code></td><td><code>Vec&lt;u8&gt;</code></td><td>The IN data stage as the box received it, whole at any length: the bytes before a STALL included, and bytes past <code>wLength</code> where the real device sent more in the packets a host asks for. For an OUT transfer or one with <code>wLength</code> 0, what the real device sent where the status stage was due (≤1 packet, usually none). A PC sees data past <code>wLength</code>, or in a status stage, as the transfer failing.</td></tr>
+              <tr><td><code>data</code></td><td><code>Vec&lt;u8&gt;</code></td><td>The IN data stage as the box received it, whole at any length. It includes bytes before a STALL, and bytes past <code>wLength</code> the real device sent in the packets a host asks for. For an OUT transfer or one with <code>wLength</code> 0, what the real device sent where the status stage was due (≤1 packet, usually none). A PC sees data past <code>wLength</code>, or in a status stage, as the transfer failing.</td></tr>
             </tbody>
           </table>
         </div>
@@ -1475,7 +1475,7 @@ assert_eq!(setup.to_bytes(), [0x80, 0x06, 0x00, 0x01, 0x00, 0x00, 0x12, 0x00]);`
             <tbody>
               <tr><td><code>applied</code></td><td>The clone serves a non-empty patched set: the one it was presented with. A later store doesn't change it until the next presentation.</td></tr>
               <tr><td><code>pending</code></td><td>The stored set differs from the one the clone serves, in its patches, bytes or order: not applied yet, changed or emptied since, refused, or held back because the opt-in is off.</td></tr>
-              <tr><td><code>refused</code></td><td>The stored set failed a clone or <A href="/native/commands/patch#ladder">consistency check</A> when the clone was last presented with it, and is unchanged since. The clone serves the real device's descriptors unpatched, and the box log names the check. A set change, a clear, a presentation that passes, or a detach resets it. A real device that fails unpatched is refused with this flag clear.</td></tr>
+              <tr><td><code>refused</code></td><td>The stored set failed a clone or <A href="/native/commands/patch#ladder">consistency check</A> when the clone was last presented with it, and is unchanged since. The clone serves the native descriptors unpatched, and the box log names the check. A set change, a clear, a presentation that passes, or a detach resets it. A real device that fails unpatched is refused with this flag clear.</td></tr>
               <tr><td><code>table_full</code></td><td>The box refused the last new patch or overwrite for lack of room: 16 patches in use (<code>PATCH_MAX_ENTRIES</code>), or no space left in the 1024-byte pool. The next change to the set, or a clear, resets it.</td></tr>
             </tbody>
           </table>

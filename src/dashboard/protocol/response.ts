@@ -639,8 +639,7 @@ export function parseResp(payload: Uint8Array): Resp | null {
   }
 }
 
-// Parse one TRANSFER_RESP chunk (§3.14): [ep u8][status u8][stage u8][flags u8][offset u16 LE][data..]. A
-// separate opcode, not a RESP frame: every chunk echoes the TRANSFER's SEQ. Null when shorter than its header.
+// One TRANSFER_RESP chunk; every chunk echoes the TRANSFER's SEQ. Null when shorter than its header.
 export function parseTransferChunk(payload: Uint8Array): TransferChunk | null {
   if (payload.length < XFER_RESP_HDR) return null;
   return {
@@ -653,8 +652,7 @@ export function parseTransferChunk(payload: Uint8Array): TransferChunk | null {
   };
 }
 
-// The reply a TRANSFER's chunks make: data placed by offset, status and stage from the last chunk. Null
-// without a last chunk, or with a gap a lost chunk left.
+// A TRANSFER's reply: data placed by offset, status and stage from the last chunk; null if one is missing.
 export function assembleTransfer(chunks: TransferChunk[]): TransferResult | null {
   const last = chunks.find((c) => c.last);
   if (!last) return null;

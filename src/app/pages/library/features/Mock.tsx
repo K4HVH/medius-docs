@@ -381,7 +381,7 @@ assert_eq!(device.clip().query_config()?.packet_triggers[0].hits, 2);`}</code></
         <p>
           Script the <A href="/library/types/structs#transfer-outcome"><code>TransferOutcome</code></A>{' '}
           a <A href="/library/advanced/transfer#reply"><code>transfer</code></A> brings back. The mock
-          sends it a chunk a frame, ≤448 bytes each, as the box does.
+          sends it in chunks of ≤448 bytes, one a frame, as the box does.
         </p>
         <div class="api-response-label">EFFECT</div>
         <div class="table-scroll">

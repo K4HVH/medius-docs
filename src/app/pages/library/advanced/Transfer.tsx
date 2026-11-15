@@ -9,8 +9,8 @@ const Transfer: Component = () => {
       <PageHeader>
         <p>
           <code>transfer</code> runs one USB control transfer on the real device and returns a{' '}
-          <A href="/library/types/structs#transfer-outcome"><code>TransferOutcome</code></A>: how it
-          ended, the stage it ended in, and the native reply at any length.
+          <A href="/library/types/structs#transfer-outcome"><code>TransferOutcome</code></A>: the
+          status, the stage it ended in, and the native reply, at any length.
         </p>
         <p>
           It bypasses every <A href="/library/advanced/rewrite">rewrite rule</A>, and the game PC's
@@ -45,7 +45,7 @@ const Transfer: Component = () => {
               <tr><td><code>ep</code></td><td><code>u8</code></td><td><code>0</code> for EP0, or a control endpoint number the real device declares.</td></tr>
               <tr><td><code>setup</code></td><td><A href="/library/types/structs#setup"><code>Setup</code></A></td><td>Eight-byte setup packet.</td></tr>
               <tr><td><code>out</code></td><td><code>&amp;[u8]</code></td><td>OUT data stage: <code>setup.length</code> bytes for an OUT request, empty for an IN one. ≤501 bytes (<code>TRANSFER_OUT_MAX</code>).</td></tr>
-              <tr><td><code>timeout</code></td><td><code>Duration</code></td><td><code>transfer_timeout</code> only. How long the box waits on the real device, the time the game PC holds the pipe included: 1 ms to 65535 ms, in whole milliseconds. <code>transfer</code> passes <code>DEFAULT_TRANSFER_TIMEOUT</code> (1 s).</td></tr>
+              <tr><td><code>timeout</code></td><td><code>Duration</code></td><td><code>transfer_timeout</code> only. The box's wait on the real device, including time the game PC holds the pipe: 1-65535 ms, in whole milliseconds. <code>transfer</code> passes <code>DEFAULT_TRANSFER_TIMEOUT</code> (1 s).</td></tr>
             </tbody>
           </table>
         </div>
@@ -60,8 +60,8 @@ const Transfer: Component = () => {
             <thead><tr><th>When</th><th>Returns</th></tr></thead>
             <tbody>
               <tr><td><code>out</code> isn't <code>setup.length</code> bytes for an OUT request, or isn't empty for an IN one</td><td><A href="/library/types/errors#errors"><code>Error::TransferData</code></A>, nothing sent</td></tr>
-              <tr><td><code>out</code> is over 501 bytes</td><td><code>Error::FrameTooLong</code>, nothing sent</td></tr>
-              <tr><td><code>timeout</code> is under 1 ms or over 65535 ms</td><td><code>Error::TransferTimeoutRange</code>, nothing sent</td></tr>
+              <tr><td><code>out</code> is &gt;501 bytes</td><td><code>Error::FrameTooLong</code>, nothing sent</td></tr>
+              <tr><td><code>timeout</code> is &lt;1 ms or &gt;65535 ms</td><td><code>Error::TransferTimeoutRange</code>, nothing sent</td></tr>
               <tr><td>no last chunk within <code>timeout</code> + 2 s</td><td><code>Error::QueryTimeout</code></td></tr>
               <tr><td>a chunk lost between the box's chips or on the control link</td><td><code>Error::TransferReplyIncomplete</code></td></tr>
             </tbody>
@@ -94,8 +94,8 @@ let reply = device.transfer_timeout(0, get_device, &[], Duration::from_secs(10))
 
       <DocSection id="reply" title="Reply" caption="Chunks, waits, and the outcome">
         <p>
-          The box sends the reply a <A href="/native/commands/transfer#transfer-resp">chunk</A> a
-          frame, ≤448 bytes each, and the call returns on the last, whose status and{' '}
+          The box sends the reply in <A href="/native/commands/transfer#transfer-resp">chunks</A> of
+          ≤448 bytes, one a frame. The call returns on the last chunk, whose status and{' '}
           <A href="/library/types/enums#transfer-stage">stage</A> are the outcome. A <A href="/library/features/mock#transfer"><code>MockBox</code></A> sends a
           scripted reply the same way.
         </p>
@@ -110,10 +110,10 @@ let reply = device.transfer_timeout(0, get_device, &[], Duration::from_secs(10))
           <table class="api-params">
             <thead><tr><th>Item</th><th>Detail</th></tr></thead>
             <tbody>
-              <tr><td>The box's wait on the real device</td><td><code>timeout</code>, the time the game PC holds the pipe included. The time a long reply waits for its next chunk to be passed on to the control port is not counted, up to 1 s a chunk.</td></tr>
-              <tr><td>The box's last chunk</td><td>Within <code>timeout</code> + 0.5 s of the box taking the transfer, plus any time its chunks waited for the control port. A reply whose next chunk waits 1 s to be passed on ends <code>NoAnswer</code> in its data stage, with the data passed on so far.</td></tr>
-              <tr><td>The call's wait</td><td><code>timeout</code> + 2 s for the last chunk, then <code>Error::QueryTimeout</code>. Meanwhile the keepalive stops the box's 1 s silence clear from dropping held state.</td></tr>
-              <tr><td>Transfers outstanding</td><td>One. Another sent while one waits is <code>Refused</code>, and so is one sent while the real device still runs a transfer whose reply ended at a 1 s chunk wait.</td></tr>
+              <tr><td>Wait on the real device</td><td><code>timeout</code>. Time a long reply's next chunk waits for the control port isn't counted, up to 1 s a chunk.</td></tr>
+              <tr><td>Last chunk</td><td>Within <code>timeout</code> + 0.5 s of the box taking the transfer, plus any time its chunks waited for the control port. If a chunk waits 1 s for the control port, the reply ends there: <code>NoAnswer</code> in its data stage, with the data passed on so far.</td></tr>
+              <tr><td>Call's wait</td><td><code>timeout</code> + 2 s for the last chunk, then <code>Error::QueryTimeout</code>. Meanwhile the keepalive stops the box's 1 s silence clear from dropping held state.</td></tr>
+              <tr><td>Transfers outstanding</td><td>One. Another sent while one waits is <code>Refused</code>. So is one sent while the real device still runs a transfer whose reply the box ended after a chunk waited 1 s.</td></tr>
             </tbody>
           </table>
         </div>
@@ -134,7 +134,7 @@ match (reply.status, reply.stage) {
         <p>
           On <A href="/library/features/async"><code>AsyncDevice</code></A>, <code>transfer</code>{' '}
           and <code>transfer_timeout</code> are futures, awaited like any query. Dropping one stops the
-          wait, not the transfer, and the box refuses another until that one ends.
+          wait, not the transfer. The box refuses another until that one ends.
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`use futures::executor::block_on;

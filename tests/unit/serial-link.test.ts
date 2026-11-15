@@ -589,7 +589,6 @@ describe('SerialLink', () => {
     await link.close();
   });
 
-  // One TRANSFER_RESP chunk: [ep][status][stage][flags][offset u16][data..].
   const xferChunk = (ep: number, status: number, stage: number, last: boolean, offset: number, data: Uint8Array) =>
     new Uint8Array([ep, status, stage, last ? XFER_LAST : 0, offset & 0xff, offset >> 8, ...data]);
 
@@ -598,9 +597,7 @@ describe('SerialLink', () => {
     const body = Uint8Array.from({ length: 1024 }, (_, i) => (i * 7) & 0xff);
     mock.responder = (f) => {
       if (f.ty !== FrameType.Transfer) return;
-      // [ep][timeout_ms u16][setup 8]: a 1024-byte read of the configuration descriptor, waiting 1000 ms.
       expect(Array.from(f.payload)).toEqual([0, 0xe8, 0x03, 0x80, 6, 0, 2, 0, 0, 0x00, 0x04]);
-      // The chunks before the last carry no outcome; the last says how and where it ended.
       mock.push(encode(FrameType.TransferResp, f.seq, xferChunk(0, 0, 1, false, 0, body.subarray(0, 448))));
       mock.push(encode(FrameType.TransferResp, f.seq, xferChunk(0, 0, 1, false, 448, body.subarray(448, 896))));
       mock.push(encode(FrameType.TransferResp, f.seq, xferChunk(0, 0, 2, true, 896, body.subarray(896))));
@@ -649,7 +646,6 @@ describe('SerialLink', () => {
     const mock = new MockSerialPort();
     mock.responder = (f) => {
       if (f.ty !== FrameType.Transfer) return;
-      // The chunk at 448 never arrives.
       mock.push(encode(FrameType.TransferResp, f.seq, xferChunk(0, 0, 1, false, 0, new Uint8Array(448))));
       mock.push(encode(FrameType.TransferResp, f.seq, xferChunk(0, 0, 2, true, 896, new Uint8Array(10))));
     };

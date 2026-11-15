@@ -514,7 +514,7 @@ const Requests: Component = () => {
             <tbody>
               <tr><td>0</td><td><code>what</code></td><td><code>u8</code></td><td>0x05</td></tr>
               <tr><td>1</td><td><code>inject_emits</code></td><td><code>u32</code></td><td>pure-injection reports emitted, little-endian</td></tr>
-              <tr><td>5</td><td><code>tx_drops</code></td><td><code>u16</code></td><td>input reports that never reached the game PC: one the clone's IN queue couldn't hold, one the host chip's forwarder or link couldn't take, or one a stop of its stream (a setting switch, a halt, a suspend) cut short; should stay 0</td></tr>
+              <tr><td>5</td><td><code>tx_drops</code></td><td><code>u16</code></td><td>input reports that never reached the game PC: one the clone's IN queue couldn't hold, one the host chip's forwarder or link couldn't take, or one cut short when its stream stopped (a setting switch, a halt, a suspend); should stay 0</td></tr>
               <tr><td>7</td><td><code>tx_merges</code></td><td><code>u16</code></td><td>backed-up reports merged instead of queued</td></tr>
               <tr><td>9</td><td><code>tx_maxdepth</code></td><td><code>u8</code></td><td>TX queue high-water mark</td></tr>
               <tr><td>10</td><td><code>tx_wedges</code></td><td><code>u8</code></td><td>wedged-endpoint recoveries</td></tr>

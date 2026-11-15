@@ -12,8 +12,8 @@ const Transfer: Component = () => {
         <p>
           <A href="/native/commands/transfer#transfer"><code>TRANSFER</code></A> runs one USB control
           transfer on the real device from the control PC.{' '}
-          <A href="/native/commands/transfer#transfer-resp"><code>TRANSFER_RESP</code></A> returns how
-          it ended and what came back, a chunk a frame.
+          <A href="/native/commands/transfer#transfer-resp"><code>TRANSFER_RESP</code></A> returns the
+          outcome and the native reply, ≤448 bytes a frame.
         </p>
         <pre class="diagram">{`  control PC               DEVICE chip            HOST chip            real device
       |                         |                     |                     |
@@ -31,8 +31,8 @@ const Transfer: Component = () => {
         </p>
         <div class="callout callout--warning">
           <p>
-            <code>TRANSFER</code> is advanced control and runs only under the{' '}
-            <A href="/native/commands/option#imperfect">imperfect-clone opt-in</A>. Otherwise a
+            <code>TRANSFER</code> runs only under{' '}
+            <A href="/native/commands/option#imperfect"><code>OPTION(IMPERFECT)</code></A>. Otherwise a
             request with a full setup packet gets <code>0xFC</code> REFUSED and never reaches the real
             device.
           </p>
@@ -41,8 +41,8 @@ const Transfer: Component = () => {
 
       <DocSection id="transfer" title="TRANSFER" caption="One control transfer on the real device">
         <p>
-          <code>TRANSFER</code> carries an endpoint, how long the box waits, an eight-byte setup
-          packet, and any OUT data stage.{' '}
+          <code>TRANSFER</code> carries an endpoint, a timeout, an eight-byte setup packet, and any
+          OUT data stage.{' '}
           <A href="/native/frame#opcodes">Opcode</A> <code>0x1A</code>.
         </p>
         <pre class="api-signature">TRANSFER  0x1A  ·  payload 11..512 bytes</pre>
@@ -74,7 +74,7 @@ const Transfer: Component = () => {
             <thead><tr><th>Value</th><th>Effect</th></tr></thead>
             <tbody>
               <tr><td><code>0</code></td><td>refused with <code>0xFC</code>; nothing reaches the real device</td></tr>
-              <tr><td><code>1</code>-<code>65535</code></td><td>the box waits that many ms on the real device, the time the game PC holds the pipe included; then <code>0xFE</code> NO_ANSWER, or <code>0xF9</code> BUSY if the game PC held the pipe throughout</td></tr>
+              <tr><td><code>1</code>-<code>65535</code></td><td>the box waits that many ms on the real device, including time the game PC holds the pipe; then <code>0xFE</code> NO_ANSWER, or <code>0xF9</code> BUSY if the game PC held the pipe throughout</td></tr>
             </tbody>
           </table>
         </div>
@@ -89,9 +89,9 @@ const Transfer: Component = () => {
           </table>
         </div>
         <p>
-          An OUT stage tops out at 501 bytes, what a 512-byte{' '}
+          An OUT stage is ≤501 bytes, what a 512-byte{' '}
           <A href="/native/frame#layout">payload</A> leaves after <code>ep</code>,{' '}
-          <code>timeout_ms</code> and the setup packet. An IN stage has no such limit: the reply comes
+          <code>timeout_ms</code> and the setup packet. An IN stage can be any length: the reply comes
           in chunks.
         </p>
         <div class="callout callout--warning">
@@ -170,7 +170,7 @@ const Transfer: Component = () => {
       <DocSection id="transfer-resp" title="TRANSFER_RESP" caption="Reply, a chunk a frame">
         <p>
           One or more frames per <A href="/native/commands/transfer#transfer"><code>TRANSFER</code></A>{' '}
-          with a full setup packet, each echoing its <A href="/native/frame#seq"><code>SEQ</code></A>.{' '}
+          with a full setup packet, each echoing the command's <A href="/native/frame#seq"><code>SEQ</code></A>.{' '}
           <A href="/native/frame#opcodes">Opcode</A> <code>0x1B</code>.
         </p>
         <pre class="api-signature">TRANSFER_RESP  0x1B  ·  payload 6..454 bytes</pre>
@@ -201,7 +201,7 @@ const Transfer: Component = () => {
           <table class="api-params">
             <thead><tr><th>Request</th><th>Reply data</th></tr></thead>
             <tbody>
-              <tr><td>IN, with a data stage</td><td>the data stage as the box received it: the bytes before a STALL included, and bytes past <code>wLength</code> where the real device sent more in the packets a host asks for</td></tr>
+              <tr><td>IN, with a data stage</td><td>the data stage as the box received it, including bytes before a STALL, and bytes past <code>wLength</code> the real device sent in the packets a host asks for</td></tr>
               <tr><td>OUT, or <code>wLength</code> = <code>0</code></td><td>what the real device sent where the status stage was due, ≤1 packet; usually none</td></tr>
             </tbody>
           </table>
@@ -280,11 +280,11 @@ const Transfer: Component = () => {
         />
       </DocSection>
 
-      <DocSection id="in-flight" title="One at a time" caption="One TRANSFER outstanding, every other command on arrival">
+      <DocSection id="in-flight" title="One at a time" caption="Other commands run while one waits">
         <p>
-          One <code>TRANSFER</code> is outstanding at a time, until its <code>LAST</code> chunk. One the box
-          ended at a 1 s chunk wait stays outstanding until the real device finishes it. The control port keeps
-          reading frames while it waits.
+          One <code>TRANSFER</code> is outstanding at a time, until its <code>LAST</code> chunk. If the
+          box ends one because a chunk waited 1 s, it stays outstanding until the real device finishes
+          it. The control port keeps reading frames while it waits.
         </p>
         <pre class="diagram">{`  TRANSFER A --> [ waits on the real device ] --> TRANSFER_RESP A ... LAST
   TRANSFER B --> TRANSFER_RESP B, 0xFC REFUSED, while A waits
@@ -296,22 +296,22 @@ const Transfer: Component = () => {
               <tr><th>Quantity</th><th>Value</th></tr>
             </thead>
             <tbody>
-              <tr><td>The box's wait on the real device</td><td><code>timeout_ms</code>, the time the game PC holds the pipe included. The time a long reply waits for its next chunk to be passed on to the control port is not counted, up to 1 s a chunk.</td></tr>
-              <tr><td>The <code>LAST</code> chunk</td><td>Within <code>timeout_ms</code> + 0.5 s of the box taking the <code>TRANSFER</code>, plus any time its chunks waited for the control port. A reply lost between the chips still ends in one: <code>0xFE</code> NO_ANSWER. A reply whose next chunk waits 1 s to be passed on ends there too: NO_ANSWER in stage 1, with the data passed on so far. The box still runs the real device's transfer to its end.</td></tr>
-              <tr><td>A client's wait for it</td><td>At least <code>timeout_ms</code> + 0.5 s, plus the client's serial latency. The library waits <code>timeout_ms</code> + 2 s.</td></tr>
+              <tr><td>Wait on the real device</td><td><code>timeout_ms</code>. Time a long reply's next chunk waits for the control port isn't counted, up to 1 s a chunk.</td></tr>
+              <tr><td><code>LAST</code> chunk</td><td>Within <code>timeout_ms</code> + 0.5 s of the box taking the <code>TRANSFER</code>, plus any time its chunks waited for the control port. If the reply is lost between the chips, the <code>LAST</code> chunk still comes, with <code>0xFE</code> NO_ANSWER. If a chunk waits 1 s for the control port, the reply ends there: NO_ANSWER in stage 1, with the data passed on so far. The box still runs the transfer on the real device to its end.</td></tr>
+              <tr><td>Client's wait</td><td>At least <code>timeout_ms</code> + 0.5 s, plus the client's serial latency. The library waits <code>timeout_ms</code> + 2 s.</td></tr>
             </tbody>
           </table>
         </div>
         <div class="callout callout--warning">
           <p>
             A <code>TRANSFER</code> doesn't hold off the 1 s silence clear (
-            <A href="/native/injection#safety">safety</A>). A client holding injection state keeps
-            sending keepalives while one waits.
+            <A href="/native/injection#safety">safety</A>). While one waits, a client holding
+            injection state keeps sending keepalives.
           </p>
         </div>
       </DocSection>
 
-      <DocSection id="proxy" title="Shared endpoints" caption="The game PC's requests come first">
+      <DocSection id="proxy" title="Shared endpoints" caption="Game PC requests come first">
         <p>
           Each control endpoint of the real device is one pipe. The game PC's requests on it come
           before a <code>TRANSFER</code>, and a <code>TRANSFER</code> never waits on another endpoint.

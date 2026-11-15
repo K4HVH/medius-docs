@@ -65,7 +65,7 @@ const Quickstart: Component = () => {
         </ol>
       </DocSection>
 
-      <DocSection id="first-move" title="Send a MOVE" caption="Relative cursor movement">
+      <DocSection id="first-move" title="Send a MOVE" caption="Relative cursor motion">
         <p>
           <A href="/native/commands/move#move"><code>MOVE</code></A> moves the PC's cursor.
         </p>

@@ -134,8 +134,8 @@ const Lock: Component = () => {
           </div>
           <p>
             A lock that blocks the press releases a button or key already held when it is set. It reads
-            released until the unlock, and pressed again then if it is still held. A lock on the release
-            alone keeps a held one down. The box emits the change at once.
+            released until the unlock, then pressed again if still held. A lock on the release alone
+            keeps a held one down. The box emits the change at once.
           </p>
           <p>
             Media has no sign and no edge, so{' '}

@@ -36,7 +36,7 @@ bun run dev
 Open [http://localhost:3000](http://localhost:3000).
 
 `dev`, `build` and `test` first generate the Comparison section from `comparison/` (`bun run comparison:generate`).
-The comparison tool itself is `comparison/compare.py`; the Comparison section's Method page says how to run it.
+The comparison tool is `comparison/compare.py`. The Comparison section's Method page says how to run it.
 
 ### Build
 

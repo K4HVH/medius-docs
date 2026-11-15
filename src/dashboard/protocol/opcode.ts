@@ -2,8 +2,7 @@
 
 export const SOF = 0xa5;
 export const MAX_PAYLOAD = 512;
-// Protocol 10 is firmware 3.5.0: TRANSFER carries the box's wait, TRANSFER_RESP comes in chunks naming the
-// stage, and a 33-byte RESP(STATS) counts the host chip's restarts. Protocol 9 was 3.4.2: a 31-byte RESP(STATS).
+// Protocol 10 is firmware 3.5.0: TRANSFER carries a timeout and replies in chunks; RESP(STATS) is 33 bytes.
 export const PROTO_VER = 10;
 
 // The oldest wire this page will still open.
@@ -291,7 +290,7 @@ export function patchSectionFromU8(v: number): PatchSection | null {
   return v >= 0 && v < PATCH_SEC_COUNT ? (v as PatchSection) : null;
 }
 
-// TRANSFER_RESP status (§3.14), also a CLIP_XFER event's flags byte: how a control transfer ended.
+// TRANSFER_RESP status, also a CLIP_XFER event's flags byte: how a control transfer ended.
 export enum TransferStatus {
   Ok = 0x00,
   Busy = 0xf9, // the game PC's transfer held the pipe until the timeout (stage Setup), or took it in the stage named
@@ -303,15 +302,13 @@ export enum TransferStatus {
   NoDevice = 0xff,
 }
 
-// TRANSFER_RESP stage (§3.14): where the transfer ended.
 export enum TransferStage {
   Setup = 0,
   Data = 1,
   Status = 2,
 }
 
-// TRANSFER (§3.14): [ep][timeout_ms u16 LE][setup 8][OUT data]. TRANSFER_RESP: [ep][status][stage][flags]
-// [offset u16 LE][data], up to 448 bytes of data.
+// TRANSFER: [ep][timeout_ms u16 LE][setup 8][OUT data]; TRANSFER_RESP: [ep][status][stage][flags][offset u16 LE][data].
 export const XFER_REQ_HDR = 11;
 export const XFER_RESP_HDR = 6;
 export const XFER_CHUNK_MAX = 448;

@@ -76,7 +76,7 @@ const CLASS_NAMES: Record<number, string> = {
   [CatchClass.Button]: 'buttons',
   [CatchClass.Key]: 'keys',
   [CatchClass.Media]: 'media',
-  [CatchClass.Axis]: 'movement',
+  [CatchClass.Axis]: 'motion',
   [CatchClass.HidIn]: 'hid-in',
   [CatchClass.HidOut]: 'hid-out',
   [CatchClass.VendorInterrupt]: 'vendor-interrupt',
@@ -145,7 +145,7 @@ const CONTROL_WORDS: Record<ControlStatus, string> = {
 };
 
 // Flags are per class. Control keeps its handshake in the low two bits beside the rule bit. A clip
-// transfer's whole flags byte is its status, always named, OK included; a status with no name shows its byte.
+// transfer's whole flags byte is its status, always named, OK included.
 const trafficFlags = (t: TrafficEvent): string => {
   let out = '';
   const bits: string[] = [];
@@ -480,7 +480,7 @@ const DeviceEventCatch = () => {
                   options={[
                     { value: 'input', label: 'All input' },
                     { value: 'buttons', label: 'Buttons' },
-                    { value: 'motion', label: 'Movement, wheel, pan' },
+                    { value: 'motion', label: 'Cursor, wheel, pan' },
                     { value: 'keys', label: 'Keyboard + media' },
                     { value: 'traffic', label: 'Raw endpoints' },
                     { value: 'bus', label: 'Bus events' },

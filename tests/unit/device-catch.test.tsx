@@ -178,8 +178,6 @@ describe('DeviceEventCatch clip transfers', () => {
       traffic({ ...out, flags: 0xff }),
       traffic({ ...out, flags: 0x42 }),
     );
-    // Oldest first. A host-to-device transfer's event carries the setup packet alone, so one group of bytes. A
-    // status no name covers shows its byte, never a name it doesn't have.
     expect(bodies()).toEqual([
       'clip-transfer out 0x0 BUSY [21 09 00 03 00 00 02 00]',
       'clip-transfer out 0x0 SUSPENDED [21 09 00 03 00 00 02 00]',
@@ -192,7 +190,6 @@ describe('DeviceEventCatch clip transfers', () => {
     ]);
   });
 
-  // A control endpoint above EP0 reports the NAK handshake as EP0 does.
   it('names the NAK a control endpoint above EP0 gave the game PC', async () => {
     const { bodies } = await watching();
     const setup = [0xc0, 0x01, 0x00, 0x00, 0x00, 0x00, 0x40, 0x00];

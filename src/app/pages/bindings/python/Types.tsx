@@ -1027,7 +1027,7 @@ LockTarget.media(media)   -> LockTarget`}</pre>
               <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
               <tbody>
                 <tr><td><code>inject_emits</code></td><td><code>int</code></td><td>injected reports emitted</td></tr>
-                <tr><td><code>tx_drops</code></td><td><code>int</code></td><td>reports the clone's IN queue, or the host chip's forwarder or link, could not take, and reports a stop of their stream (a setting switch, a halt, a suspend) cut short</td></tr>
+                <tr><td><code>tx_drops</code></td><td><code>int</code></td><td>reports the clone's IN queue, or the host chip's forwarder or link, could not take, and reports cut short when their stream stopped (a setting switch, a halt, a suspend)</td></tr>
                 <tr><td><code>tx_merges</code></td><td><code>int</code></td><td>coalesced TX frames</td></tr>
                 <tr><td><code>tx_maxdepth</code></td><td><code>int</code></td><td>peak TX queue depth</td></tr>
                 <tr><td><code>tx_wedges</code></td><td><code>int</code></td><td>wedged-endpoint recoveries</td></tr>
@@ -1397,10 +1397,10 @@ for b in medius.list_boxes():
             </table>
           </div>
           <p>
-            A <code>CONTROL</code> event is one transaction, not one stage, raised when it ends; a{' '}
+            A <code>CONTROL</code> event is one transaction, not one stage, raised when it ends. A{' '}
             <code>CLIP_TRANSFER</code> event is one transfer a clip ran. <code>bytes</code> is{' '}
             <code>[setup 8][data...]</code> (on <code>CLIP_TRANSFER</code>, the reply, empty on an OUT
-            request with a data stage); <code>direction</code> says which way the data stage went.
+            request with a data stage). <code>direction</code> says which way the data stage went.
           </p>
           <div class="table-scroll">
             <table class="api-params">
@@ -1424,7 +1424,7 @@ for b in medius.list_boxes():
               <tbody>
                 <tr><td><code>OK</code></td><td><code>0</code></td><td>the transaction completed</td></tr>
                 <tr><td><code>STALLED</code></td><td><code>1</code></td><td>the game PC got a STALL: the real device STALLed the request, or a <code>STALL</code> rule refused it</td></tr>
-                <tr><td><code>NAKED</code></td><td><code>2</code></td><td>NAKed until the PC gave up: the real device left the request unanswered or it failed on the real device's bus, a <code>NAK</code> rule matched it, the PC gave up before the real device finished, a SET_INTERFACE on its interface, a configuration change or a suspend ended it, or the box had no room to pass a step of it on (for a request the PC gave up on, the event comes when the PC's next SETUP on that endpoint replaces it, or 250-300 ms after the PC stopped polling it, whichever is first)</td></tr>
+                <tr><td><code>NAKED</code></td><td><code>2</code></td><td>NAKed until the PC gave up: the real device left the request unanswered; it failed on the real device's bus; a <code>NAK</code> rule matched it; the PC gave up before the real device finished; a SET_INTERFACE on its interface, a configuration change or a suspend ended it; or the box had no room to pass a step of it on (for a request the PC gave up on, the event comes when the PC's next SETUP on that endpoint replaces it, or 250-300 ms after the PC stopped polling it, whichever is first)</td></tr>
                 <tr><td><code>OTHER</code></td><td><code>3</code></td><td>a handshake value this build does not know; read it off <code>TrafficEvent.flags</code> bits 0-1</td></tr>
               </tbody>
             </table>
@@ -1536,7 +1536,7 @@ for b in medius.list_boxes():
               <tbody>
                 <tr><td><code>status</code></td><td><code>TransferStatus | int</code></td><td>How the transfer ended: a member below, or the raw byte for a status no member names. A status other than <code>OK</code> is returned, not raised.</td></tr>
                 <tr><td><code>stage</code></td><td><code>TransferStage | int</code></td><td>Where it ended: a member below, or the raw byte for a stage no member names.</td></tr>
-                <tr><td><code>data</code></td><td><code>bytes</code></td><td>The IN data stage as the box received it, whole at any length: the bytes before a STALL included, and bytes past <code>wLength</code> where the real device sent more in the packets a host asks for. For an OUT transfer or one with <code>wLength</code> 0, what the real device sent where the status stage was due (≤1 packet, usually none). Meaningful on any status.</td></tr>
+                <tr><td><code>data</code></td><td><code>bytes</code></td><td>The IN data stage as the box received it, whole at any length. It includes bytes before a STALL, and bytes past <code>wLength</code> the real device sent in the packets a host asks for. For an OUT transfer or one with <code>wLength</code> 0, what the real device sent where the status stage was due (≤1 packet, usually none). Meaningful on any status.</td></tr>
                 <tr><td><code>is_ok</code></td><td><code>bool</code></td><td>A property: whether the transfer completed.</td></tr>
               </tbody>
             </table>
@@ -1699,7 +1699,7 @@ except MediusError as e:     # any other failure
             </table>
           </div>
           <p>
-            The ones below are argument refusals, raised before a frame reaches the box.
+            The 25 below are argument refusals, raised before a frame reaches the box.
           </p>
           <div class="table-scroll">
             <table class="api-params">
@@ -1729,7 +1729,7 @@ except MediusError as e:     # any other failure
                 <tr><td><code>ClipPacketTriggerError</code></td><td>a <A href="/bindings/python/types#clippackettrigger"><code>ClipPacketTrigger</code></A> the box would refuse; the message says why</td></tr>
                 <tr><td><code>RewriteMatchTooLongError</code></td><td>a rewrite rule with more than 16 match bytes</td></tr>
                 <tr><td><code>RewritePoolFullError</code></td><td>a rewrite payload larger than the room the held rules leave in the box's 2048-byte payload pool; an overwrite counts the bytes it replaces as free</td></tr>
-                <tr><td><code>TransferTimeoutRangeError</code></td><td>a <code>timeout_ms</code> outside 1 to 65535, passed to <code>dev.transfer</code> (a negative one, or one past 32 bits, raises <code>ValueError</code> first)</td></tr>
+                <tr><td><code>TransferTimeoutRangeError</code></td><td>a <code>timeout_ms</code> outside 1-65535 passed to <code>dev.transfer</code> (a negative one, or one past 32 bits, raises <code>ValueError</code> first)</td></tr>
               </tbody>
             </table>
           </div>

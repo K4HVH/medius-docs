@@ -269,7 +269,6 @@ describe('clip entry encoding against the firmware vectors (§3.11)', () => {
       0x00, 0x21, 0x09, 0x00, 0x03, 0x00, 0x00, 0x02, 0x00, 0x11, 0x22,
       0x03, 0xa1, 0x01, 0x00, 0x03, 0x00, 0x00, 0x5a, 0x00,
     ]);
-    // An item is TRANSFER's payload without the timeout, so the two builders agree once it is taken out.
     const s = SET_REPORT;
     const transfer = Array.from(
       transferPayload(0, 4000, s.bmRequestType, s.bRequest, s.wValue, s.wIndex, s.wLength, new Uint8Array([0x11, 0x22])),

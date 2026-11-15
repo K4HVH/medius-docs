@@ -58,8 +58,8 @@ const Errors: Component = () => {
                 <td>
                   On Linux, another process has the control port open, such as the dashboard in a
                   browser. The port takes one reader, so the{' '}
-                  <A href="/library/connection#open">openers</A> refuse it rather than split the box's
-                  replies. <code>holders</code> names each one as <code>"name (pid N)"</code>.
+                  <A href="/library/connection#open">openers</A> refuse it. <code>holders</code> names
+                  each one as <code>"name (pid N)"</code>.
                 </td>
               </tr>
               <tr>
@@ -69,8 +69,8 @@ const Errors: Component = () => {
                   <code>proto_ver</code> other than <code>10</code>, carried in <code>got</code>. The{' '}
                   <A href="/library/discovery">discovery</A> openers return it for a matched box on
                   another protocol. On a device opened with{' '}
-                  <A href="/library/update#open-for-update"><code>open_for_update</code></A>, it is also
-                  every call outside the update path, while the box is on an older protocol.
+                  <A href="/library/update#open-for-update"><code>open_for_update</code></A> on a box
+                  on an older protocol, every call outside the update path returns it too.
                 </td>
               </tr>
               <tr>
@@ -179,8 +179,8 @@ const Errors: Component = () => {
                 <td><code>TransferTimeoutRange {'{'} timeout {'}'}</code></td>
                 <td>
                   A <A href="/library/advanced/transfer#transfer"><code>transfer_timeout</code></A>{' '}
-                  call's <code>timeout</code> is outside the box's 1 ms to 65535 ms, in whole
-                  milliseconds. Nothing is sent.
+                  call's <code>timeout</code> is outside 1-65535 ms, in whole milliseconds. Nothing is
+                  sent.
                 </td>
               </tr>
               <tr>

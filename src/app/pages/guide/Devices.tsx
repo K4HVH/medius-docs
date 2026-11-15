@@ -111,7 +111,7 @@ const Devices: Component = () => {
               <tr>
                 <td>Box capacity</td>
                 <td class="v">4 IN endpoints in use at once, 6 HID interfaces</td>
-                <td>A device over either limit, or with a vendor bulk endpoint or an isochronous one of ≤64 bytes, needs Imperfect clone. One with an endpoint wider than 64 bytes is never cloned</td>
+                <td>A device over either limit, or with a vendor bulk endpoint or an isochronous one of ≤64 bytes, needs Imperfect clone. One with an endpoint &gt;64 bytes wide is never cloned</td>
               </tr>
               <tr><td>Devices</td><td class="v">1 per box</td><td>A receiver carrying a mouse and a keyboard counts as 1</td></tr>
               <tr><td>USB speed</td><td class="v">Full speed (12 Mbit/s)</td><td>High-speed devices run at full speed through the box</td></tr>

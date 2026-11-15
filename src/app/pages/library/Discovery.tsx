@@ -56,8 +56,7 @@ for b in Device::list() {
           <A href="/library/types/errors"><code>Error::BadProtoVer</code></A> if that box speaks
           another protocol, or <A href="/library/types/errors"><code>Error::NotFound</code></A> if no
           box matches. When none matches and another process holds a box's port, it returns{' '}
-          <A href="/library/types/errors"><code>Error::PortBusy</code></A> naming the holder, since
-          that box may be the one asked for.
+          <A href="/library/types/errors"><code>Error::PortBusy</code></A> naming the holder.
         </p>
         <div class="api-response-label">EXAMPLE</div>
         <pre><code class="language-rust">{`use medius::{Device, Error};

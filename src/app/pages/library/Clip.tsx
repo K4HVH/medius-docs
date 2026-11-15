@@ -65,7 +65,7 @@ const Clip: Component = () => {
         </div>
         <div class="callout callout--info">
           <p>
-            The ring is 64 KiB with PSRAM and 16 KiB without. <code>ClipStatus::free</code> on a
+            The ring is 64 KiB with PSRAM and 8 KiB without. <code>ClipStatus::free</code> on a
             cleared ring is the size.
           </p>
         </div>

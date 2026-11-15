@@ -85,7 +85,7 @@ const Connection: Component = () => {
         caption="Unsolicited RESP(VERSION), twice per boot"
         aside={
           <span class="cross" data-search-skip data-agent-hide>
-            <FixLink href="/library/update#wait-firmware-confirmed" label="How the library uses the hello after an update">
+            <FixLink href="/library/update#wait-firmware-confirmed" label="Library: wait_firmware_confirmed">
               Library
             </FixLink>
           </span>

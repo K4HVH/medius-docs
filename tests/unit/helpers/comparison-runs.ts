@@ -1,5 +1,3 @@
-// Declarations and run files for the generator's tests: two tests, three runs on each box and on the native
-// reference.
 import type { GenerateInput, RunFileDoc, TestDecl } from '../../../src/app/data/comparison/generate';
 
 export const LATENCY: TestDecl = {

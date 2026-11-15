@@ -18,7 +18,7 @@ const Catch: Component = () => {
         <p>
           A subscription is a table of{' '}
           <A href="/library/types/structs#catch-filter"><code>CatchFilter</code></A> entries, each addressed
-          like a <A href="/library/lock"><code>lock</code></A>. Vendor bulk alone measures ~630&nbsp;KiB/s
+          like a <A href="/library/lock"><code>lock</code></A>. Vendor bulk alone measures ~525&nbsp;KiB/s
           on a 6&nbsp;Mbaud control link, so a filter can narrow to one endpoint.
         </p>
       </PageHeader>
@@ -227,10 +227,9 @@ for event in &device.catch_events([filter])? {
         </p>
         <p>
           A <code>Control</code> event is one transaction the game PC received, on any control
-          endpoint, raised when it ends; one the PC gave up on reads <code>Naked</code>. A{' '}
+          endpoint, raised when it ends. One the PC gave up on reads <code>Naked</code>. A{' '}
           <code>Control</code> or <code>ClipTransfer</code> event carries <code>[setup 8][data...]</code>,
-          split by{' '}
-          <code>setup()</code> and <code>data()</code>.
+          split by <code>setup()</code> and <code>data()</code>.
         </p>
       </DocSection>
 

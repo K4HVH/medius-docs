@@ -22,10 +22,8 @@ const mock = vi.hoisted(() => ({
   entryReads: [] as number[],
   patches: [] as { section: number; cfg: number; index: number; offset: number; len: number }[],
   transfers: [] as number[][],
-  // The OUT data and the box's wait each transfer was sent with.
   transferOut: [] as number[][],
   transferTimeouts: [] as number[],
-  // Holds a transfer open until the test lets it go.
   transferHold: null as Promise<void> | null,
   raws: [] as unknown[][],
   applied: 0,
@@ -495,17 +493,14 @@ describe('The Advanced tab of Control', () => {
     const { getByText } = render(() => <Cards />);
     fireEvent.click(getByText('Run'));
     await settle();
-    // The default setup is GET_DESCRIPTOR for the 18-byte device descriptor, waiting the default 1 s.
     expect(mock.transfers[0]).toEqual([0, 0x80, 6, 0x0100, 0, 18]);
     expect(mock.transferTimeouts).toEqual([1000]);
     expect(getByText('OK')).toBeTruthy();
     expect(getByText('Status stage')).toBeTruthy();
     expect(getByText('2 B in')).toBeTruthy();
-    expect(getByText('The real device completed the transfer.')).toBeTruthy();
     expect(getByText('12 01')).toBeTruthy();
   });
 
-  // No answer is the real device's silence or a reply the box's chips lost, never a refusal.
   it('says what a transfer with no answer can mean', async () => {
     on();
     mock.transferReply = { ep: 0, status: TransferStatus.NoAnswer, stage: TransferStage.Data, data: new Uint8Array() };
@@ -550,11 +545,10 @@ describe('The control transfer card', () => {
   });
 
   it.each([
-    ['Busy', TransferStatus.Busy, /requests on this endpoint go first/],
+    ['Busy', TransferStatus.Busy, /held this endpoint until the timeout/],
     ['Suspended', TransferStatus.Suspended, /put the clone to sleep/],
     ['Error', TransferStatus.Error, /corrupt packets three times over/],
     ['Refused', TransferStatus.Refused, /no control endpoint with that number/],
-    ['No device', TransferStatus.NoDevice, /No device plugged into the box/],
   ])('names %s and says what it means', async (label, status, blurb) => {
     mock.transferReply = { ep: 0, status, stage: TransferStage.Setup, data: new Uint8Array() };
     const { card, getByText } = root();
@@ -565,6 +559,14 @@ describe('The control transfer card', () => {
     expect(card.querySelector('pre.reply')).toBeNull();
   });
 
+  it('names No device with no line under the chip', async () => {
+    mock.transferReply = { ep: 0, status: TransferStatus.NoDevice, stage: TransferStage.Setup, data: new Uint8Array() };
+    const { card, getByText } = root();
+    await run(card);
+    expect(getByText('No device')).toBeTruthy();
+    expect(card.querySelector('.step p.mut')).toBeNull();
+  });
+
   it('shows a status it does not know as its byte, never as one it knows', async () => {
     mock.transferReply = { ep: 0, status: 0x42, stage: 9, data: new Uint8Array() };
     const { card, getByText, queryByText } = root();
@@ -572,7 +574,7 @@ describe('The control transfer card', () => {
     expect(getByText('Status 0x42')).toBeTruthy();
     expect(getByText('Stage 9')).toBeTruthy();
     expect(queryByText('No device')).toBeNull();
-    expect(queryByText(/No device plugged into the box/)).toBeNull();
+    expect(card.querySelector('.step p.mut')).toBeNull();
   });
 
   it('sends the timeout the field holds, kept to 1-65535 ms', async () => {
@@ -632,7 +634,7 @@ describe('The control transfer card', () => {
     text(card, 'wLength', '502');
     text(card, 'Out data (hex)', 'aa '.repeat(502));
     await run(card);
-    await findByText('A request that writes carries ≤501 bytes.');
+    await findByText('Out data must be ≤501 bytes.');
     expect(mock.transfers).toEqual([]);
   });
 
