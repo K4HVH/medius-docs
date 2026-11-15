@@ -55,7 +55,7 @@ ptr = "/outcomes/link-bad-corrupt"
 
 [[tables.rows]]
 id = "link-bad-bytewise"
-label = "Move written one byte a millisecond"
+label = "Move written 1 byte/ms"
 ptr = "/outcomes/link-bad-bytewise"
 
 [[tables.rows]]
@@ -67,7 +67,7 @@ ptr = "/outcomes/link-bad-interleaved"
 section = "link-malformed"
 order = 2
 kind = "measure"
-label = "Counts moved by the malformed input"
+label = "Counts arriving from the malformed input"
 key = "Malformed input"
 unit = "counts"
 better = "lower"
@@ -99,7 +99,7 @@ ptr = "/results/7/acted"
 section = "link-malformed"
 order = 3
 kind = "outcome"
-label = "Replies to queries afterwards"
+label = "Replies to queries"
 key = "Check"
 outcomes = ["Correct", "One behind"]
 

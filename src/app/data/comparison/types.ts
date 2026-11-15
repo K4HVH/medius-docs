@@ -23,12 +23,10 @@ interface RowBase {
 export interface MeasureRow extends RowBase {
   stock: Value;
   medius: Value;
-  // The same test on the real device plugged straight into the PC (in a table ranked nearer, what the row is ranked
-  // against), or in a table ranked nearer, a number the test's design sets.
+  // native: the test on the real device plugged straight into the PC; target: a number the test's design sets.
   native?: Value;
   target?: number;
-  // The box ahead, or equal, by the Method page's rule (lead.ts), where the table ranks its rows and neither value is a
-  // count of a total.
+  // The box ahead, or equal, by the Method page's rule (lead.ts).
   result?: Box | 'equal';
 }
 export interface OutcomeRow extends RowBase {

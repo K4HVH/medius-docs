@@ -1,4 +1,3 @@
-// The site's check of the comparison results: every fault a results file can have.
 import { describe, expect, it } from 'vitest';
 import { checkResults } from '../../src/app/data/comparison/check';
 import { GOOD, ref } from './helpers/comparison-results';

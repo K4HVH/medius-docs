@@ -33,7 +33,7 @@ device = "sim:builtin:multiconfig"
 section = "pass-pc-device"
 order = 1
 kind = "outcome"
-label = "What reaches the real device"
+label = "PC traffic reaching the real device"
 key = "PC sends"
 outcomes = ["Passed on", "Clone reconnects instead"]
 
@@ -100,14 +100,14 @@ ptr = "/outcomes/pass-pc-port-off"
 section = "pass-device-pc"
 order = 1
 kind = "outcome"
-label = "What reaches the PC"
-key = "Native traffic"
+label = "Native traffic reaching the PC"
+key = "Real device sends"
 outcomes = ["Reaches the PC", "Hidden"]
 
 [[tables.rows]]
 # outcome from stock: /results/4/pc_saw, /results/4/device_stalled_before_pc, /results/4/device_cleared_before_pc; medius: /results/4/pc_saw, /results/4/device_stalled_before_pc, /results/4/device_cleared_before_pc
 id = "pass-dev-stall"
-label = "A STALL on its interrupt endpoint"
+label = "STALL on its interrupt endpoint"
 ptr = "/outcomes/pass-dev-stall"
 
 [[tables.rows]]

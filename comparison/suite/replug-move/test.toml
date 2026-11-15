@@ -17,13 +17,13 @@ device = "sim:busy-mouse"
 section = "recovery-replug"
 order = 2
 kind = "measure"
-label = "Immediate move sent as the clone is back, p50"
+label = "Immediate move latency once the clone is back, p50"
 key = "Mouse"
 unit = "ms"
 better = "lower"
 layer = "wire"
 n = "10 cycles a run, 3 runs (1 on stock)"
-commands = { stock = "km.move_now", medius = "MOVE (NOW)" }
+commands = { stock = "km.move_now", medius = "MOVE(NOW)" }
 resolution = 0.01
 
 [[tables.rows]]
@@ -40,14 +40,14 @@ ptr = "/results/0/shapes/1/move_first/p50"
 section = "recovery-replug"
 order = 3
 kind = "measure"
-label = "Immediate move sent as the clone is back, max"
+label = "Immediate move latency once the clone is back, max"
 key = "Mouse"
 unit = "ms"
 better = "lower"
 stat = "max"
 layer = "wire"
 n = "10 cycles a run, 3 runs (1 on stock)"
-commands = { stock = "km.move_now", medius = "MOVE (NOW)" }
+commands = { stock = "km.move_now", medius = "MOVE(NOW)" }
 resolution = 0.01
 
 [[tables.rows]]

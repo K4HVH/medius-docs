@@ -39,7 +39,6 @@ const Bar = (props: { v: Value; max: number }) => {
 
 const valueOf = (item: Item, box: Box) => (item.row as MeasureRow)[box];
 
-// The real device's own value, where the test measured it, or the target a row ranked nearer is ranked against.
 const aim = (item: Item) => {
   if (item.table.kind !== 'measure') return null;
   const { native, target } = item.row as MeasureRow;

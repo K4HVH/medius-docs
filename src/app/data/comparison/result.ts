@@ -1,5 +1,4 @@
-// Each row's result, worked out from its values by the rules the Method page states, and each value as the site
-// writes it.
+// Each row's result by the rules the Method page states, and each value as the site writes it.
 import type { Box, FeatureRow, MeasureRow, OutcomeRow, PairRow, Table, Value } from './types';
 
 export type Result = Box | 'equal' | 'differs' | null;
@@ -11,7 +10,6 @@ export function span(v: Value): [number, number] {
   return [x, x];
 }
 
-// How far a range lies from the range it should meet: none where they meet, else the gap from the nearer end.
 const gap = ([lo, hi]: [number, number], [to, th]: [number, number]) => Math.max(0, lo - th, to - hi);
 
 export function resultOf(table: Table, row: PairRow): Result {

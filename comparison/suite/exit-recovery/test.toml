@@ -21,7 +21,7 @@ device = "sim:clicking-mouse"
 section = "recovery-program-exit"
 order = 2
 kind = "outcome"
-label = "Held input 3 s after the program stops, 9 tries"
+label = "Held input 3 s after the program stops, 3 tries a run"
 key = "Case"
 commands = { stock = "km.left, km.down, km.lock_mx, km.lock_ml", medius = "INJECT, LOCK" }
 outcomes = ["Released", "Still in effect"]

@@ -1,8 +1,6 @@
-// The faults a results file can have: every one, or none. Refs are checked for shape here; the generator resolved
-// each against its run file.
+// The faults a results file can have; refs are checked for shape here, the generator resolved them.
 
 const ID = /^[a-z0-9][a-z0-9-]*$/;
-// What counts as blank: a string of nothing but Unicode whitespace.
 const BLANK = /^[ \t\n\r\f\v\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000\ufeff\x1c-\x1f\x85]*$/;
 const BOXES = ['stock', 'medius'] as const;
 const KINDS = ['measure', 'outcome', 'feature', 'settings'];
@@ -111,7 +109,6 @@ export function checkResults(d: unknown): string[] {
   if (d.format !== 2) fault('file', `format must be 2, not ${JSON.stringify(d.format)}`);
   if (fields(d.firmware, new Set(BOXES), 'firmware')) for (const b of BOXES) text(d.firmware, b, `firmware.${b}`);
   text(d, 'rig', 'rig');
-  // Tests the tool runs once on stock: a range of theirs cites one stock run beside the other box's three.
   const once = new Set(listed(d, 'once', 'once', true).filter((t): t is string => typeof t === 'string'));
   if (Array.isArray(d.once) && d.once.some((t) => typeof t !== 'string')) fault('once', 'must list test ids');
   const testOf = (r: unknown) => (isObj(r) && typeof r.ptr === 'string' ? /^\/tests\/([^/]+)\/runs\//.exec(r.ptr)?.[1] : undefined);

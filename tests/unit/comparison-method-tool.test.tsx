@@ -1,5 +1,3 @@
-// The Method page's comparison tool sections: the single-file download, what it needs, the commands that run it,
-// and its tests: the suite's tests a still mouse or keyboard can drive, each linked to the sections its rows feed.
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { parse } from 'smol-toml';
@@ -29,7 +27,6 @@ const DECLS: Decl[] = readdirSync(SUITE)
 const STILL: Record<string, string> = { 'still-mouse': 'mouse', 'still-keyboard': 'keyboard', 'still-composite': 'mouse and keyboard in one device' };
 const NO_SIM = DECLS.filter((t) => !t.legs?.length || t.legs.some((l) => l.device in STILL));
 const SECTIONS = RESULTS.categories.flatMap((c) => c.sections.map((s) => ({ href: `/comparison/${c.id}/${s.id}`, id: s.id, title: s.title })));
-// The sections a test's rows appear in, its own tables' and those of any other test naming it, in the results' order.
 const fed = (id: string) => {
   const ids = new Set(DECLS.flatMap((d) => (d.tables ?? []).filter((t) => t.rows.some((r) => (r.test ?? d.id) === id)).map((t) => t.section)));
   return SECTIONS.filter((s) => ids.has(s.id));
@@ -43,7 +40,6 @@ const COMMANDS = [
   'python3 medius-compare.pyz report <stock file> <Medius file>',
 ];
 
-// Each shell block's commands, a line continued with a backslash read as one.
 const commands = (el: Element, section: string) =>
   [...el.querySelectorAll(`section#${section} pre code.language-bash`)].flatMap((c) => c.textContent!.replace(/ *\\\n */g, ' ').split('\n'));
 
@@ -72,12 +68,12 @@ describe('the Method page comparison tool', () => {
 
   it('says the clone is kept off the desktop and handed back, and how a stock box behind is power cycled', () => {
     const text = show().querySelector('section#tool-run')!.textContent!.replace(/\s+/g, ' ');
-    expect(text).toContain('kept off the desktop while the tool runs, so nothing injected reaches it, and handed back at exit, Ctrl-C included.');
+    expect(text).toContain("the clone is kept off the desktop, so nothing injected reaches it. It's handed back at exit, Ctrl-C included.");
     expect(text).toContain('a leg refuses to start if it moved');
     expect(text).toContain('unplugged for 3 s and plugged back in, and waits for Enter');
   });
 
-  it('names the tests that can leave stock one reply behind, how often they run there, and how to leave them out', () => {
+  it('names the tests that can leave stock one command behind, how often they run there, and how to leave them out', () => {
     const callout = show().querySelector('section#tool-run .callout')!;
     const ids = [...callout.querySelectorAll('code')].map((c) => c.textContent).filter((t) => !t!.startsWith('--'));
     expect(ids).toEqual(NO_SIM.filter((t) => t.jams_stock).map((t) => t.id));

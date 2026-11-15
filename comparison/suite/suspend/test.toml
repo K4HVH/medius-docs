@@ -54,5 +54,5 @@ ptr = "/outcomes/recovery-wake-inject"
 
 [[tables.rows]]
 id = "recovery-wake-device"
-label = "The real device's remote wakeup"
+label = "Real device's remote wakeup"
 ptr = "/outcomes/recovery-wake-device"

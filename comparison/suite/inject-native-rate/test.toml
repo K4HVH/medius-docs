@@ -34,7 +34,7 @@ key = "Moves sent"
 unit = "reports"
 better = "higher"
 layer = "hidraw"
-n = "One 15 s run per row, then 0.5 s, 3 runs"
+n = "15 s then 0.5 s a run, 3 runs"
 commands = { stock = "km.move", medius = "MOVE" }
 resolution = 1
 
@@ -95,7 +95,7 @@ key = "Mouse"
 unit = "reports"
 better = "higher"
 layer = "hidraw"
-n = "One 15 s run per row, then 0.5 s, 3 runs"
+n = "15 s then 0.5 s a run, 3 runs"
 commands = { stock = "km.move", medius = "MOVE" }
 resolution = 1
 
@@ -123,7 +123,7 @@ key = "Commands sent"
 unit = "reports"
 better = "higher"
 layer = "hidraw"
-n = "One 5 s run per row, then 0.5 s, 3 runs"
+n = "5 s then 0.5 s a run, 3 runs"
 resolution = 1
 
 [[tables.rows]]
@@ -161,17 +161,17 @@ resolution = 1
 
 [[tables.rows]]
 id = "inj-box-only-sine-1000"
-label = "1,000 moves/s"
+label = "1,000/s"
 ptr = "/sine/results/0/box_only"
 
 [[tables.rows]]
 id = "inj-box-only-sine-500"
-label = "500 moves/s"
+label = "500/s"
 ptr = "/sine/results/1/box_only"
 
 [[tables.rows]]
 id = "inj-box-only-sine-125"
-label = "125 moves/s"
+label = "125/s"
 ptr = "/sine/results/2/box_only"
 
 [[tables]]
@@ -189,12 +189,12 @@ resolution = 1
 
 [[tables.rows]]
 id = "inj-box-only-slow-30"
-label = "30 moves/s"
+label = "30/s"
 ptr = "/sine_slow/results/1/box_only"
 
 [[tables.rows]]
 id = "inj-box-only-slow-10"
-label = "10 moves/s"
+label = "10/s"
 ptr = "/sine_slow/results/0/box_only"
 
 [[tables]]
@@ -206,7 +206,7 @@ key = "Mouse and moves"
 unit = "counts"
 better = "higher"
 layer = "evdev"
-n = "One 15 s run per row, 3 runs"
+n = "15 s a run, 3 runs"
 commands = { stock = "km.move", medius = "MOVE" }
 
 [[tables.rows]]

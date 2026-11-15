@@ -66,7 +66,7 @@ ptr = "/outcomes/input-held-injected-locked"
 section = "input-lock-leak"
 order = 3
 kind = "measure"
-label = "Lock on X taking effect, p50"
+label = "Native input still reaching the PC after the lock, p50"
 key = "Lock"
 unit = "ms"
 better = "lower"
@@ -78,7 +78,7 @@ resolution = 0.001
 
 [[tables.rows]]
 id = "input-lock-x-on"
-label = "Native X motion every millisecond"
+label = "X, moving every millisecond"
 ptr = "/results/4/last_native_after_lock/p50"
 unit = "us"
 
@@ -86,7 +86,7 @@ unit = "us"
 section = "input-lock-leak"
 order = 4
 kind = "measure"
-label = "Lock on X lifting, p50"
+label = "Native input back after the unlock, p50"
 key = "Lock"
 unit = "ms"
 better = "lower"
@@ -98,7 +98,7 @@ resolution = 0.01
 
 [[tables.rows]]
 id = "input-lock-x-off"
-label = "Native X motion every millisecond"
+label = "X, moving every millisecond"
 ptr = "/results/4/first_native_after_unlock/p50"
 unit = "us"
 

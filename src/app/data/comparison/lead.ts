@@ -1,9 +1,4 @@
-// Whether a box leads a measured row (the Method page's rule). Two kinds of noise move a row's values: each run's own
-// sampling error, from the samples it timed, and the spread between runs, which the bus's phase shifts from run to
-// run. Each box's runs are pooled into one estimate weighing both (a random-effects estimate, DerSimonian-Laird), and a
-// box leads only where the two estimates differ by more than Student's t for the runs' degrees of freedom: with 3 runs
-// a box the spread between runs is itself estimated from 3 values, and 1.96 would call a lead on equal boxes about 1
-// time in 8.
+// Whether a box leads a measured row: runs pooled by random effects (DerSimonian-Laird), judged by Student's t.
 import type { Box } from './types';
 
 // A run's statistic, and its sampling variance where the run records its sample count and spread.
@@ -12,11 +7,9 @@ export interface RunStat {
   v?: number;
 }
 
-// The standard error of each statistic a run summary carries, in standard deviations over the root of its count: a
-// mean's, and a percentile's under a normal distribution (the root of p(1-p) over the density at the percentile).
+// The standard error of each statistic in standard deviations over the root of its count.
 export const SE_FACTOR: Record<string, number> = { mean: 1, p50: 1.2533, p95: 2.1098, p99: 3.7322 };
 
-// Student's t, two-sided 95%, by degrees of freedom; 1.96 past the table.
 const T95 = [12.706, 4.303, 3.182, 2.776, 2.571, 2.447, 2.365, 2.306, 2.262, 2.228, 2.201, 2.179, 2.16, 2.145, 2.131,
   2.12, 2.11, 2.101, 2.093, 2.086, 2.08, 2.074, 2.069, 2.064, 2.06, 2.056, 2.052, 2.048, 2.045, 2.042];
 export function critical(df: number): number {
@@ -58,8 +51,6 @@ export function pooled(runs: RunStat[], tau2?: number): Pooled | undefined {
   return { mu: w.reduce((a, wi, i) => a + wi * ys[i], 0) / sw, variance: 1 / sw, tau2: t };
 }
 
-// Each box's estimate, a box that ran once borrowing the other's spread between runs, and the degrees of freedom the
-// spreads between runs were estimated with; undefined where neither box can say how its runs spread.
 function both(stock: RunStat[], medius: RunStat[]): { s: Pooled; m: Pooled; df: number } | undefined {
   let s = pooled(stock);
   let m = pooled(medius);
@@ -69,7 +60,6 @@ function both(stock: RunStat[], medius: RunStat[]): { s: Pooled; m: Pooled; df: 
   return { s, m, df: Math.max(0, stock.length - 1) + Math.max(0, medius.length - 1) };
 }
 
-// `d`: how far stock is ahead of Medius (positive, stock ahead), `se` its standard error, `df` its degrees of freedom.
 function verdict(d: number, se: number, df: number): Box | 'equal' {
   if (d === 0) return 'equal';
   if (se > 0 && Math.abs(d) <= critical(df) * se) return 'equal';
@@ -86,7 +76,6 @@ export function leadOf(
   const runsMean = (rs: RunStat[]) => rs.reduce((a, r) => a + r.y, 0) / rs.length;
   const est = both(stock, medius);
   if (!est) {
-    // Both ran once with nothing recorded of their spread: the values alone.
     const [s, m] = [stock[0]?.y ?? 0, medius[0]?.y ?? 0];
     const at = ref?.target ?? (ref?.runs?.length ? runsMean(ref.runs) : 0);
     const d = better === 'nearer' ? Math.abs(m - at) - Math.abs(s - at) : better === 'lower' ? m - s : s - m;

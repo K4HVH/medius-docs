@@ -19,7 +19,7 @@ unit = "ms"
 better = "lower"
 stat = "p50"
 layer = "evdev"
-n = "One 2-second stream per rate a run, 3 runs"
+n = "One 2 s stream per rate a run, 3 runs"
 commands = { stock = "km.move", medius = "MOVE" }
 resolution = 0.01
 

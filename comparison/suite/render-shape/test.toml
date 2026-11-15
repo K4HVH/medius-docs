@@ -57,7 +57,7 @@ resolution = 0.001
 
 [[tables.columns]]
 id = "one"
-label = "One count, last count p50"
+label = "1 count, p50"
 unit = "ms"
 better = "lower"
 
@@ -75,7 +75,7 @@ better = "lower"
 
 [[tables.columns]]
 id = "moving"
-label = "One count into a moving mouse, p50"
+label = "1 count into a moving mouse, p50"
 unit = "ms"
 better = "lower"
 

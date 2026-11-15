@@ -9,9 +9,7 @@ const COMPARISON = join(import.meta.dirname, '../../../../comparison');
 
 const json = (o: unknown) => `${JSON.stringify(o, null, 2)}\n`;
 
-// The Comparison downloads, by address: all results, then one file per page with its categories, defects and
-// pending tests, then each run file the generator read, as the tool wrote it. Each results file passes the check.
-// The prerender writes them into the build; the dev server serves them.
+// The Comparison downloads by address: all results, one file per page, and each run file the generator read.
 export function comparisonFiles(): Map<string, string | Uint8Array> {
   const files = new Map<string, string | Uint8Array>([['/comparison.json', json(RESULTS)]]);
   for (const p of COMPARISON_PAGES) {

@@ -52,8 +52,8 @@ ptr = "/outcomes/devices-clone-layouts"
 
 [[tables.rows]]
 id = "devices-clone-slow-report"
-label = "Four devices slow to give their report descriptor"
-note = "450 or 700 ms late, or refused"
+label = "Four devices delaying or refusing their report descriptor"
+note = "450 or 700 ms late, or a STALL"
 ptr = "/outcomes/devices-clone-slow-report"
 
 [[tables.rows]]

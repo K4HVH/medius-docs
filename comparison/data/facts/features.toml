@@ -92,7 +92,7 @@ medius = "OPTION(RENDER)"
 
 [[tables.rows]]
 id = "feat-ride-native"
-label = "Carry injected motion only in native reports"
+label = "Inject motion only on native motion reports"
 medius = "OPTION(MOVE_RIDE)"
 
 [[tables]]

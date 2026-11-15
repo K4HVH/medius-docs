@@ -26,7 +26,7 @@ key = "Moves/s"
 unit = "reports"
 better = "lower"
 layer = "hidraw"
-n = "One 2-second stream per rate a run, 3 runs"
+n = "One 2 s stream per rate a run, 3 runs"
 commands = { stock = "km.move", medius = "MOVE" }
 resolution = 1
 
@@ -64,7 +64,7 @@ ptr = "/base/results/29/zero_reports"
 section = "inj-reports-emitted"
 order = 5
 kind = "measure"
-label = "Reports carrying only injected motion in 2.5 s beside a moving mouse, injecting for 2 s"
+label = "Reports carrying only injected motion beside a moving mouse, in 2.5 s from 2 s of moves"
 key = "Mouse and moves"
 unit = "reports"
 better = "lower"

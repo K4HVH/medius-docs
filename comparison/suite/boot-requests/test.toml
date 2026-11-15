@@ -33,7 +33,7 @@ label = "Reports from before the switch read after it, min to max"
 key = "Mouse"
 unit = "reports"
 better = "lower"
-n = "100 tries a run, 3 runs"
+n = "First 20 tries a run, 3 runs"
 resolution = 1
 
 [[tables.rows]]

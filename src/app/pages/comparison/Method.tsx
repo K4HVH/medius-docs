@@ -9,7 +9,6 @@ import { COMPARISON_PAGES } from '../../data/comparison/pages';
 import type { ToolData } from '../../data/comparison/generate';
 import tool from '../../data/comparison/tool.json';
 
-// One box's wiring. The other is wired the same way, on the same PC and hubs.
 const RIG = `+--------------------------------+
 |       PC: tests, usbmon        |
 +-------+-----------------+------+
@@ -29,7 +28,6 @@ const RIG = `+--------------------------------+
 |      USB device emulator       |
 +--------------------------------+`;
 
-// The box wired for the comparison tool: the clone and the control port on this PC, the device on USB3.
 const TOOL_WIRING: Record<Port, PortSpec> = {
   USB1: { state: 'in', label: 'This PC', tone: 'pc' },
   USB2: { state: 'in', label: 'This PC', tone: 'pc' },
@@ -38,8 +36,6 @@ const TOOL_WIRING: Record<Port, PortSpec> = {
 
 const LAYER: Record<string, string> = { wire: 'Wire', host: 'Host', evdev: 'evdev', hidraw: 'hidraw', emulator: 'Emulator' };
 
-// The tests the tool runs without the emulator and the run files the results were built from, both written by the
-// generator from the suite and the runs.
 const TOOL = tool as ToolData;
 const JAMS = TOOL.tests.filter((t) => t.jamsStock).map((t) => t.id);
 const CYCLES = TOOL.stockCycles;
@@ -55,7 +51,6 @@ const devices = (ids: string[]) => {
 const PORT = '/dev/serial/by-id/usb-1a86_USB_Single_Serial_<serial>-if00';
 const PYTHON = 'sudo ~/medius-compare/bin/python medius-compare.pyz';
 
-// Each section of the results, by id: its page's address and its title.
 const SECTIONS = new Map(
   RESULTS.categories.flatMap((c) => c.sections.map((s) => [s.id, { href: `/comparison/${c.id}/${s.id}`, title: s.title }] as const)),
 );
@@ -81,7 +76,8 @@ const Method: Component = () => (
           <tbody>
             <tr><td>Firmware</td><td>Stock {RESULTS.firmware.stock}, Medius {RESULTS.firmware.medius}</td></tr>
             <tr><td>Real device</td><td>A USB device emulator on each box's USB3, presenting the same device and native reports to both</td></tr>
-            <tr><td>Hubs</td><td>STT: a USB 2.0 hub with one transaction translator for all its ports, for both boxes' <code>USB1</code> and <code>USB2</code>. MTT: one with a translator per port, for the emulators' control ports and the native reference</td></tr>
+            <tr><td>STT hub</td><td>A USB 2.0 hub with one transaction translator for all its ports, for both boxes' <code>USB1</code> and <code>USB2</code></td></tr>
+            <tr><td>MTT hub</td><td>A USB 2.0 hub with a transaction translator per port, for the emulators' control ports and the native reference</td></tr>
             <tr><td>Box not under test</td><td>Its emulator presents a silent mouse, or is the native reference</td></tr>
             <tr><td>Native reference</td><td>The other box's emulator on the PC, presenting the same device, for every result compared with native</td></tr>
             <tr><td>PC</td><td>Linux</td></tr>
@@ -108,7 +104,7 @@ const Method: Component = () => (
             <tr><td>Bar</td><td>Drawn to the largest value in its table, or in its row on the Overview</td></tr>
             <tr><td>Result</td><td>The box ahead, worked out from the values. The box behind is dimmed</td></tr>
             <tr><td>Faithful</td><td>If a test records native behaviour, the box that matches it is ahead</td></tr>
-            <tr><td>Equal</td><td>The outcomes match, or the gap between the two measures is within their noise. Each box's runs are pooled, weighing each run's own sampling error and the spread between runs. A box leads only past Student's t for the runs' degrees of freedom: 2.78 standard errors with 3 runs a box, 4.30 where a box ran once and takes the other's spread between runs. A count of a total is equal where the two ranges overlap</td></tr>
+            <tr><td>Equal</td><td>The outcomes match, or the gap between the two measures is within their noise. Each box's runs are pooled, weighing each run's sampling error and the spread between runs. A box leads only past Student's t for the runs' degrees of freedom: 2.78 standard errors with 3 runs a box, 4.30 where a box ran once and takes the other's spread between runs. A count of a total is equal where the two ranges overlap</td></tr>
             <tr><td>Differs</td><td>The boxes behave differently. Neither is better, or no test shows which is faithful</td></tr>
             <tr><td>Defect</td><td>A fault that reproduces, marked on its row and listed on the Overview</td></tr>
           </tbody>
@@ -192,8 +188,8 @@ const Method: Component = () => (
 
     <DocSection id="tool" title="Comparison tool">
       <p>
-        <a href="/comparison/medius-compare.pyz" download="">medius-compare.pyz</a> is the same engine the published
-        results come from. Without the <A href="#rig">USB device emulator</A>, it runs the tests a still mouse or
+        <a href="/comparison/medius-compare.pyz" download="">medius-compare.pyz</a> is the tool the published results
+        come from. Without the <A href="#rig">USB device emulator</A>, it runs the tests a still mouse or
         keyboard can drive, on any MAKCU box. Every other test is skipped and named in the run file with its reason.
       </p>
       <BoardFigure ports={TOOL_WIRING} />
@@ -231,7 +227,7 @@ const Method: Component = () => (
     --port ${PORT} \\
     --usb-port <clone's USB port>`}</code></pre>
           Leave out <code>--usb-port</code> and it lists this PC's input devices by USB port. The clone is the one
-          carrying the device plugged into the box.
+          with the real device's VID:PID and name.
         </li>
         <li>
           On Medius, the same with <code>--box medius</code> and no <code>--usb-port</code> (the box says what it
@@ -245,8 +241,9 @@ const Method: Component = () => (
         </li>
       </ol>
       <p>
-        The clone is kept off the desktop while the tool runs, so nothing injected reaches it, and handed back at
-        exit, <span class="nw">Ctrl-C</span> included. Leave the device untouched: a leg refuses to start if it moved.
+        While the tool runs, the clone is kept off the desktop, so nothing injected reaches it. It's handed back at
+        exit, <span class="nw">Ctrl-C</span> included. Leave the real device untouched: a leg refuses to start if it
+        moved.
       </p>
       <div class="callout callout--warning">
         <p>
@@ -259,13 +256,13 @@ const Method: Component = () => (
               </>
             )}
           </For>{' '}
-          can leave the box's parser one reply behind until a power cycle (
+          can leave the box's parser one command behind until a power cycle (
           <A href="/comparison/control-link">Control link</A>). Each runs once on stock unless{' '}
-          <code>--stock-jam-runs</code> asks for more. When one leaves it behind, the tool asks for both the box's
-          cables to be unplugged for 3 s and plugged back in, and waits for Enter. A full run takes about{' '}
-          {CYCLES.inside}-{CYCLES.inside + JAMS.length} power cycles: our stock run needed {CYCLES.inside} inside{' '}
-          {WORDS[CYCLES.tests] ?? CYCLES.tests} of these tests, and each can need one more after it.{' '}
-          <code>--test</code> runs only the tests it names (repeat it for more), so a run can leave these out.
+          <code>--stock-jam-runs</code> asks for more. When one leaves the parser behind, the tool asks for both the
+          box's cables to be unplugged for 3 s and plugged back in, and waits for Enter. A full run takes ~{CYCLES.inside}-
+          {CYCLES.inside + JAMS.length} power cycles: our stock run needed {CYCLES.inside} inside{' '}
+          {WORDS[CYCLES.tests] ?? CYCLES.tests} of these tests, and each can need one more after it. To leave these
+          out, name the tests to run with <code>--test</code> (repeat it for more).
         </p>
       </div>
     </DocSection>

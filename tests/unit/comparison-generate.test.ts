@@ -111,7 +111,6 @@ it("places a test in every section its rows appear in, another test's tables inc
   expect(toolTests(i.tests, results)).toEqual([{ id: 'latency', devices: ['still-composite'], sections: ['timing', 'reach'], jamsStock: false }]);
 });
 
-// The input with every test jamming stock, and one box's runs of each test cut to one.
 const oneRun = (box: 'stock' | 'medius') => {
   const i = input();
   i.tests = i.tests.map((t) => ({ ...t, jams_stock: true }));
@@ -152,7 +151,6 @@ it("reads native beside each box's own runs where the test has no native runs", 
 });
 
 it('takes a row\'s pointers in one run as one value, not as runs of their own', () => {
-  // two pointers a run, each pair a run's own reading: 3 runs, not 6
   const i = input();
   const t = { ...i.tests[0], tables: [{ section: 'timing', order: 3, kind: 'measure' as const, label: 'Pair', key: 'Pairs',
     unit: 'ms', better: 'lower' as const, rows: [{ id: 'pair', label: 'Pair', ptr: ['/x/a', '/x/b'] }] }] };
@@ -166,8 +164,6 @@ it('takes a row\'s pointers in one run as one value, not as runs of their own', 
     : r,
   );
   const row = rowOf(generate(i).results, 'pair') as MeasureRow;
-  // 3 runs a box: run means 10.1/11.1/12.1 against 12.2/13.2/14.2, 2.1 apart over a standard error of ~0.82, short of
-  // t(4) = 2.78 times it; taken as 6 values a box (standard error ~0.52, t(10)), the gap would read as a lead
   expect(row.result).toBe('equal');
 });
 

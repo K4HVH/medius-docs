@@ -1,6 +1,4 @@
 // @vitest-environment node
-// The Comparison downloads: the whole file, each page's categories with their defects and pending tests, each a
-// results file in its own right, and every run file the generator built the results from, as the tool wrote it.
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -11,7 +9,6 @@ import { checkResults } from '../../src/app/data/comparison/check';
 import type { ToolData } from '../../src/app/data/comparison/generate';
 import tool from '../../src/app/data/comparison/tool.json';
 
-// The run files the generator built the results from, as their paths under comparison/.
 const COMPARISON = join(import.meta.dirname, '../../comparison');
 const RUN_FILES = (tool as ToolData).runs.map((r) => r.file);
 

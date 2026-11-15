@@ -96,7 +96,7 @@ key = "Moves/s"
 unit = "counts"
 better = "higher"
 layer = "wire"
-n = "One run per row in each of 3 runs (1 on stock)"
+n = "One stream per row in each of 3 runs (1 on stock)"
 commands = { stock = "MOVE (0x18)", medius = "MOVE" }
 
 [[tables.rows]]
@@ -133,8 +133,8 @@ of = 40000
 section = "link-paced-fast"
 order = 2
 kind = "measure"
-label = "Counts arriving from 2 s of text moves at 8,000/s"
-key = "Runs"
+label = "Counts arriving from 2 s of text moves"
+key = "Moves/s"
 unit = "counts"
 better = "higher"
 layer = "wire"
@@ -143,7 +143,7 @@ commands = { stock = "km.move", medius = "MOVE" }
 
 [[tables.rows]]
 id = "link-fast-text-8000"
-label = "8,000/s"
+label = "8,000, 3 tries a run"
 ptr = ["/results/19/delivered", "/results/20/delivered", "/results/21/delivered"]
 of = 16000
 

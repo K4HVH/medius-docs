@@ -47,7 +47,7 @@ ptr = "/outcomes/input-bk-mods-nkro"
 [[tables.rows]]
 # outcome from stock: /results/6/all_held, /results/6/in_order; medius: /results/5/all_held, /results/5/in_order
 id = "input-bk-mouse-chord"
-label = "5-button chord"
+label = "4-button chord"
 ptr = "/outcomes/input-bk-mouse-chord"
 
 [[tables.rows]]
@@ -72,7 +72,7 @@ ptr = "/outcomes/input-bk-nkro-20"
 section = "input-buttons-keys"
 order = 2
 kind = "outcome"
-label = "8 keys rolled on a 6-key boot keyboard"
+label = "8 keys rolled"
 key = "Keyboard"
 commands = { stock = "km.down, km.up", medius = "INJECT" }
 outcomes = ["Last 2 refused", "Last 2 pressed once a key is up"]

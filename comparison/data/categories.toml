@@ -17,12 +17,12 @@ about = "How often the PC polls each clone, against the native interval."
 [[categories.sections]]
 id = "devices-imperfect"
 title = "Medius with imperfect clones on"
-about = "The devices Medius refuses as it ships, given to it again with imperfect clones on. Stock has no such setting, so its column is stock as it ships."
+about = "The devices Medius refuses as it ships, given to it again with imperfect clones on. Stock has no such setting: its column is stock as it ships."
 
 [[categories.sections]]
 id = "devices-endpoint-data"
 title = "Data through every endpoint"
-about = "Each device streams a counter on every IN endpoint in turn, at its declared rate (bulk at 1,000 packets/s). The PC reads each endpoint through usbfs with eight transfers queued. A cloned endpoint delivering <95% of the native rate counts as sending nothing. Medius as it ships, imperfect clones off."
+about = "Each device streams a counter on every IN endpoint in turn, at its declared rate (bulk at 1,000 packets/s). The PC reads each endpoint through usbfs with eight transfers queued. A cloned endpoint delivering <95% of the native rate counts as sending nothing. Medius had imperfect clones off, as it ships, unless the table says otherwise."
 
 [[categories.sections]]
 id = "devices-report-size"
@@ -37,12 +37,12 @@ about = "The PC sent standard, class and vendor requests to each clone and to th
 [[categories.sections]]
 id = "devices-ep0-stacks"
 title = "Standard requests across device stacks"
-about = "A mouse with a vendor-page HID interface and a vendor interface, answering standard requests as 22 device stacks do. Each clone and the native reference get the same 316 reads. A request is given the native reply when its outcome, the PC's error and every byte match native. A timeout counts only where the native request times out too."
+about = "A mouse with a vendor-page HID interface and a vendor interface, answering standard requests as 22 device stacks do. Each clone and the native reference get the same 316 reads. A request counts as given the native reply when its outcome, the PC's error and every byte match native. A timeout counts only where the native request times out too."
 
 [[categories.sections]]
 id = "devices-control-relay"
 title = "Relayed requests"
-about = "The PC sent the same raw transfers to each clone and to the native reference, on endpoint 0 and on a second control endpoint. A request is given the native reply when its outcome and every byte match native (data before a STALL included). Its reply must also come ≤1.5 ms before or ≤3 ms after the native reply."
+about = "The PC sent the same raw transfers to each clone and to the native reference, on endpoint 0 and on a second control endpoint. A request counts as given the native reply when its outcome and every byte match native (data before a STALL included). Its reply must also come ≤1.5 ms before or ≤3 ms after the native reply."
 
 [[categories]]
 id = "passthrough"
@@ -56,7 +56,7 @@ about = "Each box relayed mice and keyboards at several report rates, 15 s each,
 [[categories.sections]]
 id = "pass-timing"
 title = "Report timing"
-about = "The relay runs above, timed on the PC's USB bus. Each report is placed on the PC's polls, so it counts as early or late only when it moved by a whole poll; the PC's own timing jitter doesn't count."
+about = "The relay runs above, timed on the PC's USB bus. Each report is placed on the poll that carried it, and counts as early or late only when it moved by a whole poll. The PC's timestamp jitter doesn't count."
 
 [[categories.sections]]
 id = "pass-latency"
@@ -76,7 +76,7 @@ about = "Requests and reports the PC sent the real device, through its clone."
 [[categories.sections]]
 id = "pass-boot"
 title = "Boot protocol requests"
-about = "The PC sends SET_PROTOCOL(boot) and SET_IDLE(0) to both HID interfaces of a gaming mouse, GET_PROTOCOL to both, reads the mouse for 0.5 s, then sends SET_PROTOCOL(report), as a host's HID driver sets up a boot device. 20 tries, each request given 1 s."
+about = "The PC sends SET_PROTOCOL(boot) and SET_IDLE(0) to both HID interfaces of a gaming mouse, GET_PROTOCOL to both, reads the mouse for 0.5 s, then sends SET_PROTOCOL(report), as a host's HID driver sets up a boot device. 100 tries a run, each request given 1 s. Reports from before the switch are counted in the first 20 tries."
 
 [[categories.sections]]
 id = "pass-device-pc"
@@ -91,7 +91,7 @@ about = "The real device sends a counter every millisecond on 2 interrupt endpoi
 [[categories.sections]]
 id = "pass-polls"
 title = "Polls the real device gets"
-about = "A silent vendor interrupt IN and a silent vendor-page HID interrupt IN, declaring 1, 4 and 8 ms, read by the PC for 2 s with 2 s unread before and after. The real device counts the polls it gets. Natively an endpoint is polled at its declared rate while read, and not at all while unread. SET_INTERFACE moves a vendor interrupt IN to another address, 40 times per row."
+about = "A silent vendor interrupt IN and a silent vendor-page HID interrupt IN, declaring 1, 4 and 8 ms, read by the PC for 2 s with 2 s unread before and after. The real device counts the polls it gets. Natively, an endpoint is polled at its declared rate while read, and not at all while unread. SET_INTERFACE moves a vendor interrupt IN to another address, 40 times per row."
 
 [[categories.sections]]
 id = "pass-pads"
@@ -105,7 +105,7 @@ title = "Injected motion"
 [[categories.sections]]
 id = "inj-latency"
 title = "Move latency"
-about = "One move at a time, timed on the PC's USB bus from the command to the report carrying it. A default move goes through each box's default smoothing, and an immediate move skips it. The resting mouse moved for 3 s before it rested: Medius smooths only once it has seen the mouse move since it was cloned, as a mouse in use has."
+about = "One move at a time, timed on the PC's USB bus from the command to the report carrying it. A default move goes through each box's default smoothing, and an immediate move skips it. The resting mouse moved for 3 s, then stopped, as a mouse in use does. Medius smooths only once it has seen the mouse move since cloning it."
 
 [[categories.sections]]
 id = "inj-stream-lag"
@@ -135,7 +135,7 @@ about = "Moves in 8 directions, sparse, streamed and wider than the report's fie
 [[categories.sections]]
 id = "inj-fresh-clone"
 title = "Move into a new clone"
-about = "A move and a click sent right after the box cloned a new device, three tries each."
+about = "A move and a click sent right after the box cloned a new device, 3 tries of each a run."
 
 [[categories.sections]]
 id = "inj-wheel-pan"
@@ -145,7 +145,7 @@ about = "Injected wheel and horizontal scroll (pan), one command at a time, time
 [[categories.sections]]
 id = "inj-raw-move"
 title = "Unsmoothed moves"
-about = "Stock's RAW_MOVE (documented as skipping its smoothing) against Medius's MOVE(NOW), timed on the PC's USB bus: one at a time, and as a stream of 200 sent 5 ms apart. Once a stream's receipts go unread, stock refuses every later RAW_MOVE until a power cycle, so it is power-cycled first when it does."
+about = "Stock's RAW_MOVE (documented as skipping its smoothing) against Medius's MOVE(NOW), timed on the PC's USB bus: one at a time, and as a stream of 200 sent 5 ms apart. Once a stream's receipts go unread, stock refuses every later RAW_MOVE until a power cycle. Each run first sends one, and power-cycles stock if it's refused."
 
 [[categories]]
 id = "control-link"
@@ -154,7 +154,7 @@ title = "Control link"
 [[categories.sections]]
 id = "link-queries"
 title = "Query round trip"
-about = "A program sent each box 3,000 queries one at a time, in each of three runs, timed on the PC's USB bus, with a mouse at rest plugged in (sending nothing)."
+about = "A program sent each box 3,000 queries one at a time, in each of 3 runs, timed on the PC's USB bus, with a mouse at rest plugged in (sending nothing)."
 
 [[categories.sections]]
 id = "link-paced-rest"
@@ -189,7 +189,7 @@ about = "One-count binary moves into a still mouse, written in clumps every 16 m
 [[categories.sections]]
 id = "link-malformed"
 title = "Malformed input"
-about = "Malformed input sent to each box, then a valid move. Three tries each."
+about = "Malformed input sent to each box, then a valid move. Each case was tried once a run: 3 runs on Medius, 1 on stock."
 
 [[categories]]
 id = "input"
@@ -208,17 +208,17 @@ about = "A native key or button held while each box injected another key, or inj
 [[categories.sections]]
 id = "input-buttons-keys"
 title = "Buttons, modifiers and key rolls"
-about = "Each button clicked 20 times, a five-button chord, each modifier held over a J press, and keys rolled down and up 25 ms apart, on a mouse, a boot keyboard and an NKRO keyboard. Five tries each."
+about = "The right, middle and side buttons clicked 20 times each, a 4-button chord, each modifier held over a J press, and keys rolled down and up 25 ms apart, on a mouse, a boot keyboard and an NKRO keyboard. The chord, modifiers and rolls are repeated 5 times a run."
 
 [[categories.sections]]
 id = "input-lock-leak"
 title = "Locks"
-about = "Each box held a lock for 10 s against native motion and clicks. On the PC's USB bus, a lock is timed from the command to the last native input through, an unlock to the first one back."
+about = "Each box held a lock for 10 s against native motion and clicks. On the PC's USB bus, a lock is timed from the command to the last native input reaching the PC, an unlock to the first one back."
 
 [[categories.sections]]
 id = "input-box-timed"
 title = "Clicks and typing timed by the box"
-about = "Ten 50 ms clicks and a 30-character string timed by the box (stock's km.click and km.string, a Medius clip), against the same clicks timed by the PC. Read off the PC's USB bus, five sets of each a run."
+about = "Ten 50 ms clicks and a 30-character string timed by the box (stock's km.click and km.string, a Medius clip), against the same clicks timed by the PC. Each is played 5 times a run, read off the PC's USB bus."
 
 [[categories.sections]]
 id = "input-typing-long"
@@ -232,7 +232,7 @@ title = "Recovery"
 [[categories.sections]]
 id = "recovery-program-exit"
 title = "Program exit"
-about = "A program pressed the left button through each box, then closed the port without releasing it."
+about = "A program held a button or key, or locked an input, through each box, then closed the port or stopped sending without releasing it."
 
 [[categories.sections]]
 id = "recovery-replug"
@@ -335,9 +335,9 @@ about = "Each firmware's documentation site, as of 11 October 2026."
 [[categories.sections]]
 id = "software-adoption"
 title = "Adoption"
-about = "Package downloads, fetched when the comparison runs, KMBox packages left out."
+about = "Package downloads, fetched during each box's run, KMBox packages left out."
 
 [[categories.sections]]
 id = "software-community"
 title = "Community"
-about = "Members of each project's Discord, fetched when the comparison runs."
+about = "Members of each project's Discord, fetched during each box's run."

@@ -1,5 +1,3 @@
-// Builds the comparison's results from the tests' declarations and the run files the comparison tool wrote.
-// Pure: the script around it reads the files and writes results.json.
 import { checkResults } from './check';
 import { leadOf, type RunStat, SE_FACTOR } from './lead';
 import { showValue } from './result';
@@ -106,8 +104,7 @@ export interface Generated {
   faults: string[];
 }
 
-// A test the comparison tool runs without the USB device emulator: the still devices its legs take, the sections
-// of the results its rows appear in, and whether it can leave stock one reply behind until a power cycle.
+// A test the comparison tool runs without the emulator, with its still devices and the sections its rows feed.
 export interface ToolTest {
   id: string;
   devices: string[];
@@ -115,16 +112,14 @@ export interface ToolTest {
   jamsStock: boolean;
 }
 
-// What the Method page lists that the results don't carry: the tool's tests, the run files, and the power cycles stock's
-// runs needed inside its tests (a leg that ran right after one says so).
+// What the Method page lists that the results don't carry: the tool's tests, run files and stock's power cycles.
 export interface ToolData {
   tests: ToolTest[];
   runs: { box: RunBox; file: string }[];
   stockCycles: { inside: number; tests: number };
 }
 
-// The power cycles stock's runs needed inside its tests, each test from the latest file holding it, and how many tests
-// needed one. A cycle after a test's last leg isn't recorded.
+// The power cycles stock's runs needed inside its tests, and how many tests needed one.
 export function stockCycles(input: GenerateInput): { inside: number; tests: number } {
   const latest = new Map<string, unknown>();
   for (const { doc } of [...input.runs].sort((a, b) => a.path.localeCompare(b.path)))
@@ -249,9 +244,7 @@ export function generate(input: GenerateInput): Generated {
     return lo === hi ? { value: lo, src } : { lo, hi, src };
   };
 
-  // Each run's statistic in the table's unit, with its sampling variance where the run's summary records the sample
-  // count and spread beside it (a mean or a percentile). A row's several pointers in one run are one run's readings, so
-  // they average into one value: as separate values they would read as runs, and their shared phase as no spread.
+  // A row's pointers within one run average into one value: as separate values they would read as runs.
   const runStats = (p: Picked, row: RowDecl, ptrs: Ptr | undefined, tableUnit: string | undefined): RunStat[] => {
     const scale = row.unit ? (TIME[row.unit] ?? NaN) / (TIME[tableUnit ?? ''] ?? NaN) : 1;
     if (Number.isNaN(scale)) return [];
@@ -301,7 +294,6 @@ export function generate(input: GenerateInput): Generated {
         for (const r of td.rows) {
           const test = r.test ?? t.id;
           const vals: Partial<Record<RunBox, Value>> = {};
-          // A test that never runs on the native reference measures it beside each box instead.
           const beside = r.native_ptr !== undefined && !tests.get(test)?.boxes.includes('native');
           const picks: Partial<Record<RunBox, Picked>> = {};
           for (const b of [...BOXES, ...(r.native_ptr !== undefined && !beside ? (['native'] as const) : [])]) {
@@ -450,8 +442,7 @@ export function generate(input: GenerateInput): Generated {
 
 const STILL = ['still-mouse', 'still-keyboard', 'still-composite'];
 
-// The tests the comparison tool runs without the emulator, in the order it runs them (by id, compared as code
-// points): each with a leg a still device can drive, or with no legs at all.
+// The tests the comparison tool runs without the emulator, in the order it runs them.
 export function toolTests(tests: TestDecl[], results: Results): ToolTest[] {
   const order = results.categories.flatMap((c) => c.sections.map((s) => s.id));
   return tests
@@ -477,8 +468,6 @@ function span(vs: Value[]): Value {
   return lo === hi ? { value: lo, src } : { lo, hi, src };
 }
 
-// Whether a row shows a box short of the best: a count under its total, an outcome other than the best, or a
-// measure worse than the other box.
 function shows(table: Table, row: MeasureRow | OutcomeRow, box: Box): boolean {
   const other: Box = box === 'stock' ? 'medius' : 'stock';
   if (table.kind === 'outcome') return (row as OutcomeRow)[box].is !== table.outcomes[0];

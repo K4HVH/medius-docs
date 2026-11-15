@@ -17,7 +17,7 @@ device = "still-keyboard"
 section = "input-box-timed"
 order = 5
 kind = "outcome"
-label = "30 characters sent by the PC as key presses back to back"
+label = "30 characters typed by the PC as key presses back to back"
 key = "String"
 commands = { stock = "km.down, km.up", medius = "INJECT" }
 outcomes = ["Exact", "Characters lost"]

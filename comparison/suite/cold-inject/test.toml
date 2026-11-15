@@ -51,7 +51,7 @@ of = 10
 section = "inj-fresh-clone"
 order = 2
 kind = "outcome"
-label = "Clicks arriving within 1 s, three tries"
+label = "Clicks arriving within 1 s, 3 tries a run"
 key = "Device"
 outcomes = ["All arrive", "Some arrive", "All lost"]
 

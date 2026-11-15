@@ -7,7 +7,7 @@ rows = ["devices-report-768-2047", "devices-report-513-700", "devices-clone-repo
 [[defects]]
 id = "pass-inject-reads"
 box = "stock"
-text = "While injecting, even at 10 moves/s, stock reads a 1 kHz mouse whose speed varies only about 300-550 times/s ({row:pass-inject-slow-10:stock} of 5,500 reports in 5.5 s at 10 moves/s)."
+text = "While injecting, stock reads a 1 kHz mouse whose speed varies only ~300-550 times/s. At 10 moves/s it reads {row:pass-inject-slow-10:stock} of 5,500 reports in 5.5 s."
 rows = ["pass-inject-varying", "pass-inject-slow-10", "pass-inject-slow-30", "pass-inject-sine-1000"]
 
 [[defects]]
@@ -25,7 +25,7 @@ text = "When the PC switches the clone's configuration, stock reconnects the clo
 [[defects]]
 id = "link-stock-parser-jam"
 box = "stock"
-text = "Moves arriving faster than stock takes them (about 30 or more binary moves in one write, ≥10,000 binary moves/s, 8,000 text moves/s, 32 per write every 16 ms, or back to back) are lost, most with no refusal. Every later command then runs one command late until a power cycle. At 8,000 text moves/s some tries end that way and some don't. 30 characters sent as key presses back to back lose characters."
+text = "Moves arriving faster than stock takes them (~30 or more binary moves in one write, ≥10,000 binary moves/s, 8,000 text moves/s, 32 per write every 16 ms, or back to back) are lost. Stock refuses most of them at ≥10,000 binary moves/s, and none in the other cases. Its parser then stays one command behind until a power cycle (in 2/3 tries at 8,000 text moves/s). 30 characters sent as key presses back to back lose characters."
 rows = ["link-back-to-back-parser", "link-clump-parser-2000", "link-fast-parser-10000", "link-fast-parser-15000", "link-fast-parser-20000", "link-fast-parser-text-8000", "link-write-parser-29", "link-write-parser-30", "input-typing-pc-pairs"]
 
 [[defects]]
@@ -43,13 +43,13 @@ rows = ["devices-interval-mouse-8", "devices-interval-mouse-10", "devices-interv
 [[defects]]
 id = "pass-stock-class-requests-unanswered"
 box = "stock"
-text = "Requests to the clone sometimes go unanswered: SET_IDLE, SET_PROTOCOL or GET_PROTOCOL in {row:pass-boot-unanswered:stock} tries. While the PC sets the clone up, a descriptor read goes unanswered now and then too, a report descriptor among them, whether the real device answers it or STALLs it. The PC's HID driver waits 5 s before asking again, so the clone comes up late."
+text = "Requests to the clone sometimes go unanswered: SET_IDLE, SET_PROTOCOL or GET_PROTOCOL in {row:pass-boot-unanswered:stock} tries. While the PC sets the clone up, descriptor reads sometimes go unanswered too (report descriptors among them), whether the real device answers them or STALLs them. The PC's HID driver waits 5 s before asking again, so the clone comes up ~5 s late."
 rows = ["pass-boot-unanswered"]
 
 [[defects]]
 id = "link-stock-moving-refusals"
 box = "stock"
-text = "With the mouse moving, stock refuses moves past about 1,325/s and replies to each refusal ({row:link-moving-bin-5000:stock} arrived at 5,000/s)."
+text = "With the mouse moving, stock refuses moves past ~1,325/s, replying to each one it refuses ({row:link-moving-bin-5000:stock} arrived at 5,000/s)."
 rows = ["link-moving-bin-5000", "link-moving-bin-1500", "link-moving-bin-2000", "link-moving-bin-3000", "link-moving-text-1500", "link-moving-text-2000", "link-moving-text-3000", "link-moving-text-5000", "link-moving-single-2000", "link-moving-single-5000"]
 
 [[defects]]
@@ -67,7 +67,7 @@ rows = ["pass-pause-skip-hid", "pass-pause-skip-vendor"]
 [[defects]]
 id = "devices-stock-ep0-overrun"
 box = "stock"
-text = "Where the real device replies past wLength (LUFA, STM32's library, V-USB), stock STALLs the request."
+text = "Where the real device replies past wLength (LUFA, STM32's USB library, V-USB), stock STALLs the request."
 rows = ["devices-ep0-stack-stm32", "devices-ep0-stack-lufa", "devices-ep0-stack-vusb"]
 
 [[defects]]

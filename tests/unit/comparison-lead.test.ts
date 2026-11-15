@@ -1,6 +1,4 @@
 // @vitest-environment node
-// Whether a box leads a measured row: each box's runs pooled with each run's own sampling error and the spread between
-// runs, and a lead only where the two differ by more than 1.96 standard errors.
 import { expect, it } from 'vitest';
 import { checkResults } from '../../src/app/data/comparison/check';
 import { generate } from '../../src/app/data/comparison/generate';
@@ -9,7 +7,6 @@ import { resultOf } from '../../src/app/data/comparison/result';
 import type { MeasureRow, MeasureTable } from '../../src/app/data/comparison/types';
 import { LATENCY, input, runFile } from './helpers/comparison-runs';
 
-// A run timing `n` samples: its p50 and their spread.
 const run = (p50: number, sd: number, n = 100) => ({ y: p50, v: (1.2533 * sd) ** 2 / n });
 
 it('pools runs with no spread between them to their weighted mean', () => {
@@ -27,14 +24,11 @@ it('widens the pooled error by the spread between runs', () => {
 });
 
 it('leads only past the noise of both boxes\' runs', () => {
-  // 742-760 against 755-770: overlapping, each run a median of 400 samples
   expect(leadOf('lower', [run(742, 20, 400), run(751, 20, 400), run(760, 20, 400)], [run(755, 20, 400), run(762, 20, 400), run(770, 20, 400)])).toBe('equal');
-  // 700-702 against 706-708, steady: a lead
   expect(leadOf('lower', [run(700, 5, 400), run(701, 5, 400), run(702, 5, 400)], [run(706, 5, 400), run(707, 5, 400), run(708, 5, 400)])).toBe('stock');
 });
 
 it('calls a gap inside the noise level, though the ranges are apart', () => {
-  // each run a median of 40 samples spread over a whole frame
   expect(leadOf('lower', [run(630, 290, 40)], [run(676, 290, 40), run(690, 290, 40), run(700, 290, 40)])).toBe('equal');
 });
 
@@ -57,7 +51,6 @@ it('ranks a table ranked nearer by the gap to the reference, past the noise', ()
   expect(leadOf('nearer', [run(90, 1), run(90, 1), run(90, 1)], [run(103, 1), run(103, 1), run(103, 1)], { target: 100 })).toBe('medius');
 });
 
-// The generator's rows carry the result, and the page reads it.
 const summary = (p50: number, sd: number, n: number) => ({ lat: { n, sd, p50 }, a: { n: 50 }, b: { n: 50 } });
 const entry = (runs: unknown[]) => ({ version: 2, layout: 'main', legs: ['rest'], devices: [], state: {}, integrity: {}, runs });
 
@@ -79,13 +72,11 @@ const rowOf = (r: ReturnType<typeof generate>['results'], id: string) =>
     .find((x) => x.row.id === id)!;
 
 it('stores each measured row\'s result, which the page reads over the ranges', () => {
-  // steady boxes 5 us apart: a lead
   const a = withLatency([summary(700, 5, 400), summary(701, 5, 400), summary(702, 5, 400)], [summary(706, 5, 400), summary(707, 5, 400), summary(708, 5, 400)]);
   expect(a.faults).toEqual([]);
   const ra = rowOf(a.results, 'lat-p50');
   expect(ra.row.result).toBe('stock');
   expect(resultOf(ra.t, ra.row)).toBe('stock');
-  // ranges apart, every run a median of a few samples over a whole frame: level
   const b = withLatency([summary(630, 290, 40), summary(640, 290, 40), summary(650, 290, 40)], [summary(676, 290, 40), summary(690, 290, 40), summary(700, 290, 40)]);
   const rb = rowOf(b.results, 'lat-p50');
   expect(rb.row.result).toBe('equal');
@@ -102,14 +93,12 @@ it('needs Student\'s t for the runs\' degrees of freedom, not 1.96', () => {
   expect(critical(4)).toBeCloseTo(2.776, 3);
   expect(critical(2)).toBeCloseTo(4.303, 3);
   expect(critical(1000)).toBeCloseTo(1.96, 2);
-  // three runs a box, a gap of 2.3 standard errors: past 1.96, short of t(4)
   const s3 = [{ y: 10 }, { y: 11 }, { y: 12 }];
   const m3 = [{ y: 11.9 }, { y: 12.9 }, { y: 13.9 }];
   expect(leadOf('lower', s3, m3)).toBe('equal');
 });
 
 it('weighs a box that ran once by the other\'s spread, at t for the other\'s runs', () => {
-  // one stock run 3 standard errors from three steady Medius runs: past t(4), short of t(2)
   const m3 = [{ y: 100 }, { y: 101 }, { y: 102 }];
   expect(leadOf('lower', [{ y: 97.8 }], m3)).toBe('equal');
   expect(leadOf('lower', [{ y: 90 }], m3)).toBe('stock');
@@ -121,7 +110,6 @@ it('ranks against the native runs when neither box says how it spreads', () => {
 
 it('counts the reference\'s own noise where the boxes sit either side of it', () => {
   const runs = (y: number) => [run(y, 1), run(y + 0.01, 1), run(y - 0.01, 1)];
-  // 99 and 102 either side of a reference spread over 90-110: nearer by 1, inside the reference's noise
   const wide = { runs: [{ y: 90 }, { y: 100 }, { y: 110 }] };
   expect(leadOf('nearer', runs(99), runs(102), wide)).toBe('equal');
   const tight = { runs: [{ y: 99.9 }, { y: 100 }, { y: 100.1 }] };
