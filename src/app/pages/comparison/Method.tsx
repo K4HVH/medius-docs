@@ -101,6 +101,7 @@ const Method: Component = () => (
             <tr><td>Table</td><td>One quantity in one unit</td></tr>
             <tr><td>Time</td><td>The median (p50), unless the table names another statistic</td></tr>
             <tr><td>Range</td><td>Lowest to highest over the runs. The fainter part of a bar spans it</td></tr>
+            <tr><td>Count</td><td>A count of a total adds up the box's runs: 3, or 1 where stock runs a test once</td></tr>
             <tr><td>Bar</td><td>Drawn to the largest value in its table, or in its row on the Overview</td></tr>
             <tr><td>Result</td><td>The box ahead, worked out from the values. The box behind is dimmed</td></tr>
             <tr><td>Faithful</td><td>If a test records native behaviour, the box that matches it is ahead</td></tr>
