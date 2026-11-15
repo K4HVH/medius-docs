@@ -1,17 +1,4 @@
-"""Wire timing from the kernel's USB monitor, as root.
-
-The binary interface (/dev/usbmonN) is read by a child process that keeps the events of the devices asked for,
-so a busy test can't make the kernel drop events. Every event of one bus is on one clock, so a command's
-packet to a box's control port and the clone's report it causes can be timed against each other.
-
-    with Wire(["1-2", "/dev/ttyACM0"]) as w:
-        ...
-    for e in w.events: e.ts (us), e.kind ('S'ubmit/'C'omplete/'E'rror), e.xfer (0 iso, 1 intr, 2 ctrl,
-                       3 bulk), e.ep (0x80 = IN), e.dev, e.len, e.data
-
-`lost` counts events the kernel dropped because the reader fell behind, and `cut` transfers the kernel kept
-less of than they carried. Either one fails the test: such a capture can't say a report went missing.
-"""
+"""Wire timing from the kernel's USB monitor, as root, every event of one bus on one clock."""
 import fcntl
 import os
 import select
@@ -25,9 +12,9 @@ from collections import namedtuple
 from . import integrity
 
 Event = namedtuple("Event", "ts kind xfer ep dev len data")
-HDR = struct.Struct("<QBBBBHccqiiII8s")   # usbmon's binary event header
-REC = struct.Struct("<qBBBBHH")           # child to parent: ts, kind, xfer, ep, dev, length, kept bytes
-RING_SIZE, STATS = 0x9204, 0x80089203     # MON_IOCT_RING_SIZE; MON_IOCG_STATS (queued, dropped; read clears)
+HDR = struct.Struct("<QBBBBHccqiiII8s")  # usbmon's binary event header
+REC = struct.Struct("<qBBBBHH")
+RING_SIZE, STATS = 0x9204, 0x80089203  # MON_IOCT_RING_SIZE; MON_IOCG_STATS (a read clears it)
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
@@ -172,8 +159,7 @@ def is_move(kind, data):
 
 
 def outs(events, ch343, pred=lambda d: True):
-    """Delivery times (us) of the control port's OUT packets whose bytes satisfy `pred`. An OUT packet's bytes
-    come with its submission and its delivery with the completion."""
+    """Delivery times (us) of the control port's OUT packets whose bytes satisfy `pred`."""
     t, pending = [], False
     for e in events:
         if e.dev != ch343 or e.xfer != 3 or e.ep & 0x80:
@@ -193,8 +179,7 @@ def reports(events, dev, ep=None):
 
 
 def move_latency(events, kind, ch343, clone, dx, field=lambda d: int.from_bytes(d[1:3], "little", signed=True)):
-    """Per move, from its packet reaching the control port to the clone's reports carrying its X, in seconds:
-    (first, done, reports). `field` reads X from a report (by default bytes 1-2, the test mouse's layout)."""
+    """Per move, (first, done, reports) in seconds from its packet at the control port to the clone's X."""
     sent = outs(events, ch343, lambda d: is_move(kind, d))
     ins = [(t, field(d)) for t, d in reports(events, clone) if len(d) >= 3]
     rows, j = [], 0

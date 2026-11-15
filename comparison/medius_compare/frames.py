@@ -1,7 +1,4 @@
-"""Control frames written straight to a box's port, for tests that pace or break them on purpose.
-
-Medius: `[A5][type][seq][len u16 LE][payload][crc16 LE]`, the CRC (CCITT-FALSE) over everything after A5 and
-before the CRC, as the protocol pages give it. Stock: `DE AD [len u16 LE][cmd][payload]` (its binary API)."""
+"""Control frames written straight to a box's port, for tests that pace or break them on purpose."""
 import struct
 
 SOF = 0xA5

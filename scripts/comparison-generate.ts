@@ -1,7 +1,4 @@
-// Builds the comparison's results.json from the tests' declarations and the run files the comparison tool wrote,
-// and tool.json beside it (what the Method page lists that the results don't carry: the tool's tests, the run files):
-//   tsx scripts/comparison-generate.ts [--runs DIR] [--out FILE]
-// Prints each row whose runs disagreed, and every fault. A fault leaves both files unwritten and exits 1.
+// tsx scripts/comparison-generate.ts [--runs DIR] [--out FILE]: results.json and tool.json from the suite and runs.
 import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 import { parse } from 'smol-toml';

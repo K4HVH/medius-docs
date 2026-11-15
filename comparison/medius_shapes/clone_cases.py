@@ -1,13 +1,10 @@
-"""Devices with unusual descriptors: gaps in interface numbering, a HID descriptor out of place, many or
-high-numbered IN endpoints, report descriptors answered late or STALLed, alternate settings, a second configuration,
-a device qualifier. SHAPES lists them with the sim's built-in personalities, by name and PID."""
+"""Devices with unusual descriptors; SHAPES lists them with the sim's built-in personalities, by name and PID."""
 from .core import (EndpointSpec, EnumHooks, GEN_COUNTER, GEN_FIXED, GEN_MOUSE_JIGGLE, KBD_DESC, MOUSE_DESC, MOUSE_IF,
                    Personality, Pump, SPEED_FULL, VEND8_DESC, VID, cfg, ctrl_record, device_desc, ep, hid, itf,
                    personality, xinput)
 
 HID_OUT_ONLY_PID = 0x61E3
 HID_OUT_ONLY_EP, HID_OUT_ONLY_MPS = 0x04, 15
-# A boot keyboard with an LED output report, and a vendor-page 64-byte feature report.
 BOOT_KBD_OUT_DESC = bytes.fromhex("05010906a101050719e029e71500250175019508810295017508810195057501050819012905"
                                   "910295017503910195067508150026ff00050719002aff008100c0")
 LIGHTING_OUT_DESC = bytes.fromhex("0600ff0a00ffa101150026ff00190029ff75089540b102c0")
@@ -47,7 +44,6 @@ def hid_after_ep():
                        ctrl=ctrl_record(0x81, 6, 0x2100, 0, hid(len(MOUSE_DESC))))
 
 
-# A HID descriptor listing a physical descriptor before the report descriptor.
 HID_PHYS_FIRST = bytes.fromhex("0c2111010002230300223200")
 
 
@@ -102,8 +98,7 @@ def unused_config_five_in():
 
 
 def six_in():
-    """A mouse moving every millisecond beside a vendor interface with IN endpoints 0x82-0x86, 0x82 streaming a
-    counter."""
+    """A mouse moving every millisecond beside a vendor interface with INs 0x82-0x86, 0x82 streaming a counter."""
     body = (MOUSE_IF + itf(1, 5, 0xFF) + ep(0x82, 64) + ep(0x83, 64) + ep(0x84, 64) + ep(0x85, 64)
             + ep(0x86, 64))
     eps = [EndpointSpec(0x81, 3, 1, 8, 3)] + [EndpointSpec(a, 3, 1, 64, 64) for a in (0x82, 0x83, 0x84, 0x85, 0x86)]
@@ -112,8 +107,7 @@ def six_in():
 
 
 def five_hid_interfaces():
-    """Five HID interfaces with one IN each (0x81 8 B every 10 ms, a boot keyboard's 0x82 28 B, 0x83 64 B
-    beside OUT 0x03, 0x84 8 B every 4 ms, 0x85 64 B), counters streaming on 0x85 and 0x83."""
+    """Five HID interfaces with one IN each (0x81-0x85), counters streaming on 0x85 and 0x83."""
     vend, kbd = VEND8_DESC, KBD_DESC
     body = (itf(0, 1, 3) + hid(len(vend)) + ep(0x81, 8, 10)
             + itf(1, 1, 3, 1, 1) + hid(len(kbd)) + ep(0x82, 28, 1)
@@ -126,7 +120,6 @@ def five_hid_interfaces():
                        pump=Pump(0x85, 1000, GEN_COUNTER), pump2=Pump(0x83, 1000, GEN_COUNTER))
 
 
-# An 8-byte vendor-page input report.
 VEND8_IN_DESC = bytes.fromhex("0600ff0901a101090215002600ff750895088102c0")
 
 
@@ -139,8 +132,7 @@ def hid_alt():
 
 
 def vend_alt():
-    """A vendor interface streaming a counter at 500 Hz in 64-byte packets on IN 0x83 in alternate setting 0 and on
-    IN 0x85 in 1."""
+    """A vendor interface streaming a 500 Hz counter on IN 0x83 in alternate setting 0 and on IN 0x85 in 1."""
     body = itf(0, 1, 0xFF) + ep(0x83, 64) + itf(0, 1, 0xFF, alt=1) + ep(0x85, 64)
     return personality(0x6234, cfg(1, body),
                        [EndpointSpec(0x83, 3, 1, 64, 64), EndpointSpec(0x85, 3, 1, 64, 64, alt=1)],
@@ -154,7 +146,6 @@ def hid_one_alt():
                        hid_report=VEND8_IN_DESC, pump=Pump(0x81, 4000, GEN_COUNTER), alt_model=1)
 
 
-# The device qualifier of a mouse that could run at high speed.
 SPEED_QUALIFIER = bytes([10, 6, 0x00, 0x02, 0, 0, 0, 64, 1, 0])
 
 
@@ -235,7 +226,6 @@ def long_configuration():
                        pump=Pump(0x81, 1000, GEN_MOUSE_JIGGLE))
 
 
-# (name, a builder or the sim's built-in personality as the sim's built-in personality name and arguments, PID)
 SHAPES = [
     ("mouse", ["mouse"], 0x6100),
     ("composite", ["composite"], 0x6102),

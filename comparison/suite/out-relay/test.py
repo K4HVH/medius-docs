@@ -1,5 +1,4 @@
-"""Data from the PC to the real device, and vendor data from the real device. The sim records what reaches it, so
-each leg checks the device end.
+"""Data from the PC to the real device, and vendor data from the real device.
 
 Legs:
   kbd_led    a boot keyboard with no interrupt OUT: the PC writes an LED output report (Caps Lock) through hidraw,
@@ -18,7 +17,6 @@ from medius_shapes.personalities import sim_module
 
 KBD_PID, HID_OUT_PID = 0x7100, 0x7101
 SETTLE_S = 2.0
-# A vendor-page report, 8 bytes in and 8 out.
 HID_OUT_DESC = bytes.fromhex("0600ff0901a1010902150026ff00750895088102" "0903750895089102" "c0")
 OUTLOG, EP0LOG = 0x5A, 0x5D
 
@@ -51,7 +49,6 @@ def crc16(data, crc=0xFFFF):
 
 
 def _ask(ctx, ty, secs=0.6):
-    """One of the sim's records, read and cleared: the reply's payload, or None."""
     lk = sim_module("link")
     link = ctx.sim()
     try:
@@ -71,8 +68,6 @@ def _ask(ctx, ty, secs=0.6):
 
 
 def _out_log(ctx):
-    """What the sim's OUT endpoints received since the last read: packets, bytes, CRC16 over the bytes in arrival
-    order, and each packet's length."""
     p = _ask(ctx, OUTLOG)
     if p is None or len(p) < 11:
         return None
@@ -81,8 +76,6 @@ def _out_log(ctx):
 
 
 def _ep0_log(ctx):
-    """The control OUT data stages the sim's endpoint 0 took since the last read: how many, and the last one's setup
-    packet and bytes."""
     p = _ask(ctx, EP0LOG)
     if p is None or len(p) < 14:
         return None

@@ -35,7 +35,6 @@ def _engine(entry: str, args, suite) -> Engine:
 
 
 def _clone_port(box: str, port: str) -> str:
-    """The USB port the box's clone is on: a Medius box says what it cloned; stock can't, so it is named."""
     from medius_bench import quiet
     if box == "medius":
         import medius

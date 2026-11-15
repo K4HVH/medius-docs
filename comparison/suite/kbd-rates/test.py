@@ -1,17 +1,14 @@
 """Native keyboard reports through the box at 500 Hz and 250 Hz: every report, once, unchanged, in order, and how
 evenly spaced on the bus?
 
-kbd-relay's method at two more rates. The sim plays a boot keyboard (8-byte report) whose two key slots step
-through 160 distinct pairs (slot 1 'a'..'p', slot 2 '1'..'0') and repeat, so each report names itself. It ticks
-on its host's frames, each report armed 500 us into the frame. Legs:
-  500  a report every 2 ms, bInterval 2
-  250  a report every 4 ms, bInterval 4
-The clone's interrupt IN completions are read off the USB monitor for 15 s. Per leg: reports (and roughly how many
-the sim sent in that time), dropped (steps skipped), duplicated, reordered, reports not from the sequence, the
-intervals between reports (all, and those within half a period of nominal), steady intervals 10% or more off
-nominal, intervals over 1.5 periods, and a histogram of the intervals in 0.1 ms bins. Each report is also placed
-on the PC's poll grid: reports a poll early or late, and polls missed. Raw stamps are kept. Also the clone's
-endpoint as the PC sees it: the bInterval it declares and the interval the host controller polls at."""
+The sim plays a boot keyboard (8-byte report) whose two key slots step through 160 distinct pairs (slot 1 'a'..'p',
+slot 2 '1'..'0') and repeat, so each report names itself; each is armed 500 us into its host's frame. Legs: 500, a
+report every 2 ms at bInterval 2; 250, every 4 ms at bInterval 4. The clone's interrupt IN completions are read off
+the USB monitor for 15 s. Per leg: reports (and about how many the sim sent), dropped (steps skipped), duplicated,
+reordered, reports not from the sequence, the intervals (all, and those within half a period of nominal), steady
+intervals 10% or more off nominal, intervals over 1.5 periods, a histogram in 0.1 ms bins, reports a poll early or
+late on the PC's poll grid and polls missed, the raw stamps, and the bInterval the clone declares with the interval
+the host controller polls it at."""
 import time
 
 from medius_compare import polls, stats, wire

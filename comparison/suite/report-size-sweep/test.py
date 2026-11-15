@@ -1,11 +1,8 @@
-"""The largest HID report descriptor the box's clone serves: the sim's built-in mouse whose report descriptor is
-padded to N bytes and declared as N, at sizes from 256 to 2,047 bytes (`base`) and from 513 to 700 (`513_700`). Per
-size: whether the clone enumerated again, how many bytes of report descriptor the PC got, and the driver bound to
-each interface. Every size shares one VID:PID, so a clone counts as the new one only once its device number changes.
-
-Outcome: the HID driver loads when, at every size in the row, it is bound and the PC got at least the declared
-bytes of report descriptor.
-"""
+"""The largest HID report descriptor the box's clone serves: the sim's built-in mouse with its report descriptor
+padded to N bytes and declared as N, at sizes from 256 to 2,047 bytes (`base`) and from 513 to 700 (`513_700`).
+Per size: whether the clone enumerated again (by device number, as every size shares one VID:PID), the bytes of
+report descriptor the PC got, and the driver bound to each interface. Outcome: the HID driver loads when, at every
+size in the row, it is bound and the PC got at least the declared bytes of report descriptor."""
 import glob
 import os
 import time

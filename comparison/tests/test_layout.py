@@ -1,14 +1,12 @@
 """Tests for medius_compare.layout: a mouse's report layout read from its report descriptor."""
 from medius_compare import layout
 
-# A gaming mouse: no report ID, 16 buttons, 16-bit X and Y, an 8-bit wheel and AC Pan.
 WIDE = bytes.fromhex(
     "05010902a101" "0901a100"
     "05091901291015002501951075018102"
     "0501160180 26ff7f 7510 9502 0930 0931 8106".replace(" ", "")
     + "1581257f750895010938 8106".replace(" ", "")
     + "050c0a3802 95018106 c0c0".replace(" ", ""))
-# A keyboard on report ID 1, then a mouse on report ID 2: 5 buttons, 12-bit X and Y, an 8-bit wheel.
 REPORT_ID = bytes.fromhex(
     "05010906a1018501050719002965150025017501950881 00c0".replace(" ", "")
     + "05010902a1018502" "0901a100"

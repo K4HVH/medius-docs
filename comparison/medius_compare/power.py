@@ -18,8 +18,7 @@ def _switch(hub, ports, action):
 
 
 def cycle(hub: str, ports: list, off_s: float = None):
-    """Every port in `ports` off, then on after `off_s` seconds. A failed switch-on is tried twice more: a
-    port left off leaves the box dark."""
+    """Every port in `ports` off, then on after `off_s` seconds, retrying a failed switch-on twice."""
     p = ",".join(str(n) for n in ports)
     _switch(hub, p, "off")
     time.sleep(OFF_S if off_s is None else off_s)

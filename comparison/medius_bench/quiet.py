@@ -1,10 +1,4 @@
-"""Keep a clone off this desktop while tests run against it.
-
-libinput ignores whatever enumerates on the clone's USB port, through a runtime udev rule gone at reboot or when
-the holder ends. Every input node on that port is held open too: usbhid polls an interrupt-IN endpoint only while
-its node is open, so with the desktop ignoring the clone, the wire would otherwise go quiet. The rule names the
-process holding it, which `clone_guard` checks before a test injects anything.
-"""
+"""Keep a clone off this desktop while tests run against it, holding its input nodes open so the PC polls it."""
 import contextlib
 import os
 import re
@@ -68,7 +62,7 @@ def clone_usb_port(box):
 
 def _reenumerate(usb_port):
     auth = f"/sys/bus/usb/devices/{usb_port}/authorized"
-    if not os.path.exists(auth):        # nothing on the port: the rule takes whatever enumerates there next
+    if not os.path.exists(auth):
         return
     for v in ("0", "1"):
         with open(auth, "w") as f:
@@ -122,7 +116,7 @@ def hold(usb_ports, stop=None):
             ready, _, _ = select.select(list(held.values()), [], [], 0.2)
         except (OSError, ValueError):
             ready = list(held.values())
-        time.sleep(0.02)                # a moving clone wakes this every millisecond; drain in batches
+        time.sleep(0.02)  # a moving clone wakes this every millisecond
         for node, fd in list(held.items()):
             if fd not in ready and os.path.exists(node):
                 continue
@@ -131,7 +125,7 @@ def hold(usb_ports, stop=None):
                     pass
             except BlockingIOError:
                 pass
-            except OSError:             # the clone re-enumerated and this node went with it
+            except OSError:
                 os.close(fd)
                 del held[node]
     for fd in held.values():
@@ -152,8 +146,7 @@ def held_elsewhere(usb_ports):
 
 @contextlib.contextmanager
 def quieted(usb_ports, native=None):
-    """The clone kept off this desktop for the body; the rule goes when it ends, Ctrl-C included. A rule another live
-    holder keeps for these ports is left as it is: removing it would hand that holder's clone back to the desktop."""
+    """The clone kept off this desktop for the body; a rule another live holder keeps for these ports is left alone."""
     ports = list(usb_ports) + ([native[1]] if native else [])
     if held_elsewhere(ports):
         yield
@@ -169,7 +162,7 @@ def quieted(usb_ports, native=None):
         main = threading.current_thread() is threading.main_thread()
         old = {s: signal.signal(s, signal.SIG_IGN) for s in (signal.SIGINT, signal.SIGTERM)} if main else {}
         try:
-            set_rule(ports, False)      # a second signal must not leave a port deauthorized
+            set_rule(ports, False)  # a second signal must not leave a port deauthorized
         finally:
             for s, h in old.items():
                 signal.signal(s, h)

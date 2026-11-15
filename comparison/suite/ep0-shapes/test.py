@@ -35,22 +35,18 @@ def _mouse(pid, mps0=64, strings=False):
 
 
 def ep0_8():
-    """A mouse moving every millisecond with an 8-byte endpoint 0."""
     return _mouse(0x70F8, 8)
 
 
 def ep0_16():
-    """The same with a 16-byte endpoint 0."""
     return _mouse(0x70F6, 16)
 
 
 def ep0_32():
-    """The same with a 32-byte endpoint 0."""
     return _mouse(0x70F2, 32)
 
 
 def strings():
-    """The same with a 64-byte endpoint 0 and manufacturer, product and serial strings."""
     return _mouse(0x70F5, 64, True)
 
 

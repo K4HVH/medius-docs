@@ -1,46 +1,25 @@
 """IN endpoints the PC stops reading for a while: does the PC still get every report the real device would have kept
 for it, and how old is the first one it gets after a pause?
 
-Natively only the PC polls the real device, and a report the PC hasn't taken stays in the real device. The sim's IN
-ring holds two reports and its counter stops while the ring is full, so a PC that pauses loses nothing, and the
-first report it reads after a pause carries the next counter value. A box polls the real device itself. If it polls
-ahead of the PC it holds a queue, and once that queue is full it loses reports the real device would have kept.
-
-Legs:
-  interrupt  A counter every millisecond on a vendor-page HID interface's interrupt IN (0x82, the sim's first
-             pump) and a vendor interface's interrupt IN (0x83, its second), 8-byte packets, beside a silent mouse.
-             The PC takes both interfaces from their kernel drivers and reads them through usbfs, one transfer per
-             report with eight queued, so an endpoint is polled every frame while a batch is open and never
-             between batches. The schedule: 5000 back to back from when the clone is up, then 40 batches of 50
-             with pauses of 0, 5, 20, 100 and 1000 ms after them in turn, then 1000 back to back. Both endpoints
-             start each batch together.
-  bulk       A vendor bulk IN (0x83, 64-byte packets) beside a silent mouse, the sim queuing a packet every 20 us,
-             faster than full speed carries them, so the bus sets the pace. Read through usbfs in transfers of 64
-             packets with four queued: 20000 back to back, 40 batches of 200 with the same pauses, then 8 batches
-             of 2500 back to back.
+Natively the sim's IN ring holds two reports and its counter stops while the ring is full, so a pause loses nothing
+and the first report after it carries the next value. Legs, each beside a silent mouse, read through usbfs:
+  interrupt  a counter every millisecond on a vendor-page HID interface's interrupt IN (0x82, the sim's first pump)
+             and a vendor interface's (0x83, its second), 8-byte packets, one report per transfer, eight queued:
+             5000 back to back, 40 batches of 50 with pauses of 0, 5, 20, 100, 1000 ms in turn, 1000 back to back
+  bulk       a vendor bulk IN (0x83, 64-byte packets) as fast as the bus takes them, 64 packets per transfer, four
+             queued: 20000 back to back, 40 batches of 200 with the same pauses, then 8 batches of 2500
 Medius runs with imperfect clones allowed: it clones a vendor bulk endpoint only then.
 
-Per endpoint:
-- Counter steps between consecutive packets. The counter is 8 bits. A step of 1 is the next report; 0 a repeat;
-  2 to 192 means that many less one were skipped; 193 to 255 reads as out of order (it went back). A loss of more
-  than 191 at once is therefore counted as out of order, or not seen at all if it is a multiple of 256. sim_made
-  settles it. Every packet must also be full length, every byte one more than the last.
-- sim_made: reports the sim made over the leg, from its DIAG counters (32 bits, no wrap), against reports the PC
-  read. Natively made_not_read is about 0: the two reports in the ring when reading starts make up for the two it
-  holds at the end.
-- Per batch after a pause, `step` is the counter step from the last report before the pause to the first one after.
-  For interrupt endpoints, `elapsed` is the report periods between those two reads, and `stale` is elapsed less
-  step: how many periods before its read the first report was made, if the real device counted without stopping.
-  Natively the step is 1 and stale is about the pause, since the real device stopped counting while it held two
-  reports. A box that polls the real device through the pause shows a larger step, the reports between lost. For
-  pauses of 100 ms and over, the sim's DIAG is read 5 ms into the pause and again 15 ms before it ends.
-  `made_during` is the reports the sim made between those reads; natively none, the ring being full. For the sim's
-  first pump only, `made_ahead_at_start` is how many it had made past the last one the PC read, 5 ms into the pause
-  (natively 2, its ring; counted modulo 256).
-- Per phase: reports read, rate, and for interrupt endpoints `frames_without_report` (batch duration in frames less
-  the reports it read; natively about 0).
-- Medius's drop counters across each leg.
-A clone that comes up without an endpoint is recorded as such."""
+Per endpoint: `repeated`, `skipped` (reports) and `out_of_order`, from the 8-bit counter's steps (a loss of more
+than 191 at once reads as out of order), `not_whole` packets (short, or not counting up byte by byte), `sim_made`
+(reports the sim made, from its DIAG counters) and `made_not_read` (that less the reports read, natively about 0).
+After each pause, `step` is the counter step across it (natively 1; more means reports lost); for interrupt
+endpoints `elapsed` is the report periods between the two reads and `stale` is elapsed less step, the first
+report's age in periods (natively about the pause). For pauses of 100 ms and over, `made_during` counts the reports
+the sim made from 5 ms into the pause to 15 ms before its end (natively none), and on the first pump
+`made_ahead_at_start` counts those made past the last one read, 5 ms in (natively 2). Per phase: reports read, rate
+and, for interrupt endpoints, `frames_without_report` (natively about 0). Also Medius's drop counters across each
+leg, and any endpoint the clone comes up without."""
 import ctypes
 import os
 import time
@@ -78,8 +57,7 @@ def _own(p, pid):
 
 
 def counter_device():
-    """A silent mouse beside a vendor-page HID interface and a vendor interface, each streaming a counter every
-    millisecond on an 8-byte interrupt IN."""
+    """A silent mouse beside vendor-page HID and vendor interrupt INs, each counting every millisecond."""
     return _own(shapes.counter_personality(), INT_PID)
 
 
@@ -108,8 +86,6 @@ def _endpoints(usb):
 
 
 def _parse_endpoints(blob, active):
-    """Every endpoint configuration `active` declares, from the device's descriptors: the first declaration of
-    each."""
     eps, i = {}, 18
     while i + 4 <= len(blob):
         total = blob[i + 2] | blob[i + 3] << 8
@@ -132,8 +108,6 @@ def _parse_endpoints(blob, active):
 
 
 def _open_clone(usb, want):
-    """Take the interfaces holding the endpoints in `want` from their kernel drivers and claim them through usbfs.
-    Returns (device or None, {"0xNN": what the clone declares, or present False}, interfaces unbound, error)."""
     try:
         eps = _endpoints(usb)
     except OSError as e:
@@ -190,8 +164,6 @@ def _stat_delta(a, b):
 
 
 def _diag(sim):
-    """The sim's report counters: pump_tick (the first pump's reports made) and appends (both pumps'), with the
-    time read."""
     try:
         d = sim.diag()
     except Exception:
@@ -200,8 +172,6 @@ def _diag(sim):
 
 
 def _made(pump, a, b):
-    """Reports the sim's pump 1 or 2 made between DIAG reads a and b; None if a read is missing or the counters
-    started again between them (a bus reset)."""
     if not a or not b or b["pump_tick"] < a["pump_tick"] or b["appends"] < a["appends"]:
         return None
     dt, da = b["pump_tick"] - a["pump_tick"], b["appends"] - a["appends"]
@@ -215,8 +185,6 @@ def _wait_until(t):
 
 
 class _Stream:
-    """One IN endpoint read to the schedule: every packet with its batch and the time its transfer was reaped."""
-
     def __init__(self, name, ep, xfer, pkt, buf_pkt, per_urb, depth, pump):
         self.name, self.ep, self.xfer, self.pkt = name, ep, xfer, pkt
         self.buf_pkt, self.per_urb, self.depth, self.pump = buf_pkt, per_urb, depth, pump
@@ -229,8 +197,6 @@ class _Stream:
 
 
 class _Reader:
-    """Reads the streams of one usbfs handle in batches, every stream starting each batch together."""
-
     def __init__(self, raw, streams):
         self.raw, self.streams, self.live = raw, streams, {}
 
@@ -296,7 +262,6 @@ class _Reader:
             s.batches.append((t_open, s.t_first, s.t_last, s.got))
 
     def cancel(self, k):
-        """Discard what a failed stream left queued; anything those transfers did carry still counts as read."""
         for _, u, _, _ in list(self.live.values()):
             self.raw.discard(u)
         end = time.monotonic() + 1.0
@@ -314,7 +279,6 @@ class _Reader:
                     self._take(s, k, time.monotonic(), data)
 
     def run(self, schedule, sim):
-        """Every batch in turn, each pause slept out after it; the sim's DIAG read at both ends of the long ones."""
         pauses = {}
         for k, (n, pause, _) in enumerate(schedule):
             if all(s.error is not None for s in self.streams):
@@ -335,7 +299,6 @@ class _Reader:
 
 
 def _steps(vals):
-    """Steps between consecutive 8-bit counter values: next, repeated, skipped (reports), out of order."""
     out = {"repeated": 0, "skipped": 0, "skip_runs": 0, "out_of_order": 0}
     odd = []
     for i in range(1, len(vals)):
@@ -436,7 +399,6 @@ def _analyse(s, schedule, pauses, d0, d1, period_ms):
 
 
 def _read_leg(ctx, usb, specs, schedule, per_urb, depth, period_ms):
-    """specs: (name, endpoint, native packet size, sim pump 1 or 2). Returns ({ep: clone's endpoint}, {ep: result})."""
     usbfs = sim_module("usbfs")
     raw, info, unbound, err = _open_clone(usb, [ep for _, ep, _, _ in specs])
     out = {f"0x{ep:02x}": {"name": name, "present": False} for name, ep, _, _ in specs

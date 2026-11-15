@@ -1,16 +1,13 @@
 """The largest clump of one-count moves each box takes in one write, into a still mouse.
 
-Each step writes one clump of N moves in a single write, sums the clone's X on its evdev node until X has been
-still for 1 s (so extra counts show too), then checks that the box still answers in step and that 100 more moves
-paced 1 ms apart all arrive. The refusals the box sends back (`DE AD 01 00 <op> FF`) are counted by opcode, after
-the clump and after the 100. A variant stops at the first step that loses a count, leaves the box out of step, or
-loses one of the 100.
-
+Each step writes a clump of N moves at once and sums the clone's X on its evdev node until X has been still for 1 s
+(extra counts show too), then checks that the box still answers in step and that 100 more moves paced 1 ms apart
+all arrive. Refusals the box sends back (`DE AD 01 00 <op> FF`) are counted by opcode, after the clump and after
+the 100. A variant stops at the first step that loses a count, leaves the box out of step, or loses one of the 100.
 Variants: `text` writes stock's `km.move(1,0)\\r\\n` (14 bytes) in clumps of 8, 16 and 18; `base` writes stock's
 binary MOVE (`DE AD 04 00 18 01 00 00 00`, 9 bytes) in clumps of 8 to 256. Medius gets MOVE frames (12 bytes) in
-both. A clump that leaves stock one command behind holds it there until a power cycle, so a box found one command
-behind before a step is power-cycled first (`cycled_before`); one still behind after the cycle skips the variant.
-"""
+both. A box found one command behind before a step is power-cycled first (`cycled_before`); one still behind after
+the cycle skips the variant."""
 import re
 import time
 
@@ -23,9 +20,6 @@ VARIANTS = (("text", "text", (8, 16, 18)), ("base", "bin", (8, 16, 20, 24, 28, 3
 
 
 class _Port:
-    """The box's control port as bytes. Medius takes its frames on the bare port with the package closed, and
-    answers a query through the package between writes."""
-
     def __init__(self, box):
         self.box = box
         self.raw = box.raw() if box.kind == "medius" else None

@@ -1,17 +1,13 @@
-"""Standard control requests across device stacks. The sim plays one device stack at a time (medius_shapes.ep0_stacks:
-a mouse, a vendor-page HID interface and a vendor interface carrying a class descriptor, answering as each stack
-does: the direction bit acted on or refused, recipients read from five bits or two, wLength rules, LUFA, STM32's
-library, V-USB, CherryUSB, a stack leaving device-to-host requests with no data stage unanswered, one padding its
-replies, one answering long reads from its buffer and SET_DESCRIPTOR only after a read, and the rest). The 22 stacks
-are those whose device neither dies, swaps nor falls a reply behind under the reads.
+"""Standard control requests across device stacks: 316 requests that change nothing, sent to the clone and to the
+native sim (lent to the PC hub) as raw control transfers through usbfs, each given 1 s.
 
-Each stack is presented on the native sim (lent to the PC hub) and read, then on the box's sim and its clone read the
-same way: 316 requests that change nothing, as raw control transfers through usbfs with every interface taken from its
-kernel driver, each given 1 s. Outcome, the PC's error and every byte must match native. A reply past wLength reads
-as an overrun on both sides where the stack is written to give one. A timeout counts only where the native request
-times out too. SET_ADDRESS is never sent. Per stack: how many requests the clone gives the native reply, and which
-differ (a stack that isn't cloned gives none).
-"""
+The sim plays one of 22 device stacks at a time (medius_shapes.ep0_stacks: a mouse, a vendor-page HID interface and
+a vendor interface carrying a class descriptor, answering as each stack does: the direction bit acted on or refused,
+recipients read from five bits or two, wLength rules, LUFA, STM32's library, V-USB, CherryUSB and others), those
+whose endpoint 0 keeps answering, in step and as the same device, under the reads. Outcome, the PC's error and every
+byte must match native. A reply past wLength reads as an overrun on both sides where the stack is written to give
+one; a timeout counts only where the native request times out too. Per stack: how many requests the clone gives the
+native reply, and which differ (a stack that isn't cloned gives none)."""
 import ctypes
 import fcntl
 import os
@@ -91,8 +87,7 @@ def reads(total):
         r += [(0x80 | rc, 0, 0, 0, 2), (0x80 | rc, 6, 0x0100, 0, 18), (0x80 | rc, 8, 0, 0, 1)]
         r += [(0x80 | rc, 10, 0, 0, 1), (rc, 1, 1, 1, 0)]
     r += [(0x83, 6, 0x0100, 0, 0), (0x03, 0, 0, 0, 2)]
-    # An interface and an endpoint the descriptors lack, named through recipients 5 and 6: usbfs refuses them at 1 and
-    # 2, and a stack reading two recipient bits takes these for them.
+    # Recipients 5 and 6 name an interface and an endpoint the descriptors lack: usbfs refuses those at 1 and 2.
     r += [(0x85, 0, 0, 7, 2), (0x85, 0, 0, 7, 1), (0x85, 10, 0, 7, 1), (0x86, 0, 0, 0x8F, 2), (0x86, 0, 0, 0x8F, 1)]
     r += [(0x85, 0, 0, 3, 2), (0x86, 0, 0, 0x83, 2)]
     r += [(0xE0, 0, 0, 0, 2), (0xE0, 6, 0x0100, 0, 18), (0xE1, 1, 0x0100, 0, 8), (0x60, 9, 0, 0, 0)]
@@ -122,8 +117,7 @@ def may_over(quirks, req):
 
 
 def seen(quirks, req, got):
-    """The PC's overrun read as one where this stack runs past wLength: an overflow, or, when the bytes come in the
-    status stage (no IN data stage), an I/O error. Both sides are read so."""
+    """The PC's overflow, or its I/O error in a status stage, read as OVER where this stack runs past wLength."""
     status_stage = req[4] == 0 or not req[0] & 0x80
     if may_over(quirks, req) and got == ("error 5" if status_stage else "error 75"):
         return OVER

@@ -1,32 +1,22 @@
-"""Injected moves in every direction: does each axis get exactly what was sent?
+"""Injected moves in every direction: each axis's total against what was sent.
 
-Each of eight directions (+X, -X, +Y, -Y and the four diagonals) is sent per mouse and move kind (stock km.move
-and km.move_now, Medius MOVE and MOVE with NOW). Scripted mice with five buttons and a wheel:
-  still    16-bit X and Y, one empty report every 2 s (stock won't inject into a device that hasn't reported
-           since it was cloned)
-  moving   16-bit X and Y, reporting every millisecond with X +1, Y +1 and wheel +1
-  still8   8-bit X and Y (a field of -127..127), one empty report every 2 s
-  moving8  8-bit X and Y, X +1, Y +1 and wheel +1 every millisecond
-Legs, per direction:
+Eight directions (+X, -X, +Y, -Y and the diagonals) per mouse and move kind (stock km.move and km.move_now, Medius
+MOVE and MOVE with NOW), into scripted mice with five buttons, a wheel, and X and Y 16-bit (still, moving) or 8-bit
+with a field of -127..127 (still8, moving8). The still mice send one empty report every 2 s (stock won't inject
+into a device that hasn't reported since it was cloned); the moving mice report X +1, Y +1 and wheel +1 every
+millisecond. Legs, per direction:
   sparse   100 unit moves (each axis -1, 0 or +1) 30-60 ms apart
   stream   500 unit moves paced at 1 kHz
-  big      5 moves of 300 counts on each commanded axis, 150-250 ms apart: past the 8-bit field, so the box must
-           split each one across reports
+  big      5 moves of 300 counts on each commanded axis, 150-250 ms apart: past the 8-bit field
   control  once per mouse, before the rest: nothing sent, the same capture. The method's error; reads 0
-The clone's evdev node is read from 0.3 s before the first command until what arrived matches what was sent (or
-3 s pass), then 0.5 s more so an overshoot shows too. The moving mice carry native motion on both cursor axes,
-taken off using the wheel: each native report carries one wheel count with its (+1, +1), nothing is injected on
-the wheel, so native motion over a capture is the wheel total times (+1, +1). Each capture starts and ends with
-nothing injected in flight, so at both edges a native report's motion and its wheel count arrive together. As a
-coarse check that the wheel tag held, `sim_reports_bracketing` is the sim's count of reports the box took, read
-just before and just after the capture: it should read a few above `native_reports`, never below.
-Recorded per leg: want and got per axis and how far off, the reports carrying motion, and the time from the last
-command until the running total reached what was sent and stayed there. For the still mice also: the reports
-moving against the commanded direction or on an axis not commanded, the largest value per report, a histogram,
-and on the 8-bit mouse the reports at the field's limit. Stock: ERR replies per leg, and whether its parser is in
-step before and after each mouse (one behind, it holds back each last command, and the run stops). Medius gets a
-QUERY(HEALTH) every 0.25 s while the test waits, as its 1 s silence rule asks of a host.
-"""
+The clone's evdev node is read until what arrived matches what was sent (or 3 s pass), then 0.5 s more so an
+overshoot shows. Native motion, the wheel total (`native_reports`) times (+1, +1), is taken off each axis;
+`sim_reports_bracketing`, the sim's count of reports the box took over the capture, should read a few above it,
+never below. Per leg: want and got per axis and how far off, the reports carrying motion, and the time from the
+last command until the total reached what was sent and stayed there. The still mice add reports against the
+commanded direction or on an axis not commanded, the largest value per report, a histogram, and on the 8-bit mouse
+the reports at the field's limit. Stock: ERR replies per leg; one command behind before or after a mouse stops
+the run."""
 import random
 import time
 
@@ -53,7 +43,6 @@ def moving8():
 
 
 SHAPES = {"moving": moving, "still8": still8, "moving8": moving8}
-# (leg, field bits, native motion per report, outcome row)
 MICE = [("still", 16, (0, 0), "inj-dirs-still"), ("moving", 16, (1, 1), "inj-dirs-moving"),
         ("still8", 8, (0, 0), "inj-dirs-still8"), ("moving8", 8, (1, 1), "inj-dirs-moving8")]
 

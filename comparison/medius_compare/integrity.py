@@ -1,5 +1,4 @@
-"""What a run's captures lost. A capture reports its losses here, and the engine fails a test whose run lost
-anything: a capture that dropped data can't say a report went missing."""
+"""What a run's captures lost; the engine fails a test whose run lost anything."""
 from contextlib import contextmanager
 
 _sink = None

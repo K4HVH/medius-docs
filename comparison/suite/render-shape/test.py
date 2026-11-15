@@ -1,19 +1,16 @@
 """What each smoothing setting does to a move, read off the PC's USB bus: every report the clone emits, bytes and
 time, against the move's packet reaching the box's control port.
 
-Settings, each set in turn and the box's own put back after: stock interpolation AUTO (its default), 0, 25, 50
-and 100; Medius render DESPIKED (its default), OFF, STOCK, UNSMOOTHED, DESPIKED with full rendering, and OFF with
-spread 0. Per setting, on a scripted 16-bit mouse (injection on X, native motion on Y):
+Settings, each in turn: stock interpolation AUTO (its default), 0, 25, 50 and 100; Medius render DESPIKED (its
+default), OFF, STOCK, UNSMOOTHED, DESPIKED with full rendering, and OFF with spread 0. On a scripted 16-bit mouse
+(injection on X, native motion on Y):
   single   moves of 1, 10 and 100 counts into a mouse at rest, 40 each, 150-250 ms apart
   stream   one-count moves at 1,000/s and 125/s for 2 s, mouse at rest
-  moving   100 one-count moves 150-250 ms apart (past stock's longest payout, ~73 ms) into a mouse reporting
-           every millisecond (Y +1/-1)
-The mouse at rest is the idle mouse in `base` (one empty report every 2 s, never moving) and the rested mouse
-in `rested` (3 s moving on Y first, then silent). Medius smooths only once it has seen the mouse move since it
-was cloned, so into the idle mouse every render setting reads as render OFF. `rested` has single and stream only.
-Per cell: latency to the first and last count, reports carrying X per move, the X each report carries, reports
-with no X while the box pays a move out, and the total.
-"""
+  moving   100 one-count moves 150-250 ms apart into a mouse reporting every millisecond
+At rest is the idle mouse in `base` (one empty report every 2 s) and the rested mouse in `rested` (3 s moving, then
+silent; single and stream only). Medius smooths only a mouse it has seen move since it was cloned, so into the idle
+mouse every render setting reads as OFF. Per cell: latency to the first and last count, reports carrying X per
+move, the X each report carries, reports with no X while the box pays a move out, and the total."""
 import random
 import time
 

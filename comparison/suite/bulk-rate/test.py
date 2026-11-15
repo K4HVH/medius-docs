@@ -1,18 +1,15 @@
-"""Bulk packets per second at full rate through the box, against the same device plugged into the PC (the native sim,
-lent to the PC hub). The devices are the device comparison's three bulk shapes: a mouse beside a vendor interface
-whose bulk IN is numbered 0x85; one HID interface with an interrupt IN and a bulk IN; a mouse beside a vendor
-interface with an interrupt IN, an interrupt OUT and a bulk pair. Each mouse reports every millisecond. Each bulk IN
-sends a counter as fast as the bus takes it, and the bulk OUT is written as fast as the device takes it, so natively
-the bus and the real device set the rate. Both sims must run one build.
+"""Bulk packets per second at full rate through the box, against the same device on the native sim plugged into the
+PC. Three bulk shapes: a mouse beside a vendor interface whose bulk IN is numbered 0x85; one HID interface with an
+interrupt IN and a bulk IN; a mouse beside a vendor interface with an interrupt IN, an interrupt OUT and a bulk pair.
+Each mouse reports every millisecond, each bulk IN sends a counter as fast as the bus takes it, and the bulk OUT is
+written as fast as the real device takes it. Both sims must run one build.
 
-Each device is presented on the box's sim and on the native sim, and both are read the same way through usbfs, with
-eight 4,096-byte transfers queued per bulk endpoint for 3 s: the bulk IN alone, the bulk OUT alone (64-byte packets,
-each transfer one of eight fixed patterns), then both at once. The HID interface's interrupt IN is read beside its
-bulk IN, as a driver taking that interface would; the other mice stay with the kernel. The sims count what each OUT
-endpoint received: packets, bytes, and a CRC16 over the bytes in order. Two rounds a run, native then the box. Per
-endpoint and leg: packets per second on each side and the box's share of native, counter steps that weren't one, and
-whether the real device received every byte written once and in order. Medius runs with imperfect clones on (it
-refuses bulk without them); its drop counters are read around each leg.
+Both sides are read through usbfs, eight 4,096-byte transfers queued per bulk endpoint, 3 s per leg: the bulk IN
+alone, the bulk OUT alone, then both at once; the HID interface's interrupt IN is read beside its bulk IN. Two rounds,
+native then the box. Per endpoint and leg: packets per second on each side and the box's share of native, counter
+steps that weren't one, and whether the real device received every byte written once and in order (the sim's packet,
+byte and CRC16 counts). Medius runs with imperfect clones on (it refuses bulk without them); its drop counters are
+read around each leg.
 """
 import ctypes
 import fcntl
@@ -26,12 +23,12 @@ from medius_shapes.personalities import sim_module
 SECS = 3.0
 ROUNDS = 2
 MPS = 64
-PUMP_US = 20             # faster than full speed carries 64-byte packets: the bus sets the pace
+PUMP_US = 20
 DEPTH = 8
 URB_LEN = 64 * MPS
 SETTLE_S = 1.0
-LINGER_S = 0.5           # after the last write, for what the box still holds to reach the real device
-_KEEP = []               # transfers discarded but never reaped, kept alive while their handle may still reap them
+LINGER_S = 0.5
+_KEEP = []               # transfers discarded but never reaped, held while their handle may still reap them
 
 _U = ord("U")
 _IOCTL = (3 << 30) | (16 << 16) | (_U << 8) | 18
@@ -48,8 +45,6 @@ SHAPES = {"fresh_mouse": fresh_mouse}
 
 
 def devices():
-    """(row, pid, personality, interface the bulk endpoints are on, bulk IN, bulk OUT or None, interrupt IN read beside
-    the bulk IN or None)."""
     mouse = core.EndpointSpec(0x81, 3, 1, 8, 3)
     jiggle = core.Pump(0x81, 1000, core.GEN_MOUSE_JIGGLE)
     high = core.personality(
@@ -93,8 +88,7 @@ def crc_upd(c, data):
 
 
 class Patterns:
-    """The eight transfers the OUT legs write in turn, and the CRC of any number of them in that order. The CRC is
-    linear, so carrying a state over one transfer is its CRC from 0 XOR the state carried over as many zeros."""
+    """The eight transfers the OUT legs write in turn, and the CRC of any number of them in that order."""
 
     def __init__(self):
         self.bufs = [bytes(((k * 64 + i // MPS) & 0xFF) if i % MPS == 0 else (k + i) & 0xFF for i in range(URB_LEN))
@@ -181,7 +175,6 @@ def _run(usbfs, d, ins, out, pats, secs):
                         s["breaks"] += 1
                     s["last"] = c
                 s["packets"] += 1
-        # The INs stop at the deadline; the OUT writes on through the transfers it has queued.
         if time.monotonic() < end and not s["error"]:
             go(ep, nxt[ep])
             nxt[ep] += 1

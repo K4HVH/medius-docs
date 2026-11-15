@@ -2,9 +2,8 @@
 (two HID interfaces, reporting every millisecond); the PC reads its reports through hidraw for 0.6 s, then sends
 SET_PROTOCOL(boot) and SET_IDLE(0) to each interface and GET_PROTOCOL to both, reads the mouse's reports through
 usbfs for 0.5 s (3 bytes each once it has switched; reports held from before the switch come first), then sends
-SET_PROTOCOL(report) back. 100 tries: a box that drops one now and then needs that many to show it.
-Per try: which requests went unanswered (1 s timeout) or failed, and whether the real device switched. A request
-left unanswered here is one a host waits out, and may reset the real device over."""
+SET_PROTOCOL(report) back, 100 tries. Per try: which requests went unanswered (1 s timeout) or failed, and whether
+the real device switched. A host waits out a request left unanswered, and may reset the real device over it."""
 import os
 import time
 from collections import Counter
@@ -75,7 +74,7 @@ def _hidraw(usb, intf):
 
 
 def _lengths(usb, ep, secs=0.6, intf=0):
-    """Lengths of the packets the clone completed on `ep` over `secs`, with its hidraw node open so the PC polls."""
+    # an open hidraw node keeps the PC polling the clone
     fd = _hidraw(usb, intf)
     _, dev = wire.resolve(usb)
     try:
@@ -88,8 +87,6 @@ def _lengths(usb, ep, secs=0.6, intf=0):
 
 
 def _read_lengths(dev, ep, secs=0.5):
-    """Lengths of the reports read off `ep` through usbfs for `secs`, one read at a time with a 20 ms timeout, in
-    order."""
     out = []
     end = time.monotonic() + secs
     while time.monotonic() < end:

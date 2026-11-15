@@ -72,7 +72,6 @@ def off_bench(tmp_path, where):
 
 
 def test_a_sim_whose_box_is_off_the_bench_is_never_behind_it(tmp_path):
-    # the stock box gone, its sim plugged straight into the socket the box's PC cable used: the native reference
     assert off_bench(tmp_path, {"SIMSTOCK": "2-3.4", "SIMMEDIUS": "2-3.1"}).layout_now() == "native:medius"
     assert off_bench(tmp_path, {"SIMSTOCK": "2-5.1", "SIMMEDIUS": "2-3.1"}).layout_now() == "unknown"
 
@@ -105,11 +104,10 @@ def test_a_run_opens_only_the_boxes_on_the_bench(tmp_path):
 
 
 def test_a_native_socket_that_is_the_sims_own_box_clone_socket_is_refused():
-    # plugged in there the sim reads as behind its box, never as the native reference, and a run would wait forever
     cfg = {**CONFIG, "sim": {"stock": {**CONFIG["sim"]["stock"], "native": "2-3.4"}, "medius": CONFIG["sim"]["medius"]}}
     with pytest.raises(ValueError, match="native socket 2-3.4"):
         Bench(cfg, locate=lambda serial: None)
-    Bench(OFF_BENCH, locate=lambda serial: None)   # the same socket with the box off the bench is the bench as it is
+    Bench(OFF_BENCH, locate=lambda serial: None)
 
 
 def test_an_unknown_config_key_is_refused():
@@ -118,7 +116,6 @@ def test_an_unknown_config_key_is_refused():
 
 
 class JamBox(FakeBox):
-    """A stock box one reply behind until the hub has switched its power off and on."""
 
     def __init__(self, record):
         super().__init__("stock")

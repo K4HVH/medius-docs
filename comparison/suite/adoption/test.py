@@ -1,10 +1,7 @@
-"""How many people use each box's packages and community, from the registries' and Discord's public figures.
-
-Read when the run happens, from their public APIs: PyPI downloads in the last 30 days (pypistats.org), crates.io
-downloads in the last 90 days, and the members of each project's Discord server (its invite's approximate member
-count). Stock's figures sum three packages on each registry, Medius's are its one package; KMBox packages are left
-out. Each run returns the totals of the box it runs for, with each package's own figure beside them.
-"""
+"""Package downloads and Discord members for each box, read from public APIs when the run happens: PyPI downloads in
+the last 30 days (pypistats.org), crates.io downloads in the last 90 days, and the approximate member count of each
+project's Discord invite. Stock's figures sum three packages on each registry, Medius has one package on each, and
+KMBox packages are left out; each package's figure is kept beside the totals."""
 import json
 import time
 import urllib.error

@@ -1,5 +1,4 @@
-"""The single-file download's entry: unpack once into ~/.cache/medius-compare, then run compare.py's command line
-from there (the suite and its tests are read as files)."""
+"""The single-file download's entry: unpack once into ~/.cache/medius-compare, then run compare.py's command line."""
 import hashlib
 import os
 import sys

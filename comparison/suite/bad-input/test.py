@@ -1,21 +1,20 @@
-"""Malformed input on each box's control port, then a valid 7-count move: does the box act on the bad bytes, does
-the valid move arrive whole, and does the box still answer queries in step?
+"""Malformed input on each box's control port, then a valid 7-count move: whether the box acts on the bad bytes,
+whether the valid move arrives whole, and whether the box still answers queries in step.
 
-X is counted in the clone's mouse reports on the PC's USB bus. `acted` is any motion besides the valid move. Garbage
-is paced at 64 bytes/ms and carries no 0xDE or 0xA5 byte, so no stock binary command or Medius frame can form by
-chance. Cases:
+X is counted in the clone's mouse reports on the PC's USB bus; the valid move is stock's km.move and Medius's
+MOVE(NOW), and `acted` is any motion besides it. Garbage is paced at 64 bytes/ms with no 0xDE or 0xA5 byte, so no
+stock binary command or Medius frame can form by chance. Cases:
   garbage       64 KB of random bytes
   cut           a move cut off after half its bytes; the valid move 100 ms later
   cut_now       the same, the valid move straight after
   bad_length    a move whose length field claims more than the box takes (Medius 0xFFFF; stock one byte long)
   unknown       an unknown command (Medius type 0x7E; stock `km.foo()` and binary opcode 0x90)
-  short         a move shorter than a move (Medius a 2-byte payload; stock `km.move(5)`)
-  bad_value     stock `km.move(a,b)` and `km.move(70000,0)`; Medius takes no text, so it has no such case
+  short         a move missing its last fields (Medius a 2-byte payload; stock `km.move(5)`)
+  bad_value     stock only: `km.move(a,b)` and `km.move(70000,0)`
   corrupt       a 5-count move with one bit flipped in its count
   bytewise      the valid move written one byte at a time, 1 ms apart
   interleaved   100 one-count moves 1 ms apart, each followed by a stray 0x00
-The valid move is stock's km.move and Medius's MOVE(NOW). A box found out of step after a case stops there.
-"""
+A box found out of step after a case stops there."""
 import glob
 import os
 import random
@@ -30,9 +29,6 @@ ARRIVES = {"garbage": "link-bad-garbage", "cut": "link-bad-cut", "cut_now": "lin
 
 
 class _Port:
-    """The box's control port as bytes. Medius takes its frames on the bare port with the package closed, and
-    answers a query through the package between writes."""
-
     def __init__(self, box):
         self.box = box
         self.raw = box.raw() if box.kind == "medius" else None
@@ -77,7 +73,6 @@ def _read(path):
 
 
 def _mouse_in(usb):
-    """The clone's mouse: its interrupt IN endpoint and report layout, from sysfs."""
     for rd in sorted(glob.glob(f"/sys/bus/usb/devices/{usb}/{usb}:*/*:*/report_descriptor")):
         with open(rd, "rb") as f:
             lay = layout.mouse_layout(f.read())
@@ -110,7 +105,6 @@ def _flip(data, byte, bit):
 
 
 def _cases(kind):
-    """(name, steps or None where the box has no such case, the valid move)."""
     if kind == "stock":
         def mv(dx):
             return f"km.move({dx},0)\r\n".encode()

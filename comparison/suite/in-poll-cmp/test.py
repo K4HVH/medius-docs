@@ -1,14 +1,12 @@
 """How often the real device's IN endpoints are polled through the box, against the same device plugged into the PC.
 
-A device polled by a PC answers each poll; a silent one NAKs it, and the sim counts those NAKs per interrupt IN
-endpoint. Each device is presented on the box's sim and on the native sim (the sim lent to the PC hub), and each
-endpoint is read the same way on the clone and on the native device, or left unread:
-  vendor  a vendor interface's silent interrupt IN declaring 1, 4 and 8 ms, read through usbfs with four transfers
-          queued as a driver keeps one polled, then left unread
+Each device is presented on the box's sim and on the native sim plugged into the PC; each sim counts the NAKs a
+silent interrupt IN gives, one per poll. Each endpoint is left unread, read the same way on the clone and on the
+native device, then left unread again:
+  vendor  a vendor interface's silent interrupt IN declaring 1, 4 and 8 ms, read through usbfs, four transfers queued
   hid     a vendor-page HID interface's silent interrupt IN declaring 1, 4 and 8 ms, read through its hidraw node
-          (which makes the HID driver poll it), then closed (the driver stops)
-Each window is 2 s, starting 0.5 s after the reading starts or stops, and gives polls per second. Read: the polls
-through the box match within 2% (and 2.5/s) of native. Unread: none, on either side.
+Each 2 s window, 0.5 s after reading starts or stops, gives polls per second. Read: the polls through the box match
+within 2% (and 2.5/s) of native. Unread: none, on either side.
   move    a vendor interrupt IN streaming a counter, which a SET_INTERFACE moves to another address (0x82 <-> 0x83):
           40 single switches, then 40 runs each of two and of three switches back to back, read only where each
           run ends. The worst and median first packet at the new address, through the box and native; a match is
@@ -50,8 +48,7 @@ def hid_device(pid, interval):
 
 
 def move_device():
-    """A mouse beside a vendor interface whose interrupt IN streams a counter at 1 kHz: on 0x82 in alternate
-    setting 0, on 0x83 in 1, the same stream."""
+    """A mouse beside a vendor interface streaming a counter at 1 kHz on 0x82 in alternate setting 0, 0x83 in 1."""
     body = (core.MOUSE_IF + core.itf(1, 1, 0xFF) + core.ep(0x82, 8, 1) + core.itf(1, 1, 0xFF, alt=1)
             + core.ep(0x83, 8, 1))
     return core.personality(MOVE_PID, core.cfg(2, body),
@@ -81,8 +78,6 @@ def _diag(ctx, on):
 
 
 def _naks(ctx, ep):
-    """(when asked, NAKs so far) on each sim: the reply waits out the serial read's timeout, so it is timed from the
-    asking."""
     out = []
     for on in (None, "native"):
         t = time.monotonic()
@@ -111,7 +106,6 @@ def _missing(rows, labels, why):
 
 
 def _pair(ctx, leg):
-    """(clone's USB port, native device's USB port); the clone's is None if it did not come up."""
     native = ctx.native(leg).usb
     try:
         return ctx.device(leg).usb, native, None
@@ -181,7 +175,6 @@ def _hid(ctx, rows):
 
 
 def _first_packet_ms(d, ep):
-    """Milliseconds from submitting a read on `ep` to the first packet arriving, or the whole timeout if none comes."""
     u, b = d.submit_in(ep, 8)
     t = time.monotonic()
     while True:
@@ -206,8 +199,6 @@ def _set_interface(d, iface, alt):
 
 
 def _move_latencies(usb, hops):
-    """First-packet latency (ms) after each of MOVE_SWITCHES runs of `hops` back-to-back SET_INTERFACEs, each
-    moving the stream 0x82 <-> 0x83, read at the address the run ends on."""
     d = sim_module("usbfs").RawDevice(_node(usb))
     ep, cur, lat = {0: 0x82, 1: 0x83}, 0, []
     try:

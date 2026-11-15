@@ -17,7 +17,7 @@ def test_report_puts_two_runs_side_by_side(tmp_path):
     text = report(paths, suite)
     assert "Fake latency" in text and "Fake condition" in text
     line = next(l for l in text.splitlines() if "Fake condition" in l)
-    assert line.count("7") >= 2          # the stock and the Medius value
+    assert line.count("7") >= 2
     assert "V4.122" in text and "3.5.0+fake" in text
 
 

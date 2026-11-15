@@ -1,34 +1,16 @@
-"""Native report latency through the box: from the moment the sim queues a native report to the moment the PC has
-the clone's copy of it, every report, on the PC's USB bus.
+"""Native report latency through the box: from the sim queueing a native report to the PC holding the clone's copy,
+every report, on the PC's USB bus.
 
-The sim plays a 16-bit mouse whose Y field counts 1..200 and repeats, so each clone report names the sim's report
-counter (its pump tick) it was queued on. The sim queues a report every 1001, 2002, 4004 or 8008 us of its clock,
-declaring bInterval 1, 2, 4 or 8. That is a device whose clock runs 1,000 ppm slow against the PC's: the moment a
-report is ready slides through the poll that takes it by 1/1000 of the interval each report, so every phase is
-measured once every 1,000 reports.
-
-The sim replies on its control link at its 1 ms edges, with the pump tick at that edge. Queries are sent at random
-phases, and the USB monitor times each query's OUT and its reply's IN on the clock the clone's reports are timed on:
-  edges     the edge that served each reply, counted from its time against the replies before it; a line through
-            the replies gives the sim's clock against the PC's (`ppm`)
-  placing   an edge comes after every query it replies to was submitted and its bytes crossed the UART. It comes
-            before each packet of its reply completed, less the reply's bytes up to that packet. Per 2 s window,
-            these two envelopes bound where the edges fall on the PC's clock, and the midpoint is used, within
-            +-`band_us` (the widest window; `drift_us` is how far the midpoints moved over the capture)
-  reports   the tick count at each edge, read as the reports slide past the edges, pins each report's queue time
-            on the sim's clock to a few microseconds (`fit_us`), in 2 s windows. A pump that finds its two-report
-            queue full queues nothing that interval, and every later report comes an interval later
-            (`intervals_held_back`, read as a lasting shortfall of the count)
-Latency per report = its completion on the bus (the clone's interrupt IN) - the moment the sim queued it. The
-capture starts once the sim reads no report queued at an edge (`drained_after_s`). The sim pumps from
-SET_CONFIGURATION, so reports queued before the first poll stay one poll behind on a host polling at the native
-interval, until the sim's slow clock skips a poll.
-`device_queue_max` is the most reports the sim ever held unread at an edge: 2 means the box stopped taking the
-native reports as fast as the sim made them, and the sim's two-report queue filled. Reports the sim queued behind an
-unread one are left out of the figures and counted (`queued_behind`, with three intervals either side). After a poll
-the PC skips, the sim keeps its next report whole until its slow clock skips a poll; a real mouse would merge its
-motion into the next report instead.
-A device plugged straight into the PC waits for the PC's poll instead: on average half a poll interval."""
+The sim plays a 16-bit mouse whose Y field counts 1..200, queueing a report every 1001, 2002, 4004 or 8008 us and
+declaring bInterval 1, 2, 4 or 8: a clock 1,000 ppm slow against the PC's, so every phase of the poll is measured
+once per 1,000 reports. The sim's control link replies at its 1 ms edges with its pump tick, and the USB monitor
+times queries and replies on the clock the clone's reports are timed on. That places each edge on the PC's clock
+(`ppm`, within +-`band_us`, `drift_us` over the capture) and each report's queue time on the sim's clock (`fit_us`).
+Latency per report = its completion on the clone's interrupt IN - the moment the sim queued it. The capture starts
+once the sim holds no queued report (`drained_after_s`). `device_queue_max` 2 means the box stopped taking native
+reports as fast as the sim made them; reports queued behind an unread one are left out and counted
+(`queued_behind`), and `intervals_held_back` counts the intervals a full queue skipped.
+Natively a report waits for the PC's poll: half a poll interval on average."""
 import collections
 import random
 import struct
@@ -48,8 +30,7 @@ BAUD = 6_000_000
 BYTE_US = 10 * 1e6 / BAUD
 LEGS = {"1000": (0x7240, 1001), "500": (0x7241, 2002), "250": (0x7242, 4004), "125": (0x7243, 8008)}
 WIN_MS = 2000
-# The sim reads its tick in the first loop pass after its edge, and queues a report in the first pass after it is
-# due: a reply whose edge and report fell in one pass reads either way.
+# A reply whose edge and report fell in one loop pass of the sim may or may not count that report.
 SLACK_US = 2.0
 SETTLE_S = 2.5
 
@@ -66,9 +47,6 @@ SHAPES = {f"slow-clock-mouse-{leg}": _shape(*spec) for leg, spec in LEGS.items()
 
 
 def _drained(ctx, secs=15.0):
-    """Seconds until the sim reads no report queued at an edge, or None if it never drains. Reports can queue
-    before the first poll, and a host polling at the native interval takes one a poll and never catches up until
-    the sim's slow clock skips a poll."""
     link = ctx.sim()
     try:
         t0 = time.monotonic()
@@ -82,8 +60,6 @@ def _drained(ctx, secs=15.0):
 
 
 class _Sampler:
-    """Asks the sim for its pump tick at random phases until stopped; the USB monitor keeps the times."""
-
     def __init__(self, link):
         self.lk = sim_module("link")
         self.link = link
@@ -120,10 +96,6 @@ class _Sampler:
 
 
 def _link_samples(events, dev, t0):
-    """(query OUT submitted, reply IN done, latest the reply's edge can be, pump tick, ring fill) per DIAG reply,
-    times in us from t0. One query is out at a time, so a reply belongs to the last query sent with its sequence
-    number. Each byte of a reply crossed the UART after its edge and came in with its packet, so the edge is no
-    later than any packet's completion less the reply's bytes up to that packet's last."""
     lk = sim_module("link")
     out, pending, buf, when = [], {}, b"", []
     for e in events:
@@ -163,10 +135,6 @@ def _link_samples(events, dev, t0):
 
 
 class _EdgeClock:
-    """The sim's edges on the PC's clock: a line through the replies, moved per window of edges to the middle of
-    that window's envelopes. usbmon stamps wall time, which the PC's time sync steers, and a reply's delay can drift
-    against the PC's frames, so each window's envelopes alone bound its edges."""
-
     def __init__(self, a0, beta, centres, mids):
         self.a0, self.beta, self.centres, self.mids = a0, beta, centres, mids
 
@@ -183,12 +151,10 @@ class _EdgeClock:
 
 
 def _edge_clock(samples):
-    """Each reply's edge index, which replies to trust, and the edges on the PC's clock."""
     ts = np.array([s[0] for s in samples])
     tr = np.array([s[1] for s in samples])
     latest = np.array([s[2] for s in samples])
-    # Counted against the median of the last replies, not the one before: a reply held up half a millisecond then
-    # lands on the wrong edge alone, and is dropped below, instead of shifting every edge after it.
+    # Median of recent replies, not the last one: a late reply then misplaces only itself, not every later edge.
     m = np.zeros(len(tr), dtype=np.int64)
     recent = collections.deque([tr[0]], maxlen=64)
     for j in range(1, len(tr)):
@@ -199,10 +165,6 @@ def _edge_clock(samples):
         beta, a0 = np.polyfit(m[use], tr[use], 1)
         res = tr - (a0 + beta * m)
         use = np.abs(res - np.median(res)) < 300
-    # An edge comes after a query it replied to was submitted and its bytes crossed the UART, and no later than
-    # `latest`. A reply that could have come from more than one edge is dropped: counted from its time, it can land
-    # on the wrong edge and read a tick off. A reply no edge fits is counted separately. Both are found against
-    # envelopes over the whole capture, first inside the outermost 0.5%, then again over the replies kept.
     q_off = ts + 7 * BYTE_US - (a0 + beta * m)
     a_off = latest - (a0 + beta * m)
     early, late = np.percentile(q_off, 99.5), np.percentile(a_off, 0.5)
@@ -236,8 +198,6 @@ def _edge_clock(samples):
 
 
 def _tick_fit(m, P, iv):
-    """Per window of edges, the tick grid on the sim's clock (us from edge 0): queue(k) = e_c + b (k - k_c). Each
-    reply says ticks up to P-1 were queued by its edge and tick P was not, within SLACK_US."""
     fits, widths = [], []
     lo_m, hi_m = int(m.min()), int(m.max())
     bs = iv + np.arange(-0.5, 3.0, 0.001)
@@ -259,16 +219,11 @@ def _tick_fit(m, P, iv):
 
 
 def _held_back(m, P, iv):
-    """The intervals the sim's pump held back: a pump that finds its two-report queue full queues nothing that
-    interval and tries again the next, so every later report comes one interval later than its tick says. Found as
-    a lasting shortfall of the tick count against one window's grid. Returns the count per reply, and per count the
-    first tick it is sure to cover: the next tick at the first reply that shows it."""
     fits, _ = _tick_fit(m, P, iv)
     if not fits:
         return np.zeros(len(m), dtype=np.int64), []
     c, kc, b, ec = fits[0]
     short = np.floor(kc + (1000.0 * m - ec) / b).astype(np.int64) + 1 - P
-    # A count read in the loop pass that queued a report can be one off for that reply alone.
     smooth = np.array([np.median(short[max(0, j - 25):j + 26]) for j in range(len(short))])
     held = np.maximum.accumulate(np.round(smooth).astype(np.int64))
     held -= held[0]
@@ -282,9 +237,6 @@ def _queue_time(fits, u):
 
 
 def _behind_spans(m, ring, held_at, iv):
-    """Spans of the sim's clock (us) in which it queued a report behind one the box had not read: from an edge that
-    read two queued to the next edge that read none, and around each interval the pump held back, widened by three
-    intervals each way to take in the reports either side that the edges' sampling leaves an interval out."""
     raw, j = [(q - iv, q + iv) for q in held_at], 0
     while j < len(m):
         if ring[j] < 2:
@@ -357,7 +309,6 @@ def _analyse(events, sim_dev, clone, iv):
     lat = np.array(lat)
     span = np.arange(ticks.min(), ticks.max() + 1) if len(ticks) else np.array([])
     uniq, counts = np.unique(ticks, return_counts=True)
-    # A report left untimed between the first and last timed ones is in the span but not lost.
     inside = sum(1 for x in untimed if timed and timed[0] < x < timed[-1])
     return lat, {"clock": clock, "reports": int(len(ticks)), "queued_behind": behind, "outside_fit": len(untimed),
                  "untimed_inside": inside, "missing": int(len(span) - len(uniq) - inside),

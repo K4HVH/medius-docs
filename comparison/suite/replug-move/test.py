@@ -1,22 +1,15 @@
 """A move sent the moment the clone is back after the real device is unplugged and plugged back in: how soon it
 reaches the PC, and whether any of it is lost.
 
-The program stays connected to the box throughout. Per cycle the sim disconnects (its D+ pull-up off, as an
-unplug looks to the box), and 3 s after the clone has left the PC it reconnects. The moment the PC has the clone
-configured again (sysfs: the device's VID:PID with bConfigurationValue set), the program sends one immediate move
-of 10 counts (stock km.move_now, Medius MOVE(NOW)). Once the move has landed or 3 s have passed, a control move of
-3 counts, given 1 s, tells a lost move from a box that is not injecting at all.
-
-Read off the PC's USB bus: the box's control port and every device number free on the clone's bus when the
-capture starts, since the clone comes back under a new one. The device sends no X, so all X on the clone is
-injected. Per move: ms from its packet reaching the control port to the first and the last of its counts on the
-bus, counts delivered, lost and extra. Against the move's packet: when the PC sent the clone SET_CONFIGURATION,
-first polled its interrupt IN, and got its first report. And the evdev view, timed from the write: the clone's
-node is opened as soon as it exists, so counts the PC took before then are on the bus but not in the evdev totals.
-
+Per cycle the sim disconnects, then reconnects 3 s after the clone has left the PC. The moment the PC has the clone
+configured again, the program, connected to the box throughout, sends one immediate move of 10 counts (stock
+km.move_now, Medius MOVE(NOW)), then a 3-count control move that tells a lost move from a box not injecting at all.
+Read off the PC's USB bus (the real device sends no X, so all X on the clone is injected), per move: ms from its
+packet reaching the control port to the first and last of its counts, counts delivered, lost and extra; and, against
+the move's packet, when the PC sent the clone SET_CONFIGURATION, first polled it and got its first report. The evdev
+view is timed from the write and misses counts the PC took before the clone's node was opened.
 Shapes: a mouse sending one empty report every 2 s, and one every 8 ms. Ten cycles each. A box one command behind
-at the start is skipped.
-"""
+at the start is skipped."""
 import glob
 import os
 import time
@@ -64,7 +57,6 @@ def _configured(usb):
 
 
 def _mouse_in(usb):
-    """The clone's mouse: its interrupt IN endpoint and report layout, from sysfs."""
     for rd in sorted(glob.glob(f"{USB}/{usb}/{usb}:*/*:*/report_descriptor")):
         with open(rd, "rb") as f:
             lay = layout.mouse_layout(f.read())
@@ -106,8 +98,6 @@ def _move_now(box, dx):
 
 
 class _XWatch:
-    """Running total of X in the clone's reports on the bus, scanning only events new since the last call."""
-
     def __init__(self, w, dev, ep, lay):
         self.w, self.dev, self.ep, self.lay, self.i, self.x = w, dev, ep, lay, 0, 0
 

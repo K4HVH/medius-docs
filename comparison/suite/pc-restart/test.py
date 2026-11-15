@@ -1,17 +1,13 @@
 """The PC dropping the clone and taking it back while the box keeps its power: does injection still work after?
 
 Two ways, five cycles each:
-  port      the PC disables the hub port the clone is on for 3 s, then enables it again (the clone's bus goes and
-            comes back, as when the PC restarts and its ports reset)
+  port      the PC disables the clone's hub port for 3 s, then enables it again, as when the PC restarts
   deauth    the PC unconfigures the clone (sysfs authorized 0) for 3 s, then configures it again
-Each cycle: the time until the clone is back with an input node, then, 0.7 s later, one immediate move of 10
-counts (stock km.move_now, Medius MOVE(NOW)): whether it reaches the PC within 3 s and how fast, read off the
-clone's evdev node. `reports` lists the clone's reports from the command until 50 ms after the move was whole (or
-the 3 s ended), read from hidraw: ms after the command and bytes, the first 30.
-
-Variants: `base`, a still mouse; `busy`, a mouse sending one empty report every 8 ms, so the device has always
-reported recently.
-"""
+Each cycle: the time until the clone is back with an input node, then, 0.7 s later, one immediate 10-count move
+(stock km.move_now, Medius MOVE(NOW)): whether it reaches the clone's evdev node within 3 s, and how fast.
+`reports`: the clone's first 30 reports on hidraw from the command until 50 ms after the move was whole (or the 3 s
+ended), as ms after the command and bytes. Variants: `base`, a still mouse; `busy`, a mouse sending one empty report
+every 8 ms, so the real device has always reported recently."""
 import time
 
 from medius_compare import capture, devices
@@ -66,7 +62,6 @@ def _hidraw(usb, secs=2.0):
 
 
 def _drop(usb, how):
-    """Drop the clone for OFF_S and take it back; returns when the PC asked for it back."""
     path, off, on = ((_port_disable(usb), "1", "0") if how == "port" else (f"{USB}/{usb}/authorized", "0", "1"))
     _write(path, off)
     time.sleep(OFF_S)

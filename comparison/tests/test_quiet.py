@@ -67,17 +67,16 @@ def test_quieted_removes_its_rule_however_it_ends(rule, monkeypatch):
 def test_quieted_leaves_a_live_quiet_clones_rule_alone(rule, monkeypatch):
     monkeypatch.setattr(quiet, "hold", lambda ports, stop=None: stop.wait())
     rule.parent.mkdir(parents=True, exist_ok=True)
+    # pid 1 is always alive: a quiet_clone.py left running
     other = 'SUBSYSTEM=="input", KERNELS=="1-3", ENV{LIBINPUT_IGNORE_DEVICE}="1"\n# holder 1\n'
-    rule.write_text(other)   # pid 1 is always alive: a quiet_clone.py left running
+    rule.write_text(other)
     with quiet.quieted(["1-3"]):
         assert rule.read_text() == other
     assert rule.read_text() == other
-    # A dead holder's rule is not kept: the run writes its own and removes it.
     rule.write_text(other.replace("# holder 1", "# holder 999999999"))
     with quiet.quieted(["1-3"]):
         assert f"# holder {os.getpid()}" in rule.read_text()
     assert not rule.exists()
-    # Nor one that leaves a port uncovered.
     rule.write_text(other)
     with quiet.quieted(["1-3", "1-4"]):
         assert 'KERNELS=="1-4"' in rule.read_text()

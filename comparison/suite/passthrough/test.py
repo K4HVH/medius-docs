@@ -1,19 +1,17 @@
-"""Native mouse reports through the box: does every report the real device sends reach the PC, once, unchanged,
-in order and on time?
+"""Native mouse reports through the box: whether every report the real device sends reaches the PC once, unchanged,
+in order and on time.
 
-The sim plays a 16-bit mouse whose Y field counts 1..200 and repeats, X and wheel zero, so each report names
-itself. It ticks on its host's frames, each report armed 500 us into the frame. Read off the clone's hidraw node
-(every report, byte for byte), its evdev node (kernel timestamps) and the USB monitor (bus timing). Legs:
+The sim plays a 16-bit mouse whose Y field counts 1..200 and repeats, X and wheel zero, ticking on its host's
+frames with each report armed 500 us into the frame. Read off the clone's hidraw node (every report, byte for byte),
+its evdev node (kernel timestamps) and the USB monitor (bus timing). Legs:
   1000/500/250/125  a report every tick at that rate (bInterval 1/2/4/8)
   burst             1 kHz in runs of seven reports with three silent ticks between
   inject            the 1 kHz mouse while the box is sent move(+1,0) 1,000 times a second: native reports must
                     still all arrive, unmerged and on time; X shows where the moves went
 Counts: delivered, dropped (a jump in the sequence), duplicated, merged (a Y value not in the sequence: two
-reports summed), reordered, any byte that differs from what the sim sent, and the interval spread. On the bus,
-the native reports' intervals and each report's place on the PC's poll grid: reports a poll early or late, and
-polls missed. Raw stamps are kept.
-
-`base` runs every leg for 15 s; `500long` runs the 500 Hz mouse for 2 minutes."""
+reports summed), reordered, any byte that differs from what the sim sent, and the interval spread. On the bus:
+the native reports' intervals and each report's place on the PC's poll grid (reports a poll early or late, polls
+missed). `base` runs every leg for 15 s; `500long` runs the 500 Hz mouse for 2 minutes."""
 import struct
 import time
 

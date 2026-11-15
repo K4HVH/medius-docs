@@ -20,7 +20,6 @@ def _is_reply(kind, data):
 
 
 def _pair(events, kind, dev):
-    """(submit to reply, delivered to reply) per query, in seconds."""
     rows, sub, done = [], None, None
     for e in events:
         if e.dev != dev or e.xfer != 3:

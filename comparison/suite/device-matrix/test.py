@@ -1,21 +1,17 @@
-"""Device support: the same USB device shapes presented to the box one at a time, and what its clone shows the PC.
+"""Device support: the same USB device shapes presented to the box one at a time, and what the PC reads off each clone.
 
 About 60 shapes: unusual descriptors (medius_shapes.clone_cases, the sim's built-in devices among them), and mice
 and keyboards at several report rates. Per shape: whether a clone with the real device's VID:PID enumerated, how
 long that took from the sim presenting it, the descriptors, strings, interfaces and drivers the PC read (checked
 against the bytes the shape was written with, where this test wrote them), and how many reports each HID interface
-delivered in a second, read through hidraw.
-
-Medius runs as it ships, imperfect clones off. The shapes it refuses are then presented again with imperfect clones
-on (the `imperfect` pass). Stock has no such setting. A clone that disconnects again after it is configured keeps
-the snapshot taken when it was configured.
+delivered in a second, read through hidraw. Medius runs as it ships, imperfect clones off; the shapes it refuses are
+then presented again with imperfect clones on (the `imperfect` pass). Stock has no such setting.
 
 Outcomes. Native data, per shape: not cloned; an interface sends nothing when one the real device declares is
 missing from the clone, or a HID interface the real device streams on delivers nothing in a second; otherwise all
 data arrives. Interval: native when every endpoint of the clone's first configuration declares the real device's
-interval. Reports a second: above native rate when the clone delivers >5% (and ≥2) more than the PC polls the real
-device for. A row takes its worst shape.
-"""
+interval. Reports a second: above native rate when the clone delivers >5% (and at least 2) more than the PC polls the
+real device for. A row takes its worst shape."""
 import glob
 import os
 import time
@@ -56,24 +52,22 @@ def mouse_125():
 
 
 def mouse_500():
-    """The same every 2 ms."""
     return scripted.scripted_mouse(0x7107, [(1, scripted.mouse(1, 0)), (1, scripted.mouse(-1, 0))],
                                    interval_us=2000)
 
 
 def mouse_250():
-    """The same every 4 ms."""
     return scripted.scripted_mouse(0x7108, [(1, scripted.mouse(1, 0)), (1, scripted.mouse(-1, 0))],
                                    interval_us=4000)
 
 
 def mouse_16bit():
-    """The same every millisecond."""
+    """A mouse with 16-bit axes reporting every millisecond."""
     return scripted.scripted_mouse(0x7105, [(1, scripted.mouse(1, 0)), (1, scripted.mouse(-1, 0))])
 
 
 def mouse_with_streaming_vendor():
-    """That mouse beside a vendor-page HID interface streaming a 64-byte counter every millisecond."""
+    """mouse_16bit beside a vendor-page HID interface streaming a 64-byte counter every millisecond."""
     return scripted.scripted_mouse(0x7106, [(1, scripted.mouse(1, 0)), (1, scripted.mouse(-1, 0))],
                                    stream_beside=True)
 
@@ -81,7 +75,6 @@ def mouse_with_streaming_vendor():
 SHAPES = {f.__name__: f for f in (fresh_mouse, eight_bit_mouse, report_id_combo, boot_keyboard, mouse_125,
                                   mouse_500, mouse_250, mouse_16bit, mouse_with_streaming_vendor)}
 
-# (name, a builder or the sim's built-in device as its name and arguments, PID or None where unknown)
 CASES = clone_cases.SHAPES + [
     ("gamingmouse", ["gamingmouse"], None),
     ("keyboard", ["keyboard"], None),
@@ -94,7 +87,7 @@ CASES = clone_cases.SHAPES + [
 ] + [(f.__name__, f, None) for f in (eight_bit_mouse, report_id_combo, boot_keyboard, mouse_125, mouse_500, mouse_250,
                                      mouse_16bit, mouse_with_streaming_vendor)]
 
-# Native data: per row, each shape and the HID interfaces (configuration.interface) the real device streams on.
+# Per shape, the HID interfaces (configuration.interface) the real device streams on.
 DATA_ROWS = {
     "devices-data-mice-1ms": [("eight_bit_mouse", ["1.0"]), ("mouse_16bit", ["1.0"]), ("report_id_combo", ["1.0"])],
     "devices-data-boot-keyboard": [("boot_keyboard", ["1.0"])],
@@ -119,8 +112,6 @@ DATA_ROWS = {
     "devices-data-builtin-stall": [("stall 200", ["1.0"])],
 }
 IMPERFECT_DATA_ROWS = {"devices-imperfect-data-five-hid": [("five_hid_interfaces", ["1.2", "1.4"])]}
-# The interval each endpoint of the sim's built-in devices declares in its first configuration; shapes written here
-# are read from their own bytes.
 BUILTIN_INTERVALS = {"mouse": {0x81: 10}, "composite": {0x81: 10, 0x82: 10}, "multiconfig": {0x81: 10},
                      "multiconfigrptgap": {0x81: 10}, "bigreport 0 1500": {0x81: 10}, "widehid 64": {0x81: 4}}
 INTERVAL_ROWS = {
@@ -132,7 +123,7 @@ INTERVAL_ROWS = {
     "devices-interval-vendor-hid": ["widehid 64"],
     "devices-interval-xinput": ["xinput"],
 }
-# (shape, interface, reports a second the PC takes from the real device: an interval of 10 ms is polled every 8 ms)
+# (shape, interface, native reports a second): the PC polls a 10 ms interval every 8 ms.
 RATE_ROWS = {"devices-poll-reports-1ms-behind-10ms": ("multiconfigrptgap", "1.0", 125),
              "devices-poll-reports-8ms-behind-8ms": ("mouse_125", "1.0", 125)}
 HS_MOUSE = ("hsmouse", 0x81, 4)

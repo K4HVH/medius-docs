@@ -1,16 +1,14 @@
 """The PC suspending and resuming the clone, through each box.
 
-The real device's side is the sim's witness (its controller's suspend and resume edges, whether its host armed
-remote wakeup, whether a wakeup it fired was refused), never the box. The PC's side is the clone's runtime power
-state in sysfs and its reports on the PC's USB bus. Cases, each on a mouse that declares remote wakeup:
-  suspend    the PC autosuspends the clone: does the device get suspended, how soon, with remote wakeup armed
+The real device's side comes from the sim (its controller's suspend and resume edges, whether its host armed
+remote wakeup, whether a wakeup it fired was refused), the PC's side from the clone's runtime power state in sysfs
+and its reports on the PC's USB bus. Cases, each on a mouse that declares remote wakeup:
+  suspend    the PC autosuspends the clone: does the real device get suspended, how soon, with remote wakeup armed
   idle       2 s suspended with nothing injected: the PC must stay asleep
   inject     a 50-count move sent to the suspended box: is the PC woken, and does the move arrive whole
-  resume     the PC resumes the clone: how soon the device resumes
-  wake       the device fires a remote wakeup while suspended: does the PC wake
-  input      a mouse reporting every 3 s, left to autosuspend: is the PC woken, and are the reports delivered
-The clone's and its hub's power settings are put back afterwards.
-"""
+  resume     the PC resumes the clone: how soon the real device resumes
+  wake       the real device fires a remote wakeup while suspended: does the PC wake
+  input      a mouse reporting every 3 s, left to autosuspend: is the PC woken, and are the reports delivered"""
 import os
 import time
 
@@ -23,7 +21,6 @@ SETTLE_S = 2.0
 
 
 def silent_mouse():
-    """A mouse that never reports."""
     return scripted.scripted_mouse(0x7130, [(1000, b"")])
 
 

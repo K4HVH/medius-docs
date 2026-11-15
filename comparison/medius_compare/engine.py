@@ -1,5 +1,4 @@
-"""Runs registered tests on boxes: selection, layouts, each box's settings, the runs themselves, and leaving
-the bench as the next test needs it."""
+"""Runs registered tests on boxes: selection, layouts, settings, the runs, and leaving the bench for the next test."""
 import importlib.util
 import os
 import platform
@@ -63,8 +62,7 @@ class Context:
 
     @property
     def box(self):
-        """The box under test. Its control port stays closed until a test first asks for the box: an open port
-        is polled on the bus beside the clone, and on a real desk it is on another PC."""
+        """The box under test; its control port stays closed until a test first asks for the box."""
         return self._port.get()
 
     def device(self, leg: str):
@@ -72,18 +70,16 @@ class Context:
         return self._present(leg)
 
     def native(self, leg: str):
-        """The device for `leg` presented on the native sim (the one lent to the PC hub), beside the box's own."""
+        """The device for `leg` presented on the native sim, the one lent to the PC hub."""
         return self._present(leg, "native")
 
     def unjam(self, force=False):
-        """Clear a stock box left one reply behind (a power cycle), and present each leg again on next use. With
-        `force`, power-cycle it anyway, for a state the test saw that only a power cycle clears."""
+        """Power-cycle a stock box left one reply behind (always with `force`), and present each leg again."""
         if self._unjam is not None:
             self._unjam(force)
 
     def sim(self, on=None):
-        """An open link to the sim playing this box's legs, or with `on="native"` the native sim (close it when
-        done); LegUnavailable without one."""
+        """An open link to the sim playing this box's legs, or the native sim with `on="native"`; close it when done."""
         if self._sim is None:
             raise LegUnavailable("this needs the sim")
         return self._sim(on or self.box_name)
@@ -176,7 +172,6 @@ class Engine:
         return legs, skipped
 
     def _apply_state(self, box, wanted: dict) -> dict:
-        """The box at its defaults with the test's settings over them, read back."""
         target = {**getattr(box, "DEFAULTS", {}), **wanted}
         if box is None or not target:
             return {}

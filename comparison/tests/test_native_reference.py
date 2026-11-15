@@ -1,5 +1,3 @@
-"""A test reading the clone against the native sim stops when the native sim never comes up: with nothing to compare
-the clone with, the run is the bench's fault, not a result."""
 import importlib.util
 from pathlib import Path
 

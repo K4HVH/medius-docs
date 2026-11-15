@@ -1,11 +1,4 @@
-"""The two boxes behind one surface: the stock firmware's `km.` text and binary commands, and Medius through
-the published `medius` package.
-
-Usages are strings: `left`, `right`, `middle`, `side1`, `side2`, or `key:<HID usage>`. Lock targets are
-those, or an axis: `x`, `y`, `wheel`, `pan`.
-
-Opening a box puts its settings at their defaults, and closing it puts back what it found.
-"""
+"""The two boxes behind one surface: stock through its `km.` text and binary commands, Medius through `medius`."""
 import os
 import sys
 import threading
@@ -75,9 +68,7 @@ def _wait_for_path(path, timeout):
 
 
 class StockBox:
-    """The stock firmware's control port: `km.` text at 4 Mbaud, where a query's reply ends at the `>>> `
-    prompt and a setter answers nothing, beside binary commands framed `DE AD <len u16> <cmd> <payload>`.
-    """
+    """The stock firmware's control port: `km.` text commands at 4 Mbaud and `DE AD` framed binary commands."""
 
     kind = "stock"
     BAUD = 4_000_000
@@ -181,8 +172,6 @@ class StockBox:
         return text.decode("latin1").strip()
 
     def _reply_to(self, cmd, timeout):
-        """The next reply that is not another command's error. A setter that fails answers late with
-        itself and ERR, after any query sent behind it has drained the buffer."""
         end = time.monotonic() + timeout
         while True:
             text = self._prompt(max(0.0, end - time.monotonic()))
@@ -204,9 +193,7 @@ class StockBox:
         return self._reply_to(cmd, timeout)
 
     def lagging(self):
-        """Whether the box answers one command late, holding each reply until the next command arrives.
-        In step, `km.screen()` after `km.echo()` answers with the screen size; one behind, with the echo
-        state."""
+        """Whether the box answers one command late, holding each reply until the next command arrives."""
         self.drain()
         self.send("km.echo()")
         self._reply_to("km.echo()", 0.3)
@@ -216,8 +203,7 @@ class StockBox:
         return not second.startswith("km.screen")
 
     def mak(self, cmd, payload=b"", timeout=0.5, ff_ok=False):
-        """A binary command. Returns the reply's payload. A payload of the single byte FF is a refusal,
-        except where FF is a value the command can return (`ff_ok`)."""
+        """A binary command; returns the reply's payload, where a lone FF is a refusal unless `ff_ok`."""
         payload = bytes(payload)
         n = len(payload) + 1 if cmd in (0xA4, 0xA5) else len(payload)
         self.drain()
@@ -295,8 +281,7 @@ class StockBox:
             self.mak(0x1F, bytes([settings["interp"]]), ff_ok=True)
 
     def leave(self):
-        """Release every button and key and clear every lock, a command at a time, then drop the replies
-        the releases of things not held answer with."""
+        """Release every button and key and clear every lock, then drop the replies the releases answer with."""
         cmds = [f"km.up({k})" for k in sorted(self._held_keys)] + [f"km.{b}(0)" for b in BUTTONS]
         cmds += [f"km.lock_{v}(0)" for v in self.LOCKS.values()]
         for cmd in cmds:
@@ -308,8 +293,7 @@ class StockBox:
 
 
 class MediusBox:
-    """Medius through the `medius` package. `device` is the package's `Device`, for what the shared surface
-    leaves out."""
+    """Medius through the `medius` package; `device` is the package's `Device`."""
 
     kind = "medius"
     DEFAULTS = {"optin": False, "riding": 0, "emit": "learned", "force_hz": 0, "bearing": 20,
@@ -391,7 +375,6 @@ class MediusBox:
         self.device.unlock(self._target(target), self.medius.Direction.BOTH)
 
     def _answered(self, query, timeout=15.0):
-        """A query's answer, waiting out a box that is restarting (as it does when the opt-in changes)."""
         end = time.monotonic() + timeout
         while True:
             try:
@@ -444,8 +427,7 @@ class MediusBox:
         self.device.reset()
 
     def raw(self):
-        """Close the package's connection and return the bare port, for a test that writes what the package
-        would refuse to send. `reopen()` brings the package back."""
+        """Close the package's connection and return the bare port; `reopen()` brings the package back."""
         self.device.close()
         s = serial.Serial(self.port, 6_000_000, timeout=0.05)
         return _RawPort(s)

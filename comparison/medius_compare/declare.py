@@ -134,8 +134,7 @@ def _declarations(root: Path):
 
 
 def load_suite(root: Path) -> dict:
-    """Every test under `root` whose code is written (<root>/<id>/test.toml beside its test.py), by id. Every
-    declaration is checked, written or not."""
+    """Every test under `root` whose test.py is written, by id; every declaration is checked."""
     return {decl.id: decl for decl, ported in _declarations(root) if ported}
 
 

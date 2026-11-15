@@ -1,17 +1,13 @@
 """Endpoint 0: what the box's clone replies to standard, class and vendor requests, against the same device plugged
 into the PC (the native sim), and how long each reply takes on the bus.
 
-The device is a scripted 16-bit mouse with manufacturer, product and serial strings, a canned feature report (HID
-GET_REPORT, feature report 3) and a canned vendor IN reply (request 0x42). Every other request the sim serves as a
-conformant device does (STALL for what it doesn't support). Each request goes to the clone, then to the native sim,
-as a raw control transfer through usbfs, with interface 0 taken from its kernel driver. Its outcome (bytes, STALL or
-the PC's error) is compared with the reply the device was written to give and with native's, and timed over 200
-repeats: in user space (the same overhead on both sides) and on the bus, from the setup's submission to its
-completion, off the kernel's USB monitor. Per clone row: its reply against native (`native_match`) and its time on
-the bus less native's (`wire_past_native`, and `wire_from_native` without the sign).
-
-Outcome per request group: the native reply when every request in it matched native; otherwise STALL, the only
-other reply the table names.
+The real device is a scripted 16-bit mouse with manufacturer, product and serial strings, a canned feature report
+(HID GET_REPORT, feature report 3) and a canned vendor IN reply (request 0x42); the sim STALLs what it doesn't
+support. Each request goes to the clone, then the native sim, as a raw control transfer through usbfs. Its outcome
+(bytes, STALL or the PC's error) is checked against the written reply (`match`) and native's (`native_match`), and
+timed over 200 repeats in user space (`time`) and on the bus from submission to completion (`wire`);
+`wire_past_native` is the clone's bus time less native's, `wire_from_native` the same without the sign.
+Outcome per request group: the native reply when every request in it matched native; otherwise STALL.
 """
 import ctypes
 import fcntl
@@ -43,7 +39,6 @@ _DISCONNECT, _CONNECT = (_U << 8) | 22, (_U << 8) | 23
 
 
 def request_mouse():
-    """A still mouse sending one empty report every 2 s, with strings, a feature report and a vendor reply."""
     p = scripted.scripted_mouse(PID, [(1, scripted.mouse(0, 0)), (1999, b"")])
     p.device = core.device_desc(scripted.VID, PID, 1, i_man=1, i_prod=2, i_ser=3)
     p.strings = STRINGS
@@ -55,8 +50,7 @@ SHAPES = {"request_mouse": request_mouse}
 
 
 def requests(p):
-    """(name, bmRequestType, bRequest, wValue, wIndex, wLength or OUT bytes, the written reply: bytes, STALL or None
-    where the reply is left to the device)."""
+    """(name, bmRequestType, bRequest, wValue, wIndex, wLength or OUT bytes, written reply: bytes, STALL or None)."""
     cfg = p.configs[0]
     return [
         ("GET_DESCRIPTOR device", 0x80, 6, 0x0100, 0, 18, p.device),

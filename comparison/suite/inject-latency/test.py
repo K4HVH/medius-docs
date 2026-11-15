@@ -2,17 +2,16 @@
 packet reaching the box's control port to the clone's reports) and on the clone's evdev node.
 
 Scripted 16-bit mice, injection on X, so native motion never reaches the measured axis:
-  base    idle (one empty report every 2 s, never moving), moving on Y at 1 kHz (+1/-1), and the same at 125 Hz
-  rested  3 s moving on Y at 1 kHz, then silent: a mouse in use that has stopped
-Stock won't inject into a device that hasn't reported since it was cloned, so the idle mouse reports now and
-then. Medius smooths only once it has seen the mouse move since it was cloned, so its default moves into the
-idle mouse go out unsmoothed, and into the rested mouse as a mouse in use gets them.
+  base    idle (one empty report every 2 s, never moving: stock won't inject into a device that hasn't reported
+          since it was cloned), moving on Y at 1 kHz (+1/-1), and the same at 125 Hz
+  rested  3 s moving on Y at 1 kHz, then silent
+Medius smooths only once it has seen the mouse move since it was cloned, so its default moves into the idle mouse
+are emitted unsmoothed and into the rested mouse smoothed.
 
 Per mouse, moves of 1 and 50 counts, default and immediate (stock km.move and km.move_now, Medius MOVE and MOVE
 with NOW), 200 each, 30-60 ms after the previous move arrived. Per move: the first report carrying X, the report
-completing the move, and how many reports it took. `done_every_move` takes its percentiles over every move sent:
-a move not done within 0.5 s counts as slower than any that was (nearest rank, so a percentile that falls on one
-reads "unfinished").
+completing the move, and how many reports it took. `done_every_move` takes its percentiles over every move sent,
+a move not done within 0.5 s counting as slower than any that was ("unfinished" where a percentile lands on one).
 """
 import random
 import time
@@ -40,7 +39,6 @@ def rested():
 
 
 SHAPES = {"moving_1k": moving_1k, "moving_125": moving_125, "rested": rested}
-# Per variant, (leg, seconds after the clone is up before the first move). The rested mouse moves for 3 s first.
 VARIANTS = {"base": [("idle", 0.5), ("moving_1k", 0.5), ("moving_125", 0.5)], "rested": [("rested", 4.0)]}
 
 

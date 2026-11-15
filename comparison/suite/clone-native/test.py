@@ -1,23 +1,16 @@
 """Each clone against the real device plugged in directly: the same device shape on the box's sim and on the native
-sim (lent to the PC hub), read from the PC the same way, every difference listed.
-
-The shapes are the device comparison's (about 60: medius_shapes.clone_cases, the sim's built-in devices among them,
-and mice and keyboards at several report rates). Both sims must run one build. Per shape:
-  enumeration  every control transfer the PC's kernel made to each device while enumerating it and binding its
-               drivers, off the kernel's USB monitor: the request, how it ended, the bytes that came back
-  reads        every descriptor at the lengths a host asks for, each configuration, the strings, GET_STATUS,
-               GET_CONFIGURATION, and per HID interface GET_INTERFACE, GET_STATUS, the HID descriptor, the report
-               descriptor at its declared length and past it, GET_IDLE and GET_PROTOCOL, as raw control transfers
-               through usbfs with every interface taken from its kernel driver for the reads
+sim (lent to the PC hub), read from the PC the same way, every difference listed. Both sims must run one build.
+The shapes are the device comparison's (about 60: medius_shapes.clone_cases, the sim's built-in devices, and mice and
+keyboards at several report rates). Per shape:
+  enumeration  each control transfer the PC's kernel made enumerating the device and binding its drivers, off the
+               USB monitor: the request, how it ended, the bytes that came back
+  reads        the standard and HID class reads, descriptors at the lengths hosts ask for and past them, through usbfs
   reports      how many reports each HID interface sent in a second, read through hidraw
-  enumerated_again  whether the device went and came back on its own while the reads ran (they are taken again)
-A clone with no difference is faithful; one that enumerates again where the real device doesn't differs. Reply times are recorded, not judged (ep0-compare judges them).
-
-Medius runs as it ships, imperfect clones off; the shapes it refuses are then presented again with imperfect clones
-on (the `imperfect` pass). Stock has no such setting.
-
-Outcome per shape: faithful with no difference, imperfect with any, not cloned when no clone came up (a refusal
-counts as imperfect where the table names no refusal). A row takes its worst shape.
+  enumerated_again  whether the device reconnected unasked while the reads ran (they are then taken again)
+Reply times are recorded, not judged. Medius runs imperfect clones off, then presents the shapes it refused again
+with them on (the `imperfect` pass); stock has no such setting. Outcome per shape: faithful with no difference
+(enumerating again where the real device doesn't is one), imperfect with any, not cloned when no clone came up (a
+refusal counts as imperfect where the table names no refusal). A row takes its worst shape.
 """
 import ctypes
 import errno
@@ -48,45 +41,37 @@ def fresh_mouse():
 
 
 def eight_bit_mouse():
-    """A mouse with 8-bit X and Y moving every millisecond."""
     return scripted.scripted_mouse8(0x7101, [(1, scripted.mouse8(1, 0)), (1, scripted.mouse8(-1, 0))])
 
 
 def report_id_combo():
-    """A mouse and a keyboard on one endpoint under report IDs, the mouse moving every millisecond."""
     return scripted.scripted_combo(0x7102, [(1, scripted.combo_mouse(1, 0)), (1, scripted.combo_mouse(-1, 0))])
 
 
 def boot_keyboard():
-    """A boot keyboard sending one empty report a second."""
     return scripted.scripted_keyboard(0x7103, [(1, scripted.keys()), (999, b"")])
 
 
 def mouse_125():
-    """A mouse with 16-bit axes declaring and reporting every 8 ms."""
     return scripted.scripted_mouse(0x7104, [(1, scripted.mouse(1, 0)), (1, scripted.mouse(-1, 0))],
                                    interval_us=8000)
 
 
 def mouse_500():
-    """The same every 2 ms."""
     return scripted.scripted_mouse(0x7107, [(1, scripted.mouse(1, 0)), (1, scripted.mouse(-1, 0))],
                                    interval_us=2000)
 
 
 def mouse_250():
-    """The same every 4 ms."""
     return scripted.scripted_mouse(0x7108, [(1, scripted.mouse(1, 0)), (1, scripted.mouse(-1, 0))],
                                    interval_us=4000)
 
 
 def mouse_16bit():
-    """The same every millisecond."""
     return scripted.scripted_mouse(0x7105, [(1, scripted.mouse(1, 0)), (1, scripted.mouse(-1, 0))])
 
 
 def mouse_with_streaming_vendor():
-    """That mouse beside a vendor-page HID interface streaming a 64-byte counter every millisecond."""
     return scripted.scripted_mouse(0x7106, [(1, scripted.mouse(1, 0)), (1, scripted.mouse(-1, 0))],
                                    stream_beside=True)
 
@@ -94,7 +79,6 @@ def mouse_with_streaming_vendor():
 SHAPES = {f.__name__: f for f in (fresh_mouse, eight_bit_mouse, report_id_combo, boot_keyboard, mouse_125,
                                   mouse_500, mouse_250, mouse_16bit, mouse_with_streaming_vendor)}
 
-# (name, a builder or the sim's built-in device as its name and arguments, PID or None)
 CASES = clone_cases.SHAPES + [
     ("gamingmouse", ["gamingmouse"], None),
     ("keyboard", ["keyboard"], None),
@@ -432,7 +416,6 @@ def _read_device(port):
 
 
 def _read_settled(port, again):
-    """The reads, taken again once the device is back if it enumerated again while they ran."""
     was = _read(port, "devnum")
     try:
         return _read_device(port)

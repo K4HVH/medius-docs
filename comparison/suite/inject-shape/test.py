@@ -1,17 +1,15 @@
 """What injected motion looks like on the clone, each box on its defaults: every report the clone emits, read off
-its hidraw node (zero-motion reports included), with evdev's kernel timestamps alongside.
+its hidraw node (zero-motion reports included).
 
-  base    into a still mouse that reports once, 3 s after it is plugged in, then sends nothing (stock won't
-          inject into a device that hasn't reported since it was cloned), so every report the clone emits is the
-          box's:
+  base    into a still mouse that reports once, 3 s after it is plugged in (stock won't inject into a device that
+          hasn't reported since it was cloned), then sends nothing, so every report the clone emits is the box's:
           single  one move of 1, 10, 100 and 1,000 counts, default and immediate (stock km.move and km.move_now,
                   Medius MOVE and MOVE with NOW), three times each: how many reports carry it, over how long,
                   and how many extra reports (motion or not) the box emits
           stream  move(1,0) paced at 1,000, 500, 250, 125, 60 and 30/s for 2 s: the sum delivered, the report
                   rate, the delay from each command to its count, the tail after the last command
   native  the same 1,000/s and 125/s streams while the mouse moves on Y at 1 kHz and at 125 Hz: the reports
-          carrying only injected motion (X and no Y; every report the mouse sends moves Y), and the native report
-          timing beside them
+          carrying only injected motion (X and no Y; every native report moves Y), and the native report timing
 """
 import os
 import struct

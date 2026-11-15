@@ -6,7 +6,6 @@ from .core import (EndpointSpec, GEN_COUNTER, GEN_FIXED, GEN_SCRIPT, KBD_DESC, P
 
 VID = 0x214E
 
-# Five buttons, 16-bit X and Y, a wheel: [buttons][x i16][y i16][wheel i8].
 MOUSE_DESC = bytes([
     0x05, 0x01, 0x09, 0x02, 0xA1, 0x01, 0x09, 0x01, 0xA1, 0x00,
     0x05, 0x09, 0x19, 0x01, 0x29, 0x05, 0x15, 0x00, 0x25, 0x01, 0x95, 0x05, 0x75, 0x01, 0x81, 0x02,
@@ -16,7 +15,6 @@ MOUSE_DESC = bytes([
     0x09, 0x38, 0x15, 0x81, 0x25, 0x7F, 0x75, 0x08, 0x95, 0x01, 0x81, 0x06,
     0xC0, 0xC0,
 ])
-# The same with 8-bit X and Y: [buttons][x i8][y i8][wheel i8].
 MOUSE8_DESC = bytes([
     0x05, 0x01, 0x09, 0x02, 0xA1, 0x01, 0x09, 0x01, 0xA1, 0x00,
     0x05, 0x09, 0x19, 0x01, 0x29, 0x05, 0x15, 0x00, 0x25, 0x01, 0x95, 0x05, 0x75, 0x01, 0x81, 0x02,
@@ -36,7 +34,6 @@ def mouse8(dx=0, dy=0, wheel=0, buttons=0):
     return struct.pack("<Bbbb", buttons, dx, dy, wheel)
 
 
-# The mouse as report ID 1 and a boot keyboard as report ID 2, on one interface and one endpoint.
 COMBO_MOUSE_ID, COMBO_KBD_ID = 1, 2
 COMBO_DESC = (MOUSE_DESC[:6] + bytes([0x85, COMBO_MOUSE_ID]) + MOUSE_DESC[6:]
               + KBD_DESC[:6] + bytes([0x85, COMBO_KBD_ID]) + KBD_DESC[6:])
@@ -90,10 +87,7 @@ def _one_hid(pid, proto, rdesc, rlen, records, once, interval_us, subclass=1, mp
 
 def scripted_mouse(pid, records, once=False, interval_us=1000, mps=8, zlp_idle=False, zlp_beside=False,
                    silent_beside=False, stream_beside=False, frame_arm_us=0):
-    """A mouse playing `records` [(count, mouse(...))], one report a tick: an empty report is a silent tick
-    (a zero-length packet with `zlp_idle`), `mps` under 6 splits reports across packets, `frame_arm_us` ticks on the
-    host's frames, and `zlp_beside`, `silent_beside` or `stream_beside` adds a HID interface that answers with
-    zero-length packets, never reports, or streams a 64-byte counter."""
+    """A mouse playing `records` [(count, mouse(...))], one report a tick, with optional HID interfaces beside it."""
     return _one_hid(pid, 2, MOUSE_DESC, 6, records, once, interval_us, mps=mps, zlp_idle=zlp_idle,
                     zlp_beside=zlp_beside, silent_beside=silent_beside, stream_beside=stream_beside,
                     frame_arm_us=frame_arm_us)

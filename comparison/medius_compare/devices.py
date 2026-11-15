@@ -1,9 +1,4 @@
-"""What a test leg runs against: a still device an owner plugged into the box, or a shape the sim plays.
-
-A leg names its device: `still-mouse`, `still-keyboard` or `still-composite`, which any bench has, or
-`sim:<shape>`, which only the sim can play: a builder in the test's own `SHAPES`, or a function in
-`medius_shapes`.
-"""
+"""What a test leg runs against: a still device an owner plugged into the box, or a shape the sim plays."""
 import glob
 import hashlib
 import importlib
@@ -124,8 +119,7 @@ def describe(port, sysfs="/sys"):
 
 
 class RealDevices:
-    """The device an owner plugged into the box, found on the clone's USB port (the one kept off the desktop).
-    It must sit still while a leg runs: a hand on it would be measured as the box."""
+    """The device an owner plugged into the box, found on the clone's USB port; it must sit still during a leg."""
 
     def __init__(self, box_name, clone_port=None, settle_s=1.0, nodes=usb_nodes, kinds=kinds_of, moved=moved,
                  describe=describe, wait_s=30.0, every=0.2):
@@ -196,8 +190,7 @@ def devnum(port, sysfs="/sys"):
 
 
 def reenumerated(port, before, timeout, sysfs="/sys", keep_s=3.0):
-    """Wait until the device on `port` is a new enumeration (another device number) with input nodes, or is still
-    the same one `keep_s` later: a clone already of that device can be kept rather than made again."""
+    """Wait until the device on `port` is a new enumeration with input nodes, or still the same one `keep_s` later."""
     start = time.monotonic()
     while True:
         now = devnum(port, sysfs)
@@ -227,8 +220,7 @@ def shape(name):
 
 
 class SimDevices:
-    """Shapes the sims play: on the sim behind the box for a box's leg, on the sim lent to the PC hub for the
-    native reference."""
+    """Shapes the sims play: behind the box for a box's leg, on the PC hub for the native reference."""
 
     def __init__(self, bench, link=_sim_link, shapes=None, appears=appears, describe=describe, nodes=usb_nodes,
                  timeout=30.0):
@@ -239,8 +231,7 @@ class SimDevices:
         self.cabling = None
 
     def cabled(self, cabling):
-        """The bench's cabling from now on. Sims are never located again for a leg: locating plays a beacon on
-        every sim, the one behind the box under test included."""
+        """The bench's cabling from now on; sims are not located again, since locating plays a beacon on every sim."""
         self.cabling = cabling
 
     def _builder(self, device, shapes=None):
@@ -289,8 +280,7 @@ class SimDevices:
         return Presented(**self._describe(port), nodes=self._nodes(port), usb=port)
 
     def park_others(self, box):
-        """A silent mouse on every other box's sim, unless that sim is lent to the PC hub: the PC then polls a
-        quiet clone beside the one under test, the same for both boxes."""
+        """A silent mouse on every other box's sim unless it is lent to the PC hub, the same for both boxes."""
         cabling = self.cabling or ""
         lent = cabling.split(":", 1)[1] if cabling.startswith("native:") else None
         for name, cfg in self.bench.sim.items():
@@ -321,8 +311,7 @@ class SimDevices:
             link.close()
 
     def locate(self, serial):
-        """The USB port a sim's device is on: it plays a beacon mouse whose PID no other shape uses, and the
-        beacon is looked for on every port the bench names."""
+        """The USB port a sim's device is on, found by a beacon mouse whose PID no other shape uses."""
         from medius_shapes import core
         [name] = [s for s, cfg in self.bench.sim.items() if cfg["serial"] == serial]
         pid = 0x6FF0 + list(self.bench.sim).index(name)

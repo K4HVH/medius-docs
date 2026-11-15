@@ -1,22 +1,16 @@
-"""What each box does with input a program held when the program exits or goes quiet.
+"""Input a program held through each box, after the program exits or goes quiet.
 
-A program presses a button or a key, or locks native input, through the box's API, then either closes the control
-port, as a program exiting or crashing does (`close`), or keeps the port open and sends nothing for 10 s, as a
-hung program does (`silent`). Targets:
+The program sets a target through the box's API, then closes the control port (`close`) or keeps it open and sends
+nothing for 10 s (`silent`). Three tries of each target and mode:
   button     a still mouse; press left (stock km.left(1), Medius INJECT left press)
   key        a still boot keyboard; press 'a' (stock km.down(4), Medius INJECT key 0x04)
   lock_x     a mouse moving X 1, 2, 3, 4 counts a report every ms and clicking left (10 ms down, 10 ms up); lock
              X (stock km.lock_mx(1), Medius LOCK x)
   lock_left  the same mouse; lock left (stock km.lock_ml(1), Medius LOCK left)
-Each case, read off the clone's evdev node: the target set, then 1 s with the program connected and talking (a
-Medius query every 0.25 s; stock needs none), checked in effect. Then one state query as the program's last
-command (stock km.left() / km.isdown(4) / km.lock_mx() / km.lock_ml(); Medius QUERY HEALTH), then the exit, and
-5 s watched after a close or the 10 s of silence. Per case: whether the target was released (the button's or
-key's release edge, or native X or a native left press back on the PC), how long after the last command and,
-for `close`, after the port closed; whether it was still in effect at the end. Then the program reconnects or
-speaks again and reads the box's state (stock the same query; Medius HEALTH, LOCKS and the STATS `session`
-count, which rises once per release of state a program set), and whether reconnecting alone released anything.
-Last, every target is released explicitly and checked clear. Three tries of each target and mode.
+Per case, off the clone's evdev node: whether the target was released (its release edge, or native X or a native
+left press back on the PC) and how long after the last command (a state query) and after a close; whether it was
+in effect 5 s after a close or at the end of the silence; on reconnecting, the box's state (Medius STATS `session`
+rises once per release of state a program set) and whether reconnecting alone released anything.
 """
 import fcntl
 import os
@@ -38,7 +32,6 @@ ROWS = {(t, m): f"recovery-exit-{t.replace('_', '-')}-{m}" for t, _ in TARGETS f
 
 
 def clicking_mouse():
-    """A mouse moving X 1, 2, 3, 4 counts a report every millisecond, its left button down 10 ms and up 10 ms."""
     return scripted.scripted_mouse(CLICKING_PID, [(1, scripted.mouse((i % 4) + 1, 0, 0, 1 if i < 10 else 0))
                                                   for i in range(20)])
 
@@ -139,7 +132,6 @@ def _in_effect(target, node, frames, now):
 
 
 def _quiet(box, mode):
-    """Stop talking: close the port, or keep it open and send nothing. Returns the bare port Medius keeps open."""
     if mode == "silent":
         return box.raw() if box.kind == "medius" else None
     box.drop()

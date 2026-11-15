@@ -1,24 +1,18 @@
-"""The parts every shape is made of: a personality (descriptors, endpoints, the pumps that stream on them,
-canned control answers, enumeration quirks) and the byte builders for standard USB descriptors.
-
-The fields and defaults match the sim's own personality, so `personalities.build` copies them across.
-"""
+"""The parts every shape is made of: a personality and the byte builders for standard USB descriptors."""
 from dataclasses import dataclass, field
 from typing import List, Optional
 
 VID = 0x1D50
 SPEED_FULL, SPEED_HIGH = 0, 1
 
-# What a pump streams on its endpoint.
 GEN_MOUSE_JIGGLE, GEN_COUNTER, GEN_FIXED, GEN_SIZERAMP, GEN_BULK_ZLP = 0, 1, 2, 3, 4
 GEN_TRACE_REPLAY, GEN_TRACE_BURST, GEN_MOUSE_MIRROR = 5, 6, 7
 GEN_SCRIPT = 10
 
-# swap_on_nth_getdesc: count from when the shape is presented, not from the last bus reset.
+# swap_on_nth_getdesc flag: count from when the shape is presented, not from the last bus reset.
 SWAP_PERSIST = 0x8000
 CTRL_LINK_NONE = 0x0F
 
-# How a device's endpoint 0 answers requests the USB specification leaves open, or that it gets wrong.
 Q_DIR_STRICT, Q_RECIP_TWO_BITS, Q_RECIP_LAX, Q_HID_STALL, Q_WLEN_STATUS = 0x0001, 0x0002, 0x0004, 0x0008, 0x0010
 Q_RW_STALL, Q_RW_WINDEX_STALL, Q_EP0_CLEAR_ACK, Q_HID_OWN, Q_WLEN_CONFIG = 0x0020, 0x0040, 0x0080, 0x0100, 0x0200
 Q_EP0_SET_ACK, Q_DESC_ANY, Q_EPDESC_ANY, Q_DEVFEAT_ACK = 0x0400, 0x0800, 0x1000, 0x2000
@@ -37,15 +31,15 @@ Q_LONG_BUF, Q_REQ7_HIST = 1 << 46, 1 << 47
 @dataclass
 class EndpointSpec:
     addr: int
-    xfer: int = 3            # 1 iso, 2 bulk, 3 interrupt
-    config: int = 1          # 0 = every configuration
+    xfer: int = 3  # 1 iso, 2 bulk, 3 interrupt
+    config: int = 1  # 0 = every configuration
     declared_mps: int = 8
     emit_size: int = 0
     iso_mult: int = 0
-    toggle: int = 0          # 0 normal, 1 always DATA0, 2 reset mid-stream
+    toggle: int = 0  # 0 normal, 1 always DATA0, 2 reset mid-stream
     stall_after: int = 0
-    nak_every: int = 0       # IN: skip every Nth tick; OUT: take a packet, then NAK for N ms
-    alt: int = 0             # the alternate setting the endpoint belongs to
+    nak_every: int = 0  # IN: skip every Nth tick; OUT: take a packet, then NAK for N ms
+    alt: int = 0
 
 
 @dataclass
@@ -53,19 +47,18 @@ class EnumHooks:
     ep0_mps: int = 64
     set_address_delay_us: int = 0
     swap_on_nth_getdesc: int = 0
-    # 1: endpoint 0 answers nothing after the first class GET_REPORT, until a bus reset; 2: the same, and a bus
-    # reset doesn't bring it back; 3: nothing after a standard GET_STATUS at recipient 3, until a bus reset;
-    # 4: that one request unanswered, everything else answered; 5: 3, once the device reads as another.
+    # 1: endpoint 0 dead after the first class GET_REPORT until a bus reset; 2: for good; 3: dead after GET_STATUS
+    # at recipient 3 until a bus reset; 4: only that request unanswered; 5: 3, once the device reads as another.
     ep0_die_on_getreport: int = 0
-    # GET_DESCRIPTOR(REPORT) on this interface answered slow_rpt_ms late (0xFFFF: STALLed) for the first
-    # slow_rpt_times fetches (0xFF: all); 0xFF = off.
+    # GET_DESCRIPTOR(REPORT) on slow_rpt_iface (0xFF: off) answered slow_rpt_ms late (0xFFFF: STALLed) for the
+    # first slow_rpt_times fetches (0xFF: all).
     slow_rpt_iface: int = 0xFF
     slow_rpt_ms: int = 0
     slow_rpt_times: int = 0
-    slow_str_ms: int = 0     # every string fetch answered this late
-    slow_reset_ms: int = 0   # every CLEAR_FEATURE(ENDPOINT_HALT) and SET_INTERFACE finished this late
-    ep0_quirks: int = 0      # Q_*
-    dev_status: int = 0      # the GET_STATUS(device) word
+    slow_str_ms: int = 0
+    slow_reset_ms: int = 0
+    ep0_quirks: int = 0
+    dev_status: int = 0
 
 
 @dataclass
@@ -74,15 +67,13 @@ class Pump:
     interval_us: int = 0
     gen: int = GEN_FIXED
     gen_arg: int = 0
-    # 0: a tick every interval_us. Otherwise a tick on every host frame interval_us spans, armed this long
-    # into the frame.
+    # 0: a tick every interval_us; else a tick on each host frame interval_us spans, armed this long into it.
     frame_arm_us: int = 0
 
 
 @dataclass
 class CtrlRecord:
-    """One canned endpoint 0 answer. An IN record serves `data` cut to wLength; an OUT record takes the data
-    stage, and with `link` set overwrites that IN record's answer with it."""
+    """One canned endpoint 0 answer: IN serves `data` cut to wLength, OUT with `link` set overwrites that IN record."""
     bm: int
     req: int
     wv: int
@@ -100,8 +91,7 @@ def ctrl_record(bm, req, wv, wi, data=b"", any_wv=False, any_wi=False, link=CTRL
 
 @dataclass
 class Script:
-    """Motion for a GEN_SCRIPT pump: each (count, report) is sent on `count` consecutive ticks. An empty report
-    sends nothing, or with `zlp_idle` a zero-length packet. It repeats unless `once`."""
+    """Motion for a GEN_SCRIPT pump: each (count, report) is sent on `count` ticks, repeating unless `once`."""
     records: list
     once: bool = False
     zlp_idle: bool = False
@@ -120,7 +110,7 @@ class Personality:
     bos: bytes = b""
     qualifier: bytes = b""
     hid_report: bytes = b""
-    hid_report2: bytes = b""          # the report descriptor of interface rpt2_iface, when it differs
+    hid_report2: bytes = b""
     endpoints: List[EndpointSpec] = field(default_factory=list)
     hooks: EnumHooks = field(default_factory=EnumHooks)
     pump: Pump = field(default_factory=Pump)
@@ -128,7 +118,7 @@ class Personality:
     script: Optional[Script] = None
     ctrl: List[CtrlRecord] = field(default_factory=list)
     rpt2_iface: int = 1
-    alt_model: int = 0                # 0: one device-wide alternate setting; 1: per interface
+    alt_model: int = 0  # 0: one device-wide alternate setting; 1: per interface
 
     def encode(self) -> bytes:
         from .personalities import build
@@ -178,7 +168,6 @@ def hid_config(cfg_value=1, proto=2, report_len=50, ep_addr=0x81, ep_attr=0x03, 
     return bytes([9, 2, total & 0xFF, total >> 8, 1, cfg_value, 0, 0xA0, 50]) + body
 
 
-# A three-button mouse with 8-bit X and Y.
 MOUSE_DESC = bytes([
     0x05, 0x01, 0x09, 0x02, 0xA1, 0x01, 0x09, 0x01, 0xA1, 0x00, 0x05, 0x09, 0x19, 0x01, 0x29,
     0x03, 0x15, 0x00, 0x25, 0x01, 0x95, 0x03, 0x75, 0x01, 0x81, 0x02, 0x95, 0x01, 0x75, 0x05,
@@ -186,7 +175,6 @@ MOUSE_DESC = bytes([
     0x02, 0x81, 0x06, 0xC0, 0xC0,
 ])
 MOUSE_REPORT = MOUSE_DESC
-# A boot keyboard: modifiers, a reserved byte, five LEDs out, six keys.
 KBD_DESC = bytes([
     0x05, 0x01, 0x09, 0x06, 0xA1, 0x01, 0x05, 0x07, 0x19, 0xE0, 0x29, 0xE7, 0x15, 0x00, 0x25,
     0x01, 0x75, 0x01, 0x95, 0x08, 0x81, 0x02, 0x95, 0x01, 0x75, 0x08, 0x81, 0x03, 0x95, 0x05,
@@ -194,7 +182,6 @@ KBD_DESC = bytes([
     0x03, 0x95, 0x06, 0x75, 0x08, 0x15, 0x00, 0x25, 0x65, 0x05, 0x07, 0x19, 0x00, 0x29, 0x65,
     0x81, 0x00, 0xC0,
 ])
-# 8-byte and 64-byte vendor-page input reports.
 VEND8_DESC = bytes.fromhex("0600ff0901a1010902150026ff00750895088102c0")
 VEND64_DESC = bytes.fromhex("0600ff0901a1010902150026ff00750895408102c0")
 
@@ -202,16 +189,12 @@ MOUSE_IF = itf(0, 1, 3, 1, 2) + hid(len(MOUSE_DESC)) + ep(0x81)
 
 
 def personality(pid, config, endpoints, hid_report=MOUSE_DESC, **kw):
-    """A full-speed device with the sim's VID and `pid`, one configuration. Other keywords set the
-    personality's fields (hid_report2, pump, pump2, ctrl, strings, qualifier, hooks, alt_model, rpt2_iface,
-    device)."""
+    """A full-speed device with the sim's VID, `pid` and one configuration; keywords set other personality fields."""
     dev = kw.pop("device", device_desc(VID, pid, 1))
     return Personality(speed=SPEED_FULL, device=dev, configs=[config], hid_report=hid_report,
                        endpoints=endpoints, **kw)
 
 
-# A pad on the XInput protocol, with no HID interface: four vendor interfaces, seven interrupt endpoints, and
-# interface 3 (FF/FD/13) with no endpoint, whose string is the protocol's security banner.
 XINPUT_CFG = bytes.fromhex(
     "09029900040100a0fa"
     "0904000002ff5d0100" "1121000101258114000000001301080000" "07058103200004" "07050103200008"
@@ -221,7 +204,6 @@ XINPUT_CFG = bytes.fromhex(
     "0904030000fffd1304" "064100010103")
 XINPUT_STRINGS = [sd("Maker"), sd("Pad"), sd("0001"),
                   sd("Xbox Security Method 3, Version 1.00, © 2005 Microsoft Corporation. All rights reserved.")]
-# What a driver's probe reads: capabilities (interface recipient) and the serial (device recipient).
 XINPUT_CAPS = bytes.fromhex("00143ff7ffff00000000c0ffc0ffc0ffc0ff0000")
 XINPUT_SERIAL = bytes.fromhex("12345678")
 
@@ -233,7 +215,7 @@ def xinput(pid=0x6200):
     eps = ([EndpointSpec(0x81, 3, 1, 32, 20), EndpointSpec(0x82, 3, 1, 32, 32),
             EndpointSpec(0x83, 3, 1, 32), EndpointSpec(0x84, 3, 1, 32)]
            + [EndpointSpec(a, 3, 1, 32) for a in (0x01, 0x02, 0x03)])
-    # The sim holds strings 0-3, so the security string (4) is a canned answer.
+    # The sim holds strings 0-3, so string 4 is a canned answer.
     ctrl = (ctrl_record(0xC1, 0x01, 0x0100, 0, XINPUT_CAPS) + ctrl_record(0xC0, 0x01, 0x0000, 0, XINPUT_SERIAL)
             + ctrl_record(0x80, 0x06, 0x0304, 0x0409, XINPUT_STRINGS[3]))
     return Personality(speed=SPEED_FULL, device=dev, configs=[XINPUT_CFG],

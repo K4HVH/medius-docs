@@ -1,22 +1,18 @@
 """How many one-way move commands each box takes per second, by command form, counted on the PC.
 
-Each run writes moves at a set rate for `secs` and sums the clone's X on its evdev node until X has been still
-for 1 s, so counts beyond the commanded total show too. Each command moves `dx` counts on X. Forms:
+Each run writes moves of `dx` counts on X at a set rate for `secs`, then sums the clone's X on its evdev node until
+X has been still for 1 s, so counts beyond the commanded total show too. Forms:
   stock bin    binary MOVE (0x18): `DE AD 04 00 18 <x i16> <y i16>`; no reply when taken, `DE AD 01 00 18 FF`
                when refused
   stock text   `km.move(dx,0)\\r\\n`
   Medius       MOVE frames, in both stock forms' places
-Rates are paced in 1 ms batches. `rate:ms` writes one clump of round(rate * ms / 1000) every `ms` ms instead (a
-sender whose timer wakes every 16 ms writes its moves in clumps). `single` writes each command on its own at its
-scheduled time. `blast` writes 12,871 moves back to back in 4,096-byte writes, after a 1,000/s run.
-
-Variants, as `{variant: {"results": [...]}}`: the mouse is still (`rest`), or reports every millisecond with Y
-moving 1 to 10 and back over 200 ms and X still (`moving`). Per run: commands sent, refusals counted on the
-control port, the bytes the box sent back, X counts on the PC, how long after the last write the last count
-arrived (`tail_ms`), and whether the box still answers in step afterwards. A box found one command behind before
-a run is power-cycled first (`cycled_before`), so every run starts in step; one still behind after the cycle has
-that run recorded as skipped, in its place.
-"""
+Rates are paced in 1 ms batches; `rate:ms` writes a clump of round(rate * ms / 1000) every `ms` ms instead, `single`
+sends one command per write at its scheduled time, and `blast` writes 12,871 moves back to back in 4,096-byte
+writes, after a 1,000/s run. Variants (`{variant: {"results": [...]}}`) run on a still mouse (`rest`) or one
+reporting every millisecond, Y moving 1 to 10 and back over 200 ms and X still (`moving`). Per run: commands sent,
+refusals counted on the control port, bytes the box sent back, X counts on the PC, `tail_ms` from the last write to
+the last count, and whether the box answers in step after. A box one command behind before a run is power-cycled
+first (`cycled_before`); one still behind after that has the run recorded as skipped."""
 import math
 import time
 
@@ -28,7 +24,6 @@ REFUSED = b"\xde\xad\x01\x00\x18\xff"
 SINE_PID = 0x704E
 BLAST = 12871
 
-# (name, leg, rates, secs, stock forms, dx values, single)
 VARIANTS = [
     ("rest", "rest", "500,1000,1500,2000,5000", 1.0, ("bin", "text"), (1,), False),
     ("rest_5s", "rest", "500,500,250,1000,2000", 5.0, ("bin", "text"), (1,), False),
@@ -53,9 +48,6 @@ SHAPES = {"sine-mouse": sine_mouse}
 
 
 class _Port:
-    """The box's control port as bytes. Medius takes its frames on the bare port with the package closed, and
-    answers a query through the package between writes."""
-
     def __init__(self, box):
         self.box = box
         self.raw = box.raw() if box.kind == "medius" else None

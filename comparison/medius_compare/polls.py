@@ -1,27 +1,16 @@
-"""Report timing on the PC's poll grid, from usbmon stamps.
-
-usbmon stamps a completion when the kernel hands the transfer back, sometimes 0.2-2 ms after the bus carried
-it and never early. An interrupt endpoint polled every P carries each report on a poll, so on the bus a report
-can only move by whole polls. Each report is placed on the poll its stamp sits on, and a stamp off the grid
-(stamped late) is left unjudged.
-
-The test devices tick on their host's frames, so a device never drifts across a poll. What the hosts and a
-box add shows as a report off the local pattern, or a step in the pattern: a poll that took no report, every
-report after it a poll later.
-"""
+"""Report timing on the PC's poll grid, from usbmon stamps: each report placed on the poll its stamp sits on."""
 import contextlib
 import os
 import struct
 
-EPS_US = 15.0     # a stamp this close to a poll is on it: on-grid stamps sit within 11 us (p99.9)
-WINDOW = 25       # judged reports either side of the local pattern
-TRACK = 0.1       # how fast the grid's phase follows its drift against the stamping clock
+EPS_US = 15.0  # on-grid stamps sit within 11 us (p99.9)
+WINDOW = 25
+TRACK = 0.1
 
 
 @contextlib.contextmanager
 def awake():
-    """Keep the CPUs out of deep idle while a capture runs (/dev/cpu_dma_latency at 0). Waking from it for
-    each completion spread a 125 Hz stream's stamps to sd 20-29 us, past the grid's tolerance; held, 6-11 us."""
+    """Keep the CPUs out of deep idle while a capture runs (/dev/cpu_dma_latency at 0)."""
     fd = os.open("/dev/cpu_dma_latency", os.O_WRONLY)
     try:
         os.write(fd, struct.pack("<i", 0))
@@ -61,9 +50,7 @@ def _median(xs):
 
 
 def timing(stamps_us, poll_us, ticks=None, tick_us=None):
-    """Judge a stream's reports against the poll grid. `ticks` is the device tick each report was made on
-    (every `tick_us`); by default one report per poll. Returns the reports judged and left unjudged, the
-    reports a poll early or late, and the polls missed (steps in the pattern, each poll it moved counted)."""
+    """Judge a stream's reports against the poll grid: judged and unjudged, early or late, and polls missed."""
     ticks = list(range(len(stamps_us))) if ticks is None else ticks
     k = round((tick_us or poll_us) / poll_us)
     slots = place(stamps_us, poll_us)
@@ -93,8 +80,7 @@ def poll_us(dev, intf=0, ep=0x81):
 
 
 def burst_ticks(index, first, seq, run=7, rest=3):
-    """Ticks for a counter that wraps at `seq`, with `rest` silent ticks after every `run` reports from the
-    start of each wrap, the first report's counter value `first`."""
+    """Ticks for a counter wrapping at `seq`: `rest` silent ticks after every `run` reports, starting at `first`."""
     cycle = seq + rest * (seq // run)
     return [(n // seq) * cycle + n % seq + rest * ((n % seq) // run) for n in (first + i for i in index)]
 

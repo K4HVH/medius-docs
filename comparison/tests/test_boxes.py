@@ -17,9 +17,6 @@ SETTER = re.compile(r"km\.(move|move_now|wheel|pan|left|right|middle|side1|side2
 
 
 class StockFake:
-    """The master end of a pty, answering as V4.122 does with echo off: a query replies with its value
-    and a prompt, a setter is silent, anything else echoes itself and ERR. With `lag`, each reply is held
-    until the next line arrives."""
 
     def __init__(self, lag=False):
         self.master, self.slave = pty.openpty()
@@ -203,7 +200,6 @@ def test_stock_leave_releases_what_was_pressed_and_locked():
 
 
 class FakeDevice:
-    """Records the verbs a MediusBox sends and keeps the settings it is given."""
 
     def __init__(self, spread=100):
         self.calls = []

@@ -1,25 +1,16 @@
 """Typing 300 characters: capitals, digits and symbols arrive whole, in order, with nothing left held, and how
 long it takes. Read on the clone's key node.
 
-The device is a boot keyboard nobody is typing on. The text (300 characters on a US layout) mixes capitals,
-lower case, digits, spaces and the symbols ! @ # $ % ^ & * - _ = + [ ] { } ; : . < > / ? ~ ` |, with doubled
-letters, digits and symbols. It leaves out the six characters that delimit a stock command line:
-, ( ) ' " and backslash. Legs:
-  string       stock: km.string("..."), documented for 0-256 ASCII characters and one timed string at a time,
-               sent 150 characters per command, each once the last one's characters have arrived (or gone
-               quiet for 2 s). Medius has no string command; the PC types through INJECT, as below
-  host_paced   the PC types each character as key presses: (left shift down,) key down, key up (, left shift
-               up), one change every 10, 4 and 2 ms (stock km.down/km.up with the HID usage, Medius INJECT
-               press and soft-release)
-  host_burst   Medius only: every change sent back to back at once. Not sent to stock: commands back to back
-               at this rate leave its parser one command behind until a power cycle
-Characters are decoded from the key codes with the shift state at each press (either shift). Per leg: what was
-typed, exact or not, characters delivered, missing / extra / replaced counts and the replaced ones that are the
-right key with the wrong shift, the first difference, presses with ctrl, alt or gui held, keys the edges leave
-down, keys the PC holds after the leg (EVIOCGKEY) and after cleanup (stock km.init(), which releases keys and
-cancels a string; Medius RESET), the time from the first command to the last key edge, characters per second,
-and the time between presses. Stock: ERR replies, km.device(), and whether its parser is in step before the run
-and after each leg; the run stops at the first leg that leaves it one command behind. Medius: its capabilities."""
+The real device is a still boot keyboard. The text (US layout) mixes capitals, lower case, digits, spaces and
+symbols, doubled ones among them, without , ( ) ' " and backslash, which delimit a stock command line. Legs:
+  string       stock only: km.string("..."), 150 characters a command, the next once these arrive or go 2 s quiet
+  host_paced   key down and up per character, inside left shift where shifted, one change every 10, 4 and 2 ms
+               (stock km.down/km.up, Medius INJECT press and soft-release)
+  host_burst   Medius only: every change back to back (stock's parser falls one command behind at this rate)
+Per leg, decoded with the shift state at each press: missing, extra and replaced characters (and replaced ones that
+are the right key with the wrong shift), presses with ctrl, alt or gui held, keys held after the leg and after
+cleanup (stock km.init(), Medius RESET), and the time to the last key edge. Stock: ERR replies, and whether its
+parser is in step before the run and after each leg; the run stops at the first leg that leaves it behind."""
 import dataclasses
 import difflib
 import enum
@@ -37,7 +28,6 @@ GAPS_S = (0.010, 0.004, 0.002)
 EVIOCGKEY = 0x80604518
 LETTERS = "abcdefghijklmnopqrstuvwxyz"
 EV_LETTER = [30, 48, 46, 32, 18, 33, 34, 35, 23, 36, 37, 38, 50, 49, 24, 25, 16, 19, 31, 20, 22, 47, 17, 45, 21, 44]
-# (HID usage, evdev code, character, shifted character) on a US layout
 KEYS = ([(0x04 + i, e, c, c.upper()) for i, (c, e) in enumerate(zip(LETTERS, EV_LETTER))]
         + [(0x1E + i, 2 + i, d, s) for i, (d, s) in enumerate(zip("1234567890", "!@#$%^&*()"))]
         + [(0x2C, 57, " ", " "), (0x2D, 12, "-", "_"), (0x2E, 13, "=", "+"), (0x2F, 26, "[", "{"),

@@ -1,15 +1,4 @@
-"""Keep what a test injects off this desktop.
-
-    from medius_bench import clone_guard; clone_guard.engage()
-
-Exits unless a live process keeps the clone quiet (`comparison/quiet_clone.py`, or the no-sim run itself, through
-`medius_bench.quiet`) with its rule naming the clone's USB port. Then holds an
-exclusive grab (EVIOCGRAB) on every input node on that port for the life of the process, taking each new
-node as the clone re-enumerates. When the process opens a node, the grab is handed to that fd, and comes
-back when it is closed or ungrabbed. So a test reads its nodes as usual, and nothing injected reaches
-anything else. If the clone turns up on another USB port, one the desktop still reads, the process stops
-at once.
-"""
+"""Keep what a test injects off this desktop: `clone_guard.engage()` grabs every input node on the clone's port."""
 import builtins
 import fcntl
 import io
@@ -26,9 +15,9 @@ SCAN_S = 0.005
 
 _lock = threading.RLock()
 _port = None
-_covered = []       # every port the rule names; _port is the first
-_guard = {}         # node -> the guard's fd
-_holder = {}        # node -> the fd holding the grab (the guard's, or one the process opened)
+_covered = []
+_guard = {}
+_holder = {}  # node -> the fd holding the grab: the guard's, or one the process opened
 _real_ioctl = fcntl.ioctl
 _real_os_open = os.open
 _real_open = builtins.open
@@ -80,7 +69,6 @@ def _grab(fd, on):
 
 
 def _take_back(node):
-    """The guard's fd holds the grab again. Caller holds _lock."""
     gfd = _guard.get(node)
     if gfd is None:
         return
@@ -92,7 +80,6 @@ def _take_back(node):
 
 
 def _hand_to(node, fd):
-    """Move the grab on `node` from the guard to `fd`. Caller holds _lock."""
     if _holder.get(node) == fd:
         return
     gfd = _guard.get(node)
@@ -136,7 +123,7 @@ def _scan():
             holder = _holder.get(node)
             if holder is not None and holder != _guard[node]:
                 cur, _ = _node_of(holder)
-                if cur != node:                      # the fd the process held it on is closed
+                if cur != node:  # the fd the process held it on was closed
                     _take_back(node)
             elif holder is None:
                 _take_back(node)
@@ -153,8 +140,6 @@ def _scan():
                     pass
                 _guard.pop(node, None)
                 _holder.pop(node, None)
-    # A device new since the start, with input nodes on a port the rule does not name, is the clone where
-    # the desktop reads it.
     now = _usb_devices()
     for d, vendor in now.items():
         if d in _usb_start or any(d == p or d.startswith(p + ".") for p in _covered):
@@ -183,9 +168,8 @@ def _patched_ioctl(fd, req, arg=0, *rest):
                 if arg:
                     _hand_to(node, n)
                     return 0
-                # Released for real (EINVAL when this fd never held it), then taken straight back.
                 try:
-                    _grab(n, False)
+                    _grab(n, False)  # EINVAL when this fd never held the grab
                 except OSError:
                     pass
                 _take_back(node)

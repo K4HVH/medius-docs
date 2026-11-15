@@ -1,10 +1,8 @@
-"""Does injected motion add up when moves come at a steady rate below 1 kHz? A companion to `conservation`, whose
-sparse moves come 30-60 ms apart at random and whose dense moves come at 1 kHz.
+"""Whether injected motion adds up when moves come at a steady rate below 1 kHz.
 
 move(+1,0) paced at 500, 250, 125, 60 and 30/s for 4 s into the idle mouse (one empty report every 2 s, never
-moving; stock won't inject into a device that hasn't reported since it was cloned), each box on its defaults,
-then 5 s more of capture. The clone's X total, read off its evdev node, against the moves sent.
-"""
+moving), each box on its defaults, then 5 s more of capture: the clone's X total on its evdev node against the
+moves sent."""
 import time
 
 from medius_compare import capture
@@ -21,7 +19,6 @@ def total(r):
 
 
 def outcomes(out):
-    """Each rate's total against the moves sent."""
     return {row: total(out["results"][i]) for row, i in ROWS.items()}
 
 

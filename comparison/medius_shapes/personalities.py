@@ -1,7 +1,4 @@
-"""Turning a shape into what the sim's library uploads, and the shapes of devices that stream, take OUT traffic,
-halt and switch settings. The sim's library is reached only through this module, from a checkout of it beside
-whatever path the caller has it on, or from `SIM_LIBRARY` (set from the bench config's `sim_library`, or the
-environment variable of that name)."""
+"""Turning a shape into what the sim's library uploads, and shapes of devices that stream, take OUT, halt or switch."""
 import os
 import sys
 from dataclasses import asdict, fields
@@ -67,13 +64,11 @@ def build(p: core.Personality):
 
 OUT_PID = 0x61E2
 OUT_HID_EP, OUT_VINT_EP, OUT_VBULK_EP = 0x02, 0x03, 0x04
-# A vendor-page report, 4 bytes in and 8 out.
 VEND_PAGE_DESC = bytes.fromhex("0600ff0901a1010902150026ff007508950481020903750895089102c0")
 
 
 def out_personality():
-    """A silent mouse; a vendor-page HID interface with an 8-byte interrupt OUT; a vendor interface with 8-byte
-    interrupt and bulk OUTs."""
+    """A silent mouse, a vendor-page HID interface with an 8-byte interrupt OUT, and vendor interrupt and bulk OUTs."""
     body = (core.itf(0, 1, 3, 1, 2) + core.hid(len(core.MOUSE_REPORT)) + core.ep(0x81)
             + core.itf(1, 2, 3) + core.hid(len(VEND_PAGE_DESC)) + core.ep(0x82) + core.ep(OUT_HID_EP)
             + core.itf(2, 2, 0xFF) + core.ep(OUT_VINT_EP) + core.ep(OUT_VBULK_EP, 8, 0, 2))
@@ -85,8 +80,7 @@ def out_personality():
 
 
 def vendor_seven_shapes():
-    """Seven vendor endpoints beside a mouse, three IN and four OUT: across two interfaces, on one, and one
-    on each of seven, as (name, PID, personality, vendor interfaces)."""
+    """Seven vendor endpoints beside a mouse, three ways, as (name, PID, personality, vendor interfaces)."""
     ins = [core.EndpointSpec(0x81, 3, 1, 8, 3)] + [core.EndpointSpec(a, 3, 1, 64, 64) for a in (0x82, 0x83, 0x84)]
     eps = ins + [core.EndpointSpec(a, 3, 1, 64) for a in (0x01, 0x02, 0x03, 0x04)]
     order = (0x82, 0x01, 0x83, 0x02, 0x84, 0x03, 0x04)
@@ -106,8 +100,7 @@ LINE_DEFAULT = bytes.fromhex("80250000000008")
 
 
 def class_device():
-    """A mouse beside a CDC ACM interface with no union descriptor and a DFU runtime interface, each
-    answering its class requests."""
+    """A mouse beside a CDC ACM interface with no union descriptor and a DFU runtime interface."""
     body = (core.MOUSE_IF
             + core.itf(1, 1, 2, 2, 1) + bytes.fromhex("0524001001" "04240206") + core.ep(0x82, 16)
             + core.itf(2, 0, 0xFE, 1, 1) + bytes.fromhex("09210bff0000041001"))
@@ -122,14 +115,12 @@ def class_device():
                             pump=core.Pump(0x81, 1000, core.GEN_MOUSE_JIGGLE), ctrl=ctrl)
 
 
-# A vendor-page report, 8 bytes in and 8 out.
 VEND8_IO_DESC = bytes.fromhex("0600ff0901a101090215002600ff750895088102090395089102c0")
 OUT_RATE_EPS = (0x01, 0x02, 0x03, 0x04)
 
 
 def out_rate_personality(pid, slow_nak_ms=0):
-    """A HID interface with an interrupt OUT beside a vendor interface with three OUT endpoints, 0x02
-    taking one packet per `slow_nak_ms` ms when set."""
+    """A HID interrupt OUT beside three vendor OUTs, 0x02 taking one packet per `slow_nak_ms` ms when set."""
     body = (core.itf(0, 2, 3) + core.hid(len(VEND8_IO_DESC)) + core.ep(0x81, 8) + core.ep(0x01, 8)
             + core.itf(1, 3, 0xFF) + core.ep(0x02, 64) + core.ep(0x03, 64) + core.ep(0x04, 64))
     eps = [core.EndpointSpec(0x81, 3, 1, 8), core.EndpointSpec(0x01, 3, 1, 8),
@@ -139,8 +130,7 @@ def out_rate_personality(pid, slow_nak_ms=0):
 
 
 def halt_personality():
-    """A streaming mouse beside vendor endpoints that STALL (IN 0x82 after 200 packets, OUT 0x03 after 5,
-    OUT 0x04 after 200, OUT 0x02 never), taking 30 ms to finish a CLEAR_FEATURE(HALT)."""
+    """A streaming mouse beside vendor endpoints that STALL, taking 30 ms to finish a CLEAR_FEATURE(HALT)."""
     body = (core.MOUSE_IF + core.itf(1, 4, 0xFF) + core.ep(0x82, 64) + core.ep(0x02, 64) + core.ep(0x03, 64)
             + core.ep(0x04, 64))
     eps = [core.EndpointSpec(0x81, 3, 1, 8, 3), core.EndpointSpec(0x82, 3, 1, 64, 64, 0, 0, 200),
@@ -151,8 +141,7 @@ def halt_personality():
 
 
 def hid_halt_personality(pid, interval):
-    """A still mouse beside a vendor-page HID interface whose interrupt IN 0x81, declaring `interval` ms,
-    counts in its first byte, STALLs after 200 reports and takes 30 ms to clear."""
+    """A still mouse beside a vendor-page HID IN counting reports, which STALLs after 200 and takes 30 ms to clear."""
     body = (core.itf(0, 1, 3) + core.hid(len(core.VEND8_DESC)) + core.ep(0x81, 8, interval)
             + core.itf(1, 1, 3, 1, 2) + core.hid(len(core.MOUSE_DESC)) + core.ep(0x82))
     eps = [core.EndpointSpec(0x81, 3, 1, 8, 8, 0, 0, 200), core.EndpointSpec(0x82, 3, 1, 8, 3)]
@@ -165,9 +154,7 @@ SWITCH_PID = 0x6237
 
 
 def switch_personality():
-    """Counters on a HID interface (IN 0x81 in setting 0, 0x82 in 1) and on a vendor interface's IN 0x84
-    beside OUT 0x04, with a vendor interface between holding IN 0x83 and OUT 0x03 in setting 0 and nothing in 1;
-    SET_INTERFACE and CLEAR_FEATURE(HALT) take 30 ms."""
+    """Counters on HID and vendor interfaces across settings; SET_INTERFACE and CLEAR_FEATURE(HALT) take 30 ms."""
     rl = len(VEND8_IN_DESC)
     body = (core.itf(0, 1, 3) + core.hid(rl) + core.ep(0x81) + core.itf(0, 1, 3, alt=1) + core.hid(rl)
             + core.ep(0x82)
@@ -182,8 +169,7 @@ def switch_personality():
 
 
 def six_in_slow():
-    """A mouse moving every millisecond beside a vendor interface: 0x82 streaming a counter every millisecond,
-    0x83, 0x84 and 0x85 declaring a poll every 32 ms, 0x86 every millisecond."""
+    """A mouse beside vendor INs 0x82-0x86: 0x82 streaming a counter, 0x83-0x85 declaring 32 ms polls."""
     body = (core.MOUSE_IF + core.itf(1, 5, 0xFF) + core.ep(0x82, 64) + core.ep(0x83, 64, 32) + core.ep(0x84, 64, 32)
             + core.ep(0x85, 64, 32) + core.ep(0x86, 64))
     eps = ([core.EndpointSpec(0x81, 3, 1, 8, 3)]
@@ -194,9 +180,7 @@ def six_in_slow():
 
 
 def zlp_personalities():
-    """Three devices pairing a HID interface (0x81, a 64-byte report over 32-byte packets) with a vendor
-    one (0x82): `ends` ends every transfer with a zero-length packet, `alone` sends one alone after two packets,
-    `idle` answers every poll with one."""
+    """HID-plus-vendor devices sending zero-length packets: `ends` after each transfer, `alone`, `idle` per poll."""
     cfg = core.cfg(2, core.itf(0, 1, 3) + core.hid(len(core.VEND64_DESC)) + core.ep(0x81, 32)
                    + core.itf(1, 1, 0xFF) + core.ep(0x82, 64))
     ends = core.personality(0x623B, cfg, [core.EndpointSpec(0x81, 3, 1, 32, 32),
@@ -218,13 +202,11 @@ BULK_MOVE_PID = 0x6242
 HID_MULTI_PID = 0x6243
 BIG_MPS_PID = 0x6244
 SWAP_PID = 0x6247
-# A vendor-page report descriptor declaring a 40-byte input report.
 VEND40_DESC = bytes.fromhex("0600ff0901a1010901150026ff00750895288102c0")
 
 
 def bulk_move_personality():
-    """A mouse beside a vendor interface whose bulk IN streams a counter: on 0x82 in alternate setting 0, on 0x83 in
-    1, the same stream."""
+    """A mouse beside a vendor bulk IN counter on 0x82 in alternate setting 0 and on 0x83 in 1."""
     body = (core.MOUSE_IF + core.itf(1, 1, 0xFF) + core.ep(0x82, 64, 0, attr=2)
             + core.itf(1, 1, 0xFF, alt=1) + core.ep(0x83, 64, 0, attr=2))
     eps = [core.EndpointSpec(0x81, 3, 1, 8, 3), core.EndpointSpec(0x82, 2, 1, 64, 64),
@@ -234,8 +216,7 @@ def bulk_move_personality():
 
 
 def swap_personality():
-    """A mouse beside a vendor interface listing interrupt INs 0x82 then 0x83 in setting 0 and the reverse in
-    1, a counter streaming on the first and nothing on the second; SET_INTERFACE takes 30 ms."""
+    """A mouse beside vendor INs 0x82 and 0x83 swapping places between settings; SET_INTERFACE takes 30 ms."""
     body = (core.MOUSE_IF + core.itf(1, 2, 0xFF) + core.ep(0x82, 8, 1) + core.ep(0x83, 8, 1)
             + core.itf(1, 2, 0xFF, alt=1) + core.ep(0x83, 8, 1) + core.ep(0x82, 8, 1))
     eps = [core.EndpointSpec(0x81, 3, 1, 8, 3), core.EndpointSpec(0x82, 3, 1, 8, 8),
@@ -245,8 +226,7 @@ def swap_personality():
 
 
 def hid_multi_personality():
-    """A HID interface whose 40-byte input report spans five 8-byte packets, streaming a counter: on 0x81 in
-    alternate setting 0, on 0x82 in 1, the same stream."""
+    """A HID counter report of 40 bytes over five 8-byte packets, on 0x81 in alternate setting 0 and 0x82 in 1."""
     rl = len(VEND40_DESC)
     body = (core.itf(0, 1, 3) + core.hid(rl) + core.ep(0x81, 8, 1) + core.itf(0, 1, 3, alt=1) + core.hid(rl)
             + core.ep(0x82, 8, 1))
@@ -256,8 +236,7 @@ def hid_multi_personality():
 
 
 def big_mps_personality():
-    """A moving mouse beside a vendor interface whose interrupt IN declares a 256-byte packet, illegal at full
-    speed, and sends 64-byte counters."""
+    """A moving mouse beside a vendor interrupt IN declaring a 256-byte packet, illegal at full speed."""
     body = core.MOUSE_IF + core.itf(1, 1, 0xFF) + core.ep(0x82, 256, 1)
     return core.personality(BIG_MPS_PID, core.cfg(2, body),
                             [core.EndpointSpec(0x81, 3, 1, 8, 3), core.EndpointSpec(0x82, 3, 1, 256, 64)],
@@ -272,8 +251,7 @@ COUNTER_PKT = 8
 
 
 def counter_personality():
-    """A silent mouse beside a vendor-page HID interface and a vendor interface, each streaming a counter every
-    millisecond on an 8-byte interrupt IN."""
+    """A silent mouse beside a vendor-page HID interface and a vendor interface, each counting every millisecond."""
     body = (core.MOUSE_IF
             + core.itf(COUNTER_HID_IF, 1, 3) + core.hid(len(core.VEND8_DESC)) + core.ep(COUNTER_HID_EP, COUNTER_PKT)
             + core.itf(COUNTER_VEND_IF, 1, 0xFF) + core.ep(COUNTER_VEND_EP, COUNTER_PKT))
@@ -287,7 +265,7 @@ def counter_personality():
 BULK_COUNTER_PID = 0x6261
 BULK_COUNTER_EP, BULK_COUNTER_IF = 0x83, 1
 BULK_COUNTER_PKT = 64
-# A tick faster than full speed carries 64-byte packets, so the bus sets the pace.
+# Faster than full speed carries 64-byte packets, so the bus sets the pace.
 BULK_COUNTER_IV_US = 20
 
 

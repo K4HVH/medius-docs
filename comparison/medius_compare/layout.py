@@ -1,7 +1,4 @@
-"""A mouse's input report layout, read from its HID report descriptor (HID 1.11, section 6.2.2).
-
-Offsets and sizes are in bits from the start of the report as the PC reads it, the report ID byte included.
-"""
+"""A mouse's input report layout from its HID report descriptor, in bits from the report's start, ID included."""
 from dataclasses import dataclass
 from typing import Optional, Tuple
 
@@ -37,7 +34,6 @@ def _items(desc):
 
 
 def _inputs(desc):
-    """Every variable Input field: (application index, report ID, bit offset, bits, page, usage)."""
     glob = {"page": 0, "size": 0, "count": 0, "id": 0}
     stack, local, apps, depth = [], {"usages": [], "min": None, "max": None}, [], []
     pos, fields, ids = {}, [], set()

@@ -1,5 +1,4 @@
-"""Endpoint 0 the way different device stacks answer it: one mouse, a vendor-page HID interface and a vendor
-interface carrying a class descriptor, presented as each kind of stack in KINDS (EnumHooks.ep0_quirks)."""
+"""Endpoint 0 as different device stacks answer it: one device presented as each kind of stack in KINDS."""
 from .core import (EndpointSpec, EnumHooks, GEN_FIXED, MOUSE_DESC, Personality, Pump, SPEED_FULL, SWAP_PERSIST,
                    VEND8_DESC, VID, cfg, ctrl_record, device_desc, ep, hid, itf, sd)
 from .core import (Q_ALT_ANY, Q_ALT_IGNORED, Q_ANY_INDEX, Q_BEHIND, Q_CFG_ANY_INDEX, Q_DESC0_NAK, Q_DESC_ANY,
@@ -14,8 +13,7 @@ from .core import (Q_ALT_ANY, Q_ALT_IGNORED, Q_ANY_INDEX, Q_BEHIND, Q_CFG_ANY_IN
 _STM32 = (Q_WLEN_STATUS | Q_WLEN_CONFIG | Q_OVERRUN | Q_EP0_CLEAR_ACK | Q_EP0_SET_ACK | Q_ALT_ANY | Q_ST_FEATURES
           | Q_ST_ONEWAY | Q_ZLP_IFZERO | Q_IF_LIMIT | Q_EPHALT_ANY | Q_CFG_ANY_INDEX | Q_WDATA_NAK)
 
-# name: (ep0_quirks, GET_STATUS(device) word, configuration bmAttributes). A kind's PID is PID0 plus its place here,
-# so new kinds go last.
+# name: (ep0_quirks, GET_STATUS(device) word, bmAttributes). PID is PID0 plus the place here: add kinds last.
 KINDS = {
     "permissive": (0, 0, 0xA0),
     "strict": (Q_DIR_STRICT, 1, 0xA0),
@@ -52,14 +50,10 @@ KINDS = {
     "reclonewedge": (0, 0, 0xA0),
     "longbuf": (Q_LONG_BUF | Q_REQ7_HIST, 0, 0xA0),
 }
-# EnumHooks.ep0_die_on_getreport: 4 leaves GET_STATUS at recipient 3 unanswered, 3 kills endpoint 0 there, 5 kills it
-# there once the device reads as another.
 DIE = {"quiet": 4, "quietlax": 4, "wedge": 3, "reclonewedge": 5}
 TWO_CONFIGS = ("twocfg", "reclone", "reclonewedge")
-# Quirks under which a write with a data stage leaves endpoint 0 behind, or dead, until a bus reset.
 LATE_KINDS = Q_BEHIND | Q_WDATA_DEAD
-# The reclone kinds read as another device past this many GET_DESCRIPTOR(DEVICE), bus resets included: past the
-# reads a box makes while it clones the device, which run to ~2,000.
+# Past the ~2,000 GET_DESCRIPTOR(DEVICE) reads a box makes while it clones the device, bus resets included.
 RECLONE_AFTER = 3000
 PID0 = 0x7080
 STRINGS = [bytes([4, 3, 0x09, 0x04]), sd("Test Lab"), sd("Request Mouse"), sd("SN-7080")]
@@ -68,8 +62,7 @@ FUNC = bytes([9, 0x21, 0x0B, 0xE8, 0x03, 0x40, 0x00, 0x10, 0x01])
 
 
 def config(value, attrs, country=0, bcd=0x0111):
-    """The configuration every kind presents: bmAttributes `attrs`, the mouse's HID descriptor at version `bcd` for
-    `country`."""
+    """The configuration every kind presents: bmAttributes `attrs`, the HID descriptor at `bcd` for `country`."""
     hid0 = bytearray(hid(len(MOUSE_DESC)))
     hid0[2], hid0[3], hid0[4] = bcd & 0xFF, bcd >> 8, country
     body = (itf(0, 1, 3, 1, 2) + bytes(hid0) + ep(0x81)

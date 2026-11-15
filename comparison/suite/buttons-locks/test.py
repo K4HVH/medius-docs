@@ -2,13 +2,13 @@
 
   latency  left press and release injected into a still mouse, 100 times: from the command's write to the
            clone's BTN_LEFT edge
-  stuck    a left press injected, then the control port closed without a release: is left still held on the
-           PC 3 s later? Then the port is opened again and left released
-  or_rule  the device holds left for 2 s and releases it for 2 s; while it holds, the box injects a release,
-           then a press and release: the PC must see left held throughout
-  mask     the device clicks left every 100 ms; the box blocks native left (stock km.left_mask, Medius LOCK
-           left) for 1 s: no native click may reach the PC, while an injected press still does
-  bite     the device moves X every millisecond; the box locks X (stock km.lock_mx, Medius LOCK x) 20 times:
+  stuck    a left press injected, then the control port closed without a release: whether left is still held
+           on the PC 3 s later. Then the port is opened again and left released
+  or_rule  the real device holds left for 2 s and releases it for 2 s; while it holds, the box injects a
+           release, then a press and release: left must stay held on the PC throughout
+  mask     the real device clicks left every 100 ms; the box blocks native left (stock km.left_mask, Medius
+           LOCK left) for 1 s: no native click may reach the PC, while an injected press still does
+  bite     the real device moves X every millisecond; the box locks X (stock km.lock_mx, Medius LOCK x) 20 times:
            on the PC's USB bus, from the lock's packet reaching the control port to the last native X report,
            and from the unlock's packet to the first native X report back
 

@@ -1,14 +1,11 @@
-"""Keyboard injection, read on the clone's key node.
+"""Keyboard injection, read on the clone's key node. Stock gets km.down/km.up, Medius INJECT press and soft-release.
 
   merge    a boot keyboard holds 'q'; the box injects 'a' down, then up 0.2 s later: 'q' must still be held
-  latency  a still boot keyboard; 'a' down, then up, 200 times: from the command's write to the clone's
-           KEY_A edge
+  latency  a still boot keyboard; 'a' down, then up, 200 times: from the command's write to the clone's KEY_A edge
   string   stock only: "the quick brown fox 0123456789" through km.string, which the box times itself
   media    Volume Up on a keyboard with no media interface: stock km.down("volumeup"), Medius INJECT media
   pairs    the same text as key down/up pairs sent back to back by the PC, last: it can leave stock's parser
-           one command behind, so the parser's state is read after it
-
-Stock gets km.down/km.up, Medius INJECT press and soft-release."""
+           one command behind, so the parser's state is read after it"""
 import fcntl
 import os
 import time

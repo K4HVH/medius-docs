@@ -1,10 +1,4 @@
-"""The bench the sim script runs on, from a local config: where each box and sim is plugged, what the person
-moving cables calls each one, and which hub ports power the stock box.
-
-A cabling is `main` (each sim behind its own box) or `native:<box>` (that box's sim behind it, the other sim's
-device on the PC hub as the native reference). A sim's device carries no serial, so `locate` finds it: given
-the sim's serial, the USB port its device enumerates on, or None.
-"""
+"""The bench from a local config: where each box and sim is plugged, their names, and the stock box's hub ports."""
 import glob
 import os
 import sys
@@ -126,7 +120,6 @@ class Bench:
         return {name: self._locate(sim["serial"]) for name, sim in self.sim.items()}
 
     def _state(self, s, where):
-        """Where sim `s` is: behind its box (only a box on the bench), on its PC hub socket, or neither (None)."""
         cfg = self.sim[s]
         box = self.box.get(cfg["box"])
         if box is not None and where[s] == box["clone"]:

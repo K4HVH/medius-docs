@@ -1,5 +1,4 @@
-// Packs the no-sim comparison tool into one file a verifier downloads and runs with python3:
-//   tsx scripts/comparison-package.ts [OUT]      (default dist/comparison/medius-compare.pyz)
+// tsx scripts/comparison-package.ts [OUT]: the no-sim comparison tool as one .pyz a verifier runs with python3.
 import { mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 import { zipSync } from 'fflate';
@@ -8,7 +7,6 @@ const ROOT = join(import.meta.dirname, '..');
 const COMPARISON = join(ROOT, 'comparison');
 const PACKAGES = ['medius_compare', 'medius_bench', 'medius_shapes', 'suite'];
 
-// Where the site serves it: the prerender writes it there, and the dev server builds it there on request.
 export const PYZ = '/comparison/medius-compare.pyz';
 
 function walk(dir: string): string[] {

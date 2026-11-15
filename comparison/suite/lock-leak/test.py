@@ -1,16 +1,13 @@
-"""Whether a held lock lets native input through, read on the clone's mouse node.
+"""Whether native input reaches the PC while a lock is held, read on the clone's mouse node.
 
-The mouse reports every millisecond. For the axis legs X counts 1, 2, 3, 4 and repeats (2.5 counts/ms). For
-the button legs it also holds left for 10 ms and releases it for 10 ms (50 presses/s). For axis_inj_negx X
-counts 100 to 103, so a leaked report stands out from injected motion even when the two share a report. Each
-leg: 1 s unlocked (the baseline: the mouse's input must reach the PC), then the lock (stock km.lock_mx(1) or
-km.lock_ml(1), Medius LOCK x or LOCK left), 0.1 s for it to take hold, then 10 s held while the box injects as
-the leg says, then the unlock.
+The mouse reports every millisecond, X counting 1, 2, 3, 4 and repeating (2.5 counts/ms); for the button legs it
+also holds left for 10 ms and releases it for 10 ms (50 presses/s). Each leg: 1 s unlocked (the baseline: native
+input must reach the PC), the lock (stock km.lock_mx(1) or km.lock_ml(1), Medius LOCK x or LOCK left), 0.1 s, then
+10 s held while the box injects:
   axis_idle      lock X, no injection
   axis_inj_y     lock X, inject move(0,+1) at 1 kHz
   axis_inj_y125  lock X, inject move(0,+1) at 125 Hz
-  axis_inj_negx  lock X on the 100-103 mouse, inject move(-1,0) at 1 kHz: injected motion only adds negative
-                 X, so a report with positive X carries leaked motion
+  axis_inj_negx  lock X on a mouse whose X counts 100 to 103, inject move(-1,0) at 1 kHz: positive X is leaked
   button_idle    lock left, no injection
   button_inj_y   lock left, inject move(0,+1) at 1 kHz
 Per leg: native X counts (or left presses) that reached the PC while locked, against the baseline. For

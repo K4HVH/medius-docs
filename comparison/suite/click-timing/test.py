@@ -1,12 +1,11 @@
 """Clicks and typing timed by the box, against the same clicks driven by the PC, read off the PC's USB bus.
 
-The device is a mouse (interface 0, at rest) beside a boot keyboard (interface 1).
+The real device is a mouse (interface 0, at rest) beside a boot keyboard (interface 1).
   onbox    10 left clicks, 50 ms down and 50 ms up, timed by the box: stock km.click(1,10,50), Medius a clip
-           (press, 49 empty frames, release, 49 empty frames)
   host     the same 10 clicks with each press and release sent by the PC, 50 ms apart
   typing   "the quick brown fox 0123456789": stock km.string, Medius a clip (each character's down and up on
            consecutive frames)
-Five runs of each. Per run: clicks or characters that reached the PC, in order; hold and gap times; start
+Five sets of each. Per set: clicks or characters that reached the PC, in order; hold and gap times; start
 latency from the command's packet reaching the box's control port; total time for the string."""
 import struct
 import time

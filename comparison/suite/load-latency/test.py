@@ -1,7 +1,7 @@
 """Injected left button and 'a' key latency under three loads, read off the PC's USB bus: from the command's
 packet reaching the box's control port to the first clone report showing the change.
 
-The device is a mouse (interface 0) beside a boot keyboard (interface 1, an empty report every second).
+The real device is a mouse (interface 0) beside a boot keyboard (interface 1, an empty report every second).
 Per load, 40 rounds of: left press, left release, 'a' down, 'a' up, each 50-250 ms apart.
   rest     the mouse reports once every 2 s
   moving   the mouse reports every millisecond (Y +1, -1)

@@ -1,12 +1,11 @@
 """Game pads through the box: relay, and stock's controller commands.
 
-Three pads, scripted on the sim, each moving its left stick through set values:
-  xinput  a pad on the XInput protocol (vendor class, no HID interface), under IDs the PC's pad driver binds to,
-          reporting a 20-byte report every 8 ms
+Three pads scripted on the sim, each moving its left stick through set values:
+  xinput  XInput (vendor class, no HID interface) under IDs the PC's pad driver binds to, a 20-byte report every 8 ms
   hidpad  a generic HID gamepad (two sticks, two triggers, a hat, 16 buttons), every 4 ms
-  gip     a pad on the GIP protocol (one vendor interface with an interrupt IN and OUT), under IDs the PC's pad
-          driver binds to, every 4 ms; the sim records what the PC's driver sends it at start-up
-Per pad: does the clone enumerate and the PC's driver bind, and do the sim's stick values reach the PC unchanged
+  gip     GIP (one vendor interface with an interrupt IN and OUT) under IDs the PC's pad driver binds to, every 4 ms;
+          the sim records what the PC's driver sends it at start-up
+Per pad: whether the clone enumerates and the PC's driver binds, and whether the stick values reach the PC unchanged
 (read off the pad's evdev node for 1.5 s). On stock, also whether km.controller_physical() reads the pad and whether
 km.controller_state() moves the stick the PC receives."""
 import fcntl
@@ -50,7 +49,6 @@ def xinput_pad():
                             hooks=core.EnumHooks(ep0_mps=8))
 
 
-# A generic gamepad: 16 buttons, hat, X Y Z Rz (sticks, 8-bit centred 0x80), Rx Ry (triggers, 8-bit).
 HIDPAD_DESC = bytes.fromhex(
     "05010905a101"
     "05091901291015002501750195108102"
@@ -76,7 +74,6 @@ def hid_pad():
                             pump=core.Pump(0x81, 4000, core.GEN_SCRIPT), script=core.script(recs))
 
 
-# One vendor interface (FF/47/D0) with interrupt IN 0x81 and OUT 0x01, 64 bytes.
 GIP_CFG = bytes.fromhex(
     "0902" "2000" "01" "01" "00" "a0" "fa"
     "0904000002ff47d000" "07058103400004" "07050103400004")
@@ -102,8 +99,6 @@ PADS = (("xinput", LX_STEPS), ("hidpad", HID_XS), ("gip", LX_STEPS))
 
 
 def _out_log(ctx, secs=0.6):
-    """What reached the pad on its OUT endpoints since the last read: packets, bytes, CRC16 over the bytes in arrival
-    order, and each packet's length."""
     lk = sim_module("link")
     link = ctx.sim()
     try:
@@ -156,7 +151,6 @@ def _abs_nodes(usb):
 
 
 def _read_abs_x(node, secs):
-    """ABS_X values the node reports in `secs`, in order, as (kernel time, value)."""
     fd = os.open(node, os.O_RDONLY | os.O_NONBLOCK)
     vals = []
     try:

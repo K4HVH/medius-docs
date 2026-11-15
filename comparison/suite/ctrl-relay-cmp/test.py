@@ -1,16 +1,14 @@
-"""Control requests the box's clone passes to the real device, each against the native sim (lent to the PC hub). The
-sim's test requests go to the clone and to the native sim as the same raw control transfer through usbfs, on
-endpoint 0 and on a control endpoint above 0: replies of 0 to 4,096 bytes, past wLength and in the status stage,
-never answered, answered 100-1,900 ms late, refused partway, paced 5 ms a packet; writes of the same kinds; then a
-read while the other pipe holds an unanswered request, a read right after one the PC abandoned, and a read answered
-1 s late on interface 1's control endpoint while the PC switches interface 2's setting, which natively leaves it
-alone. Both sims must run one build.
+"""Control requests the box's clone relays to the real device, against the native sim (lent to the PC hub): the same
+raw control transfer through usbfs to both, on endpoint 0 and on a control endpoint above 0. Replies of 0 to 4,096
+bytes, past wLength and in the status stage, never answered, answered 100-1,900 ms late, refused partway, paced 5 ms
+a packet; writes of the same kinds; a read while the other pipe holds an unanswered request, a read right after one
+the PC abandoned, and a read answered 1 s late on interface 1's control endpoint while the PC switches interface 2's
+setting. Both sims must run one build.
 
-Per request: each side's outcome (the usbfs status, the bytes received, partial data before a STALL included) and
-time, and whether the clone's matches: outcome and bytes equal, and its reply ≤1.5 ms before or ≤3 ms after
-native's (a request native leaves unanswered must time out on the clone too). A clone without the control endpoint
-above 0 has its requests there recorded as "no endpoint", against the native sim's answers. The summary counts the
-matches per pipe and kind of request.
+Per request: each side's outcome (usbfs status, bytes, partial data before a STALL included) and time. The clone
+matches when outcome and bytes are equal and its reply comes 1.5 ms before native's to 3 ms after; a request native
+leaves unanswered must time out on the clone too. A clone without the control endpoint above 0 reads "no endpoint"
+there. The summary counts the matches per pipe and kind of request.
 """
 import ctypes
 import fcntl
@@ -24,12 +22,11 @@ PID_CTRLEP = 0x614A
 PID_SWITCH = 0x614E
 T0 = 0xA500                    # endpoint 0 takes the test requests at wIndex 0xA5xx
 LATE_MS = 3.0
-NEVER = 2.0                    # how long the PC waits on a request the device never answers
+NEVER = 2.0
 TIMEOUT = "timeout"
 NO_EP = ("no endpoint", None, None)
 _SETINTERFACE = (2 << 30) | (8 << 16) | (ord("U") << 8) | 4
 
-# (label, bRequest, wValue, wLength) of the sim's test requests, reads then writes.
 IN = [
     ("read 8", 0x81, 0, 8), ("read 64", 0x81, 0, 64), ("short 32 of 64", 0x83, 0, 64),
     ("big 0", 0x84, 1024, 0), ("big 65", 0x84, 65, 65), ("big 200", 0x84, 200, 200),
@@ -51,7 +48,6 @@ OUT = [
     ("late 100", 0x08, 100, 0), ("late 550", 0x08, 550, 0), ("late 1900", 0x08, 1900, 0),
     ("never 0", 0x07, 0, 0), ("never 16", 0x07, 0, 16), ("unknown", 0x19, 0, 0),
 ]
-# Each request's kind, from the first word of its label, for the counts; a write's apart from a read's.
 KINDS_IN = {"read": "reads", "short": "reads", "big": "reads", "over": "past wLength", "part": "refused",
             "unknown": "refused", "paced": "paced", "late": "late", "never": "never answered"}
 KINDS_OUT = {"write": "writes", "reply": "writes", "part": "writes refused", "unknown": "writes refused",
@@ -72,8 +68,7 @@ def fresh_mouse():
 
 
 def switch_personality(pid=PID_SWITCH):
-    """A mouse; control endpoint 0x82 on vendor interface 1; vendor interface 2, whose alternate setting 1 adds an
-    interrupt IN: a SET_INTERFACE on interface 2 changes the device's endpoints and nothing on interface 1."""
+    """A mouse, control endpoint 0x82 on vendor interface 1, and vendor interface 2 whose setting 1 adds an IN."""
     cfg = bytes([9, 2, 75, 0, 3, 1, 0, 0xA0, 50,
                  9, 4, 0, 0, 1, 3, 1, 2, 0,
                  9, 0x21, 0x11, 0x01, 0, 1, 0x22, len(core.MOUSE_DESC), 0,
@@ -94,7 +89,6 @@ SHAPES = {"fresh_mouse": fresh_mouse, "switch_personality": switch_personality}
 
 
 def pipes():
-    """Each pipe under test: (name, endpoint, wIndex)."""
     return [("ep0", 0, T0), ("ep2", 2, IFACE)]
 
 
@@ -247,7 +241,6 @@ def _requests(ctx, links, ports, rows):
                 if d is devs[0] and not has:
                     res.append(NO_EP)
                     continue
-                # The held request: endpoint 2 never answers its read; endpoint 0's is answered 3 s late.
                 rq, wv = (0x87, 0) if hep else (0x88, 3000)
                 urb, _ = d.submit_control(hep, 0xC0 | (hep and 1), rq, wv, hwi, 8)
                 time.sleep(0.02)

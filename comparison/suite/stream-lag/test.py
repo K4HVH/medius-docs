@@ -1,9 +1,8 @@
 """Delay of each count in a steady stream of moves: each move(+1,0)'s send time against the arrival of the count it
 adds on the clone's evdev node, matched one to one in order (every count must arrive for the match to hold).
 
-The mouse is the idle mouse (one empty report every 2 s, never moving): stock won't inject into a device that
-hasn't reported since it was cloned. Each box on its default smoothing. One 2 s stream per rate, 1 s apart, and
-1.5 s of capture after each.
+The idle mouse (one empty report every 2 s), each box on its default smoothing. One 2 s stream per rate, 1 s apart,
+and 1.5 s of capture after each.
 """
 import time
 

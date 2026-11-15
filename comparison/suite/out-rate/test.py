@@ -1,37 +1,21 @@
-"""OUT packets written at the PC's full rate: does every packet the PC writes reach the real device once, whole and
-in order, and how fast does each box take them?
+"""OUT packets written at the PC's full rate: does every packet reach the real device once, whole and in order, and
+how fast does each box take them?
 
-The device: a silent mouse; a vendor-page HID interface with an 8-byte interrupt OUT (0x02); a vendor interface with
-an 8-byte interrupt OUT (0x03) and an 8-byte bulk OUT (0x04). Nothing is pumped. Endpoints narrower than 64 bytes are
-the hard case. A full packet doesn't end a transfer there, so a relay that arms its reads for more than one packet
-holds a packet until the next one arrives, or merges packets. Medius runs with imperfect clones allowed (it clones
-vendor bulk only then); stock has no such option. The native run plays the slow leg on the sim lent to the PC hub,
-the device plugged straight into the PC: the rates each box's rows are read against.
-
-The PC takes interfaces 1 and 2 from their kernel drivers and writes through usbfs, one packet per transfer, with
-eight transfers queued per endpoint so it sends as fast as the clone takes them. Each packet is 8 bytes: a 16-bit
-counter, the endpoint address, then a ramp, so no two packets match. Legs:
-  alone     N packets on each endpoint in turn
-  together  N packets on all three at once
-  slow      the same device with each OUT endpoint taking one packet then NAKing for 5 ms, 100 packets on all three
-            at once. Natively the PC waits, about 0.5 s per endpoint, and loses nothing.
-
-What the real device received comes from the sim's SIMSTAT: per OUT endpoint, packets, bytes and a CRC16 over the
-bytes in arrival order. The CRC is tested against the packets the clone accepted, and against each simple way of
-getting them wrong: only the first k arrived (the rest lost, or still held), one run of packets lost, one run
-repeated, two neighbours swapped, and every byte in order but in fewer packets (merged). The CRC is 16 bits, so a
-match is a hypothesis the counts and CRC agree with. Each hypothesis tried has about a 1 in 65536 chance of matching
-by coincidence; when more than one fits, all are listed. A stream none of them explains is reported as unexplained,
-with its counts. On the alone leg, the sim's OUT log also gives each of the first 96 packets' length.
-
-Per leg and endpoint:
-- transfers the clone completed, and errors;
-- the write rate: packets over the time from the first submit to the last completion. An 8-byte interrupt OUT
-  polled every frame takes 1000 a second natively. Bulk has no fixed rate: the bus and the real device set it;
-- packets and bytes the real device received, and the verdict: lost, merged, repeated, reordered;
-- on the slow leg, how long the PC took and whether it waited on the real device;
-- Medius's drop counters across each leg.
-A clone that comes up without an endpoint is recorded as such."""
+The real device: a silent mouse; a vendor-page HID interface with an 8-byte interrupt OUT (0x02); a vendor interface
+with an 8-byte interrupt OUT (0x03) and an 8-byte bulk OUT (0x04). On endpoints this narrow a full packet doesn't end
+a transfer, so a relay can merge packets or hold one back. Medius runs with imperfect clones allowed (it clones vendor
+bulk only then). The native run, the real device plugged straight into the PC, plays only the slow leg. The PC writes
+through usbfs, one distinct 8-byte packet per transfer, eight transfers queued per endpoint:
+  alone     1,000 packets on each endpoint in turn
+  together  1,000 packets on all three at once
+  slow      100 packets on all three at once, each endpoint taking one packet then NAKing for 5 ms. Natively the PC
+            waits, about 0.5 s per endpoint, and loses nothing.
+The verdict is the account the sim's per-endpoint counts (packets, bytes, CRC16 in arrival order) fit: all once in
+order, the last k lost or still held, one run lost or repeated, two neighbours swapped, or merged into fewer packets.
+Each account matches by chance about 1 in 65536; all that fit are listed. Also per leg and endpoint: transfers the
+clone completed, errors, the write rate (an 8-byte interrupt OUT takes 1000 a second natively; bulk has no fixed
+rate), whether the PC waited on the real device (slow), the first 96 packets' lengths (alone), Medius's drop
+counters."""
 import ctypes
 import os
 import struct
@@ -66,13 +50,10 @@ def _own(p, pid):
 
 
 def out_device():
-    """A silent mouse; a vendor-page HID interface with an 8-byte interrupt OUT; a vendor interface with 8-byte
-    interrupt and bulk OUTs."""
     return _own(shapes.out_personality(), FAST_PID)
 
 
 def slow_out_device():
-    """The same, every OUT endpoint taking one packet then NAKing for NAK_MS."""
     p = _own(shapes.out_personality(), SLOW_PID)
     for e in p.endpoints:
         if not e.addr & 0x80:
@@ -108,8 +89,6 @@ def _endpoints(usb):
 
 
 def _parse_endpoints(blob, active):
-    """Every endpoint configuration `active` declares, from the device's descriptors: the first declaration of
-    each."""
     eps, i = {}, 18
     while i + 4 <= len(blob):
         total = blob[i + 2] | blob[i + 3] << 8
@@ -132,8 +111,6 @@ def _parse_endpoints(blob, active):
 
 
 def _open_clone(usb, want):
-    """Take the interfaces holding the endpoints in `want` from their kernel drivers and claim them through usbfs.
-    Returns (device or None, {"0xNN": what the clone declares, or present False}, interfaces unbound, error)."""
     try:
         eps = _endpoints(usb)
     except OSError as e:
@@ -198,8 +175,6 @@ def _sim_stat(ctx):
 
 
 def _out_log(ctx, secs=0.6):
-    """What the sim's OUT endpoints received since the last read: packets, bytes, CRC16 over the bytes in arrival
-    order, and each packet's length. Reading clears it."""
     lk = sim_module("link")
     link = ctx.sim()
     try:
@@ -232,10 +207,6 @@ def _submit_out(raw, ep, data, xfer):
 
 
 def _write_all(raw, plan, deadline_s):
-    """plan: {ep: (usbfs transfer type, [packets])}. Keeps DEPTH transfers queued on each endpoint until its packets
-    are all written, it fails, or the deadline passes. An endpoint stops at its first failed transfer. Returns per
-    endpoint the indices the clone accepted in completion order, failures by status, transfers left unfinished, and
-    times."""
     st = {ep: {"next": 0, "inflight": 0, "ok": [], "errors": {}, "short": 0, "stopped": None,
                "t0": None, "t_last": None, "unfinished": 0} for ep in plan}
     live = {}
@@ -329,12 +300,7 @@ def crc_upd(c, data):
 
 
 class Explainer:
-    """Which simple account of a sent list of equal-size packets fits what the real device counted (packets, bytes,
-    CRC).
-
-    The CRC has no final XOR, so it is linear: carrying state s over bytes B gives crc(0, B) ^ crc(s, zeros(len B)).
-    With the CRC of every prefix, of every suffix from state 0, and the carry of each state bit over k packets of
-    zeros, the CRC of any splice of the sent list costs 16 steps, and every account below is tried in O(n)."""
+    """Which loss, repeat, swap or merge of the sent packets fits the counts; the CRC must have no final XOR."""
 
     def __init__(self, sent):
         self.sent, self.n = sent, len(sent)
@@ -417,7 +383,6 @@ class Explainer:
 
 
 def _lens_of(log, n):
-    """The sim's OUT log on a leg with one endpoint: the first 96 packets' lengths, and the first that isn't PKT."""
     if log is None:
         return None
     lens = log["lens"]
@@ -430,12 +395,12 @@ def _lens_of(log, n):
 
 
 def _run_leg(ctx, raw, info, leg, eps, n):
-    """Write n packets on each endpoint in eps at once; read what the sim received. Returns one row per endpoint."""
     usbfs = sim_module("usbfs")
     sent = {ep: _packets(ep, n, BASE[leg]) for ep in eps}
     plan = {ep: (usbfs.TYPE_BULK if info[f"0x{ep:02x}"]["type"] == "bulk" else usbfs.TYPE_INTERRUPT, sent[ep])
             for ep in eps}
     st0 = _stats(ctx.box)
+    # reading clears the sim's counts and OUT log
     _sim_stat(ctx)
     _out_log(ctx)
     w = _write_all(raw, plan, max(10.0, n * 0.02))
@@ -467,7 +432,6 @@ def _run_leg(ctx, raw, info, leg, eps, n):
 
 
 def _device_legs(ctx, leg_id, legs):
-    """Present the leg's device, take its OUT interfaces, run `legs` on it. Returns rows."""
     usb = ctx.device(leg_id).usb
     time.sleep(SETTLE_S)
     raw, info, unbound, err = _open_clone(usb, OUT_EPS)

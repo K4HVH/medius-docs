@@ -1,10 +1,4 @@
-"""Reading the clone's input nodes.
-
-A reader that falls behind loses events in the kernel: evdev flushes its client's buffer and inserts
-SYN_DROPPED, and hidraw drops reports with no marker. A test's pacing loop holds Python's interpreter lock for
-milliseconds at a time, so each node is drained by a child process doing nothing else, into a 1 MB pipe the
-test reads at leisure. A hidraw read keeps its boundary and its read time: each is framed [t f64][len u16][bytes].
-"""
+"""Reading the clone's input nodes, each drained by a child process so a busy test loses no events."""
 import fcntl
 import os
 import select
@@ -100,7 +94,7 @@ class EvDecoder:
                     self.frames.append((sec + usec / 1e6, self._rel, self._keys))
                 self._rel, self._keys = {}, []
             elif typ == EV_SYN and code == SYN_DROPPED:
-                # Setting the clock at open flushes a node with events waiting and marks it once.
+                # Setting the clock at open flushes a node with events waiting and marks it dropped once.
                 if not first:
                     self.syn_dropped += 1
                 self._rel, self._keys = {}, []

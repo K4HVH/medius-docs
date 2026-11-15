@@ -1,20 +1,17 @@
-"""Does what the PC does to the clone reach the real device, and what the real device does reach the PC?
-
-The real device's side is read from the sim's records (bus resets it saw, endpoint halts set and cleared, its
-alternate setting), never from the box; the PC's side from usbfs and the USB monitor. Cases:
-  boot     SET_PROTOCOL(boot) to both boot interfaces of a gaming mouse: the device switches to 3-byte boot
-           reports, and those reach the PC
+"""PC actions on the clone reaching the real device, and native traffic reaching the PC. The real device's side is
+read from the sim's records (bus resets, halts set and cleared, alternate setting), the PC's from usbfs and usbmon.
+  boot     SET_PROTOCOL(boot) to both boot interfaces of a gaming mouse: the device switches to 3-byte boot reports
+           and they reach the PC
   reset    a bus reset of the clone: the device receives a reset and returns to report protocol
   restart  the clone's hub port off for 1 s and on, as a PC restart: the device receives a reset
   halt     the PC halts the mouse's interrupt IN and clears it: the device receives both
-  stall    a device whose interrupt IN STALLs mid-stream: whether the PC reads a STALL or the box clears the
-           device itself, and whether the PC's CLEAR_FEATURE(HALT) reaches the device
-  altset   SET_INTERFACE to the streaming setting of a device with a zero-bandwidth setting: the device follows,
-           its packets reach the PC, and it follows back
-  zlp      a mouse replying to idle polls with zero-length packets: they reach the PC
-  config   SET_CONFIGURATION(2) on a device whose configuration 2 alone declares a counting IN endpoint: the
-           clone enters it and the real device's packets reach the PC; back to configuration 1. The sim counts
-           the bus resets the real device took on the way, which a native switch never sends"""
+  stall    an interrupt IN STALLing mid-stream: whether the PC reads the STALL or the box clears it itself, and
+           whether the PC's CLEAR_FEATURE(HALT) reaches the device
+  altset   SET_INTERFACE to a streaming setting and back to a zero-bandwidth one: the device follows, its packets
+           reach the PC
+  zlp      a mouse answering idle polls with zero-length packets: they reach the PC
+  config   SET_CONFIGURATION(2), which alone declares a counting IN endpoint, and back to 1: the clone follows, its
+           packets reach the PC, and the sim counts the bus resets the device took (natively none)"""
 import errno
 import os
 import struct
@@ -28,7 +25,7 @@ from medius_shapes.personalities import sim_module
 
 GAMING_PID, STALL_PID, ZLP_PID = 0x6160, 0x6130, 0x7120
 STALL_AFTER = 1000      # reports at 100/s: about 10 s, so the STALL lands mid-read
-EXTRA_EP = 0x82         # declared by configuration 2 alone
+EXTRA_EP = 0x82
 CONFIG_PACKETS = 100
 CONFIG_SETTLE_S = 2.5
 USBDEVFS_SETINTERFACE = (2 << 30) | (8 << 16) | (ord("U") << 8) | 4
@@ -36,14 +33,12 @@ _KEEP = []
 
 
 def stall_mouse():
-    """A boot mouse reporting every 10 ms whose interrupt IN STALLs after STALL_AFTER reports."""
     return core.personality(STALL_PID, core.hid_config(1, 2, len(core.MOUSE_DESC), 0x81, 0x03, 8, 10),
                             [core.EndpointSpec(0x81, 3, 1, 8, 3, stall_after=STALL_AFTER)],
                             pump=core.Pump(0x81, 10000, core.GEN_FIXED, 0))
 
 
 def zlp_mouse():
-    """A mouse that reports once a second and answers the polls between with zero-length packets."""
     return scripted.scripted_mouse(ZLP_PID, [(1, scripted.mouse(0, 0)), (999, b"")], zlp_idle=True)
 
 
@@ -99,7 +94,6 @@ class _Taken:
 
 
 def _read(dev, ep, size, timeout_s):
-    """One read of `ep`: (bytes, None), or (None, why it failed)."""
     urb, buf = dev.submit_in(ep, size)
     try:
         _, status, data = dev.reap(timeout=timeout_s)
@@ -158,7 +152,6 @@ def _hidraw(usb, intf):
 
 
 def _lengths(usb, ep, secs=0.6, intf=0):
-    """Lengths of the packets the clone completed on `ep` over `secs`, with its hidraw node open so the PC polls."""
     fd = _hidraw(usb, intf)
     _, dev = wire.resolve(usb)
     try:
@@ -306,8 +299,6 @@ def _zlp(ctx, out):
 
 
 def _select(usb, value):
-    """SET_CONFIGURATION through the kernel, which rebinds its drivers to the new configuration's interfaces.
-    Returns the error the write met, if any."""
     try:
         _put(f"/sys/bus/usb/devices/{usb}/bConfigurationValue", str(value))
         err = None
@@ -318,8 +309,6 @@ def _select(usb, value):
 
 
 def _drain(usb, ep, packets, timeout_ms):
-    """(received, went_absent, malformed, distinct). With the sim's counter, a correct packet ramps up from its
-    first byte, and every packet is new."""
     got, bad, seen = 0, 0, set()
     with _Taken(usb, (0,)) as dev:
         for _ in range(packets):
@@ -341,7 +330,6 @@ def _drain(usb, ep, packets, timeout_ms):
 
 
 def _absent(usb, ep, timeout_ms):
-    """Whether the active configuration lacks `ep` (as opposed to declaring it and sending nothing)."""
     with _Taken(usb, (0,)) as dev:
         try:
             _read(dev, ep, 8, timeout_ms / 1000)

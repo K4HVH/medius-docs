@@ -1,21 +1,16 @@
-"""Data through every IN endpoint of the box's clone: a clone of an interface the box can't serve delivers nothing
-there, which is worse than refusing the device.
+"""Data through every IN endpoint of the box's clone. An interface cloned but not served delivers nothing, which ranks
+below a device not cloned.
 
-Per shape and endpoint, the sim streams a counter on that endpoint: a full-size packet each interval, every byte one
-more than the last, the first byte one more than the previous packet's first. The PC reads it through usbfs with
-eight transfers queued, its interface taken from any kernel driver (and left so) and switched to the endpoint's
-alternate setting, for 2 s. The sim's built-in devices stream the endpoint the sim always feeds, 1,000 packets a second; shapes from
-medius_shapes.clone_cases are presented once per IN endpoint with the counter moved to it, at the interval the
-device declares. Per endpoint: packets read and their rate against the native rate, the clone's interval and packet
-size, counter steps other than one (packets lost or repeated on the way), and packets of the wrong length or
-contents. The sim's pump waits while its queue is full, so a box that reads slowly shows fewer packets, not gaps. Not
-read: an isochronous endpoint (the sim never feeds one) and a control endpoint (control transfers, not a stream).
+Per shape and IN endpoint, the sim streams a counter there: a full-size packet each interval, every byte one more than
+the last. The PC reads it through usbfs for 2 s with eight transfers queued, in the endpoint's alternate setting. The
+sim's built-in devices stream 1,000 packets a second; medius_shapes.clone_cases shapes stream at the declared interval.
+Per endpoint: packets read and their rate against the native rate, the clone's interval and packet size, counter steps
+other than one (lost or repeated), and packets of the wrong length or contents. The sim waits while its queue is full,
+so a slow box shows fewer packets, not gaps. Isochronous and control endpoints are not read.
 
-Medius runs as it ships, imperfect clones off; the shapes it refuses are then presented again with imperfect clones
-on (the `imperfect` pass). Stock has no such setting.
-
-Outcomes, per row's endpoints: not cloned; an endpoint missing from the clone, or delivering <95% of the native
-rate, sends nothing; otherwise every endpoint runs at the native rate.
+Medius runs with imperfect clones off, then presents the shapes it refused again with them on (the `imperfect` pass).
+Outcomes per row: not cloned; an endpoint missing or below 95% of the native rate sends nothing; otherwise every
+endpoint at the native rate.
 """
 import copy
 import ctypes
@@ -30,7 +25,6 @@ from medius_shapes.personalities import builtin, sim_module
 SECS = 2.0
 BUILTIN_RATE = 1000.0
 OUTCOMES = ("Every endpoint at the native rate", "Not cloned", "An endpoint sends nothing")
-# The sim's built-in devices: name and arguments, PID, the endpoint the sim streams a counter on.
 BUILTIN = [
     (["vendorintr"], 0x6140, 0x82),
     (["vendintrep", "0x84"], 0x6184, 0x84),
@@ -43,7 +37,7 @@ BUILTIN = [
     (["vendbulkhigh"], 0x6145, 0x85),
     (["hidbulkin"], 0x6144, 0x82),
     (["vendorbulk", "1000", "0"], 0x6141, 0x83),
-    (["widehid", "65", "65"], 0x6151, 0x81),        # 65-byte reports, one more than a full-speed packet holds
+    (["widehid", "65", "65"], 0x6151, 0x81),
 ]
 BUILT = [clone_cases.two_high_in, clone_cases.five_in, clone_cases.six_in, clone_cases.ten_interfaces,
          clone_cases.high_interface, core.xinput, clone_cases.five_hid_interfaces]

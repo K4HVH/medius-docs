@@ -1,13 +1,11 @@
 """The real device unplugged and plugged back in: what each box presents to the PC with nothing on its device port,
-and how long the clone takes to come back.
+and how long the clone takes to come back. The real device is a mouse reporting every millisecond; ten cycles.
 
-The sim disconnects (its D+ pull-up off, as an unplug looks to the box) and reconnects. Per cycle: time from the
-disconnect until the clone's port reads disconnected at its hub (GET_STATUS(port) read about every 0.3 ms, so the
-box's delay alone), and until the clone leaves the PC's bus as the kernel sees it, or stays if the box keeps
-presenting something. The kernel hears of it at the hub's next status poll, every 256 ms on common hubs, so each
-disconnect first waits a random 0-256 ms and the cycles cover every phase of that poll. Then what is on the
-clone's port while the device is away, and the time from reconnect until the clone is configured with its hidraw
-node, then until its first report reaches the PC. Ten cycles. The device is a mouse reporting every millisecond.
+Per cycle, from the sim's disconnect (D+ pull-up off): the time until the clone's port reads disconnected at its
+hub (polled every ~0.3 ms, so the box's delay alone) and until the clone leaves the PC's bus in sysfs, or stays if
+the box keeps presenting something (each disconnect waits a random 0-256 ms first, so the cycles cover every phase
+of the hub's 256 ms status poll); what is on the clone's port while the real device is away; and from reconnect,
+the time until the clone is configured with its hidraw node, then until its first report reaches the PC.
 """
 import random
 import time
@@ -21,7 +19,6 @@ CYCLES = 10
 
 
 def ticking_mouse():
-    """A mouse moving X +1 and -1 on alternate milliseconds."""
     return scripted.scripted_mouse(PID, [(1, scripted.mouse(1, 0)), (1, scripted.mouse(-1, 0))], interval_us=1000)
 
 

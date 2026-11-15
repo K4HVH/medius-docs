@@ -1,9 +1,4 @@
-"""Bench helpers for running tests against a box: which USB port its clone is on, which input node is
-the clone's mouse, whether a device is connected on a hub port, and who else holds a serial port.
-
-`quiet` keeps the clone off this desktop while tests run against it (run by `comparison/quiet_clone.py`, or
-by the no-sim run itself), and writes the udev rule these helpers read. Linux only.
-"""
+"""Bench helpers: the clone's USB port and mouse node, hub port status, and who holds a serial port. Linux only."""
 import os
 import re
 import subprocess
@@ -13,11 +8,7 @@ QUIET_RULE = "/run/udev/rules.d/99-medius-quiet-clone.rules"
 
 
 def clone_usb_port(rule=QUIET_RULE):
-    """The USB port tests guard (`1-4`): the first one the quiet rule names, or None
-    without one.
-
-    A second box's clone can carry the same VID:PID as this one's, so a lookup by VID:PID alone reads
-    whichever the bus lists first. `on_clone_port` and `on_clone_sysfs` pin lookups to this port."""
+    """The USB port tests guard (`1-4`): the first one the quiet rule names, or None without one."""
     try:
         with open(rule) as f:
             ports = re.findall(r'KERNELS=="([^"]+)"', f.read())
@@ -27,10 +18,7 @@ def clone_usb_port(rule=QUIET_RULE):
 
 
 def native_sim(rule=QUIET_RULE):
-    """The native sim `quiet_clone.py --native` names, as (its control port, its USB port), or None.
-
-    The native sim is a second device emulator plugged straight into this PC, presenting the same device
-    as the one behind the box, so a test reads the clone and the real device the same way."""
+    """The native sim `quiet_clone.py --native` names, as (control port, USB port), or None."""
     try:
         with open(rule) as f:
             m = re.search(r"^# native-sim (\S+) (\S+)$", f.read(), re.M)
@@ -54,8 +42,7 @@ def on_clone_port(dev):
 
 
 def on_clone_sysfs(path):
-    """A sysfs path (a /sys/bus/usb/devices entry, or a device path through it) is on the clone's port,
-    or no port is known."""
+    """Whether a sysfs path is on the clone's port; True when no port is known."""
     port = clone_usb_port()
     if port is None:
         return True
@@ -64,13 +51,7 @@ def on_clone_sysfs(path):
 
 
 def clone_event_node(vid=None, pid=None, wait_s=0.0):
-    """The clone's mouse event node, or None.
-
-    Event numbers shift on any replug, and a wrong node reads all zeros. The clone's keyboard
-    collections share its VID:PID, so ID_INPUT_MOUSE tells them apart. Pass the cloned device's vid and
-    pid to pin this box. Without them a lone USB mouse is taken, and two mice (a second box's clone, a
-    real mouse) give None rather than a node that may be another box's. `wait_s` polls that long,
-    covering the gap while the box enumerates the clone again."""
+    """The clone's mouse event node, or None; pass the cloned device's vid and pid to pin this box."""
     end = time.time() + wait_s
     while True:
         node = _clone_event_node_once(vid, pid)
@@ -106,9 +87,7 @@ def _clone_event_node_once(vid, pid):
 
 
 class HubPort:
-    """Whether a device is connected on a USB port (`1-4`), read from its hub with GET_STATUS(port) on
-    demand. It shows a device arriving or leaving within a read (~0.3 ms), where the kernel's hub driver
-    hears of it at the hub's next status poll (every 256 ms on common hubs). Needs root."""
+    """Whether a device is connected on a USB port (`1-4`), read from its hub with GET_STATUS(port). Needs root."""
 
     def __init__(self, usb):
         import ctypes
@@ -125,7 +104,7 @@ class HubPort:
         self._ioctl = fcntl.ioctl
         self._buf = ctypes.create_string_buffer(4)
         self._req = Ctrl(0xA3, 0x00, 0, int(port), 4, 1000, ctypes.cast(self._buf, ctypes.c_void_p))
-        self._op = (3 << 30) | (ctypes.sizeof(Ctrl) << 16) | (ord("U") << 8)     # USBDEVFS_CONTROL
+        self._op = (3 << 30) | (ctypes.sizeof(Ctrl) << 16) | (ord("U") << 8)  # USBDEVFS_CONTROL
         self.fd = os.open(f"/dev/bus/usb/{bus:03d}/{dev:03d}", os.O_RDWR)
 
     def connected(self):
@@ -137,9 +116,7 @@ class HubPort:
 
 
 def port_holders(port, include_self=False):
-    """The processes with `port` open, as 'name (pid N)'; empty where /proc can't say. This process is
-    left out unless `include_self`. Each descriptor's link is read, never followed: a stat of one on a
-    hung network mount would hang here."""
+    """The processes with `port` open, as 'name (pid N)', leaving this process out unless `include_self`."""
     try:
         path = os.path.realpath(port)
         me = os.getpid()
@@ -169,8 +146,7 @@ def port_holders(port, include_self=False):
 
 
 def restore_vmin(s):
-    """Put a pyserial port's read minimum back to 1 before closing it. pyserial leaves it at 0, and a
-    browser's Web Serial that opens the port next reads 0 bytes and calls the device lost."""
+    """Put a pyserial port's read minimum back to 1 before closing, or Web Serial opening it next reads 0 bytes."""
     try:
         import termios
     except ImportError:
@@ -179,5 +155,5 @@ def restore_vmin(s):
         attrs = termios.tcgetattr(s.fileno())
         attrs[6][termios.VMIN] = 1
         termios.tcsetattr(s.fileno(), termios.TCSANOW, attrs)
-    except (termios.error, OSError, ValueError, AttributeError):    # the port has gone
+    except (termios.error, OSError, ValueError, AttributeError):
         pass

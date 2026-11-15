@@ -1,5 +1,3 @@
-"""Tests for medius_shapes: shapes are plain data, and build() hands the sim exactly what its own library
-would have built."""
 import importlib
 import inspect
 import os
@@ -17,7 +15,6 @@ HERE = Path(__file__).resolve().parent.parent
 
 
 def every_shape():
-    """Every zero-argument function in medius_shapes that returns a personality."""
     for info in pkgutil.iter_modules(medius_shapes.__path__):
         if info.name == "personalities":
             continue

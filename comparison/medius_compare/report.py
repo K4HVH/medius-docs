@@ -1,5 +1,4 @@
-"""`report`: one box's run beside the other's, row by row, as the comparison's tables lay them out. It
-compares nothing with the published numbers; that is up to whoever reads it."""
+"""`report`: one box's run beside the other's, row by row, as the comparison's tables lay them out."""
 from .runfile import RunFile, resolve
 
 
@@ -17,7 +16,7 @@ def _cell(entry, ptr):
         return "failed"
     ptrs = [p for p in (ptr if isinstance(ptr, list) else [ptr]) if p is not None]
     if not ptrs:
-        return "-"       # a row this box has nothing for
+        return "-"
     vals = []
     for run in entry["runs"]:
         got = [resolve(run, p) for p in ptrs]

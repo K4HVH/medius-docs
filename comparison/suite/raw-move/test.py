@@ -1,19 +1,14 @@
 """Stock's move with a receipt (binary RAW_MOVE 0x69) against Medius MOVE with NOW, read off the PC's USB bus.
 
 RAW_MOVE carries an id, a delta and a timeout; the box replies with a state and reason, and RAW_STATUS (0x6A)
-reads a result back. Medius has no receipt; its MOVE with NOW is the move that skips smoothing. Legs, one-count
-moves:
-  rest     40 into the idle mouse (one empty report every 2 s; stock won't inject into a device that hasn't
-           reported since it was cloned), 150-250 ms apart
+reads a result back. Medius's MOVE with NOW skips smoothing and has no receipt. Legs, one-count moves:
+  rest     40 into the idle mouse (one empty report every 2 s), 150-250 ms apart
   moving   40 into a mouse reporting every millisecond (Y +1, -1), 150-250 ms apart
   stream   200 into the idle mouse, 5 ms after each command (stock's after its reply), presented again
 Per leg: latency from the command's packet reaching the box's control port to the clone report carrying it,
-reports per move, the total, and stock's reply and receipt states.
-
-Once a stream of receipted moves has gone unread, stock refuses every later one (reply ff03) until a power cycle,
-ordinary moves unaffected. So before its legs the run sends one receipted move, and power-cycles a stock box that
-refuses it (`power_cycled_first`).
-"""
+reports per move, the total, and stock's reply and receipt states. Once receipted moves have gone unread, stock
+refuses every later one (reply ff03) until a power cycle, so a stock box refusing one before the legs is
+power-cycled first (`power_cycled_first`)."""
 import random
 import struct
 import time

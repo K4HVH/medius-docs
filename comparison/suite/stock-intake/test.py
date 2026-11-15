@@ -1,17 +1,12 @@
-"""Where each box's control-port intake gives out: one-count moves in single writes and paced fast, counted in
-the clone's reports on the PC's USB bus.
-
-An overload can leave stock's parser one command behind until it is powered off. A box found one command behind
-before a step is power-cycled first (`cycled_before`), so every step starts in step; one still behind after the
-cycle has that step recorded as skipped. Medius gets the same steps, as MOVE frames (12 bytes). Steps, each into a
-still mouse:
-  sweep    one write of N moves: stock's binary MOVE (9 bytes) N = 28-32, 64, 256; stock's text `km.move(1,0)`
-           (14 bytes) N = 18-21; text `km.move(0000001,0)` (20 bytes) N = 12-14, which tells a limit in bytes from
-           one in commands
-  paced    binary moves paced in 1 ms batches for 2 s at 5,000, 7,000, 10,000, 15,000 and 20,000/s
-  text8k   `km.move(1,0)` paced at 8,000/s for 2 s, three times
+"""Each box's control-port intake limit: one-count moves into a still mouse, written at once or paced, counted in the
+clone's reports on the PC's USB bus. Medius gets the same steps as MOVE frames (12 bytes).
+  sweep    one write of N moves: stock's binary MOVE (9 bytes) N = 28-32, 64, 256; text `km.move(1,0)` (14 bytes)
+           N = 18-21; text `km.move(0000001,0)` (20 bytes) N = 12-14, telling a byte limit from a command limit
+  paced    binary moves in 1 ms batches for 2 s at 5,000, 7,000, 10,000, 15,000 and 20,000/s
+  text8k   `km.move(1,0)` at 8,000/s for 2 s, three times
 Per step: moves delivered, refusals (`DE AD 01 00 18 FF` and `ERR`), and whether the box answers in step after.
-Every step keeps its place in `results`, run or skipped.
+A box found one command behind before a step is power-cycled first (`cycled_before`); a step still behind after
+the cycle is recorded as skipped. Every step keeps its place in `results`.
 """
 import glob
 import os
@@ -32,9 +27,6 @@ PACED_S = 2.0
 
 
 class _Port:
-    """The box's control port as bytes. Medius takes its frames on the bare port with the package closed, and
-    answers a query through the package between writes."""
-
     def __init__(self, box):
         self.box = box
         self.raw = box.raw() if box.kind == "medius" else None
@@ -79,7 +71,6 @@ def _read(path):
 
 
 def _mouse_in(usb):
-    """The clone's mouse: its interrupt IN endpoint and report layout, from sysfs."""
     for rd in sorted(glob.glob(f"/sys/bus/usb/devices/{usb}/{usb}:*/*:*/report_descriptor")):
         with open(rd, "rb") as f:
             lay = layout.mouse_layout(f.read())

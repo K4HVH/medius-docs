@@ -1,29 +1,18 @@
 """Native report rate while the box injects, second by second.
 
-The scripted mouse reports every millisecond, and plays its next record only once the box has taken the last
-one, so a box that reads the device more slowly shows as fewer, still consecutive, reports rather than gaps.
-Mice: `count` (Y counts 1 to 200, so each report names itself), `alt` (Y +1/-1 alternately), `const1` and
-`const100` (Y +1 or +100 on every report), `sine` (Y from 1 to 10 and back over 200 ms, a hand-like speed curve).
-
-Variants, each a mouse, the rates its command is paced at (0: none sent), for how long, the command, and how
-long the capture runs after the commands stop:
-  count, alt, const1, const100   0, 1,000, 500 and 125/s, 15 s, move(+1,0)
-  sine                           1,000, 500 and 125/s, 15 s, move(+1,0)
-  sine_slow                      10 and 30/s, 5 s, move(+1,0), then 3 s
-  sine_move0                     1,000/s, 5 s, move(0,0), then 3 s
-  sine_query                     100/s, 5 s, a query (stock km.moving() unanswered; Medius QUERY(HEALTH) waiting
-                                 for each reply), then 3 s
-Recorded per rate:
-  per_second   native reports (frames carrying Y) and box-only reports (X without Y) in each second, from evdev
-               kernel timestamps; `tail_per_second` the same after the commands stop; `box_only` their sum while
-               the commands run
-  hidraw_native  native reports read from hidraw while the commands run and 0.5 s after; `seq_gaps` (count only)
-               pairs of consecutive native reports that aren't consecutive in the sequence
-  sim          the sim's report count and tick over the run (its tick stops while its endpoint is full)
-  stock_lag    whether stock's parser was one command behind as the rate started
-  x_delivered  X delivered against commands sent; `refused` (stock) the moves it answered with a refusal
-Pacing sleeps to within 0.3 ms of each command, then spins, so the capture threads keep running.
-"""
+The scripted mouse reports every millisecond and plays its next record only once the box has taken the last one,
+so a box reading it more slowly shows fewer, still consecutive, reports rather than gaps. Mice: `count` (Y counts 1
+to 200, so each report names itself), `alt` (Y +1/-1 alternately), `const1` and `const100` (Y +1 or +100 on every
+report), `sine` (Y from 1 to 10 and back over 200 ms).
+Variants: count, alt, const1 and const100 with move(+1,0) at 0 (none sent), 1,000, 500 and 125/s, and sine at 1,000,
+500 and 125/s, 15 s each; sine_slow, move(+1,0) at 10 and 30/s, and sine_move0, move(0,0) at 1,000/s, 5 s each;
+sine_query, a query at 100/s for 5 s (stock km.moving() unanswered, Medius QUERY(HEALTH) waiting for each reply).
+The last three capture 3 s more after the commands stop.
+Per rate: `per_second`, native (carrying Y) and box-only (X without Y) reports in each second on evdev,
+`tail_per_second` the same after the commands stop, `box_only` their sum while they run; `hidraw_native`, native
+reports on hidraw while they run and 0.5 s after, `seq_gaps` (count only) breaks in the sequence; `sim`, the sim's
+report count and tick (the tick stops while its endpoint is full); `stock_lag`, stock's parser one command behind
+as the rate started; `x_delivered` against commands `sent`; `refused` (stock), the moves answered with a refusal."""
 import math
 import os
 import struct
@@ -58,7 +47,6 @@ def sine():
 
 
 SHAPES = {"count": count, "alt": alt, "const1": const1, "const100": const100, "sine": sine}
-# variant: (mouse, rates, seconds, command, tail seconds)
 VARIANTS = {
     "count": ("count", (0, 1000, 500, 125), 15.0, "move", 0.0),
     "alt": ("alt", (0, 1000, 500, 125), 15.0, "move", 0.0),

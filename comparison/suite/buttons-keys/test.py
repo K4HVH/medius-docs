@@ -1,24 +1,20 @@
 """Injected mouse buttons and keys: every press and release arrives, in order, and nothing stays held. Read on
-the clone's evdev nodes.
+the clone's evdev nodes; edges are key events of value 0 or 1.
 
 Mouse (five buttons, still):
-  single   right, middle, side1 (BTN_SIDE) and side2 (BTN_EXTRA), each pressed and released 20 times, each
-           edge awaited before the next command: write-to-edge latency, presses and releases missed, edges on
-           any other button
+  single   right, middle, side1 (BTN_SIDE) and side2 (BTN_EXTRA), each pressed and released 20 times, each edge
+           awaited before the next command: write-to-edge latency, presses and releases missed, edges on other buttons
   chord    the four pressed 25 ms apart, held 0.15 s, released 25 ms apart in the same order and in reverse on
            alternate reps, 5 reps: the edges in the order sent, all held at once, none after
 Keyboards, each silent but for one empty report every 2 s: a boot keyboard (six key slots) and an NKRO keyboard
 (a modifier byte and a bitmap of usages 0-0x67, on a non-boot interface):
-  mods     each of the eight modifiers, then left ctrl+shift+alt+gui together: modifiers down, J down, J up,
-           modifiers up in reverse, 25 ms apart, 5 reps: edges in the order sent, the modifiers held when J went
-           down, nothing held after
+  mods     each of the eight modifiers, then left ctrl+shift+alt+gui: modifiers down, J down, J up, modifiers up
+           in reverse, 25 ms apart, 5 reps: edges in the order sent, the modifiers held when J went down, none after
   roll     N letters pressed 25 ms apart, held 0.3 s, released 25 ms apart in the same order, 5 reps. N is 6
            and 8 on the boot keyboard (8 is past its six slots) and 6, 10 and 20 on the NKRO one
-Stock gets km.right/middle/side1/side2 and km.down/km.up with the HID usage as a number (modifiers 224-231);
-Medius INJECT press and soft-release. Each leg reads what the PC holds (EVIOCGKEY) after its last release,
-then releases everything it used and reads again. Stock: ERR replies per leg, and whether its parser is in step
-before and after each device; the sweep stops at the first device that leaves it one command behind.
-Edges are key events of value 0 or 1."""
+Stock gets km.right/middle/side1/side2 and km.down/km.up with the HID usage, Medius INJECT press and soft-release.
+Each leg reads what the PC holds (EVIOCGKEY) after its last release, then after releasing everything it used.
+Stock: ERR replies per leg; the sweep stops at the first device that leaves it one command behind."""
 import dataclasses
 import enum
 import fcntl
@@ -51,7 +47,6 @@ NAME.update({e: n for n, _, e in MODS})
 NAME.update({c: n for n, c in BTN.items()})
 SIZES = {"boot": (6, 8), "nkro": (6, 10, 20)}
 
-# A keyboard reporting every key as one bit: the modifier byte, then usages 0x00-0x67 (104 bits), 14 bytes.
 NKRO_DESC = bytes([
     0x05, 0x01, 0x09, 0x06, 0xA1, 0x01,
     0x05, 0x07, 0x19, 0xE0, 0x29, 0xE7, 0x15, 0x00, 0x25, 0x01, 0x75, 0x01, 0x95, 0x08, 0x81, 0x02,

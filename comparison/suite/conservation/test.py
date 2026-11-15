@@ -1,10 +1,10 @@
-"""Does injected motion add up? Every move command's counts must reach the PC once: no more, no less.
+"""Whether injected motion adds up: every move command's counts must reach the PC once.
 
 Each box on its defaults. Mice: `default` runs the idle mouse (one empty report every 2 s, never moving; stock
 won't inject into a device that hasn't reported since it was cloned), a mouse moving on Y at 1 kHz (+1/-1), and
 the same at 125 Hz with bInterval 8; `moving_var` runs a mouse moving on Y from 1 to 10 counts and back every
-200 ms at 1 kHz, a hand-like speed curve. Per mouse, default and immediate moves (stock km.move and km.move_now,
-Medius MOVE and MOVE with NOW), each in two patterns:
+200 ms at 1 kHz. Per mouse, default and immediate moves (stock km.move and km.move_now, Medius MOVE and MOVE with
+NOW), each in two patterns:
   sparse  400 move(+1,0) commands 30-60 ms apart
   dense   2,000 move(+1,0) commands paced at 1 kHz
 The clone's X is read off its evdev node end to end (2 s after the last command), so any count added, dropped or
@@ -37,7 +37,6 @@ def moving_var():
 SHAPES = {"moving_1k": moving_1k, "moving_125": moving_125, "moving_var": moving_var}
 VARIANTS = {"default": ("idle", "moving_1k", "moving_125"), "moving_var": ("moving_var",)}
 
-# Outcome rows: (variant, result index, rule).
 TOTAL_DEFAULT, TOTAL, REVERSED = "total_default", "total", "reversed"
 ROWS = {
     "inj-total-rest-spaced": ("default", 0, TOTAL_DEFAULT), "inj-total-rest-1000": ("default", 1, TOTAL_DEFAULT),
@@ -91,7 +90,6 @@ def total(r, one_short=False):
 
 
 def outcomes(out):
-    """Each outcome row's label: a total against the counts sent, or whether any report moved X the wrong way."""
     labels = {}
     for row, (variant, i, rule) in ROWS.items():
         r = out[variant]["results"][i]

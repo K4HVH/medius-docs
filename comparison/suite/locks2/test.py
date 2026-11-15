@@ -1,13 +1,11 @@
 """Locks beyond X and the left button, read off the PC's USB bus.
 
-Per target the device keeps producing the input the lock blocks; each of 10 cycles locks for 2 s and unlocks
-for 1 s. Per cycle: how long after the lock's packet reaches the box's control port the input still reaches the
-PC, how long it takes to reach the PC after the unlock, and what got through while locked (from 20 ms after the
-lock). Back is timed from the moment the input could first show: the unlock's packet if the device holds it
-then, else the start of its next press, placed by the shape's period from the last one on the bus before the
-lock. Motion and the wheel come every millisecond, so their lock and unlock are timed directly. A 50 ms click
-or tap times a lock or unlock only when it lands mid-press and reads ~0 otherwise, so its p50 follows the
-phase: the held targets time buttons and keys, the clicks and taps what gets through.
+Per target the real device keeps producing the input the lock blocks; 10 cycles each lock for 2 s and unlock for 1 s.
+Per cycle: how long the input still reaches the PC after the lock's packet reaches the box's control port, how long
+until it is back after the unlock (timed from the unlock's packet, or from the next press if the real device isn't
+holding the input then), and what got through while locked (from 20 ms after the lock). A 50 ms click or tap times
+a lock or unlock only when it lands mid-press (~0 otherwise): the held targets time buttons and keys, the clicks and
+taps count what gets through.
   y           Y +1 every millisecond                  stock km.lock_my     Medius LOCK y
   y+          Y +1 three times, then -1, every ms     stock km.lock_my+    Medius LOCK y positive (only -1 may pass)
   wheel       wheel +1 every millisecond              stock km.lock_mw     Medius LOCK wheel
@@ -34,7 +32,6 @@ def _y(d):
     return struct.unpack_from("<h", d, 3)[0] if len(d) >= 5 else 0
 
 
-# (name, leg, stock lock and unlock, Medius target and direction, live, leaked amount, (period, live time) us)
 TARGETS = [
     ("y", "y", ("km.lock_my(1)", "km.lock_my(0)"), ("y", "BOTH"),
      lambda d: _y(d) != 0, lambda d: abs(_y(d)), None),

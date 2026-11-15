@@ -1,14 +1,12 @@
 """Injection into a device that has not reported since it was cloned.
 
-A resting mouse sends nothing, so right after a box clones it the device may never have sent a report. Each try
-presents the mouse afresh, so the box clones it again, then asks the box for one immediate 10-count move (stock
-km.move_now, Medius MOVE with NOW) and one left click:
+Each try presents a mouse at rest afresh, so the box clones it again, then asks the box for one immediate 10-count
+move (stock km.move_now, Medius MOVE with NOW) and one left click:
   never      the mouse never reports
   once       one empty report as the device starts, then silence
   every_100  one empty report every 100 ms
 Three tries per mouse, the mice taken in turn. Per try: whether the move and the click reached the PC within 1 s,
-read off the clone's evdev node, and how fast.
-"""
+read off the clone's evdev node, and how fast."""
 import time
 
 from medius_compare import capture
@@ -62,7 +60,6 @@ def clicks(n):
 
 
 def outcomes(results):
-    """Per mouse, how many of its clicks arrived."""
     return {row: clicks(sum(r["click_delivered"] for r in results if r["shape"] == shape))
             for shape, row in ROWS.items()}
 
